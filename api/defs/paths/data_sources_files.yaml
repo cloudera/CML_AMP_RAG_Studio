@@ -1,0 +1,103 @@
+/rag/data_sources/{data_source_id}/files:
+  post:
+    summary: Upload a file to a data source
+    operationId: uploadFileToDataSource
+    tags:
+      - data_source_files
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The ID of the data source to upload the file to
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - file
+            properties:
+              file:
+                type: string
+                format: binary
+                description: The file to upload
+      required: true
+    responses:
+      "200":
+        description: File uploaded successfully
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataSourceFile"
+  get:
+    summary: List files in a data source
+    operationId: listFilesInDataSource
+    tags:
+      - data_source_files
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The ID of the data source to get the files from
+    responses:
+      "200":
+        description: Files retrieved successfully
+        headers:
+          Content-Disposition:
+            schema:
+              type: string
+            description: Indicates that the content should be downloaded
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataSourceFiles"
+/rag/data_sources/{data_source_id}/files/{file_id}:
+  get:
+    summary: Get a file in a data source
+    operationId: getFileInDataSource
+    tags:
+      - data_source_files
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the file to get
+    responses:
+      "200":
+        description: File retrieved successfully
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+  delete:
+    summary: Delete a file in a data source
+    operationId: deleteFileInDataSource
+    tags:
+      - data_source_files
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the file to delete
+    responses:
+      "204":
+        description: File deleted successfully

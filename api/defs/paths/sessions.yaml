@@ -1,0 +1,92 @@
+/rag/sessions:
+  get:
+    summary: List sessions
+    operationId: listSessions
+    tags:
+      - session
+    responses:
+      '200':
+        description: List of sessions
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionList'
+  post:
+    summary: Create a session
+    operationId: createSession
+    tags:
+      - session
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionCreateRequest'
+    responses:
+      '200':
+        description: Session
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Session'
+
+/rag/sessions/{session_id}:
+  get:
+    summary: Get a session
+    operationId: getSession
+    tags:
+      - session
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Session
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Session'
+  put:
+    summary: Update a session
+    operationId: updateSession
+    tags:
+      - session
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionUpdateRequest'
+    responses:
+      '200':
+        description: Session
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Session'
+  delete:
+    summary: Delete a session
+    operationId: deleteSession
+    tags:
+      - session
+    parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Session deleted

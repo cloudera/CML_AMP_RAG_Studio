@@ -1,0 +1,40 @@
+Session:
+  type: object
+  required:
+    - id
+    - name
+    - time_created
+    - time_updated
+    - created_by_id
+    - updated_by_id
+    - last_interaction_time
+    - data_source_ids
+  properties:
+    id:
+      type: integer
+      format: int64
+    name:
+      type: string
+    time_created:
+      type: string
+      format: date-time
+      description: Session creation timestamp
+    time_updated:
+      type: string
+      format: date-time
+      description: Session update timestamp
+    created_by_id:
+      type: string
+      description: Session creator ID
+    updated_by_id:
+      type: string
+      description: Session updater ID
+    last_interaction_time:
+      type: string
+      format: date-time
+      description: Session last interaction timestamp
+    data_source_ids:
+      type: array
+      items:
+        type: integer
+        format: int64

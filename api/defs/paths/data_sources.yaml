@@ -1,0 +1,92 @@
+/rag/data_sources:
+  get:
+    summary: List data sources
+    operationId: listDataSources
+    tags:
+      - data_source
+    responses:
+      '200':
+        description: List of data sources
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceList'
+  post:
+    summary: Create a data source
+    operationId: createDataSource
+    tags:
+      - data_source
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DataSourceCreateRequest'
+    responses:
+      '200':
+        description: Data source
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSource'
+
+/rag/data_sources/{data_source_id}:
+  get:
+    summary: Get a data source
+    operationId: getDataSource
+    tags:
+      - data_source
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Data source
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSource'
+  put:
+    summary: Update a data source
+    operationId: updateDataSource
+    tags:
+      - data_source
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DataSourceUpdateRequest'
+    responses:
+      '200':
+        description: Data source
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSource'
+  delete:
+    summary: Delete a data source
+    operationId: deleteDataSource
+    tags:
+      - data_source
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '200':
+        description: Data source deleted

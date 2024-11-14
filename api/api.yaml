@@ -1,0 +1,601 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: RAG Studio API
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8000/api/v1
+paths:
+  /rag/data_sources:
+    get:
+      summary: List data sources
+      operationId: listDataSources
+      tags:
+        - data_source
+      responses:
+        '200':
+          description: List of data sources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceList'
+    post:
+      summary: Create a data source
+      operationId: createDataSource
+      tags:
+        - data_source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceCreateRequest'
+      responses:
+        '200':
+          description: Data source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSource'
+  
+  /rag/data_sources/{data_source_id}:
+    get:
+      summary: Get a data source
+      operationId: getDataSource
+      tags:
+        - data_source
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Data source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSource'
+    put:
+      summary: Update a data source
+      operationId: updateDataSource
+      tags:
+        - data_source
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceUpdateRequest'
+      responses:
+        '200':
+          description: Data source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSource'
+    delete:
+      summary: Delete a data source
+      operationId: deleteDataSource
+      tags:
+        - data_source
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Data source deleted
+
+  /rag/data_sources/{data_source_id}/files:
+    post:
+      summary: Upload a file to a data source
+      operationId: uploadFileToDataSource
+      tags:
+        - data_source_files
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the data source to upload the file to
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload
+        required: true
+      responses:
+        "200":
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceFile"
+    get:
+      summary: List files in a data source
+      operationId: listFilesInDataSource
+      tags:
+        - data_source_files
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the data source to get the files from
+      responses:
+        "200":
+          description: Files retrieved successfully
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Indicates that the content should be downloaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceFiles"
+  /rag/data_sources/{data_source_id}/files/{file_id}:
+    get:
+      summary: Get a file in a data source
+      operationId: getFileInDataSource
+      tags:
+        - data_source_files
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the file to get
+      responses:
+        "200":
+          description: File retrieved successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    delete:
+      summary: Delete a file in a data source
+      operationId: deleteFileInDataSource
+      tags:
+        - data_source_files
+      parameters:
+        - name: data_source_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The ID of the file to delete
+      responses:
+        "204":
+          description: File deleted successfully
+
+  /rag/sessions:
+    get:
+      summary: List sessions
+      operationId: listSessions
+      tags:
+        - session
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionList'
+    post:
+      summary: Create a session
+      operationId: createSession
+      tags:
+        - session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreateRequest'
+      responses:
+        '200':
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+  
+  /rag/sessions/{session_id}:
+    get:
+      summary: Get a session
+      operationId: getSession
+      tags:
+        - session
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+    put:
+      summary: Update a session
+      operationId: updateSession
+      tags:
+        - session
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdateRequest'
+      responses:
+        '200':
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+    delete:
+      summary: Delete a session
+      operationId: deleteSession
+      tags:
+        - session
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Session deleted
+
+components:
+  schemas:
+    DataSource:
+      type: object
+      required:
+        - id
+        - name
+        - time_created
+        - time_updated
+        - created_by_id
+        - updated_by_id
+        - configuration
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Data source ID
+        name:
+          type: string
+          description: Data source name
+        time_created:
+          type: string
+          format: date-time
+          description: Data source creation timestamp
+        time_updated:
+          type: string
+          format: date-time
+          description: Data source update timestamp
+        created_by_id:
+          type: string
+          description: Data source creator ID
+        updated_by_id:
+          type: string
+          description: Data source updater ID
+        configuration:
+          type: object
+          required:
+            - connection_type
+            - chunk_size
+            - chunk_overlap_percent
+          properties:
+            connection_type:
+              type: string
+              description: Data source connection type
+              enum:
+                - MANUAL
+                - CDF
+                - API
+                - OTHER
+            chunk_size:
+              type: integer
+              format: int64
+              description: Data source chunk size
+            chunk_overlap_percent:
+              type: integer
+              format: int64
+              description: Data source chunk overlap percentage
+        status:
+          type: object
+          required:
+            - document_count
+            - total_doc_size
+          properties:
+            document_count:
+              type: integer
+              format: int64
+              description: Number of documents in the data source
+            total_doc_size:
+              type: integer
+              format: int64
+              description: Total size of documents in the data source in bytes
+
+    DataSourceCreateRequest:
+      type: object
+      required:
+        - name
+        - configuration
+      properties:
+        name:
+          type: string
+          description: Data source name
+        configuration:
+          type: object
+          required:
+            - connection_type
+            - chunk_size
+            - chunk_overlap_percent
+          properties:
+            connection_type:
+              type: string
+              description: Data source connection type
+              enum:
+                - MANUAL
+                - CDF
+                - API
+                - OTHER
+            chunk_size:
+              type: integer
+              format: int64
+              description: Data source chunk size
+            chunk_overlap_percent:
+              type: integer
+              format: int64
+              description: Data source chunk overlap percentage
+
+    DataSourceFile:
+      type: object
+      required:
+        - id
+        - time_created
+        - time_updated
+        - created_by_id
+        - updated_by_id
+        - filename
+        - data_source_id
+        - document_id
+        - s3_path
+        - vector_upload_timestamp
+        - size_in_bytes
+        - extension
+        - summary_creation_timestamp
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the file
+        time_created:
+          type: string
+          format: date-time
+          description: The date and time when the file was created
+        time_updated:
+          type: string
+          format: date-time
+          description: The date and time when the file was last updated
+        created_by_id:
+          type: string
+          description: ID of the user who created the file
+        updated_by_id:
+          type: string
+          description: ID of the user who last updated the file
+        filename:
+          type: string
+          description: Name of the File
+        data_source_id:
+          type: integer
+          format: int64
+          description: ID of the data source the file belongs to
+        document_id:
+          type: string
+          description: ID of the document in the data source
+        s3_path:
+          type: string
+          description: Path to the file in S3
+        vector_upload_timestamp:
+          type: string
+          format: date-time
+          description: The date and time when the file was uploaded
+        size_in_bytes:
+          type: integer
+          format: int64
+          description: Size of the file in bytes
+        extension:
+          type: string
+          description: Extension of the file
+        summary_creation_timestamp:
+          type: string
+          format: date-time
+          description: The date and time when the file summary was created
+
+    DataSourceFiles:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataSourceFile"
+
+    DataSourceList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataSource"
+
+    DataSourceUpdateRequest:
+      type: object
+      required:
+        - name
+        - configuration
+      properties:
+        name:
+          type: string
+          description: Data source name
+        configuration:
+          type: object
+          required:
+            - connection_type
+            - chunk_size
+            - chunk_overlap_percent
+          properties:
+            connection_type:
+              type: string
+              description: Data source connection type
+              enum:
+                - MANUAL
+                - CDF
+                - API
+                - OTHER
+            chunk_size:
+              type: integer
+              format: int64
+              description: Data source chunk size
+            chunk_overlap_percent:
+              type: integer
+              format: int64
+              description: Data source chunk overlap percentage
+
+    Session:
+      type: object
+      required:
+        - id
+        - name
+        - time_created
+        - time_updated
+        - created_by_id
+        - updated_by_id
+        - last_interaction_time
+        - data_source_ids
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        time_created:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+        time_updated:
+          type: string
+          format: date-time
+          description: Session update timestamp
+        created_by_id:
+          type: string
+          description: Session creator ID
+        updated_by_id:
+          type: string
+          description: Session updater ID
+        last_interaction_time:
+          type: string
+          format: date-time
+          description: Session last interaction timestamp
+        data_source_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    SessionCreateRequest:
+      type: object
+      required:
+        - name
+        - data_source_ids
+      properties:
+        name:
+          type: string
+        data_source_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    SessionList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Session"
+
+    SessionUpdateRequest:
+      type: object
+      required:
+        - name
+        - data_source_ids
+      properties:
+        name:
+          type: string
+        data_source_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+

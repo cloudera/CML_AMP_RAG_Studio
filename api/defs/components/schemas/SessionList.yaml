@@ -1,0 +1,9 @@
+SessionList:
+  type: object
+  required:
+    - items
+  properties:
+    items:
+      type: array
+      items:
+        $ref: "#/components/schemas/Session"
