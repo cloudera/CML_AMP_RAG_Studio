@@ -1,7 +1,12 @@
 from datetime import datetime
+from typing import Optional
 
 from src.dal.session import SessionDAL
-from src.db.provider import DBConnectionProvider, transaction
+from src.db.provider import (
+    DBConnectionProvider,
+    SQLiteConnectionProviderSingleton,
+    transaction,
+)
 from src.openapi_server.apis.session_api_base import BaseSessionApi
 from src.openapi_server.impl.utils import raise_not_found_if_missing
 from src.openapi_server.models.session import Session
@@ -83,3 +88,12 @@ class SessionApi(BaseSessionApi):
                 # TODO: update last_interaction_time?
                 SessionDAL.save(cursor, session)
                 return session
+
+
+class SessionApiSingleton(BaseSessionApi):
+    _instance: Optional[SessionApi] = None
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = SessionApi(SQLiteConnectionProviderSingleton())
+        return cls._instance

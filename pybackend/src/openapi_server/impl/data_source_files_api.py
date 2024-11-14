@@ -2,13 +2,18 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import boto3
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
-from src.db.provider import DBConnectionProvider, transaction
+from src.db.provider import (
+    DBConnectionProvider,
+    SQLiteConnectionProviderSingleton,
+    transaction,
+)
 from src.openapi_server.apis.data_source_files_api_base import BaseDataSourceFilesApi
 from src.openapi_server.impl.utils import raise_not_found_if_missing
 from src.openapi_server.models.data_source_file import DataSourceFile
@@ -194,3 +199,20 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
 
     def _s3_path(self, data_source_id: int, file_id: str) -> str:
         return f"{self.config.s3_path_prefix}/{data_source_id}/{file_id}"
+
+
+class DataSourceFilesApiSingleton(BaseDataSourceFilesApi):
+    _instance: Optional[DataSourceFilesApi] = None
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = DataSourceFilesApi(
+                db_connection_provider=SQLiteConnectionProviderSingleton(),
+                config=DataSourceFilesApiConfig(
+                    bucket_name=os.getenv("S3_BUCKET_NAME"),
+                    s3_path_prefix=os.getenv("S3_PATH_PREFIX"),
+                ),
+                s3_client=boto3.client("s3"),
+                files_dir=os.getenv("FILES_DIR"),
+            )
+        return cls._instance

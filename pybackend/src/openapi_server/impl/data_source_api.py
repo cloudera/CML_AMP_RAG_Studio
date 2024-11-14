@@ -1,8 +1,13 @@
 from datetime import datetime
+from typing import Optional
 
 from fastapi import HTTPException
 from src.dal.data_source import DataSourceDAL
-from src.db.provider import DBConnectionProvider, transaction
+from src.db.provider import (
+    DBConnectionProvider,
+    SQLiteConnectionProviderSingleton,
+    transaction,
+)
 from src.openapi_server.apis.data_source_api_base import BaseDataSourceApi
 from src.openapi_server.impl.utils import raise_not_found_if_missing
 from src.openapi_server.models.data_source import DataSource
@@ -13,7 +18,7 @@ from src.openapi_server.models.data_source_status import DataSourceStatus
 from src.openapi_server.models.data_source_update_request import DataSourceUpdateRequest
 
 
-class DataSourceApi(BaseDataSourceApi):
+class DataSourceApi:
     def __init__(self, db_connection_provider: DBConnectionProvider):
         self.db_connection_provider = db_connection_provider
 
@@ -99,3 +104,12 @@ class DataSourceApi(BaseDataSourceApi):
             raise HTTPException(
                 status_code=400, detail="Chunk size must be greater than 0"
             )
+
+
+class DataSourceApiSingleton(BaseDataSourceApi):
+    _instance: Optional[DataSourceApi] = None
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = DataSourceApi(SQLiteConnectionProviderSingleton())
+        return cls._instance

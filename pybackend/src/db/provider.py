@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import threading
 from abc import ABC, abstractmethod
@@ -5,6 +6,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from sqlite3 import Connection
 from typing import Optional
+
+from src.migration.datastore import SQLiteDatastore
+from src.migration.migrator import Migrator
 
 
 class DBConnectionProvider(ABC):
@@ -36,6 +40,21 @@ class SQLiteConnectionProvider(DBConnectionProvider):
     @contextmanager
     def connection(self):
         yield sqlite3.connect(self.db_path)
+
+
+class SQLiteConnectionProviderSingleton:
+    _instance: Optional[SQLiteConnectionProvider] = None
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = SQLiteConnectionProvider(
+                os.getenv("SQLITE_DB_PATH", "./db.sqlite")
+            )
+            with cls._instance.connection() as connection:
+                datastore = SQLiteDatastore(connection)
+                migrator = Migrator(datastore)
+                migrator.perform_migration()
+        return cls._instance
 
 
 @contextmanager
