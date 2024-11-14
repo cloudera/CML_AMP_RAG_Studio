@@ -41,6 +41,7 @@ rm -rf typescript-client
 
 echo "Generating FastAPI server"
 openapi-generator-cli generate -i api.yaml -g python-fastapi -o fastapi-server
+ruff format fastapi-server
 # For each file in the apis, fix the "file" representation
 for f in fastapi-server/src/openapi_server/apis/*.py; do
     echo "Fixing $f"

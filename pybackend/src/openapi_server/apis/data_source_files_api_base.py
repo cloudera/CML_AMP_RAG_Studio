@@ -14,32 +14,26 @@ class BaseDataSourceFilesApi:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         BaseDataSourceFilesApi.subclasses = BaseDataSourceFilesApi.subclasses + (cls,)
+
     def delete_file_in_data_source(
         self,
         data_source_id: int,
         file_id: str,
-    ) -> None:
-        ...
-
+    ) -> None: ...
 
     def get_file_in_data_source(
         self,
         data_source_id: int,
         file_id: str,
-    ) -> FileResponse:
-        ...
-
+    ) -> FileResponse: ...
 
     def list_files_in_data_source(
         self,
         data_source_id: int,
-    ) -> DataSourceFiles:
-        ...
-
+    ) -> DataSourceFiles: ...
 
     def upload_file_to_data_source(
         self,
         data_source_id: int,
         file: UploadFile,
-    ) -> DataSourceFile:
-        ...
+    ) -> DataSourceFile: ...

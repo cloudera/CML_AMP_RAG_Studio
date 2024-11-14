@@ -98,8 +98,7 @@ def get_session(
     summary="List sessions",
     response_model_by_alias=True,
 )
-def list_sessions(
-) -> SessionList:
+def list_sessions() -> SessionList:
     if not BaseSessionApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return BaseSessionApi.subclasses[0]().list_sessions()
@@ -120,4 +119,6 @@ def update_session(
 ) -> Session:
     if not BaseSessionApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseSessionApi.subclasses[0]().update_session(session_id, session_update_request)
+    return BaseSessionApi.subclasses[0]().update_session(
+        session_id, session_update_request
+    )

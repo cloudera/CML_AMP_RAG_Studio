@@ -52,7 +52,9 @@ def create_data_source(
 ) -> DataSource:
     if not BaseDataSourceApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseDataSourceApi.subclasses[0]().create_data_source(data_source_create_request)
+    return BaseDataSourceApi.subclasses[0]().create_data_source(
+        data_source_create_request
+    )
 
 
 @router.delete(
@@ -98,8 +100,7 @@ def get_data_source(
     summary="List data sources",
     response_model_by_alias=True,
 )
-def list_data_sources(
-) -> DataSourceList:
+def list_data_sources() -> DataSourceList:
     if not BaseDataSourceApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return BaseDataSourceApi.subclasses[0]().list_data_sources()
@@ -120,4 +121,6 @@ def update_data_source(
 ) -> DataSource:
     if not BaseDataSourceApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseDataSourceApi.subclasses[0]().update_data_source(data_source_id, data_source_update_request)
+    return BaseDataSourceApi.subclasses[0]().update_data_source(
+        data_source_id, data_source_update_request
+    )

@@ -51,7 +51,9 @@ def delete_file_in_data_source(
 ) -> None:
     if not BaseDataSourceFilesApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseDataSourceFilesApi.subclasses[0]().delete_file_in_data_source(data_source_id, file_id)
+    return BaseDataSourceFilesApi.subclasses[0]().delete_file_in_data_source(
+        data_source_id, file_id
+    )
 
 
 @router.get(
@@ -67,7 +69,9 @@ def get_file_in_data_source(
 ) -> FileResponse:
     if not BaseDataSourceFilesApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseDataSourceFilesApi.subclasses[0]().get_file_in_data_source(data_source_id, file_id)
+    return BaseDataSourceFilesApi.subclasses[0]().get_file_in_data_source(
+        data_source_id, file_id
+    )
 
 
 @router.get(
@@ -80,11 +84,15 @@ def get_file_in_data_source(
     response_model_by_alias=True,
 )
 def list_files_in_data_source(
-    data_source_id: int = Path(..., description="The ID of the data source to get the files from"),
+    data_source_id: int = Path(
+        ..., description="The ID of the data source to get the files from"
+    ),
 ) -> DataSourceFiles:
     if not BaseDataSourceFilesApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseDataSourceFilesApi.subclasses[0]().list_files_in_data_source(data_source_id)
+    return BaseDataSourceFilesApi.subclasses[0]().list_files_in_data_source(
+        data_source_id
+    )
 
 
 @router.post(
@@ -97,9 +105,13 @@ def list_files_in_data_source(
     response_model_by_alias=True,
 )
 def upload_file_to_data_source(
-    data_source_id: int = Path(..., description="The ID of the data source to upload the file to"),
+    data_source_id: int = Path(
+        ..., description="The ID of the data source to upload the file to"
+    ),
     file: UploadFile = File(..., description="The file to upload"),
 ) -> DataSourceFile:
     if not BaseDataSourceFilesApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return BaseDataSourceFilesApi.subclasses[0]().upload_file_to_data_source(data_source_id, file)
+    return BaseDataSourceFilesApi.subclasses[0]().upload_file_to_data_source(
+        data_source_id, file
+    )
