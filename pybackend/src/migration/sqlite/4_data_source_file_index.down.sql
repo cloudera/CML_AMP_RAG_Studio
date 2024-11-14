@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_data_source_files_data_source_id;

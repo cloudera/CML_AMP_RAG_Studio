@@ -57,8 +57,28 @@ def delete_file_in_data_source(
 
 
 @router.get(
-    "/rag/data_sources/{data_source_id}/files/{file_id}",
+    "/rag/data_sources/{data_source_id}/files/{file_id}/download",
     response_class=FileResponse,
+    tags=["data_source_files"],
+    summary="Download a file in a data source",
+    response_model_by_alias=True,
+)
+def download_file_in_data_source(
+    data_source_id: int = Path(..., description=""),
+    file_id: str = Path(..., description="The ID of the file to download"),
+) -> FileResponse:
+    if not BaseDataSourceFilesApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return BaseDataSourceFilesApi.subclasses[0]().download_file_in_data_source(
+        data_source_id, file_id
+    )
+
+
+@router.get(
+    "/rag/data_sources/{data_source_id}/files/{file_id}",
+    responses={
+        200: {"model": DataSourceFile, "description": "File retrieved successfully"},
+    },
     tags=["data_source_files"],
     summary="Get a file in a data source",
     response_model_by_alias=True,
@@ -66,7 +86,7 @@ def delete_file_in_data_source(
 def get_file_in_data_source(
     data_source_id: int = Path(..., description=""),
     file_id: str = Path(..., description="The ID of the file to get"),
-) -> FileResponse:
+) -> DataSourceFile:
     if not BaseDataSourceFilesApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return BaseDataSourceFilesApi.subclasses[0]().get_file_in_data_source(

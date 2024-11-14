@@ -7,7 +7,6 @@ Session:
     - time_updated
     - created_by_id
     - updated_by_id
-    - last_interaction_time
     - data_source_ids
   properties:
     id:

@@ -139,10 +139,10 @@ export interface DataSourceCreateRequest {
 export interface DataSourceFile {
     /**
      * Unique identifier for the file
-     * @type {number}
+     * @type {string}
      * @memberof DataSourceFile
      */
-    'id': number;
+    'id': string;
     /**
      * The date and time when the file was created
      * @type {string}
@@ -192,12 +192,6 @@ export interface DataSourceFile {
      */
     's3_path': string;
     /**
-     * The date and time when the file was uploaded
-     * @type {string}
-     * @memberof DataSourceFile
-     */
-    'vector_upload_timestamp': string;
-    /**
      * Size of the file in bytes
      * @type {number}
      * @memberof DataSourceFile
@@ -210,11 +204,17 @@ export interface DataSourceFile {
      */
     'extension': string;
     /**
+     * The date and time when the vector embedding was created
+     * @type {string}
+     * @memberof DataSourceFile
+     */
+    'vector_upload_timestamp'?: string;
+    /**
      * The date and time when the file summary was created
      * @type {string}
      * @memberof DataSourceFile
      */
-    'summary_creation_timestamp': string;
+    'summary_creation_timestamp'?: string;
 }
 /**
  * 
@@ -327,7 +327,7 @@ export interface Session {
      * @type {string}
      * @memberof Session
      */
-    'last_interaction_time': string;
+    'last_interaction_time'?: string;
     /**
      * 
      * @type {Array<number>}
@@ -821,6 +821,44 @@ export const DataSourceFilesApiAxiosParamCreator = function (configuration?: Con
         },
         /**
          * 
+         * @summary Download a file in a data source
+         * @param {number} dataSourceId 
+         * @param {string} fileId The ID of the file to download
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        downloadFileInDataSource: async (dataSourceId: number, fileId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'dataSourceId' is not null or undefined
+            assertParamExists('downloadFileInDataSource', 'dataSourceId', dataSourceId)
+            // verify required parameter 'fileId' is not null or undefined
+            assertParamExists('downloadFileInDataSource', 'fileId', fileId)
+            const localVarPath = `/rag/data_sources/{data_source_id}/files/{file_id}/download`
+                .replace(`{${"data_source_id"}}`, encodeURIComponent(String(dataSourceId)))
+                .replace(`{${"file_id"}}`, encodeURIComponent(String(fileId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Get a file in a data source
          * @param {number} dataSourceId 
          * @param {string} fileId The ID of the file to get
@@ -962,13 +1000,27 @@ export const DataSourceFilesApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Download a file in a data source
+         * @param {number} dataSourceId 
+         * @param {string} fileId The ID of the file to download
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async downloadFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.downloadFileInDataSource(dataSourceId, fileId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DataSourceFilesApi.downloadFileInDataSource']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Get a file in a data source
          * @param {number} dataSourceId 
          * @param {string} fileId The ID of the file to get
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+        async getFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DataSourceFile>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getFileInDataSource(dataSourceId, fileId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DataSourceFilesApi.getFileInDataSource']?.[localVarOperationServerIndex]?.url;
@@ -1024,13 +1076,24 @@ export const DataSourceFilesApiFactory = function (configuration?: Configuration
         },
         /**
          * 
+         * @summary Download a file in a data source
+         * @param {number} dataSourceId 
+         * @param {string} fileId The ID of the file to download
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        downloadFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig): AxiosPromise<File> {
+            return localVarFp.downloadFileInDataSource(dataSourceId, fileId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Get a file in a data source
          * @param {number} dataSourceId 
          * @param {string} fileId The ID of the file to get
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig): AxiosPromise<File> {
+        getFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig): AxiosPromise<DataSourceFile> {
             return localVarFp.getFileInDataSource(dataSourceId, fileId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1075,6 +1138,19 @@ export class DataSourceFilesApi extends BaseAPI {
      */
     public deleteFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig) {
         return DataSourceFilesApiFp(this.configuration).deleteFileInDataSource(dataSourceId, fileId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Download a file in a data source
+     * @param {number} dataSourceId 
+     * @param {string} fileId The ID of the file to download
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DataSourceFilesApi
+     */
+    public downloadFileInDataSource(dataSourceId: number, fileId: string, options?: RawAxiosRequestConfig) {
+        return DataSourceFilesApiFp(this.configuration).downloadFileInDataSource(dataSourceId, fileId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

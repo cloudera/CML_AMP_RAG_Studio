@@ -21,11 +21,17 @@ class BaseDataSourceFilesApi:
         file_id: str,
     ) -> None: ...
 
-    def get_file_in_data_source(
+    def download_file_in_data_source(
         self,
         data_source_id: int,
         file_id: str,
     ) -> FileResponse: ...
+
+    def get_file_in_data_source(
+        self,
+        data_source_id: int,
+        file_id: str,
+    ) -> DataSourceFile: ...
 
     def list_files_in_data_source(
         self,

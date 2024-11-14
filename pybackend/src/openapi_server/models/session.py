@@ -19,7 +19,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 
 try:
     from typing import Self
@@ -38,8 +38,8 @@ class Session(BaseModel):
     time_updated: datetime = Field(description="Session update timestamp")
     created_by_id: StrictStr = Field(description="Session creator ID")
     updated_by_id: StrictStr = Field(description="Session updater ID")
-    last_interaction_time: datetime = Field(
-        description="Session last interaction timestamp"
+    last_interaction_time: Optional[datetime] = Field(
+        default=None, description="Session last interaction timestamp"
     )
     data_source_ids: List[StrictInt]
     __properties: ClassVar[List[str]] = [

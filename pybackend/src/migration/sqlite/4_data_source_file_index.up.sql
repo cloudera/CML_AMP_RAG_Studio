@@ -1,0 +1,1 @@
+CREATE INDEX idx_data_source_files_data_source_id ON data_source_files(data_source_id);

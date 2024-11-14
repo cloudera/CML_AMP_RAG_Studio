@@ -14,9 +14,7 @@ Do not edit the class manually.
 from fastapi import FastAPI
 
 from src.openapi_server.apis.data_source_api import router as DataSourceApiRouter
-from src.openapi_server.apis.data_source_files_api import (
-    router as DataSourceFilesApiRouter,
-)
+from src.openapi_server.apis.data_source_files_api import router as DataSourceFilesApiRouter
 from src.openapi_server.apis.session_api import router as SessionApiRouter
 
 app = FastAPI(

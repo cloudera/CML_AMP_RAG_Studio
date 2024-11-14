@@ -46,11 +46,6 @@
     responses:
       "200":
         description: Files retrieved successfully
-        headers:
-          Content-Disposition:
-            schema:
-              type: string
-            description: Indicates that the content should be downloaded
         content:
           application/json:
             schema:
@@ -77,10 +72,9 @@
       "200":
         description: File retrieved successfully
         content:
-          application/octet-stream:
+          application/json:
             schema:
-              type: string
-              format: binary
+              $ref: "#/components/schemas/DataSourceFile"
   delete:
     summary: Delete a file in a data source
     operationId: deleteFileInDataSource
@@ -101,3 +95,29 @@
     responses:
       "204":
         description: File deleted successfully
+/rag/data_sources/{data_source_id}/files/{file_id}/download:
+  get:
+    summary: Download a file in a data source
+    operationId: downloadFileInDataSource
+    tags:
+      - data_source_files
+    parameters:
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the file to download
+    responses:
+      "200":
+        description: File downloaded successfully
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary

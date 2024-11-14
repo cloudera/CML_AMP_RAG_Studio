@@ -19,7 +19,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 
 try:
     from typing import Self
@@ -32,7 +32,7 @@ class DataSourceFile(BaseModel):
     DataSourceFile
     """  # noqa: E501
 
-    id: StrictInt = Field(description="Unique identifier for the file")
+    id: StrictStr = Field(description="Unique identifier for the file")
     time_created: datetime = Field(
         description="The date and time when the file was created"
     )
@@ -49,13 +49,14 @@ class DataSourceFile(BaseModel):
     )
     document_id: StrictStr = Field(description="ID of the document in the data source")
     s3_path: StrictStr = Field(description="Path to the file in S3")
-    vector_upload_timestamp: datetime = Field(
-        description="The date and time when the file was uploaded"
-    )
     size_in_bytes: StrictInt = Field(description="Size of the file in bytes")
     extension: StrictStr = Field(description="Extension of the file")
-    summary_creation_timestamp: datetime = Field(
-        description="The date and time when the file summary was created"
+    vector_upload_timestamp: Optional[datetime] = Field(
+        default=None,
+        description="The date and time when the vector embedding was created",
+    )
+    summary_creation_timestamp: Optional[datetime] = Field(
+        default=None, description="The date and time when the file summary was created"
     )
     __properties: ClassVar[List[str]] = [
         "id",
@@ -67,9 +68,9 @@ class DataSourceFile(BaseModel):
         "data_source_id",
         "document_id",
         "s3_path",
-        "vector_upload_timestamp",
         "size_in_bytes",
         "extension",
+        "vector_upload_timestamp",
         "summary_creation_timestamp",
     ]
 
@@ -130,9 +131,9 @@ class DataSourceFile(BaseModel):
                 "data_source_id": obj.get("data_source_id"),
                 "document_id": obj.get("document_id"),
                 "s3_path": obj.get("s3_path"),
-                "vector_upload_timestamp": obj.get("vector_upload_timestamp"),
                 "size_in_bytes": obj.get("size_in_bytes"),
                 "extension": obj.get("extension"),
+                "vector_upload_timestamp": obj.get("vector_upload_timestamp"),
                 "summary_creation_timestamp": obj.get("summary_creation_timestamp"),
             }
         )

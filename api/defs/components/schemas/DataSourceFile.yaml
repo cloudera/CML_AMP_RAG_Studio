@@ -10,14 +10,11 @@ DataSourceFile:
     - data_source_id
     - document_id
     - s3_path
-    - vector_upload_timestamp
     - size_in_bytes
     - extension
-    - summary_creation_timestamp
   properties:
     id:
-      type: integer
-      format: int64
+      type: string
       description: Unique identifier for the file
     time_created:
       type: string
@@ -46,10 +43,6 @@ DataSourceFile:
     s3_path:
       type: string
       description: Path to the file in S3
-    vector_upload_timestamp:
-      type: string
-      format: date-time
-      description: The date and time when the file was uploaded
     size_in_bytes:
       type: integer
       format: int64
@@ -57,7 +50,12 @@ DataSourceFile:
     extension:
       type: string
       description: Extension of the file
+    vector_upload_timestamp:
+      type: string
+      format: date-time
+      description: The date and time when the vector embedding was created
     summary_creation_timestamp:
       type: string
       format: date-time
       description: The date and time when the file summary was created
+
