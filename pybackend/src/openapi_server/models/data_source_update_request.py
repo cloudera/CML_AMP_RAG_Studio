@@ -18,7 +18,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from src.openapi_server.models.data_source_configuration import DataSourceConfiguration
 
 try:
@@ -32,8 +32,8 @@ class DataSourceUpdateRequest(BaseModel):
     DataSourceUpdateRequest
     """  # noqa: E501
 
-    name: StrictStr = Field(description="Data source name")
-    configuration: DataSourceConfiguration
+    name: Optional[StrictStr] = Field(default=None, description="Data source name")
+    configuration: Optional[DataSourceConfiguration] = None
     __properties: ClassVar[List[str]] = ["name", "configuration"]
 
     model_config = {

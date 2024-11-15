@@ -507,9 +507,6 @@ components:
 
     DataSourceUpdateRequest:
       type: object
-      required:
-        - name
-        - configuration
       properties:
         name:
           type: string
@@ -604,9 +601,6 @@ components:
 
     SessionUpdateRequest:
       type: object
-      required:
-        - name
-        - data_source_ids
       properties:
         name:
           type: string

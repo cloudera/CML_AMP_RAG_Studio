@@ -1,8 +1,5 @@
 DataSourceUpdateRequest:
   type: object
-  required:
-    - name
-    - configuration
   properties:
     name:
       type: string

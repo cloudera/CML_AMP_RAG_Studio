@@ -91,8 +91,10 @@ class DataSourceApi:
                     DataSourceDAL.get_data_source(cursor, data_source_id),
                     f"Data source with id {data_source_id} not found",
                 )
-                data_source.name = data_source_update_request.name
-                data_source.configuration = data_source_update_request.configuration
+                if data_source_update_request.name is not None:
+                    data_source.name = data_source_update_request.name
+                if data_source_update_request.configuration is not None:
+                    data_source.configuration = data_source_update_request.configuration
                 data_source.time_updated = now
                 data_source.updated_by_id = user_id
                 DataSourceDAL.save_data_source(cursor, data_source)

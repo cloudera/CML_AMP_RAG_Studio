@@ -81,7 +81,10 @@ class SessionApi(BaseSessionApi):
                     SessionDAL.get_session(cursor, session_id),
                     f"Session with id {session_id} not found",
                 )
-                session.name = session_update_request.name
+                if session_update_request.name is not None:
+                    session.name = session_update_request.name
+                if session_update_request.data_source_ids is not None:
+                    session.data_source_ids = session_update_request.data_source_ids
                 session.time_updated = now
                 session.updated_by_id = user_id
                 # TODO: update last_interaction_time?

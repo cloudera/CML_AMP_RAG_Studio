@@ -18,7 +18,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 
 try:
     from typing import Self
@@ -31,8 +31,8 @@ class SessionUpdateRequest(BaseModel):
     SessionUpdateRequest
     """  # noqa: E501
 
-    name: StrictStr
-    data_source_ids: List[StrictInt]
+    name: Optional[StrictStr] = None
+    data_source_ids: Optional[List[StrictInt]] = None
     __properties: ClassVar[List[str]] = ["name", "data_source_ids"]
 
     model_config = {

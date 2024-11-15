@@ -1,8 +1,5 @@
 SessionUpdateRequest:
   type: object
-  required:
-    - name
-    - data_source_ids
   properties:
     name:
       type: string

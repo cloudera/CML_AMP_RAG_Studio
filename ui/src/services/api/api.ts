@@ -272,13 +272,13 @@ export interface DataSourceUpdateRequest {
      * @type {string}
      * @memberof DataSourceUpdateRequest
      */
-    'name': string;
+    'name'?: string;
     /**
      * 
      * @type {DataSourceConfiguration}
      * @memberof DataSourceUpdateRequest
      */
-    'configuration': DataSourceConfiguration;
+    'configuration'?: DataSourceConfiguration;
 }
 /**
  * 
@@ -378,13 +378,13 @@ export interface SessionUpdateRequest {
      * @type {string}
      * @memberof SessionUpdateRequest
      */
-    'name': string;
+    'name'?: string;
     /**
      * 
      * @type {Array<number>}
      * @memberof SessionUpdateRequest
      */
-    'data_source_ids': Array<number>;
+    'data_source_ids'?: Array<number>;
 }
 
 /**
