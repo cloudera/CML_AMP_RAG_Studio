@@ -48,8 +48,8 @@ with db_connection_provider.connection() as connection:
 
 # Initialize the S3 client
 s3_client = boto3.client("s3")
-s3_bucket_name = os.getenv("S3_BUCKET_NAME")
-s3_path_prefix = os.getenv("S3_PATH_PREFIX")
+s3_bucket_name = os.getenv("S3_RAG_DOCUMENT_BUCKET")
+s3_path_prefix = os.getenv("S3_RAG_BUCKET_PREFIX")
 
 # Initialize the Python client
 python_client = PythonClient(os.getenv("PYTHON_BASE_URL"))
