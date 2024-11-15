@@ -37,33 +37,43 @@
  ******************************************************************************/
 
 import { cleanup, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, afterEach } from "vitest";
 import {
   RagChatContext,
   RagChatContextType,
 } from "pages/RagChatTab/State/RagChatContext";
+import {
+  DataSource,
+  DataSourceConnectionType,
+  Session,
+} from "src/services/api/api";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import ChatBodyController from "./ChatBodyController";
-import { ConnectionType } from "src/api/dataSourceApi.ts";
 
-const testDataSource = {
+const testDataSource: DataSource = {
   id: 1,
   name: "data source name",
-  chunkSize: 1,
-  totalDocSize: 1,
-  documentCount: 1,
-  connectionType: ConnectionType.MANUAL,
-  chunkOverlapPercent: 0,
+  chunk_size: 1,
+  connection_type: DataSourceConnectionType.Manual,
+  chunk_overlap_percent: 0,
+  status: {
+    total_doc_size: 1,
+    document_count: 1,
+  },
+  time_created: "123",
+  time_updated: "123",
+  created_by_id: "1",
+  updated_by_id: "1",
 };
 
-const testSession = {
-  dataSourceIds: [1],
+const testSession: Session = {
+  data_source_ids: [1],
   id: 1,
   name: "session name",
-  timeCreated: 123,
-  timeUpdated: 123,
-  createdById: "1",
-  updatedById: "1",
-  lastInteractionTime: 123,
+  time_created: "123",
+  time_updated: "123",
+  created_by_id: "1",
+  updated_by_id: "1",
+  last_interaction_time: "123",
 };
 
 describe("ChatBodyController", () => {
@@ -109,7 +119,7 @@ describe("ChatBodyController", () => {
         value={{ ...defaultContextValue, ...contextValue }}
       >
         <ChatBodyController />
-      </RagChatContext.Provider>,
+      </RagChatContext.Provider>
     );
   };
 
@@ -168,8 +178,8 @@ describe("ChatBodyController", () => {
 
     expect(
       screen.getByText(
-        "In order to get started, create a new knowledge base using the button below.",
-      ),
+        "In order to get started, create a new knowledge base using the button below."
+      )
     ).toBeTruthy();
   });
 
@@ -177,11 +187,11 @@ describe("ChatBodyController", () => {
     renderWithContext({
       dataSources: [testDataSource],
       dataSourceId: undefined,
-      activeSession: { ...testSession, dataSourceIds: [2] },
+      activeSession: { ...testSession, data_source_ids: [2] },
     });
 
     expect(
-      screen.getByText("No knowledge base for this session."),
+      screen.getByText("No knowledge base for this session.")
     ).toBeTruthy();
   });
 
@@ -204,7 +214,7 @@ describe("ChatBodyController", () => {
         default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
           <div data-testid="empty-chat-state">{dataSourceSize}</div>
         )),
-      }),
+      })
     );
 
     renderWithContext({

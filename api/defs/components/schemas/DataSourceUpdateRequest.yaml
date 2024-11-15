@@ -4,26 +4,13 @@ DataSourceUpdateRequest:
     name:
       type: string
       description: Data source name
-    configuration:
-      type: object
-      required:
-        - connection_type
-        - chunk_size
-        - chunk_overlap_percent
-      properties:
-        connection_type:
-          type: string
-          description: Data source connection type
-          enum:
-            - MANUAL
-            - CDF
-            - API
-            - OTHER
-        chunk_size:
-          type: integer
-          format: int64
-          description: Data source chunk size
-        chunk_overlap_percent:
-          type: integer
-          format: int64
-          description: Data source chunk overlap percentage
+    connection_type:
+      $ref: "#/components/schemas/DataSourceConnectionType"
+    chunk_size:
+      type: integer
+      format: int64
+      description: Data source chunk size
+    chunk_overlap_percent:
+      type: integer
+      format: int64
+      description: Data source chunk overlap percentage

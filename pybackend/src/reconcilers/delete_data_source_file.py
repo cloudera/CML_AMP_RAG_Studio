@@ -1,11 +1,15 @@
+import logging
 from typing import Optional
 
 import boto3
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import DBConnectionProvider, transaction
+from src.log import setup_logger
 from src.openapi_server.models.data_source_file import DataSourceFile
 from src.python_migration.python_client import PythonClient
 from src.reconcilers.reconciler import Reconciler
+
+logger = setup_logger(__name__)
 
 
 class DeleteDataSourceFileReconciler(Reconciler):
@@ -17,7 +21,7 @@ class DeleteDataSourceFileReconciler(Reconciler):
         s3_client: boto3.client,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client
         self.s3_bucket_name = s3_bucket_name
@@ -52,5 +56,5 @@ class DeleteDataSourceFileReconciler(Reconciler):
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 DataSourceFileDAL.hard_delete_data_source_file(
-                    cursor, data_source_file.data_source_id, data_source_file.id
+                    cursor, data_source_file.id
                 )

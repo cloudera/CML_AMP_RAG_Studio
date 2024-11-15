@@ -14,7 +14,7 @@ from src.openapi_server.models.session_list import SessionList
 from src.openapi_server.models.session_update_request import SessionUpdateRequest
 
 
-class SessionApi(BaseSessionApi):
+class SessionApi:
     def __init__(self, db_connection_provider: DBConnectionProvider):
         self.db_connection_provider = db_connection_provider
 

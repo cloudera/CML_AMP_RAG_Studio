@@ -36,21 +36,21 @@
  * DATA.
  ******************************************************************************/
 
+import { ClearOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { Flex, Menu, Modal, Popover, Tooltip, Typography } from "antd";
+import { useState } from "react";
+import { chatHistoryQueryKey } from "src/api/chatApi.ts";
 import {
-  Session,
   useDeleteChatHistoryMutation,
   useDeleteSessionMutation,
 } from "src/api/sessionApi.ts";
-import useModal from "src/utils/useModal.ts";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { chatHistoryQueryKey } from "src/api/chatApi.ts";
-import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
-import { Flex, Menu, Modal, Popover, Tooltip, Typography } from "antd";
 import { cdlWhite } from "src/cuix/variables.ts";
-import { ClearOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { Session } from "src/services/api/api";
+import messageQueue from "src/utils/messageQueue.ts";
+import useModal from "src/utils/useModal.ts";
 
 const SessionItem = ({ session }: { session: Session }) => {
   const deleteChatHistoryModal = useModal();
@@ -91,7 +91,7 @@ const SessionItem = ({ session }: { session: Session }) => {
   };
 
   const handleDeleteSession = () => {
-    deleteSessionMutate(session.id.toString());
+    deleteSessionMutate(session.id);
   };
 
   return (

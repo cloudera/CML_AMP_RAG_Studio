@@ -36,7 +36,6 @@
  * DATA.
  ******************************************************************************/
 
-export const ragPath = "/api/v1/rag";
 export const llmServicePath = "/llm-service";
 
 export const paths = {

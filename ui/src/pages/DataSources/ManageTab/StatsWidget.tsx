@@ -36,28 +36,31 @@
  * DATA.
  ******************************************************************************/
 
-import { RagDocumentResponseType } from "src/api/ragDocumentsApi.ts";
-import { Card, Flex, Typography } from "antd";
-import { bytesConversion } from "src/utils/bytesConversion.ts";
 import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import { Card, Flex, Typography } from "antd";
 import { useGetDataSourceSummary } from "src/api/summaryApi.ts";
+import { DataSourceFile } from "src/services/api/api";
+import { bytesConversion } from "src/utils/bytesConversion.ts";
 
 const StatsWidget = ({
   ragDocuments,
   docsLoading,
   dataSourceId,
 }: {
-  ragDocuments: RagDocumentResponseType[];
+  ragDocuments: DataSourceFile[];
   docsLoading: boolean;
   dataSourceId: string;
 }) => {
   const completedIndexing = ragDocuments.filter(
-    (doc) => doc.vectorUploadTimestamp !== null,
+    (doc) => doc.vector_upload_timestamp !== null
   ).length;
-  const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
+  const totalSize = ragDocuments.reduce(
+    (acc, doc) => acc + doc.size_in_bytes,
+    0
+  );
 
   const docsSummarized = ragDocuments.find(
-    (doc) => doc.summaryCreationTimestamp !== null,
+    (doc) => doc.summary_creation_timestamp !== null
   );
 
   const shouldLoadSummary = !docsLoading && Boolean(docsSummarized);

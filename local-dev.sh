@@ -70,6 +70,14 @@ python -m pytest -sxvvra
 
 fastapi dev &
 
-# start up the jarva
-cd ../backend
-./gradlew --console=plain bootRun
+cd ..
+cd pybackend
+python3.10 -m venv venv
+source venv/bin/activate
+python -m pip install pdm
+pdm install
+./run.sh
+
+# # start up the jarva
+# cd ../backend
+# ./gradlew --console=plain bootRun

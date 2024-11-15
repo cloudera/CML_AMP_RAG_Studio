@@ -36,16 +36,16 @@
  * DATA.
  ******************************************************************************/
 
-import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
-import { useContext } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
-import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
-import EmptyChatState from "pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx";
-import NoSessionState from "../Placeholders/NoSessionState";
 import { useParams } from "@tanstack/react-router";
 import { Result } from "antd";
+import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
+import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
+import EmptyChatState from "pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx";
 import NoDataSourceForSession from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourceForSession.tsx";
+import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { useContext } from "react";
+import NoSessionState from "../Placeholders/NoSessionState";
 
 const ChatBodyController = () => {
   const {
@@ -82,7 +82,7 @@ const ChatBodyController = () => {
   }
 
   const currentDataSource = dataSources.find((dataSource) => {
-    return dataSource.id === activeSession?.dataSourceIds[0];
+    return dataSource.id === activeSession?.data_source_ids[0];
   });
 
   if (!currentDataSource) {

@@ -36,8 +36,6 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext, useState } from "react";
-import { Session } from "src/api/sessionApi.ts";
 import {
   ConfigProvider,
   Flex,
@@ -47,20 +45,22 @@ import {
   theme,
   Typography,
 } from "antd";
+import { ItemType } from "antd/lib/menu/interface";
+import { Dictionary } from "lodash";
+import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
+import { sessionItems } from "pages/RagChatTab/Sessions/SessionItems.tsx";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { useContext, useState } from "react";
+import Images from "src/components/images/Images.ts";
 import {
   cdlGray200,
   cdlGray800,
   cdlSlate800,
   cdlWhite,
 } from "src/cuix/variables.ts";
-import CreateSessionModal from "./CreateSessionModal";
-import { Dictionary } from "lodash";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { Session } from "src/services/api/api";
 import useModal from "src/utils/useModal.ts";
-import { sessionItems } from "pages/RagChatTab/Sessions/SessionItems.tsx";
-import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
-import { ItemType } from "antd/lib/menu/interface";
-import Images from "src/components/images/Images.ts";
+import CreateSessionModal from "./CreateSessionModal";
 import "./index.css";
 
 export type MenuItem = Required<MenuProps>["items"];

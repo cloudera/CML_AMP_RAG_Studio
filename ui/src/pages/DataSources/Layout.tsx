@@ -36,16 +36,17 @@
  * DATA.
  ******************************************************************************/
 
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 import { Layout, Typography } from "antd";
 import DataSourcesTabs from "pages/DataSources/Tabs.tsx";
-import { useQuery } from "@tanstack/react-query";
-import { DataSourceType, getDataSourceById } from "src/api/dataSourceApi.ts";
-import { useParams } from "@tanstack/react-router";
 import { createContext } from "react";
+import { getDataSourceById } from "src/api/dataSourceApi.ts";
+import { DataSource } from "src/services/api/api";
 
 export const DataSourceContext = createContext<{
   isLoading: boolean;
-  data?: DataSourceType;
+  data?: DataSource;
 }>({ isLoading: true, data: undefined });
 
 function DataSourceLayout() {
@@ -53,7 +54,7 @@ function DataSourceLayout() {
     from: "/_layout/data/_layout-datasources/$dataSourceId",
   });
   const { data, isPending, isLoading } = useQuery(
-    getDataSourceById(dataSourceId),
+    getDataSourceById(dataSourceId)
   );
 
   return (

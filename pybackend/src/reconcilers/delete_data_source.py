@@ -1,10 +1,14 @@
+import logging
 from typing import Set
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import DBConnectionProvider, transaction
+from src.log import setup_logger
 from src.python_migration.python_client import PythonClient
 from src.reconcilers.reconciler import Reconciler
+
+logger = setup_logger(__name__)
 
 
 class DeleteDataSourceReconciler(Reconciler):
@@ -14,7 +18,7 @@ class DeleteDataSourceReconciler(Reconciler):
         python_client: PythonClient,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client
 
@@ -36,5 +40,5 @@ class DeleteDataSourceReconciler(Reconciler):
                 )
                 for data_source_file in data_source_files:
                     DataSourceFileDAL.soft_delete_data_source_file(
-                        cursor, data_source_id, data_source_file.id
+                        cursor, data_source_file.id
                     )

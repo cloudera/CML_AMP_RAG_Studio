@@ -7,7 +7,9 @@ DataSource:
     - time_updated
     - created_by_id
     - updated_by_id
-    - configuration
+    - connection_type
+    - chunk_size
+    - chunk_overlap_percent
     - status
   properties:
     id:
@@ -31,29 +33,16 @@ DataSource:
     updated_by_id:
       type: string
       description: Data source updater ID
-    configuration:
-      type: object
-      required:
-        - connection_type
-        - chunk_size
-        - chunk_overlap_percent
-      properties:
-        connection_type:
-          type: string
-          description: Data source connection type
-          enum:
-            - MANUAL
-            - CDF
-            - API
-            - OTHER
-        chunk_size:
-          type: integer
-          format: int64
-          description: Data source chunk size
-        chunk_overlap_percent:
-          type: integer
-          format: int64
-          description: Data source chunk overlap percentage
+    connection_type:
+      $ref: "#/components/schemas/DataSourceConnectionType"
+    chunk_size:
+      type: integer
+      format: int64
+      description: Data source chunk size
+    chunk_overlap_percent:
+      type: integer
+      format: int64
+      description: Data source chunk overlap percentage
     status:
       type: object
       required:

@@ -10,7 +10,6 @@ from src.db.provider import (
 from src.openapi_server.apis.data_source_api_base import BaseDataSourceApi
 from src.openapi_server.impl.utils import raise_not_found_if_missing
 from src.openapi_server.models.data_source import DataSource
-from src.openapi_server.models.data_source_configuration import DataSourceConfiguration
 from src.openapi_server.models.data_source_create_request import DataSourceCreateRequest
 from src.openapi_server.models.data_source_list import DataSourceList
 from src.openapi_server.models.data_source_status import DataSourceStatus
@@ -25,14 +24,15 @@ class DataSourceApi:
         self,
         data_source_create_request: DataSourceCreateRequest,
     ) -> DataSource:
-        self._validate_configuration(data_source_create_request.configuration)
-
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 now = datetime.now()
                 user_id = ""
 
                 id = DataSourceDAL.next_id(cursor)
+                chunk_overlap_percent = (
+                    data_source_create_request.chunk_overlap_percent or 0
+                )
                 data_source = DataSource(
                     id=id,
                     name=data_source_create_request.name,
@@ -40,12 +40,15 @@ class DataSourceApi:
                     time_updated=now,
                     created_by_id=user_id,
                     updated_by_id=user_id,
-                    configuration=data_source_create_request.configuration,
+                    connection_type=data_source_create_request.connection_type,
+                    chunk_size=data_source_create_request.chunk_size,
+                    chunk_overlap_percent=chunk_overlap_percent,
                     status=DataSourceStatus(
                         document_count=0,
                         total_doc_size=0,
                     ),
                 )
+                self._validate_configuration(data_source)
                 DataSourceDAL.save_data_source(cursor, data_source)
                 return data_source
 
@@ -80,8 +83,6 @@ class DataSourceApi:
         data_source_id: int,
         data_source_update_request: DataSourceUpdateRequest,
     ) -> DataSource:
-        self._validate_configuration(data_source_update_request.configuration)
-
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 now = datetime.now()
@@ -93,15 +94,25 @@ class DataSourceApi:
                 )
                 if data_source_update_request.name is not None:
                     data_source.name = data_source_update_request.name
-                if data_source_update_request.configuration is not None:
-                    data_source.configuration = data_source_update_request.configuration
+                if data_source_update_request.connection_type is not None:
+                    data_source.connection_type = (
+                        data_source_update_request.connection_type
+                    )
+                if data_source_update_request.chunk_size is not None:
+                    data_source.chunk_size = data_source_update_request.chunk_size
+                if data_source_update_request.chunk_overlap_percent is not None:
+                    data_source.chunk_overlap_percent = (
+                        data_source_update_request.chunk_overlap_percent
+                    )
                 data_source.time_updated = now
                 data_source.updated_by_id = user_id
+                self._validate_configuration(data_source)
+
                 DataSourceDAL.save_data_source(cursor, data_source)
                 return data_source
 
-    def _validate_configuration(self, configuration: DataSourceConfiguration) -> None:
-        if configuration.chunk_size <= 0:
+    def _validate_configuration(self, data_source: DataSource) -> None:
+        if data_source.chunk_size <= 0:
             raise HTTPException(
                 status_code=400, detail="Chunk size must be greater than 0"
             )

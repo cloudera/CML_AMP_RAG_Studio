@@ -36,28 +36,29 @@
  * DATA.
  ******************************************************************************/
 
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 import { Divider, Flex, Layout } from "antd";
+import { format } from "date-fns";
+import { groupBy } from "lodash";
 import RagChat from "pages/RagChatTab/RagChat.tsx";
 import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
-import { getSessionsQueryOptions, Session } from "src/api/sessionApi.ts";
-import { groupBy } from "lodash";
-import { format } from "date-fns";
-import { useParams } from "@tanstack/react-router";
-import { useEffect, useState, useMemo } from "react";
-import { QueryConfiguration, useChatHistoryQuery } from "src/api/chatApi.ts";
 import {
   defaultQueryConfig,
   RagChatContext,
 } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { useEffect, useMemo, useState } from "react";
+import { QueryConfiguration, useChatHistoryQuery } from "src/api/chatApi.ts";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { Session } from "src/services/api/api";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
 };
 
 const getDataSourceIdForSession = (session?: Session) => {
-  return session?.dataSourceIds[0];
+  return session?.data_source_ids[0];
 };
 
 function ChatLayout() {
@@ -71,11 +72,12 @@ function ChatLayout() {
   const [queryConfiguration, setQueryConfiguration] =
     useState<QueryConfiguration>(defaultQueryConfig);
   const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery(
-    sessionId?.toString() ?? "",
+    sessionId?.toString() ?? ""
   );
   const dataSourceSize = useMemo(() => {
     return (
-      dataSources?.find((ds) => ds.id === dataSourceId)?.totalDocSize ?? null
+      dataSources?.find((ds) => ds.id === dataSourceId)?.status
+        .total_doc_size ?? null
     );
   }, [dataSources, dataSourceId]);
 
@@ -84,8 +86,8 @@ function ChatLayout() {
   }, [sessionId]);
 
   const sessionsByDate = groupBy(sessions, (session) => {
-    const relevantTime = session.lastInteractionTime || session.timeUpdated;
-    return format(relevantTime * 1000, "yyyyMMdd");
+    const relevantTime = session.last_interaction_time || session.time_updated;
+    return format(new Date(relevantTime), "yyyyMMdd");
   });
 
   return (

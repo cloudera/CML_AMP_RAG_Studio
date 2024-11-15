@@ -36,12 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Table, TableProps, Tooltip } from "antd";
 import { Link } from "@tanstack/react-router";
-import { ConnectionType, DataSourceType } from "src/api/dataSourceApi.ts";
+import { Flex, Table, TableProps, Tooltip } from "antd";
 import ProductDataFlowLg from "src/cuix/icons/ProductDataFlowLgIcon";
+import { DataSource, DataSourceConnectionType } from "src/services/api/api";
 
-const columns: TableProps<DataSourceType>["columns"] = [
+const columns: TableProps<DataSource>["columns"] = [
   {
     title: "ID",
     dataIndex: "id",
@@ -65,10 +65,10 @@ const columns: TableProps<DataSourceType>["columns"] = [
   },
   {
     title: "Connection",
-    dataIndex: "connectionType",
-    key: "connectionType",
+    dataIndex: "connection_type",
+    key: "connection_type",
     render: (connectionType) => {
-      return connectionType === ConnectionType[ConnectionType.CDF] ? (
+      return connectionType === DataSourceConnectionType.Cdf ? (
         <Flex style={{ height: "100%" }}>
           <Tooltip title="Cloudera DataFlow">
             <ProductDataFlowLg fontSize={25} />
@@ -84,7 +84,7 @@ const DataSourcesTable = ({
   dataSources,
   dataSourcesLoading,
 }: {
-  dataSources?: DataSourceType[];
+  dataSources?: DataSource[];
   dataSourcesLoading: boolean;
 }) => {
   return (

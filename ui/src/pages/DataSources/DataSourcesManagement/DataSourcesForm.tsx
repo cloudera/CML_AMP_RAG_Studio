@@ -37,10 +37,14 @@
  ******************************************************************************/
 
 import { Collapse, Form, FormInstance, Input, InputNumber, Select } from "antd";
-import { ConnectionType, DataSourceBaseType } from "src/api/dataSourceApi";
 import RequestConfigureOptions from "pages/DataSources/DataSourcesManagement/RequestConfigureOptions.tsx";
-import { Model, useGetEmbeddingModels } from "src/api/modelsApi.ts";
 import { useEffect } from "react";
+import { Model, useGetEmbeddingModels } from "src/api/modelsApi.ts";
+import {
+  DataSource,
+  DataSourceConnectionType,
+  DataSourceCreateRequest,
+} from "src/services/api/api";
 
 export const distanceMetricOptions = [
   {
@@ -56,22 +60,22 @@ export const distanceMetricOptions = [
 
 export const connectionsOptions = [
   {
-    value: ConnectionType.MANUAL,
+    value: DataSourceConnectionType.Manual,
     label: "Manual",
   },
   {
-    value: ConnectionType.CDF,
+    value: DataSourceConnectionType.Cdf,
     label: "CDF",
   },
   {
-    value: ConnectionType.API,
+    value: DataSourceConnectionType.Api,
     label: "Custom API",
   },
 ];
 
 export const advancedOptions = (
   updateMode: DataSourcesFormProps["updateMode"],
-  initialValues: DataSourcesFormProps["initialValues"],
+  initialValues: DataSourcesFormProps["initialValues"]
 ) => [
   {
     key: "1",
@@ -86,9 +90,9 @@ export const advancedOptions = (
           <Select options={distanceMetricOptions} disabled={updateMode} />
         </Form.Item>
         <Form.Item
-          name="chunkOverlapPercent"
+          name="chunk_overlap_percent"
           label="Chunk overlap"
-          initialValue={initialValues.chunkOverlapPercent}
+          initialValue={initialValues.chunk_overlap_percent}
           rules={[{ required: true }]}
         >
           <InputNumber<number>
@@ -104,19 +108,19 @@ export const advancedOptions = (
   },
 ];
 
-export const dataSourceCreationInitialValues = {
+export const dataSourceCreationInitialValues: DataSourceCreateRequest = {
   name: "",
-  chunkSize: 512,
-  connectionType: ConnectionType.MANUAL,
-  chunkOverlapPercent: 0,
+  chunk_size: 512,
+  connection_type: DataSourceConnectionType.Manual,
+  chunk_overlap_percent: 0,
 };
 
 export interface DataSourcesFormProps {
   form: FormInstance;
   updateMode: boolean;
   initialValues: Pick<
-    DataSourceBaseType,
-    "name" | "chunkSize" | "connectionType" | "chunkOverlapPercent"
+    DataSource,
+    "name" | "chunk_size" | "connection_type" | "chunk_overlap_percent"
   >;
 }
 
@@ -163,9 +167,9 @@ const DataSourcesForm = ({
         <Input />
       </Form.Item>
       <Form.Item
-        name="chunkSize"
+        name="chunk_size"
         label="Chunk size (tokens)"
-        initialValue={initialValues.chunkSize}
+        initialValue={initialValues.chunk_size}
         rules={[{ required: true }]}
       >
         <Select
@@ -195,9 +199,9 @@ const DataSourcesForm = ({
         />
       </Form.Item>
       <Form.Item
-        name="connectionType"
+        name="connection_type"
         label="Connection"
-        initialValue={initialValues.connectionType}
+        initialValue={initialValues.connection_type}
       >
         <Select options={connectionsOptions} />
       </Form.Item>

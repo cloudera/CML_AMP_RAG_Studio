@@ -38,46 +38,17 @@
 
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import {
-  deleteRequest,
-  getRequest,
   MutationKeys,
-  paths,
-  postRequest,
   QueryKeys,
-  ragPath,
-  UseMutationType,
+  UseMutationType
 } from "src/api/utils.ts";
-
-export interface CreateDataSourceType {
-  name: string;
-  chunkSize: number;
-  chunkOverlapPercent: number;
-}
-
-export enum ConnectionType {
-  "MANUAL" = "MANUAL",
-  "CDF" = "CDF",
-  "API" = "API",
-  "OTHER" = "OTHER",
-}
-
-export interface DataSourceBaseType {
-  id: number;
-  name: string;
-  chunkSize: number;
-  chunkOverlapPercent: number;
-  connectionType: ConnectionType;
-}
-
-export type DataSourceType = DataSourceBaseType & {
-  totalDocSize: number | null;
-  documentCount: number;
-};
+import { DataSource, DataSourceCreateRequest, DataSourceUpdateRequest } from "src/services/api/api";
+import { dataSourceApi } from "src/services/api_config";
 
 export const useCreateDataSourceMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<DataSourceBaseType>) => {
+}: UseMutationType<DataSource>) => {
   return useMutation({
     mutationKey: [MutationKeys.createDataSource],
     mutationFn: createDataSourceMutation,
@@ -87,15 +58,15 @@ export const useCreateDataSourceMutation = ({
 };
 
 const createDataSourceMutation = async (
-  dataSource: CreateDataSourceType,
-): Promise<DataSourceBaseType> => {
-  return await postRequest(`${ragPath}/${paths.dataSources}`, dataSource);
+  request: DataSourceCreateRequest
+): Promise<DataSource> => {
+  return (await dataSourceApi.createDataSource(request)).data;
 };
 
 export const useUpdateDataSourceMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<DataSourceBaseType>) => {
+}: UseMutationType<DataSource>) => {
   return useMutation({
     mutationKey: [MutationKeys.updateDataSource],
     mutationFn: updateDataSourceMutation,
@@ -105,12 +76,15 @@ export const useUpdateDataSourceMutation = ({
 };
 
 const updateDataSourceMutation = async (
-  dataSource: DataSourceBaseType,
-): Promise<DataSourceBaseType> => {
-  return await postRequest(
-    `${ragPath}/${paths.dataSources}/${dataSource.id.toString()}`,
-    dataSource,
-  );
+  {
+    id,
+    request,
+  }: {
+    id: number;
+    request: DataSourceUpdateRequest;
+  }
+): Promise<DataSource> => {
+  return (await dataSourceApi.updateDataSource(id, request)).data;
 };
 
 export const useGetDataSourcesQuery = () => {
@@ -120,7 +94,7 @@ export const useGetDataSourcesQuery = () => {
       const res = await getDataSourcesQuery();
 
       return res
-        .map((source: DataSourceType) => ({ ...source, key: source.id }))
+        .map((source: DataSource) => ({ ...source, key: source.id }))
         .reverse();
     },
   });
@@ -132,16 +106,16 @@ export const getDataSourcesQueryOptions = queryOptions({
     const res = await getDataSourcesQuery();
 
     return res
-      .map((source: DataSourceType) => ({ ...source, key: source.id }))
+      .map((source: DataSource) => ({ ...source, key: source.id }))
       .reverse();
   },
 });
 
-const getDataSourcesQuery = async (): Promise<DataSourceType[]> => {
-  return await getRequest(`${ragPath}/${paths.dataSources}`);
+const getDataSourcesQuery = async (): Promise<DataSource[]> => {
+  return (await dataSourceApi.listDataSources()).data.items;
 };
 
-export const getDataSourceById = (dataSourceId: string) => {
+export const getDataSourceById = (dataSourceId: number | string) => {
   return queryOptions({
     queryKey: [QueryKeys.getDataSourceById, { dataSourceId }],
     queryFn: () => getDataSourceByIdQuery(dataSourceId),
@@ -149,21 +123,24 @@ export const getDataSourceById = (dataSourceId: string) => {
 };
 
 const getDataSourceByIdQuery = async (
-  dataSourceId: string,
-): Promise<DataSourceType> => {
-  return await getRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
+  dataSourceId: number | string,
+): Promise<DataSource> => {
+  const id = typeof dataSourceId === 'string' ? parseInt(dataSourceId, 10) : dataSourceId;
+  return (await dataSourceApi.getDataSource(id)).data;
 };
 
 export const getCdfConfigQuery = async (
-  dataSourceId: string,
+  dataSourceId: number | string,
 ): Promise<string> => {
-  return await getRequest(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/nifiConfig?ragStudioUrl=${window.location.origin}`,
-  );
+  const id = typeof dataSourceId === 'string' ? parseInt(dataSourceId, 10) : dataSourceId;
+  return id.toString(); // TODO: Implement
+  // return await getRequest(
+  //   `${ragPath}/${paths.dataSources}/${dataSourceId}/nifiConfig?ragStudioUrl=${window.location.origin}`,
+  // );
 };
 
 export const deleteDataSourceMutation = async (
-  dataSourceId: string,
+  dataSourceId: number,
 ): Promise<void> => {
-  await deleteRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
+  await dataSourceApi.deleteDataSource(dataSourceId);
 };

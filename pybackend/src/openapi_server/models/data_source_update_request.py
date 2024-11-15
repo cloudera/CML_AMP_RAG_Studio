@@ -17,9 +17,9 @@ import re  # noqa: F401
 import json
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from src.openapi_server.models.data_source_configuration import DataSourceConfiguration
+from src.openapi_server.models.data_source_connection_type import DataSourceConnectionType
 
 try:
     from typing import Self
@@ -33,8 +33,19 @@ class DataSourceUpdateRequest(BaseModel):
     """  # noqa: E501
 
     name: Optional[StrictStr] = Field(default=None, description="Data source name")
-    configuration: Optional[DataSourceConfiguration] = None
-    __properties: ClassVar[List[str]] = ["name", "configuration"]
+    connection_type: Optional[DataSourceConnectionType] = None
+    chunk_size: Optional[StrictInt] = Field(
+        default=None, description="Data source chunk size"
+    )
+    chunk_overlap_percent: Optional[StrictInt] = Field(
+        default=None, description="Data source chunk overlap percentage"
+    )
+    __properties: ClassVar[List[str]] = [
+        "name",
+        "connection_type",
+        "chunk_size",
+        "chunk_overlap_percent",
+    ]
 
     model_config = {
         "populate_by_name": True,
@@ -71,9 +82,6 @@ class DataSourceUpdateRequest(BaseModel):
             exclude={},
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of configuration
-        if self.configuration:
-            _dict["configuration"] = self.configuration.to_dict()
         return _dict
 
     @classmethod
@@ -88,11 +96,9 @@ class DataSourceUpdateRequest(BaseModel):
         _obj = cls.model_validate(
             {
                 "name": obj.get("name"),
-                "configuration": DataSourceConfiguration.from_dict(
-                    obj.get("configuration")
-                )
-                if obj.get("configuration") is not None
-                else None,
+                "connection_type": obj.get("connection_type"),
+                "chunk_size": obj.get("chunk_size"),
+                "chunk_overlap_percent": obj.get("chunk_overlap_percent"),
             }
         )
         return _obj

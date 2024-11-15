@@ -36,18 +36,16 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Form, Modal } from "antd";
-import { Dispatch, SetStateAction, useContext } from "react";
-import CreateSessionForm from "./CreateSessionForm";
-import messageQueue from "src/utils/messageQueue";
-import {
-  CreateSessionRequest,
-  useCreateSessionMutation,
-} from "src/api/sessionApi";
 import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "src/api/utils";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useNavigate } from "@tanstack/react-router";
+import { Button, Form, Modal } from "antd";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { Dispatch, SetStateAction, useContext } from "react";
+import { useCreateSessionMutation } from "src/api/sessionApi";
+import { QueryKeys } from "src/api/utils";
+import { SessionCreateRequest } from "src/services/api/api";
+import messageQueue from "src/utils/messageQueue";
+import CreateSessionForm from "./CreateSessionForm";
 
 export interface CreateSessionType {
   name: string;
@@ -92,9 +90,9 @@ const CreateSessionModal = ({
     form
       .validateFields()
       .then((values) => {
-        const responseBody: CreateSessionRequest = {
+        const responseBody: SessionCreateRequest = {
           name: values.name,
-          dataSourceIds: [values.dataSourceId],
+          data_source_ids: [values.dataSourceId],
         };
         createSessionMutation(responseBody);
       })

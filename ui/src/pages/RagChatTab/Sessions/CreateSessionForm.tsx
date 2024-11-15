@@ -37,12 +37,12 @@
  ******************************************************************************/
 
 import { Form, FormInstance, Input, Select } from "antd";
-import { DataSourceType } from "src/api/dataSourceApi.ts";
 import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
+import { DataSource } from "src/services/api/api";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
-  dataSources?: DataSourceType[];
+  dataSources?: DataSource[];
 }
 
 const layout = {
@@ -51,7 +51,7 @@ const layout = {
 };
 
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
-  const formatDataSource = (value: DataSourceType) => {
+  const formatDataSource = (value: DataSource) => {
     return {
       ...value,
       label: value.name,
@@ -68,7 +68,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       onValuesChange={(changedValues: CreateSessionType, allValues) => {
         if (changedValues.dataSourceId && !allValues.name) {
           const dataSource = dataSources?.find(
-            (value) => value.id === changedValues.dataSourceId,
+            (value) => value.id === changedValues.dataSourceId
           );
           form.setFieldsValue({
             name: dataSource?.name,

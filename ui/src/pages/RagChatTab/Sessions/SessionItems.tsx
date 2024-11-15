@@ -36,14 +36,14 @@
  * DATA.
  ******************************************************************************/
 
-import { Dictionary } from "lodash";
-import { Session } from "src/api/sessionApi.ts";
 import { useNavigate } from "@tanstack/react-router";
-import { ItemType } from "antd/lib/menu/interface";
 import { Typography } from "antd";
+import { ItemType } from "antd/lib/menu/interface";
 import { parse } from "date-fns";
+import { Dictionary } from "lodash";
 import SessionItem from "pages/RagChatTab/Sessions/SessionItem.tsx";
 import { MenuItem } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
+import { Session } from "src/services/api/api";
 
 export const sessionItems = (sessions: Dictionary<Session[]>): MenuItem => {
   const navigate = useNavigate();

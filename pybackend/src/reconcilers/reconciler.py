@@ -1,3 +1,4 @@
+import logging
 import queue
 import threading
 import time
@@ -9,7 +10,10 @@ T = TypeVar("T")
 
 
 class Reconciler(Generic[T]):
-    def __init__(self, batch_size: int = 100, resync_interval: int = 5):
+    def __init__(
+        self, logger: logging.Logger, batch_size: int = 100, resync_interval: int = 5
+    ):
+        self.logger = logger
         self.pending_items = set()
         self.running_items = set()
         self.lock = threading.Lock()
@@ -64,3 +68,5 @@ class Reconciler(Generic[T]):
                 # Reconcile the items in parallel and wait for them to finish
                 with ThreadPoolExecutor(max_workers=self.batch_size) as executor:
                     executor.map(self._reconcile_item, items)
+            else:
+                time.sleep(1)

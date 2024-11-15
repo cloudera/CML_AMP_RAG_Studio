@@ -39,26 +39,14 @@
 import { queryOptions, useMutation } from "@tanstack/react-query";
 import {
   deleteRequest,
-  getRequest,
   llmServicePath,
   MutationKeys,
   paths,
-  postRequest,
   QueryKeys,
-  ragPath,
-  UseMutationType,
+  UseMutationType
 } from "src/api/utils.ts";
-
-export interface Session {
-  id: number;
-  name: string;
-  dataSourceIds: number[];
-  timeCreated: number;
-  timeUpdated: number;
-  createdById: string;
-  updatedById: string;
-  lastInteractionTime: number;
-}
+import { Session, SessionCreateRequest } from "src/services/api/api";
+import { sessionApi } from "src/services/api_config";
 
 export const getSessionsQueryOptions = queryOptions({
   queryKey: [QueryKeys.getSessions],
@@ -66,13 +54,8 @@ export const getSessionsQueryOptions = queryOptions({
 });
 
 export const getSessionsQuery = async (): Promise<Session[]> => {
-  return await getRequest(`${ragPath}/${paths.sessions}`);
+  return (await sessionApi.listSessions()).data.items;
 };
-
-export interface CreateSessionRequest {
-  name: string;
-  dataSourceIds: number[];
-}
 
 export const useCreateSessionMutation = ({
   onSuccess,
@@ -87,9 +70,9 @@ export const useCreateSessionMutation = ({
 };
 
 const createSessionMutation = async (
-  request: CreateSessionRequest,
+  request: SessionCreateRequest,
 ): Promise<Session> => {
-  return await postRequest(`${ragPath}/${paths.sessions}`, request);
+  return (await sessionApi.createSession(request)).data;
 };
 
 export const useDeleteSessionMutation = ({
@@ -105,9 +88,9 @@ export const useDeleteSessionMutation = ({
 };
 
 export const deleteSessionMutation = async (
-  sessionId: string,
+  sessionId: number,
 ): Promise<void> => {
-  await deleteRequest(`${ragPath}/${paths.sessions}/${sessionId}`);
+  await sessionApi.deleteSession(sessionId);
 };
 
 export const useDeleteChatHistoryMutation = ({

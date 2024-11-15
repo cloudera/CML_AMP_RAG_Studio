@@ -1,4 +1,5 @@
 import os
+import tempfile
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -25,7 +26,7 @@ class DataSourceFilesApiConfig:
     s3_path_prefix: str
 
 
-class DataSourceFilesApi(BaseDataSourceFilesApi):
+class DataSourceFilesApi:
     def __init__(
         self,
         db_connection_provider: DBConnectionProvider,
@@ -54,14 +55,10 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
                     f"Data source with id {data_source_id} not found",
                 )
                 data_source_file = raise_not_found_if_missing(
-                    DataSourceFileDAL.get_data_source_file(
-                        cursor, data_source_id, file_id
-                    ),
+                    DataSourceFileDAL.get_data_source_file(cursor, file_id),
                     f"Data source file with id {file_id} not found",
                 )
-                DataSourceFileDAL.soft_delete_data_source_file(
-                    cursor, data_source_id, file_id
-                )
+                DataSourceFileDAL.soft_delete_data_source_file(cursor, file_id)
 
                 data_source.status.document_count -= 1
                 data_source.status.total_doc_size -= data_source_file.size_in_bytes
@@ -77,9 +74,7 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 return raise_not_found_if_missing(
-                    DataSourceFileDAL.get_data_source_file(
-                        cursor, data_source_id, file_id
-                    ),
+                    DataSourceFileDAL.get_data_source_file(cursor, file_id),
                     f"Data source file with id {file_id} not found",
                 )
 
@@ -115,7 +110,10 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
         s3_path = self._s3_path(data_source_id, id)
 
         # Upload file to S3
-        self.s3_client.upload_fileobj(file.file, self.config.bucket_name, s3_path)
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        with open(temp_file.name, "wb") as f:
+            f.write(file.file.read())
+        self.s3_client.upload_file(temp_file.name, self.config.bucket_name, s3_path)
 
         # Save file metadata to DB
         with self.db_connection_provider.connection() as connection:
@@ -167,9 +165,7 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
                     f"Data source with id {data_source_id} not found",
                 )
                 data_source_file = raise_not_found_if_missing(
-                    DataSourceFileDAL.get_data_source_file(
-                        cursor, data_source_id, file_id
-                    ),
+                    DataSourceFileDAL.get_data_source_file(cursor, file_id),
                     f"Data source file with id {file_id} not found",
                 )
 

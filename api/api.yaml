@@ -328,7 +328,9 @@ components:
         - time_updated
         - created_by_id
         - updated_by_id
-        - configuration
+        - connection_type
+        - chunk_size
+        - chunk_overlap_percent
         - status
       properties:
         id:
@@ -352,29 +354,16 @@ components:
         updated_by_id:
           type: string
           description: Data source updater ID
-        configuration:
-          type: object
-          required:
-            - connection_type
-            - chunk_size
-            - chunk_overlap_percent
-          properties:
-            connection_type:
-              type: string
-              description: Data source connection type
-              enum:
-                - MANUAL
-                - CDF
-                - API
-                - OTHER
-            chunk_size:
-              type: integer
-              format: int64
-              description: Data source chunk size
-            chunk_overlap_percent:
-              type: integer
-              format: int64
-              description: Data source chunk overlap percentage
+        connection_type:
+          $ref: "#/components/schemas/DataSourceConnectionType"
+        chunk_size:
+          type: integer
+          format: int64
+          description: Data source chunk size
+        chunk_overlap_percent:
+          type: integer
+          format: int64
+          description: Data source chunk overlap percentage
         status:
           type: object
           required:
@@ -390,38 +379,35 @@ components:
               format: int64
               description: Total size of documents in the data source in bytes
 
+    DataSourceConnectionType:
+      type: string
+      description: Data source connection type
+      enum:
+        - MANUAL
+        - CDF
+        - API
+        - OTHER
+
     DataSourceCreateRequest:
       type: object
       required:
         - name
-        - configuration
+        - connection_type
+        - chunk_size
       properties:
         name:
           type: string
           description: Data source name
-        configuration:
-          type: object
-          required:
-            - connection_type
-            - chunk_size
-            - chunk_overlap_percent
-          properties:
-            connection_type:
-              type: string
-              description: Data source connection type
-              enum:
-                - MANUAL
-                - CDF
-                - API
-                - OTHER
-            chunk_size:
-              type: integer
-              format: int64
-              description: Data source chunk size
-            chunk_overlap_percent:
-              type: integer
-              format: int64
-              description: Data source chunk overlap percentage
+        connection_type:
+          $ref: "#/components/schemas/DataSourceConnectionType"
+        chunk_size:
+          type: integer
+          format: int64
+          description: Data source chunk size
+        chunk_overlap_percent:
+          type: integer
+          format: int64
+          description: Data source chunk overlap percentage
 
     DataSourceFile:
       type: object
@@ -511,29 +497,16 @@ components:
         name:
           type: string
           description: Data source name
-        configuration:
-          type: object
-          required:
-            - connection_type
-            - chunk_size
-            - chunk_overlap_percent
-          properties:
-            connection_type:
-              type: string
-              description: Data source connection type
-              enum:
-                - MANUAL
-                - CDF
-                - API
-                - OTHER
-            chunk_size:
-              type: integer
-              format: int64
-              description: Data source chunk size
-            chunk_overlap_percent:
-              type: integer
-              format: int64
-              description: Data source chunk overlap percentage
+        connection_type:
+          $ref: "#/components/schemas/DataSourceConnectionType"
+        chunk_size:
+          type: integer
+          format: int64
+          description: Data source chunk size
+        chunk_overlap_percent:
+          type: integer
+          format: int64
+          description: Data source chunk overlap percentage
 
     Session:
       type: object

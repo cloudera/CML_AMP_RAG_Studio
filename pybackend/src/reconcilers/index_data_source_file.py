@@ -1,9 +1,11 @@
+import logging
 from datetime import datetime
 from typing import Optional
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import DBConnectionProvider, transaction
+from src.log import setup_logger
 from src.openapi_server.models.data_source_file import DataSourceFile
 from src.python_migration.python_client import (
     IndexConfiguration,
@@ -11,6 +13,8 @@ from src.python_migration.python_client import (
     PythonClient,
 )
 from src.reconcilers.reconciler import Reconciler
+
+logger = setup_logger(__name__)
 
 
 class IndexDataSourceFileReconciler(Reconciler):
@@ -21,26 +25,28 @@ class IndexDataSourceFileReconciler(Reconciler):
         s3_bucket_name: str,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client
         self.s3_bucket_name = s3_bucket_name
 
     def resync(self) -> None:
+        logger.info("Resyncing data source files")
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                data_source_files = (
-                    DataSourceFileDAL.get_soft_deleted_data_source_files(cursor)
-                )
+                data_source_files = DataSourceFileDAL.list_data_source_files(cursor)
                 for data_source_file in data_source_files:
-                    self.submit(data_source_file.id)
+                    if data_source_file.vector_upload_timestamp is None:
+                        self.submit(data_source_file.id)
 
-    def reconcile(self, data_source_file_id: int) -> None:
+    def reconcile(self, data_source_file_id: str) -> None:
+        logger.info(f"Indexing data source file {data_source_file_id}")
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 data_source_file: Optional[DataSourceFile] = (
                     DataSourceFileDAL.get_data_source_file(cursor, data_source_file_id)
                 )
+                logger.info(f"Data source file: {data_source_file}")
                 if data_source_file is None:
                     return
                 data_source = DataSourceDAL.get_data_source(
@@ -50,6 +56,8 @@ class IndexDataSourceFileReconciler(Reconciler):
                     return
                 if data_source_file.vector_upload_timestamp is not None:
                     return
+
+        logger.info(f"Sending to python client: {data_source_file.s3_path}")
 
         self.python_client.index_file(
             IndexRequest(

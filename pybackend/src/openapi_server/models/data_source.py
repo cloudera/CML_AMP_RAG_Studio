@@ -20,7 +20,7 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List
-from src.openapi_server.models.data_source_configuration import DataSourceConfiguration
+from src.openapi_server.models.data_source_connection_type import DataSourceConnectionType
 from src.openapi_server.models.data_source_status import DataSourceStatus
 
 try:
@@ -40,7 +40,11 @@ class DataSource(BaseModel):
     time_updated: datetime = Field(description="Data source update timestamp")
     created_by_id: StrictStr = Field(description="Data source creator ID")
     updated_by_id: StrictStr = Field(description="Data source updater ID")
-    configuration: DataSourceConfiguration
+    connection_type: DataSourceConnectionType
+    chunk_size: StrictInt = Field(description="Data source chunk size")
+    chunk_overlap_percent: StrictInt = Field(
+        description="Data source chunk overlap percentage"
+    )
     status: DataSourceStatus
     __properties: ClassVar[List[str]] = [
         "id",
@@ -49,7 +53,9 @@ class DataSource(BaseModel):
         "time_updated",
         "created_by_id",
         "updated_by_id",
-        "configuration",
+        "connection_type",
+        "chunk_size",
+        "chunk_overlap_percent",
         "status",
     ]
 
@@ -88,9 +94,6 @@ class DataSource(BaseModel):
             exclude={},
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of configuration
-        if self.configuration:
-            _dict["configuration"] = self.configuration.to_dict()
         # override the default output from pydantic by calling `to_dict()` of status
         if self.status:
             _dict["status"] = self.status.to_dict()
@@ -113,11 +116,9 @@ class DataSource(BaseModel):
                 "time_updated": obj.get("time_updated"),
                 "created_by_id": obj.get("created_by_id"),
                 "updated_by_id": obj.get("updated_by_id"),
-                "configuration": DataSourceConfiguration.from_dict(
-                    obj.get("configuration")
-                )
-                if obj.get("configuration") is not None
-                else None,
+                "connection_type": obj.get("connection_type"),
+                "chunk_size": obj.get("chunk_size"),
+                "chunk_overlap_percent": obj.get("chunk_overlap_percent"),
                 "status": DataSourceStatus.from_dict(obj.get("status"))
                 if obj.get("status") is not None
                 else None,

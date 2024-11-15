@@ -37,6 +37,13 @@
  ******************************************************************************/
 
 import {
+  CheckCircleOutlined,
+  DeleteOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
+import {
   Button,
   Flex,
   Modal,
@@ -46,26 +53,19 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import { useParams } from "@tanstack/react-router";
+import StatsWidget from "pages/DataSources/ManageTab/StatsWidget.tsx";
+import { useState } from "react";
 import {
-  CheckCircleOutlined,
-  DeleteOutlined,
-  LoadingOutlined,
-} from "@ant-design/icons";
-import {
-  RagDocumentResponseType,
   useDeleteDocumentMutation,
   useGetRagDocuments,
 } from "src/api/ragDocumentsApi.ts";
-import { bytesConversion } from "src/utils/bytesConversion.ts";
-import StatsWidget from "pages/DataSources/ManageTab/StatsWidget.tsx";
+import { useGetDocumentSummary } from "src/api/summaryApi.ts";
+import { QueryKeys } from "src/api/utils.ts";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
-import { useGetDocumentSummary } from "src/api/summaryApi.ts";
-import { useState } from "react";
+import { DataSourceFile } from "src/services/api/api";
+import { bytesConversion } from "src/utils/bytesConversion.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
 
 function SummaryPopover({
@@ -98,19 +98,19 @@ function SummaryPopover({
 
 const columns = (
   dataSourceId: string,
-  handleDeleteFile: (document: RagDocumentResponseType) => void,
-): TableProps<RagDocumentResponseType>["columns"] => [
+  handleDeleteFile: (document: DataSourceFile) => void
+): TableProps<DataSourceFile>["columns"] => [
   {
     title: <AiAssistantIcon />,
-    dataIndex: "summaryCreationTimestamp",
-    key: "summaryCreationTimestamp",
+    dataIndex: "summary_creation_timestamp",
+    key: "summary_creation_timestamp",
     render: (timestamp: number | null, data) => {
       return timestamp == null ? (
         <LoadingOutlined spin />
       ) : (
         <SummaryPopover
           dataSourceId={dataSourceId}
-          docId={data.documentId}
+          docId={data.document_id}
           timestamp={timestamp}
         />
       );
@@ -121,14 +121,14 @@ const columns = (
     dataIndex: "filename",
     key: "filename",
     showSorterTooltip: false,
-    sorter: (a, b) => a.filename.localeCompare(b.filename),
+    sorter: (a: DataSourceFile, b: DataSourceFile) =>
+      a.filename.localeCompare(b.filename),
   },
   {
     title: "Size",
-    dataIndex: "sizeInBytes",
-    key: "sizeInBytes",
-    render: (sizeInBytes: RagDocumentResponseType["sizeInBytes"]) =>
-      bytesConversion(sizeInBytes.toString()),
+    dataIndex: "size_in_bytes",
+    key: "size_in_bytes",
+    render: (sizeInBytes: number) => bytesConversion(sizeInBytes.toString()),
   },
   {
     title: "Extension",
@@ -137,19 +137,18 @@ const columns = (
   },
   {
     title: "Creation date",
-    dataIndex: "timeCreated",
-    key: "timeCreated",
+    dataIndex: "time_created",
+    key: "time_created",
     showSorterTooltip: false,
-    sorter: (a, b) => {
-      return a.timeCreated - b.timeCreated;
-    },
+    sorter: (a: DataSourceFile, b: DataSourceFile) =>
+      a.time_created.localeCompare(b.time_created),
     defaultSortOrder: "descend",
     render: (timestamp) => new Date(timestamp * 1000).toLocaleString(),
   },
   {
     title: <Tooltip title="Document indexing complete">Ready</Tooltip>,
-    dataIndex: "vectorUploadTimestamp",
-    key: "vectorUploadTimestamp",
+    dataIndex: "vector_upload_timestamp",
+    key: "vector_upload_timestamp",
     render: (timestamp?: number) =>
       timestamp == null ? <LoadingOutlined spin /> : <CheckCircleOutlined />,
   },
@@ -173,8 +172,7 @@ const UploadedFilesTable = () => {
   const dataSourceId = useParams({
     from: "/_layout/data/_layout-datasources/$dataSourceId",
   }).dataSourceId;
-  const [selectedDocument, setSelectedDocument] =
-    useState<RagDocumentResponseType>();
+  const [selectedDocument, setSelectedDocument] = useState<DataSourceFile>();
   const deleteConfirmationModal = useModal();
   const queryClient = useQueryClient();
   const getRagDocuments = useGetRagDocuments(dataSourceId);
@@ -207,11 +205,11 @@ const UploadedFilesTable = () => {
 
     deleteDocumentMutation.mutate({
       id: selectedDocument.id,
-      dataSourceId: selectedDocument.dataSourceId.toString(),
+      dataSourceId: selectedDocument.data_source_id,
     });
   };
 
-  const handleDeleteFileModal = (document: RagDocumentResponseType) => {
+  const handleDeleteFileModal = (document: DataSourceFile) => {
     setSelectedDocument(document);
     deleteConfirmationModal.setIsModalOpen(true);
   };
@@ -228,7 +226,7 @@ const UploadedFilesTable = () => {
         docsLoading={docsLoading}
         dataSourceId={dataSourceId}
       />
-      <Table<RagDocumentResponseType>
+      <Table<DataSourceFile>
         loading={docsLoading}
         dataSource={ragDocuments}
         columns={columns(dataSourceId, handleDeleteFileModal)}

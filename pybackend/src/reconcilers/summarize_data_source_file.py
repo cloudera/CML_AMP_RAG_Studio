@@ -1,15 +1,19 @@
+import logging
 from datetime import datetime
 from typing import Optional
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import DBConnectionProvider, transaction
+from src.log import setup_logger
 from src.openapi_server.models.data_source_file import DataSourceFile
 from src.python_migration.python_client import (
     PythonClient,
     SummaryRequest,
 )
 from src.reconcilers.reconciler import Reconciler
+
+logger = setup_logger(__name__)
 
 
 class SummarizeDataSourceFileReconciler(Reconciler):
@@ -20,7 +24,7 @@ class SummarizeDataSourceFileReconciler(Reconciler):
         s3_bucket_name: str,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client
         self.s3_bucket_name = s3_bucket_name

@@ -36,11 +36,10 @@
  * DATA.
  ******************************************************************************/
 
-import { createContext, Dispatch, SetStateAction } from "react";
 import { ResponseSynthesizerOptions } from "pages/RagChatTab/Constants/ResponseSynthesizerModelOptions.ts";
+import { createContext, Dispatch, SetStateAction } from "react";
 import { ChatMessageType, QueryConfiguration } from "src/api/chatApi.ts";
-import { Session } from "src/api/sessionApi.ts";
-import { DataSourceType } from "src/api/dataSourceApi.ts";
+import { DataSource, Session } from "src/services/api/api";
 
 export interface RagChatContextType {
   dataSourceId?: number;
@@ -53,7 +52,7 @@ export interface RagChatContextType {
   dataSourceSize: number | null;
   dataSourcesStatus?: "error" | "success" | "pending";
   activeSession?: Session;
-  dataSources: DataSourceType[];
+  dataSources: DataSource[];
 }
 
 export const defaultQueryConfig = {

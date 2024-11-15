@@ -36,22 +36,21 @@
  * DATA.
  ******************************************************************************/
 
-import { Session } from "src/api/sessionApi.ts";
-import { DataSourceType } from "src/api/dataSourceApi.ts";
 import { Button, Flex, Layout, Tooltip, Typography } from "antd";
 import QueryTimeSettingsModal from "pages/RagChatTab/Settings/QueryTimeSettingsModal.tsx";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useContext } from "react";
 import { QueryConfiguration } from "src/api/chatApi.ts";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import useModal from "src/utils/useModal.ts";
 import SettingsIcon from "src/cuix/icons/SettingsIcon";
 import { cdlBlue600 } from "src/cuix/variables.ts";
+import { DataSource, Session } from "src/services/api/api";
+import useModal from "src/utils/useModal.ts";
 
 const { Header } = Layout;
 
 function getHeaderTitle(
   activeSession?: Session,
-  currentDataSource?: DataSourceType,
+  currentDataSource?: DataSource
 ): string {
   if (!activeSession) {
     return "";
@@ -64,7 +63,7 @@ function getHeaderTitle(
 
 export const RagChatHeader = (props: {
   activeSession?: Session;
-  currentDataSource?: DataSourceType;
+  currentDataSource?: DataSource;
 }) => {
   const { queryConfiguration, setQueryConfiguration } =
     useContext(RagChatContext);

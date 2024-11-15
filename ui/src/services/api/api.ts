@@ -66,10 +66,22 @@ export interface DataSource {
     'updated_by_id': string;
     /**
      * 
-     * @type {DataSourceConfiguration}
+     * @type {DataSourceConnectionType}
      * @memberof DataSource
      */
-    'configuration': DataSourceConfiguration;
+    'connection_type': DataSourceConnectionType;
+    /**
+     * Data source chunk size
+     * @type {number}
+     * @memberof DataSource
+     */
+    'chunk_size': number;
+    /**
+     * Data source chunk overlap percentage
+     * @type {number}
+     * @memberof DataSource
+     */
+    'chunk_overlap_percent': number;
     /**
      * 
      * @type {DataSourceStatus}
@@ -77,40 +89,23 @@ export interface DataSource {
      */
     'status': DataSourceStatus;
 }
-/**
- * 
- * @export
- * @interface DataSourceConfiguration
- */
-export interface DataSourceConfiguration {
-    /**
-     * Data source connection type
-     * @type {string}
-     * @memberof DataSourceConfiguration
-     */
-    'connection_type': DataSourceConfigurationConnectionTypeEnum;
-    /**
-     * Data source chunk size
-     * @type {number}
-     * @memberof DataSourceConfiguration
-     */
-    'chunk_size': number;
-    /**
-     * Data source chunk overlap percentage
-     * @type {number}
-     * @memberof DataSourceConfiguration
-     */
-    'chunk_overlap_percent': number;
-}
 
-export const DataSourceConfigurationConnectionTypeEnum = {
+
+/**
+ * Data source connection type
+ * @export
+ * @enum {string}
+ */
+
+export const DataSourceConnectionType = {
     Manual: 'MANUAL',
     Cdf: 'CDF',
     Api: 'API',
     Other: 'OTHER'
 } as const;
 
-export type DataSourceConfigurationConnectionTypeEnum = typeof DataSourceConfigurationConnectionTypeEnum[keyof typeof DataSourceConfigurationConnectionTypeEnum];
+export type DataSourceConnectionType = typeof DataSourceConnectionType[keyof typeof DataSourceConnectionType];
+
 
 /**
  * 
@@ -126,11 +121,25 @@ export interface DataSourceCreateRequest {
     'name': string;
     /**
      * 
-     * @type {DataSourceConfiguration}
+     * @type {DataSourceConnectionType}
      * @memberof DataSourceCreateRequest
      */
-    'configuration': DataSourceConfiguration;
+    'connection_type': DataSourceConnectionType;
+    /**
+     * Data source chunk size
+     * @type {number}
+     * @memberof DataSourceCreateRequest
+     */
+    'chunk_size': number;
+    /**
+     * Data source chunk overlap percentage
+     * @type {number}
+     * @memberof DataSourceCreateRequest
+     */
+    'chunk_overlap_percent'?: number;
 }
+
+
 /**
  * 
  * @export
@@ -275,11 +284,25 @@ export interface DataSourceUpdateRequest {
     'name'?: string;
     /**
      * 
-     * @type {DataSourceConfiguration}
+     * @type {DataSourceConnectionType}
      * @memberof DataSourceUpdateRequest
      */
-    'configuration'?: DataSourceConfiguration;
+    'connection_type'?: DataSourceConnectionType;
+    /**
+     * Data source chunk size
+     * @type {number}
+     * @memberof DataSourceUpdateRequest
+     */
+    'chunk_size'?: number;
+    /**
+     * Data source chunk overlap percentage
+     * @type {number}
+     * @memberof DataSourceUpdateRequest
+     */
+    'chunk_overlap_percent'?: number;
 }
+
+
 /**
  * 
  * @export

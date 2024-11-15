@@ -1,0 +1,8 @@
+DataSourceConnectionType:
+  type: string
+  description: Data source connection type
+  enum:
+    - MANUAL
+    - CDF
+    - API
+    - OTHER

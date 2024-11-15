@@ -36,14 +36,14 @@
  * DATA.
  ******************************************************************************/
 
-import React, { useState } from "react";
-import { Button, Divider, Flex, Upload, UploadFile, UploadProps } from "antd";
-import { QueryKeys } from "src/api/utils.ts";
 import { InboxOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
+import { Button, Divider, Flex, Upload, UploadFile, UploadProps } from "antd";
 import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
+import React, { useState } from "react";
 import { useCreateRagDocumentsMutation } from "src/api/ragDocumentsApi.ts";
+import { QueryKeys } from "src/api/utils.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 
 const DragAndDrop = () => {
@@ -58,10 +58,10 @@ const DragAndDrop = () => {
 };
 
 const isFulfilled = <T,>(
-  p: PromiseSettledResult<T>,
+  p: PromiseSettledResult<T>
 ): p is PromiseFulfilledResult<T> => p.status === "fulfilled";
 const isRejected = <T,>(
-  p: PromiseSettledResult<T>,
+  p: PromiseSettledResult<T>
 ): p is PromiseRejectedResult => p.status === "rejected";
 
 interface RejectReasonType {
@@ -94,7 +94,7 @@ const FileManagement: React.FC = () => {
 
       if (fulfilledValues > 0) {
         messageQueue.success(
-          `Uploaded ${fulfilledValues.toString()} document${fulfilledValues > 1 ? "s" : ""} successfully.`,
+          `Uploaded ${fulfilledValues.toString()} document${fulfilledValues > 1 ? "s" : ""} successfully.`
         );
       }
     },
@@ -105,7 +105,10 @@ const FileManagement: React.FC = () => {
   });
 
   const handleUpload = () => {
-    ragDocumentMutation.mutate({ files: fileList, dataSourceId });
+    ragDocumentMutation.mutate({
+      files: fileList.map((file) => file as unknown as File),
+      dataSourceId,
+    });
   };
 
   const props: UploadProps = {

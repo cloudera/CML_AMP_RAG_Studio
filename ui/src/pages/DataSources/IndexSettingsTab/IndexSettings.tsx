@@ -36,20 +36,20 @@
  * DATA.
  ******************************************************************************/
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { Button, Card, Flex, Form, Input, Modal, Typography } from "antd";
-import { useContext, useState } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import DataSourcesForm, {
   DataSourcesFormProps,
 } from "pages/DataSources/DataSourcesManagement/DataSourcesForm.tsx";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MutationKeys, QueryKeys } from "src/api/utils.ts";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { useContext, useState } from "react";
 import {
-  DataSourceBaseType,
   deleteDataSourceMutation,
   useUpdateDataSourceMutation,
 } from "src/api/dataSourceApi.ts";
-import { useNavigate } from "@tanstack/react-router";
+import { MutationKeys, QueryKeys } from "src/api/utils.ts";
+import { DataSourceUpdateRequest } from "src/services/api/api";
 import messageQueue from "src/utils/messageQueue.ts";
 
 const IndexSettings = () => {
@@ -83,7 +83,7 @@ const IndexSettings = () => {
     mutationKey: [MutationKeys.deleteDataSource],
     mutationFn: () => {
       if (data) {
-        return deleteDataSourceMutation(data.id.toString());
+        return deleteDataSourceMutation(data.id);
       }
       return Promise.resolve();
     },
@@ -111,8 +111,8 @@ const IndexSettings = () => {
       .validateFields()
       .then((values) => {
         if (data) {
-          const payload: DataSourceBaseType = { ...values, id: data.id };
-          updateDataSourceMutate(payload);
+          const payload: DataSourceUpdateRequest = { ...values };
+          updateDataSourceMutate({ id: data.id, request: payload });
         }
       })
       .catch(() => {

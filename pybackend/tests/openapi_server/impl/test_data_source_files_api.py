@@ -18,7 +18,6 @@ from src.openapi_server.impl.data_source_files_api import (
     DataSourceFilesApiConfig,
 )
 from src.openapi_server.models.data_source import DataSource
-from src.openapi_server.models.data_source_configuration import DataSourceConfiguration
 from src.openapi_server.models.data_source_create_request import DataSourceCreateRequest
 from src.openapi_server.models.data_source_status import DataSourceStatus
 
@@ -68,9 +67,9 @@ def test_upload_file_success(
     data_source = DataSourceApi(db_connection_provider).create_data_source(
         DataSourceCreateRequest(
             name="test source",
-            configuration=DataSourceConfiguration(
-                chunk_size=512, chunk_overlap_percent=10, connection_type="MANUAL"
-            ),
+            chunk_size=512,
+            chunk_overlap_percent=10,
+            connection_type="MANUAL",
         )
     )
     data_source_id = data_source.id
@@ -129,9 +128,9 @@ def test_download_file_success(
     data_source = DataSourceApi(db_connection_provider).create_data_source(
         DataSourceCreateRequest(
             name="test source",
-            configuration=DataSourceConfiguration(
-                chunk_size=512, chunk_overlap_percent=10, connection_type="MANUAL"
-            ),
+            chunk_size=512,
+            chunk_overlap_percent=10,
+            connection_type="MANUAL",
         )
     )
     uploaded_file = api.upload_file_to_data_source(data_source.id, mock_file)
@@ -166,9 +165,9 @@ def test_download_nonexistent_file(db_connection_provider, s3_client, api_config
     data_source = DataSourceApi(db_connection_provider).create_data_source(
         DataSourceCreateRequest(
             name="test source",
-            configuration=DataSourceConfiguration(
-                chunk_size=512, chunk_overlap_percent=10, connection_type="MANUAL"
-            ),
+            chunk_size=512,
+            chunk_overlap_percent=10,
+            connection_type="MANUAL",
         )
     )
 
@@ -193,9 +192,9 @@ def test_download_cached_file(db_connection_provider, s3_client, api_config, moc
     data_source = DataSourceApi(db_connection_provider).create_data_source(
         DataSourceCreateRequest(
             name="test source",
-            configuration=DataSourceConfiguration(
-                chunk_size=512, chunk_overlap_percent=10, connection_type="MANUAL"
-            ),
+            chunk_size=512,
+            chunk_overlap_percent=10,
+            connection_type="MANUAL",
         )
     )
     uploaded_file = api.upload_file_to_data_source(data_source.id, mock_file)

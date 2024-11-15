@@ -17,11 +17,11 @@ class DataSourceFileDAL:
 
     @staticmethod
     def get_data_source_file(
-        cursor: Cursor, data_source_id: int, data_source_file_id: str
+        cursor: Cursor, data_source_file_id: str
     ) -> Optional[DataSourceFile]:
         cursor.execute(
-            "SELECT blob FROM data_source_files WHERE id = ? AND data_source_id = ? AND deleted = FALSE",
-            (data_source_file_id, data_source_id),
+            "SELECT blob FROM data_source_files WHERE id = ? AND deleted = FALSE",
+            (data_source_file_id,),
         )
         row = cursor.fetchone()
         if row is None:
@@ -40,21 +40,17 @@ class DataSourceFileDAL:
         )
 
     @staticmethod
-    def soft_delete_data_source_file(
-        cursor: Cursor, data_source_id: int, data_source_file_id: str
-    ) -> None:
+    def soft_delete_data_source_file(cursor: Cursor, data_source_file_id: str) -> None:
         cursor.execute(
-            "UPDATE data_source_files SET deleted = TRUE WHERE id = ? AND data_source_id = ?",
-            (data_source_file_id, data_source_id),
+            "UPDATE data_source_files SET deleted = TRUE WHERE id = ?",
+            (data_source_file_id,),
         )
 
     @staticmethod
-    def hard_delete_data_source_file(
-        cursor: Cursor, data_source_id: int, data_source_file_id: str
-    ) -> None:
+    def hard_delete_data_source_file(cursor: Cursor, data_source_file_id: str) -> None:
         cursor.execute(
-            "DELETE FROM data_source_files WHERE id = ? AND data_source_id = ?",
-            (data_source_file_id, data_source_id),
+            "DELETE FROM data_source_files WHERE id = ?",
+            (data_source_file_id,),
         )
 
     @staticmethod

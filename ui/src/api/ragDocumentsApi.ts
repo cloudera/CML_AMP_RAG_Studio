@@ -38,30 +38,17 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  commonHeaders,
-  deleteRequest,
-  getRequest,
   MutationKeys,
-  paths,
   QueryKeys,
-  ragPath,
-  UseMutationType,
+  UseMutationType
 } from "src/api/utils.ts";
-import { GetProp, UploadFile, UploadProps } from "antd";
-
-type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
-
-interface RagDocumentMetadata {
-  fileName: string;
-  documentId: string;
-  extension: string;
-  sizeInBytes: number;
-}
+import { DataSourceFile } from "src/services/api/api";
+import { dataSourceFilesApi } from "src/services/api_config";
 
 export const useCreateRagDocumentsMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<PromiseSettledResult<RagDocumentMetadata>[]>) => {
+}: UseMutationType<PromiseSettledResult<DataSourceFile>[]>) => {
   return useMutation({
     mutationKey: [MutationKeys.createRagDocuments],
     mutationFn: createRagDocumentsMutation,
@@ -74,58 +61,23 @@ const createRagDocumentsMutation = async ({
   files,
   dataSourceId,
 }: {
-  files: UploadFile[];
-  dataSourceId: string;
+  files: File[];
+  dataSourceId: number | string;
 }) => {
+  const dataSourceIdNumber = typeof dataSourceId === 'string' ? parseInt(dataSourceId, 10) : dataSourceId;
   const promises = files.map((file) =>
-    createRagDocumentMutation(file, dataSourceId),
+    createRagDocumentMutation(file, dataSourceIdNumber),
   );
   return await Promise.allSettled(promises);
 };
 
 const createRagDocumentMutation = async (
-  file: UploadFile,
-  dataSourceId: string,
+  file: File,
+  dataSourceId: number,
 ) => {
-  const formData = new FormData();
-  formData.append("file", file as FileType);
-  return await fetch(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`,
-    {
-      method: "POST",
-      body: formData,
-      headers: commonHeaders,
-    },
-  ).then((res) => {
-    if (!res.ok) {
-      if (res.status === 413) {
-        throw new Error(
-          `File is too large. Maximum size is 100MB: ${file.name}`,
-        );
-      }
-      throw new Error(
-        `Failed to call API backend. status: ${res.status.toString()} : ${res.statusText}`,
-      );
-    }
-    return res.json() as Promise<RagDocumentMetadata>;
-  });
+  const response = await dataSourceFilesApi.uploadFileToDataSource(dataSourceId, file);
+  return response.data;
 };
-
-export interface RagDocumentResponseType {
-  id: number;
-  filename: string;
-  dataSourceId: number;
-  documentId: string;
-  s3Path: string;
-  vectorUploadTimestamp: number | null;
-  sizeInBytes: number;
-  extension: string;
-  timeCreated: number;
-  timeUpdated: number;
-  createdById: number;
-  updatedById: number;
-  summaryCreationTimestamp: number | null;
-}
 
 export const useGetRagDocuments = (dataSourceId: string) => {
   return useQuery({
@@ -137,11 +89,11 @@ export const useGetRagDocuments = (dataSourceId: string) => {
         return false;
       }
       const nullTimestampDocuments = data.find(
-        (file: RagDocumentResponseType) => file.vectorUploadTimestamp === null,
+        (file: DataSourceFile) => file.vector_upload_timestamp === null,
       );
       const nullSummaryCreation = data.find(
-        (file: RagDocumentResponseType) =>
-          file.summaryCreationTimestamp === null,
+        (file: DataSourceFile) =>
+          file.summary_creation_timestamp === null,
       );
       return nullTimestampDocuments || nullSummaryCreation ? 3000 : false;
     },
@@ -149,11 +101,10 @@ export const useGetRagDocuments = (dataSourceId: string) => {
 };
 
 const getRagDocuments = async (
-  dataSourceId: string,
-): Promise<RagDocumentResponseType[]> => {
-  return getRequest(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`,
-  );
+  dataSourceId: number | string,
+): Promise<DataSourceFile[]> => {
+  const id = typeof dataSourceId === 'string' ? parseInt(dataSourceId, 10) : dataSourceId;
+  return (await dataSourceFilesApi.listFilesInDataSource(id)).data.items;
 };
 
 export const useDeleteDocumentMutation = ({
@@ -172,10 +123,9 @@ export const deleteDocumentMutation = async ({
   id,
   dataSourceId,
 }: {
-  id: number;
-  dataSourceId: string;
+  id: string;
+  dataSourceId: number | string;
 }): Promise<void> => {
-  await deleteRequest(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}/${id.toString()}`,
-  );
+  const dataSourceIdNumber = typeof dataSourceId === 'string' ? parseInt(dataSourceId, 10) : dataSourceId;
+  await dataSourceFilesApi.deleteFileInDataSource(dataSourceIdNumber, id);
 };

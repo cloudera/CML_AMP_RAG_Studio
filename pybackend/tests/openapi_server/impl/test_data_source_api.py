@@ -2,7 +2,6 @@ import pytest
 from fastapi import HTTPException
 from src.db.provider import DBConnectionProvider
 from src.openapi_server.impl.data_source_api import DataSourceApi
-from src.openapi_server.models.data_source_configuration import DataSourceConfiguration
 from src.openapi_server.models.data_source_create_request import DataSourceCreateRequest
 from src.openapi_server.models.data_source_update_request import DataSourceUpdateRequest
 
@@ -10,19 +9,25 @@ from src.openapi_server.models.data_source_update_request import DataSourceUpdat
 def test_create_data_source(db_connection_provider: DBConnectionProvider):
     data_source_api = DataSourceApi(db_connection_provider)
     name = "test-name"
-    configuration = DataSourceConfiguration(
-        chunk_size=512,
-        chunk_overlap_percent=10,
-        connection_type="MANUAL",
+    chunk_size = 512
+    chunk_overlap_percent = 10
+    connection_type = "MANUAL"
+
+    create_request = DataSourceCreateRequest(
+        name=name,
+        chunk_size=chunk_size,
+        chunk_overlap_percent=chunk_overlap_percent,
+        connection_type=connection_type,
     )
-    create_request = DataSourceCreateRequest(name=name, configuration=configuration)
 
     data_source = data_source_api.create_data_source(create_request)
 
     # Basic validations
     assert data_source.id is not None
     assert data_source.name == name
-    assert data_source.configuration == configuration
+    assert data_source.chunk_size == chunk_size
+    assert data_source.chunk_overlap_percent == chunk_overlap_percent
+    assert data_source.connection_type == connection_type
 
     # Additional validations matching Java test
     assert data_source.time_created is not None
@@ -38,38 +43,43 @@ def test_update_data_source(db_connection_provider: DBConnectionProvider):
 
     # Create initial data source
     original_name = "original-name"
-    configuration = DataSourceConfiguration(
-        chunk_size=1024,
-        chunk_overlap_percent=20,
-        connection_type="MANUAL",
-    )
+    chunk_size = 1024
+    chunk_overlap_percent = 20
+    connection_type = "MANUAL"
+
     create_request = DataSourceCreateRequest(
-        name=original_name, configuration=configuration
+        name=original_name,
+        chunk_size=chunk_size,
+        chunk_overlap_percent=chunk_overlap_percent,
+        connection_type=connection_type,
     )
     data_source = data_source_api.create_data_source(create_request)
 
     # Update the name
     updated_name = "updated-name"
     update_request = DataSourceUpdateRequest(
-        name=updated_name, configuration=configuration
+        name=updated_name,
+        chunk_size=chunk_size,
+        chunk_overlap_percent=chunk_overlap_percent,
+        connection_type=connection_type,
     )
     updated = data_source_api.update_data_source(data_source.id, update_request)
 
     # Verify the update
     assert updated.name == updated_name
     assert updated.id == data_source.id
-    assert updated.configuration == configuration
+    assert updated.chunk_size == chunk_size
+    assert updated.chunk_overlap_percent == chunk_overlap_percent
+    assert updated.connection_type == connection_type
 
 
 def test_delete_data_source(db_connection_provider: DBConnectionProvider):
     data_source_api = DataSourceApi(db_connection_provider)
     create_request = DataSourceCreateRequest(
         name="test-name",
-        configuration=DataSourceConfiguration(
-            chunk_size=1024,
-            chunk_overlap_percent=20,
-            connection_type="MANUAL",
-        ),
+        chunk_size=1024,
+        chunk_overlap_percent=20,
+        connection_type="MANUAL",
     )
 
     data_source = data_source_api.create_data_source(create_request)
@@ -86,22 +96,18 @@ def test_get_data_sources(db_connection_provider: DBConnectionProvider):
     # Create first data source
     create_request1 = DataSourceCreateRequest(
         name="test1",
-        configuration=DataSourceConfiguration(
-            chunk_size=1024,
-            chunk_overlap_percent=20,
-            connection_type="MANUAL",
-        ),
+        chunk_size=1024,
+        chunk_overlap_percent=20,
+        connection_type="MANUAL",
     )
     data_source1 = data_source_api.create_data_source(create_request1)
 
     # Create second data source
     create_request2 = DataSourceCreateRequest(
         name="test2",
-        configuration=DataSourceConfiguration(
-            chunk_size=512,
-            chunk_overlap_percent=10,
-            connection_type="MANUAL",
-        ),
+        chunk_size=512,
+        chunk_overlap_percent=10,
+        connection_type="MANUAL",
     )
     data_source2 = data_source_api.create_data_source(create_request2)
 
@@ -126,13 +132,11 @@ def test_empty_chunk_size_not_allowed(db_connection_provider: DBConnectionProvid
     data_source_api = DataSourceApi(db_connection_provider)
 
     # Create a data source with null chunk_size
-    configuration = DataSourceConfiguration(
+    create_request = DataSourceCreateRequest(
+        name="test-name",
         chunk_size=0,
         chunk_overlap_percent=20,
         connection_type="MANUAL",
-    )
-    create_request = DataSourceCreateRequest(
-        name="test-name", configuration=configuration
     )
 
     # Assert that creating with null chunk_size raises HTTPException
