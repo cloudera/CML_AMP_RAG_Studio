@@ -21,10 +21,12 @@ class DataSourceDAL:
         return [DataSourceDAL._deserialize(row[0]) for row in cursor.fetchall()]
 
     @staticmethod
-    def get_data_source(cursor: Cursor, data_source_id: int) -> Optional[DataSource]:
+    def get_data_source(
+        cursor: Cursor, data_source_id: int, allow_deleted: bool = False
+    ) -> Optional[DataSource]:
         cursor.execute(
-            "SELECT blob FROM data_sources WHERE id = ? AND deleted = FALSE",
-            (data_source_id,),
+            "SELECT blob FROM data_sources WHERE id = ? AND deleted = ?",
+            (data_source_id, allow_deleted),
         )
         row = cursor.fetchone()
         if row is None:

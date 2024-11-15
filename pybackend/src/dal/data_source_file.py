@@ -17,11 +17,11 @@ class DataSourceFileDAL:
 
     @staticmethod
     def get_data_source_file(
-        cursor: Cursor, data_source_file_id: str
+        cursor: Cursor, data_source_file_id: str, allow_deleted: bool = False
     ) -> Optional[DataSourceFile]:
         cursor.execute(
-            "SELECT blob FROM data_source_files WHERE id = ? AND deleted = FALSE",
-            (data_source_file_id,),
+            "SELECT blob FROM data_source_files WHERE id = ? AND deleted = ?",
+            (data_source_file_id, allow_deleted),
         )
         row = cursor.fetchone()
         if row is None:
@@ -38,6 +38,20 @@ class DataSourceFileDAL:
                 data_source_file.data_source_id,
             ),
         )
+
+    @staticmethod
+    def list_files_to_index(cursor: Cursor) -> List[DataSourceFile]:
+        cursor.execute(
+            "SELECT blob FROM data_source_files WHERE indexed = FALSE AND deleted = FALSE",
+        )
+        return [DataSourceFileDAL._deserialize(row[0]) for row in cursor.fetchall()]
+
+    @staticmethod
+    def list_files_to_summarize(cursor: Cursor) -> List[DataSourceFile]:
+        cursor.execute(
+            "SELECT blob FROM data_source_files WHERE summarized = FALSE AND deleted = FALSE",
+        )
+        return [DataSourceFileDAL._deserialize(row[0]) for row in cursor.fetchall()]
 
     @staticmethod
     def soft_delete_data_source_file(cursor: Cursor, data_source_file_id: str) -> None:

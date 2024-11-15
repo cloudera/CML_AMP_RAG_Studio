@@ -39,13 +39,17 @@ class Reconciler(Generic[T]):
 
     def _resync_loop(self) -> None:
         while True:
-            self.resync()
+            try:
+                self.resync()
+            except Exception as e:
+                self.logger.error(f"Error resyncing: {e}")
             time.sleep(self.resync_interval)
 
     def _reconcile_item(self, item: T) -> None:
         try:
             self.reconcile(item)
         except Exception as e:
+            self.logger.error(f"Error reconciling item {item}: {e}")
             # Re-add to pending items if reconciliation fails
             with self.lock:
                 self.pending_items.add(item)
@@ -65,7 +69,6 @@ class Reconciler(Generic[T]):
                     self.running_items.add(item)
                     items.add(item)
             if items:
-                # Reconcile the items in parallel and wait for them to finish
                 with ThreadPoolExecutor(max_workers=self.batch_size) as executor:
                     executor.map(self._reconcile_item, items)
             else:

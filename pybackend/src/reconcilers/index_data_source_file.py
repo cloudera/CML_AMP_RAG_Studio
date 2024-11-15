@@ -34,19 +34,17 @@ class IndexDataSourceFileReconciler(Reconciler):
         logger.info("Resyncing data source files")
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                data_source_files = DataSourceFileDAL.list_data_source_files(cursor)
+                data_source_files = DataSourceFileDAL.list_files_to_index(cursor)
                 for data_source_file in data_source_files:
-                    if data_source_file.vector_upload_timestamp is None:
-                        self.submit(data_source_file.id)
+                    assert data_source_file.vector_upload_timestamp is None
+                    self.submit(data_source_file.id)
 
     def reconcile(self, data_source_file_id: str) -> None:
-        logger.info(f"Indexing data source file {data_source_file_id}")
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 data_source_file: Optional[DataSourceFile] = (
                     DataSourceFileDAL.get_data_source_file(cursor, data_source_file_id)
                 )
-                logger.info(f"Data source file: {data_source_file}")
                 if data_source_file is None:
                     return
                 data_source = DataSourceDAL.get_data_source(
@@ -57,16 +55,14 @@ class IndexDataSourceFileReconciler(Reconciler):
                 if data_source_file.vector_upload_timestamp is not None:
                     return
 
-        logger.info(f"Sending to python client: {data_source_file.s3_path}")
-
         self.python_client.index_file(
             IndexRequest(
                 s3_bucket_name=self.s3_bucket_name,
                 s3_document_key=data_source_file.s3_path,
                 data_source_id=data_source_file.data_source_id,
                 configuration=IndexConfiguration(
-                    chunk_size=data_source.configuration.chunk_size,
-                    chunk_overlap_percentage=data_source.configuration.chunk_overlap_percent,
+                    chunk_size=data_source.chunk_size,
+                    chunk_overlap_percentage=data_source.chunk_overlap_percent,
                 ),
             )
         )

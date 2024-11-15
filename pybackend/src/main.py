@@ -52,7 +52,7 @@ s3_bucket_name = os.getenv("S3_RAG_DOCUMENT_BUCKET")
 s3_path_prefix = os.getenv("S3_RAG_BUCKET_PREFIX")
 
 # Initialize the Python client
-python_client = PythonClient(os.getenv("PYTHON_BASE_URL"))
+python_client = PythonClient(os.getenv("LLM_SERVICE_URL") + "/index")
 
 # Initialize the reconcilers
 DeleteDataSourceFileReconciler(

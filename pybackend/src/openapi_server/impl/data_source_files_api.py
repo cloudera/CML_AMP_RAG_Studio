@@ -113,7 +113,12 @@ class DataSourceFilesApi:
         temp_file = tempfile.NamedTemporaryFile(delete=False)
         with open(temp_file.name, "wb") as f:
             f.write(file.file.read())
-        self.s3_client.upload_file(temp_file.name, self.config.bucket_name, s3_path)
+        self.s3_client.upload_file(
+            temp_file.name,
+            self.config.bucket_name,
+            s3_path,
+            ExtraArgs={"Metadata": {"originalfilename": file.filename}},
+        )
 
         # Save file metadata to DB
         with self.db_connection_provider.connection() as connection:

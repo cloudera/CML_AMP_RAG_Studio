@@ -6,7 +6,7 @@ def setup_logger(
     log_level=logging.INFO,
 ):
     # Create a logger object
-    logger = logging.getLogger()
+    logger = logging.getLogger(name)
     logger.setLevel(log_level)
 
     # Create a formatter

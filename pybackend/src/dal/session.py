@@ -22,9 +22,12 @@ class SessionDAL:
         return [SessionDAL._deserialize(row[0]) for row in cursor.fetchall()]
 
     @staticmethod
-    def get_session(cursor: Cursor, session_id: int) -> Optional[Session]:
+    def get_session(
+        cursor: Cursor, session_id: int, allow_deleted: bool = False
+    ) -> Optional[Session]:
         cursor.execute(
-            "SELECT blob FROM sessions WHERE id = ? AND deleted = FALSE", (session_id,)
+            "SELECT blob FROM sessions WHERE id = ? AND deleted = ?",
+            (session_id, allow_deleted),
         )
         row = cursor.fetchone()
         if row is None:

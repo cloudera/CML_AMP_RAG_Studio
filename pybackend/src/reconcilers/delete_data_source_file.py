@@ -40,7 +40,9 @@ class DeleteDataSourceFileReconciler(Reconciler):
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 data_source_file: Optional[DataSourceFile] = (
-                    DataSourceFileDAL.get_data_source_file(cursor, data_source_file_id)
+                    DataSourceFileDAL.get_data_source_file(
+                        cursor, data_source_file_id, allow_deleted=True
+                    )
                 )
                 if data_source_file is None:
                     return
