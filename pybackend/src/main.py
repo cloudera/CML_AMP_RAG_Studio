@@ -9,6 +9,8 @@ from starlette.middleware.gzip import GZipMiddleware
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.db.provider import SQLiteConnectionProviderSingleton
+from src.java_migration.client import JavaClient
+from src.java_migration.migrate import JavaMigrator
 from src.openapi_server.main import app
 
 app.add_middleware(
@@ -44,3 +46,11 @@ async def health_check():
 
 
 SQLiteConnectionProviderSingleton()
+
+
+JavaMigrator(
+    JavaClient(
+        os.getenv("JAVA_BASE_URL"),
+    ),
+    SQLiteConnectionProviderSingleton(),
+).migrate()

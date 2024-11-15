@@ -49,6 +49,22 @@ class DataSourceFileDAL:
         )
 
     @staticmethod
+    def hard_delete_data_source_file(
+        cursor: Cursor, data_source_id: int, data_source_file_id: str
+    ) -> None:
+        cursor.execute(
+            "DELETE FROM data_source_files WHERE id = ? AND data_source_id = ?",
+            (data_source_file_id, data_source_id),
+        )
+
+    @staticmethod
+    def get_soft_deleted_data_source_files(cursor: Cursor) -> List[DataSourceFile]:
+        cursor.execute(
+            "SELECT blob FROM data_source_files WHERE deleted = TRUE",
+        )
+        return [DataSourceFileDAL._deserialize(row[0]) for row in cursor.fetchall()]
+
+    @staticmethod
     def _serialize(data_source_file: DataSourceFile) -> bytes:
         return data_source_file.model_dump_json().encode("utf-8")
 

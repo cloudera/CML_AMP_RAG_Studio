@@ -43,6 +43,15 @@ class SessionDAL:
         cursor.execute("UPDATE sessions SET deleted = TRUE WHERE id = ?", (session_id,))
 
     @staticmethod
+    def hard_delete_session(cursor: Cursor, session_id: int) -> None:
+        cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+
+    @staticmethod
+    def get_soft_deleted_sessions(cursor: Cursor) -> List[Session]:
+        cursor.execute("SELECT blob FROM sessions WHERE deleted = TRUE")
+        return [SessionDAL._deserialize(row[0]) for row in cursor.fetchall()]
+
+    @staticmethod
     def _serialize(session: Session) -> bytes:
         return session.model_dump_json().encode("utf-8")
 
