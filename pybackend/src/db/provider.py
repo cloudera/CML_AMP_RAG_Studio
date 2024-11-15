@@ -42,21 +42,6 @@ class SQLiteConnectionProvider(DBConnectionProvider):
         yield sqlite3.connect(self.db_path)
 
 
-class SQLiteConnectionProviderSingleton:
-    _instance: Optional[SQLiteConnectionProvider] = None
-
-    def __new__(cls):
-        if not cls._instance:
-            cls._instance = SQLiteConnectionProvider(
-                os.getenv("SQLITE_DB_PATH", "./db.sqlite")
-            )
-            with cls._instance.connection() as connection:
-                datastore = SQLiteDatastore(connection)
-                migrator = Migrator(datastore)
-                migrator.perform_migration()
-        return cls._instance
-
-
 @contextmanager
 def transaction(conn: Connection):
     """Context manager for handling transactions."""

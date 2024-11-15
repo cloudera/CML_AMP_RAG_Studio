@@ -5,7 +5,6 @@ from src.dal.data_source_file import DataSourceFileDAL
 from src.dal.session import SessionDAL
 from src.db.provider import (
     DBConnectionProvider,
-    SQLiteConnectionProviderSingleton,
     transaction,
 )
 from src.java_migration.client import JavaClient

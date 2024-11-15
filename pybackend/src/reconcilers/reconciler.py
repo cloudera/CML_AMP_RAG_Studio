@@ -1,8 +1,8 @@
 import queue
 import threading
+import time
 from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor
-from time import time
 from typing import Generic, Set, TypeVar
 
 T = TypeVar("T")
@@ -28,6 +28,10 @@ class Reconciler(Generic[T]):
     @abstractmethod
     def reconcile(self, input: T) -> None:
         pass
+
+    def run(self) -> None:
+        threading.Thread(target=self._resync_loop, daemon=True).start()
+        threading.Thread(target=self._reconcile_loop, daemon=True).start()
 
     def _resync_loop(self) -> None:
         while True:

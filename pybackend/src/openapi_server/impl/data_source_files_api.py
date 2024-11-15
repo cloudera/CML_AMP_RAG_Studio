@@ -11,7 +11,6 @@ from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import (
     DBConnectionProvider,
-    SQLiteConnectionProviderSingleton,
     transaction,
 )
 from src.openapi_server.apis.data_source_files_api_base import BaseDataSourceFilesApi
@@ -38,6 +37,7 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
         self.config = config
         self.s3_client = s3_client
         self.files_dir = files_dir
+        os.makedirs(self.files_dir, exist_ok=True)
 
     def delete_file_in_data_source(
         self,
@@ -204,15 +204,7 @@ class DataSourceFilesApi(BaseDataSourceFilesApi):
 class DataSourceFilesApiSingleton(BaseDataSourceFilesApi):
     _instance: Optional[DataSourceFilesApi] = None
 
-    def __new__(cls):
+    def __new__(cls, **kwargs):
         if not cls._instance:
-            cls._instance = DataSourceFilesApi(
-                db_connection_provider=SQLiteConnectionProviderSingleton(),
-                config=DataSourceFilesApiConfig(
-                    bucket_name=os.getenv("S3_BUCKET_NAME"),
-                    s3_path_prefix=os.getenv("S3_PATH_PREFIX"),
-                ),
-                s3_client=boto3.client("s3"),
-                files_dir=os.getenv("FILES_DIR"),
-            )
+            cls._instance = DataSourceFilesApi(**kwargs)
         return cls._instance

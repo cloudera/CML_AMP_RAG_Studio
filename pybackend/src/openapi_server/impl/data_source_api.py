@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from src.dal.data_source import DataSourceDAL
 from src.db.provider import (
     DBConnectionProvider,
-    SQLiteConnectionProviderSingleton,
     transaction,
 )
 from src.openapi_server.apis.data_source_api_base import BaseDataSourceApi
@@ -109,7 +108,7 @@ class DataSourceApi:
 class DataSourceApiSingleton(BaseDataSourceApi):
     _instance: Optional[DataSourceApi] = None
 
-    def __new__(cls):
+    def __new__(cls, **kwargs):
         if not cls._instance:
-            cls._instance = DataSourceApi(SQLiteConnectionProviderSingleton())
+            cls._instance = DataSourceApi(**kwargs)
         return cls._instance

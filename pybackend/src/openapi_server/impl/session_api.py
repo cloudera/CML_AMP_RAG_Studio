@@ -4,7 +4,6 @@ from typing import Optional
 from src.dal.session import SessionDAL
 from src.db.provider import (
     DBConnectionProvider,
-    SQLiteConnectionProviderSingleton,
     transaction,
 )
 from src.openapi_server.apis.session_api_base import BaseSessionApi
@@ -93,7 +92,7 @@ class SessionApi(BaseSessionApi):
 class SessionApiSingleton(BaseSessionApi):
     _instance: Optional[SessionApi] = None
 
-    def __new__(cls):
+    def __new__(cls, **kwargs):
         if not cls._instance:
-            cls._instance = SessionApi(SQLiteConnectionProviderSingleton())
+            cls._instance = SessionApi(**kwargs)
         return cls._instance
