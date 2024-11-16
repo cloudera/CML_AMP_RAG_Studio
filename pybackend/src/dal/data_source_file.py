@@ -1,6 +1,7 @@
 from sqlite3 import Cursor
 from typing import List, Optional
 
+from src.dal.codec import decode_blob, encode_blob
 from src.openapi_server.models.data_source_file import DataSourceFile
 
 
@@ -76,8 +77,8 @@ class DataSourceFileDAL:
 
     @staticmethod
     def _serialize(data_source_file: DataSourceFile) -> bytes:
-        return data_source_file.model_dump_json().encode("utf-8")
+        return encode_blob(data_source_file)
 
     @staticmethod
     def _deserialize(data: bytes) -> DataSourceFile:
-        return DataSourceFile.model_validate_json(data.decode("utf-8"))
+        return decode_blob(DataSourceFile, data)

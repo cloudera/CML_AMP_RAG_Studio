@@ -2,6 +2,7 @@ import logging
 from sqlite3 import Cursor
 from typing import List, Optional
 
+from src.dal.codec import decode_blob, encode_blob
 from src.openapi_server.models.session import Session
 
 logger = logging.getLogger(__name__)
@@ -56,8 +57,8 @@ class SessionDAL:
 
     @staticmethod
     def _serialize(session: Session) -> bytes:
-        return session.model_dump_json().encode("utf-8")
+        return encode_blob(session)
 
     @staticmethod
     def _deserialize(data: bytes) -> Session:
-        return Session.model_validate_json(data.decode("utf-8"))
+        return decode_blob(Session, data)
