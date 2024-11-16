@@ -31,7 +31,6 @@ class IndexDataSourceFileReconciler(Reconciler):
         self.s3_bucket_name = s3_bucket_name
 
     def resync(self) -> None:
-        logger.info("Resyncing data source files")
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 data_source_files = DataSourceFileDAL.list_files_to_index(cursor)
