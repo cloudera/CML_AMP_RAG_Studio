@@ -83,7 +83,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
 
   @Override
   public void resync() {
-    log.info("checking for RAG documents to be indexed");
+    log.debug("checking for RAG documents to be indexed");
     String sql =
         """
         SELECT * from rag_data_source_document

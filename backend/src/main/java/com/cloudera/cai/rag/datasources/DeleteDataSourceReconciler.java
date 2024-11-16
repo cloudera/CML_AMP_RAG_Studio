@@ -67,7 +67,7 @@ public class DeleteDataSourceReconciler extends BaseReconciler<Long> {
 
   @Override
   public void resync() {
-    log.info("Checking for data sources to delete");
+    log.debug("Checking for data sources to delete");
     jdbi.useHandle(
         handle ->
             handle

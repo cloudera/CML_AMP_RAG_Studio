@@ -36,14 +36,56 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+import { Table, TableProps } from "antd";
+import { Model, useTestLlmModel } from "src/api/modelsApi.ts";
+import { useState } from "react";
+import { modelColumns, TestCell } from "pages/Models/ModelTable.tsx";
 
-export const Route = createFileRoute("/_layout/sessions/$sessionId")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
-});
+const InferenceModelTestCell = ({ model }: { model: Model }) => {
+  const [testModel, setTestModel] = useState("");
+  const { data: testResult, isLoading, error } = useTestLlmModel(testModel);
+
+  const handleTestModel = () => {
+    setTestModel(model.model_id);
+  };
+
+  return (
+    <TestCell
+      onClick={handleTestModel}
+      model={model}
+      loading={isLoading}
+      error={error}
+      testResult={testResult}
+    />
+  );
+};
+
+const testCell: TableProps<Model>["columns"] = [
+  {
+    title: "Test",
+    width: 140,
+    render: (_, model) => {
+      return <InferenceModelTestCell model={model} />;
+    },
+  },
+];
+
+const InferenceModelTable = ({
+  inferenceModels,
+  areInferenceModelsLoading,
+}: {
+  inferenceModels?: Model[];
+  areInferenceModelsLoading: boolean;
+}) => {
+  return (
+    <Table
+      dataSource={inferenceModels}
+      columns={modelColumns ? [...modelColumns, ...testCell] : testCell}
+      style={{ width: "100%" }}
+      loading={areInferenceModelsLoading}
+      rowKey={(record) => record.model_id}
+    />
+  );
+};
+
+export default InferenceModelTable;

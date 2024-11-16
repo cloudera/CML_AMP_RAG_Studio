@@ -81,7 +81,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
 
   @Override
   public void resync() {
-    log.info("checking for RAG documents to be summarized");
+    log.debug("checking for RAG documents to be summarized");
     String sql =
         """
         SELECT * from rag_data_source_document

@@ -36,7 +36,6 @@
  * DATA.
  ******************************************************************************/
 
-import { ResponseSynthesizerOptions } from "pages/RagChatTab/Constants/ResponseSynthesizerModelOptions.ts";
 import { createContext, Dispatch, SetStateAction } from "react";
 import { ChatMessageType, QueryConfiguration } from "src/api/chatApi.ts";
 import { DataSource, Session } from "src/services/api/api";
@@ -57,7 +56,7 @@ export interface RagChatContextType {
 
 export const defaultQueryConfig = {
   top_k: 5,
-  model_name: ResponseSynthesizerOptions["Llama31-8bInstructV1"],
+  model_name: "",
 };
 
 export const RagChatContext = createContext<RagChatContextType>({

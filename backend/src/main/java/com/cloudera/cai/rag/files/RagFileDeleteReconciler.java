@@ -32,7 +32,7 @@ public class RagFileDeleteReconciler extends BaseReconciler<Types.RagDocument> {
 
   @Override
   public void resync() throws Exception {
-    log.info("checking for RAG documents to be deleted");
+    log.debug("checking for RAG documents to be deleted");
     jdbi.useHandle(
         handle -> {
           handle.registerRowMapper(ConstructorMapper.factory(Types.RagDocument.class));

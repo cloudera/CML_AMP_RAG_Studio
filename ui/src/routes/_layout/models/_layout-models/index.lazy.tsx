@@ -36,14 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+import { createLazyFileRoute } from "@tanstack/react-router";
+import ModelPage from "pages/Models/ModelPage.tsx";
 
-export const Route = createFileRoute("/_layout/sessions/$sessionId")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
+export const Route = createLazyFileRoute("/_layout/models/_layout-models/")({
+  component: () => <ModelPage />,
 });

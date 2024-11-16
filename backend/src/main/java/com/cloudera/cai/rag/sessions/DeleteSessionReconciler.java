@@ -66,7 +66,7 @@ public class DeleteSessionReconciler extends BaseReconciler<Long> {
 
   @Override
   public void resync() {
-    log.info("Checking for sessions to delete");
+    log.debug("Checking for sessions to delete");
     jdbi.useHandle(
         handle ->
             handle

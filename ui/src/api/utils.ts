@@ -80,6 +80,8 @@ export enum QueryKeys {
   "getLlmModels" = "getLlmModels",
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
+  "testLlmModel" = "testLlmModel",
+  "testEmbeddingModel" = "testEmbeddingModel",
 }
 
 export const commonHeaders = {

@@ -63,6 +63,7 @@ import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
+import { cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceFile } from "src/services/api/api";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -101,7 +102,24 @@ const columns = (
   handleDeleteFile: (document: DataSourceFile) => void
 ): TableProps<DataSourceFile>["columns"] => [
   {
-    title: <AiAssistantIcon />,
+    title: (
+      <Tooltip
+        title={
+          <Flex vertical gap={4}>
+            <Typography.Text style={{ color: cdlWhite }}>
+              Document Summary
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
+              Note: Document summarization can take a significant amount of
+              time, but will not impact the ability to use the document for
+              Chat.
+            </Typography.Text>
+          </Flex>
+        }
+      >
+        <AiAssistantIcon />
+      </Tooltip>
+    ),
     dataIndex: "summary_creation_timestamp",
     key: "summary_creation_timestamp",
     render: (timestamp: number | null, data) => {

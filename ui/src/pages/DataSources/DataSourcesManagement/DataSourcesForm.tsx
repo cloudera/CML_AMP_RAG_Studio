@@ -39,12 +39,13 @@
 import { Collapse, Form, FormInstance, Input, InputNumber, Select } from "antd";
 import RequestConfigureOptions from "pages/DataSources/DataSourcesManagement/RequestConfigureOptions.tsx";
 import { useEffect } from "react";
-import { Model, useGetEmbeddingModels } from "src/api/modelsApi.ts";
+import { useGetEmbeddingModels } from "src/api/modelsApi.ts";
 import {
   DataSource,
   DataSourceConnectionType,
   DataSourceCreateRequest,
 } from "src/services/api/api";
+import { transformModelOptions } from "src/utils/modelUtils.ts";
 
 export const distanceMetricOptions = [
   {
@@ -142,15 +143,6 @@ const DataSourcesForm = ({
     });
   }, [embeddingsModels.data]);
 
-  const transformModelOptions = (models?: Model[]) => {
-    if (!models) {
-      return [];
-    }
-    return models.map((model) => ({
-      value: model.model_id,
-      label: model.name,
-    }));
-  };
   return (
     <Form
       id="create-new-dataset"

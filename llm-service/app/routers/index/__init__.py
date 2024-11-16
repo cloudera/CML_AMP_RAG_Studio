@@ -120,7 +120,7 @@ class RagStudioChatRequest(BaseModel):
     data_source_id: int
     session_id: int
     query: str
-    configuration: qdrant.RagPredictConfiguration = qdrant.RagPredictConfiguration()
+    configuration: qdrant.RagPredictConfiguration
 
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")

@@ -35,15 +35,14 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { Model } from "src/api/modelsApi.ts";
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
-
-export const Route = createFileRoute("/_layout/sessions/$sessionId")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
-});
+export const transformModelOptions = (models?: Model[]) => {
+  if (!models) {
+    return [];
+  }
+  return models.map((model) => ({
+    value: model.model_id,
+    label: model.name,
+  }));
+};

@@ -36,10 +36,16 @@
  * DATA.
  ******************************************************************************/
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { getRequest, llmServicePath, QueryKeys } from "src/api/utils.ts";
+import {
+  ApiError,
+  CustomError,
+  getRequest,
+  llmServicePath,
+  QueryKeys,
+} from "src/api/utils.ts";
 
 export interface Model {
-  name: string;
+  name?: string;
   model_id: string;
   available?: boolean;
   replica_count?: number;
@@ -53,6 +59,13 @@ export const useGetLlmModels = () => {
     },
   });
 };
+
+export const getLlmModelsQueryOptions = queryOptions({
+  queryKey: [QueryKeys.getLlmModels],
+  queryFn: async () => {
+    return await getLlmModels();
+  },
+});
 
 const getLlmModels = async (): Promise<Model[]> => {
   return await getRequest(`${llmServicePath}/index/models/llm`);
@@ -82,4 +95,52 @@ export const getModelSourceQueryOptions = queryOptions({
 
 const getModelSource = async (): Promise<ModelSource> => {
   return await getRequest(`${llmServicePath}/index/models/model_source`);
+};
+
+export const useTestLlmModel = (model_id: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.testLlmModel, { model_id }],
+    queryFn: async () => {
+      return await testLlmModel(model_id);
+    },
+    enabled: !!model_id,
+    retry: false,
+  });
+};
+
+const testLlmModel = async (model_id: string): Promise<string> => {
+  return await fetch(
+    `${llmServicePath}/index/models/llm/${model_id}/test`,
+  ).then(async (res) => {
+    if (!res.ok) {
+      const detail = (await res.json()) as CustomError;
+      throw new ApiError(detail.message ?? detail.detail, res.status);
+    }
+
+    return (await res.json()) as Promise<string>;
+  });
+};
+
+export const useTestEmbeddingModel = (model_id: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.testEmbeddingModel, { model_id }],
+    queryFn: async () => {
+      return await testEmbeddingModel(model_id);
+    },
+    retry: false,
+    enabled: !!model_id,
+  });
+};
+
+const testEmbeddingModel = async (model_id: string): Promise<string> => {
+  return await fetch(
+    `${llmServicePath}/index/models/embedding/${model_id}/test`,
+  ).then(async (res) => {
+    if (!res.ok) {
+      const detail = (await res.json()) as CustomError;
+      throw new ApiError(detail.message ?? detail.detail, res.status);
+    }
+
+    return (await res.json()) as Promise<string>;
+  });
 };

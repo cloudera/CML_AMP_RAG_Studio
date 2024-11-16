@@ -49,7 +49,7 @@ import {
 } from "@tanstack/react-router";
 import "./index.css";
 import { ApiError } from "./api/utils";
-import { Button, Flex, Result, Spin } from "antd";
+import { Button, Flex, Result, Spin, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 
 const queryClient = new QueryClient({
@@ -102,8 +102,11 @@ const router = createRouter({
     <Flex
       align="center"
       justify="center"
-      style={{ height: "100%", width: "100%" }}
+      style={{ height: "100vh", width: "100%" }}
+      vertical
+      gap={20}
     >
+      <Typography.Text type="secondary">RAG Studio</Typography.Text>
       <Spin spinning />
     </Flex>
   ),

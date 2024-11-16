@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -35,23 +35,34 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-export enum ResponseSynthesizerOptions {
-  "Llama31-8bInstructV1" = "meta.llama3-1-8b-instruct-v1:0",
-  "Llama31-70bInstructV1" = "meta.llama3-1-70b-instruct-v1:0",
-  "Llama31-405bInstructV1" = "meta.llama3-1-405b-instruct-v1:0",
-}
 
-export const responseSynthesizerModelOptions = [
-  {
-    value: ResponseSynthesizerOptions["Llama31-8bInstructV1"],
-    label: "Llama3.1 8B Instruct v1",
-  },
-  {
-    value: ResponseSynthesizerOptions["Llama31-70bInstructV1"],
-    label: "Llama3.1 70B Instruct v1",
-  },
-  {
-    value: ResponseSynthesizerOptions["Llama31-405bInstructV1"],
-    label: "Llama3.1 405B Instruct v1",
-  },
-];
+import { Flex, Typography } from "antd";
+import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
+import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
+import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
+
+const ModelPage = () => {
+  const { data: embeddingModels, isLoading: areEmbeddingModelsLoading } =
+    useGetEmbeddingModels();
+  const { data: inferenceModels, isLoading: areInferenceModelsLoading } =
+    useGetLlmModels();
+
+  return (
+    <Flex vertical align="center">
+      <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
+        <Typography.Title level={3}>Embedding Models</Typography.Title>
+        <EmbeddingModelTable
+          embeddingModels={embeddingModels}
+          areEmbeddingModelsLoading={areEmbeddingModelsLoading}
+        />
+        <Typography.Title level={3}>Inference Models</Typography.Title>
+        <InferenceModelTable
+          inferenceModels={inferenceModels}
+          areInferenceModelsLoading={areInferenceModelsLoading}
+        />
+      </Flex>
+    </Flex>
+  );
+};
+
+export default ModelPage;

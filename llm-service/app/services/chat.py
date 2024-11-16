@@ -63,7 +63,7 @@ def v2_chat(
         return RagStudioChatMessage(
             id=response_id,
             source_nodes=[],
-            ragmessage={
+            rag_message={
                 "user": query,
                 "assistant": "I don't have any documents to answer your question.",
             },
@@ -137,9 +137,9 @@ def generate_suggested_questions(
     else:
         query_str = (
             "Give me a list of questions that you can answer."
-            " There should be no more than four questions."
-            " Each question should be no longer than 15 words."
-            " Each question should start with *."
+            " There should be no more than four (4) questions."
+            " Each question should be no longer than fifteen (15) words."
+            " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
             " Do not return questions based on the metadata of the document. Only the content."
             " Do not start like this - `Here are four questions that I can answer based on the context information`"
             " Only return the list."

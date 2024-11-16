@@ -35,15 +35,78 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { Button, Flex, TableProps, Tooltip, Typography } from "antd";
+import { Model } from "src/api/modelsApi.ts";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+export const TestCell = ({
+  onClick,
+  model,
+  loading,
+  error,
+  testResult,
+}: {
+  onClick: () => void;
+  model: Model;
+  loading: boolean;
+  error: Error | null;
+  testResult: string | undefined;
+}) => {
+  if (!model.name) {
+    return null;
+  }
 
-export const Route = createFileRoute("/_layout/sessions/$sessionId")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
-});
+  if (testResult === "ok") {
+    return <CheckCircleOutlined style={{ color: cdlGreen600 }} />;
+  }
+
+  return (
+    <Flex gap={8}>
+      <Button
+        onClick={onClick}
+        disabled={model.available != undefined && !model.available}
+        loading={loading}
+      >
+        Test
+      </Button>
+      {error || (testResult && testResult !== "ok") ? (
+        <Tooltip title={error?.message ?? "an error occurred"}>
+          <CloseCircleOutlined style={{ color: cdlRed600 }} />
+        </Tooltip>
+      ) : null}
+    </Flex>
+  );
+};
+
+export const modelColumns: TableProps<Model>["columns"] = [
+  {
+    title: "Model ID",
+    dataIndex: "model_id",
+    key: "model_id",
+    width: 350,
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
+    key: "name",
+    width: 350,
+    render: (name?: string) =>
+      name ?? <Typography.Text type="warning">No model found</Typography.Text>,
+  },
+  {
+    title: "Status",
+    dataIndex: "available",
+    width: 150,
+    key: "available",
+    render: (_, model) => {
+      if (!model.name) {
+        return null;
+      }
+      if (model.available === undefined) {
+        return "Unknown";
+      }
+      return model.available ? "Available" : "Not Ready";
+    },
+  },
+];

@@ -50,6 +50,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { QueryConfiguration, useChatHistoryQuery } from "src/api/chatApi.ts";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 import { Session } from "src/services/api/api";
 
@@ -63,6 +64,7 @@ const getDataSourceIdForSession = (session?: Session) => {
 
 function ChatLayout() {
   const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+  const { data: llmModels } = useSuspenseQuery(getLlmModelsQueryOptions);
   const { sessionId } = useParams({ strict: false });
   const activeSession = getSessionForSessionId(sessionId, sessions);
   const dataSourceId = getDataSourceIdForSession(activeSession);
@@ -84,6 +86,15 @@ function ChatLayout() {
   useEffect(() => {
     setCurrentQuestion("");
   }, [sessionId]);
+
+  useEffect(() => {
+    if (llmModels.length) {
+      setQueryConfiguration((prev) => ({
+        ...prev,
+        model_name: llmModels[0].model_id,
+      }));
+    }
+  }, [llmModels, setQueryConfiguration]);
 
   const sessionsByDate = groupBy(sessions, (session) => {
     const relevantTime = session.last_interaction_time || session.time_updated;

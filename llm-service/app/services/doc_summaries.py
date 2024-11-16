@@ -53,7 +53,6 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
-from .llama_utils import completion_to_prompt, messages_to_prompt
 from . import rag_vector_store
 from .s3 import download
 from .utils import get_last_segment
@@ -118,7 +117,7 @@ def generate_summary(
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
 def set_settings_globals():
-    Settings.llm = models.get_llm(messages_to_prompt, completion_to_prompt, "meta.llama3-8b-instruct-v1:0")
+    Settings.llm = models.get_llm("meta.llama3-8b-instruct-v1:0")
     Settings.embed_model = models.get_embedding_model()
     Settings.splitter = SentenceSplitter(chunk_size=1024)
 

@@ -44,7 +44,6 @@ from llama_index.core.chat_engine import CondenseQuestionChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
-from llama_index.core.llms.chatml_utils import completion_to_prompt
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.readers import SimpleDirectoryReader
@@ -55,7 +54,6 @@ from pydantic import BaseModel
 from . import rag_vector_store
 from ..rag_types import RagPredictConfiguration
 from .chat_store import RagContext
-from .llama_utils import completion_to_prompt, messages_to_prompt
 from . import models
 from .utils import get_last_segment
 
@@ -166,8 +164,7 @@ def query(
         embed_model=embedding_model, # is this needed, really, if it's in the index?
     )
     # TODO: factor out LLM and chat engine into a separate function
-    llm = models.get_llm(messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt,
-                  model_name=configuration.model_name)
+    llm = models.get_llm(model_name=configuration.model_name)
 
     response_synthesizer = get_response_synthesizer(llm=llm)
     query_engine = RetrieverQueryEngine(

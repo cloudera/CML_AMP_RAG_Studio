@@ -35,12 +35,11 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from datetime import datetime
-
+from llama_index.core.base.llms import generic_utils
 from llama_index.core.base.llms.types import LLMMetadata
+from llama_index.core.bridge.pydantic import Field
+from llama_index.llms.mistralai.base import MistralAI
 from llama_index.llms.openai import OpenAI
-from pydantic import Field
-
 
 class CaiiModel(OpenAI):
     context: int = Field(
@@ -66,12 +65,42 @@ class CaiiModel(OpenAI):
 
     @property
     def metadata(self) -> LLMMetadata:
-        print("metadata called at: ", datetime.now())
         ## todo: pull this info from somewhere
         return LLMMetadata(
             context_window=self.context,
             num_output=self.max_tokens or -1,
             is_chat_model=True,
+            is_function_calling_model=True,
+            model_name=self.model,
+        )
+
+
+class CaiiModelMistral(MistralAI):
+
+    def __init__(
+            self,
+            model: str,
+            context: int,
+            api_base: str,
+            messages_to_prompt,
+            completion_to_prompt,
+            default_headers):
+        super().__init__(
+            api_key=default_headers.get("Authorization"),
+            model=model,
+            endpoint=api_base.removesuffix("/v1"), # mistral expects the base url without the /v1
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt
+        )
+
+
+    @property
+    def metadata(self) -> LLMMetadata:
+        ## todo: pull this info from somewhere
+        return LLMMetadata(
+            context_window=32000,  ## this is the minimum mistral context window from utils.py
+            num_output=self.max_tokens or -1,
+            is_chat_model=False,
             is_function_calling_model=True,
             model_name=self.model,
         )
