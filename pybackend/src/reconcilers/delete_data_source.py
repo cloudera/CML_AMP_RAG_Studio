@@ -1,5 +1,4 @@
-import logging
-from typing import Any, Set
+from typing import Any
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
@@ -25,9 +24,9 @@ class DeleteDataSourceReconciler(Reconciler[int]):
     def resync(self) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                data_sources = DataSourceDAL.get_soft_deleted_data_sources(cursor)
-                for data_source in data_sources:
-                    self.submit(data_source.id)
+                ids = DataSourceDAL.list_soft_deleted_data_sources_ids(cursor)
+                for id in ids:
+                    self.submit(id)
 
     def reconcile(self, data_source_id: int) -> None:
         self.python_client.delete_data_source(data_source_id)

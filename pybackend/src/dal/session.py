@@ -51,9 +51,9 @@ class SessionDAL:
         cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
 
     @staticmethod
-    def get_soft_deleted_sessions(cursor: Cursor) -> List[Session]:
-        cursor.execute("SELECT blob FROM sessions WHERE deleted = TRUE")
-        return [SessionDAL._deserialize(row[0]) for row in cursor.fetchall()]
+    def list_soft_deleted_sessions_ids(cursor: Cursor) -> List[int]:
+        cursor.execute("SELECT id FROM sessions WHERE deleted = TRUE")
+        return [row[0] for row in cursor.fetchall()]
 
     @staticmethod
     def _serialize(session: Session) -> bytes:

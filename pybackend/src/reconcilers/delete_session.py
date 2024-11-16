@@ -1,5 +1,4 @@
-import logging
-from typing import Any, Dict, Set
+from typing import Any
 
 from src.dal.session import SessionDAL
 from src.db.provider import DBConnectionProvider, transaction
@@ -24,9 +23,9 @@ class DeleteSessionReconciler(Reconciler[int]):
     def resync(self) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                sessions = SessionDAL.get_soft_deleted_sessions(cursor)
-                for session in sessions:
-                    self.submit(session.id)
+                ids = SessionDAL.list_soft_deleted_sessions_ids(cursor)
+                for id in ids:
+                    self.submit(id)
 
     def reconcile(self, session_id: int) -> None:
         self.python_client.delete_session(session_id)

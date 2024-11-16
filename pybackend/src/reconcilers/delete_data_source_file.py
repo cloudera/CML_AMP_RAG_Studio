@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Optional
 
 import boto3
@@ -31,11 +30,9 @@ class DeleteDataSourceFileReconciler(Reconciler[str]):
     def resync(self) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                data_source_files = (
-                    DataSourceFileDAL.get_soft_deleted_data_source_files(cursor)
-                )
-                for data_source_file in data_source_files:
-                    self.submit(data_source_file.id)
+                ids = DataSourceFileDAL.list_soft_deleted_data_source_files_ids(cursor)
+                for id in ids:
+                    self.submit(id)
 
     def reconcile(self, data_source_file_id: str) -> None:
         with self.db_connection_provider.connection() as connection:

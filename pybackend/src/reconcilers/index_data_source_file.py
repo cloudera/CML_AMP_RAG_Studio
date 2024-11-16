@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import Any, Optional
 
@@ -33,10 +32,9 @@ class IndexDataSourceFileReconciler(Reconciler[str]):
     def resync(self) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                data_source_files = DataSourceFileDAL.list_files_to_index(cursor)
-                for data_source_file in data_source_files:
-                    assert data_source_file.vector_upload_timestamp is None
-                    self.submit(data_source_file.id)
+                ids = DataSourceFileDAL.list_ids_to_index(cursor)
+                for id in ids:
+                    self.submit(id)
 
     def reconcile(self, data_source_file_id: str) -> None:
         with self.db_connection_provider.connection() as connection:

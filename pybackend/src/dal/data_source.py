@@ -52,11 +52,11 @@ class DataSourceDAL:
         cursor.execute("DELETE FROM data_sources WHERE id = ?", (data_source_id,))
 
     @staticmethod
-    def get_soft_deleted_data_sources(cursor: Cursor) -> List[DataSource]:
+    def list_soft_deleted_data_sources_ids(cursor: Cursor) -> List[int]:
         cursor.execute(
-            "SELECT blob FROM data_sources WHERE deleted = TRUE",
+            "SELECT id FROM data_sources WHERE deleted = TRUE",
         )
-        return [DataSourceDAL._deserialize(row[0]) for row in cursor.fetchall()]
+        return [row[0] for row in cursor.fetchall()]
 
     @staticmethod
     def _serialize(data_source: DataSource) -> bytes:

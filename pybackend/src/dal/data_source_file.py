@@ -41,18 +41,18 @@ class DataSourceFileDAL:
         )
 
     @staticmethod
-    def list_files_to_index(cursor: Cursor) -> List[DataSourceFile]:
+    def list_ids_to_index(cursor: Cursor) -> List[str]:
         cursor.execute(
-            "SELECT blob FROM data_source_files WHERE indexed = FALSE AND deleted = FALSE",
+            "SELECT id FROM data_source_files WHERE indexed = FALSE AND deleted = FALSE",
         )
-        return [DataSourceFileDAL._deserialize(row[0]) for row in cursor.fetchall()]
+        return [row[0] for row in cursor.fetchall()]
 
     @staticmethod
-    def list_files_to_summarize(cursor: Cursor) -> List[DataSourceFile]:
+    def list_ids_to_summarize(cursor: Cursor) -> List[str]:
         cursor.execute(
-            "SELECT blob FROM data_source_files WHERE summarized = FALSE AND deleted = FALSE",
+            "SELECT id FROM data_source_files WHERE summarized = FALSE AND deleted = FALSE",
         )
-        return [DataSourceFileDAL._deserialize(row[0]) for row in cursor.fetchall()]
+        return [row[0] for row in cursor.fetchall()]
 
     @staticmethod
     def soft_delete_data_source_file(cursor: Cursor, data_source_file_id: str) -> None:
@@ -69,11 +69,11 @@ class DataSourceFileDAL:
         )
 
     @staticmethod
-    def get_soft_deleted_data_source_files(cursor: Cursor) -> List[DataSourceFile]:
+    def list_soft_deleted_data_source_files_ids(cursor: Cursor) -> List[str]:
         cursor.execute(
-            "SELECT blob FROM data_source_files WHERE deleted = TRUE",
+            "SELECT id FROM data_source_files WHERE deleted = TRUE",
         )
-        return [DataSourceFileDAL._deserialize(row[0]) for row in cursor.fetchall()]
+        return [row[0] for row in cursor.fetchall()]
 
     @staticmethod
     def _serialize(data_source_file: DataSourceFile) -> bytes:

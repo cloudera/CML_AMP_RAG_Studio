@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import Any, Optional
 
@@ -32,10 +31,9 @@ class SummarizeDataSourceFileReconciler(Reconciler[str]):
     def resync(self) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
-                data_source_files = DataSourceFileDAL.list_files_to_summarize(cursor)
-                for data_source_file in data_source_files:
-                    assert data_source_file.summary_creation_timestamp is None
-                    self.submit(data_source_file.id)
+                ids = DataSourceFileDAL.list_ids_to_summarize(cursor)
+                for id in ids:
+                    self.submit(id)
 
     def reconcile(self, data_source_file_id: str) -> None:
         with self.db_connection_provider.connection() as connection:
