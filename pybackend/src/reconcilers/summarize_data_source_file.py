@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
@@ -16,14 +16,14 @@ from src.reconcilers.reconciler import Reconciler
 logger = setup_logger(__name__)
 
 
-class SummarizeDataSourceFileReconciler(Reconciler):
+class SummarizeDataSourceFileReconciler(Reconciler[str]):
     def __init__(
         self,
         db_connection_provider: DBConnectionProvider,
         python_client: PythonClient,
         s3_bucket_name: str,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client
@@ -37,7 +37,7 @@ class SummarizeDataSourceFileReconciler(Reconciler):
                     assert data_source_file.summary_creation_timestamp is None
                     self.submit(data_source_file.id)
 
-    def reconcile(self, data_source_file_id: int) -> None:
+    def reconcile(self, data_source_file_id: str) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 data_source_file: Optional[DataSourceFile] = (

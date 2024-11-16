@@ -8,6 +8,7 @@ from typing import Optional
 import boto3
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
+
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import (
@@ -131,7 +132,7 @@ class DataSourceFilesApi:
                     f"Data source with id {data_source_id} not found",
                 )
                 data_source.status.document_count += 1
-                data_source.status.total_doc_size += file.size
+                data_source.status.total_doc_size += file.size or 0
                 data_source.time_updated = now
                 data_source.updated_by_id = user_id
                 DataSourceDAL.save_data_source(cursor, data_source)
@@ -150,7 +151,7 @@ class DataSourceFilesApi:
                     data_source_id=data_source_id,
                     document_id=id,  # ??
                     s3_path=s3_path,
-                    size_in_bytes=file.size,
+                    size_in_bytes=file.size or 0,
                     extension=extension,
                     summary_creation_timestamp=None,
                     vector_upload_timestamp=None,
@@ -202,10 +203,10 @@ class DataSourceFilesApi:
         return f"{self.config.s3_path_prefix}/{data_source_id}/{file_id}"
 
 
-class DataSourceFilesApiSingleton(BaseDataSourceFilesApi):
+class DataSourceFilesApiSingleton(BaseDataSourceFilesApi):  # type: ignore
     _instance: Optional[DataSourceFilesApi] = None
 
-    def __new__(cls, **kwargs):
+    def __new__(cls, **kwargs) -> DataSourceFilesApi:  # type: ignore
         if not cls._instance:
             cls._instance = DataSourceFilesApi(**kwargs)
         return cls._instance

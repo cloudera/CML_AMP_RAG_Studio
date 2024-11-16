@@ -12,7 +12,7 @@ license = {text = "TBD"}
 
 
 [dependency-groups]
-dev = ["pytest>=8.3.3", "hypothesis>=6.118.0", "moto>=5.0.20"]
+dev = ["pytest>=8.3.3", "hypothesis>=6.118.0", "moto>=5.0.20", "mypy>=1.13.0"]
 
 [tool.pytest.ini_options]
 pythonpath = [
@@ -30,3 +30,22 @@ markers = [
 [tool.pdm]
 distribution = false
 
+[tool.mypy]
+files = ["src/"]
+ignore_missing_imports = true
+strict = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_return_any = true
+show_error_codes = true
+exclude = "src/openapi_server/(apis|models)/.*"
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+module = "src.openapi_server.apis.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.openapi_server.models.*"
+ignore_errors = true

@@ -12,10 +12,10 @@ T = TypeVar("T")
 class Reconciler(Generic[T]):
     def __init__(
         self, logger: logging.Logger, batch_size: int = 100, resync_interval: int = 5
-    ):
+    ) -> None:
         self.logger = logger
-        self.pending_items = set()
-        self.running_items = set()
+        self.pending_items: Set[T] = set()
+        self.running_items: Set[T] = set()
         self.lock = threading.Lock()
         self.batch_size = batch_size
         self.resync_interval = resync_interval
@@ -60,7 +60,7 @@ class Reconciler(Generic[T]):
 
     def _reconcile_loop(self) -> None:
         while True:
-            items = set()
+            items: Set[T] = set()
             with self.lock:
                 while len(items) < self.batch_size:
                     if not self.pending_items:

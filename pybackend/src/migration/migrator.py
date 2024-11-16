@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 class Migrator:
-    def __init__(self, datastore: Datastore):
+    def __init__(self, datastore: Datastore) -> None:
         self.datastore = datastore
         datastore.ensure_migration_content_table_exists()
         datastore.ensure_migration_state_table_exists()
 
-    def perform_migration(self, desired_version: Optional[int] = None):
+    def perform_migration(self, desired_version: Optional[int] = None) -> None:
         self._update_migrations()
 
         state = self.datastore.get_migration_state()
@@ -58,7 +58,7 @@ class Migrator:
 
         logger.info("Database migrations completed successfully.")
 
-    def _update_migrations(self):
+    def _update_migrations(self) -> None:
         migrations = self.datastore.get_migrations_from_disk()
         self.datastore.update_migrations(migrations)
 
@@ -66,7 +66,7 @@ class Migrator:
         if state.version <= 1:
             raise RuntimeError(
                 "Database is in a dirty state at version "
-                + state.version
+                + str(state.version)
                 + ". Bailing out until dropping the database is implemented."
             )
         # We assume if a migration failed, that it wasn't applied, so it should be safe

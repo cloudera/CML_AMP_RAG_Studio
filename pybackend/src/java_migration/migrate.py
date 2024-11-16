@@ -1,4 +1,5 @@
 import os
+from typing import Dict, List
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
@@ -8,6 +9,7 @@ from src.db.provider import (
     transaction,
 )
 from src.java_migration.client import JavaClient
+from src.java_migration.types import JavaRagDocument
 
 
 class JavaMigrator:
@@ -17,12 +19,12 @@ class JavaMigrator:
         self.client = client
         self.db_connection_provider = db_connection_provider
 
-    def migrate(self):
+    def migrate(self) -> None:
         # Load data sources
         data_sources = self.client.get_rag_data_sources()
 
         # Load documents
-        documents = {}
+        documents: Dict[int, List[JavaRagDocument]] = {}
         for data_source in data_sources:
             documents[data_source.id] = self.client.get_rag_documents(data_source.id)
 
@@ -30,23 +32,25 @@ class JavaMigrator:
         sessions = self.client.get_rag_sessions()
 
         # Migrate data sources
-        dal = DataSourceDAL()
+        data_source_dal = DataSourceDAL()
         for data_source in data_sources:
             with self.db_connection_provider.connection() as connection:
                 with transaction(connection) as cursor:
-                    dal.save_data_source(cursor, data_source.to_model())
+                    data_source_dal.save_data_source(cursor, data_source.to_model())
 
         # Migrate documents
-        dal = DataSourceFileDAL()
-        for documents in documents.values():
-            for document in documents:
+        data_source_file_dal = DataSourceFileDAL()
+        for documents_for_data_source in documents.values():
+            for document in documents_for_data_source:
                 with self.db_connection_provider.connection() as connection:
                     with transaction(connection) as cursor:
-                        dal.save_data_source_file(cursor, document.to_model())
+                        data_source_file_dal.save_data_source_file(
+                            cursor, document.to_model()
+                        )
 
         # Migrate sessions
-        dal = SessionDAL()
+        session_dal = SessionDAL()
         for session in sessions:
             with self.db_connection_provider.connection() as connection:
                 with transaction(connection) as cursor:
-                    dal.save_session(cursor, session.to_model())
+                    session_dal.save_session(cursor, session.to_model())

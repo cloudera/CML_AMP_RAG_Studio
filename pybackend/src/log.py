@@ -2,9 +2,9 @@ import logging
 
 
 def setup_logger(
-    name,
-    log_level=logging.INFO,
-):
+    name: str,
+    log_level: int = logging.INFO,
+) -> logging.Logger:
     # Create a logger object
     logger = logging.getLogger(name)
     logger.setLevel(log_level)

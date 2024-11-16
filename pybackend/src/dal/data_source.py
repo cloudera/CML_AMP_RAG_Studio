@@ -9,7 +9,7 @@ class DataSourceDAL:
     @staticmethod
     def next_id(cursor: Cursor) -> int:
         cursor.execute("SELECT MAX(id) FROM data_sources")
-        last_id = cursor.fetchone()[0]
+        last_id: Optional[int] = cursor.fetchone()[0]
         if last_id is None:
             return 1
         return last_id + 1

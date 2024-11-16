@@ -28,15 +28,17 @@ class MigrationContent:
         else:
             raise ValueError(f"Invalid migration name: {name}")
 
-    def __eq__(self, other: "MigrationContent"):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MigrationContent):
+            return False
         return self.name == other.name and self.content == other.content
 
-    def __lt__(self, other: "MigrationContent"):
+    def __lt__(self, other: "MigrationContent") -> bool:
         if self.id != other.id:
             return self.id < other.id
         return self.up < other.up
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"MigrationContent(name={self.name}, id={self.id}, up={self.up})"
 
 
@@ -50,7 +52,7 @@ class Datastore(ABC):
     """Abstract base class for datastore migrations."""
 
     @abstractmethod
-    def ensure_migration_state_table_exists(self):
+    def ensure_migration_state_table_exists(self) -> None:
         """
         Ensure the migration table exists.
         """
@@ -62,12 +64,12 @@ class Datastore(ABC):
         pass
 
     @abstractmethod
-    def update_migration_state(self, state: MigrationState):
+    def update_migration_state(self, state: MigrationState) -> None:
         """Update the migration state."""
         pass
 
     @abstractmethod
-    def ensure_migration_content_table_exists(self):
+    def ensure_migration_content_table_exists(self) -> None:
         """
         Ensure the migration content table exists.
         """
@@ -84,12 +86,12 @@ class Datastore(ABC):
         pass
 
     @abstractmethod
-    def update_migrations(self, migrations: List[MigrationContent]):
+    def update_migrations(self, migrations: List[MigrationContent]) -> None:
         """Update the migrations."""
         pass
 
     @abstractmethod
-    def execute_migration(self, migration: MigrationContent):
+    def execute_migration(self, migration: MigrationContent) -> None:
         """Execute a migration."""
         pass
 
@@ -97,10 +99,10 @@ class Datastore(ABC):
 class SQLiteDatastore(Datastore):
     """Datastore implementation using SQLite."""
 
-    def __init__(self, connection: Connection):
+    def __init__(self, connection: Connection) -> None:
         self.connection = connection
 
-    def ensure_migration_state_table_exists(self):
+    def ensure_migration_state_table_exists(self) -> None:
         """Create migration_state table if it doesn't exist."""
         self.connection.execute(
             f"""
@@ -128,14 +130,14 @@ class SQLiteDatastore(Datastore):
         )
         return MigrationState(*cursor.fetchone())
 
-    def update_migration_state(self, state: MigrationState):
+    def update_migration_state(self, state: MigrationState) -> None:
         self.connection.execute(
             f"INSERT OR REPLACE INTO {MIGRATION_STATE_TABLE} (key, version, dirty) VALUES (0, ?, ?)",
             (state.version, state.dirty),
         )
         self.connection.commit()
 
-    def ensure_migration_content_table_exists(self):
+    def ensure_migration_content_table_exists(self) -> None:
         """Create migration_content table if it doesn't exist."""
         self.connection.execute(
             f"""
@@ -165,7 +167,7 @@ class SQLiteDatastore(Datastore):
                 migrations.append(MigrationContent(file.name, f.read()))
         return list(sorted(migrations))
 
-    def update_migrations(self, migrations: List[MigrationContent]):
+    def update_migrations(self, migrations: List[MigrationContent]) -> None:
         """Update the migrations."""
         migration_tuples = [(m.name, m.content) for m in migrations]
 
@@ -175,7 +177,7 @@ class SQLiteDatastore(Datastore):
         )
         self.connection.commit()
 
-    def execute_migration(self, migration: MigrationContent):
+    def execute_migration(self, migration: MigrationContent) -> None:
         """Execute a migration."""
         sql = migration.content.strip()
         if sql:

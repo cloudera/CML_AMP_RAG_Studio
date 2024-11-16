@@ -4,8 +4,8 @@ import threading
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from contextvars import ContextVar
-from sqlite3 import Connection
-from typing import Optional
+from sqlite3 import Connection, Cursor
+from typing import Generator, Optional
 
 from src.migration.datastore import SQLiteDatastore
 from src.migration.migrator import Migrator
@@ -14,18 +14,18 @@ from src.migration.migrator import Migrator
 class DBConnectionProvider(ABC):
     @abstractmethod
     @contextmanager
-    def connection(self):
+    def connection(self) -> Generator[Connection, None, None]:
         """Get a database connection."""
         pass
 
 
 class TestConnectionProvider(DBConnectionProvider):
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = threading.Lock()
         self._connection = sqlite3.connect(":memory:")
 
     @contextmanager
-    def connection(self):
+    def connection(self) -> Generator[Connection, None, None]:
         self._lock.acquire()
         try:
             yield self._connection
@@ -34,16 +34,16 @@ class TestConnectionProvider(DBConnectionProvider):
 
 
 class SQLiteConnectionProvider(DBConnectionProvider):
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str) -> None:
         self.db_path = db_path
 
     @contextmanager
-    def connection(self):
+    def connection(self) -> Generator[Connection, None, None]:
         yield sqlite3.connect(self.db_path)
 
 
 @contextmanager
-def transaction(conn: Connection):
+def transaction(conn: Connection) -> Generator[Cursor, None, None]:
     """Context manager for handling transactions."""
     cursor = conn.cursor()
     try:

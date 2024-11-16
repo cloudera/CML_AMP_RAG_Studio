@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
@@ -17,14 +17,14 @@ from src.reconcilers.reconciler import Reconciler
 logger = setup_logger(__name__)
 
 
-class IndexDataSourceFileReconciler(Reconciler):
+class IndexDataSourceFileReconciler(Reconciler[str]):
     def __init__(
         self,
         db_connection_provider: DBConnectionProvider,
         python_client: PythonClient,
         s3_bucket_name: str,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client

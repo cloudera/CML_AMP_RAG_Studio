@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any, Dict
 
 import requests
 
@@ -8,7 +9,7 @@ class IndexConfiguration:
     chunk_size: int
     chunk_overlap_percentage: int
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "chunk_size": self.chunk_size,
             "chunk_overlap": self.chunk_overlap_percentage,
@@ -22,7 +23,7 @@ class IndexRequest:
     data_source_id: int
     configuration: IndexConfiguration
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "s3_bucket_name": self.s3_bucket_name,
             "s3_document_key": self.s3_document_key,
@@ -36,7 +37,7 @@ class SummaryRequest:
     s3_bucket_name: str
     s3_document_key: str
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "s3_bucket_name": self.s3_bucket_name,
             "s3_document_key": self.s3_document_key,
@@ -44,7 +45,7 @@ class SummaryRequest:
 
 
 class PythonClient:
-    def __init__(self, index_url: str):
+    def __init__(self, index_url: str) -> None:
         self.index_url = index_url
         self.session = requests.Session()
         self.session.headers.update(
@@ -67,7 +68,7 @@ class PythonClient:
                 json=request.to_dict(),
             )
             response.raise_for_status()
-            return response.text
+            return str(response.text)
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Failed to create summary: {str(e)}") from e
 

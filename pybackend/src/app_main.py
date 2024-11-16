@@ -2,6 +2,8 @@ import os
 
 import boto3
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
+
 from src.db.provider import SQLiteConnectionProvider
 from src.migration.datastore import SQLiteDatastore
 from src.migration.migrator import Migrator
@@ -18,7 +20,6 @@ from src.reconcilers.delete_data_source_file import DeleteDataSourceFileReconcil
 from src.reconcilers.delete_session import DeleteSessionReconciler
 from src.reconcilers.index_data_source_file import IndexDataSourceFileReconciler
 from src.reconcilers.summarize_data_source_file import SummarizeDataSourceFileReconciler
-from starlette.middleware.gzip import GZipMiddleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,7 +34,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add this new endpoint after the existing routes
 @app.get("/_health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
 
 
@@ -48,11 +49,13 @@ with db_connection_provider.connection() as connection:
 
 # Initialize the S3 client
 s3_client = boto3.client("s3")
-s3_bucket_name = os.getenv("S3_RAG_DOCUMENT_BUCKET")
-s3_path_prefix = os.getenv("S3_RAG_BUCKET_PREFIX")
+s3_bucket_name = os.getenv("S3_RAG_DOCUMENT_BUCKET", "")
+s3_path_prefix = os.getenv("S3_RAG_BUCKET_PREFIX", "")
 
 # Initialize the Python client
-python_client = PythonClient(os.getenv("LLM_SERVICE_URL") + "/index")
+python_client = PythonClient(
+    os.getenv("LLM_SERVICE_URL", "http://localhost:8000") + "/index"
+)
 
 # Initialize the reconcilers
 DeleteDataSourceFileReconciler(

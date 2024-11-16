@@ -1,5 +1,5 @@
 import logging
-from typing import Set
+from typing import Any, Set
 
 from src.dal.data_source import DataSourceDAL
 from src.dal.data_source_file import DataSourceFileDAL
@@ -11,13 +11,13 @@ from src.reconcilers.reconciler import Reconciler
 logger = setup_logger(__name__)
 
 
-class DeleteDataSourceReconciler(Reconciler):
+class DeleteDataSourceReconciler(Reconciler[int]):
     def __init__(
         self,
         db_connection_provider: DBConnectionProvider,
         python_client: PythonClient,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client

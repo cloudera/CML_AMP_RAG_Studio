@@ -1,7 +1,8 @@
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 import boto3
+
 from src.dal.data_source_file import DataSourceFileDAL
 from src.db.provider import DBConnectionProvider, transaction
 from src.log import setup_logger
@@ -12,15 +13,15 @@ from src.reconcilers.reconciler import Reconciler
 logger = setup_logger(__name__)
 
 
-class DeleteDataSourceFileReconciler(Reconciler):
+class DeleteDataSourceFileReconciler(Reconciler[str]):
     def __init__(
         self,
         db_connection_provider: DBConnectionProvider,
         python_client: PythonClient,
         s3_bucket_name: str,
         s3_client: boto3.client,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         super().__init__(logger=logger, **kwargs)
         self.db_connection_provider = db_connection_provider
         self.python_client = python_client
@@ -36,7 +37,7 @@ class DeleteDataSourceFileReconciler(Reconciler):
                 for data_source_file in data_source_files:
                     self.submit(data_source_file.id)
 
-    def reconcile(self, data_source_file_id: int) -> None:
+    def reconcile(self, data_source_file_id: str) -> None:
         with self.db_connection_provider.connection() as connection:
             with transaction(connection) as cursor:
                 data_source_file: Optional[DataSourceFile] = (

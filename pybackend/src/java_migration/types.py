@@ -4,6 +4,9 @@ from enum import Enum
 from typing import List, Optional
 
 from src.openapi_server.models.data_source import DataSource
+from src.openapi_server.models.data_source_connection_type import (
+    DataSourceConnectionType,
+)
 from src.openapi_server.models.data_source_file import DataSourceFile
 from src.openapi_server.models.data_source_status import DataSourceStatus
 from src.openapi_server.models.session import Session
@@ -40,7 +43,7 @@ class JavaRagDataSource:
             updated_by_id=self.updated_by_id,
             chunk_size=self.chunk_size,
             chunk_overlap_percent=self.chunk_overlap_percent,
-            connection_type=self.connection_type.value,
+            connection_type=DataSourceConnectionType(self.connection_type.value),
             status=DataSourceStatus(
                 document_count=self.document_count or 0,
                 total_doc_size=self.total_doc_size or 0,
@@ -66,7 +69,7 @@ class JavaRagDocument:
 
     def to_model(self) -> DataSourceFile:
         return DataSourceFile(
-            id=self.id,
+            id=str(self.id),
             time_created=self.time_created,
             time_updated=self.time_updated,
             created_by_id=self.created_by_id,

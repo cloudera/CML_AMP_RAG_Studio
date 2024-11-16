@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
+
 from src.dal.data_source import DataSourceDAL
 from src.db.provider import (
     DBConnectionProvider,
@@ -118,10 +119,10 @@ class DataSourceApi:
             )
 
 
-class DataSourceApiSingleton(BaseDataSourceApi):
+class DataSourceApiSingleton(BaseDataSourceApi):  # type: ignore
     _instance: Optional[DataSourceApi] = None
 
-    def __new__(cls, **kwargs):
+    def __new__(cls, **kwargs) -> DataSourceApi:  # type: ignore
         if not cls._instance:
             cls._instance = DataSourceApi(**kwargs)
         return cls._instance

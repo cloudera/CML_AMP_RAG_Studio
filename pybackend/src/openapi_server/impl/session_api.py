@@ -88,14 +88,14 @@ class SessionApi:
                 session.time_updated = now
                 session.updated_by_id = user_id
                 # TODO: update last_interaction_time?
-                SessionDAL.save(cursor, session)
+                SessionDAL.save_session(cursor, session)
                 return session
 
 
-class SessionApiSingleton(BaseSessionApi):
+class SessionApiSingleton(BaseSessionApi):  # type: ignore
     _instance: Optional[SessionApi] = None
 
-    def __new__(cls, **kwargs):
+    def __new__(cls, **kwargs) -> SessionApi:  # type: ignore
         if not cls._instance:
             cls._instance = SessionApi(**kwargs)
         return cls._instance
