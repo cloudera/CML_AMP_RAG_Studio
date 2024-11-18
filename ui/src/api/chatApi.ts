@@ -138,7 +138,7 @@ const appendPlaceholderToChatHistory = (
   return [...cachedData, placeholderChatResponse(query)];
 };
 
-const replacePlaceholderInChatHistory = (
+export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
   cachedData?: ChatMessageType[],
 ) => {

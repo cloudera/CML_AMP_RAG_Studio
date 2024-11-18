@@ -36,11 +36,25 @@
  * DATA.
  ******************************************************************************/
 
-import { Popover, Table, TableProps, Tooltip } from "antd";
+import {
+  Button,
+  Flex,
+  Modal,
+  Popover,
+  Table,
+  TableProps,
+  Tooltip,
+  Typography,
+} from "antd";
 import { useParams } from "@tanstack/react-router";
-import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  DeleteOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import {
   RagDocumentResponseType,
+  useDeleteDocumentMutation,
   useGetRagDocuments,
 } from "src/api/ragDocumentsApi.ts";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
@@ -49,6 +63,11 @@ import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import { useState } from "react";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
+import useModal from "src/utils/useModal.ts";
+import { cdlWhite } from "src/cuix/variables.ts";
 
 function SummaryPopover({
   dataSourceId,
@@ -80,9 +99,27 @@ function SummaryPopover({
 
 const columns = (
   dataSourceId: string,
+  handleDeleteFile: (document: RagDocumentResponseType) => void,
 ): TableProps<RagDocumentResponseType>["columns"] => [
   {
-    title: <AiAssistantIcon />,
+    title: (
+      <Tooltip
+        title={
+          <Flex vertical gap={4}>
+            <Typography.Text style={{ color: cdlWhite }}>
+              Document Summary
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
+              Note: Document summarization can take a significant amount of
+              time, but will not impact the ability to use the document for
+              Chat.
+            </Typography.Text>
+          </Flex>
+        }
+      >
+        <AiAssistantIcon />
+      </Tooltip>
+    ),
     dataIndex: "summaryCreationTimestamp",
     key: "summaryCreationTimestamp",
     render: (timestamp: number | null, data) => {
@@ -134,17 +171,73 @@ const columns = (
     render: (timestamp?: number) =>
       timestamp == null ? <LoadingOutlined spin /> : <CheckCircleOutlined />,
   },
+  {
+    title: "Actions",
+    render: (_, record) => {
+      return (
+        <Button
+          type="text"
+          icon={<DeleteOutlined />}
+          onClick={() => {
+            handleDeleteFile(record);
+          }}
+        />
+      );
+    },
+  },
 ];
 
 const UploadedFilesTable = () => {
   const dataSourceId = useParams({
     from: "/_layout/data/_layout-datasources/$dataSourceId",
   }).dataSourceId;
+  const [selectedDocument, setSelectedDocument] =
+    useState<RagDocumentResponseType>();
+  const deleteConfirmationModal = useModal();
+  const queryClient = useQueryClient();
   const getRagDocuments = useGetRagDocuments(dataSourceId);
+  const deleteDocumentMutation = useDeleteDocumentMutation({
+    onSuccess: () => {
+      messageQueue.success("Document deleted successfully");
+      deleteConfirmationModal.setIsModalOpen(false);
+      setSelectedDocument(undefined);
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getRagDocuments, { dataSourceId }],
+        })
+        .catch(() => {
+          messageQueue.error("Failed to refresh document list");
+        });
+    },
+    onError: () => {
+      messageQueue.error("Failed to delete document");
+    },
+  });
   const ragDocuments = getRagDocuments.data
     ? getRagDocuments.data.map((doc) => ({ ...doc, key: doc.id }))
     : [];
   const docsLoading = getRagDocuments.isLoading || getRagDocuments.isPending;
+
+  const handleDeleteFile = () => {
+    if (!selectedDocument) {
+      return null;
+    }
+
+    deleteDocumentMutation.mutate({
+      id: selectedDocument.id,
+      dataSourceId: selectedDocument.dataSourceId.toString(),
+    });
+  };
+
+  const handleDeleteFileModal = (document: RagDocumentResponseType) => {
+    setSelectedDocument(document);
+    deleteConfirmationModal.setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    deleteConfirmationModal.setIsModalOpen(false);
+    setSelectedDocument(undefined);
+  };
 
   return (
     <>
@@ -156,8 +249,23 @@ const UploadedFilesTable = () => {
       <Table<RagDocumentResponseType>
         loading={docsLoading}
         dataSource={ragDocuments}
-        columns={columns(dataSourceId)}
+        columns={columns(dataSourceId, handleDeleteFileModal)}
       />
+      <Modal
+        title="Delete document?"
+        open={deleteConfirmationModal.isModalOpen}
+        onOk={handleDeleteFile}
+        okText={"Yes, delete"}
+        loading={deleteDocumentMutation.isPending}
+        okButtonProps={{
+          danger: true,
+        }}
+        onCancel={handleCloseModal}
+      >
+        <Flex style={{ marginTop: 20 }} vertical gap={16}>
+          <Typography.Text italic>{selectedDocument?.filename}</Typography.Text>
+        </Flex>
+      </Modal>
     </>
   );
 };

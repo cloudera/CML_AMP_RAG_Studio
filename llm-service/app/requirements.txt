@@ -6,4 +6,12 @@ pydantic-settings == 2.3.4
 boto3 == 1.34.26
 llama-index-embeddings-bedrock == 0.2.1
 llama-index-llms-bedrock == 0.1.13
+llama-index-llms-openai == 0.1.31
+llama-index-llms-mistralai == 0.1.20
+llama-index-embeddings-openai == 0.1.11
 llama-index-vector-stores-qdrant == 0.2.17
+
+
+# test deps
+moto[s3]
+pytest

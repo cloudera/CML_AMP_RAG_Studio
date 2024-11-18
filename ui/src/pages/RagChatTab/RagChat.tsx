@@ -42,13 +42,10 @@ import ChatBodyController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatBod
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
-import { QueryClient } from "@tanstack/react-query";
 
 const { Footer, Content } = Layout;
 
 const RagChat = () => {
-  const queryClient = new QueryClient();
-  console.log("RagChat.tsx: RagChat: queryClient: ", queryClient);
   const { dataSourceId, dataSources, activeSession } =
     useContext(RagChatContext);
 

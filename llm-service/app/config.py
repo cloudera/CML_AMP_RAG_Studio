@@ -45,6 +45,7 @@ simply the field name in all capital letters.
 # ##############################################################################
 
 import logging
+import os.path
 from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -96,6 +97,7 @@ class Settings(BaseSettings):
     s3: S3Settings = S3Settings()
 
     rag_log_level: int = logging.INFO
+    rag_databases_dir: str = os.path.join("..", "databases")
 
 
 settings = Settings()

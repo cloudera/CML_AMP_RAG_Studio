@@ -38,7 +38,13 @@
 
 import { JobStatus } from "src/api/ampUpdateApi.ts";
 import { Flex, Progress, Typography } from "antd";
-import { cdlBlue600, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
+import {
+  cdlAmber400,
+  cdlBlue600,
+  cdlGray200,
+  cdlGreen600,
+  cdlRed600,
+} from "src/cuix/variables.ts";
 
 const jobStatusDisplayValue = (jobStatus?: JobStatus): string => {
   const statusMap: Record<JobStatus, string> = {
@@ -57,8 +63,9 @@ const jobStatusDisplayValue = (jobStatus?: JobStatus): string => {
   return jobStatus && statusMap[jobStatus] ? statusMap[jobStatus] : "Unknown";
 };
 
-const JobStatusTracker = ({ jobStatus }: { jobStatus?: JobStatus }) => {
-  let percent = 0;
+function decideProgressStatus(jobStatus?: JobStatus): [number, string] {
+  let percent: number;
+  let color = cdlBlue600;
 
   switch (jobStatus) {
     case JobStatus.SCHEDULING:
@@ -75,11 +82,28 @@ const JobStatusTracker = ({ jobStatus }: { jobStatus?: JobStatus }) => {
       break;
     case JobStatus.SUCCEEDED:
       percent = 100;
+      color = cdlGreen600;
+      break;
+    case JobStatus.STOPPING:
+    case JobStatus.STOPPED:
+    case JobStatus.UNKNOWN:
+      percent = 100;
+      color = cdlAmber400;
+      break;
+    case JobStatus.FAILED:
+    case JobStatus.TIMEDOUT:
+      percent = 100;
+      color = cdlRed600;
       break;
     default:
       percent = 0;
       break;
   }
+  return [percent, color];
+}
+
+const JobStatusTracker = ({ jobStatus }: { jobStatus?: JobStatus }) => {
+  const [percent, color] = decideProgressStatus(jobStatus);
 
   return (
     <Progress
@@ -87,7 +111,7 @@ const JobStatusTracker = ({ jobStatus }: { jobStatus?: JobStatus }) => {
       percent={percent}
       steps={5}
       trailColor={cdlGray200}
-      strokeColor={percent === 100 ? cdlGreen600 : cdlBlue600}
+      strokeColor={color}
       strokeWidth={10}
       format={() => (
         <Flex align="center" justify="center">

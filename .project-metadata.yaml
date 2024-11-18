@@ -26,6 +26,18 @@ environment_variables:
         default: ""
         description: "AWS Secret Access Key"
         required: true
+    CAII_DOMAIN:
+      default: ""
+      description: "The domain of the CAII service. Setting this will enable CAII as the sole source for both inference and embedding models."
+      required: false
+    CAII_INFERENCE_ENDPOINT_NAME:
+      default: ""
+      description: "The name of the inference endpoint for the CAII service. Required if CAII_DOMAIN is set."
+      required: false
+    CAII_EMBEDDING_ENDPOINT_NAME:
+      default: ""
+      description: "The name of the embedding endpoint for the CAII service. Required if CAII_DOMAIN is set."
+      required: false
     DB_URL:
         default: "jdbc:h2:file:~/databases/rag"
         description: "Internal DB URL. Do not change."
@@ -38,6 +50,7 @@ environment_variables:
         default: "http://localhost:8080"
         description: "Internal API URL. Do not change."
         required: true
+
 
 runtimes:
   - editor: JupyterLab

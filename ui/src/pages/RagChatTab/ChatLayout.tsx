@@ -51,6 +51,7 @@ import {
 } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
@@ -62,6 +63,7 @@ const getDataSourceIdForSession = (session?: Session) => {
 
 function ChatLayout() {
   const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+  const { data: llmModels } = useSuspenseQuery(getLlmModelsQueryOptions);
   const { sessionId } = useParams({ strict: false });
   const activeSession = getSessionForSessionId(sessionId, sessions);
   const dataSourceId = getDataSourceIdForSession(activeSession);
@@ -82,6 +84,15 @@ function ChatLayout() {
   useEffect(() => {
     setCurrentQuestion("");
   }, [sessionId]);
+
+  useEffect(() => {
+    if (llmModels.length) {
+      setQueryConfiguration((prev) => ({
+        ...prev,
+        model_name: llmModels[0].model_id,
+      }));
+    }
+  }, [llmModels, setQueryConfiguration]);
 
   const sessionsByDate = groupBy(sessions, (session) => {
     const relevantTime = session.lastInteractionTime || session.timeUpdated;

@@ -1,6 +1,6 @@
 services:
   api:
-    build: api
+    build: backend
     develop:
       watch:
         - action: rebuild
@@ -67,4 +67,3 @@ services:
       - "6333:6333"
     environment:
       - RUST_LOG=info
-

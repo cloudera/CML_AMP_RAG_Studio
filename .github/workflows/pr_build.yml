@@ -20,14 +20,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
+          cache-dependency-path: backend/build.gradle.kts
 
       - name: Run Java backend tests
         run: ./gradlew test
-        working-directory: api
+        working-directory: backend
 
       - name: Build with Gradle
         run: ./gradlew build
-        working-directory: api
+        working-directory: backend
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm

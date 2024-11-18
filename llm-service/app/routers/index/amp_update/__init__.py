@@ -36,7 +36,6 @@
 #  DATA.
 # ##############################################################################
 
-import json
 import subprocess
 
 from fastapi import APIRouter
@@ -44,7 +43,7 @@ from subprocess import CompletedProcess
 from .... import exceptions
 from ....services.amp_update import check_amp_update_status
 
-router = APIRouter(prefix="/amp-update")
+router = APIRouter(prefix="/amp-update" , tags=["AMP Update"])
 
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates

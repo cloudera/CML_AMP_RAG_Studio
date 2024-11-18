@@ -38,8 +38,9 @@
 
 import { Flex, Form, Modal, Select, Slider, SliderSingleProps } from "antd";
 import { QueryConfiguration } from "src/api/chatApi.ts";
-import { responseSynthesizerModelOptions } from "pages/RagChatTab/Constants/ResponseSynthesizerModelOptions.ts";
 import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { transformModelOptions } from "src/utils/modelUtils.ts";
 
 const marks: SliderSingleProps["marks"] = {
   1: "1",
@@ -58,6 +59,7 @@ const QueryTimeSettingsModal = ({
   handleUpdateConfiguration: (queryConfiguration: QueryConfiguration) => void;
 }) => {
   const [form] = Form.useForm<QueryConfiguration>();
+  const { data } = useGetLlmModels();
 
   return (
     <Modal
@@ -77,7 +79,7 @@ const QueryTimeSettingsModal = ({
             name="model_name"
             label="Response synthesizer model"
           >
-            <Select options={responseSynthesizerModelOptions} />
+            <Select options={transformModelOptions(data)} />
           </Form.Item>
           <RequestModels />
           <Form.Item<QueryConfiguration>

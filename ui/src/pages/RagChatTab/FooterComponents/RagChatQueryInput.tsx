@@ -129,8 +129,10 @@ const RagChatQueryInput = () => {
             onChange={(e) => {
               setUserInput(e.target.value);
             }}
-            onPressEnter={() => {
-              handleChat(userInput);
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleChat(userInput);
+              }
             }}
             disabled={!dataSourceSize || chatMutation.isPending}
           />

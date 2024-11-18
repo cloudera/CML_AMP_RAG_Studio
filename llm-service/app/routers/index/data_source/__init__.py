@@ -28,13 +28,13 @@
 #  DATA.
 # ##############################################################################
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....services import doc_summaries, qdrant
 
-router = APIRouter(prefix="/data_sources/{data_source_id}")
+router = APIRouter(prefix="/data_sources/{data_source_id}", tags=["Data Sources"])
 
 
 class SummarizeDocumentRequest(BaseModel):
@@ -85,3 +85,10 @@ def summarize_document(
     return doc_summaries.generate_summary(
         data_source_id, request.s3_bucket_name, request.s3_document_key
     )
+
+
+@router.delete("/documents/{doc_id}", summary="delete a single document")
+@exceptions.propagates
+def delete_document(data_source_id: int, doc_id: str) -> None:
+    qdrant.delete_document(data_source_id, doc_id)
+    doc_summaries.delete_document(data_source_id, doc_id)

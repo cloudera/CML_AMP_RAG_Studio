@@ -1,4 +1,4 @@
-# RAG Studio 
+# RAG Studio
 
 ### What is Rag Studio?
 
@@ -6,10 +6,10 @@ An AMP that provides a no-code tool to build RAG applications
 
 ### Pre-requisites
 
-RAG Studio requires AWS for access to both LLM and embedding models.  Please complete the following steps before using the RAG Studio:
+RAG Studio requires AWS for access to both LLM and embedding models. Please complete the following steps before using the RAG Studio:
 
 - A S3 bucket to store the documents
-- The following models configured and accessible via AWS Bedrock.  Any of the models not enabled will not function in the UI.
+- The following models configured and accessible via AWS Bedrock. Any of the models not enabled will not function in the UI.
   - Llama3.1 8b Instruct V1 (`meta.llama3-1-8b-instruct-v1:0`) - This model is required for the RAG Studio to function
   - Llama3.1 70b Instruct V1 (`meta.llama3-1-70b-instruct-v1:0`)
   - Llama3.1 405b Instruct V1 (`meta.llama3-1-405b-instruct-v1:0`)
@@ -18,21 +18,21 @@ RAG Studio requires AWS for access to both LLM and embedding models.  Please com
 
 ### Cloudera DataFlow (Nifi) Setup:
 
-Rag Studio provides a Nifi template that can be downloaded for a given Knowledge Base from the `Connections` tab.  
-The Nifi template can then be imported into your Cloudera DataFlow (CDF) environment and used to setup a pipeline into Rag Studio.  
+Rag Studio provides a Nifi template that can be downloaded for a given Knowledge Base from the `Connections` tab.
+The Nifi template can then be imported into your Cloudera DataFlow (CDF) environment and used to setup a pipeline into Rag Studio.
 
 IMPORTANT: In order to inject data from CDF, users must disable authentication of the AMP Project from their Cloudera Machine Learning (CML) workspace.
 This carries a security risk and should be carefully considered before proceeding.
 
 ### Updating RAG Studio
 
-The Rag Studio UI will show a banner at the top of the page when a new version of the AMP is available.  
-To update the Rag Studio, click on the banner and follow the instructions.  If any issues are encountered, please contact 
-Cloudera for assistance.  Additionally, further details on the AMP status can be found from the CML workspace.
+The Rag Studio UI will show a banner at the top of the page when a new version of the AMP is available.
+To update the Rag Studio, click on the banner and follow the instructions. If any issues are encountered, please contact
+Cloudera for assistance. Additionally, further details on the AMP status can be found from the CML workspace.
 
 ### Common Issues
 
-- Both the Llama and Cohere models must be enabled in AWS Bedrock for the Rag Studio to function properly.  If the models are not enabled, Rag Studio will not function as expected.
+- Both the Llama and Cohere models must be enabled in AWS Bedrock for the Rag Studio to function properly. If the models are not enabled, Rag Studio will not function as expected.
 
 ## Installation
 
@@ -64,8 +64,8 @@ Make a copy of the `.env.example` file and rename it to `.env`. Fill in the valu
 
 ### Local Development
 
-Every service can be started locally for development by running `./local-dev.sh`.  Once started, the UI can be accessed 
-at `http://localhost:5173`.  Additionally, each service can be started individually by following the instructions below.
+Every service can be started locally for development by running `./local-dev.sh`. Once started, the UI can be accessed
+at `http://localhost:5173`. Additionally, each service can be started individually by following the instructions below.
 
 #### FE Setup
 
@@ -76,8 +76,8 @@ at `http://localhost:5173`.  Additionally, each service can be started individua
 
 #### Node Setup
 
-The Node Service is used as a proxy and to serve static assets. For local development, the proxying and static 
-asset serving is handled by the FE service.  The Node service is only used in production.  However, if you want to run 
+The Node Service is used as a proxy and to serve static assets. For local development, the proxying and static
+asset serving is handled by the FE service. The Node service is only used in production. However, if you want to run
 the Node service locally, you can do so by following these steps:
 
 - Build the FE service (`cd ./ui` and then `pnpm build`)
@@ -91,15 +91,16 @@ the Node service locally, you can do so by following these steps:
 - Create a virtual environment (`python -m venv venv; source venv/bin/activate`)
 - Install dependencies (`python -m pip install -r requirements.txt`)
 - `fastapi dev`
-    - ends up running on port 8000
+  - ends up running on port 8000
 
 #### Java Setup
 
 - Install Java 21 and make default JDK
-- `cd ./api`
+- `cd ./backend`
 - `./gradlew bootRun`
 
 #### To run quadrant locally
+
 ```
 docker run -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 ```

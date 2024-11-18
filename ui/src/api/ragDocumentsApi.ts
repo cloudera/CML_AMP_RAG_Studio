@@ -39,6 +39,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   commonHeaders,
+  deleteRequest,
   getRequest,
   MutationKeys,
   paths,
@@ -152,5 +153,29 @@ const getRagDocuments = async (
 ): Promise<RagDocumentResponseType[]> => {
   return getRequest(
     `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`,
+  );
+};
+
+export const useDeleteDocumentMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<void>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.deleteRagDocument],
+    mutationFn: deleteDocumentMutation,
+    onSuccess,
+    onError,
+  });
+};
+
+export const deleteDocumentMutation = async ({
+  id,
+  dataSourceId,
+}: {
+  id: number;
+  dataSourceId: string;
+}): Promise<void> => {
+  await deleteRequest(
+    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}/${id.toString()}`,
   );
 };

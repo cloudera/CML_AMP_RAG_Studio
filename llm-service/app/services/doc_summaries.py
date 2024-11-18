@@ -35,10 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import os
 import shutil
 import tempfile
-import os
 from typing import cast
+
+from fastapi import HTTPException
+
+from . import models
 
 from llama_index.core import (
     DocumentSummaryIndex,
@@ -48,25 +52,11 @@ from llama_index.core import (
 )
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
-from llama_index.embeddings.bedrock import BedrockEmbedding
-from llama_index.llms.bedrock import Bedrock
-from llama_index.vector_stores.qdrant import QdrantVectorStore
-from .qdrant import create_qdrant_clients
 
-from .llama_utils import completion_to_prompt, messages_to_prompt
+from . import rag_vector_store
 from .s3 import download
 from .utils import get_last_segment
-
-## todo: move to somewhere better; these are defaults to use when none are explicitly provided
-Settings.llm = Bedrock(
-    model="meta.llama3-8b-instruct-v1:0",
-    context_size=128000,
-    messages_to_prompt=messages_to_prompt,
-    completion_to_prompt=completion_to_prompt,
-)
-
-Settings.embed_model = BedrockEmbedding(model_name="cohere.embed-english-v3")
-Settings.splitter = SentenceSplitter(chunk_size=1024)
+from ..config import settings
 
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
@@ -74,11 +64,15 @@ SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate 
 
 def index_dir(data_source_id: int) -> str:
     """Return the directory name to be used for a data source's summary index."""
-    return f"../databases/doc_summary_index_{data_source_id}"
+    return os.path.join(settings.rag_databases_dir, f"doc_summary_index_{data_source_id}")
 
 
 def read_summary(data_source_id: int, document_id: str) -> str:
     """Return the summary of `document_id`."""
+    index = index_dir(data_source_id)
+    if not os.path.exists(index):
+        raise HTTPException(status_code=404, detail="Knowledge base not found.")
+
     storage_context = make_storage_context(data_source_id)
     doc_summary_index = load_document_summary_index(storage_context)
 
@@ -87,13 +81,6 @@ def read_summary(data_source_id: int, document_id: str) -> str:
 
     return doc_summary_index.get_document_summary(doc_id=document_id)
 
-
-def load_document_summary_index(storage_context) -> DocumentSummaryIndex:
-    doc_summary_index: DocumentSummaryIndex = cast(
-        DocumentSummaryIndex,
-        load_index_from_storage(storage_context, summary_query=SUMMARY_PROMPT),
-    )
-    return doc_summary_index
 
 
 def generate_summary(
@@ -128,12 +115,29 @@ def generate_summary(
         return doc_summary_index.get_document_summary(doc_id=document_id)
 
 
+## todo: move to somewhere better; these are defaults to use when none are explicitly provided
+def set_settings_globals():
+    Settings.llm = models.get_llm("meta.llama3-8b-instruct-v1:0")
+    Settings.embed_model = models.get_embedding_model()
+    Settings.splitter = SentenceSplitter(chunk_size=1024)
+
+
 def initialize_summary_index_storage(data_source_id):
+    set_settings_globals()
     doc_summary_index = DocumentSummaryIndex.from_documents(
         [],
         summary_query=SUMMARY_PROMPT,
     )
     doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
+
+
+def load_document_summary_index(storage_context) -> DocumentSummaryIndex:
+    set_settings_globals()
+    doc_summary_index: DocumentSummaryIndex = cast(
+        DocumentSummaryIndex,
+        load_index_from_storage(storage_context, summary_query=SUMMARY_PROMPT),
+    )
+    return doc_summary_index
 
 
 def summarize_data_source(data_source_id: int) -> str:
@@ -147,7 +151,7 @@ def summarize_data_source(data_source_id: int) -> str:
     doc_ids = doc_summary_index.index_struct.doc_id_to_summary_id.keys()
     summaries = map(doc_summary_index.get_document_summary, doc_ids)
 
-    prompt = "I have summarized a list of documents that may or may not be related to each other. Please provide an overview of the document corpus as an executive summary.  Do not start with \"Here is...\".  The summary should be concise and not be frivolous"
+    prompt = 'I have summarized a list of documents that may or may not be related to each other. Please provide an overview of the document corpus as an executive summary.  Do not start with "Here is...".  The summary should be concise and not be frivolous'
     response = Settings.llm.complete(prompt + "\n".join(summaries))
     return response.text
 
@@ -155,17 +159,12 @@ def summarize_data_source(data_source_id: int) -> str:
 def make_storage_context(data_source_id):
     storage_context = StorageContext.from_defaults(
         persist_dir=index_dir(data_source_id),
-        vector_store=create_qdrant_vector_store(data_source_id),
+        vector_store=rag_vector_store.create_summary_vector_store(data_source_id).access_vector_store(),
     )
     return storage_context
 
-def create_qdrant_vector_store(data_source_id: int) -> QdrantVectorStore:
-    vector_store = QdrantVectorStore(
-        table_name_from(data_source_id), *create_qdrant_clients()
-    )
-    return vector_store
 
-def table_name_from(data_source_id: int):
+def doc_summary_vector_table_name_from(data_source_id: int):
     return f"summary_index_{data_source_id}"
 
 
@@ -174,5 +173,16 @@ def delete_data_source(data_source_id):
     index = index_dir(data_source_id)
     if os.path.exists(index):
         shutil.rmtree(index)
-    [qdrant_client, _]  = create_qdrant_clients()
-    qdrant_client.delete_collection(table_name_from(data_source_id))
+    rag_vector_store.create_summary_vector_store(data_source_id).delete()
+
+
+def delete_document(data_source_id, doc_id):
+    index = index_dir(data_source_id)
+    if not os.path.exists(index):
+        return
+    storage_context = make_storage_context(data_source_id)
+    doc_summary_index = load_document_summary_index(storage_context)
+    if doc_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
+        return
+    doc_summary_index.delete(doc_id)
+    doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))

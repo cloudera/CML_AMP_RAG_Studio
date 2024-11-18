@@ -41,7 +41,7 @@ from fastapi import APIRouter
 from .... import exceptions
 from ....services.chat_store import RagStudioChatMessage, chat_store
 
-router = APIRouter(prefix="/sessions/{session_id}")
+router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
 @router.get("/chat-history", summary="Returns an array of chat messages for the provided session.")
 @exceptions.propagates

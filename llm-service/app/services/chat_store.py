@@ -42,6 +42,7 @@ from typing import Literal
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.storage.chat_store import SimpleChatStore
 from pydantic import BaseModel
+from ..config import settings
 
 
 class RagPredictSourceNode(BaseModel):
@@ -158,4 +159,4 @@ class ChatHistoryManager:
         return "session_" + str(session_id)
 
 
-chat_store = ChatHistoryManager(store_path="../databases/")
+chat_store = ChatHistoryManager(store_path=settings.rag_databases_dir)

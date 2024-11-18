@@ -36,19 +36,10 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Layout } from "antd";
-import Sidebar from "src/layout/Sidebar.tsx";
-
-const { Content } = Layout;
+import { createFileRoute } from "@tanstack/react-router";
+import { getModelSourceQueryOptions } from "src/api/modelsApi.ts";
 
 export const Route = createFileRoute("/_layout")({
-  component: () => (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sidebar />
-      <Content style={{ margin: "0", overflowY: "auto" }}>
-        <Outlet />
-      </Content>
-    </Layout>
-  ),
+  loader: async ({ context: { queryClient } }) =>
+    queryClient.ensureQueryData(getModelSourceQueryOptions),
 });

@@ -1,3 +1,0 @@
--r ../app/requirements.txt
-
-pytest
