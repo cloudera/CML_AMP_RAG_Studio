@@ -45,7 +45,7 @@ from fastapi import HTTPException
 logger = logging.getLogger(__name__)
 
 
-def download(tmpdirname: str, bucket_name: str, document_key: str):
+def download(tmpdirname: str, bucket_name: str, document_key: str) -> str:
     """
     Download document from S3
     """
@@ -69,6 +69,7 @@ def download(tmpdirname: str, bucket_name: str, document_key: str):
             document_key,
             final_filename,
         )
+        return final_filename
     except s3.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "404":
             logger.error(
