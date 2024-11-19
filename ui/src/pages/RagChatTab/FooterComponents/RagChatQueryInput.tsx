@@ -36,9 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input } from "antd";
+import { Button, Flex, Input, Switch, Tooltip } from "antd";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
-import { SendOutlined } from "@ant-design/icons";
+import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -119,6 +119,11 @@ const RagChatQueryInput = () => {
                 handleChat(userInput);
               }
             }}
+            suffix={
+              <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
+                <Switch checkedChildren={<DatabaseFilled />} defaultChecked />
+              </Tooltip>
+            }
             disabled={!dataSourceSize || chatMutation.isPending}
           />
           <Button
