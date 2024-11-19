@@ -36,8 +36,12 @@
 #  DATA.
 # ##############################################################################
 import logging
+import os
 
 import botocore.exceptions
+import docling
+from docling import document_converter
+from .utils import convert_pdf
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
@@ -66,12 +70,9 @@ class RagIndexDocumentConfiguration(BaseModel):
     chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
 
 
-def download_and_index(
-        tmpdirname: str,
-        data_source_id: int,
-        configuration: RagIndexDocumentConfiguration,
-        s3_document_key: str,
-):
+def index(tmpdirname: str, data_source_id: int, configuration: RagIndexDocumentConfiguration, s3_document_key: str,
+          filename):
+    tmpdirname = convert_pdf(filename, tmpdirname)
     try:
         documents = SimpleDirectoryReader(tmpdirname).load_data()
         document_id = get_last_segment(s3_document_key)

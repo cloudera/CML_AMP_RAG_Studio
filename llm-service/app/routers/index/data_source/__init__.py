@@ -121,12 +121,13 @@ def download_and_index(
 ) -> str:
     with tempfile.TemporaryDirectory() as tmpdirname:
         logger.debug("created temporary directory %s", tmpdirname)
-        s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
-        qdrant.download_and_index(
+        filename = s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
+        qdrant.index(
             tmpdirname,
             data_source_id,
             request.configuration,
-            request.s3_document_key
+            request.s3_document_key,
+            filename
         )
         return http.HTTPStatus.OK.phrase
 

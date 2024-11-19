@@ -55,7 +55,7 @@ from llama_index.core.readers import SimpleDirectoryReader
 
 from . import rag_vector_store
 from .s3 import download
-from .utils import get_last_segment
+from .utils import get_last_segment, convert_pdf
 from ..config import settings
 
 
@@ -91,7 +91,8 @@ def generate_summary(
     """Generate, persist, and return a summary for `s3_document_key`."""
     with tempfile.TemporaryDirectory() as tmpdirname:
         # load document(s)
-        download(tmpdirname, s3_bucket_name, s3_document_key)
+        filename = download(tmpdirname, s3_bucket_name, s3_document_key)
+        tmpdirname = convert_pdf(filename, tmpdirname)
         documents = SimpleDirectoryReader(tmpdirname).load_data()
         document_id = get_last_segment(s3_document_key)
         for document in documents:

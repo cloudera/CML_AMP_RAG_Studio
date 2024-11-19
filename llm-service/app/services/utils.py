@@ -38,7 +38,8 @@
 
 import re
 from typing import List, Tuple
-
+from docling import document_converter
+import os
 
 # TODO delete this if it's not being used
 
@@ -80,3 +81,15 @@ def parse_choice_select_answer_fn(
 
 def get_last_segment(path: str) -> str:
     return path.split('/')[-1]
+
+def convert_pdf(filename, tmpdirname):
+    if filename.endswith(".pdf"):
+        markdown_directory = tmpdirname + "/markdown"
+        os.mkdir(markdown_directory)
+        converter = document_converter.DocumentConverter()
+        result = converter.convert(filename)
+        markdown = result.document.export_to_markdown()
+        with open(markdown_directory + "/temp.md", "w") as f:
+            f.write(markdown)
+        tmpdirname = markdown_directory
+    return tmpdirname
