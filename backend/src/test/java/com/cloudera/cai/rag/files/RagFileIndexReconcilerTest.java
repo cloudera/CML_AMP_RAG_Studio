@@ -177,7 +177,8 @@ class RagFileIndexReconcilerTest {
             RagBackendClient.createNull(tracker, exceptions),
             RagDataSourceRepository.createNull(),
             reconcilerConfig,
-            OpenTelemetry.noop());
+            OpenTelemetry.noop(),
+            RagFileRepository.createNull());
     reconciler.init();
     return reconciler;
   }

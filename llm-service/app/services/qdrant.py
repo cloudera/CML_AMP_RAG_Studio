@@ -79,6 +79,7 @@ def index(tmpdirname: str, data_source_id: int, configuration: RagIndexDocumentC
         for document in documents:
             document.id_ = document_id  # this is a terrible way to assign the doc id...
             document.metadata["document_id"] = document_id
+            document.metadata["original_filename"] = get_last_segment(filename)
     except Exception as e:
         logger.error(
             "error loading document from temporary directory %s",

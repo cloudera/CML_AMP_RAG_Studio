@@ -66,6 +66,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   private final Jdbi jdbi;
   private final RagBackendClient ragBackendClient;
   private final RagDataSourceRepository ragDataSourceRepository;
+  private final RagFileRepository ragFileRepository;
 
   @Autowired
   public RagFileIndexReconciler(
@@ -74,12 +75,14 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       RagBackendClient ragBackendClient,
       RagDataSourceRepository ragDataSourceRepository,
       @Qualifier("singleWorkerReconcilerConfig") ReconcilerConfig reconcilerConfig,
-      OpenTelemetry openTelemetry) {
+      OpenTelemetry openTelemetry,
+      RagFileRepository ragFileRepository) {
     super(reconcilerConfig, openTelemetry);
     this.bucketName = bucketName;
     this.jdbi = jdbi;
     this.ragBackendClient = ragBackendClient;
     this.ragDataSourceRepository = ragDataSourceRepository;
+    this.ragFileRepository = ragFileRepository;
   }
 
   @Override
@@ -105,6 +108,11 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   @Override
   public ReconcileResult reconcile(Set<RagDocument> documents) {
     for (RagDocument document : documents) {
+      var currentDocumentState = ragFileRepository.findDocumentByDocumentId(document.documentId());
+      if (currentDocumentState.vectorUploadTimestamp() != null) {
+        log.info("Document already indexed: {}", document.filename());
+        continue;
+      }
       log.info("starting indexing document: {}", document);
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
       Instant updateTimestamp = indexFile(document, indexConfiguration);
@@ -150,6 +158,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
         RagBackendClient.createNull(),
         RagDataSourceRepository.createNull(),
         ReconcilerConfig.builder().isTestReconciler(true).build(),
-        OpenTelemetry.noop());
+        OpenTelemetry.noop(),
+        RagFileRepository.createNull());
   }
 }
