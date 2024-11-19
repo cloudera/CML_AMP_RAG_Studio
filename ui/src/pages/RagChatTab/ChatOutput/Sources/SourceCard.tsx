@@ -44,6 +44,7 @@ import { SourceNode } from "src/api/chatApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import Icon from "@ant-design/icons";
+import { cdlGray600 } from "src/cuix/variables.ts";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { dataSourceId } = useContext(RagChatContext);
@@ -71,7 +72,14 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
       onOpenChange={handleGetChunkContents}
       content={
         <Card
-          title={source.source_file_name}
+          title={
+            <Flex justify="space-between">
+              {source.source_file_name}
+              <Typography.Text style={{ color: cdlGray600 }}>
+                Score: {source.score}
+              </Typography.Text>
+            </Flex>
+          }
           bordered={false}
           style={{ width: 600, height: 300, overflowY: "auto" }}
         >
