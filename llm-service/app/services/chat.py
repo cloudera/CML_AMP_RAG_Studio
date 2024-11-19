@@ -114,12 +114,17 @@ def retrieve_chat_history(session_id):
 def format_source_nodes(response):
     response_source_nodes = []
     for source_node in response.source_nodes:
-        doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
+        source_metadata = source_node.node.metadata
+        doc_id = source_metadata.get("document_id", source_node.node.node_id)
+        if "original_filename" in source_metadata:
+            source_file_name = source_metadata["original_filename"]
+        else:
+            source_file_name = source_metadata["file_name"]
         response_source_nodes.append(
             RagPredictSourceNode(
                 node_id=source_node.node.node_id,
                 doc_id=doc_id,
-                source_file_name=source_node.node.metadata["file_name"],
+                source_file_name=source_file_name,
                 score=source_node.score,
             )
         )

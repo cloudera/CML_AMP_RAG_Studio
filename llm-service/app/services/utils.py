@@ -89,7 +89,8 @@ def convert_pdf(filename, tmpdirname):
         converter = document_converter.DocumentConverter()
         result = converter.convert(filename)
         markdown = result.document.export_to_markdown()
-        with open(markdown_directory + "/temp.md", "w") as f:
+        markdown_filename = get_last_segment(filename).replace(".pdf", ".md")
+        with open(markdown_directory + "/" + markdown_filename, "w") as f:
             f.write(markdown)
         tmpdirname = markdown_directory
     return tmpdirname
