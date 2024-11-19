@@ -36,14 +36,13 @@
 #  DATA.
 # ##############################################################################
 
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel
-
-from .services.chat_store import RagContext, RagPredictSourceNode
 
 
 class RagPredictConfiguration(BaseModel):
     top_k: int = 5
     chunk_size: int = 512
     model_name: str = "meta.llama3-1-8b-instruct-v1:0"
+    exclude_knowledge_base: Optional[bool] = False

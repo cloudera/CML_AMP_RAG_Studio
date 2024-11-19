@@ -47,6 +47,8 @@ import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
+import type { SwitchChangeEventHandler } from "antd/lib/switch";
+
 const RagChatQueryInput = () => {
   const {
     dataSourceId,
@@ -55,6 +57,7 @@ const RagChatQueryInput = () => {
     chatHistory,
     dataSourceSize,
     dataSourcesStatus,
+    setQueryConfiguration,
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -92,6 +95,13 @@ const RagChatQueryInput = () => {
     }
   };
 
+  const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
+    setQueryConfiguration((prev) => ({
+      ...prev,
+      exclude_knowledge_base: !checked,
+    }));
+  };
+
   return (
     <div>
       <Flex vertical align="center" gap={10}>
@@ -121,7 +131,11 @@ const RagChatQueryInput = () => {
             }}
             suffix={
               <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
-                <Switch checkedChildren={<DatabaseFilled />} defaultChecked />
+                <Switch
+                  checkedChildren={<DatabaseFilled />}
+                  value={!queryConfiguration.exclude_knowledge_base}
+                  onChange={handleExcludeKnowledgeBase}
+                />
               </Tooltip>
             }
             disabled={!dataSourceSize || chatMutation.isPending}

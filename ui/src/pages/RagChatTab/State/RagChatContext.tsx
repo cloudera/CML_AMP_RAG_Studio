@@ -58,6 +58,7 @@ export interface RagChatContextType {
 export const defaultQueryConfig = {
   top_k: 5,
   model_name: "",
+  exclude_knowledge_base: false,
 };
 
 export const RagChatContext = createContext<RagChatContextType>({
