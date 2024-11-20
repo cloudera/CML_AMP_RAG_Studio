@@ -38,18 +38,15 @@
 
 package com.cloudera.cai.rag.external;
 
-import java.io.IOException;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.configuration.AppConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RagBackendClient {
@@ -71,7 +68,8 @@ public class RagBackendClient {
               + "/data_sources/"
               + ragDocument.dataSourceId()
               + "/documents/download-and-index",
-          new IndexRequest(ragDocument.documentId(), bucketName, ragDocument.s3Path(), configuration));
+          new IndexRequest(
+              ragDocument.documentId(), bucketName, ragDocument.s3Path(), configuration));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -103,18 +101,15 @@ public class RagBackendClient {
       @JsonProperty("document_id") String documentId,
       @JsonProperty("s3_bucket_name") String s3BucketName,
       @JsonProperty("s3_document_key") String s3DocumentKey,
-      IndexConfiguration configuration) {
-  }
+      IndexConfiguration configuration) {}
 
   public record SummaryRequest(
       @JsonProperty("s3_bucket_name") String s3BucketName,
-      @JsonProperty("s3_document_key") String s3DocumentKey) {
-  }
+      @JsonProperty("s3_document_key") String s3DocumentKey) {}
 
   public record IndexConfiguration(
       @JsonProperty("chunk_size") int chunkSize,
-      @JsonProperty("chunk_overlap") int chunkOverlapPercentage) {
-  }
+      @JsonProperty("chunk_overlap") int chunkOverlapPercentage) {}
 
   // nullables below here
 
@@ -178,18 +173,13 @@ public class RagBackendClient {
   }
 
   public record TrackedIndexRequest(
-      String bucketName, String s3Path, long dataSourceId, IndexConfiguration configuration) {
-  }
+      String bucketName, String s3Path, long dataSourceId, IndexConfiguration configuration) {}
 
-  public record TrackedDeleteSessionRequest(Long sessionId) {
-  }
+  public record TrackedDeleteSessionRequest(Long sessionId) {}
 
-  public record TrackedDeleteDataSourceRequest(long dataSourceId) {
-  }
+  public record TrackedDeleteDataSourceRequest(long dataSourceId) {}
 
-  public record TrackedRequest<T>(T detail) {
-  }
+  public record TrackedRequest<T>(T detail) {}
 
-  public record TrackedDeleteDocumentRequest(long dataSourceId, String documentId) {
-  }
+  public record TrackedDeleteDocumentRequest(long dataSourceId, String documentId) {}
 }

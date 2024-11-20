@@ -92,6 +92,7 @@ def data_source_id() -> int:
 @pytest.fixture
 def index_document_request_body(data_source_id, s3_object) -> dict[str, Any]:
     return {
+        "document_id": s3_object.key,
         "data_source_id": data_source_id,
         "s3_bucket_name": s3_object.bucket_name,
         "s3_document_key": s3_object.key,

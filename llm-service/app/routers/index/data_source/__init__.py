@@ -38,9 +38,9 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....services import doc_summaries, qdrant, s3
-from app.ai.indexing.index import Indexer
-from app.services.rag_vector_store import create_rag_vector_store
-from app.services.models import get_embedding_model
+from ....ai.indexing.index import Indexer
+from ....services.rag_vector_store import create_rag_vector_store
+from ....services.models import get_embedding_model
 from llama_index.core.node_parser import SentenceSplitter
 
 logger = logging.getLogger(__name__)

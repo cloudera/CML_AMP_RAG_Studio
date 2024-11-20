@@ -42,21 +42,26 @@ import os
 from typing import Dict, List, Type
 
 from .readers.pdf import PDFReader
+from .readers.nop import NopReader
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import Document
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from app.services.vector_store import VectorStore
+from ...services.vector_store import VectorStore
 from llama_index.core.node_parser.interface import BaseNode
 
 logger = logging.getLogger(__name__)
 
 READERS: Dict[str, Type[BaseReader]] = {
     ".pdf": PDFReader,
+    ".txt": NopReader,
+    ".md": NopReader,
 }
 CHUNKABLE_FILE_EXTENSIONS = set(
     [
         ".pdf",
+        ".txt",
+        ".md",
     ]
 )
 
