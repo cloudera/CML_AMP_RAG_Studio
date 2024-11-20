@@ -61,7 +61,7 @@ jobs:
       - name: Set up Python
         uses: pdm-project/setup-pdm@v3
         with:
-          python-version: 3.10
+          python-version: '3.10'
           cache: true
           cache-dependency-path: 'llm-service/pdm.lock'
 
