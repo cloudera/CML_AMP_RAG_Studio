@@ -35,11 +35,18 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
 import re
 from typing import List, Tuple
 from docling import document_converter
-import os
+import sys, os
+
+# Disable
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
+
+# Restore
+def enablePrint():
+    sys.stdout = sys.__stdout__
 
 # TODO delete this if it's not being used
 
@@ -86,8 +93,10 @@ def convert_pdf(filename, tmpdirname):
     if filename.endswith(".pdf"):
         markdown_directory = tmpdirname + "/markdown"
         os.mkdir(markdown_directory)
+        blockPrint()
         converter = document_converter.DocumentConverter()
         result = converter.convert(filename)
+        enablePrint()
         markdown = result.document.export_to_markdown()
         markdown_filename = get_last_segment(filename).replace(".pdf", ".md")
         with open(markdown_directory + "/" + markdown_filename, "w") as f:
