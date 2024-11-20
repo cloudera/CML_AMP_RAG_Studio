@@ -67,12 +67,12 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r app/requirements.txt
+          python -m pip install pdm
+          pdm install
         working-directory: llm-service
 
       - name: Test with pytest
         run: |
-          python -m pytest -sxvvra
+          pdm run pytest -sxvvra
         working-directory: llm-service
 
