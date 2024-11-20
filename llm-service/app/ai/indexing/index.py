@@ -106,6 +106,8 @@ class Indexer:
         chunks_vector_store = self.chunks_vector_store.access_vector_store()
         chunks_vector_store.add(chunks)
 
+        logger.debug(f"Indexing file: {file_path} completed")
+
     def _documents_in_file(self, reader: BaseReader, file_path: str, file_id: str) -> List[Document]:
         documents = reader.load_data(file_path)
 
