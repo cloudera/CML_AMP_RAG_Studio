@@ -106,8 +106,6 @@ public class AppConfiguration {
   }
 
   public static String getRagIndexUrl() {
-    String ragBackendBaseUrl =
-        Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://rag-backend:8000");
-    return ragBackendBaseUrl + "/index";
+    return Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://rag-backend:8000");
   }
 }

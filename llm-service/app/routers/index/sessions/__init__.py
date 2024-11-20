@@ -35,11 +35,17 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import time
+import uuid
 
 from fastapi import APIRouter
 
+from pydantic import BaseModel
+
 from .... import exceptions
 from ....services.chat_store import RagStudioChatMessage, chat_store
+from ....services import qdrant, llm_completion
+from ....services.chat import (v2_chat, generate_suggested_questions)
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -60,3 +66,58 @@ def delete_chat_history(session_id: int) -> str:
     chat_store.delete_chat_history(session_id=session_id)
     return "Chat history deleted."
 
+
+class RagStudioChatRequest(BaseModel):
+    data_source_id: int
+    query: str
+    configuration: qdrant.RagPredictConfiguration
+
+
+@router.post("/chat", summary="Chat with your documents in the requested datasource")
+@exceptions.propagates
+def chat(
+        session_id: int,
+        request: RagStudioChatRequest,
+) -> RagStudioChatMessage:
+    if request.configuration.exclude_knowledge_base:
+        return llm_talk(session_id, request)
+    return v2_chat(session_id, request.data_source_id, request.query, request.configuration)
+
+def llm_talk(
+        session_id: int,
+        request: RagStudioChatRequest,
+) -> RagStudioChatMessage:
+    chat_response = llm_completion.completion(session_id, request.query, request.configuration)
+    new_chat_message = RagStudioChatMessage(
+        id=str(uuid.uuid4()),
+        source_nodes=[],
+        evaluations=[],
+        rag_message={
+            "user": request.query,
+            "assistant": chat_response.message.content,
+        },
+        timestamp=time.time()
+    )
+    chat_store.append_to_history(session_id, [new_chat_message])
+    return new_chat_message
+
+
+class SuggestQuestionsRequest(BaseModel):
+    data_source_id: int
+    configuration: qdrant.RagPredictConfiguration = qdrant.RagPredictConfiguration()
+
+class RagSuggestedQuestionsResponse(BaseModel):
+    suggested_questions: list[str]
+
+@router.post("/suggest-questions", summary="Suggest questions with context")
+@exceptions.propagates
+def suggest_questions(
+        session_id: int,
+        request: SuggestQuestionsRequest,
+) -> RagSuggestedQuestionsResponse:
+    data_source_size = qdrant.size_of(request.data_source_id)
+    qdrant.check_data_source_exists(data_source_size)
+    suggested_questions = generate_suggested_questions(
+        request.configuration, request.data_source_id, data_source_size, session_id
+    )
+    return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)

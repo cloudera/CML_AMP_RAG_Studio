@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.util;
 
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -73,6 +74,10 @@ public class SimpleHttpClient {
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString());
       int statusCode = response.statusCode();
+      if (statusCode == 404) {
+        throw new NotFound("Failed to post to " + url + " code: " + statusCode);
+      }
+
       if (statusCode >= 400) {
         throw new RuntimeException(
             "Failed to post to " + url + " code: " + statusCode + ", body : " + response.body());

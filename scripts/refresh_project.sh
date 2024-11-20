@@ -46,7 +46,8 @@ cd ui/express
 npm install
 
 cd ../../llm-service
-pip install -r app/requirements.txt
+pip install pdm
+pdm install -v
 
 cd ..
 mkdir -p artifacts

@@ -50,6 +50,7 @@ import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.rag.external.RagBackendClient.IndexConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient.TrackedIndexRequest;
 import com.cloudera.cai.util.Tracker;
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
@@ -113,8 +114,59 @@ class RagFileIndexReconcilerTest {
                     "rag-files", "path_in_s3", dataSourceId, new IndexConfiguration(1024, 20))));
   }
 
+  @Test
+  void reconcile_notFound() {
+    var requestTracker = new Tracker<RagBackendClient.TrackedRequest<?>>();
+    RagFileIndexReconciler reconciler =
+        createTestInstance(requestTracker, new NotFound("datasource not found in the rag backend"));
+    String documentId = UUID.randomUUID().toString();
+    long dataSourceId =
+        ragDataSourceRepository.createRagDataSource(
+            new RagDataSource(
+                null,
+                "test_datasource",
+                1024,
+                20,
+                null,
+                null,
+                "test-id",
+                "test-id",
+                Types.ConnectionType.API,
+                null,
+                null));
+    RagDocument document =
+        RagDocument.builder()
+            .documentId(documentId)
+            .dataSourceId(dataSourceId)
+            .s3Path("path_in_s3")
+            .extension("pdf")
+            .filename("myfile.pdf")
+            .timeCreated(Instant.now())
+            .timeUpdated(Instant.now())
+            .createdById("test-id")
+            .build();
+    Long id = ragFileRepository.saveDocumentMetadata(document);
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
+        .isNull();
+
+    reconciler.submit(document.withId(id));
+    await().until(reconciler::isEmpty);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(reconciler.isEmpty()).isTrue();
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.vectorUploadTimestamp()).isEqualTo(Instant.EPOCH);
+            });
+    assertThat(requestTracker.getValues())
+        .contains(
+            new RagBackendClient.TrackedRequest<>(
+                new TrackedIndexRequest(
+                    "rag-files", "path_in_s3", dataSourceId, new IndexConfiguration(1024, 20))));
+  }
+
   private RagFileIndexReconciler createTestInstance(
-      Tracker<RagBackendClient.TrackedRequest<?>> tracker) {
+      Tracker<RagBackendClient.TrackedRequest<?>> tracker, RuntimeException... exceptions) {
     Jdbi jdbi = new JdbiConfiguration().jdbi();
     var reconcilerConfig = ReconcilerConfig.builder().isTestReconciler(true).workerCount(1).build();
 
@@ -122,7 +174,7 @@ class RagFileIndexReconcilerTest {
         new RagFileIndexReconciler(
             "rag-files",
             jdbi,
-            RagBackendClient.createNull(tracker),
+            RagBackendClient.createNull(tracker, exceptions),
             RagDataSourceRepository.createNull(),
             reconcilerConfig,
             OpenTelemetry.noop());

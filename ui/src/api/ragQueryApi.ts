@@ -54,7 +54,7 @@ export interface RagMessage {
 export interface SuggestQuestionsRequest {
   data_source_id: string;
   configuration: QueryConfiguration;
-  chat_history: RagMessage[];
+  session_id: string;
 }
 
 export interface SuggestQuestionsResponse {
@@ -78,7 +78,9 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: suggestedQuestionKey(request.data_source_id),
     queryFn: () => suggestQuestionsQuery(request),
-    enabled: !!request.data_source_id,
+    enabled:
+      Boolean(request.data_source_id) &&
+      Boolean(request.configuration.model_name),
     gcTime: 0,
   });
 };
@@ -87,7 +89,7 @@ const suggestQuestionsQuery = async (
   request: SuggestQuestionsRequest,
 ): Promise<SuggestQuestionsResponse> => {
   return await postRequest(
-    `${llmServicePath}/index/suggest-questions`,
+    `${llmServicePath}/sessions/${request.session_id}/suggest-questions`,
     request,
   );
 };
@@ -110,6 +112,6 @@ const getChunkContents = async (
   request: ChunkContentsRequest,
 ): Promise<ChunkContents> => {
   return getRequest(
-    `${llmServicePath}/index/data_sources/${request.data_source_id}/chunks/${request.chunk_id}`,
+    `${llmServicePath}/data_sources/${request.data_source_id}/chunks/${request.chunk_id}`,
   );
 };

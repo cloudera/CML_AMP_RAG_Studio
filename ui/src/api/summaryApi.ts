@@ -66,7 +66,7 @@ const getDocumentSummary = async (
   doc_id: DocumentSummaryRequest["doc_id"],
 ): Promise<DocumentSummary> => {
   return getRequest(
-    `${llmServicePath}/index/data_sources/${data_source_id}/documents/${doc_id}/summary`,
+    `${llmServicePath}/data_sources/${data_source_id}/documents/${doc_id}/summary`,
   );
 };
 
@@ -82,7 +82,5 @@ export const useGetDataSourceSummary = (request: DataSourceSummaryRequest) => {
 const getDataSourceSummary = async (
   data_source_id: DataSourceSummaryRequest["data_source_id"],
 ): Promise<DocumentSummary> => {
-  return getRequest(
-    `${llmServicePath}/index/data_sources/${data_source_id}/summary`,
-  );
+  return getRequest(`${llmServicePath}/data_sources/${data_source_id}/summary`);
 };

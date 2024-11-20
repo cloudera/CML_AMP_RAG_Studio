@@ -55,7 +55,7 @@ export const useGetAmpUpdateStatus = () => {
 };
 
 const getAmpUpdateStatus = async (): Promise<boolean> => {
-  return getRequest(`${llmServicePath}/index/amp-update`);
+  return getRequest(`${llmServicePath}/amp-update`);
 };
 
 export enum JobStatus {
@@ -83,7 +83,7 @@ export const useGetAmpUpdateJobStatus = (enabled: boolean) => {
 };
 
 const getAmpUpdateJobStatus = async (): Promise<JobStatus> => {
-  return getRequestJobStatus(`${llmServicePath}/index/amp-update/job-status`);
+  return getRequestJobStatus(`${llmServicePath}/amp-update/job-status`);
 };
 
 const getRequestJobStatus = async (url: string): Promise<JobStatus> => {
@@ -112,5 +112,5 @@ export const useUpdateAmpMutation = ({
 };
 
 const updateAmpMutation = async (): Promise<string> => {
-  return await postRequest(`${llmServicePath}/index/amp-update`, {});
+  return await postRequest(`${llmServicePath}/amp-update`, {});
 };

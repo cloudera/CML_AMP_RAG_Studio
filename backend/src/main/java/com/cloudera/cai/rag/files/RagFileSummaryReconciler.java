@@ -42,6 +42,7 @@ import static com.cloudera.cai.rag.Types.*;
 
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
@@ -108,8 +109,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
         log.info("Document already summarized: {}", document.filename());
         continue;
       }
-      String summary = ragBackendClient.createSummary(document, bucketName);
-      log.info("Doc summary: {}", summary);
+      var updateTimestamp = generateSummary(document);
       log.info("finished requesting summarization of file {}", document);
       String updateSql =
           """
@@ -120,11 +120,23 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
       jdbi.useHandle(
           handle -> {
             try (Update update = handle.createUpdate(updateSql)) {
-              update.bind("id", document.id()).bind("now", Instant.now()).execute();
+              update.bind("id", document.id()).bind("now", updateTimestamp).execute();
             }
           });
     }
     return new ReconcileResult();
+  }
+
+  private Instant generateSummary(RagDocument document) {
+    var updateTimestamp = Instant.now();
+    try {
+      String summary = ragBackendClient.createSummary(document, bucketName);
+      log.info("Doc summary: {}", summary);
+    } catch (NotFound e) {
+      updateTimestamp = Instant.EPOCH;
+      log.info("got a not found exception from the rag backend: {}", e.getMessage());
+    }
+    return updateTimestamp;
   }
 
   // nullables stuff below here...

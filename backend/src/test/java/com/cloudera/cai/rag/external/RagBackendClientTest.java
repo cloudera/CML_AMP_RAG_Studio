@@ -39,12 +39,14 @@
 package com.cloudera.cai.rag.external;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.external.RagBackendClient.IndexConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.SimpleHttpClient.TrackedHttpRequest;
 import com.cloudera.cai.util.Tracker;
+import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -65,9 +67,8 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://rag-backend:8000/index/download-and-index",
-                new RagBackendClient.IndexRequest(
-                    "bucketName", "s3Path", 1234L, indexConfiguration)));
+                "http://rag-backend:8000/data_sources/" + 1234L + "/documents/download-and-index",
+                new RagBackendClient.IndexRequest("bucketName", "s3Path", indexConfiguration)));
   }
 
   @Test
@@ -84,7 +85,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://rag-backend:8000/index/data_sources/1234/summarize-document",
+                "http://rag-backend:8000/data_sources/1234/summarize-document",
                 new RagBackendClient.SummaryRequest("bucketName", "s3Path")));
   }
 
@@ -98,7 +99,7 @@ class RagBackendClientTest {
         .hasSize(1)
         .contains(
             new TrackedHttpRequest<>(
-                HttpMethod.DELETE, "http://rag-backend:8000/index/data_sources/1234", null));
+                HttpMethod.DELETE, "http://rag-backend:8000/data_sources/1234", null));
   }
 
   @Test
@@ -112,7 +113,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.DELETE,
-                "http://rag-backend:8000/index/data_sources/1234/documents/documentId",
+                "http://rag-backend:8000/data_sources/1234/documents/documentId",
                 null));
   }
 
@@ -126,7 +127,16 @@ class RagBackendClientTest {
         .hasSize(1)
         .contains(
             new TrackedHttpRequest<>(
-                HttpMethod.DELETE, "http://rag-backend:8000/index/sessions/1234", null));
+                HttpMethod.DELETE, "http://rag-backend:8000/sessions/1234", null));
+  }
+
+  @Test
+  void null_handlesThrowable() {
+    RagBackendClient client =
+        RagBackendClient.createNull(new Tracker<>(), new NotFound("not found"));
+    RagDocument document = indexRequest("s3Path", 1234L);
+    assertThatThrownBy(() -> client.indexFile(document, "fakeit", null))
+        .isInstanceOf(NotFound.class);
   }
 
   private static RagDocument indexRequest(String s3Path, Long dataSourceId) {

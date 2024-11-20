@@ -53,12 +53,12 @@ describe("JobStatusTracker", () => {
 
   it("displays Starting status correctly", () => {
     render(<JobStatusTracker jobStatus={JobStatus.STARTING} />);
-    expect(screen.getByText("Starting")).toBeTruthy();
+    expect(screen.getByText("Update Starting")).toBeTruthy();
   });
 
   it("displays Running status correctly", () => {
     render(<JobStatusTracker jobStatus={JobStatus.RUNNING} />);
-    expect(screen.getByText("Running")).toBeTruthy();
+    expect(screen.getByText("Update Running")).toBeTruthy();
   });
 
   it("displays Stopping status correctly", () => {

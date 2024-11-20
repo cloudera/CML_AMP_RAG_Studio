@@ -58,3 +58,20 @@ jobs:
         run: pnpm build
         working-directory: ui
 
+      - name: Set up Python
+        uses: pdm-project/setup-pdm@v3
+        with:
+          python-version: '3.10'
+          cache: true
+          cache-dependency-path: 'llm-service/pdm.lock'
+
+      - name: Install Python dependencies
+        run: |
+          pdm install
+        working-directory: llm-service
+
+      - name: Test with pytest
+        run: |
+          pdm run pytest -sxvvra
+        working-directory: llm-service
+

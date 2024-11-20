@@ -81,13 +81,40 @@ class RagFileDeleteReconcilerTest {
             });
   }
 
-  private static RagFileDeleteReconciler createTestReconciler(Tracker<TrackedRequest<?>> tracker) {
+  @Test
+  void reconcile_notFound() throws Exception {
+    Tracker<TrackedRequest<?>> tracker = new Tracker<>();
+    RagFileDeleteReconciler reconciler =
+        createTestReconciler(tracker, new NotFound("data source not found"));
+
+    RagFileRepository ragFileRepository = RagFileRepository.createNull();
+    var dataSourceId = TestData.createTestDataSource(RagDataSourceRepository.createNull());
+    String documentId = UUID.randomUUID().toString();
+    var id = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
+
+    ragFileRepository.deleteById(id);
+    reconciler.resync();
+
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(tracker.getValues())
+                  .contains(
+                      new TrackedRequest<>(
+                          new TrackedDeleteDocumentRequest(dataSourceId, documentId)));
+              assertThatThrownBy(() -> ragFileRepository.getRagDocumentById(id))
+                  .isInstanceOf(NotFound.class);
+            });
+  }
+
+  private static RagFileDeleteReconciler createTestReconciler(
+      Tracker<TrackedRequest<?>> tracker, RuntimeException... exceptions) {
     RagFileDeleteReconciler reconciler =
         new RagFileDeleteReconciler(
             ReconcilerConfig.createTestConfig(),
             OpenTelemetry.noop(),
             JdbiConfiguration.createNull(),
-            RagBackendClient.createNull(tracker));
+            RagBackendClient.createNull(tracker, exceptions));
     reconciler.init();
     return reconciler;
   }

@@ -96,7 +96,11 @@ describe("ChatBodyController", () => {
       chatHistory: [],
       dataSourceId: undefined,
       dataSourcesStatus: undefined,
-      queryConfiguration: { top_k: 5, model_name: "" },
+      queryConfiguration: {
+        top_k: 5,
+        model_name: "",
+        exclude_knowledge_base: false,
+      },
       setQueryConfiguration: () => null,
       setCurrentQuestion: () => null,
       dataSourceSize: null,

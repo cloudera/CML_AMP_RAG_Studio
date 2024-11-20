@@ -28,11 +28,17 @@
 #  DATA.
 # ##############################################################################
 
+import http
+import logging
+import tempfile
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .... import exceptions
-from ....services import doc_summaries, qdrant
+from ....services import doc_summaries, qdrant, s3
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/data_sources/{data_source_id}", tags=["Data Sources"])
 
@@ -92,3 +98,35 @@ def summarize_document(
 def delete_document(data_source_id: int, doc_id: str) -> None:
     qdrant.delete_document(data_source_id, doc_id)
     doc_summaries.delete_document(data_source_id, doc_id)
+
+
+
+class RagIndexDocumentRequest(BaseModel):
+    s3_bucket_name: str
+    s3_document_key: str
+    configuration: qdrant.RagIndexDocumentConfiguration = (
+        qdrant.RagIndexDocumentConfiguration()
+    )
+
+
+@router.post(
+    "/documents/download-and-index",
+    summary="Download and index document",
+    description="Download document from S3 and index in Pinecone",
+)
+@exceptions.propagates
+def download_and_index(
+        data_source_id: int,
+        request: RagIndexDocumentRequest,
+) -> str:
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        logger.debug("created temporary directory %s", tmpdirname)
+        s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
+        qdrant.download_and_index(
+            tmpdirname,
+            data_source_id,
+            request.configuration,
+            request.s3_document_key
+        )
+        return http.HTTPStatus.OK.phrase
+

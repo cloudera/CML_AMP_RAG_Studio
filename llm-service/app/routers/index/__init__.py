@@ -36,17 +36,10 @@
 #  DATA.
 # ##############################################################################
 
-import http
 import logging
-import tempfile
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 
-from ... import exceptions
-from ...services import qdrant, s3
-from ...services.chat import (generate_suggested_questions, v2_chat)
-from ...services.chat_store import RagContext, RagStudioChatMessage
 from . import data_source
 from . import sessions
 from . import amp_update
@@ -55,74 +48,14 @@ from . import models
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(
-    prefix="/index",
-)
+router = APIRouter()
 router.include_router(data_source.router)
 router.include_router(sessions.router)
 router.include_router(amp_update.router)
+# include this for legacy UI calls
+router.include_router(amp_update.router, prefix="/index", deprecated=True)
 router.include_router(models.router)
 
 
-class SuggestQuestionsRequest(BaseModel):
-    data_source_id: int
-    chat_history: list[RagContext]
-    configuration: qdrant.RagPredictConfiguration = qdrant.RagPredictConfiguration()
-
-class RagSuggestedQuestionsResponse(BaseModel):
-    suggested_questions: list[str]
-
-class RagIndexDocumentRequest(BaseModel):
-    data_source_id: int
-    s3_bucket_name: str
-    s3_document_key: str
-    configuration: qdrant.RagIndexDocumentConfiguration = (
-        qdrant.RagIndexDocumentConfiguration()
-    )
 
 
-@router.post(
-    "/download-and-index",
-    summary="Download and index document",
-    description="Download document from S3 and index in Pinecone",
-)
-@exceptions.propagates
-def download_and_index(
-        request: RagIndexDocumentRequest,
-) -> str:
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        logger.debug("created temporary directory %s", tmpdirname)
-        s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
-        qdrant.download_and_index(
-            tmpdirname,
-            request.data_source_id,
-            request.configuration,
-            request.s3_document_key
-        )
-        return http.HTTPStatus.OK.phrase
-
-@router.post("/suggest-questions", summary="Suggest questions with context")
-@exceptions.propagates
-def suggest_questions(
-    request: SuggestQuestionsRequest,
-) -> RagSuggestedQuestionsResponse:
-    data_source_size = qdrant.size_of(request.data_source_id)
-    qdrant.check_data_source_exists(data_source_size)
-    suggested_questions = generate_suggested_questions(
-        request.configuration, request.data_source_id, request.chat_history, data_source_size
-    )
-    return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)
-
-class RagStudioChatRequest(BaseModel):
-    data_source_id: int
-    session_id: int
-    query: str
-    configuration: qdrant.RagPredictConfiguration
-
-
-@router.post("/chat", summary="Chat with your documents in the requested datasource")
-@exceptions.propagates
-def chat(
-    request: RagStudioChatRequest,
-) -> RagStudioChatMessage:
-    return v2_chat(request.session_id, request.data_source_id, request.query, request.configuration)

@@ -43,25 +43,25 @@ class TestDocumentSummaries:
     @staticmethod
     def test_generate_summary(client, index_document_request_body: dict[str, Any], data_source_id, document_id, s3_object) -> None:
         response = client.post(
-            "/index/download-and-index",
+            f"/data_sources/{data_source_id}/documents/download-and-index",
             json=index_document_request_body,
         )
 
         assert response.status_code == 200
 
         post_summarization_response = client.post(
-            f'/index/data_sources/{data_source_id}/summarize-document',
+            f'/data_sources/{data_source_id}/summarize-document',
             json={ "s3_bucket_name": s3_object.bucket_name, "s3_document_key": s3_object.key })
 
         assert post_summarization_response.status_code == 200
         assert post_summarization_response.text == '"this is a completion response"'
 
-        get_summary_response = client.get(f'/index/data_sources/{data_source_id}/documents/{document_id}/summary')
+        get_summary_response = client.get(f'/data_sources/{data_source_id}/documents/{document_id}/summary')
 
         assert get_summary_response.status_code == 200
         assert get_summary_response.text == '"this is a completion response"'
 
-        get_data_source_response = client.get(f'/index/data_sources/{data_source_id}/summary')
+        get_data_source_response = client.get(f'/data_sources/{data_source_id}/summary')
         assert get_data_source_response.status_code == 200
         # our monkeypatched model always returns this.
         # todo: Figure out how to parameterize the monkey patch
@@ -70,23 +70,23 @@ class TestDocumentSummaries:
     @staticmethod
     def test_delete_document(client, index_document_request_body: dict[str, Any], data_source_id, document_id, s3_object) -> None:
         response = client.post(
-            "/index/download-and-index",
+            f"/data_sources/{data_source_id}/documents/download-and-index",
             json=index_document_request_body,
         )
 
         assert response.status_code == 200
 
         post_summarization_response = client.post(
-            f'/index/data_sources/{data_source_id}/summarize-document',
+            f'/data_sources/{data_source_id}/summarize-document',
             json={ "s3_bucket_name": s3_object.bucket_name, "s3_document_key": s3_object.key })
 
         assert post_summarization_response.status_code == 200
 
-        delete_document_response = client.delete(f'/index/data_sources/{data_source_id}/documents/{document_id}')
+        delete_document_response = client.delete(f'/data_sources/{data_source_id}/documents/{document_id}')
 
         assert delete_document_response.status_code == 200
 
-        get_summary_response = client.get(f'/index/data_sources/{data_source_id}/documents/{document_id}/summary')
+        get_summary_response = client.get(f'/data_sources/{data_source_id}/documents/{document_id}/summary')
 
         assert get_summary_response.text == '"No summary found for this document."'
         assert get_summary_response.status_code == 200

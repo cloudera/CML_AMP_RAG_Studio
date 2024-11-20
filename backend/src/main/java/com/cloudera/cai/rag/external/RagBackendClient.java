@@ -64,9 +64,11 @@ public class RagBackendClient {
       Types.RagDocument ragDocument, String bucketName, IndexConfiguration configuration) {
     try {
       client.post(
-          indexUrl + "/download-and-index",
-          new IndexRequest(
-              bucketName, ragDocument.s3Path(), ragDocument.dataSourceId(), configuration));
+          indexUrl
+              + "/data_sources/"
+              + ragDocument.dataSourceId()
+              + "/documents/download-and-index",
+          new IndexRequest(bucketName, ragDocument.s3Path(), configuration));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -97,7 +99,6 @@ public class RagBackendClient {
   record IndexRequest(
       @JsonProperty("s3_bucket_name") String s3BucketName,
       @JsonProperty("s3_document_key") String s3DocumentKey,
-      @JsonProperty("data_source_id") long dataSourceId,
       IndexConfiguration configuration) {}
 
   public record SummaryRequest(
@@ -114,8 +115,12 @@ public class RagBackendClient {
     return createNull(new Tracker<>());
   }
 
-  public static RagBackendClient createNull(Tracker<TrackedRequest<?>> tracker) {
+  public static RagBackendClient createNull(
+      Tracker<TrackedRequest<?>> tracker, RuntimeException... t) {
     return new RagBackendClient(SimpleHttpClient.createNull()) {
+      private final RuntimeException[] exceptions = t;
+      private int exceptionIndex = 0;
+
       @Override
       public void indexFile(
           Types.RagDocument ragDocument, String bucketName, IndexConfiguration configuration) {
@@ -124,18 +129,27 @@ public class RagBackendClient {
             new TrackedRequest<>(
                 new TrackedIndexRequest(
                     bucketName, ragDocument.s3Path(), ragDocument.dataSourceId(), configuration)));
+        checkForException();
+      }
+
+      private void checkForException() {
+        if (exceptionIndex < exceptions.length) {
+          throw exceptions[exceptionIndex++];
+        }
       }
 
       @Override
       public void deleteDataSource(Long dataSourceId) {
         super.deleteDataSource(dataSourceId);
         tracker.track(new TrackedRequest<>(new TrackedDeleteDataSourceRequest(dataSourceId)));
+        checkForException();
       }
 
       @Override
       public String createSummary(Types.RagDocument ragDocument, String bucketName) {
         String result = super.createSummary(ragDocument, bucketName);
         tracker.track(new TrackedRequest<>(new SummaryRequest(bucketName, ragDocument.s3Path())));
+        checkForException();
         return result;
       }
 
@@ -143,6 +157,7 @@ public class RagBackendClient {
       public void deleteSession(Long sessionId) {
         super.deleteSession(sessionId);
         tracker.track(new TrackedRequest<>(new TrackedDeleteSessionRequest(sessionId)));
+        checkForException();
       }
 
       @Override
@@ -150,6 +165,7 @@ public class RagBackendClient {
         super.deleteDocument(dataSourceId, documentId);
         tracker.track(
             new TrackedRequest<>(new TrackedDeleteDocumentRequest(dataSourceId, documentId)));
+        checkForException();
       }
     };
   }

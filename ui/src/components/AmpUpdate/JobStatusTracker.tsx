@@ -49,8 +49,8 @@ import {
 const jobStatusDisplayValue = (jobStatus?: JobStatus): string => {
   const statusMap: Record<JobStatus, string> = {
     [JobStatus.SCHEDULING]: "Scheduling",
-    [JobStatus.STARTING]: "Starting",
-    [JobStatus.RUNNING]: "Running",
+    [JobStatus.STARTING]: "Update Starting",
+    [JobStatus.RUNNING]: "Update Running",
     [JobStatus.STOPPING]: "Stopping",
     [JobStatus.STOPPED]: "Stopped",
     [JobStatus.UNKNOWN]: "Unknown",
@@ -115,7 +115,7 @@ const JobStatusTracker = ({ jobStatus }: { jobStatus?: JobStatus }) => {
       strokeWidth={10}
       format={() => (
         <Flex align="center" justify="center">
-          <Typography.Text style={{ fontSize: 12, textWrap: "wrap" }}>
+          <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
             {jobStatusDisplayValue(jobStatus)}
           </Typography.Text>
         </Flex>

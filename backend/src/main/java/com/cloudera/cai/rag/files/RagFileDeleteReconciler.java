@@ -3,6 +3,7 @@ package com.cloudera.cai.rag.files;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.BaseReconciler;
 import com.cloudera.cai.util.reconcilers.ReconcileResult;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
@@ -47,8 +48,12 @@ public class RagFileDeleteReconciler extends BaseReconciler<Types.RagDocument> {
   public ReconcileResult reconcile(Set<Types.RagDocument> documents) throws Exception {
     for (Types.RagDocument document : documents) {
       log.info("starting deletion of document: {}", document);
-      ragBackendClient.deleteDocument(document.dataSourceId(), document.documentId());
-      log.info("finished requesting deletion of document {}", document);
+      try {
+        ragBackendClient.deleteDocument(document.dataSourceId(), document.documentId());
+        log.info("finished requesting deletion of document {}", document);
+      } catch (NotFound e) {
+        log.info("got a not found exception from the rag backend: {}", e.getMessage());
+      }
       jdbi.useHandle(
           handle ->
               handle.execute("DELETE from rag_data_source_document WHERE id = ?", document.id()));

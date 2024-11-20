@@ -67,6 +67,7 @@ export interface RagMessageV2 {
 export interface QueryConfiguration {
   top_k: number;
   model_name: string;
+  exclude_knowledge_base: boolean;
 }
 
 export interface ChatMutationRequest {
@@ -124,7 +125,7 @@ export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
 ): Promise<ChatMessageType[]> => {
   return await getRequest(
-    `${llmServicePath}/index/sessions/${request.session_id}/chat-history`,
+    `${llmServicePath}/sessions/${request.session_id}/chat-history`,
   );
 };
 
@@ -185,5 +186,8 @@ export const useChatMutation = ({
 const chatMutation = async (
   request: ChatMutationRequest,
 ): Promise<ChatMessageType> => {
-  return await postRequest(`${llmServicePath}/index/chat`, request);
+  return await postRequest(
+    `${llmServicePath}/sessions/${request.session_id}/chat`,
+    request,
+  );
 };

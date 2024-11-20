@@ -56,7 +56,7 @@ const SuggestedQuestionsCards = () => {
   } = useSuggestQuestions({
     data_source_id: dataSourceId?.toString() ?? "",
     configuration: queryConfiguration,
-    chat_history: [],
+    session_id: sessionId ?? "",
   });
 
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({

@@ -70,7 +70,7 @@ export const getLlmModelsQueryOptions = queryOptions({
 });
 
 const getLlmModels = async (): Promise<Model[]> => {
-  return await getRequest(`${llmServicePath}/index/models/llm`);
+  return await getRequest(`${llmServicePath}/models/llm`);
 };
 
 export const useGetEmbeddingModels = () => {
@@ -83,7 +83,7 @@ export const useGetEmbeddingModels = () => {
 };
 
 const getEmbeddingModels = async (): Promise<Model[]> => {
-  return await getRequest(`${llmServicePath}/index/models/embeddings`);
+  return await getRequest(`${llmServicePath}/models/embeddings`);
 };
 
 type ModelSource = "CAII" | "Bedrock";
@@ -96,7 +96,7 @@ export const getModelSourceQueryOptions = queryOptions({
 });
 
 const getModelSource = async (): Promise<ModelSource> => {
-  return await getRequest(`${llmServicePath}/index/models/model_source`);
+  return await getRequest(`${llmServicePath}/models/model_source`);
 };
 
 export const useTestLlmModel = ({
@@ -112,16 +112,16 @@ export const useTestLlmModel = ({
 };
 
 const testLlmModel = async (model_id: string): Promise<string> => {
-  return await fetch(
-    `${llmServicePath}/index/models/llm/${model_id}/test`,
-  ).then(async (res) => {
-    if (!res.ok) {
-      const detail = (await res.json()) as CustomError;
-      throw new ApiError(detail.message ?? detail.detail, res.status);
-    }
+  return await fetch(`${llmServicePath}/models/llm/${model_id}/test`).then(
+    async (res) => {
+      if (!res.ok) {
+        const detail = (await res.json()) as CustomError;
+        throw new ApiError(detail.message ?? detail.detail, res.status);
+      }
 
-    return (await res.json()) as Promise<string>;
-  });
+      return (await res.json()) as Promise<string>;
+    },
+  );
 };
 
 export const useTestEmbeddingModel = ({
@@ -138,7 +138,7 @@ export const useTestEmbeddingModel = ({
 
 const testEmbeddingModel = async (model_id: string): Promise<string> => {
   return await fetch(
-    `${llmServicePath}/index/models/embedding/${model_id}/test`,
+    `${llmServicePath}/models/embedding/${model_id}/test`,
   ).then(async (res) => {
     if (!res.ok) {
       const detail = (await res.json()) as CustomError;
