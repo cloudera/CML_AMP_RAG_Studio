@@ -66,7 +66,7 @@ cd llm-service
 pip install uv
 uv venv venv
 source venv/bin/activate
-uv pip install -r app/requirements.txt --system
+uv pip install -r app/requirements.txt
 pytest -sxvvra
 
 fastapi dev &

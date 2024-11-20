@@ -47,7 +47,9 @@ npm install
 
 cd ../../llm-service
 pip install uv
-uv pip install -r app/requirements.txt --system
+uv venv venv
+source venv/bin/activate
+uv pip install -r app/requirements.txt
 
 cd ..
 mkdir -p artifacts
