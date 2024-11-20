@@ -65,9 +65,7 @@ docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databas
 cd llm-service
 python3.10 -m venv venv
 source venv/bin/activate
-pip install uv
-uv pip install -r app/requirements.txt
-#python -m pip install -r app/requirements.txt
+python -m pip install -r app/requirements.txt
 python -m pytest -sxvvra
 
 fastapi dev &
