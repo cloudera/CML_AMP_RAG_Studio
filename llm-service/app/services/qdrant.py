@@ -168,8 +168,7 @@ def query(
 
     response_synthesizer = get_response_synthesizer(llm=llm)
     query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer
-    )
+        retriever=retriever, response_synthesizer=response_synthesizer)
     chat_engine = CondenseQuestionChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,

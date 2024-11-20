@@ -96,7 +96,7 @@ def v2_chat(
     return new_chat_message
 
 
-def retrieve_chat_history(session_id):
+def retrieve_chat_history(session_id) -> list[RagContext]:
     chat_history = chat_store.retrieve_chat_history(session_id)[:10]
     history: [RagContext] = list()
     for message in chat_history:

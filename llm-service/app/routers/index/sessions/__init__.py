@@ -35,6 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import time
+import uuid
 
 from fastapi import APIRouter
 
@@ -42,7 +44,7 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....services.chat_store import RagStudioChatMessage, chat_store
-from ....services import qdrant
+from ....services import qdrant, llm_completion
 from ....services.chat import (v2_chat, generate_suggested_questions)
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
@@ -77,7 +79,27 @@ def chat(
         session_id: int,
         request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
+    if request.configuration.exclude_knowledge_base:
+        return llm_talk(session_id, request)
     return v2_chat(session_id, request.data_source_id, request.query, request.configuration)
+
+def llm_talk(
+        session_id: int,
+        request: RagStudioChatRequest,
+) -> RagStudioChatMessage:
+    chat_response = llm_completion.completion(session_id, request.query, request.configuration)
+    new_chat_message = RagStudioChatMessage(
+        id=str(uuid.uuid4()),
+        source_nodes=[],
+        evaluations=[],
+        rag_message={
+            "user": request.query,
+            "assistant": chat_response.message.content,
+        },
+        timestamp=time.time()
+    )
+    chat_store.append_to_history(session_id, [new_chat_message])
+    return new_chat_message
 
 
 class SuggestQuestionsRequest(BaseModel):

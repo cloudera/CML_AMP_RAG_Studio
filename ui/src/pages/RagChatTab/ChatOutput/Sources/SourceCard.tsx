@@ -113,7 +113,9 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 <Typography.Title level={5} style={{ marginTop: 10 }}>
                   Extracted reference content
                 </Typography.Title>
-                <Typography.Paragraph style={{ textAlign: "left" }}>
+                <Typography.Paragraph
+                  style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
+                >
                   {chunkContents.data}
                 </Typography.Paragraph>
               </Flex>
