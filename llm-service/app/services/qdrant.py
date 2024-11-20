@@ -59,61 +59,6 @@ from .utils import get_last_segment
 
 logger = logging.getLogger(__name__)
 
-
-class RagIndexDocumentConfiguration(BaseModel):
-    # TODO: Add more params
-    chunk_size: int = 512  # this is llama-index's default
-    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
-
-
-def download_and_index(
-        tmpdirname: str,
-        data_source_id: int,
-        configuration: RagIndexDocumentConfiguration,
-        s3_document_key: str,
-):
-    try:
-        documents = SimpleDirectoryReader(tmpdirname).load_data()
-        document_id = get_last_segment(s3_document_key)
-        for document in documents:
-            document.id_ = document_id  # this is a terrible way to assign the doc id...
-            document.metadata["document_id"] = document_id
-    except Exception as e:
-        logger.error(
-            "error loading document from temporary directory %s",
-            tmpdirname,
-        )
-        raise HTTPException(
-            status_code=422,
-            detail=f"error loading document from temporary directory {tmpdirname}",
-        ) from e
-
-    logger.info("instantiating vector store")
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
-    logger.info("instantiated vector store")
-
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
-    chunk_overlap_tokens = int(
-        configuration.chunk_overlap * 0.01 * configuration.chunk_size
-    )
-
-    logger.info("indexing document")
-    VectorStoreIndex.from_documents(
-        documents,
-        storage_context=storage_context,
-        embed_model=models.get_embedding_model(),
-        show_progress=False,
-        transformations=[
-            SentenceSplitter(
-                chunk_size=configuration.chunk_size,
-                chunk_overlap=chunk_overlap_tokens,
-            ),
-        ],
-    )
-    logger.info("indexed document")
-
-
 def check_data_source_exists(data_source_size: int) -> None:
     if data_source_size == -1:
         raise HTTPException(status_code=404, detail="Knowledge base not found.")

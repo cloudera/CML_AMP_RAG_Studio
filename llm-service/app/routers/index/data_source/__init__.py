@@ -30,6 +30,7 @@
 
 import http
 import logging
+import os
 import tempfile
 
 from fastapi import APIRouter
@@ -37,6 +38,10 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....services import doc_summaries, qdrant, s3
+from app.ai.indexing.index import Indexer
+from app.services.rag_vector_store import create_rag_vector_store
+from app.services.models import get_embedding_model
+from llama_index.core.node_parser import SentenceSplitter
 
 logger = logging.getLogger(__name__)
 
@@ -100,14 +105,18 @@ def delete_document(data_source_id: int, doc_id: str) -> None:
     doc_summaries.delete_document(data_source_id, doc_id)
 
 
+class RagIndexDocumentConfiguration(BaseModel):
+    # TODO: Add more params
+    chunk_size: int = 512  # this is llama-index's default
+    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
 
 class RagIndexDocumentRequest(BaseModel):
+    document_id: str
     s3_bucket_name: str
     s3_document_key: str
-    configuration: qdrant.RagIndexDocumentConfiguration = (
-        qdrant.RagIndexDocumentConfiguration()
+    configuration: RagIndexDocumentConfiguration = (
+        RagIndexDocumentConfiguration()
     )
-
 
 @router.post(
     "/documents/download-and-index",
@@ -118,15 +127,23 @@ class RagIndexDocumentRequest(BaseModel):
 def download_and_index(
         data_source_id: int,
         request: RagIndexDocumentRequest,
-) -> str:
+) -> None:
     with tempfile.TemporaryDirectory() as tmpdirname:
         logger.debug("created temporary directory %s", tmpdirname)
         s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
-        qdrant.download_and_index(
-            tmpdirname,
-            data_source_id,
-            request.configuration,
-            request.s3_document_key
-        )
-        return http.HTTPStatus.OK.phrase
+        # Get the single file in the directory
+        files = os.listdir(tmpdirname)
+        if len(files) != 1:
+            raise ValueError("Expected a single file in the temporary directory")
+        file_path = os.path.join(tmpdirname, files[0])
 
+        indexer = Indexer(
+                data_source_id,
+                splitter=SentenceSplitter(
+                    chunk_size=request.configuration.chunk_size,
+                    chunk_overlap=int(request.configuration.chunk_overlap * 0.01 * request.configuration.chunk_size),
+                ),
+                embedding_model=get_embedding_model(),
+                chunks_vector_store=create_rag_vector_store(data_source_id)
+        )
+        indexer.index_file(file_path, request.document_id)
