@@ -63,10 +63,11 @@ mkdir -p databases
 docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 
 cd llm-service
-python3.10 -m venv venv
+pip install uv
+uv venv venv
 source venv/bin/activate
-python -m pip install -r app/requirements.txt
-python -m pytest -sxvvra
+uv pip install -r app/requirements.txt --system
+pytest -sxvvra
 
 fastapi dev &
 
