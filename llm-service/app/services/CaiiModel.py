@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from llama_index.core.base.llms import generic_utils
 from llama_index.core.base.llms.types import LLMMetadata
 from llama_index.core.bridge.pydantic import Field
 from llama_index.llms.mistralai.base import MistralAI

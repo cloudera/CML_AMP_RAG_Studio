@@ -35,8 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import http.client as http_client
 import json
+import os
+from typing import List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from openai import OpenAI
@@ -60,19 +62,33 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return self._get_embedding(query, "query")
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
-        client, model = self._get_client()
-        query = query.replace("\n", " ")
-        return (
-            client.embeddings.create(input=[query], extra_body={ "input_type": input_type, "truncate": "END"}, model=model).data[0].embedding
-        )
+        model = self.endpoint["endpointmetadata"]["model_name"]
+        domain = os.environ['CAII_DOMAIN']
 
-    def _get_client(self) -> (OpenAI, any):
-        api_base = self.endpoint["url"].removesuffix("/embeddings")
+        connection = http_client.HTTPSConnection(domain, 443)
+        headers = self.build_auth_headers()
+        headers["Content-Type"] = "application/json"
+        body = json.dumps({
+            "input": query,
+            "input_type": input_type,
+            "truncate": "END",
+            "model": model
+        })
+        connection.request("POST", self.endpoint["url"], body=body, headers=headers)
+        res = connection.getresponse()
+        data = res.read()
+        json_response = data.decode("utf-8")
+        structured_response = json.loads(json_response)
+        embedding = structured_response["data"][0]["embedding"]
 
+        return embedding
+
+
+    def build_auth_headers(self) -> dict:
         with open('/tmp/jwt', 'r') as file:
             jwt_contents = json.load(file)
         access_token = jwt_contents['access_token']
         headers = {
             "Authorization": f"Bearer {access_token}"
         }
-        return  OpenAI(base_url=api_base, default_headers=headers, api_key="api_key"), self.endpoint["endpointmetadata"]["model_name"]
+        return headers
