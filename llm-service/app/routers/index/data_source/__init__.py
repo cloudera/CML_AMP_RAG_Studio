@@ -31,6 +31,7 @@
 import logging
 import os
 import tempfile
+from pathlib import Path
 
 from fastapi import APIRouter
 from llama_index.core.node_parser import SentenceSplitter
@@ -132,7 +133,7 @@ def download_and_index(
         files = os.listdir(tmpdirname)
         if len(files) != 1:
             raise ValueError("Expected a single file in the temporary directory")
-        file_path = os.path.join(tmpdirname, files[0])
+        file_path = Path(os.path.join(tmpdirname, files[0]))
 
         indexer = Indexer(
             data_source_id,

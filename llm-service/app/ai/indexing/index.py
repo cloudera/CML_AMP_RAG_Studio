@@ -36,19 +36,20 @@
 #  DATA.
 #
 
-from dataclasses import dataclass
 import logging
 import os
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Type
 
-from .readers.pdf import PDFReader
-from .readers.nop import NopReader
-from llama_index.core.readers.base import BaseReader
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import Document
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.readers.base import BaseReader
+from llama_index.core.schema import BaseNode, Document, TextNode
+
 from ...services.vector_store import VectorStore
-from llama_index.core.node_parser.interface import BaseNode
+from .readers.nop import NopReader
+from .readers.pdf import PDFReader
 
 logger = logging.getLogger(__name__)
 
@@ -59,18 +60,26 @@ READERS: Dict[str, Type[BaseReader]] = {
 }
 CHUNKABLE_FILE_EXTENSIONS = {".pdf", ".txt", ".md"}
 
+
 @dataclass
 class NotSupportedFileExtensionError(Exception):
     file_extension: str
 
+
 class Indexer:
-    def __init__(self, data_source_id: int, splitter: SentenceSplitter, embedding_model: BaseEmbedding, chunks_vector_store: VectorStore):
+    def __init__(
+        self,
+        data_source_id: int,
+        splitter: SentenceSplitter,
+        embedding_model: BaseEmbedding,
+        chunks_vector_store: VectorStore,
+    ):
         self.data_source_id = data_source_id
         self.splitter = splitter
         self.embedding_model = embedding_model
         self.chunks_vector_store = chunks_vector_store
 
-    def index_file(self, file_path: str, file_id: str):
+    def index_file(self, file_path: Path, file_id: str) -> None:
         logger.debug(f"Indexing file: {file_path}")
 
         file_extension = os.path.splitext(file_path)[1]
@@ -85,7 +94,11 @@ class Indexer:
         documents = self._documents_in_file(reader, file_path, file_id)
         if file_extension in CHUNKABLE_FILE_EXTENSIONS:
             logger.debug(f"Chunking file: {file_path}")
-            chunks = [chunk for document in documents for chunk in self._chunks_in_document(document)]
+            chunks = [
+                chunk
+                for document in documents
+                for chunk in self._chunks_in_document(document)
+            ]
         else:
             chunks = documents
 
@@ -95,34 +108,48 @@ class Indexer:
 
         for chunk, embedding in zip(chunks, embeddings):
             chunk.embedding = embedding
-            chunk.metadata["file_name"] = os.path.basename(file_path)
 
         logger.debug(f"Adding {len(chunks)} chunks to vector store")
         chunks_vector_store = self.chunks_vector_store.access_vector_store()
-        chunks_vector_store.add(chunks)
+
+        # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
+        # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because
+        # we're capturing "text".
+        converted_chunks: List[BaseNode] = [chunk for chunk in chunks]
+        chunks_vector_store.add(converted_chunks)
 
         logger.debug(f"Indexing file: {file_path} completed")
 
-    def _documents_in_file(self, reader: BaseReader, file_path: str, file_id: str) -> List[Document]:
+    def _documents_in_file(
+        self, reader: BaseReader, file_path: Path, file_id: str
+    ) -> List[Document]:
         documents = reader.load_data(file_path)
 
         for i, document in enumerate(documents):
             # Update the document metadata
             document.id_ = file_id
-            document.metadata["file_id"] = file_id
+            document.metadata["file_name"] = os.path.basename(file_path)
+            document.metadata["document_id"] = file_id
             document.metadata["document_part_number"] = i
             document.metadata["data_source_id"] = self.data_source_id
 
         return documents
 
-    def _chunks_in_document(self, document: Document) -> List[BaseNode]:
+    def _chunks_in_document(self, document: Document) -> List[TextNode]:
         chunks = self.splitter.get_nodes_from_documents([document])
 
         for j, chunk in enumerate(chunks):
-            chunk.metadata["file_id"] = document.metadata["file_id"]
-            chunk.metadata["document_id"] = document.metadata["file_id"]
-            chunk.metadata["document_part_number"] = document.metadata["document_part_number"]
+            chunk.metadata["file_name"] = document.metadata["file_name"]
+            chunk.metadata["document_id"] = document.metadata["document_id"]
+            chunk.metadata["document_part_number"] = document.metadata[
+                "document_part_number"
+            ]
             chunk.metadata["chunk_number"] = j
             chunk.metadata["data_source_id"] = document.metadata["data_source_id"]
 
-        return chunks
+        converted_chunks: List[TextNode] = []
+        for chunk in chunks:
+            assert isinstance(chunk, TextNode)
+            converted_chunks.append(chunk)
+
+        return converted_chunks

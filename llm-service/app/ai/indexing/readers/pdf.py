@@ -36,15 +36,17 @@
 #  DATA.
 #
 
+from pathlib import Path
 from typing import List
 
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import Document
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
+
 class PDFReader(BaseReader):
-    def __init__(self):
+    def __init__(self) -> None:
         self.inner = LlamaIndexPDFReader(return_full_document=True)
 
-    def load_data(self, file_path: str) -> List[Document]:
+    def load_data(self, file_path: Path) -> List[Document]:
         return self.inner.load_data(file_path)

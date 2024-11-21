@@ -40,6 +40,7 @@ from typing import List
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import Document
 
+
 class NopReader(BaseReader):
     def load_data(self, file_path: str) -> List[Document]:
         with open(file_path, "r") as f:
