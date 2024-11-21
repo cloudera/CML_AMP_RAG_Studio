@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:cf38cbf44250032e4b248c90dbc34037bb94662cdfe512d50fcb3e271309fd84"
+content_hash = "sha256:2a9b3e86ee90d639241d72fdeee20e779c2e7c42e90ab2e43e335c18454e0858"
 
 [[metadata.targets]]
 requires_python = "==3.10.*"
@@ -380,6 +380,15 @@ groups = ["default"]
 files = [
     {file = "dnspython-2.7.0-py3-none-any.whl", hash = "sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86"},
     {file = "dnspython-2.7.0.tar.gz", hash = "sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1"},
+]
+
+[[package]]
+name = "docx2txt"
+version = "0.8"
+summary = "A pure python-based utility to extract text and images from docx files."
+groups = ["default"]
+files = [
+    {file = "docx2txt-0.8.tar.gz", hash = "sha256:2c06d98d7cfe2d3947e5760a57d924e3ff07745b379c8737723922e7009236e5"},
 ]
 
 [[package]]

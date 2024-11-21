@@ -46,6 +46,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import BaseNode, Document, TextNode
+from llama_index.readers.file import DocxReader
 
 from ...services.vector_store import VectorStore
 from .readers.nop import NopReader
@@ -57,8 +58,9 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".pdf": PDFReader,
     ".txt": NopReader,
     ".md": NopReader,
+    ".docx": DocxReader,
 }
-CHUNKABLE_FILE_EXTENSIONS = {".pdf", ".txt", ".md"}
+CHUNKABLE_FILE_EXTENSIONS = {".pdf", ".txt", ".md", ".docx"}
 
 
 @dataclass
