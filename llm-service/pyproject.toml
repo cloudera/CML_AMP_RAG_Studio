@@ -8,7 +8,8 @@ authors = [
 dependencies = [
     "llama-index-core==0.10.68",
     "llama-index-readers-file==0.1.33",
-    "fastapi==0.111.0", "pydantic==2.8.2",
+    "fastapi==0.111.0",
+    "pydantic==2.8.2",
     "pydantic-settings==2.3.4",
     "boto3>=1.35.66",
     "llama-index-embeddings-bedrock==0.2.1",
