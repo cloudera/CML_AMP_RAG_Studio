@@ -74,7 +74,7 @@ class TestDocumentIndexing:
         assert document_id is not None
         index = get_vector_store_index(data_source_id)
         vectors = index.vector_store.query(
-            VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id])
+            VectorStoreQuery(query_embedding=[0.66] * 1024)
         )
         assert len(vectors.nodes or []) == 1
 
@@ -93,7 +93,7 @@ class TestDocumentIndexing:
 
         index = get_vector_store_index(data_source_id)
         vectors = index.vector_store.query(
-            VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id])
+            VectorStoreQuery(query_embedding=[0.66] * 1024)
         )
         assert len(vectors.nodes or []) == 1
 
@@ -122,9 +122,11 @@ class TestDocumentIndexing:
 
         index = get_vector_store_index(data_source_id)
         vectors = index.vector_store.query(
-            VectorStoreQuery(query_embedding=[0.2] * 1024, doc_ids=[document_id])
+            VectorStoreQuery(query_embedding=[0.2] * 1024)
         )
         assert len(vectors.nodes or []) == 1
+        print(document_id)
+        print("\n" * 10)
 
         response = client.delete(
             f"/data_sources/{data_source_id}/documents/{document_id}"
@@ -133,7 +135,7 @@ class TestDocumentIndexing:
 
         index = get_vector_store_index(data_source_id)
         vectors = index.vector_store.query(
-            VectorStoreQuery(query_embedding=[0.2] * 1024, doc_ids=[document_id])
+            VectorStoreQuery(query_embedding=[0.2] * 1024)
         )
         assert len(vectors.nodes or []) == 0
 

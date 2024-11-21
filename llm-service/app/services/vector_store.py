@@ -61,3 +61,7 @@ class VectorStore:
     @abstractmethod
     def exists(self) -> bool:
         """Does the vector store exist?"""
+
+    @abstractmethod
+    def delete_document(self, document_id: str) -> None:
+        """Delete a document from the vector store"""

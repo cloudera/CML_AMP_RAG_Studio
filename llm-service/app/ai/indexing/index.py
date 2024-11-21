@@ -87,7 +87,7 @@ class Indexer:
         self.embedding_model = embedding_model
         self.chunks_vector_store = chunks_vector_store
 
-    def index_file(self, file_path: Path, file_id: str) -> None:
+    def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(f"Indexing file: {file_path}")
 
         file_extension = os.path.splitext(file_path)[1]
@@ -99,7 +99,7 @@ class Indexer:
 
         logger.debug(f"Parsing file: {file_path}")
 
-        documents = self._documents_in_file(reader, file_path, file_id)
+        documents = self._documents_in_file(reader, file_path, document_id)
         if file_extension in CHUNKABLE_FILE_EXTENSIONS:
             logger.debug(f"Chunking file: {file_path}")
             chunks = [

@@ -46,6 +46,12 @@ from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.vector_stores.types import (
+    FilterOperator,
+    MetadataFilter,
+    MetadataFilters,
+    VectorStoreQuery,
+)
 
 from ..rag_types import RagPredictConfiguration
 from . import models, rag_vector_store
@@ -78,14 +84,9 @@ def delete(data_source_id: int) -> None:
 
 
 def delete_document(data_source_id: int, document_id: str) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(
-        data_source_id
-    ).access_vector_store()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=models.get_embedding_model(),
+    rag_vector_store.create_rag_vector_store(data_source_id).delete_document(
+        document_id
     )
-    index.delete_ref_doc(document_id)
 
 
 def query(

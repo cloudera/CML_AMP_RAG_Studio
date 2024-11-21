@@ -39,9 +39,10 @@
 import os
 
 import qdrant_client
+import qdrant_client.http.models as rest
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from qdrant_client.http.models import CountResult
+from qdrant_client.http.models import CountResult, FieldCondition, MatchValue
 
 from .vector_store import VectorStore
 
@@ -87,3 +88,16 @@ class RagQdrantVectorStore(VectorStore):
     def access_vector_store(self) -> BasePydanticVectorStore:
         vector_store = QdrantVectorStore(self.table_name, self.client, self.aclient)
         return vector_store
+
+    def delete_document(self, document_id: str) -> None:
+        result = self.client.delete(
+            self.table_name,
+            points_selector=rest.Filter(
+                must=[
+                    FieldCondition(
+                        key="metadata.document_id", match=MatchValue(value=document_id)
+                    )
+                ]
+            ),
+        )
+        print(result)
