@@ -62,10 +62,17 @@ jobs:
         uses: pdm-project/setup-pdm@v3
         with:
           python-version: '3.10'
-          cache: true
-          cache-dependency-path: 'llm-service/pdm.lock'
+          cache: false
+
+      - name: Cache pdm cache folder
+        uses: actions/cache@v4
+        id: python_cache
+        with:
+          path: ./llm-service/.venv
+          key: pdm-venv-${{ hashFiles('./llm-service/pdm.lock') }}
 
       - name: Install Python dependencies
+        if: steps.python_cache.outputs.cache-hit != 'true'
         run: |
           pdm install
         working-directory: llm-service
