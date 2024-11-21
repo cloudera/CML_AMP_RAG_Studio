@@ -36,13 +36,62 @@
 #  DATA.
 #
 
-from .rag_qdrant_vector_store import RagQdrantVectorStore
+import os
+from typing import Optional
+
+import qdrant_client
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
+from llama_index.vector_stores.qdrant import (
+    QdrantVectorStore as LlamaIndexQdrantVectorStore,
+)
+from qdrant_client.http.models import CountResult
+
 from .vector_store import VectorStore
 
 
-def create_rag_vector_store(data_source_id: int) -> VectorStore:
-    return RagQdrantVectorStore(table_name=f"index_{data_source_id}")
+def new_qdrant_client() -> qdrant_client.QdrantClient:
+    host = os.environ.get("QDRANT_HOST", "localhost")
+    port = 6333
+    return qdrant_client.QdrantClient(host=host, port=port)
 
 
-def create_summary_vector_store(data_source_id: int) -> VectorStore:
-    return RagQdrantVectorStore(table_name=f"summary_index_{data_source_id}")
+class QdrantVectorStore(VectorStore):
+    @staticmethod
+    def for_chunks(
+        data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
+    ) -> "QdrantVectorStore":
+        return QdrantVectorStore(table_name=f"index_{data_source_id}", client=client)
+
+    @staticmethod
+    def for_summaries(
+        data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
+    ) -> "QdrantVectorStore":
+        return QdrantVectorStore(
+            table_name=f"summary_index_{data_source_id}", client=client
+        )
+
+    def __init__(
+        self, table_name: str, client: Optional[qdrant_client.QdrantClient] = None
+    ):
+        self.client = client or new_qdrant_client()
+        self.table_name = table_name
+
+    def size(self) -> int:
+        """
+        If the collection does not exist, return -1
+        """
+        if not self.client.collection_exists(self.table_name):
+            return -1
+        document_count: CountResult = self.client.count(self.table_name)
+        return document_count.count
+
+    def delete(self) -> None:
+        if self.exists():
+            self.client.delete_collection(self.table_name)
+
+    def exists(self) -> bool:
+        return self.client.collection_exists(self.table_name)
+
+    def llama_vector_store(self) -> BasePydanticVectorStore:
+        vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
+        return vector_store

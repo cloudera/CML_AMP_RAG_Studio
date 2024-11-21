@@ -43,6 +43,7 @@ from typing import List
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
+from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 from . import evaluators, qdrant
 from .chat_store import (
@@ -61,7 +62,7 @@ def v2_chat(
     configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
     response_id = str(uuid.uuid4())
-    if qdrant.size_of(data_source_id) == 0:
+    if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
             source_nodes=[],

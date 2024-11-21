@@ -40,16 +40,15 @@
 
 from typing import Any
 
-from app.services import models, rag_vector_store
+from app.ai.vector_stores.qdrant import QdrantVectorStore
+from app.services import models
 from fastapi.testclient import TestClient
 from llama_index.core import VectorStoreIndex
 from llama_index.core.vector_stores import VectorStoreQuery
 
 
 def get_vector_store_index(data_source_id: int) -> VectorStoreIndex:
-    vector_store = rag_vector_store.create_rag_vector_store(
-        data_source_id
-    ).access_vector_store()
+    vector_store = QdrantVectorStore.for_chunks(data_source_id).llama_vector_store()
     index = VectorStoreIndex.from_vector_store(
         vector_store, embed_model=models.get_embedding_model()
     )
@@ -99,7 +98,7 @@ class TestDocumentIndexing:
 
         response = client.delete(f"/data_sources/{data_source_id}")
         assert response.status_code == 200
-        vector_store = rag_vector_store.create_rag_vector_store(data_source_id)
+        vector_store = QdrantVectorStore.for_chunks(data_source_id)
         assert vector_store.exists() is False
 
         get_summary_response = client.get(

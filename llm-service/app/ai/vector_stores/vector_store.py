@@ -36,48 +36,28 @@
 #  DATA.
 #
 
-import os
+from abc import abstractmethod
 
-import qdrant_client
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
-from llama_index.vector_stores.qdrant import QdrantVectorStore
-from qdrant_client.http.models import CountResult
-
-from .vector_store import VectorStore
 
 
-class RagQdrantVectorStore(VectorStore):
-    host = os.environ.get("QDRANT_HOST", "localhost")
-    port = 6333
+class VectorStore:
+    """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
 
-    def __init__(self, table_name: str, memory_store: bool = False):
-        self.client = self._create_qdrant_clients(memory_store)
-        self.table_name = table_name
-
+    @abstractmethod
     def size(self) -> int:
         """
         If the collection does not exist, return -1
         """
-        if not self.client.collection_exists(self.table_name):
-            return -1
-        document_count: CountResult = self.client.count(self.table_name)
-        return document_count.count
 
+    @abstractmethod
     def delete(self) -> None:
-        if self.exists():
-            self.client.delete_collection(self.table_name)
+        """Delete the vector store"""
 
+    @abstractmethod
+    def llama_vector_store(self) -> BasePydanticVectorStore:
+        """Access the underlying llama-index vector store implementation"""
+
+    @abstractmethod
     def exists(self) -> bool:
-        return self.client.collection_exists(self.table_name)
-
-    def _create_qdrant_clients(self, memory_store: bool) -> qdrant_client.QdrantClient:
-        if memory_store:
-            client = qdrant_client.QdrantClient(":memory:")
-        else:
-            client = qdrant_client.QdrantClient(host=self.host, port=self.port)
-
-        return client
-
-    def access_vector_store(self) -> BasePydanticVectorStore:
-        vector_store = QdrantVectorStore(self.table_name, self.client)
-        return vector_store
+        """Does the vector store exist?"""

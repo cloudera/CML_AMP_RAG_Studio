@@ -50,8 +50,9 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
+from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..config import settings
-from . import models, rag_vector_store
+from . import models
 from .s3 import download
 from .utils import get_last_segment
 
@@ -158,9 +159,9 @@ def summarize_data_source(data_source_id: int) -> str:
 def make_storage_context(data_source_id: int) -> StorageContext:
     storage_context = StorageContext.from_defaults(
         persist_dir=index_dir(data_source_id),
-        vector_store=rag_vector_store.create_summary_vector_store(
+        vector_store=QdrantVectorStore.for_summaries(
             data_source_id
-        ).access_vector_store(),
+        ).llama_vector_store(),
     )
     return storage_context
 
@@ -174,7 +175,7 @@ def delete_data_source(data_source_id: int) -> None:
     index = index_dir(data_source_id)
     if os.path.exists(index):
         shutil.rmtree(index)
-    rag_vector_store.create_summary_vector_store(data_source_id).delete()
+    QdrantVectorStore.for_summaries(data_source_id).delete()
 
 
 def delete_document(data_source_id: int, doc_id: str) -> None:

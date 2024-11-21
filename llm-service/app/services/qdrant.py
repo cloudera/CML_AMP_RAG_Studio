@@ -47,45 +47,12 @@ from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 
+from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
-from . import models, rag_vector_store
+from . import models
 from .chat_store import RagContext
 
 logger = logging.getLogger(__name__)
-
-
-def check_data_source_exists(data_source_size: int) -> None:
-    if data_source_size == -1:
-        raise HTTPException(status_code=404, detail="Knowledge base not found.")
-
-
-def size_of(data_source_id: int) -> int:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id)
-    return vector_store.size()
-
-
-def chunk_contents(data_source_id: int, chunk_id: str) -> str:
-    vector_store = rag_vector_store.create_rag_vector_store(
-        data_source_id
-    ).access_vector_store()
-    node = vector_store.get_nodes([chunk_id])[0]
-    return node.get_content()
-
-
-def delete(data_source_id: int) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id)
-    vector_store.delete()
-
-
-def delete_document(data_source_id: int, document_id: str) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(
-        data_source_id
-    ).access_vector_store()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=models.get_embedding_model(),
-    )
-    index.delete_ref_doc(document_id)
 
 
 def query(
@@ -94,9 +61,7 @@ def query(
     configuration: RagPredictConfiguration,
     chat_history: list[RagContext],
 ) -> AgentChatResponse:
-    vector_store = rag_vector_store.create_rag_vector_store(
-        data_source_id
-    ).access_vector_store()
+    vector_store = QdrantVectorStore.for_chunks(data_source_id).llama_vector_store()
     embedding_model = models.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,

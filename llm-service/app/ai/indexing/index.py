@@ -49,8 +49,8 @@ from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import BaseNode, Document, TextNode
 from llama_index.readers.file import DocxReader
 
+from ...ai.vector_stores.vector_store import VectorStore
 from ...services.utils import batch_sequence, flatten_sequence
-from ...services.vector_store import VectorStore
 from .readers.csv import CSVReader
 from .readers.json import JSONReader
 from .readers.nop import NopReader
@@ -124,7 +124,7 @@ class Indexer:
             # we're capturing "text".
             converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
 
-            chunks_vector_store = self.chunks_vector_store.access_vector_store()
+            chunks_vector_store = self.chunks_vector_store.llama_vector_store()
             chunks_vector_store.add(converted_chunks)
 
         logger.debug(f"Indexing file: {file_path} completed")

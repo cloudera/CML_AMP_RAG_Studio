@@ -35,29 +35,3 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
-from abc import abstractmethod
-
-from llama_index.core.vector_stores.types import BasePydanticVectorStore
-
-
-class VectorStore:
-    """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
-
-    @abstractmethod
-    def size(self) -> int:
-        """
-        If the collection does not exist, return -1
-        """
-
-    @abstractmethod
-    def delete(self) -> None:
-        """Delete the vector store"""
-
-    @abstractmethod
-    def access_vector_store(self) -> BasePydanticVectorStore:
-        """Access the underlying llama-index vector store implementation"""
-
-    @abstractmethod
-    def exists(self) -> bool:
-        """Does the vector store exist?"""

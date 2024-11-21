@@ -45,6 +45,7 @@ from typing import Any, Dict, Sequence
 
 import boto3
 import pytest
+import qdrant_client as q_client
 from boto3.resources.base import ServiceResource
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
@@ -62,15 +63,21 @@ from llama_index.core.llms import LLM
 from moto import mock_aws
 from pydantic import Field
 
+from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
-from app.services import models, rag_vector_store
-from app.services.rag_qdrant_vector_store import RagQdrantVectorStore
+from app.services import models
 from app.services.utils import get_last_segment
+
 
 @dataclass
 class BotoObject:
     bucket_name: str
     key: str
+
+
+@pytest.fixture
+def qdrant_client() -> q_client.QdrantClient:
+    return q_client.QdrantClient(":memory:")
 
 
 @pytest.fixture
@@ -188,38 +195,27 @@ class DummyEmbeddingModel(BaseEmbedding):
         return [0.1] * 1024
 
 
-# We're hacking our vector stores to run in-memory. Since they are in memory, we need
-# to be sure to return the same instance for the same data source id
-table_name_to_vector_store: Dict[int, RagQdrantVectorStore] = {}
-
-
-def _get_vector_store_instance(
-    data_source_id: int, table_prefix: str
-) -> RagQdrantVectorStore:
-    if data_source_id in table_name_to_vector_store:
-        return table_name_to_vector_store[data_source_id]
-    res = RagQdrantVectorStore(
-        table_name=f"{table_prefix}{data_source_id}", memory_store=True
-    )
-    table_name_to_vector_store[data_source_id] = res
-    return res
-
-
 @pytest.fixture(autouse=True)
-def vector_store(monkeypatch: pytest.MonkeyPatch) -> None:
+def vector_store(
+    monkeypatch: pytest.MonkeyPatch, qdrant_client: q_client.QdrantClient
+) -> None:
+    original = QdrantVectorStore.for_chunks
     monkeypatch.setattr(
-        rag_vector_store,
-        "create_rag_vector_store",
-        lambda ds_id: _get_vector_store_instance(ds_id, "index_"),
+        QdrantVectorStore,
+        "for_chunks",
+        lambda ds_id: original(ds_id, qdrant_client),
     )
 
 
 @pytest.fixture(autouse=True)
-def summary_vector_store(monkeypatch: pytest.MonkeyPatch) -> None:
+def summary_vector_store(
+    monkeypatch: pytest.MonkeyPatch, qdrant_client: q_client.QdrantClient
+) -> None:
+    original = QdrantVectorStore.for_summaries
     monkeypatch.setattr(
-        rag_vector_store,
-        "create_summary_vector_store",
-        lambda ds_id: _get_vector_store_instance(ds_id, "summary_index_"),
+        QdrantVectorStore,
+        "for_summaries",
+        lambda ds_id: original(ds_id, qdrant_client),
     )
 
 

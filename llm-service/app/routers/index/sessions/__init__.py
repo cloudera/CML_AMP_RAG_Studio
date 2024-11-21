@@ -38,10 +38,11 @@
 import time
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from .... import exceptions
+from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion, qdrant
 from ....services.chat import generate_suggested_questions, v2_chat
@@ -130,8 +131,9 @@ def suggest_questions(
     session_id: int,
     request: SuggestQuestionsRequest,
 ) -> RagSuggestedQuestionsResponse:
-    data_source_size = qdrant.size_of(request.data_source_id)
-    qdrant.check_data_source_exists(data_source_size)
+    data_source_size = QdrantVectorStore.for_chunks(request.data_source_id).size()
+    if data_source_size == -1:
+        raise HTTPException(status_code=404, detail="Knowledge base not found.")
     suggested_questions = generate_suggested_questions(
         request.configuration, request.data_source_id, data_source_size, session_id
     )
