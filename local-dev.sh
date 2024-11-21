@@ -66,7 +66,7 @@ cd llm-service
 python3.10 -m venv venv
 source venv/bin/activate
 python -m pip install pdm
-pdm install
+pdm install -v
 pdm run pytest -sxvvra
 
 pdm run fastapi dev &
