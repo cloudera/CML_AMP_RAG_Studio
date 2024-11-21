@@ -38,9 +38,10 @@
 
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Type
+from typing import Dict, Generator, List, Type
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.node_parser import SentenceSplitter
@@ -48,6 +49,7 @@ from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import BaseNode, Document, TextNode
 from llama_index.readers.file import DocxReader
 
+from ...services.utils import batch_sequence, flatten_sequence
 from ...services.vector_store import VectorStore
 from .readers.csv import CSVReader
 from .readers.json import JSONReader
@@ -108,21 +110,22 @@ class Indexer:
         else:
             chunks = documents
 
-        texts = [chunk.text for chunk in chunks]
-        logger.debug(f"Embedding {len(texts)} chunks")
-        embeddings = self.embedding_model.get_text_embedding_batch(texts)
+        logger.debug(f"Embedding {len(chunks)} chunks")
 
-        for chunk, embedding in zip(chunks, embeddings):
-            chunk.embedding = embedding
+        chunks_with_embeddings = flatten_sequence(self._compute_embeddings(chunks))
 
-        logger.debug(f"Adding {len(chunks)} chunks to vector store")
-        chunks_vector_store = self.chunks_vector_store.access_vector_store()
+        acc = 0
+        for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
+            acc += len(chunk_batch)
+            logger.debug(f"Adding {acc}/{len(chunks)} chunks to vector store")
 
-        # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
-        # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because
-        # we're capturing "text".
-        converted_chunks: List[BaseNode] = [chunk for chunk in chunks]
-        chunks_vector_store.add(converted_chunks)
+            # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
+            # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because
+            # we're capturing "text".
+            converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
+
+            chunks_vector_store = self.chunks_vector_store.access_vector_store()
+            chunks_vector_store.add(converted_chunks)
 
         logger.debug(f"Indexing file: {file_path} completed")
 
@@ -132,8 +135,6 @@ class Indexer:
         documents = reader.load_data(file_path)
 
         for i, document in enumerate(documents):
-            # Update the document metadata
-            document.id_ = file_id
             document.metadata["file_name"] = os.path.basename(file_path)
             document.metadata["document_id"] = file_id
             document.metadata["document_part_number"] = i
@@ -159,3 +160,24 @@ class Indexer:
             converted_chunks.append(chunk)
 
         return converted_chunks
+
+    def _compute_embeddings(
+        self, chunks: List[TextNode]
+    ) -> Generator[List[TextNode], None, None]:
+        batched_chunks = list(batch_sequence(chunks, 100))
+        batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]
+
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            futures = [
+                executor.submit(
+                    lambda b: (i, self.embedding_model.get_text_embedding_batch(b)),
+                    batch,
+                )
+                for i, batch in enumerate(batched_texts)
+            ]
+            logger.debug(f"Waiting for {len(futures)} futures")
+            for future in as_completed(futures):
+                i, batch_embeddings = future.result()
+                for chunk, embedding in zip(batched_chunks[i], batch_embeddings):
+                    chunk.embedding = embedding
+                yield batched_chunks[i]
