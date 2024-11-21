@@ -43,7 +43,7 @@ import functools
 import inspect
 import logging
 from collections.abc import Callable, Iterator
-from typing import Awaitable, ParamSpec, Type, TypeVar, Union
+from typing import Awaitable, ParamSpec, TypeVar, Union
 
 import requests
 from fastapi import HTTPException
