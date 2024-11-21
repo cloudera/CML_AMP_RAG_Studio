@@ -1,4 +1,38 @@
+[project]
+name = "llm-service"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Conrado Silva Miranda", email = "csilvamiranda@cloudera.com"},
+]
+dependencies = ["llama-index-core==0.10.68", "llama-index-readers-file==0.1.33", "fastapi==0.111.0", "pydantic==2.8.2", "pydantic-settings==2.3.4", "boto3>=1.35.66", "llama-index-embeddings-bedrock==0.2.1", "llama-index-llms-bedrock==0.1.13", "llama-index-llms-openai==0.1.31", "llama-index-llms-mistralai==0.1.20", "llama-index-embeddings-openai==0.1.11", "llama-index-vector-stores-qdrant==0.2.17", "docx2txt>=0.8", "docling>=2.7.0", "torch==2.4.1"]
+requires-python = "==3.10.*"
+readme = "README.md"
+license = {text = "APACHE"}
+
+[dependency-groups]
+dev = [
+    "moto[s3]>=5.0.21",
+    "pytest>=8.3.3",
+    "ruff>=0.7.4",
+    "mypy>=1.13.0",
+]
+
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
 ]
+
+[tool.pdm]
+distribution = false
+
+[tool.mypy]
+files = ["./app/"]
+ignore_missing_imports = true
+strict = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_return_any = true
+show_error_codes = true
+disable_error_code = ["import-untyped", "assignment"]

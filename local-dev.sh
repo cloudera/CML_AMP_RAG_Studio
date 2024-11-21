@@ -63,15 +63,13 @@ mkdir -p databases
 docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 
 cd llm-service
-
 python3.10 -m venv venv
 source venv/bin/activate
-pip install uv
-#uv venv venv
-uv pip install -r app/requirements.txt
-pytest -sxvvra
+python -m pip install pdm
+pdm install
+pdm run pytest -sxvvra
 
-fastapi dev &
+pdm run fastapi dev &
 
 # start up the jarva
 cd ../backend
