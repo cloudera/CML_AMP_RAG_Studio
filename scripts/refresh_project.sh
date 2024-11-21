@@ -48,8 +48,8 @@ npm install
 cd ../../llm-service
 python -m venv venv
 source venv/bin/activate
-python -m pip install uv
 env
+python -m pip install uv
 uv pip install -r app/requirements.txt
 
 cd ..
