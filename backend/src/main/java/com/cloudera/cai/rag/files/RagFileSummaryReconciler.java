@@ -81,6 +81,15 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
   }
 
   @Override
+  public void init() {
+    // disable
+  }
+
+  public void testInit() {
+    super.init();
+  }
+
+  @Override
   public void resync() {
     log.debug("checking for RAG documents to be summarized");
     String sql =

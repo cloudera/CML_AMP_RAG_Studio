@@ -179,7 +179,7 @@ class RagFileSummaryReconcilerTest {
             ragFileRepository,
             reconcilerConfig,
             OpenTelemetry.noop());
-    reconciler.init();
+    reconciler.testInit();
     return reconciler;
   }
 }
