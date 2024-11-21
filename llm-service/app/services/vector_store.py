@@ -42,7 +42,7 @@ from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
 
 class VectorStore:
-    """ RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
+    """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
 
     @abstractmethod
     def size(self) -> int:
@@ -52,12 +52,12 @@ class VectorStore:
 
     @abstractmethod
     def delete(self) -> None:
-        """ Delete the vector store """
+        """Delete the vector store"""
 
     @abstractmethod
     def access_vector_store(self) -> BasePydanticVectorStore:
-        """ Access the underlying llama-index vector store implementation """
+        """Access the underlying llama-index vector store implementation"""
 
     @abstractmethod
     def exists(self) -> bool:
-        """ Does the vector store exist? """
+        """Does the vector store exist?"""

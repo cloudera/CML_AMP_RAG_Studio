@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Literal
+from typing import Any, Dict, List, Literal
 
 from fastapi import APIRouter
 
@@ -54,13 +54,13 @@ router = APIRouter(prefix="/models", tags=["Models"])
 
 @router.get("/llm", summary="Get LLM Inference models.")
 @exceptions.propagates
-def get_llm_models() -> list:
+def get_llm_models() -> List[Dict[str, Any]]:
     return get_available_llm_models()
 
 
 @router.get("/embeddings", summary="Get LLM Embedding models.")
 @exceptions.propagates
-def get_llm_embedding_models() -> list:
+def get_llm_embedding_models() -> List[Dict[str, Any]]:
     return get_available_embedding_models()
 
 

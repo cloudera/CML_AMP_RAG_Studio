@@ -63,17 +63,19 @@ class CaiiEmbeddingModel(BaseEmbedding):
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
         model = self.endpoint["endpointmetadata"]["model_name"]
-        domain = os.environ['CAII_DOMAIN']
+        domain = os.environ["CAII_DOMAIN"]
 
         connection = http_client.HTTPSConnection(domain, 443)
         headers = self.build_auth_headers()
         headers["Content-Type"] = "application/json"
-        body = json.dumps({
-            "input": query,
-            "input_type": input_type,
-            "truncate": "END",
-            "model": model
-        })
+        body = json.dumps(
+            {
+                "input": query,
+                "input_type": input_type,
+                "truncate": "END",
+                "model": model,
+            }
+        )
         connection.request("POST", self.endpoint["url"], body=body, headers=headers)
         res = connection.getresponse()
         data = res.read()
@@ -83,12 +85,9 @@ class CaiiEmbeddingModel(BaseEmbedding):
 
         return embedding
 
-
     def build_auth_headers(self) -> dict:
-        with open('/tmp/jwt', 'r') as file:
+        with open("/tmp/jwt", "r") as file:
             jwt_contents = json.load(file)
-        access_token = jwt_contents['access_token']
-        headers = {
-            "Authorization": f"Bearer {access_token}"
-        }
+        access_token = jwt_contents["access_token"]
+        headers = {"Authorization": f"Bearer {access_token}"}
         return headers

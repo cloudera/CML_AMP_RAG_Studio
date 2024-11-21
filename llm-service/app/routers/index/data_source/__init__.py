@@ -100,7 +100,6 @@ def delete_document(data_source_id: int, doc_id: str) -> None:
     doc_summaries.delete_document(data_source_id, doc_id)
 
 
-
 class RagIndexDocumentRequest(BaseModel):
     s3_bucket_name: str
     s3_document_key: str
@@ -116,17 +115,13 @@ class RagIndexDocumentRequest(BaseModel):
 )
 @exceptions.propagates
 def download_and_index(
-        data_source_id: int,
-        request: RagIndexDocumentRequest,
+    data_source_id: int,
+    request: RagIndexDocumentRequest,
 ) -> str:
     with tempfile.TemporaryDirectory() as tmpdirname:
         logger.debug("created temporary directory %s", tmpdirname)
         s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
         qdrant.download_and_index(
-            tmpdirname,
-            data_source_id,
-            request.configuration,
-            request.s3_document_key
+            tmpdirname, data_source_id, request.configuration, request.s3_document_key
         )
         return http.HTTPStatus.OK.phrase
-

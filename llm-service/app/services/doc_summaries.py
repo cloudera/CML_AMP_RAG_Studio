@@ -41,9 +41,6 @@ import tempfile
 from typing import cast
 
 from fastapi import HTTPException
-
-from . import models
-
 from llama_index.core import (
     DocumentSummaryIndex,
     Settings,
@@ -53,18 +50,19 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
-from . import rag_vector_store
+from ..config import settings
+from . import models, rag_vector_store
 from .s3 import download
 from .utils import get_last_segment
-from ..config import settings
-
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
 
 
 def index_dir(data_source_id: int) -> str:
     """Return the directory name to be used for a data source's summary index."""
-    return os.path.join(settings.rag_databases_dir, f"doc_summary_index_{data_source_id}")
+    return os.path.join(
+        settings.rag_databases_dir, f"doc_summary_index_{data_source_id}"
+    )
 
 
 def read_summary(data_source_id: int, document_id: str) -> str:
@@ -80,7 +78,6 @@ def read_summary(data_source_id: int, document_id: str) -> str:
         return "No summary found for this document."
 
     return doc_summary_index.get_document_summary(doc_id=document_id)
-
 
 
 def generate_summary(
@@ -116,13 +113,13 @@ def generate_summary(
 
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
-def set_settings_globals():
+def set_settings_globals() -> None:
     Settings.llm = models.get_llm("meta.llama3-8b-instruct-v1:0")
     Settings.embed_model = models.get_embedding_model()
     Settings.splitter = SentenceSplitter(chunk_size=1024)
 
 
-def initialize_summary_index_storage(data_source_id):
+def initialize_summary_index_storage(data_source_id: int) -> None:
     set_settings_globals()
     doc_summary_index = DocumentSummaryIndex.from_documents(
         [],
@@ -131,7 +128,9 @@ def initialize_summary_index_storage(data_source_id):
     doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
 
 
-def load_document_summary_index(storage_context) -> DocumentSummaryIndex:
+def load_document_summary_index(
+    storage_context: StorageContext,
+) -> DocumentSummaryIndex:
     set_settings_globals()
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
@@ -156,19 +155,21 @@ def summarize_data_source(data_source_id: int) -> str:
     return response.text
 
 
-def make_storage_context(data_source_id):
+def make_storage_context(data_source_id: int) -> StorageContext:
     storage_context = StorageContext.from_defaults(
         persist_dir=index_dir(data_source_id),
-        vector_store=rag_vector_store.create_summary_vector_store(data_source_id).access_vector_store(),
+        vector_store=rag_vector_store.create_summary_vector_store(
+            data_source_id
+        ).access_vector_store(),
     )
     return storage_context
 
 
-def doc_summary_vector_table_name_from(data_source_id: int):
+def doc_summary_vector_table_name_from(data_source_id: int) -> str:
     return f"summary_index_{data_source_id}"
 
 
-def delete_data_source(data_source_id):
+def delete_data_source(data_source_id: int) -> None:
     """Delete the summary index for `data_source_id`."""
     index = index_dir(data_source_id)
     if os.path.exists(index):
@@ -176,7 +177,7 @@ def delete_data_source(data_source_id):
     rag_vector_store.create_summary_vector_store(data_source_id).delete()
 
 
-def delete_document(data_source_id, doc_id):
+def delete_document(data_source_id: int, doc_id: str) -> None:
     index = index_dir(data_source_id)
     if not os.path.exists(index):
         return

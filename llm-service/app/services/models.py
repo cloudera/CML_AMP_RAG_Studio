@@ -37,7 +37,7 @@
 #
 import os
 from enum import Enum
-from typing import Literal
+from typing import Any, Dict, List, Literal
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -73,13 +73,13 @@ def get_llm(model_name: str = None) -> LLM:
     )
 
 
-def get_available_embedding_models():
+def get_available_embedding_models() -> List[Dict[str, Any]]:
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
-def get_available_llm_models():
+def get_available_llm_models() -> List[Dict[str, Any]]:
     if is_caii_enabled():
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
@@ -90,7 +90,7 @@ def is_caii_enabled() -> bool:
     return len(domain) > 0
 
 
-def _get_bedrock_llm_models():
+def _get_bedrock_llm_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "meta.llama3-1-8b-instruct-v1:0",
@@ -107,7 +107,7 @@ def _get_bedrock_llm_models():
     ]
 
 
-def _get_bedrock_embedding_models():
+def _get_bedrock_embedding_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "cohere.embed-english-v3",

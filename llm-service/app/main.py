@@ -115,7 +115,7 @@ def _configure_app_logger(app_logger: logging.Logger) -> None:
     app_logger.setLevel(settings.rag_log_level)
 
 
-def initialize_logging():
+def initialize_logging() -> None:
     logger.info("Initializing logging.")
 
     _configure_app_logger(logging.getLogger("uvicorn.access"))

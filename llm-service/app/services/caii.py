@@ -35,45 +35,45 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import requests
 import json
 import os
+from typing import Any, Dict, List
 
+import requests
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 
-from .CaiiModel import CaiiModel, CaiiModelMistral
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
+from .CaiiModel import CaiiModel, CaiiModelMistral
 
-def describe_endpoint(domain: str, endpoint_name: str):
-    with open('/tmp/jwt', 'r') as file:
+
+def describe_endpoint(domain: str, endpoint_name: str) -> Any:
+    with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
-    access_token = jwt_contents['access_token']
+    access_token = jwt_contents["access_token"]
 
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    describe_url=f"https://{domain}/api/v1alpha1/describeEndpoint"
-    desc_json = {
-        "name": endpoint_name,
-        "namespace": "serving-default"
-    }
+    headers = {"Authorization": f"Bearer {access_token}"}
+    describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
+    desc_json = {"name": endpoint_name, "namespace": "serving-default"}
 
     desc = requests.post(describe_url, headers=headers, json=desc_json)
     if desc.status_code == 404:
-        raise HTTPException(status_code=404, detail = f"Endpoint '{endpoint_name}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Endpoint '{endpoint_name}' not found"
+        )
     return json.loads(desc.content)
 
-def get_llm(domain: str, endpoint_name: str, messages_to_prompt, completion_to_prompt) -> LLM:
+
+def get_llm(
+    domain: str, endpoint_name: str, messages_to_prompt, completion_to_prompt
+) -> LLM:
     endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     api_base = endpoint["url"].removesuffix("/chat/completions")
-    with open('/tmp/jwt', 'r') as file:
+    with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
-    access_token = jwt_contents['access_token']
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
+    access_token = jwt_contents["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     model = endpoint["endpointmetadata"]["model_name"]
     if "mistral" in endpoint_name.lower():
@@ -98,22 +98,28 @@ def get_llm(domain: str, endpoint_name: str, messages_to_prompt, completion_to_p
 
     return llm
 
+
 def get_embedding_model() -> BaseEmbedding:
-    domain = os.environ['CAII_DOMAIN']
-    endpoint_name = os.environ['CAII_EMBEDDING_ENDPOINT_NAME']
+    domain = os.environ["CAII_DOMAIN"]
+    endpoint_name = os.environ["CAII_EMBEDDING_ENDPOINT_NAME"]
     endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     return CaiiEmbeddingModel(endpoint=endpoint)
 
+
 ### metadata methods below here
 
-def get_caii_llm_models():
-    domain = os.environ['CAII_DOMAIN']
-    endpoint_name = os.environ['CAII_INFERENCE_ENDPOINT_NAME']
+
+def get_caii_llm_models() -> List[Dict[str, Any]]:
+    domain = os.environ["CAII_DOMAIN"]
+    endpoint_name = os.environ["CAII_INFERENCE_ENDPOINT_NAME"]
     try:
         models = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     except requests.exceptions.ConnectionError as e:
         print(e)
-        raise HTTPException(status_code=421, detail = f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.")
+        raise HTTPException(
+            status_code=421,
+            detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
+        )
     except HTTPException as e:
         if e.status_code == 404:
             return [{"model_id": endpoint_name}]
@@ -121,17 +127,21 @@ def get_caii_llm_models():
             raise e
     return build_model_response(models)
 
-def get_caii_embedding_models():
+
+def get_caii_embedding_models() -> List[Dict[str, Any]]:
     # notes:
     # NameResolutionError is we can't contact the CAII_DOMAIN
 
-    domain = os.environ['CAII_DOMAIN']
-    endpoint_name = os.environ['CAII_EMBEDDING_ENDPOINT_NAME']
+    domain = os.environ["CAII_DOMAIN"]
+    endpoint_name = os.environ["CAII_EMBEDDING_ENDPOINT_NAME"]
     try:
         models = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     except requests.exceptions.ConnectionError as e:
         print(e)
-        raise HTTPException(status_code=421, detail = f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.")
+        raise HTTPException(
+            status_code=421,
+            detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
+        )
     except HTTPException as e:
         if e.status_code == 404:
             return [{"model_id": endpoint_name}]
@@ -139,6 +149,13 @@ def get_caii_embedding_models():
             raise e
     return build_model_response(models)
 
-def build_model_response(models):
-    return [{"model_id": models["name"], "name": models["name"], "available": models['replica_count'] > 0,
-             "replica_count": models["replica_count"]}]
+
+def build_model_response(models: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [
+        {
+            "model_id": models["name"],
+            "name": models["name"],
+            "available": models["replica_count"] > 0,
+            "replica_count": models["replica_count"],
+        }
+    ]

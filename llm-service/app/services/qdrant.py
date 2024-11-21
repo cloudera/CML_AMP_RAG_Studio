@@ -51,10 +51,9 @@ from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.storage import StorageContext
 from pydantic import BaseModel
 
-from . import rag_vector_store
 from ..rag_types import RagPredictConfiguration
+from . import models, rag_vector_store
 from .chat_store import RagContext
-from . import models
 from .utils import get_last_segment
 
 logger = logging.getLogger(__name__)
@@ -67,11 +66,11 @@ class RagIndexDocumentConfiguration(BaseModel):
 
 
 def download_and_index(
-        tmpdirname: str,
-        data_source_id: int,
-        configuration: RagIndexDocumentConfiguration,
-        s3_document_key: str,
-):
+    tmpdirname: str,
+    data_source_id: int,
+    configuration: RagIndexDocumentConfiguration,
+    s3_document_key: str,
+) -> None:
     try:
         documents = SimpleDirectoryReader(tmpdirname).load_data()
         document_id = get_last_segment(s3_document_key)
@@ -89,7 +88,9 @@ def download_and_index(
         ) from e
 
     logger.info("instantiating vector store")
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     logger.info("instantiated vector store")
 
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -125,7 +126,9 @@ def size_of(data_source_id: int) -> int:
 
 
 def chunk_contents(data_source_id: int, chunk_id: str) -> str:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     node = vector_store.get_nodes([chunk_id])[0]
     return node.get_content()
 
@@ -136,7 +139,9 @@ def delete(data_source_id: int) -> None:
 
 
 def delete_document(data_source_id: int, document_id: str) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
         embed_model=models.get_embedding_model(),
@@ -145,12 +150,14 @@ def delete_document(data_source_id: int, document_id: str) -> None:
 
 
 def query(
-        data_source_id: int,
-        query_str: str,
-        configuration: RagPredictConfiguration,
-        chat_history: list[RagContext],
+    data_source_id: int,
+    query_str: str,
+    configuration: RagPredictConfiguration,
+    chat_history: list[RagContext],
 ) -> AgentChatResponse:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     embedding_model = models.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
@@ -161,14 +168,15 @@ def query(
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
-        embed_model=embedding_model, # is this needed, really, if it's in the index?
+        embed_model=embedding_model,  # is this needed, really, if it's in the index?
     )
     # TODO: factor out LLM and chat engine into a separate function
     llm = models.get_llm(model_name=configuration.model_name)
 
     response_synthesizer = get_response_synthesizer(llm=llm)
     query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer)
+        retriever=retriever, response_synthesizer=response_synthesizer
+    )
     chat_engine = CondenseQuestionChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
@@ -193,4 +201,3 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
-

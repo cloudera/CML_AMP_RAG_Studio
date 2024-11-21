@@ -119,7 +119,6 @@ def propagates(f: Callable[P, T]) -> Callable[P, T]:
     """
 
     if inspect.iscoroutinefunction(f):
-
         # for coroutines, the wrapper must be declared async,
         # and the wrapped function's result must be awaited
         @functools.wraps(f)

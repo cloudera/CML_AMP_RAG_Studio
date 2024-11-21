@@ -45,15 +45,20 @@ from .models import get_llm
 
 
 def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
-    user = ChatMessage.from_str(x.rag_message['user'], role="user")
-    assistant = ChatMessage.from_str(x.rag_message['assistant'], role="assistant")
+    user = ChatMessage.from_str(x.rag_message["user"], role="user")
+    assistant = ChatMessage.from_str(x.rag_message["assistant"], role="assistant")
     return [user, assistant]
 
 
-def completion(session_id: int, question: str, configuration: RagPredictConfiguration) -> ChatResponse:
+def completion(
+    session_id: int, question: str, configuration: RagPredictConfiguration
+) -> ChatResponse:
     model = get_llm(configuration.model_name)
     chat_history = chat_store.retrieve_chat_history(session_id)[:10]
-    messages = list(itertools.chain.from_iterable(map(lambda x: make_chat_messages(x), chat_history)))
+    messages = list(
+        itertools.chain.from_iterable(
+            map(lambda x: make_chat_messages(x), chat_history)
+        )
+    )
     messages.append(ChatMessage.from_str(question, role="user"))
     return model.chat(messages)
-

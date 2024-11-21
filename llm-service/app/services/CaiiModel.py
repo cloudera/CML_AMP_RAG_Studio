@@ -40,6 +40,7 @@ from llama_index.core.bridge.pydantic import Field
 from llama_index.llms.mistralai.base import MistralAI
 from llama_index.llms.openai import OpenAI
 
+
 class CaiiModel(OpenAI):
     context: int = Field(
         description="The context size",
@@ -47,20 +48,22 @@ class CaiiModel(OpenAI):
     )
 
     def __init__(
-            self,
-            model: str,
-            context: int,
-            api_base: str,
-            messages_to_prompt,
-            completion_to_prompt,
-            default_headers):
+        self,
+        model: str,
+        context: int,
+        api_base: str,
+        messages_to_prompt,
+        completion_to_prompt,
+        default_headers,
+    ):
         super().__init__(
             model=model,
             api_base=api_base,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
             default_headers=default_headers,
-            context=context)
+            context=context,
+        )
         self.context = context
 
     @property
@@ -76,23 +79,24 @@ class CaiiModel(OpenAI):
 
 
 class CaiiModelMistral(MistralAI):
-
     def __init__(
-            self,
-            model: str,
-            context: int,
-            api_base: str,
-            messages_to_prompt,
-            completion_to_prompt,
-            default_headers):
+        self,
+        model: str,
+        context: int,
+        api_base: str,
+        messages_to_prompt,
+        completion_to_prompt,
+        default_headers,
+    ):
         super().__init__(
             api_key=default_headers.get("Authorization"),
             model=model,
-            endpoint=api_base.removesuffix("/v1"), # mistral expects the base url without the /v1
+            endpoint=api_base.removesuffix(
+                "/v1"
+            ),  # mistral expects the base url without the /v1
             messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt
+            completion_to_prompt=completion_to_prompt,
         )
-
 
     @property
     def metadata(self) -> LLMMetadata:

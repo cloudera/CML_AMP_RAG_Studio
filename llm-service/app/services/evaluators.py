@@ -39,13 +39,14 @@
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator
 from llama_index.llms.bedrock import Bedrock
+
 from .llama_utils import completion_to_prompt, messages_to_prompt
 
 
 def evaluate_response(
-        query: str,
-        chat_response: AgentChatResponse,
-) -> tuple[float | None, float | None]:
+    query: str,
+    chat_response: AgentChatResponse,
+) -> tuple[float, float]:
     evaluator_llm = Bedrock(
         model="meta.llama3-8b-instruct-v1:0",
         context_size=128000,
@@ -61,5 +62,4 @@ def evaluate_response(
     faithfulness = faithfulness_evaluator.evaluate_response(
         query=query, response=chat_response
     )
-    return relevance.score, faithfulness.score
-
+    return relevance.score or 0, faithfulness.score or 0

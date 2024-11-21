@@ -46,8 +46,16 @@ import boto3
 import pytest
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.base.llms.types import CompletionResponseAsyncGen, ChatMessage, ChatResponseAsyncGen, \
-    CompletionResponse, ChatResponse, CompletionResponseGen, ChatResponseGen, LLMMetadata
+from llama_index.core.base.llms.types import (
+    ChatMessage,
+    ChatResponse,
+    ChatResponseAsyncGen,
+    ChatResponseGen,
+    CompletionResponse,
+    CompletionResponseAsyncGen,
+    CompletionResponseGen,
+    LLMMetadata,
+)
 from llama_index.core.llms import LLM
 from moto import mock_aws
 from pydantic import Field
@@ -71,7 +79,7 @@ def databases_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> st
 
 @pytest.fixture
 def s3(
-        monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator["s3.ServiceResource"]:
     """Mock all S3 interactions."""
 
@@ -106,7 +114,11 @@ class DummyLlm(LLM):
     completion_response = Field("this is a completion response")
     chat_response = Field("this is a chat response")
 
-    def __init__(self, completion_response: str = "this is a completion response", chat_response: str = "hello"):
+    def __init__(
+        self,
+        completion_response: str = "this is a completion response",
+        chat_response: str = "hello",
+    ):
         super().__init__()
         self.completion_response = completion_response
         self.chat_response = chat_response
@@ -118,26 +130,10 @@ class DummyLlm(LLM):
     def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
         return ChatResponse(message=ChatMessage.from_str(self.chat_response))
 
-    def complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
+    def complete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponse:
         return CompletionResponse(text=self.completion_response)
-
-    def stream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponseGen:
-        pass
-
-    def stream_complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponseGen:
-        pass
-
-    async def achat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
-        pass
-
-    async def acomplete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
-        pass
-
-    async def astream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponseAsyncGen:
-        pass
-
-    async def astream_complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponseAsyncGen:
-        pass
 
 
 class DummyEmbeddingModel(BaseEmbedding):
@@ -156,24 +152,34 @@ class DummyEmbeddingModel(BaseEmbedding):
 table_name_to_vector_store = {}
 
 
-def _get_vector_store_instance(data_source_id: int, table_prefix: str) -> RagQdrantVectorStore:
+def _get_vector_store_instance(
+    data_source_id: int, table_prefix: str
+) -> RagQdrantVectorStore:
     if data_source_id in table_name_to_vector_store:
         return table_name_to_vector_store[data_source_id]
-    res = RagQdrantVectorStore(table_name=f"{table_prefix}{data_source_id}", memory_store=True)
+    res = RagQdrantVectorStore(
+        table_name=f"{table_prefix}{data_source_id}", memory_store=True
+    )
     table_name_to_vector_store[data_source_id] = res
     return res
 
 
 @pytest.fixture(autouse=True)
 def vector_store(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(rag_vector_store, 'create_rag_vector_store',
-                        lambda ds_id: _get_vector_store_instance(ds_id, "index_"))
+    monkeypatch.setattr(
+        rag_vector_store,
+        "create_rag_vector_store",
+        lambda ds_id: _get_vector_store_instance(ds_id, "index_"),
+    )
 
 
 @pytest.fixture(autouse=True)
 def summary_vector_store(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(rag_vector_store, 'create_summary_vector_store',
-                        lambda ds_id: _get_vector_store_instance(ds_id, "summary_index_"))
+    monkeypatch.setattr(
+        rag_vector_store,
+        "create_summary_vector_store",
+        lambda ds_id: _get_vector_store_instance(ds_id, "summary_index_"),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -181,7 +187,7 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
     model = DummyEmbeddingModel()
 
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, 'get_embedding_model', lambda: model)
+    monkeypatch.setattr(models, "get_embedding_model", lambda: model)
     return model
 
 
@@ -190,13 +196,13 @@ def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
     model = DummyLlm()
 
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, 'get_llm', lambda model_name: model)
+    monkeypatch.setattr(models, "get_llm", lambda model_name: model)
     return model
 
 
 @pytest.fixture
 def s3_object(
-        s3: "s3.ServiceResource", aws_region: str, document_id: str
+    s3: "s3.ServiceResource", aws_region: str, document_id: str
 ) -> "s3.Object":
     """Put and return a mocked S3 object"""
     bucket_name = "test_bucket"
@@ -214,7 +220,7 @@ def s3_object(
 
 @pytest.fixture
 def client(
-        s3: "s3.ServiceResource",
+    s3: "s3.ServiceResource",
 ) -> Iterator[TestClient]:
     """Return a test client for making calls to the service.
 

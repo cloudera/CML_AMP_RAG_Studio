@@ -71,17 +71,19 @@ class RagQdrantVectorStore(VectorStore):
     def exists(self) -> bool:
         return self.client.collection_exists(self.table_name)
 
-    def _create_qdrant_clients(self, memory_store) -> tuple[qdrant_client.QdrantClient, qdrant_client.AsyncQdrantClient]:
+    def _create_qdrant_clients(
+        self, memory_store
+    ) -> tuple[qdrant_client.QdrantClient, qdrant_client.AsyncQdrantClient]:
         if memory_store:
             client = qdrant_client.QdrantClient(":memory:")
             aclient = qdrant_client.AsyncQdrantClient(":memory:")
         else:
             client = qdrant_client.QdrantClient(host=self.host, port=self.port)
-            aclient = qdrant_client.AsyncQdrantClient(host=self.host, port=self.async_port)
+            aclient = qdrant_client.AsyncQdrantClient(
+                host=self.host, port=self.async_port
+            )
         return client, aclient
 
     def access_vector_store(self) -> BasePydanticVectorStore:
-        vector_store = QdrantVectorStore(
-            self.table_name, self.client, self.aclient
-        )
+        vector_store = QdrantVectorStore(self.table_name, self.client, self.aclient)
         return vector_store

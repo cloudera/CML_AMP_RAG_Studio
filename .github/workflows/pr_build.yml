@@ -70,6 +70,16 @@ jobs:
           pdm install
         working-directory: llm-service
 
+      - name: Run ruff
+        run: |
+          pdm run ruff check app
+        working-directory: llm-service
+
+      - name: Run mypy
+        run: |
+          pdm run mypy app
+        working-directory: llm-service
+
       - name: Test with pytest
         run: |
           pdm run pytest -sxvvra

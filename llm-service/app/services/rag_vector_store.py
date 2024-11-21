@@ -43,6 +43,6 @@ from .vector_store import VectorStore
 def create_rag_vector_store(data_source_id: int) -> VectorStore:
     return RagQdrantVectorStore(table_name=f"index_{data_source_id}")
 
+
 def create_summary_vector_store(data_source_id: int) -> VectorStore:
     return RagQdrantVectorStore(table_name=f"summary_index_{data_source_id}")
-

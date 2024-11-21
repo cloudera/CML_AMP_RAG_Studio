@@ -43,22 +43,36 @@ from subprocess import CompletedProcess
 from .... import exceptions
 from ....services.amp_update import check_amp_update_status
 
-router = APIRouter(prefix="/amp-update" , tags=["AMP Update"])
+router = APIRouter(prefix="/amp-update", tags=["AMP Update"])
+
 
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
 def amp_up_to_date_status() -> bool:
     return check_amp_update_status()
 
+
 @router.post("", summary="Updates AMP.")
 @exceptions.propagates
 def update_amp() -> str:
-    print(subprocess.run(["python /home/cdsw/llm-service/scripts/run_refresh_job.py"], shell=True, check=True))
+    print(
+        subprocess.run(
+            ["python /home/cdsw/llm-service/scripts/run_refresh_job.py"],
+            shell=True,
+            check=True,
+        )
+    )
     return "OK"
+
 
 @router.get("/job-status", summary="Get AMP Status.")
 @exceptions.propagates
 def get_amp_status() -> str:
-    process: CompletedProcess[bytes] = subprocess.run(["python /home/cdsw/llm-service/scripts/get_job_run_status.py"], shell=True, check=True, capture_output=True)
-    stdout = process.stdout.decode('utf-8')
+    process: CompletedProcess[bytes] = subprocess.run(
+        ["python /home/cdsw/llm-service/scripts/get_job_run_status.py"],
+        shell=True,
+        check=True,
+        capture_output=True,
+    )
+    stdout = process.stdout.decode("utf-8")
     return stdout.strip()

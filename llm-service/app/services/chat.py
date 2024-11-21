@@ -38,6 +38,7 @@
 
 import time
 import uuid
+from typing import List
 
 from llama_index.core.base.llms.types import MessageRole
 
@@ -96,9 +97,9 @@ def v2_chat(
     return new_chat_message
 
 
-def retrieve_chat_history(session_id) -> list[RagContext]:
+def retrieve_chat_history(session_id: int) -> List[RagContext]:
     chat_history = chat_store.retrieve_chat_history(session_id)[:10]
-    history: [RagContext] = list()
+    history: List[RagContext] = []
     for message in chat_history:
         history.append(
             RagContext(role=MessageRole.USER, content=message.rag_message["user"])
