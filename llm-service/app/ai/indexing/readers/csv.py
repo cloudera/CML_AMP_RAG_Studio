@@ -36,14 +36,21 @@
 #  DATA.
 #
 
+import json
 from pathlib import Path
 from typing import List
 
+import pandas as pd
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import Document
 
 
-class NopReader(BaseReader):
+class CSVReader(BaseReader):
     def load_data(self, file_path: Path) -> List[Document]:
-        with open(file_path, "r") as f:
-            return [Document(text=f.read())]
+        # Read the CSV file into a pandas DataFrame
+        df = pd.read_csv(file_path)
+        # Convert the dataframe into a list of dictionaries, one per row
+        rows = df.to_dict(orient="records")
+        # Convert each dictionary into a Document
+        documents = [Document(text=json.dumps(row, sort_keys=True)) for row in rows]
+        return documents

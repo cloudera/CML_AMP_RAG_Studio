@@ -49,6 +49,8 @@ from llama_index.core.schema import BaseNode, Document, TextNode
 from llama_index.readers.file import DocxReader
 
 from ...services.vector_store import VectorStore
+from .readers.csv import CSVReader
+from .readers.json import JSONReader
 from .readers.nop import NopReader
 from .readers.pdf import PDFReader
 
@@ -59,6 +61,8 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".txt": NopReader,
     ".md": NopReader,
     ".docx": DocxReader,
+    ".csv": CSVReader,
+    ".json": JSONReader,
 }
 CHUNKABLE_FILE_EXTENSIONS = {".pdf", ".txt", ".md", ".docx"}
 
