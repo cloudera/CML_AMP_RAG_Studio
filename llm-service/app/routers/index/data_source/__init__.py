@@ -28,7 +28,6 @@
 #  DATA.
 # ##############################################################################
 
-import http
 import logging
 import os
 import tempfile
@@ -39,8 +38,8 @@ from pydantic import BaseModel
 from .... import exceptions
 from ....services import doc_summaries, qdrant, s3
 from ....ai.indexing.index import Indexer
-from ....services.rag_vector_store import create_rag_vector_store
-from ....services.models import get_embedding_model
+from ....services import rag_vector_store
+from ....services import models
 from llama_index.core.node_parser import SentenceSplitter
 
 logger = logging.getLogger(__name__)
@@ -143,7 +142,7 @@ def download_and_index(
                     chunk_size=request.configuration.chunk_size,
                     chunk_overlap=int(request.configuration.chunk_overlap * 0.01 * request.configuration.chunk_size),
                 ),
-                embedding_model=get_embedding_model(),
-                chunks_vector_store=create_rag_vector_store(data_source_id)
+                embedding_model=models.get_embedding_model(),
+                chunks_vector_store=rag_vector_store.create_rag_vector_store(data_source_id)
         )
         indexer.index_file(file_path, request.document_id)
