@@ -37,7 +37,7 @@
 # DATA.
 #
 
-set -e
+set -ex
 
 ## set the RELEASE_TAG env var from the file, if it exists
 source scripts/release_version.txt || true
