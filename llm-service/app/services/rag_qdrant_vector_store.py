@@ -39,10 +39,9 @@
 import os
 
 import qdrant_client
-import qdrant_client.http.models as rest
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from qdrant_client.http.models import CountResult, FieldCondition, MatchValue
+from qdrant_client.http.models import CountResult
 
 from .vector_store import VectorStore
 
