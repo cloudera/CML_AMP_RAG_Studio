@@ -88,16 +88,3 @@ class RagQdrantVectorStore(VectorStore):
     def access_vector_store(self) -> BasePydanticVectorStore:
         vector_store = QdrantVectorStore(self.table_name, self.client, self.aclient)
         return vector_store
-
-    def delete_document(self, document_id: str) -> None:
-        result = self.client.delete(
-            self.table_name,
-            points_selector=rest.Filter(
-                must=[
-                    FieldCondition(
-                        key="metadata.document_id", match=MatchValue(value=document_id)
-                    )
-                ]
-            ),
-        )
-        print(result)
