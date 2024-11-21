@@ -130,13 +130,14 @@ class Indexer:
         logger.debug(f"Indexing file: {file_path} completed")
 
     def _documents_in_file(
-        self, reader: BaseReader, file_path: Path, file_id: str
+        self, reader: BaseReader, file_path: Path, document_id: str
     ) -> List[Document]:
         documents = reader.load_data(file_path)
 
         for i, document in enumerate(documents):
+            document.id_ = document_id
             document.metadata["file_name"] = os.path.basename(file_path)
-            document.metadata["document_id"] = file_id
+            document.metadata["document_id"] = document_id
             document.metadata["document_part_number"] = i
             document.metadata["data_source_id"] = self.data_source_id
 
