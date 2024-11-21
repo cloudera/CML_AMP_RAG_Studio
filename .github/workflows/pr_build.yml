@@ -68,7 +68,7 @@ jobs:
         uses: actions/cache@v4
         id: python_cache
         with:
-          # path: ./llm-service/.venv
+          path: ./llm-service/.venv
           key: pdm-venv-${{ hashFiles('./llm-service/pdm.lock') }}
 
       - name: Install Python dependencies
