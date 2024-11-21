@@ -46,9 +46,9 @@ cd ui/express
 npm install
 
 cd ../../llm-service
-pip install uv
-uv venv venv
+python -m venv venv
 source venv/bin/activate
+pip install uv
 uv pip install -r app/requirements.txt
 
 cd ..
