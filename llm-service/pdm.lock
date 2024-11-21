@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:2a9b3e86ee90d639241d72fdeee20e779c2e7c42e90ab2e43e335c18454e0858"
+content_hash = "sha256:8a759766434529522c347027893fec1b8c80f1d4e4b42c37a2f66f52ed1e6a6a"
 
 [[metadata.targets]]
 requires_python = "==3.10.*"
@@ -793,6 +793,15 @@ groups = ["default"]
 files = [
     {file = "jsonpath-python-1.0.6.tar.gz", hash = "sha256:dd5be4a72d8a2995c3f583cf82bf3cd1a9544cfdabf2d22595b67aff07349666"},
     {file = "jsonpath_python-1.0.6-py3-none-any.whl", hash = "sha256:1e3b78df579f5efc23565293612decee04214609208a2335884b3ee3f786b575"},
+]
+
+[[package]]
+name = "lipsum"
+version = "0.1.2"
+summary = "A randomised Lorem Ipsum generator library for Python"
+groups = ["dev"]
+files = [
+    {file = "lipsum-0.1.2.tar.gz", hash = "sha256:ba5f46cef19104c07f889b14486a3772845fc25afa1eb5e2eee1f2d9badcb8ab"},
 ]
 
 [[package]]

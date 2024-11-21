@@ -44,6 +44,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Sequence
 
 import boto3
+import lipsum
 import pytest
 from boto3.resources.base import ServiceResource
 from fastapi.testclient import TestClient
@@ -66,6 +67,7 @@ from app.main import app
 from app.services import models, rag_vector_store
 from app.services.rag_qdrant_vector_store import RagQdrantVectorStore
 from app.services.utils import get_last_segment
+
 
 @dataclass
 class BotoObject:
@@ -249,12 +251,14 @@ def s3_object(
     bucket_name = "test_bucket"
     key = "test/" + document_id
 
+    body = lipsum.generate_words(1000)
+
     bucket = s3_client.Bucket(bucket_name)
     bucket.create(CreateBucketConfiguration={"LocationConstraint": aws_region})
     bucket.put_object(
         Key=key,
         # TODO: fixturize file
-        Body=b"Some text to be summarized and indexed",
+        Body=body.encode("utf-8"),
         Metadata={"originalfilename": "test.txt"},
     )
     return BotoObject(bucket_name=bucket_name, key=key)
