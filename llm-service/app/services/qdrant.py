@@ -44,17 +44,12 @@ from llama_index.core.chat_engine import CondenseQuestionChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
-from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.readers import SimpleDirectoryReader
 from llama_index.core.response_synthesizers import get_response_synthesizer
-from llama_index.core.storage import StorageContext
-from pydantic import BaseModel
 
 from ..rag_types import RagPredictConfiguration
 from . import models, rag_vector_store
 from .chat_store import RagContext
-from .utils import get_last_segment
 
 logger = logging.getLogger(__name__)
 
