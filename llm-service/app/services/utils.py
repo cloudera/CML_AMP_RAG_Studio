@@ -42,6 +42,7 @@ from typing import List, Tuple
 
 # TODO delete this if it's not being used
 
+
 def parse_choice_select_answer_fn(
     answer: str, num_choices: int, raise_error: bool = False
 ) -> Tuple[List[int], List[float]]:
@@ -78,5 +79,6 @@ def parse_choice_select_answer_fn(
         answer_relevances.append(float(_answer_relevance))
     return answer_nums, answer_relevances
 
+
 def get_last_segment(path: str) -> str:
-    return path.split('/')[-1]
+    return path.split("/")[-1]

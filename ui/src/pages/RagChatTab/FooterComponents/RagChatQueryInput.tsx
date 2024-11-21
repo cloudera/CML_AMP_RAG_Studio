@@ -36,9 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input } from "antd";
+import { Button, Flex, Input, Switch, Tooltip } from "antd";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
-import { SendOutlined } from "@ant-design/icons";
+import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -46,6 +46,8 @@ import { useChatMutation } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
+
+import type { SwitchChangeEventHandler } from "antd/lib/switch";
 
 const RagChatQueryInput = () => {
   const {
@@ -55,6 +57,7 @@ const RagChatQueryInput = () => {
     chatHistory,
     dataSourceSize,
     dataSourcesStatus,
+    setQueryConfiguration,
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -92,6 +95,13 @@ const RagChatQueryInput = () => {
     }
   };
 
+  const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
+    setQueryConfiguration((prev) => ({
+      ...prev,
+      exclude_knowledge_base: !checked,
+    }));
+  };
+
   return (
     <div>
       <Flex vertical align="center" gap={10}>
@@ -119,6 +129,16 @@ const RagChatQueryInput = () => {
                 handleChat(userInput);
               }
             }}
+            suffix={
+              <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
+                <Switch
+                  checkedChildren={<DatabaseFilled />}
+                  value={!queryConfiguration.exclude_knowledge_base}
+                  onChange={handleExcludeKnowledgeBase}
+                  style={{ display: "none" }} // note: disabled for now, until UX is ready
+                />
+              </Tooltip>
+            }
             disabled={!dataSourceSize || chatMutation.isPending}
           />
           <Button

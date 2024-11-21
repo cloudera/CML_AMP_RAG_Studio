@@ -67,6 +67,7 @@ export interface RagMessageV2 {
 export interface QueryConfiguration {
   top_k: number;
   model_name: string;
+  exclude_knowledge_base: boolean;
 }
 
 export interface ChatMutationRequest {

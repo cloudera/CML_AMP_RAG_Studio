@@ -41,26 +41,32 @@
 from typing import Any
 
 import pytest
+from app.services import models, rag_vector_store
+from fastapi.testclient import TestClient
 from llama_index.core import VectorStoreIndex
 from llama_index.core.vector_stores import VectorStoreQuery
 
-from app.services import models
-from app.services import rag_vector_store
 
-
-def get_vector_store_index(data_source_id) -> VectorStoreIndex:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
-    index = VectorStoreIndex.from_vector_store(vector_store, embed_model=models.get_embedding_model())
+def get_vector_store_index(data_source_id: int) -> VectorStoreIndex:
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
+    index = VectorStoreIndex.from_vector_store(
+        vector_store, embed_model=models.get_embedding_model()
+    )
     return index
 
-@pytest.mark.skip(reason="The test and the http handler are getting different vector stores and I'm not sure how they were getting the same one before. Re-enabling this test requires dependencies to be defined more explicitly.")
+
+@pytest.mark.skip(
+    reason="The test and the http handler are getting different vector stores and I'm not sure how they were getting the same one before. Re-enabling this test requires dependencies to be defined more explicitly."
+)
 class TestDocumentIndexing:
     @staticmethod
     def test_create_document(
-            client,
-            index_document_request_body: dict[str, Any],
-            document_id: str,
-            data_source_id: int,
+        client: TestClient,
+        index_document_request_body: dict[str, Any],
+        document_id: str,
+        data_source_id: int,
     ) -> None:
         """Test POST /download-and-index."""
         response = client.post(
@@ -71,15 +77,17 @@ class TestDocumentIndexing:
         assert response.status_code == 200
         assert document_id is not None
         index = get_vector_store_index(data_source_id)
-        vectors = index.vector_store.query(VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id]))
-        assert len(vectors.nodes) == 1
+        vectors = index.vector_store.query(
+            VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id])
+        )
+        assert len(vectors.nodes or []) == 1
 
     @staticmethod
     def test_delete_data_source(
-            client,
-            data_source_id: int,
-            document_id: str,
-            index_document_request_body: dict[str, Any],
+        client: TestClient,
+        data_source_id: int,
+        document_id: str,
+        index_document_request_body: dict[str, Any],
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}."""
         client.post(
@@ -88,23 +96,27 @@ class TestDocumentIndexing:
         )
 
         index = get_vector_store_index(data_source_id)
-        vectors = index.vector_store.query(VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id]))
-        assert len(vectors.nodes) == 1
+        vectors = index.vector_store.query(
+            VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id])
+        )
+        assert len(vectors.nodes or []) == 1
 
         response = client.delete(f"/data_sources/{data_source_id}")
         assert response.status_code == 200
         vector_store = rag_vector_store.create_rag_vector_store(data_source_id)
         assert vector_store.exists() is False
 
-        get_summary_response = client.get(f'/data_sources/{data_source_id}/documents/{document_id}/summary')
+        get_summary_response = client.get(
+            f"/data_sources/{data_source_id}/documents/{document_id}/summary"
+        )
         assert get_summary_response.status_code == 404
 
     @staticmethod
     def test_delete_document(
-            client,
-            data_source_id: int,
-            document_id: str,
-            index_document_request_body: dict[str, Any],
+        client: TestClient,
+        data_source_id: int,
+        document_id: str,
+        index_document_request_body: dict[str, Any],
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}/documents/{document_id}."""
         client.post(
@@ -113,21 +125,27 @@ class TestDocumentIndexing:
         )
 
         index = get_vector_store_index(data_source_id)
-        vectors = index.vector_store.query(VectorStoreQuery(query_embedding=[.2] * 1024, doc_ids=[document_id]))
-        assert len(vectors.nodes) == 1
+        vectors = index.vector_store.query(
+            VectorStoreQuery(query_embedding=[0.2] * 1024, doc_ids=[document_id])
+        )
+        assert len(vectors.nodes or []) == 1
 
-        response = client.delete(f"/data_sources/{data_source_id}/documents/{document_id}")
+        response = client.delete(
+            f"/data_sources/{data_source_id}/documents/{document_id}"
+        )
         assert response.status_code == 200
 
         index = get_vector_store_index(data_source_id)
-        vectors = index.vector_store.query(VectorStoreQuery(query_embedding=[.2] * 1024, doc_ids=[document_id]))
-        assert len(vectors.nodes) == 0
+        vectors = index.vector_store.query(
+            VectorStoreQuery(query_embedding=[0.2] * 1024, doc_ids=[document_id])
+        )
+        assert len(vectors.nodes or []) == 0
 
     @staticmethod
     def test_get_size(
-            client,
-            data_source_id: int,
-            index_document_request_body: dict[str, Any],
+        client: TestClient,
+        data_source_id: int,
+        index_document_request_body: dict[str, Any],
     ) -> None:
         """Test GET /data_sources/{data_source_id}/size."""
         client.post(

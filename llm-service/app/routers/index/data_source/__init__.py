@@ -28,20 +28,17 @@
 #  DATA.
 # ##############################################################################
 
-import http
 import logging
 import os
 import tempfile
 
 from fastapi import APIRouter
+from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
 from .... import exceptions
-from ....services import doc_summaries, qdrant, s3
 from ....ai.indexing.index import Indexer
-from ....services import rag_vector_store
-from ....services import models
-from llama_index.core.node_parser import SentenceSplitter
+from ....services import doc_summaries, models, qdrant, rag_vector_store, s3
 
 logger = logging.getLogger(__name__)
 
@@ -110,13 +107,13 @@ class RagIndexDocumentConfiguration(BaseModel):
     chunk_size: int = 512  # this is llama-index's default
     chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
 
+
 class RagIndexDocumentRequest(BaseModel):
     document_id: str
     s3_bucket_name: str
     s3_document_key: str
-    configuration: RagIndexDocumentConfiguration = (
-        RagIndexDocumentConfiguration()
-    )
+    configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
+
 
 @router.post(
     "/documents/download-and-index",
@@ -125,8 +122,8 @@ class RagIndexDocumentRequest(BaseModel):
 )
 @exceptions.propagates
 def download_and_index(
-        data_source_id: int,
-        request: RagIndexDocumentRequest,
+    data_source_id: int,
+    request: RagIndexDocumentRequest,
 ) -> None:
     with tempfile.TemporaryDirectory() as tmpdirname:
         logger.debug("created temporary directory %s", tmpdirname)
@@ -138,12 +135,18 @@ def download_and_index(
         file_path = os.path.join(tmpdirname, files[0])
 
         indexer = Indexer(
-                data_source_id,
-                splitter=SentenceSplitter(
-                    chunk_size=request.configuration.chunk_size,
-                    chunk_overlap=int(request.configuration.chunk_overlap * 0.01 * request.configuration.chunk_size),
+            data_source_id,
+            splitter=SentenceSplitter(
+                chunk_size=request.configuration.chunk_size,
+                chunk_overlap=int(
+                    request.configuration.chunk_overlap
+                    * 0.01
+                    * request.configuration.chunk_size
                 ),
-                embedding_model=models.get_embedding_model(),
-                chunks_vector_store=rag_vector_store.create_rag_vector_store(data_source_id)
+            ),
+            embedding_model=models.get_embedding_model(),
+            chunks_vector_store=rag_vector_store.create_rag_vector_store(
+                data_source_id
+            ),
         )
         indexer.index_file(file_path, request.document_id)

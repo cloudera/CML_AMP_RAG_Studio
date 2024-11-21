@@ -43,7 +43,7 @@ import functools
 import inspect
 import logging
 from collections.abc import Callable, Iterator
-from typing import ParamSpec, TypeVar
+from typing import Awaitable, ParamSpec, TypeVar, Union
 
 import requests
 from fastapi import HTTPException
@@ -88,7 +88,7 @@ def _exception_propagation() -> Iterator[None]:
         ) from e
 
 
-def propagates(f: Callable[P, T]) -> Callable[P, T]:
+def propagates(f: Callable[P, T]) -> Union[Callable[P, T], Callable[P, Awaitable[T]]]:
     """
     Function decorator for catching and propagating exceptions back to a client.
 
@@ -119,14 +119,13 @@ def propagates(f: Callable[P, T]) -> Callable[P, T]:
     """
 
     if inspect.iscoroutinefunction(f):
-
         # for coroutines, the wrapper must be declared async,
         # and the wrapped function's result must be awaited
         @functools.wraps(f)
         async def exception_propagation_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             with _exception_propagation():
-                return await f(*args, **kwargs)
-
+                ret: T = await f(*args, **kwargs)
+                return ret
     else:
 
         @functools.wraps(f)

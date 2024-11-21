@@ -40,14 +40,24 @@ import os
 import pathlib
 import uuid
 from collections.abc import Iterator
-from typing import Any, Sequence
+from dataclasses import dataclass
+from typing import Any, Dict, Sequence
 
 import boto3
 import pytest
+from boto3.resources.base import ServiceResource
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.base.llms.types import CompletionResponseAsyncGen, ChatMessage, ChatResponseAsyncGen, \
-    CompletionResponse, ChatResponse, CompletionResponseGen, ChatResponseGen, LLMMetadata
+from llama_index.core.base.llms.types import (
+    ChatMessage,
+    ChatResponse,
+    ChatResponseAsyncGen,
+    ChatResponseGen,
+    CompletionResponse,
+    CompletionResponseAsyncGen,
+    CompletionResponseGen,
+    LLMMetadata,
+)
 from llama_index.core.llms import LLM
 from moto import mock_aws
 from pydantic import Field
@@ -55,6 +65,12 @@ from pydantic import Field
 from app.main import app
 from app.services import models, rag_vector_store
 from app.services.rag_qdrant_vector_store import RagQdrantVectorStore
+
+
+@dataclass
+class BotoObject:
+    bucket_name: str
+    key: str
 
 
 @pytest.fixture
@@ -70,9 +86,9 @@ def databases_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> st
 
 
 @pytest.fixture
-def s3(
-        monkeypatch: pytest.MonkeyPatch,
-) -> Iterator["s3.ServiceResource"]:
+def s3_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterator[ServiceResource]:
     """Mock all S3 interactions."""
 
     with mock_aws():
@@ -90,7 +106,9 @@ def data_source_id() -> int:
 
 
 @pytest.fixture
-def index_document_request_body(data_source_id, s3_object) -> dict[str, Any]:
+def index_document_request_body(
+    data_source_id: int, s3_object: BotoObject
+) -> Dict[str, Any]:
     return {
         "document_id": s3_object.key,
         "data_source_id": data_source_id,
@@ -107,7 +125,11 @@ class DummyLlm(LLM):
     completion_response = Field("this is a completion response")
     chat_response = Field("this is a chat response")
 
-    def __init__(self, completion_response: str = "this is a completion response", chat_response: str = "hello"):
+    def __init__(
+        self,
+        completion_response: str = "this is a completion response",
+        chat_response: str = "hello",
+    ):
         super().__init__()
         self.completion_response = completion_response
         self.chat_response = chat_response
@@ -119,26 +141,40 @@ class DummyLlm(LLM):
     def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
         return ChatResponse(message=ChatMessage.from_str(self.chat_response))
 
-    def complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
+    def complete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponse:
         return CompletionResponse(text=self.completion_response)
 
-    def stream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponseGen:
-        pass
+    def stream_chat(
+        self, messages: Sequence[ChatMessage], **kwargs: Any
+    ) -> ChatResponseGen:
+        raise NotImplementedError("Not implemented")
 
-    def stream_complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponseGen:
-        pass
+    def stream_complete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponseGen:
+        raise NotImplementedError("Not implemented")
 
-    async def achat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
-        pass
+    async def achat(
+        self, messages: Sequence[ChatMessage], **kwargs: Any
+    ) -> ChatResponse:
+        raise NotImplementedError("Not implemented")
 
-    async def acomplete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
-        pass
+    async def acomplete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponse:
+        raise NotImplementedError("Not implemented")
 
-    async def astream_chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponseAsyncGen:
-        pass
+    async def astream_chat(
+        self, messages: Sequence[ChatMessage], **kwargs: Any
+    ) -> ChatResponseAsyncGen:
+        raise NotImplementedError("Not implemented")
 
-    async def astream_complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponseAsyncGen:
-        pass
+    async def astream_complete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponseAsyncGen:
+        raise NotImplementedError("Not implemented")
 
 
 class DummyEmbeddingModel(BaseEmbedding):
@@ -154,27 +190,37 @@ class DummyEmbeddingModel(BaseEmbedding):
 
 # We're hacking our vector stores to run in-memory. Since they are in memory, we need
 # to be sure to return the same instance for the same data source id
-table_name_to_vector_store = {}
+table_name_to_vector_store: Dict[int, RagQdrantVectorStore] = {}
 
 
-def _get_vector_store_instance(data_source_id: int, table_prefix: str) -> RagQdrantVectorStore:
+def _get_vector_store_instance(
+    data_source_id: int, table_prefix: str
+) -> RagQdrantVectorStore:
     if data_source_id in table_name_to_vector_store:
         return table_name_to_vector_store[data_source_id]
-    res = RagQdrantVectorStore(table_name=f"{table_prefix}{data_source_id}", memory_store=True)
+    res = RagQdrantVectorStore(
+        table_name=f"{table_prefix}{data_source_id}", memory_store=True
+    )
     table_name_to_vector_store[data_source_id] = res
     return res
 
 
 @pytest.fixture(autouse=True)
-def vector_store(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(rag_vector_store, 'create_rag_vector_store',
-                        lambda ds_id: _get_vector_store_instance(ds_id, "index_"))
+def vector_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        rag_vector_store,
+        "create_rag_vector_store",
+        lambda ds_id: _get_vector_store_instance(ds_id, "index_"),
+    )
 
 
 @pytest.fixture(autouse=True)
-def summary_vector_store(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(rag_vector_store, 'create_summary_vector_store',
-                        lambda ds_id: _get_vector_store_instance(ds_id, "summary_index_"))
+def summary_vector_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        rag_vector_store,
+        "create_summary_vector_store",
+        lambda ds_id: _get_vector_store_instance(ds_id, "summary_index_"),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -182,7 +228,7 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
     model = DummyEmbeddingModel()
 
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, 'get_embedding_model', lambda: model)
+    monkeypatch.setattr(models, "get_embedding_model", lambda: model)
     return model
 
 
@@ -191,31 +237,32 @@ def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
     model = DummyLlm()
 
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, 'get_llm', lambda model_name: model)
+    monkeypatch.setattr(models, "get_llm", lambda model_name: model)
     return model
 
 
 @pytest.fixture
 def s3_object(
-        s3: "s3.ServiceResource", aws_region: str, document_id: str
-) -> "s3.Object":
+    s3_client: ServiceResource, aws_region: str, document_id: str
+) -> BotoObject:
     """Put and return a mocked S3 object"""
     bucket_name = "test_bucket"
     key = "test/" + document_id
 
-    bucket = s3.Bucket(bucket_name)
+    bucket = s3_client.Bucket(bucket_name)
     bucket.create(CreateBucketConfiguration={"LocationConstraint": aws_region})
-    return bucket.put_object(
+    bucket.put_object(
         Key=key,
         # TODO: fixturize file
         Body=b"Some text to be summarized and indexed",
         Metadata={"originalfilename": "test.txt"},
     )
+    return BotoObject(bucket_name=bucket_name, key=key)
 
 
 @pytest.fixture
 def client(
-        s3: "s3.ServiceResource",
+    s3_client: ServiceResource,
 ) -> Iterator[TestClient]:
     """Return a test client for making calls to the service.
 

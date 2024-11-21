@@ -66,7 +66,7 @@ def messages_to_prompt(
         # first message should always be a user
         user_message = messages[i]
         assert user_message.role == MessageRole.USER
-        str_message = ''
+        str_message = ""
         if i == 0:
             # make sure system prompt is included at the start
             str_message = f"{BOS}{SH}system{EH}\n\n{system_message_str.strip()}{EOT}\n"
@@ -90,6 +90,7 @@ def messages_to_prompt(
     result = "".join(string_messages)
     return result
 
+
 def messages_to_prompt_mistral(
     messages: Sequence[ChatMessage], system_prompt: Optional[str] = None
 ) -> str:
@@ -101,7 +102,9 @@ def messages_to_prompt_mistral(
         string_messages[-1] += f"{EOT}\n"
 
         # include user message content
-        str_message = f"{SH}user{EH}\n\n{user_message.content}{EOT}\n{SH}assistant{EH}\n\n"
+        str_message = (
+            f"{SH}user{EH}\n\n{user_message.content}{EOT}\n{SH}assistant{EH}\n\n"
+        )
 
         if len(messages) > (i + 1):
             # if assistant message exists, add to str_message
@@ -115,38 +118,41 @@ def messages_to_prompt_mistral(
     return result
 
 
-
 def completion_to_prompt(completion: str, system_prompt: Optional[str] = None) -> str:
     system_prompt_str = system_prompt or DEFAULT_SYSTEM_PROMPT
 
-    result = (f"{BOS}{SH}system{EH}\n\n{system_prompt_str.strip()}{EOT}\n" \
-          f"{SH}user{EH}\n\n{completion.strip()}{EOT}\n" \
-          f"{SH}assistant{EH}\n\n")
+    result = (
+        f"{BOS}{SH}system{EH}\n\n{system_prompt_str.strip()}{EOT}\n"
+        f"{SH}user{EH}\n\n{completion.strip()}{EOT}\n"
+        f"{SH}assistant{EH}\n\n"
+    )
     return result
 
 
-def mistralv2_messages_to_prompt(messages):
+def mistralv2_messages_to_prompt(messages: Sequence[ChatMessage]) -> str:
     print(f"mistralv2_messages_to_prompt: {messages}")
     conversation = ""
     bos_token = "<s>"
-    eos_token= "</s>"
-    if messages[0].role ==  MessageRole.SYSTEM:
+    eos_token = "</s>"
+    if messages[0].role == MessageRole.SYSTEM:
         loop_messages = messages[1:]
         system_message = messages[0].content
     else:
         loop_messages = messages
-        system_message = False
+        system_message = None
 
     for index, message in enumerate(loop_messages):
         if (message.role == MessageRole.USER) != (index % 2 == 0):
-            raise Exception('HFI Conversation roles must alternate user/assistant/user/assistant/...')
-        if index == 0 and system_message != False:
-            content = '<<SYS>>\n' + system_message + '\n<</SYS>>\n\n' + message.content
+            raise Exception(
+                "HFI Conversation roles must alternate user/assistant/user/assistant/..."
+            )
+        if index == 0 and system_message is not None:
+            content = "<<SYS>>\n" + system_message + "\n<</SYS>>\n\n" + message.content
         else:
             content = message.content
         if message.role == MessageRole.USER:
-            conversation += bos_token + '[INST] ' + content.strip() + ' [/INST]'
+            conversation += bos_token + "[INST] " + content.strip() + " [/INST]"
         elif message.role == MessageRole.ASSISTANT:
-            conversation += ' ' + content.strip() + ' ' + eos_token
+            conversation += " " + content.strip() + " " + eos_token
 
-    return (conversation)
+    return conversation

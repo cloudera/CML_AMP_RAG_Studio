@@ -81,7 +81,7 @@ const ChatMessage = ({
             </div>
             <Flex vertical gap={12}>
               <SourceNodes data={data} />
-              <Typography.Text style={{ fontSize: 16 }}>
+              <Typography.Text style={{ fontSize: 16, whiteSpace: "pre-wrap" }}>
                 {data.rag_message.assistant}
               </Typography.Text>
               <Evaluations evaluations={data.evaluations} />

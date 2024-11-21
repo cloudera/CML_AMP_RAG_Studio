@@ -47,7 +47,7 @@ npm install
 
 cd ../../llm-service
 pip install pdm
-pdm install
+pdm install -v
 
 cd ..
 mkdir -p artifacts

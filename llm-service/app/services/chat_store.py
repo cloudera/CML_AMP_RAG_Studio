@@ -37,11 +37,12 @@
 # ##############################################################################
 
 import os
-from typing import Literal
+from typing import List, Literal
 
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.storage.chat_store import SimpleChatStore
 from pydantic import BaseModel
+
 from ..config import settings
 
 
@@ -75,7 +76,7 @@ class ChatHistoryManager:
         self.store_path = store_path
 
     # note: needs pagination in the future
-    def retrieve_chat_history(self, session_id: int) -> list[RagStudioChatMessage]:
+    def retrieve_chat_history(self, session_id: int) -> List[RagStudioChatMessage]:
         store = self.store_for_session(session_id)
 
         messages: list[ChatMessage] = store.get_messages(
@@ -94,38 +95,48 @@ class ChatHistoryManager:
                 assistant_message.role = MessageRole.ASSISTANT
                 assistant_message.content = ""
                 i = i - 1
-            results.append(RagStudioChatMessage(
-                id=user_message.additional_kwargs["id"],
-                source_nodes=assistant_message.additional_kwargs.get("source_nodes", []),
-                rag_message={MessageRole.USER.value: user_message.content, MessageRole.ASSISTANT.value: assistant_message.content},
-                evaluations=assistant_message.additional_kwargs.get("evaluations", []),
-                timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
-            ))
+            results.append(
+                RagStudioChatMessage(
+                    id=user_message.additional_kwargs["id"],
+                    source_nodes=assistant_message.additional_kwargs.get(
+                        "source_nodes", []
+                    ),
+                    rag_message={
+                        MessageRole.USER.value: str(user_message.content),
+                        MessageRole.ASSISTANT.value: str(assistant_message.content),
+                    },
+                    evaluations=assistant_message.additional_kwargs.get(
+                        "evaluations", []
+                    ),
+                    timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
+                )
+            )
             i += 2
 
         return results
 
-    def store_for_session(self, session_id):
+    def store_for_session(self, session_id: int) -> SimpleChatStore:
         store = SimpleChatStore.from_persist_path(
-            persist_path=self.store_file(session_id))
+            persist_path=self.store_file(session_id)
+        )
         return store
 
-    def clear_chat_history(self, session_id):
+    def clear_chat_history(self, session_id: int) -> None:
         store = self.store_for_session(session_id)
         store.delete_messages(self.build_chat_key(session_id))
         store.persist(self.store_file(session_id))
 
-    def delete_chat_history(self, session_id):
+    def delete_chat_history(self, session_id: int) -> None:
         session_storage = self.store_file(session_id)
         if os.path.exists(session_storage):
             os.remove(session_storage)
 
-    def store_file(self, session_id):
+    def store_file(self, session_id: int) -> str:
         return os.path.join(self.store_path, f"chat_store-{session_id}.json")
 
     def append_to_history(
-        self, session_id: int, messages: list[RagStudioChatMessage]
-    ):
+        self, session_id: int, messages: List[RagStudioChatMessage]
+    ) -> None:
         store = self.store_for_session(session_id)
 
         for message in messages:
@@ -155,7 +166,7 @@ class ChatHistoryManager:
             store.persist(self.store_file(session_id))
 
     @staticmethod
-    def build_chat_key(session_id: int):
+    def build_chat_key(session_id: int) -> str:
         return "session_" + str(session_id)
 
 

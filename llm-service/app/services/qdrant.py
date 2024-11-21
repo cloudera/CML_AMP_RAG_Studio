@@ -51,13 +51,13 @@ from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.storage import StorageContext
 from pydantic import BaseModel
 
-from . import rag_vector_store
 from ..rag_types import RagPredictConfiguration
+from . import models, rag_vector_store
 from .chat_store import RagContext
-from . import models
 from .utils import get_last_segment
 
 logger = logging.getLogger(__name__)
+
 
 def check_data_source_exists(data_source_size: int) -> None:
     if data_source_size == -1:
@@ -70,7 +70,9 @@ def size_of(data_source_id: int) -> int:
 
 
 def chunk_contents(data_source_id: int, chunk_id: str) -> str:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     node = vector_store.get_nodes([chunk_id])[0]
     return node.get_content()
 
@@ -81,7 +83,9 @@ def delete(data_source_id: int) -> None:
 
 
 def delete_document(data_source_id: int, document_id: str) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
         embed_model=models.get_embedding_model(),
@@ -90,12 +94,14 @@ def delete_document(data_source_id: int, document_id: str) -> None:
 
 
 def query(
-        data_source_id: int,
-        query_str: str,
-        configuration: RagPredictConfiguration,
-        chat_history: list[RagContext],
+    data_source_id: int,
+    query_str: str,
+    configuration: RagPredictConfiguration,
+    chat_history: list[RagContext],
 ) -> AgentChatResponse:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = rag_vector_store.create_rag_vector_store(
+        data_source_id
+    ).access_vector_store()
     embedding_model = models.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
@@ -106,7 +112,7 @@ def query(
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
-        embed_model=embedding_model, # is this needed, really, if it's in the index?
+        embed_model=embedding_model,  # is this needed, really, if it's in the index?
     )
     # TODO: factor out LLM and chat engine into a separate function
     llm = models.get_llm(model_name=configuration.model_name)
@@ -121,7 +127,7 @@ def query(
     )
 
     logger.info("querying chat engine")
-    chat_history = list(
+    chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
             chat_history,
@@ -129,7 +135,7 @@ def query(
     )
 
     try:
-        chat_response = chat_engine.chat(query_str, chat_history)
+        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response
     except botocore.exceptions.ClientError as error:
@@ -139,4 +145,3 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
-

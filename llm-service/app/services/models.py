@@ -37,7 +37,7 @@
 #
 import os
 from enum import Enum
-from typing import Literal
+from typing import Any, Dict, List, Literal
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -73,23 +73,24 @@ def get_llm(model_name: str = None) -> LLM:
     )
 
 
-def get_available_embedding_models():
+def get_available_embedding_models() -> List[Dict[str, Any]]:
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
-def get_available_llm_models():
+def get_available_llm_models() -> List[Dict[str, Any]]:
     if is_caii_enabled():
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
 
 
-def is_caii_enabled():
-    return "CAII_DOMAIN" in os.environ
+def is_caii_enabled() -> bool:
+    domain: str = os.environ.get("CAII_DOMAIN", "")
+    return len(domain) > 0
 
 
-def _get_bedrock_llm_models():
+def _get_bedrock_llm_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "meta.llama3-1-8b-instruct-v1:0",
@@ -106,7 +107,7 @@ def _get_bedrock_llm_models():
     ]
 
 
-def _get_bedrock_embedding_models():
+def _get_bedrock_embedding_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "cohere.embed-english-v3",
@@ -130,7 +131,7 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
     models = get_available_llm_models()
     for model in models:
         if model["model_id"] == model_name:
-            if not is_caii_enabled() or model['available']:
+            if not is_caii_enabled() or model["available"]:
                 get_llm(model_name).complete("Are you available to answer questions?")
                 return "ok"
             else:
@@ -138,14 +139,15 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
 
     raise HTTPException(status_code=404, detail="Model not found")
 
+
 def test_embedding_model(model_name: str) -> str:
     models = get_available_embedding_models()
     for model in models:
         if model["model_id"] == model_name:
-            if not is_caii_enabled() or model['available']:
+            if not is_caii_enabled() or model["available"]:
                 # TODO: Update to pass embedding model in the future when multiple are supported
-                get_embedding_model().get_text_embedding('test')
-                return 'ok'
+                get_embedding_model().get_text_embedding("test")
+                return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")
 
