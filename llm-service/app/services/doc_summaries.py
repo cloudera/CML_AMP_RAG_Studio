@@ -116,7 +116,7 @@ def generate_summary(
 def set_settings_globals() -> None:
     Settings.llm = models.get_llm("meta.llama3-8b-instruct-v1:0")
     Settings.embed_model = models.get_embedding_model()
-    Settings.splitter = SentenceSplitter(chunk_size=1024)
+    Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
 def initialize_summary_index_storage(data_source_id: int) -> None:

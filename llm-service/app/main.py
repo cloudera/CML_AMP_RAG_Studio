@@ -42,6 +42,7 @@ import sys
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,7 +80,7 @@ _configure_logger()
 
 
 @functools.cache
-def _get_app_log_handler():
+def _get_app_log_handler() -> logging.Handler:
     """Format and return a reusable handler for application logging."""
     # match Java backend's formatting
     formatter = logging.Formatter(
@@ -125,7 +126,7 @@ def initialize_logging() -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     initialize_logging()
     yield
 

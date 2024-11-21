@@ -37,11 +37,12 @@
 #
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Sequence
 
 import requests
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
@@ -66,7 +67,10 @@ def describe_endpoint(domain: str, endpoint_name: str) -> Any:
 
 
 def get_llm(
-    domain: str, endpoint_name: str, messages_to_prompt, completion_to_prompt
+    domain: str,
+    endpoint_name: str,
+    messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
+    completion_to_prompt: Callable[[str], str],
 ) -> LLM:
     endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     api_base = endpoint["url"].removesuffix("/chat/completions")

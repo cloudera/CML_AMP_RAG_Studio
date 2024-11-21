@@ -35,7 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from llama_index.core.base.llms.types import LLMMetadata
+from typing import Callable, Dict, Sequence
+
+from llama_index.core.base.llms.types import ChatMessage, LLMMetadata
 from llama_index.core.bridge.pydantic import Field
 from llama_index.llms.mistralai.base import MistralAI
 from llama_index.llms.openai import OpenAI
@@ -52,9 +54,9 @@ class CaiiModel(OpenAI):
         model: str,
         context: int,
         api_base: str,
-        messages_to_prompt,
-        completion_to_prompt,
-        default_headers,
+        messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
+        completion_to_prompt: Callable[[str], str],
+        default_headers: Dict[str, str],
     ):
         super().__init__(
             model=model,
@@ -84,9 +86,9 @@ class CaiiModelMistral(MistralAI):
         model: str,
         context: int,
         api_base: str,
-        messages_to_prompt,
-        completion_to_prompt,
-        default_headers,
+        messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
+        completion_to_prompt: Callable[[str], str],
+        default_headers: Dict[str, str],
     ):
         super().__init__(
             api_key=default_headers.get("Authorization"),

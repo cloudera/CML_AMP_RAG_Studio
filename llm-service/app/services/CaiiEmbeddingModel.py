@@ -38,7 +38,7 @@
 import http.client as http_client
 import json
 import os
-from typing import List
+from typing import Any, Dict, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from openai import OpenAI
@@ -48,7 +48,7 @@ from pydantic import Field
 class CaiiEmbeddingModel(BaseEmbedding):
     endpoint = Field(any, description="The endpoint to use for embeddings")
 
-    def __init__(self, endpoint):
+    def __init__(self, endpoint: Dict[str, Any]):
         super().__init__()
         self.endpoint = endpoint
 
@@ -56,7 +56,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return self._get_embedding(text, "passage")
 
     async def _aget_query_embedding(self, query: str) -> Embedding:
-        pass
+        raise NotImplementedError("Not implemented")
 
     def _get_query_embedding(self, query: str) -> Embedding:
         return self._get_embedding(query, "query")
@@ -82,10 +82,12 @@ class CaiiEmbeddingModel(BaseEmbedding):
         json_response = data.decode("utf-8")
         structured_response = json.loads(json_response)
         embedding = structured_response["data"][0]["embedding"]
+        assert isinstance(embedding, list)
+        assert all(isinstance(x, float) for x in embedding)
 
         return embedding
 
-    def build_auth_headers(self) -> dict:
+    def build_auth_headers(self) -> Dict[str, str]:
         with open("/tmp/jwt", "r") as file:
             jwt_contents = json.load(file)
         access_token = jwt_contents["access_token"]

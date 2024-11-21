@@ -183,7 +183,7 @@ def query(
     )
 
     logger.info("querying chat engine")
-    chat_history = list(
+    chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
             chat_history,
@@ -191,7 +191,7 @@ def query(
     )
 
     try:
-        chat_response = chat_engine.chat(query_str, chat_history)
+        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response
     except botocore.exceptions.ClientError as error:

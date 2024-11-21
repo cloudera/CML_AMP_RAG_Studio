@@ -40,14 +40,13 @@
 
 from typing import Any
 
+from app.services import models, rag_vector_store
+from fastapi.testclient import TestClient
 from llama_index.core import VectorStoreIndex
 from llama_index.core.vector_stores import VectorStoreQuery
 
-from app.services import models
-from app.services import rag_vector_store
 
-
-def get_vector_store_index(data_source_id) -> VectorStoreIndex:
+def get_vector_store_index(data_source_id: int) -> VectorStoreIndex:
     vector_store = rag_vector_store.create_rag_vector_store(
         data_source_id
     ).access_vector_store()
@@ -60,7 +59,7 @@ def get_vector_store_index(data_source_id) -> VectorStoreIndex:
 class TestDocumentIndexing:
     @staticmethod
     def test_create_document(
-        client,
+        client: TestClient,
         index_document_request_body: dict[str, Any],
         document_id: str,
         data_source_id: int,
@@ -77,11 +76,11 @@ class TestDocumentIndexing:
         vectors = index.vector_store.query(
             VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id])
         )
-        assert len(vectors.nodes) == 1
+        assert len(vectors.nodes or []) == 1
 
     @staticmethod
     def test_delete_data_source(
-        client,
+        client: TestClient,
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
@@ -96,7 +95,7 @@ class TestDocumentIndexing:
         vectors = index.vector_store.query(
             VectorStoreQuery(query_embedding=[0.66] * 1024, doc_ids=[document_id])
         )
-        assert len(vectors.nodes) == 1
+        assert len(vectors.nodes or []) == 1
 
         response = client.delete(f"/data_sources/{data_source_id}")
         assert response.status_code == 200
@@ -110,7 +109,7 @@ class TestDocumentIndexing:
 
     @staticmethod
     def test_delete_document(
-        client,
+        client: TestClient,
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
@@ -125,7 +124,7 @@ class TestDocumentIndexing:
         vectors = index.vector_store.query(
             VectorStoreQuery(query_embedding=[0.2] * 1024, doc_ids=[document_id])
         )
-        assert len(vectors.nodes) == 1
+        assert len(vectors.nodes or []) == 1
 
         response = client.delete(
             f"/data_sources/{data_source_id}/documents/{document_id}"
@@ -136,11 +135,11 @@ class TestDocumentIndexing:
         vectors = index.vector_store.query(
             VectorStoreQuery(query_embedding=[0.2] * 1024, doc_ids=[document_id])
         )
-        assert len(vectors.nodes) == 0
+        assert len(vectors.nodes or []) == 0
 
     @staticmethod
     def test_get_size(
-        client,
+        client: TestClient,
         data_source_id: int,
         index_document_request_body: dict[str, Any],
     ) -> None:

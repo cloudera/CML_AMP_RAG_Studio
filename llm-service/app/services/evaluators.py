@@ -36,6 +36,7 @@
 #  DATA.
 # ##############################################################################
 
+from llama_index.core.base.response.schema import Response
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator
 from llama_index.llms.bedrock import Bedrock
@@ -56,10 +57,10 @@ def evaluate_response(
 
     relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
     relevance = relevancy_evaluator.evaluate_response(
-        query=query, response=chat_response
+        query=query, response=Response(response=chat_response.response)
     )
     faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
     faithfulness = faithfulness_evaluator.evaluate_response(
-        query=query, response=chat_response
+        query=query, response=Response(response=chat_response.response)
     )
     return relevance.score or 0, faithfulness.score or 0

@@ -45,7 +45,7 @@ from fastapi import HTTPException
 logger = logging.getLogger(__name__)
 
 
-def download(tmpdirname: str, bucket_name: str, document_key: str):
+def download(tmpdirname: str, bucket_name: str, document_key: str) -> None:
     """
     Download document from S3
     """

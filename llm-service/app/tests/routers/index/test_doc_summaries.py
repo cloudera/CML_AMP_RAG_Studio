@@ -38,15 +38,19 @@
 
 from typing import Any
 
+from fastapi.testclient import TestClient
+
+from ...conftest import BotoObject
+
 
 class TestDocumentSummaries:
     @staticmethod
     def test_generate_summary(
-        client,
+        client: TestClient,
         index_document_request_body: dict[str, Any],
-        data_source_id,
-        document_id,
-        s3_object,
+        data_source_id: int,
+        document_id: str,
+        s3_object: BotoObject,
     ) -> None:
         response = client.post(
             f"/data_sources/{data_source_id}/documents/download-and-index",
@@ -81,11 +85,11 @@ class TestDocumentSummaries:
 
     @staticmethod
     def test_delete_document(
-        client,
+        client: TestClient,
         index_document_request_body: dict[str, Any],
-        data_source_id,
-        document_id,
-        s3_object,
+        data_source_id: int,
+        document_id: str,
+        s3_object: BotoObject,
     ) -> None:
         response = client.post(
             f"/data_sources/{data_source_id}/documents/download-and-index",

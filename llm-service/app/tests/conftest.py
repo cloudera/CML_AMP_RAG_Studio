@@ -40,10 +40,12 @@ import os
 import pathlib
 import uuid
 from collections.abc import Iterator
-from typing import Any, Sequence
+from dataclasses import dataclass
+from typing import Any, Dict, Sequence
 
 import boto3
 import pytest
+from boto3.resources.base import ServiceResource
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from llama_index.core.base.llms.types import (
@@ -65,6 +67,12 @@ from app.services import models, rag_vector_store
 from app.services.rag_qdrant_vector_store import RagQdrantVectorStore
 
 
+@dataclass
+class BotoObject:
+    bucket_name: str
+    key: str
+
+
 @pytest.fixture
 def aws_region() -> str:
     return os.environ.get("AWS_DEFAULT_REGION", "us-west-2")
@@ -78,9 +86,9 @@ def databases_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> st
 
 
 @pytest.fixture
-def s3(
+def s3_client(
     monkeypatch: pytest.MonkeyPatch,
-) -> Iterator["s3.ServiceResource"]:
+) -> Iterator[ServiceResource]:
     """Mock all S3 interactions."""
 
     with mock_aws():
@@ -98,7 +106,9 @@ def data_source_id() -> int:
 
 
 @pytest.fixture
-def index_document_request_body(data_source_id, s3_object) -> dict[str, Any]:
+def index_document_request_body(
+    data_source_id: int, s3_object: BotoObject
+) -> Dict[str, Any]:
     return {
         "data_source_id": data_source_id,
         "s3_bucket_name": s3_object.bucket_name,
@@ -135,6 +145,36 @@ class DummyLlm(LLM):
     ) -> CompletionResponse:
         return CompletionResponse(text=self.completion_response)
 
+    def stream_chat(
+        self, messages: Sequence[ChatMessage], **kwargs: Any
+    ) -> ChatResponseGen:
+        raise NotImplementedError("Not implemented")
+
+    def stream_complete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponseGen:
+        raise NotImplementedError("Not implemented")
+
+    async def achat(
+        self, messages: Sequence[ChatMessage], **kwargs: Any
+    ) -> ChatResponse:
+        raise NotImplementedError("Not implemented")
+
+    async def acomplete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponse:
+        raise NotImplementedError("Not implemented")
+
+    async def astream_chat(
+        self, messages: Sequence[ChatMessage], **kwargs: Any
+    ) -> ChatResponseAsyncGen:
+        raise NotImplementedError("Not implemented")
+
+    async def astream_complete(
+        self, prompt: str, formatted: bool = False, **kwargs: Any
+    ) -> CompletionResponseAsyncGen:
+        raise NotImplementedError("Not implemented")
+
 
 class DummyEmbeddingModel(BaseEmbedding):
     def _get_query_embedding(self, query: str) -> Embedding:
@@ -149,7 +189,7 @@ class DummyEmbeddingModel(BaseEmbedding):
 
 # We're hacking our vector stores to run in-memory. Since they are in memory, we need
 # to be sure to return the same instance for the same data source id
-table_name_to_vector_store = {}
+table_name_to_vector_store: Dict[int, RagQdrantVectorStore] = {}
 
 
 def _get_vector_store_instance(
@@ -165,7 +205,7 @@ def _get_vector_store_instance(
 
 
 @pytest.fixture(autouse=True)
-def vector_store(monkeypatch: pytest.MonkeyPatch):
+def vector_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         rag_vector_store,
         "create_rag_vector_store",
@@ -174,7 +214,7 @@ def vector_store(monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture(autouse=True)
-def summary_vector_store(monkeypatch: pytest.MonkeyPatch):
+def summary_vector_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         rag_vector_store,
         "create_summary_vector_store",
@@ -202,25 +242,26 @@ def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
 
 @pytest.fixture
 def s3_object(
-    s3: "s3.ServiceResource", aws_region: str, document_id: str
-) -> "s3.Object":
+    s3_client: ServiceResource, aws_region: str, document_id: str
+) -> BotoObject:
     """Put and return a mocked S3 object"""
     bucket_name = "test_bucket"
     key = "test/" + document_id
 
-    bucket = s3.Bucket(bucket_name)
+    bucket = s3_client.Bucket(bucket_name)
     bucket.create(CreateBucketConfiguration={"LocationConstraint": aws_region})
-    return bucket.put_object(
+    bucket.put_object(
         Key=key,
         # TODO: fixturize file
         Body=b"Some text to be summarized and indexed",
         Metadata={"originalfilename": "test.txt"},
     )
+    return BotoObject(bucket_name=bucket_name, key=key)
 
 
 @pytest.fixture
 def client(
-    s3: "s3.ServiceResource",
+    s3_client: ServiceResource,
 ) -> Iterator[TestClient]:
     """Return a test client for making calls to the service.
 

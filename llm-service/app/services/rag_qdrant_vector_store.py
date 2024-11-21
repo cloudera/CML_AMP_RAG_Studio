@@ -51,7 +51,7 @@ class RagQdrantVectorStore(VectorStore):
     port = 6333
     async_port = 6334
 
-    def __init__(self, table_name: str, memory_store=False):
+    def __init__(self, table_name: str, memory_store: bool = False):
         self.client, self.aclient = self._create_qdrant_clients(memory_store)
         self.table_name = table_name
 
@@ -64,7 +64,7 @@ class RagQdrantVectorStore(VectorStore):
         document_count: CountResult = self.client.count(self.table_name)
         return document_count.count
 
-    def delete(self):
+    def delete(self) -> None:
         if self.exists():
             self.client.delete_collection(self.table_name)
 
@@ -72,7 +72,7 @@ class RagQdrantVectorStore(VectorStore):
         return self.client.collection_exists(self.table_name)
 
     def _create_qdrant_clients(
-        self, memory_store
+        self, memory_store: bool
     ) -> tuple[qdrant_client.QdrantClient, qdrant_client.AsyncQdrantClient]:
         if memory_store:
             client = qdrant_client.QdrantClient(":memory:")

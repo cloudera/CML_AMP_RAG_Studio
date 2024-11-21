@@ -42,10 +42,10 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .... import exceptions
+from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion, qdrant
 from ....services.chat import generate_suggested_questions, v2_chat
 from ....services.chat_store import RagStudioChatMessage, chat_store
-from ....services.qdrant import RagPredictConfiguration
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -107,7 +107,7 @@ def llm_talk(
         evaluations=[],
         rag_message={
             "user": request.query,
-            "assistant": chat_response.message.content,
+            "assistant": str(chat_response.message.content),
         },
         timestamp=time.time(),
     )

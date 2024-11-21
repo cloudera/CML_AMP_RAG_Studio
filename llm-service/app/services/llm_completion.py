@@ -39,8 +39,8 @@ import itertools
 
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 
-from .chat_store import chat_store, RagStudioChatMessage
-from .qdrant import RagPredictConfiguration
+from ..rag_types import RagPredictConfiguration
+from .chat_store import RagStudioChatMessage, chat_store
 from .models import get_llm
 
 

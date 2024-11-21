@@ -102,8 +102,8 @@ class ChatHistoryManager:
                         "source_nodes", []
                     ),
                     rag_message={
-                        MessageRole.USER.value: user_message.content,
-                        MessageRole.ASSISTANT.value: assistant_message.content,
+                        MessageRole.USER.value: str(user_message.content),
+                        MessageRole.ASSISTANT.value: str(assistant_message.content),
                     },
                     evaluations=assistant_message.additional_kwargs.get(
                         "evaluations", []
@@ -134,7 +134,9 @@ class ChatHistoryManager:
     def store_file(self, session_id: int) -> str:
         return os.path.join(self.store_path, f"chat_store-{session_id}.json")
 
-    def append_to_history(self, session_id: int, messages: list[RagStudioChatMessage]):
+    def append_to_history(
+        self, session_id: int, messages: List[RagStudioChatMessage]
+    ) -> None:
         store = self.store_for_session(session_id)
 
         for message in messages:

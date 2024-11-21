@@ -129,7 +129,7 @@ def completion_to_prompt(completion: str, system_prompt: Optional[str] = None) -
     return result
 
 
-def mistralv2_messages_to_prompt(messages):
+def mistralv2_messages_to_prompt(messages: Sequence[ChatMessage]) -> str:
     print(f"mistralv2_messages_to_prompt: {messages}")
     conversation = ""
     bos_token = "<s>"
@@ -139,14 +139,14 @@ def mistralv2_messages_to_prompt(messages):
         system_message = messages[0].content
     else:
         loop_messages = messages
-        system_message = False
+        system_message = None
 
     for index, message in enumerate(loop_messages):
         if (message.role == MessageRole.USER) != (index % 2 == 0):
             raise Exception(
                 "HFI Conversation roles must alternate user/assistant/user/assistant/..."
             )
-        if index == 0 and system_message != False:
+        if index == 0 and system_message is not None:
             content = "<<SYS>>\n" + system_message + "\n<</SYS>>\n\n" + message.content
         else:
             content = message.content
