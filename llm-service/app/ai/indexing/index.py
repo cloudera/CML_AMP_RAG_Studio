@@ -57,13 +57,7 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".txt": NopReader,
     ".md": NopReader,
 }
-CHUNKABLE_FILE_EXTENSIONS = set(
-    [
-        ".pdf",
-        ".txt",
-        ".md",
-    ]
-)
+CHUNKABLE_FILE_EXTENSIONS = {".pdf", ".txt", ".md"}
 
 @dataclass
 class NotSupportedFileExtensionError(Exception):
@@ -101,6 +95,7 @@ class Indexer:
 
         for chunk, embedding in zip(chunks, embeddings):
             chunk.embedding = embedding
+            chunk.metadata["file_name"] = os.path.basename(file_path)
 
         logger.debug(f"Adding {len(chunks)} chunks to vector store")
         chunks_vector_store = self.chunks_vector_store.access_vector_store()
@@ -113,6 +108,7 @@ class Indexer:
 
         for i, document in enumerate(documents):
             # Update the document metadata
+            document.id_ = file_id
             document.metadata["file_id"] = file_id
             document.metadata["document_part_number"] = i
             document.metadata["data_source_id"] = self.data_source_id
@@ -124,6 +120,7 @@ class Indexer:
 
         for j, chunk in enumerate(chunks):
             chunk.metadata["file_id"] = document.metadata["file_id"]
+            chunk.metadata["document_id"] = document.metadata["file_id"]
             chunk.metadata["document_part_number"] = document.metadata["document_part_number"]
             chunk.metadata["chunk_number"] = j
             chunk.metadata["data_source_id"] = document.metadata["data_source_id"]

@@ -55,7 +55,7 @@ from pydantic import Field
 from app.main import app
 from app.services import models, rag_vector_store
 from app.services.rag_qdrant_vector_store import RagQdrantVectorStore
-
+from app.services.utils import get_last_segment
 
 @pytest.fixture
 def aws_region() -> str:
@@ -92,7 +92,7 @@ def data_source_id() -> int:
 @pytest.fixture
 def index_document_request_body(data_source_id, s3_object) -> dict[str, Any]:
     return {
-        "document_id": s3_object.key,
+        "document_id": get_last_segment(s3_object.key),
         "data_source_id": data_source_id,
         "s3_bucket_name": s3_object.bucket_name,
         "s3_document_key": s3_object.key,

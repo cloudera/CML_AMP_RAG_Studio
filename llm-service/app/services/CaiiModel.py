@@ -60,7 +60,8 @@ class CaiiModel(OpenAI):
             api_base=api_base,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
-            default_headers=default_headers)
+            default_headers=default_headers,
+            context=context)
         self.context = context
 
     @property
