@@ -59,7 +59,7 @@ public class Types {
       Long dataSourceId,
       String documentId,
       String s3Path,
-      Instant vectorUploadTimestamp,
+      @With Instant vectorUploadTimestamp,
       Long sizeInBytes,
       String extension,
       Instant timeCreated,
