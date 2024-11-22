@@ -47,7 +47,7 @@ npm install
 
 cd ../../llm-service
 pip install uv
-uv install -v
+uv pip install -v
 
 cd ..
 mkdir -p artifacts
