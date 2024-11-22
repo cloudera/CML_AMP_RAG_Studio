@@ -37,8 +37,7 @@
 # ##############################################################################
 
 import re
-from typing import List, Tuple
-
+from typing import Generator, List, Sequence, Tuple, TypeVar, Union
 
 # TODO delete this if it's not being used
 
@@ -82,3 +81,27 @@ def parse_choice_select_answer_fn(
 
 def get_last_segment(path: str) -> str:
     return path.split("/")[-1]
+
+
+T = TypeVar("T")
+
+
+def batch_sequence(
+    sequence: Union[Sequence[T], Generator[T, None, None]], batch_size: int
+) -> Generator[List[T], None, None]:
+    batch = []
+    for val in sequence:
+        batch.append(val)
+        if len(batch) == batch_size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
+
+
+def flatten_sequence(
+    sequence: Union[Sequence[Sequence[T]], Generator[Sequence[T], None, None]],
+) -> Generator[T, None, None]:
+    for sublist in sequence:
+        for item in sublist:
+            yield item

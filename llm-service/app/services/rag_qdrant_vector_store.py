@@ -49,10 +49,9 @@ from .vector_store import VectorStore
 class RagQdrantVectorStore(VectorStore):
     host = os.environ.get("QDRANT_HOST", "localhost")
     port = 6333
-    async_port = 6334
 
     def __init__(self, table_name: str, memory_store: bool = False):
-        self.client, self.aclient = self._create_qdrant_clients(memory_store)
+        self.client = self._create_qdrant_clients(memory_store)
         self.table_name = table_name
 
     def size(self) -> int:
@@ -71,19 +70,14 @@ class RagQdrantVectorStore(VectorStore):
     def exists(self) -> bool:
         return self.client.collection_exists(self.table_name)
 
-    def _create_qdrant_clients(
-        self, memory_store: bool
-    ) -> tuple[qdrant_client.QdrantClient, qdrant_client.AsyncQdrantClient]:
+    def _create_qdrant_clients(self, memory_store: bool) -> qdrant_client.QdrantClient:
         if memory_store:
             client = qdrant_client.QdrantClient(":memory:")
-            aclient = qdrant_client.AsyncQdrantClient(":memory:")
         else:
             client = qdrant_client.QdrantClient(host=self.host, port=self.port)
-            aclient = qdrant_client.AsyncQdrantClient(
-                host=self.host, port=self.async_port
-            )
-        return client, aclient
+
+        return client
 
     def access_vector_store(self) -> BasePydanticVectorStore:
-        vector_store = QdrantVectorStore(self.table_name, self.client, self.aclient)
+        vector_store = QdrantVectorStore(self.table_name, self.client)
         return vector_store

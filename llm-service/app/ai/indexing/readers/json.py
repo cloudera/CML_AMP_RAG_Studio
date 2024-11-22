@@ -36,6 +36,7 @@
 #  DATA.
 #
 
+import json
 from pathlib import Path
 from typing import List
 
@@ -43,7 +44,8 @@ from llama_index.core.readers.base import BaseReader
 from llama_index.core.schema import Document
 
 
-class NopReader(BaseReader):
+class JSONReader(BaseReader):
     def load_data(self, file_path: Path) -> List[Document]:
         with open(file_path, "r") as f:
-            return [Document(text=f.read())]
+            content = json.load(f)
+        return [Document(text=json.dumps(content, sort_keys=True))]
