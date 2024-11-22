@@ -23,6 +23,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           uv python install 3.10
+          uv venv
           uv pip install -r pyproject.toml
         working-directory: llm-service
 
