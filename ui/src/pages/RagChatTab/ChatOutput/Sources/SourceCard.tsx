@@ -122,26 +122,28 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 </div>
               </Flex>
             ) : (
-              <Flex vertical>
-                <Typography.Title level={5} style={{ marginTop: 10 }}>
-                  Extracted reference content
-                </Typography.Title>
-                <Typography.Paragraph
-                  style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-                >
-                  {chunkContents.data?.text}
-                </Typography.Paragraph>
-                {chunkContents.data?.metadata.row_number ? (
-                  <>
-                    <Typography.Title level={5} style={{ marginTop: 0 }}>
-                      Metadata
-                    </Typography.Title>
-                    <Typography.Text>
-                      Row number: {chunkContents.data?.metadata.row_number}
-                    </Typography.Text>
-                  </>
-                ) : null}
-              </Flex>
+              chunkContents.data && (
+                <Flex vertical>
+                  <Typography.Title level={5} style={{ marginTop: 10 }}>
+                    Extracted reference content
+                  </Typography.Title>
+                  <Typography.Paragraph
+                    style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
+                  >
+                    {chunkContents.data.text}
+                  </Typography.Paragraph>
+                  {chunkContents.data.metadata.row_number && (
+                    <>
+                      <Typography.Title level={5} style={{ marginTop: 0 }}>
+                        Metadata
+                      </Typography.Title>
+                      <Typography.Text>
+                        Row number: {chunkContents.data.metadata.row_number}
+                      </Typography.Text>
+                    </>
+                  )}
+                </Flex>
+              )
             )}
           </Flex>
         </Card>

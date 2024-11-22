@@ -96,7 +96,7 @@ const suggestQuestionsQuery = async (
 
 interface ChunkContentsResponse {
   text: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, string | number>;
 }
 
 interface ChunkContentsRequest {
