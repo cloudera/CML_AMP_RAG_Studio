@@ -56,6 +56,7 @@ class PDFReader(BaseReader):
         logger.info(f"{file_path=}")
         logger.info(subprocess.run(["docling", "--output=/home/cdsw", str(file_path)]))
         logger.info("hey done")
+        ## one more experiment: try this with a GPU
         
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
