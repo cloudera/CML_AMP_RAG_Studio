@@ -37,6 +37,7 @@
 #
 
 from abc import abstractmethod
+from typing import Optional
 
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
@@ -45,9 +46,9 @@ class VectorStore:
     """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
 
     @abstractmethod
-    def size(self) -> int:
+    def size(self) -> Optional[int]:
         """
-        If the collection does not exist, return -1
+        If the collection does not exist, return None
         """
 
     @abstractmethod

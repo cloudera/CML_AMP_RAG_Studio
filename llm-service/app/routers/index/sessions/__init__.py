@@ -132,7 +132,7 @@ def suggest_questions(
     request: SuggestQuestionsRequest,
 ) -> RagSuggestedQuestionsResponse:
     data_source_size = QdrantVectorStore.for_chunks(request.data_source_id).size()
-    if data_source_size == -1:
+    if data_source_size is None:
         raise HTTPException(status_code=404, detail="Knowledge base not found.")
     suggested_questions = generate_suggested_questions(
         request.configuration, request.data_source_id, data_source_size, session_id

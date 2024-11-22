@@ -80,7 +80,7 @@ class DataSourceController:
     )
     @exceptions.propagates
     def size(self) -> int:
-        return self.chunks_vector_store.size()
+        return self.chunks_vector_store.size() or 0
 
     @router.get(
         "/chunks/{chunk_id}",

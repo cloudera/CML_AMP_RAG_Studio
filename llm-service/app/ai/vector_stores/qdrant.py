@@ -78,12 +78,12 @@ class QdrantVectorStore(VectorStore):
         self.client = client or new_qdrant_client()
         self.table_name = table_name
 
-    def size(self) -> int:
+    def size(self) -> Optional[int]:
         """
         If the collection does not exist, return -1
         """
         if not self.client.collection_exists(self.table_name):
-            return -1
+            return None
         document_count: CountResult = self.client.count(self.table_name)
         return document_count.count
 
