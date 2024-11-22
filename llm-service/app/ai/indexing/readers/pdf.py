@@ -46,7 +46,8 @@ from .base_reader import BaseReader
 
 
 class PDFReader(BaseReader):
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=True)
 
     def load_chunks(self, file_path: Path) -> List[TextNode]:
