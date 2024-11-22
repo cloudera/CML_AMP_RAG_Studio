@@ -1,0 +1,43 @@
+name: UI checks
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.BRANCH }}
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: ui/pnpm-lock.yaml
+
+      - name: Install UI Dependencies
+        run: pnpm install --no-frozen-lockfile
+        working-directory: ui
+
+      - name: Lint with PNPM
+        run: pnpm lint
+        working-directory: ui
+
+      - name: Run frontend tests
+        run: pnpm test
+        working-directory: ui
+
+      - name: Build with PNPM
+        run: pnpm build
+        working-directory: ui
