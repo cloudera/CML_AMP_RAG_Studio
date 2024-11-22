@@ -37,7 +37,7 @@
 #
 
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from llama_index.core.schema import TextNode
 from llama_index.readers.file import DocxReader as LlamaIndexDocxReader
@@ -46,7 +46,7 @@ from .base_reader import BaseReader
 
 
 class DocxReader(BaseReader):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexDocxReader()
 
