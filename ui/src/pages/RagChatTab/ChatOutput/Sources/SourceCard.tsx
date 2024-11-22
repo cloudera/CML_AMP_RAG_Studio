@@ -36,9 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useGetChunkContents } from "src/api/ragQueryApi.ts";
-import { useContext, useState } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import Icon from "@ant-design/icons";
 import {
   Alert,
   Card,
@@ -49,10 +47,12 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { useContext, useState } from "react";
 import { SourceNode } from "src/api/chatApi.ts";
+import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
-import Icon from "@ant-design/icons";
 import { cdlGray600 } from "src/cuix/variables.ts";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
@@ -129,8 +129,18 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 <Typography.Paragraph
                   style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
                 >
-                  {chunkContents.data}
+                  {chunkContents.data?.text}
                 </Typography.Paragraph>
+                {chunkContents.data?.metadata.row_number ? (
+                  <>
+                    <Typography.Title level={5} style={{ marginTop: 0 }}>
+                      Metadata
+                    </Typography.Title>
+                    <Typography.Text>
+                      Row number: {chunkContents.data?.metadata.row_number}
+                    </Typography.Text>
+                  </>
+                ) : null}
               </Flex>
             )}
           </Flex>

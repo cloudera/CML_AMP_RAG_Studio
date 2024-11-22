@@ -30,6 +30,7 @@
 
 import logging
 import tempfile
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
@@ -65,6 +66,11 @@ class RagIndexDocumentRequest(BaseModel):
     configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
+class ChunkContentsResponse(BaseModel):
+    text: str
+    metadata: Dict[str, Any]
+
+
 @cbv(router)
 class DataSourceController:
     chunks_vector_store: VectorStore = Depends(
@@ -86,11 +92,11 @@ class DataSourceController:
         response_model=None,
     )
     @exceptions.propagates
-    def chunk_contents(self, chunk_id: str) -> str:
-        return (
-            self.chunks_vector_store.llama_vector_store()
-            .get_nodes([chunk_id])[0]
-            .get_content()
+    def chunk_contents(self, chunk_id: str) -> ChunkContentsResponse:
+        node = self.chunks_vector_store.llama_vector_store().get_nodes([chunk_id])[0]
+        return ChunkContentsResponse(
+            text=node.get_content(),
+            metadata=node.metadata,
         )
 
     @router.delete(
