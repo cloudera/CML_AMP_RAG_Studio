@@ -46,8 +46,8 @@ from .base_reader import BaseReader
 
 
 class DocxReader(BaseReader):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.inner = LlamaIndexDocxReader()
 
     def load_chunks(self, file_path: Path) -> List[TextNode]:
