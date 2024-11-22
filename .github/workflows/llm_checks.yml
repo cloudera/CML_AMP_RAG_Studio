@@ -14,37 +14,35 @@ jobs:
         with:
           ref: ${{ github.event.inputs.BRANCH }}
 
+      - name: Install uv
+        run: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-local-path: "./llm-service/uv.lock"
+
       - name: Set up Python
         uses: pdm-project/setup-pdm@v3
         with:
           python-version: '3.10'
           cache: false
 
-      - name: Cache pdm cache folder
-        uses: actions/cache@v4
-        id: python_cache
-        with:
-          path: ./llm-service/.venv
-          key: pdm-venv-${{ hashFiles('./llm-service/pdm.lock') }}
-
       - name: Install Python dependencies
-        if: steps.python_cache.outputs.cache-hit != 'true'
         run: |
-          pdm install
+          uv python install
         working-directory: llm-service
 
       - name: Run ruff
         run: |
-          pdm run ruff check app
+          uv run ruff check app
         working-directory: llm-service
 
       - name: Run mypy
         run: |
-          pdm run mypy app
+          uv run mypy app
         working-directory: llm-service
 
       - name: Test with pytest
         run: |
-          pdm run pytest -sxvvra
+          uv run pytest -sxvvra
         working-directory: llm-service
 

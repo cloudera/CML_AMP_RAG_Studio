@@ -89,7 +89,8 @@ the Node service locally, you can do so by following these steps:
 - Install Python (via [pyenv](https://github.com/pyenv/pyenv), probably) (directly via brew, if you must)
 - `cd llm-service`
 - Create a virtual environment (`python -m venv venv; source venv/bin/activate`)
-- Install dependencies (`python -m pip install -r requirements.txt`)
+- Install UV (`python -m pip install uv`)
+- Install dependencies (`uv pip install -r pyproject.toml`)
 - `fastapi dev`
   - ends up running on port 8000
 
