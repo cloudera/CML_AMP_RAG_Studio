@@ -21,7 +21,6 @@ dependencies = [
     "docx2txt>=0.8",
     "torch==2.4.1",
     "docling>=2.7.0",
-    "docling-parse==2.1.0"
 ]
 requires-python = "==3.10.*"
 readme = "README.md"
