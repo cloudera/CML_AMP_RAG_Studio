@@ -37,7 +37,8 @@
 #
 
 from pathlib import Path
-from typing import Any, List
+from typing import Any
+import subprocess
 
 from llama_index.core.schema import TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
@@ -50,7 +51,11 @@ class PDFReader(BaseReader):
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=True)
 
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+    def load_chunks(self, file_path: Path) -> list[TextNode]:
+        print(f"{file_path=}")
+        print(subprocess.run(["docling", "--output=/tmp", str(file_path)], check=True))
+        print("hey done")
+        
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
         document = documents[0]
