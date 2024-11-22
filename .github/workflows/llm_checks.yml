@@ -18,12 +18,12 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-          cache-local-path: "./llm-service/uv.lock"
+          cache-dependency-glob: "./llm-service/uv.lock"
 
       - name: Install Python dependencies
         run: |
           uv python install 3.10
-          uv venv
+          uv venv --python 3.10
           uv pip install -r pyproject.toml
         working-directory: llm-service
 
