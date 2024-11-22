@@ -132,15 +132,18 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                   >
                     {chunkContents.data.text}
                   </Typography.Paragraph>
+                  <Typography.Title level={5} style={{ marginTop: 0 }}>
+                    Metadata
+                  </Typography.Title>
                   {chunkContents.data.metadata.row_number && (
-                    <>
-                      <Typography.Title level={5} style={{ marginTop: 0 }}>
-                        Metadata
-                      </Typography.Title>
-                      <Typography.Text>
-                        Row number: {chunkContents.data.metadata.row_number}
-                      </Typography.Text>
-                    </>
+                    <Typography.Text>
+                      Row number: {chunkContents.data.metadata.row_number}
+                    </Typography.Text>
+                  )}
+                  {chunkContents.data.metadata.page_label && (
+                    <Typography.Text>
+                      Page label: {chunkContents.data.metadata.page_label}
+                    </Typography.Text>
                   )}
                 </Flex>
               )

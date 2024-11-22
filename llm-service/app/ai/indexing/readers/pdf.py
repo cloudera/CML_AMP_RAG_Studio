@@ -39,7 +39,7 @@
 from pathlib import Path
 from typing import Any, List
 
-from llama_index.core.schema import TextNode
+from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from .base_reader import BaseReader
@@ -48,12 +48,42 @@ from .base_reader import BaseReader
 class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.inner = LlamaIndexPDFReader(return_full_document=True)
+        self.inner = LlamaIndexPDFReader(return_full_document=False)
 
     def load_chunks(self, file_path: Path) -> List[TextNode]:
-        documents = self.inner.load_data(file_path)
-        assert len(documents) == 1
-        document = documents[0]
+        pages = self.inner.load_data(file_path)
+
+        page_labels = [page.metadata["page_label"] for page in pages]
+        page_texts = [page.text for page in pages]
+        # The start of every page
+        page_start_index = [0]
+        for i, text in enumerate(page_texts):
+            page_start_index.append(page_start_index[-1] + len(text) + 1)
+
+        document_text = "\n".join(page_texts)
+        # Check computation. Add 1 to length because we're assuming the last page would have the new line
+        assert (
+            page_start_index[-1] == len(document_text) + 1
+        ), f"Start of page after last {page_start_index[-1]} does not match document text length {len(document_text)+1}"
+
+        document = Document(text=document_text)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
-        return self._chunks_in_document(document)
+        chunks = self._chunks_in_document(document)
+
+        def find_label(start_index: int) -> str:
+            last_good_label = ""
+            for i, page_start in enumerate(page_start_index):
+                if start_index >= page_start:
+                    last_good_label = page_labels[i]
+                else:
+                    break
+            return last_good_label
+
+        # Populate the page label for each chunk
+        for chunk in chunks:
+            chunk_start = chunk.start_char_idx
+            chunk_label = find_label(chunk_start)
+            chunk.metadata["page_label"] = chunk_label
+
+        return chunks
