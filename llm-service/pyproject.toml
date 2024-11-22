@@ -31,6 +31,7 @@ dev = [
     "pytest>=8.3.3",
     "ruff>=0.7.4",
     "mypy>=1.13.0",
+    "lipsum>=0.1.2",
 ]
 
 [tool.pytest.ini_options]
