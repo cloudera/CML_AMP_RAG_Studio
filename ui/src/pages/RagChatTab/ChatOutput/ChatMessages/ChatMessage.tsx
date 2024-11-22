@@ -79,7 +79,7 @@ const ChatMessage = ({
                 }}
               />
             </div>
-            <Flex vertical gap={12}>
+            <Flex vertical gap={12} style={{ width: "100%" }}>
               <SourceNodes data={data} />
               <Typography.Text style={{ fontSize: 16, whiteSpace: "pre-wrap" }}>
                 {data.rag_message.assistant}

@@ -39,7 +39,16 @@
 import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { Alert, Card, Flex, Popover, Spin, Tag, Typography } from "antd";
+import {
+  Alert,
+  Card,
+  Flex,
+  Popover,
+  Spin,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import { SourceNode } from "src/api/chatApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
@@ -74,7 +83,11 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
         <Card
           title={
             <Flex justify="space-between">
-              {source.source_file_name}
+              <Tooltip title={source.source_file_name}>
+                <Typography.Paragraph ellipsis style={{ width: "70%" }}>
+                  {source.source_file_name}
+                </Typography.Paragraph>
+              </Tooltip>
               <Typography.Text style={{ color: cdlGray600 }}>
                 Score: {source.score}
               </Typography.Text>

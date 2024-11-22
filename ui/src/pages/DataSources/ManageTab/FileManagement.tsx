@@ -129,7 +129,13 @@ const FileManagement: React.FC = () => {
         align="center"
         style={{ maxWidth: 300, alignSelf: "center" }}
       >
-        <Upload.Dragger {...props} multiple>
+        <Upload.Dragger
+          {...props}
+          multiple
+          itemRender={(originNode) => {
+            return <div style={{ width: 432 }}>{originNode}</div>;
+          }}
+        >
           <DragAndDrop />
         </Upload.Dragger>
         <Button
