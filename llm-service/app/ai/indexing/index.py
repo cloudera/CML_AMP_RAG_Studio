@@ -45,13 +45,13 @@ from typing import Dict, Generator, List, Type
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import BaseNode, Document, TextNode
-from llama_index.readers.file import DocxReader
+from llama_index.core.schema import BaseNode, TextNode
 
 from ...ai.vector_stores.vector_store import VectorStore
 from ...services.utils import batch_sequence, flatten_sequence
+from .readers.base_reader import BaseReader
 from .readers.csv import CSVReader
+from .readers.docx import DocxReader
 from .readers.json import JSONReader
 from .readers.nop import NopReader
 from .readers.pdf import PDFReader
@@ -66,7 +66,6 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".csv": CSVReader,
     ".json": JSONReader,
 }
-CHUNKABLE_FILE_EXTENSIONS = {".pdf", ".txt", ".md", ".docx"}
 
 
 @dataclass
@@ -95,20 +94,15 @@ class Indexer:
         if not reader_cls:
             raise NotSupportedFileExtensionError(file_extension)
 
-        reader = reader_cls()
+        reader = reader_cls(
+            splitter=self.splitter,
+            document_id=document_id,
+            data_source_id=self.data_source_id,
+        )
 
         logger.debug(f"Parsing file: {file_path}")
 
-        documents = self._documents_in_file(reader, file_path, document_id)
-        if file_extension in CHUNKABLE_FILE_EXTENSIONS:
-            logger.debug(f"Chunking file: {file_path}")
-            chunks = [
-                chunk
-                for document in documents
-                for chunk in self._chunks_in_document(document)
-            ]
-        else:
-            chunks = documents
+        chunks = reader.load_chunks(file_path)
 
         logger.debug(f"Embedding {len(chunks)} chunks")
 
@@ -128,39 +122,6 @@ class Indexer:
             chunks_vector_store.add(converted_chunks)
 
         logger.debug(f"Indexing file: {file_path} completed")
-
-    def _documents_in_file(
-        self, reader: BaseReader, file_path: Path, document_id: str
-    ) -> List[Document]:
-        documents = reader.load_data(file_path)
-
-        for i, document in enumerate(documents):
-            document.id_ = document_id
-            document.metadata["file_name"] = os.path.basename(file_path)
-            document.metadata["document_id"] = document_id
-            document.metadata["document_part_number"] = i
-            document.metadata["data_source_id"] = self.data_source_id
-
-        return documents
-
-    def _chunks_in_document(self, document: Document) -> List[TextNode]:
-        chunks = self.splitter.get_nodes_from_documents([document])
-
-        for j, chunk in enumerate(chunks):
-            chunk.metadata["file_name"] = document.metadata["file_name"]
-            chunk.metadata["document_id"] = document.metadata["document_id"]
-            chunk.metadata["document_part_number"] = document.metadata[
-                "document_part_number"
-            ]
-            chunk.metadata["chunk_number"] = j
-            chunk.metadata["data_source_id"] = document.metadata["data_source_id"]
-
-        converted_chunks: List[TextNode] = []
-        for chunk in chunks:
-            assert isinstance(chunk, TextNode)
-            converted_chunks.append(chunk)
-
-        return converted_chunks
 
     def _compute_embeddings(
         self, chunks: List[TextNode]

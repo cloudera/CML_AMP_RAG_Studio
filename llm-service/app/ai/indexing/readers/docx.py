@@ -40,14 +40,14 @@ from pathlib import Path
 from typing import List
 
 from llama_index.core.schema import TextNode
-from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
+from llama_index.readers.file import DocxReader as LlamaIndexDocxReader
 
 from .base_reader import BaseReader
 
 
-class PDFReader(BaseReader):
+class DocxReader(BaseReader):
     def __init__(self) -> None:
-        self.inner = LlamaIndexPDFReader(return_full_document=True)
+        self.inner = LlamaIndexDocxReader()
 
     def load_chunks(self, file_path: Path) -> List[TextNode]:
         documents = self.inner.load_data(file_path)

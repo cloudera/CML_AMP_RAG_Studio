@@ -41,16 +41,20 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import Document
+from llama_index.core.schema import TextNode
+
+from .base_reader import BaseReader
 
 
 class CSVReader(BaseReader):
-    def load_data(self, file_path: Path) -> List[Document]:
+    def load_chunks(self, file_path: Path) -> List[TextNode]:
         # Read the CSV file into a pandas DataFrame
         df = pd.read_csv(file_path)
         # Convert the dataframe into a list of dictionaries, one per row
         rows = df.to_dict(orient="records")
         # Convert each dictionary into a Document
-        documents = [Document(text=json.dumps(row, sort_keys=True)) for row in rows]
-        return documents
+        chunks = [TextNode(text=json.dumps(row, sort_keys=True)) for row in rows]
+        for chunk in chunks:
+            chunk.id_ = self.document_id  # TODO: Fix
+            self._add_document_metadata(chunk, file_path)
+        return chunks

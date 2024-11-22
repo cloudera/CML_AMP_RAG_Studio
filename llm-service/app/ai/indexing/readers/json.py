@@ -40,12 +40,16 @@ import json
 from pathlib import Path
 from typing import List
 
-from llama_index.core.readers.base import BaseReader
-from llama_index.core.schema import Document
+from llama_index.core.schema import Document, TextNode
+
+from .base_reader import BaseReader
 
 
 class JSONReader(BaseReader):
-    def load_data(self, file_path: Path) -> List[Document]:
+    def load_chunks(self, file_path: Path) -> List[TextNode]:
         with open(file_path, "r") as f:
             content = json.load(f)
-        return [Document(text=json.dumps(content, sort_keys=True))]
+        document = Document(text=json.dumps(content, sort_keys=True))
+        document.id_ = self.document_id
+        self._add_document_metadata(document, file_path)
+        return [document]
