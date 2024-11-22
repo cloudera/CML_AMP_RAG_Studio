@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import logging
 from pathlib import Path
 from typing import Any
 import subprocess
@@ -45,6 +45,7 @@ from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from .base_reader import BaseReader
 
+logger = logging.getLogger(__name__)
 
 class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -52,9 +53,9 @@ class PDFReader(BaseReader):
         self.inner = LlamaIndexPDFReader(return_full_document=True)
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
-        print(f"{file_path=}")
-        print(subprocess.run(["docling", "--output=/tmp", str(file_path)], check=True))
-        print("hey done")
+        logger.info(f"{file_path=}")
+        logger.info(subprocess.run(["docling", "--output=/tmp", str(file_path)], check=True))
+        logger.info("hey done")
         
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
