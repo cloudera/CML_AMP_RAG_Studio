@@ -177,4 +177,6 @@ class DataSourceController:
                 embedding_model=models.get_embedding_model(),
                 chunks_vector_store=self.chunks_vector_store,
             )
+            # Delete to avoid duplicates
+            self.chunks_vector_store.delete_document(request.document_id)
             indexer.index_file(file_path, request.document_id)

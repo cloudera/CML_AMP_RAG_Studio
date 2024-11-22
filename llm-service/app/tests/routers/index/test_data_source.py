@@ -78,6 +78,40 @@ class TestDocumentIndexing:
         assert len(vectors.nodes or []) == 1
 
     @staticmethod
+    def test_double_create_document(
+        client: TestClient,
+        index_document_request_body: dict[str, Any],
+        document_id: str,
+        data_source_id: int,
+    ) -> None:
+        """Test POST /download-and-index."""
+        response = client.post(
+            f"/data_sources/{data_source_id}/documents/download-and-index",
+            json=index_document_request_body,
+        )
+
+        assert response.status_code == 200
+        assert document_id is not None
+
+        response = client.get(f"/data_sources/{data_source_id}/size")
+        assert response.status_code == 200
+        size1 = response.json()
+
+        response = client.post(
+            f"/data_sources/{data_source_id}/documents/download-and-index",
+            json=index_document_request_body,
+        )
+
+        assert response.status_code == 200
+        assert document_id is not None
+
+        response = client.get(f"/data_sources/{data_source_id}/size")
+        assert response.status_code == 200
+        size2 = response.json()
+
+        assert size2 == size1
+
+    @staticmethod
     def test_delete_data_source(
         client: TestClient,
         data_source_id: int,
