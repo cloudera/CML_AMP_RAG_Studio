@@ -47,7 +47,7 @@ npm install
 
 cd ../../llm-service
 pip install uv
-uv pip install -v
+uv pip install -r pyproject.toml
 
 cd ..
 mkdir -p artifacts
