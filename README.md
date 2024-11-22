@@ -86,13 +86,13 @@ the Node service locally, you can do so by following these steps:
 
 #### Python Setup
 
-- Install Python (via [pyenv](https://github.com/pyenv/pyenv), probably) (directly via brew, if you must)
+- Install Python 3.10 (via [pyenv](https://github.com/pyenv/pyenv), probably) (directly via brew, if you must)
 - `cd llm-service`
-- Create a virtual environment (`python -m venv venv; source venv/bin/activate`)
-- Install UV (`python -m pip install uv`)
-- Install dependencies (`uv pip install -r pyproject.toml`)
-- `fastapi dev`
-  - ends up running on port 8000
+- Install `uv`. 
+  - We recommend installing via `brew install uv`, but you can also install it directly in your python environment if you prefer.
+- `uv sync` - this creates a `uv` virtual environment in `.venv` and installs the dependencies
+- `uv fastapi dev`
+  - the python-based service ends up running on port 8000
 
 #### Java Setup
 
