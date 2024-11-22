@@ -83,7 +83,8 @@ class PDFReader(BaseReader):
         # Populate the page label for each chunk
         for chunk in chunks:
             chunk_start = chunk.start_char_idx
-            chunk_label = find_label(chunk_start)
-            chunk.metadata["page_label"] = chunk_label
+            if chunk_start is not None:
+                chunk_label = find_label(chunk_start)
+                chunk.metadata["page_label"] = chunk_label
 
         return chunks
