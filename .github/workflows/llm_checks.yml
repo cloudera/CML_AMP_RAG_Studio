@@ -19,12 +19,7 @@ jobs:
         with:
           enable-cache: true
           cache-local-path: "./llm-service/uv.lock"
-
-      - name: Set up Python
-        uses: pdm-project/setup-pdm@v3
-        with:
-          python-version: '3.10'
-          cache: false
+          python-version: "3.10"
 
       - name: Install Python dependencies
         run: |
