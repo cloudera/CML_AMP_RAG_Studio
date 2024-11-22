@@ -1,9 +1,9 @@
 FROM docker-private.infra.cloudera.com/cloudera_base/hardened/cloudera-python:3.10
-RUN pip install pdm
+RUN pip install uv
 COPY ./pyproject.toml /app/
-COPY ./pdm.lock /app/
+COPY ./uv.lock /app/
 WORKDIR /app
-RUN pdm install
+RUN uv install
 
 COPY ./app /app
 WORKDIR /app

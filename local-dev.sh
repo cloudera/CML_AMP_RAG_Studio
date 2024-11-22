@@ -65,11 +65,11 @@ docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databas
 cd llm-service
 python3.10 -m venv venv
 source venv/bin/activate
-python -m pip install pdm
-pdm install
-pdm run pytest -sxvvra
+python -m pip install uv
+uv pip install -r pyproject.toml
+uv run pytest -sxvvra
 
-pdm run fastapi dev &
+uv run fastapi dev &
 
 # start up the jarva
 cd ../backend
