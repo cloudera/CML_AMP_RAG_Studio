@@ -40,12 +40,14 @@ import os
 from typing import Optional
 
 import qdrant_client
+from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.qdrant import (
     QdrantVectorStore as LlamaIndexQdrantVectorStore,
 )
 from qdrant_client.http.models import CountResult
 
+from ...services import models
 from .vector_store import VectorStore
 
 
@@ -88,6 +90,14 @@ class QdrantVectorStore(VectorStore):
     def delete(self) -> None:
         if self.exists():
             self.client.delete_collection(self.table_name)
+
+    def delete_document(self, document_id: str) -> None:
+        if self.exists():
+            index = VectorStoreIndex.from_vector_store(
+                vector_store=self.llama_vector_store(),
+                embed_model=models.get_embedding_model(),
+            )
+            index.delete_ref_doc(document_id)
 
     def exists(self) -> bool:
         return self.client.collection_exists(self.table_name)

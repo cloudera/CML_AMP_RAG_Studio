@@ -55,6 +55,10 @@ class VectorStore:
         """Delete the vector store"""
 
     @abstractmethod
+    def delete_document(self, document_id: str) -> None:
+        """Delete a single document from the vector store"""
+
+    @abstractmethod
     def llama_vector_store(self) -> BasePydanticVectorStore:
         """Access the underlying llama-index vector store implementation"""
 

@@ -36,25 +36,54 @@
 #  DATA.
 #
 
+import io
 import json
 from pathlib import Path
 from typing import List
 
 import pandas as pd
-from llama_index.core.schema import TextNode
+from llama_index.core.node_parser.interface import MetadataAwareTextSplitter
+from llama_index.core.schema import Document, TextNode
 
 from .base_reader import BaseReader
 
 
-class CSVReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+class _CsvSplitter(MetadataAwareTextSplitter):
+    def split_text_metadata_aware(self, text: str, metadata_str: str) -> List[str]:
+        return self.split_text(text)
+
+    def split_text(self, text: str) -> List[str]:
+        buffer = io.StringIO(text)
         # Read the CSV file into a pandas DataFrame
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(buffer)
         # Convert the dataframe into a list of dictionaries, one per row
         rows = df.to_dict(orient="records")
-        # Convert each dictionary into a Document
-        chunks = [TextNode(text=json.dumps(row, sort_keys=True)) for row in rows]
-        for chunk in chunks:
-            chunk.id_ = self.document_id  # TODO: Fix
-            self._add_document_metadata(chunk, file_path)
-        return chunks
+        # Convert each dictionary into a chunk
+        return [json.dumps(row, sort_keys=True) for row in rows]
+
+
+class CSVReader(BaseReader):
+    def load_chunks(self, file_path: Path) -> List[TextNode]:
+        # Create the base document
+        with open(file_path, "r") as f:
+            content = f.read()
+        document = Document(text=content)
+        document.id_ = self.document_id
+        self._add_document_metadata(document, file_path)
+
+        local_splitter = _CsvSplitter()
+
+        rows = local_splitter.get_nodes_from_documents([document])
+
+        for i, row in enumerate(rows):
+            row.metadata["file_name"] = document.metadata["file_name"]
+            row.metadata["document_id"] = document.metadata["document_id"]
+            row.metadata["data_source_id"] = document.metadata["data_source_id"]
+            row.metadata["chunk_number"] = i
+
+        converted_rows: List[TextNode] = []
+        for row in rows:
+            assert isinstance(row, TextNode)
+            converted_rows.append(row)
+
+        return converted_rows

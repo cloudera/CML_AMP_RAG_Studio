@@ -35,7 +35,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
-from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
@@ -141,11 +140,7 @@ class DataSourceController:
     )
     @exceptions.propagates
     def delete_document(self, data_source_id: int, doc_id: str) -> None:
-        index = VectorStoreIndex.from_vector_store(
-            vector_store=self.chunks_vector_store.llama_vector_store(),
-            embed_model=models.get_embedding_model(),
-        )
-        index.delete_ref_doc(doc_id)
+        self.chunks_vector_store.delete_document(doc_id)
         doc_summaries.delete_document(data_source_id, doc_id)
 
     @router.post(
