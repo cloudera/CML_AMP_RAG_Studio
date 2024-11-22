@@ -44,7 +44,7 @@ from pydantic import BaseModel
 from .... import exceptions
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
-from ....services import llm_completion, qdrant
+from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat
 from ....services.chat_store import RagStudioChatMessage, chat_store
 
