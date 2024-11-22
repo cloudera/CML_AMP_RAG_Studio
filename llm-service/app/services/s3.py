@@ -38,6 +38,7 @@
 
 import logging
 import os
+from pathlib import Path
 
 import boto3
 from fastapi import HTTPException
@@ -45,7 +46,7 @@ from fastapi import HTTPException
 logger = logging.getLogger(__name__)
 
 
-def download(tmpdirname: str, bucket_name: str, document_key: str) -> None:
+def download(tmpdirname: str, bucket_name: str, document_key: str) -> Path:
     """
     Download document from S3
     """
@@ -69,6 +70,7 @@ def download(tmpdirname: str, bucket_name: str, document_key: str) -> None:
             document_key,
             final_filename,
         )
+        return Path(final_filename)
     except s3.exceptions.ClientError as e:
         if e.response["Error"]["Code"] == "404":
             logger.error(

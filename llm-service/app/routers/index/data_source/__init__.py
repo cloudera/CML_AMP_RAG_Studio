@@ -157,12 +157,9 @@ class DataSourceController:
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
-            s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key)
-            # Get the single file in the directory
-            files = os.listdir(tmpdirname)
-            if len(files) != 1:
-                raise ValueError("Expected a single file in the temporary directory")
-            file_path = Path(os.path.join(tmpdirname, files[0]))
+            file_path = s3.download(
+                tmpdirname, request.s3_bucket_name, request.s3_document_key
+            )
 
             indexer = Indexer(
                 data_source_id,
