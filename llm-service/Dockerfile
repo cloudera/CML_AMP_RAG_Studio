@@ -3,9 +3,13 @@ RUN pip install uv
 COPY ./pyproject.toml /app/
 COPY ./uv.lock /app/
 WORKDIR /app
-RUN uv install
+RUN uv sync
 
 COPY ./app /app
-WORKDIR /app
+COPY ./scripts /scripts
+ENV PATH="/app/.venv/bin:$PATH"
 
-CMD [ "pdm", "run", "fastapi", "run", "--host", "0.0.0.0" ]
+# Reset the entrypoint, don't invoke `uv`
+ENTRYPOINT []
+
+CMD [ "fastapi", "run", "--host", "0.0.0.0" ]
