@@ -47,7 +47,7 @@ npm install
 
 cd ../../llm-service
 pip install uv
-uv venv venv
+uv venv
 uv pip install -r pyproject.toml
 
 cd ..
