@@ -24,7 +24,7 @@ jobs:
         run: |
           uv python install 3.10
           uv venv --python 3.10
-          uv pip install -r pyproject.toml
+          uv sync
         working-directory: llm-service
 
       - name: Run ruff

@@ -63,10 +63,12 @@ mkdir -p databases
 docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 
 cd llm-service
-python3.10 -m venv venv
-source venv/bin/activate
-python -m pip install uv
-uv pip install -r pyproject.toml
+if [ -z "$USE_SYSTEM_UV" ]; then
+  python3.10 -m venv venv
+  source venv/bin/activate
+  python -m pip install uv
+fi
+uv sync
 uv run pytest -sxvvra
 
 uv run fastapi dev &
