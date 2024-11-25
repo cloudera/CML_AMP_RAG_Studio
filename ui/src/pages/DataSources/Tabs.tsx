@@ -113,13 +113,17 @@ const DataSourceVisualization = () => {
             },
             tooltip: {
               callbacks: {
-                label: function (context: any) {
+                title: function (context: any) {
                   console.log(context);
-                  return context.dataset.label;
+                  return context[0].dataset.label;
+                },
+                label: function () {
+                  return "";
                 },
               },
             },
           },
+          interaction: { mode: "dataset" },
         }}
       />
     </div>
