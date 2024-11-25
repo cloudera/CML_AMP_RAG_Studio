@@ -95,6 +95,7 @@ const DataSourceVisualization = () => {
       borderColor: colors[hashStringToIndex(label)],
       borderWidth: 1,
       pointHoverRadius: 8,
+      pointHoverBackgroundColor: "black",
     };
   });
 
