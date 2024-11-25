@@ -109,14 +109,11 @@ class QdrantVectorStore(VectorStore):
     def visualize(self):
         records: list[Record]
         records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
-        print(f"found {len(records)} points")
         filenames = [record.payload.get("file_name") for record in records]
-        print(f"first point: {filenames[0]} {records[0]}")
 
         import umap
         reducer = umap.UMAP()
         embeddings = [record.vector for record in records]
         reduced_embeddings = reducer.fit_transform(embeddings)
-        print(f"reduced to {reduced_embeddings.shape} points")
 
         return [(tuple(x), filenames[i]) for i, x in enumerate(reduced_embeddings.tolist())]

@@ -45,9 +45,6 @@ import { getVisualizeDataSource, Point2d } from "src/api/dataSourceApi.ts";
 import { useParams } from "@tanstack/react-router";
 import { Scatter } from "react-chartjs-2";
 import "chart.js/auto";
-import { hash } from "crypto";
-
-// Chart.register(ChartDataLabels);
 
 const DataSourceVisualization = () => {
   const dataSourceId = useParams({
@@ -97,11 +94,12 @@ const DataSourceVisualization = () => {
       backgroundColor: colors[hashStringToIndex(label)],
       borderColor: colors[hashStringToIndex(label)],
       borderWidth: 1,
+      pointHoverRadius: 8,
     };
   });
 
   return (
-    <div>
+    <Flex vertical align="center" justify="center">
       <Scatter
         data={{
           datasets: datasets,
@@ -112,9 +110,10 @@ const DataSourceVisualization = () => {
               display: false,
             },
             tooltip: {
+              enabled: true,
+              position: "nearest",
               callbacks: {
-                title: function (context: any) {
-                  console.log(context);
+                title: function (context) {
                   return context[0].dataset.label;
                 },
                 label: function () {
@@ -126,7 +125,7 @@ const DataSourceVisualization = () => {
           interaction: { mode: "dataset" },
         }}
       />
-    </div>
+    </Flex>
   );
 };
 
