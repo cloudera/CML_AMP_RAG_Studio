@@ -40,6 +40,87 @@ import { Flex, Tabs, TabsProps } from "antd";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx";
 import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { getVisualizeDataSource, Point2d } from "src/api/dataSourceApi.ts";
+import { useParams } from "@tanstack/react-router";
+import { Scatter } from "react-chartjs-2";
+import "chart.js/auto";
+
+// Chart.register(ChartDataLabels);
+
+const DataSourceVisualization = () => {
+  const dataSourceId = useParams({
+    from: "/_layout/data/_layout-datasources/$dataSourceId",
+  }).dataSourceId;
+  const { data, isPending } = useQuery(getVisualizeDataSource(dataSourceId));
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  const transformedData = data?.map((d: Point2d) => {
+    return { x: d[0][0], y: d[0][1], label: d[1] };
+  });
+
+  const colors = [
+    "rgba(255, 99, 132)",
+    "rgba(54, 162, 235)",
+    "rgba(255, 206, 86)",
+    "rgba(75, 192, 192)",
+    "rgba(153, 102, 255)",
+    "rgba(255, 159, 64)",
+    "rgba(199, 199, 199)",
+    "rgba(83, 102, 255)",
+    "rgba(255, 99, 255)",
+    "rgba(99, 255, 132)",
+  ];
+
+  const hashStringToIndex = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash % 10);
+  };
+
+  const datasets = colors.map((color, index) => {
+    return {
+      label: "",
+      data: [] as [number, number, string][],
+      backgroundColor: color,
+      borderColor: color,
+      borderWidth: 1,
+    };
+  });
+  transformedData?.forEach((d) => {
+    datasets[hashStringToIndex(d.label)].data.push([d.x, d.y, d.label]);
+  });
+
+  return (
+    <div>
+      <Scatter
+        data={{
+          datasets: datasets,
+        }}
+        options={{
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context: any) {
+                  console.log(context);
+                  return context.raw[2];
+                },
+              },
+            },
+          },
+        }}
+      />
+    </div>
+  );
+};
 
 export const tabItems: TabsProps["items"] = [
   {
@@ -56,6 +137,11 @@ export const tabItems: TabsProps["items"] = [
     key: "3",
     label: "Connections",
     children: <DataSourceConnections />,
+  },
+  {
+    key: "4",
+    label: "Visualize",
+    children: <DataSourceVisualization />,
   },
 ];
 

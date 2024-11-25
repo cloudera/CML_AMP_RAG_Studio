@@ -66,3 +66,6 @@ class VectorStore:
     @abstractmethod
     def exists(self) -> bool:
         """Does the vector store exist?"""
+
+    def visualize(self):
+        """get a 2-d visualization of the vectors in the store"""

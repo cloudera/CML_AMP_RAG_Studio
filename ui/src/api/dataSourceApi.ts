@@ -40,6 +40,7 @@ import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import {
   deleteRequest,
   getRequest,
+  llmServicePath,
   MutationKeys,
   paths,
   postRequest,
@@ -73,6 +74,8 @@ export type DataSourceType = DataSourceBaseType & {
   totalDocSize: number | null;
   documentCount: number;
 };
+
+export type Point2d = [[number, number], string];
 
 export const useCreateDataSourceMutation = ({
   onSuccess,
@@ -152,6 +155,21 @@ const getDataSourceByIdQuery = async (
   dataSourceId: string,
 ): Promise<DataSourceType> => {
   return await getRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
+};
+
+export const getVisualizeDataSource = (dataSourceId: string) => {
+  return queryOptions({
+    queryKey: [QueryKeys.getVisualizeDataSource, { dataSourceId }],
+    queryFn: () => getVisualizeDataSourceQuery(dataSourceId),
+  });
+};
+
+const getVisualizeDataSourceQuery = async (
+  dataSourceId: string,
+): Promise<Point2d[]> => {
+  return await getRequest(
+    `${llmServicePath}/data_sources/${dataSourceId}/visualize`,
+  );
 };
 
 export const getCdfConfigQuery = async (

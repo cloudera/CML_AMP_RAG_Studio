@@ -99,6 +99,12 @@ class DataSourceController:
             metadata=node.metadata,
         )
 
+    @router.get("/visualize")
+    @exceptions.propagates
+    def visualize(self) -> list:
+        return self.chunks_vector_store.visualize()
+
+
     @router.delete(
         "/", summary="Deletes the data source from the index.", response_model=None
     )

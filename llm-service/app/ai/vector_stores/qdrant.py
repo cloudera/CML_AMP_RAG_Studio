@@ -37,7 +37,7 @@
 #
 
 import os
-from typing import Optional
+from typing import Optional, List, Tuple, Any
 
 import qdrant_client
 from llama_index.core.indices import VectorStoreIndex
@@ -45,7 +45,7 @@ from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.qdrant import (
     QdrantVectorStore as LlamaIndexQdrantVectorStore,
 )
-from qdrant_client.http.models import CountResult
+from qdrant_client.http.models import CountResult, ScoredPoint, Record
 
 from ...services import models
 from .vector_store import VectorStore
@@ -105,3 +105,18 @@ class QdrantVectorStore(VectorStore):
     def llama_vector_store(self) -> BasePydanticVectorStore:
         vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
         return vector_store
+
+    def visualize(self):
+        records: list[Record]
+        records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
+        print(f"found {len(records)} points")
+        filenames = [record.payload.get("file_name") for record in records]
+        print(f"first point: {filenames[0]} {records[0]}")
+
+        import umap
+        reducer = umap.UMAP()
+        embeddings = [record.vector for record in records]
+        reduced_embeddings = reducer.fit_transform(embeddings)
+        print(f"reduced to {reduced_embeddings.shape} points")
+
+        return [(tuple(x), filenames[i]) for i, x in enumerate(reduced_embeddings.tolist())]
