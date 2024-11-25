@@ -45,6 +45,7 @@ import { getVisualizeDataSource, Point2d } from "src/api/dataSourceApi.ts";
 import { useParams } from "@tanstack/react-router";
 import { Scatter } from "react-chartjs-2";
 import "chart.js/auto";
+import { hash } from "crypto";
 
 // Chart.register(ChartDataLabels);
 
@@ -57,8 +58,14 @@ const DataSourceVisualization = () => {
     return <div>Loading...</div>;
   }
 
-  const transformedData = data?.map((d: Point2d) => {
-    return { x: d[0][0], y: d[0][1], label: d[1] };
+  const points: Record<string, [{ x: number; y: number }]> = {};
+
+  data?.forEach((d: Point2d) => {
+    if (d[1] in points) {
+      points[d[1]].push({ x: d[0][0], y: d[0][1] });
+    } else {
+      points[d[1]] = [{ x: d[0][0], y: d[0][1] }];
+    }
   });
 
   const colors = [
@@ -83,17 +90,14 @@ const DataSourceVisualization = () => {
     return Math.abs(hash % 10);
   };
 
-  const datasets = colors.map((color, index) => {
+  const datasets = Object.entries(points).map(([label, points]) => {
     return {
-      label: "",
-      data: [] as [number, number, string][],
-      backgroundColor: color,
-      borderColor: color,
+      label: label,
+      data: points,
+      backgroundColor: colors[hashStringToIndex(label)],
+      borderColor: colors[hashStringToIndex(label)],
       borderWidth: 1,
     };
-  });
-  transformedData?.forEach((d) => {
-    datasets[hashStringToIndex(d.label)].data.push([d.x, d.y, d.label]);
   });
 
   return (
@@ -111,7 +115,7 @@ const DataSourceVisualization = () => {
               callbacks: {
                 label: function (context: any) {
                   console.log(context);
-                  return context.raw[2];
+                  return context.dataset.label;
                 },
               },
             },
