@@ -78,7 +78,7 @@ const DataSourceVisualization = () => {
       dataSourceId: dataSourceId.toString(),
     });
   };
-  if (isPending || vectorData.length === 0) {
+  if (isPending || questionMutation.isPending || vectorData.length === 0) {
     return <div>Loading...</div>;
   }
 
