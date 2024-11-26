@@ -106,7 +106,7 @@ class QdrantVectorStore(VectorStore):
         vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
         return vector_store
 
-    def visualize(self, user_query: Optional[str] = None) -> list[tuple[tuple[float], str]]:
+    def visualize(self, user_query: Optional[str] = None) -> list[tuple[tuple[float, float], str]]:
         records: list[Record]
         records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
 
