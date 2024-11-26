@@ -86,7 +86,7 @@ const DataSourceVisualization = () => {
     <Flex vertical align="center" justify="center">
       <VectorGraph rawData={vectorData} />
       <Input
-        disabled={questionMutation.isPending || isPending}
+        disabled={questionMutation.isPending}
         style={{ width: 700 }}
         placeholder={"Try asking a question"}
         value={userInput}

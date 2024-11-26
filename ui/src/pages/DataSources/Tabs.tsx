@@ -45,17 +45,17 @@ import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSour
 
 export const tabItems: TabsProps["items"] = [
   {
-    key: "1",
+    key: "manage",
     label: "Manage",
     children: <FileManagement />,
   },
   {
-    key: "2",
+    key: "settings",
     label: "Index Settings",
     children: <IndexSettings />,
   },
   {
-    key: "3",
+    key: "connections",
     label: "Connections",
     children: <DataSourceConnections />,
   },
@@ -69,7 +69,7 @@ export const tabItems: TabsProps["items"] = [
 const DataSourcesTabs = () => {
   return (
     <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-      <Tabs defaultActiveKey="viz" items={tabItems} centered />
+      <Tabs defaultActiveKey="manage" items={tabItems} centered />
     </Flex>
   );
 };
