@@ -106,9 +106,15 @@ class QdrantVectorStore(VectorStore):
         vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
         return vector_store
 
-    def visualize(self):
+    def visualize(self, user_query: Optional[str] = None):
         records: list[Record]
         records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
+
+        if user_query:
+            embedding_model = models.get_embedding_model()
+            user_query_vector = embedding_model.get_query_embedding(user_query)
+            records.append(Record(vector=user_query_vector, id="abc123", payload={"file_name": "USER_QUERY"}))
+
         filenames = [record.payload.get("file_name") for record in records]
 
         import umap

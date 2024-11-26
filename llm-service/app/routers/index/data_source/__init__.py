@@ -99,10 +99,21 @@ class DataSourceController:
             metadata=node.metadata,
         )
 
+
     @router.get("/visualize")
     @exceptions.propagates
     def visualize(self) -> list:
         return self.chunks_vector_store.visualize()
+
+
+    class VisualizationRequest(BaseModel):
+        user_query: str
+
+
+    @router.post("/visualize")
+    @exceptions.propagates
+    def visualize_with_query(self, request: VisualizationRequest) -> list:
+        return self.chunks_vector_store.visualize(request.user_query)
 
 
     @router.delete(

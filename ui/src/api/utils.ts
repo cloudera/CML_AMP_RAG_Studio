@@ -67,6 +67,7 @@ export enum MutationKeys {
   "updateAmp" = "updateAmp",
   "testLlmModel" = "testLlmModel",
   "testEmbeddingModel" = "testEmbeddingModel",
+  "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
 }
 
 export enum QueryKeys {

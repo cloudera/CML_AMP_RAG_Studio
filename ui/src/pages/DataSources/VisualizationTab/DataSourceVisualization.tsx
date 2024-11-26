@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,42 +36,70 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Tabs, TabsProps } from "antd";
-import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
-import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx";
-import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
-import "chart.js/auto";
-import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
+import { useParams } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import {
+  getVisualizeDataSource,
+  Point2d,
+  useVisualizeDataSourceWithUserQuery,
+} from "src/api/dataSourceApi.ts";
+import { useQuery } from "@tanstack/react-query";
+import messageQueue from "src/utils/messageQueue.ts";
+import { Flex, Input } from "antd";
+import VectorGraph from "pages/DataSources/VisualizationTab/VectorGraph.tsx";
 
-export const tabItems: TabsProps["items"] = [
-  {
-    key: "1",
-    label: "Manage",
-    children: <FileManagement />,
-  },
-  {
-    key: "2",
-    label: "Index Settings",
-    children: <IndexSettings />,
-  },
-  {
-    key: "3",
-    label: "Connections",
-    children: <DataSourceConnections />,
-  },
-  {
-    key: "viz",
-    label: "Visualize",
-    children: <DataSourceVisualization />,
-  },
-];
+const DataSourceVisualization = () => {
+  const dataSourceId = useParams({
+    from: "/_layout/data/_layout-datasources/$dataSourceId",
+  }).dataSourceId;
+  const [userInput, setUserInput] = useState("");
+  const [vectorData, setVectorData] = useState<Point2d[]>([]);
 
-const DataSourcesTabs = () => {
+  const { data, isPending } = useQuery(getVisualizeDataSource(dataSourceId));
+
+  useEffect(() => {
+    if (data) {
+      setVectorData(data);
+    }
+  }, [data]);
+
+  const questionMutation = useVisualizeDataSourceWithUserQuery({
+    onSuccess: (result) => {
+      setVectorData(result);
+    },
+    onError: (res: Error) => {
+      messageQueue.error(res.toString());
+    },
+  });
+
+  const handleQuestion = (question: string) => {
+    questionMutation.mutate({
+      userQuery: question,
+      dataSourceId: dataSourceId.toString(),
+    });
+  };
+  if (isPending || vectorData.length === 0) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-      <Tabs defaultActiveKey="viz" items={tabItems} centered />
+    <Flex vertical align="center" justify="center">
+      <VectorGraph rawData={vectorData} />
+      <Input
+        style={{ width: 700 }}
+        placeholder={"Try asking a question"}
+        value={userInput}
+        onChange={(e) => {
+          setUserInput(e.target.value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleQuestion(userInput);
+          }
+        }}
+      />
     </Flex>
   );
 };
 
-export default DataSourcesTabs;
+export default DataSourceVisualization;

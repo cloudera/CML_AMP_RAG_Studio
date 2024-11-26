@@ -67,5 +67,6 @@ class VectorStore:
     def exists(self) -> bool:
         """Does the vector store exist?"""
 
-    def visualize(self):
+    @abstractmethod
+    def visualize(self, user_query: Optional[str] = None) -> list[[tuple[float], str]]:
         """get a 2-d visualization of the vectors in the store"""

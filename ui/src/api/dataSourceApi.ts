@@ -172,6 +172,32 @@ const getVisualizeDataSourceQuery = async (
   );
 };
 
+export const useVisualizeDataSourceWithUserQuery = ({
+  onSuccess,
+  onError,
+}: UseMutationType<Point2d[]>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.visualizeDataSourceWithUserQuery],
+    mutationFn: visualizeDataSourceWithUserQuery,
+    onSuccess,
+    onError,
+  });
+};
+
+export interface VisualizationRequest {
+  dataSourceId: string;
+  userQuery: string;
+}
+
+const visualizeDataSourceWithUserQuery = async (
+  request: VisualizationRequest,
+): Promise<Point2d[]> => {
+  return await postRequest(
+    `${llmServicePath}/data_sources/${request.dataSourceId}/visualize`,
+    { user_query: request.userQuery },
+  );
+};
+
 export const getCdfConfigQuery = async (
   dataSourceId: string,
 ): Promise<string> => {
