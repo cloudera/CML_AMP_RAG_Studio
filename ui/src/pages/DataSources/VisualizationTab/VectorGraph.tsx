@@ -71,19 +71,20 @@ const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
       hash = (hash << 5) - hash + str.charCodeAt(i);
       hash |= 0; // Convert to 32bit integer
     }
-    return Math.abs(hash % 10);
+    return Math.abs(hash % colors.length);
   };
+
+  const pickColor = (label: string) => colors[hashStringToIndex(label)];
 
   const vizDatasets: DataSets = Object.entries(points).map(
     ([label, points]) => {
       const userQuery = label === "USER_QUERY";
+      const color = pickColor(label);
       return {
         label: userQuery ? "User Query" : label,
         data: points,
-        backgroundColor: userQuery
-          ? "lightgray"
-          : colors[hashStringToIndex(label)],
-        borderColor: userQuery ? "black" : colors[hashStringToIndex(label)],
+        backgroundColor: userQuery ? "lightgray" : color,
+        borderColor: userQuery ? "black" : color,
         borderWidth: 1,
         pointStyle: userQuery ? "circle" : "circle",
         pointRadius: userQuery ? 15 : 3,

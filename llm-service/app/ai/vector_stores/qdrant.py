@@ -37,7 +37,7 @@
 #
 
 import os
-from typing import Optional, List, Tuple, Any
+from typing import Optional
 
 import qdrant_client
 from llama_index.core.indices import VectorStoreIndex
@@ -45,7 +45,7 @@ from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.qdrant import (
     QdrantVectorStore as LlamaIndexQdrantVectorStore,
 )
-from qdrant_client.http.models import CountResult, ScoredPoint, Record
+from qdrant_client.http.models import CountResult, Record
 
 from ...services import models
 from .vector_store import VectorStore
