@@ -102,7 +102,7 @@ class DataSourceController:
 
     @router.get("/visualize")
     @exceptions.propagates
-    def visualize(self) -> list:
+    def visualize(self) -> list[tuple[tuple[float], str]]:
         return self.chunks_vector_store.visualize()
 
 
@@ -112,7 +112,7 @@ class DataSourceController:
 
     @router.post("/visualize")
     @exceptions.propagates
-    def visualize_with_query(self, request: VisualizationRequest) -> list:
+    def visualize_with_query(self, request: VisualizationRequest) -> list[tuple[tuple[float], str]]:
         return self.chunks_vector_store.visualize(request.user_query)
 
 
