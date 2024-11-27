@@ -42,6 +42,8 @@ import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx"
 import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
 import "chart.js/auto";
 import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { useState } from "react";
 
 export const tabItems: TabsProps["items"] = [
   {
@@ -60,16 +62,33 @@ export const tabItems: TabsProps["items"] = [
     children: <DataSourceConnections />,
   },
   {
-    key: "viz",
+    key: "visualize",
     label: "Visualize",
     children: <DataSourceVisualization />,
   },
 ];
 
 const DataSourcesTabs = () => {
+  const navigate = useNavigate();
+  const router = useRouter();
+  const [activeTag, setActiveTag] = useState(
+    router.state.location.hash || "manage",
+  );
+
   return (
     <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-      <Tabs defaultActiveKey="manage" items={tabItems} centered />
+      <Tabs
+        defaultActiveKey="manage"
+        activeKey={activeTag}
+        items={tabItems}
+        centered
+        onChange={(key) => {
+          setActiveTag(key);
+          navigate({ hash: key }).catch((reason: unknown) => {
+            console.error(reason);
+          });
+        }}
+      />
     </Flex>
   );
 };
