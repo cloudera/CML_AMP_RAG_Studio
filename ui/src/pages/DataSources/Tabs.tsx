@@ -42,8 +42,8 @@ import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx"
 import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
 import "chart.js/auto";
 import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
-import { useNavigate, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 export const tabItems: TabsProps["items"] = [
   {
@@ -70,23 +70,35 @@ export const tabItems: TabsProps["items"] = [
 
 const DataSourcesTabs = () => {
   const navigate = useNavigate();
-  const router = useRouter();
-  const [activeTag, setActiveTag] = useState(
-    router.state.location.hash || "manage",
-  );
+  const location = useLocation();
+
+  const handleNav = (key: string) => {
+    navigate({ hash: key }).catch((reason: unknown) => {
+      console.error(reason);
+    });
+  };
+
+  useEffect(() => {
+    if (location.hash) {
+      const tabsIncludeHash = tabItems.find(
+        (item) => item.key === location.hash,
+      );
+
+      if (!tabsIncludeHash) {
+        handleNav("manage");
+      }
+    }
+  }, [location.hash, tabItems, navigate]);
 
   return (
     <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
       <Tabs
         defaultActiveKey="manage"
-        activeKey={activeTag}
+        activeKey={location.hash || "manage"}
         items={tabItems}
         centered
         onChange={(key) => {
-          setActiveTag(key);
-          navigate({ hash: key }).catch((reason: unknown) => {
-            console.error(reason);
-          });
+          handleNav(key);
         }}
       />
     </Flex>

@@ -41,6 +41,7 @@ import { Scatter } from "react-chartjs-2";
 import { ChartDataset, Point } from "chart.js";
 
 type DataSets = ChartDataset<"scatter", (number | Point | null)[]>[];
+
 const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
   const points: Record<string, [{ x: number; y: number }]> = {};
 
@@ -63,6 +64,16 @@ const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
     "rgba(83, 102, 255)",
     "rgba(255, 99, 255)",
     "rgba(99, 255, 132)",
+    "rgba(255, 99, 71)",
+    "rgba(60, 179, 113)",
+    "rgba(123, 104, 238)",
+    "rgba(255, 215, 0)",
+    "rgba(0, 191, 255)",
+    "rgba(255, 69, 0)",
+    "rgba(138, 43, 226)",
+    "rgba(0, 255, 127)",
+    "rgba(70, 130, 180)",
+    "rgba(255, 20, 147)",
   ];
 
   const hashStringToIndex = (str: string): number => {
@@ -111,9 +122,7 @@ const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
               title: function (context) {
                 return context[0].dataset.label;
               },
-              label: function () {
-                return "";
-              },
+              label: () => "",
             },
           },
         },
