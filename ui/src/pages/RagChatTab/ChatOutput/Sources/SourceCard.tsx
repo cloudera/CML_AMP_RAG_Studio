@@ -99,7 +99,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
           <Flex justify="center" vertical>
             <Flex vertical>
               <Typography.Title level={5} style={{ marginTop: 10 }}>
-                Generated document summary:
+                Generated document summary
               </Typography.Title>
               <Typography.Text>
                 {documentSummary.data ?? "No summary available"}
@@ -132,9 +132,11 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                   >
                     {chunkContents.data.text}
                   </Typography.Paragraph>
-                  <Typography.Title level={5} style={{ marginTop: 0 }}>
-                    Metadata
-                  </Typography.Title>
+                  {Object.keys(chunkContents.data.metadata).length && (
+                    <Typography.Title level={5} style={{ marginTop: 0 }}>
+                      Metadata
+                    </Typography.Title>
+                  )}
                   {chunkContents.data.metadata.row_number && (
                     <Typography.Text>
                       Row number: {chunkContents.data.metadata.row_number}

@@ -38,6 +38,7 @@
 
 import os
 from typing import Optional, Any
+import umap
 
 import qdrant_client
 from llama_index.core.indices import VectorStoreIndex
@@ -122,7 +123,6 @@ class QdrantVectorStore(VectorStore):
             if payload:
                 filenames.append(payload.get("file_name"))
 
-        import umap
         reducer = umap.UMAP()
         embeddings = [record.vector for record in records]
         reduced_embeddings = reducer.fit_transform(embeddings)

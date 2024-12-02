@@ -42,7 +42,45 @@ import { ChartDataset, Point } from "chart.js";
 
 type DataSets = ChartDataset<"scatter", (number | Point | null)[]>[];
 
-const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
+const colors = [
+  "rgba(255, 99, 132)",
+  "rgba(54, 162, 235)",
+  "rgba(255, 206, 86)",
+  "rgba(75, 192, 192)",
+  "rgba(153, 102, 255)",
+  "rgba(255, 159, 64)",
+  "rgba(199, 199, 199)",
+  "rgba(83, 102, 255)",
+  "rgba(255, 99, 255)",
+  "rgba(99, 255, 132)",
+  "rgba(255, 99, 71)",
+  "rgba(60, 179, 113)",
+  "rgba(123, 104, 238)",
+  "rgba(255, 215, 0)",
+  "rgba(0, 191, 255)",
+  "rgba(255, 69, 0)",
+  "rgba(138, 43, 226)",
+  "rgba(0, 255, 127)",
+  "rgba(70, 130, 180)",
+  "rgba(255, 20, 147)",
+];
+
+const hashStringToIndex = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return Math.abs(hash % colors.length);
+};
+
+const VectorGraph = ({
+  rawData,
+  userInput,
+}: {
+  rawData: Point2d[];
+  userInput: string;
+}) => {
   const points: Record<string, [{ x: number; y: number }]> = {};
 
   rawData.forEach((d: Point2d) => {
@@ -53,38 +91,6 @@ const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
     }
   });
 
-  const colors = [
-    "rgba(255, 99, 132)",
-    "rgba(54, 162, 235)",
-    "rgba(255, 206, 86)",
-    "rgba(75, 192, 192)",
-    "rgba(153, 102, 255)",
-    "rgba(255, 159, 64)",
-    "rgba(199, 199, 199)",
-    "rgba(83, 102, 255)",
-    "rgba(255, 99, 255)",
-    "rgba(99, 255, 132)",
-    "rgba(255, 99, 71)",
-    "rgba(60, 179, 113)",
-    "rgba(123, 104, 238)",
-    "rgba(255, 215, 0)",
-    "rgba(0, 191, 255)",
-    "rgba(255, 69, 0)",
-    "rgba(138, 43, 226)",
-    "rgba(0, 255, 127)",
-    "rgba(70, 130, 180)",
-    "rgba(255, 20, 147)",
-  ];
-
-  const hashStringToIndex = (str: string): number => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0; // Convert to 32bit integer
-    }
-    return Math.abs(hash % colors.length);
-  };
-
   const pickColor = (label: string) => colors[hashStringToIndex(label)];
 
   const vizDatasets: DataSets = Object.entries(points).map(
@@ -92,7 +98,7 @@ const VectorGraph = ({ rawData }: { rawData: Point2d[] }) => {
       const userQuery = label === "USER_QUERY";
       const color = pickColor(label);
       return {
-        label: userQuery ? "User Query" : label,
+        label: userQuery ? `Query: ${userInput}` : label,
         data: points,
         backgroundColor: userQuery ? "lightgray" : color,
         borderColor: userQuery ? "black" : color,
