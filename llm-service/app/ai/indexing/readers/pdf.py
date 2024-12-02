@@ -56,7 +56,7 @@ class PDFReader(BaseReader):
     def load_chunks(self, file_path: Path) -> list[TextNode]:
         logger.info(f"{file_path=}")
         f = open("output.txt", "w")
-        process: CompletedProcess[bytes] = subprocess.run(["docling", "-v", "--output=/home/cdsw", str(file_path)], stdout=f, stderr=f)
+        process: CompletedProcess[bytes] = subprocess.run(["docling", "-vv", "--output=/home/cdsw", str(file_path)], stdout=f, stderr=f)
         f.close()
         logger.info(f"hey done return code = {process.returncode}")
 
