@@ -36,8 +36,10 @@
 #  DATA.
 #
 import logging
+# import sys
 from pathlib import Path
 from subprocess import CompletedProcess
+# from subprocess import Popen
 from typing import Any
 import subprocess
 
@@ -55,7 +57,8 @@ class PDFReader(BaseReader):
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
         logger.info(f"{file_path=}")
-        process: CompletedProcess[bytes] = subprocess.run(["docling", "--output=/home/cdsw", str(file_path)])
+        process: CompletedProcess[bytes] = subprocess.run(["docling", "--help"])
+        # process: Popen[bytes] = subprocess.Popen([sys.executable, "docling", "--output=/home/cdsw", str(file_path)])
         logger.info(f"hey done return code = {process.returncode}")
 
         documents = self.inner.load_data(file_path)
