@@ -37,6 +37,7 @@
 #
 import logging
 from pathlib import Path
+from subprocess import CompletedProcess
 from typing import Any
 import subprocess
 
@@ -54,10 +55,9 @@ class PDFReader(BaseReader):
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
         logger.info(f"{file_path=}")
-        logger.info(subprocess.run(["docling", "--output=/home/cdsw", str(file_path)]))
-        logger.info("hey done")
-        ## one more experiment: try this with a GPU
-        
+        process: CompletedProcess[bytes] = subprocess.run(["docling", "--output=/home/cdsw", str(file_path)])
+        logger.info(f"hey done return code = {process.returncode}")
+
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
         document = documents[0]
