@@ -112,7 +112,7 @@ class PDFReader(BaseReader):
             process: CompletedProcess[bytes] = subprocess.run(
                 ["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
         logger.debug(f"docling return code = {process.returncode}")
-        # todo: look
+        # todo: figure out page numbers & look into the docling llama-index integration
         markdown_file_path = file_path.with_suffix(".md")
         if process.returncode == 0 and markdown_file_path.exists():
             # update chunk metadata to point at the original pdf
