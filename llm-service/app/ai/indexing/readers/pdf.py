@@ -40,6 +40,7 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Any
 import subprocess
+from .nop import NopReader
 
 from llama_index.core.schema import TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
@@ -52,14 +53,23 @@ class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=True)
+        self.markdown_reader = NopReader(*args, **kwargs)
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
         logger.info(f"{file_path=}")
-        f = open("output.txt", "w")
-        process: CompletedProcess[bytes] = subprocess.run(["docling", "-vv", "--output=/home/cdsw", str(file_path)], stdout=f, stderr=f)
-        f.close()
+        directory = file_path.parent
+        logger.info(f"{directory=}")
+        with open("output.txt", "a") as f:
+            process: CompletedProcess[bytes] = subprocess.run(["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
         logger.info(f"hey done return code = {process.returncode}")
-
+        markdown_file_path = file_path.with_suffix(".md")
+        if process.returncode == 0 and markdown_file_path.exists():
+            chunks = self.markdown_reader.load_chunks(markdown_file_path)
+            for chunk in chunks:
+                chunk.metadata["file_name"] = file_path.name
+            return chunks
+        else:
+            logger.info("Failed to convert pdf to markdown, falling back to pdf reader")
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
         document = documents[0]
