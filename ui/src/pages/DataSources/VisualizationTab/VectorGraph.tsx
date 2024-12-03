@@ -39,6 +39,7 @@
 import { Point2d } from "src/api/dataSourceApi.ts";
 import { Scatter } from "react-chartjs-2";
 import { ChartDataset, Point } from "chart.js";
+import { Skeleton } from "antd";
 
 type DataSets = ChartDataset<"scatter", (number | Point | null)[]>[];
 
@@ -77,9 +78,11 @@ const hashStringToIndex = (str: string): number => {
 const VectorGraph = ({
   rawData,
   userInput,
+  loading,
 }: {
   rawData: Point2d[];
   userInput: string;
+  loading: boolean;
 }) => {
   const points: Record<string, [{ x: number; y: number }]> = {};
 
@@ -111,11 +114,16 @@ const VectorGraph = ({
     },
   );
 
+  if (loading) {
+    return <Skeleton style={{ width: "100%", height: 400 }} active />;
+  }
+
   return (
     <Scatter
       data={{
         datasets: vizDatasets,
       }}
+      style={{ width: "100%" }}
       options={{
         plugins: {
           legend: {

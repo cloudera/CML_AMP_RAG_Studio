@@ -89,8 +89,8 @@ const DataSourceVisualization = () => {
 
   return (
     <Flex vertical align="center" justify="center">
-      <Flex>
-        <Typography.Title level={4} style={{ marginTop: 0 }}>
+      <Flex align="start">
+        <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 0 }}>
           2d Chunk Vector Projection{" "}
         </Typography.Title>
         <Tooltip
@@ -103,16 +103,12 @@ const DataSourceVisualization = () => {
           />
         </Tooltip>
       </Flex>
-      <Flex
-        align="center"
-        justify="center"
-        style={{ width: "100%", height: 500 }}
-      >
-        {loading ? (
-          <Spin />
-        ) : (
-          <VectorGraph rawData={vectorData} userInput={userInput} />
-        )}
+      <Flex align="center" justify="center">
+        <VectorGraph
+          rawData={vectorData}
+          userInput={userInput}
+          loading={loading}
+        />
       </Flex>
       <Input
         disabled={loading}
