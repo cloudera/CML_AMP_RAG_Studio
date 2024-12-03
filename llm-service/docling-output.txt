@@ -1,0 +1,582 @@
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 126673.61it/s]
+INFO:docling.pipeline.base_pipeline:Processing document GIG4KPPQWOAJKUY3724CODP2WSX5I2GF.pdf
+INFO:docling.document_converter:Finished converting document GIG4KPPQWOAJKUY3724CODP2WSX5I2GF.pdf in 4.23 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp2g3i9pwu/GIG4KPPQWOAJKUY3724CODP2WSX5I2GF.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.23 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 16920.10it/s]
+INFO:docling.pipeline.base_pipeline:Processing document SPOQ5FUVLA2ZM5ITKZRVFHCP3MGMBPEX.pdf
+INFO:docling.document_converter:Finished converting document SPOQ5FUVLA2ZM5ITKZRVFHCP3MGMBPEX.pdf in 4.55 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpyrh_7eu_/SPOQ5FUVLA2ZM5ITKZRVFHCP3MGMBPEX.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.55 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 120218.90it/s]
+INFO:docling.pipeline.base_pipeline:Processing document S2UVWECYPR7LVAESLI2OMTZOVVDIEP2S.pdf
+INFO:docling.document_converter:Finished converting document S2UVWECYPR7LVAESLI2OMTZOVVDIEP2S.pdf in 5.56 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp2f_es1t5/S2UVWECYPR7LVAESLI2OMTZOVVDIEP2S.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 5.57 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 19478.19it/s]
+INFO:docling.pipeline.base_pipeline:Processing document HQ3EDBUQ55MJVAAWB3KE7VYWLHAOXKRI.pdf
+INFO:docling.document_converter:Finished converting document HQ3EDBUQ55MJVAAWB3KE7VYWLHAOXKRI.pdf in 4.86 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp2sxpu61q/HQ3EDBUQ55MJVAAWB3KE7VYWLHAOXKRI.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.86 seconds.
+WARNING: /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpvuz3rq6k/DLCK2ZINQX5GZHWTO7CREF3XKDUSMXRQ.pdf: extraneous whitespace seen before xref
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 142987.64it/s]
+INFO:docling.pipeline.base_pipeline:Processing document DLCK2ZINQX5GZHWTO7CREF3XKDUSMXRQ.pdf
+INFO:docling.backend.docling_parse_backend:An error occurred when loading page 0 of document e3b1df864490efc4c9bcf51acbab69c162a49d8764dc789afd04bd8e90d6681d.
+INFO:docling.document_converter:Finished converting document DLCK2ZINQX5GZHWTO7CREF3XKDUSMXRQ.pdf in 3.02 sec.
+WARNING:docling.cli.main:Document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpvuz3rq6k/DLCK2ZINQX5GZHWTO7CREF3XKDUSMXRQ.pdf failed to convert.
+INFO:docling.cli.main:Processed 1 docs, of which 1 failed
+INFO:docling.cli.main:All documents were converted in 3.02 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 81005.87it/s]
+INFO:docling.pipeline.base_pipeline:Processing document GOHTUHFXHFLQENFPJ7LB5G55VNZTKH67.pdf
+INFO:docling.document_converter:Finished converting document GOHTUHFXHFLQENFPJ7LB5G55VNZTKH67.pdf in 4.95 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpq1urgeo4/GOHTUHFXHFLQENFPJ7LB5G55VNZTKH67.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.95 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 42130.29it/s]
+INFO:docling.pipeline.base_pipeline:Processing document WIXGOEH55ET7IKPZ7WA63JSQT6HB4PJR.pdf
+INFO:docling.document_converter:Finished converting document WIXGOEH55ET7IKPZ7WA63JSQT6HB4PJR.pdf in 7.20 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpkh7oumw2/WIXGOEH55ET7IKPZ7WA63JSQT6HB4PJR.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 7.20 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 195589.31it/s]
+INFO:docling.pipeline.base_pipeline:Processing document WI2VFTXLXSXQKDIARAOUUVVHAWB2UQT2.pdf
+INFO:docling.document_converter:Finished converting document WI2VFTXLXSXQKDIARAOUUVVHAWB2UQT2.pdf in 4.83 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp140rl_we/WI2VFTXLXSXQKDIARAOUUVVHAWB2UQT2.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.83 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 82782.32it/s]
+INFO:docling.pipeline.base_pipeline:Processing document CS7K5VMMTMSYHTHKLFYD7QC7EFIEPHKX.pdf
+INFO:docling.document_converter:Finished converting document CS7K5VMMTMSYHTHKLFYD7QC7EFIEPHKX.pdf in 8.26 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpx071s5up/CS7K5VMMTMSYHTHKLFYD7QC7EFIEPHKX.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 8.27 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 82601.17it/s]
+INFO:docling.pipeline.base_pipeline:Processing document U7OKI6X3E3WT4VGYZ3UEQHTPYGLID22Z.pdf
+INFO:docling.document_converter:Finished converting document U7OKI6X3E3WT4VGYZ3UEQHTPYGLID22Z.pdf in 4.02 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp6y7h12h7/U7OKI6X3E3WT4VGYZ3UEQHTPYGLID22Z.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.02 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 102300.10it/s]
+INFO:docling.pipeline.base_pipeline:Processing document 32PQ6TLRU26TDGA4NLYBMYEHYGX3X7US.pdf
+INFO:docling.document_converter:Finished converting document 32PQ6TLRU26TDGA4NLYBMYEHYGX3X7US.pdf in 3.66 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpxa9x3gzk/32PQ6TLRU26TDGA4NLYBMYEHYGX3X7US.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 3.66 seconds.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp1o0cbdp8/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 112347.43it/s]
+INFO:docling.pipeline.base_pipeline:Processing document B3LIWULH323OKSAJATTM7QK5O7KKYMCA.pdf
+WARNING: content stream objects stream 26 0 (content, offset 1348): parse error while reading object
+WARNING: content stream objects stream 27 0 (content, offset 94): treating unexpected array close token as null
+WARNING: content stream objects stream 27 0, content at offset 0: operation for array attempted on object of type string: treating as empty
+INFO:docling.document_converter:Finished converting document B3LIWULH323OKSAJATTM7QK5O7KKYMCA.pdf in 5.08 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp7d5wj3tt/B3LIWULH323OKSAJATTM7QK5O7KKYMCA.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 5.08 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 95808.97it/s]
+INFO:docling.pipeline.base_pipeline:Processing document 37RZ6AARR76UDY2JH4LRVGQBIPYUQ2A2.pdf
+INFO:docling.document_converter:Finished converting document 37RZ6AARR76UDY2JH4LRVGQBIPYUQ2A2.pdf in 3.58 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp_850ww6w/37RZ6AARR76UDY2JH4LRVGQBIPYUQ2A2.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 3.58 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 147456.00it/s]
+INFO:docling.pipeline.base_pipeline:Processing document QCZLJRXUA3KIQPMRQ4LSGYCNVTIK6PG4.pdf
+INFO:docling.document_converter:Finished converting document QCZLJRXUA3KIQPMRQ4LSGYCNVTIK6PG4.pdf in 3.62 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp6ekh4gnl/QCZLJRXUA3KIQPMRQ4LSGYCNVTIK6PG4.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 3.62 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 95808.97it/s]
+INFO:docling.pipeline.base_pipeline:Processing document LYCCADK4R374ZC4R4ROO5VZSQLHW4RPQ.pdf
+INFO:docling.document_converter:Finished converting document LYCCADK4R374ZC4R4ROO5VZSQLHW4RPQ.pdf in 4.98 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpgap54xy5/LYCCADK4R374ZC4R4ROO5VZSQLHW4RPQ.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.98 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 63872.65it/s]
+INFO:docling.pipeline.base_pipeline:Processing document U7DUK2J5PKLFHRD5VN7MWJWRF23MHANT.pdf
+INFO:docling.document_converter:Finished converting document U7DUK2J5PKLFHRD5VN7MWJWRF23MHANT.pdf in 3.65 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpb25jlcfa/U7DUK2J5PKLFHRD5VN7MWJWRF23MHANT.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 3.65 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 170039.35it/s]
+INFO:docling.pipeline.base_pipeline:Processing document POX3CR2EUHMC7IPGDNEHNTQOAV2ZQLHR.pdf
+INFO:docling.document_converter:Finished converting document POX3CR2EUHMC7IPGDNEHNTQOAV2ZQLHR.pdf in 4.14 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpvmuegm9x/POX3CR2EUHMC7IPGDNEHNTQOAV2ZQLHR.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.14 seconds.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpiuineul4/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp_0z7wk8a/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 39988.07it/s]
+INFO:docling.pipeline.base_pipeline:Processing document 53MPVZWCXMT55PDT4CQCJ2MN5JAKIAGV.pdf
+INFO:docling.document_converter:Finished converting document 53MPVZWCXMT55PDT4CQCJ2MN5JAKIAGV.pdf in 3.70 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp9hogmy7o/53MPVZWCXMT55PDT4CQCJ2MN5JAKIAGV.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 3.70 seconds.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpc5y4bm6g/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 173159.34it/s]
+INFO:docling.pipeline.base_pipeline:Processing document QKMKFZHDUXL4UT3XEH7MJU4V7AUZHBGO.pdf
+INFO:docling.document_converter:Finished converting document QKMKFZHDUXL4UT3XEH7MJU4V7AUZHBGO.pdf in 5.45 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp49ydsjxz/QKMKFZHDUXL4UT3XEH7MJU4V7AUZHBGO.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 5.45 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 48457.94it/s]
+INFO:docling.pipeline.base_pipeline:Processing document Travel Reservation June 24 for JOHN KISTLER WATSON.pdf
+INFO:docling.document_converter:Finished converting document Travel Reservation June 24 for JOHN KISTLER WATSON.pdf in 5.13 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpu8px2l2w/Travel Reservation June 24 for JOHN KISTLER WATSON.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 5.14 seconds.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpxbrqxmch/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 90742.15it/s]
+INFO:docling.pipeline.base_pipeline:Processing document KDLB3IO7SCHXPEJZJYXLBWTX2MTEUOS6.pdf
+INFO:docling.document_converter:Finished converting document KDLB3IO7SCHXPEJZJYXLBWTX2MTEUOS6.pdf in 5.72 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp_d_8i8_0/KDLB3IO7SCHXPEJZJYXLBWTX2MTEUOS6.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 5.72 seconds.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpl67yamqu/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmp560n4vxy/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpqoko7q_b/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+ERROR:docling.datamodel.document:An unexpected error occurred while opening the document 4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 120, in __init__
+    self._init_doc(backend, path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/datamodel/document.py", line 173, in _init_doc
+    self._backend = backend(self, path_or_stream=path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/backend/docling_parse_backend.py", line 194, in __init__
+    self._pdoc = pdfium.PdfDocument(self.path_or_stream)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 78, in __init__
+    self.raw, to_hold, to_close = _open_pdf(self._input, self._password, self._autoclose)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/pypdfium2/_helpers/document.py", line 678, in _open_pdf
+    raise PdfiumError(f"Failed to load document (PDFium: {pdfium_i.ErrorToStr.get(err_code)}).")
+pypdfium2._helpers.misc.PdfiumError: Failed to load document (PDFium: Incorrect password error).
+INFO:docling.document_converter:Going to convert document batch...
+Traceback (most recent call last):
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/bin/docling", line 8, in <module>
+    sys.exit(app())
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 338, in __call__
+    raise e
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 321, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 665, in main
+    return _main(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/core.py", line 197, in _main
+    rv = self.invoke(ctx)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/typer/main.py", line 703, in wrapper
+    return callback(**use_params)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 310, in convert
+    export_documents(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/cli/main.py", line 93, in export_documents
+    for conv_res in conv_results:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 189, in convert_all
+    for conv_res in conv_res_iter:
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 220, in _convert
+    for item in map(
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 264, in _process_document
+    conv_res = self._execute_pipeline(in_doc, raises_on_error=raises_on_error)
+  File "/Users/jwatson/code/cloudera/CML_AMP_RAG_Studio/llm-service/.venv/lib/python3.10/site-packages/docling/document_converter.py", line 287, in _execute_pipeline
+    raise RuntimeError(f"Input document {in_doc.file} is not valid.")
+RuntimeError: Input document /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpg98i1g0y/4GJGAIUVBMLM3W7O5SV4EKDNKC4DVOCL.pdf is not valid.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 70956.27it/s]
+INFO:docling.pipeline.base_pipeline:Processing document CenturyLink-November-bill.pdf
+2024-12-03 09:46:27.357 (   7.907s) [           9B0BF]    doc_normalisation.h:448   WARN| found new `other` type: checkbox-unselected
+2024-12-03 09:46:27.357 (   7.907s) [           9B0BF]    doc_normalisation.h:448   WARN| found new `other` type: checkbox-unselected
+INFO:docling.document_converter:Finished converting document CenturyLink-November-bill.pdf in 6.40 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpvwnkf77p/CenturyLink-November-bill.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 6.40 seconds.
+INFO:docling.document_converter:Going to convert document batch...
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 35312.19it/s]
+INFO:docling.pipeline.base_pipeline:Processing document CenturyLink-November-Payment.pdf
+INFO:docling.document_converter:Finished converting document CenturyLink-November-Payment.pdf in 4.75 sec.
+INFO:docling.cli.main:writing Markdown output to /var/folders/t9/cb6vgc592gbf6hcvpwx1dkcm0000gn/T/tmpsqidnnn4/CenturyLink-November-Payment.md
+INFO:docling.cli.main:Processed 1 docs, of which 0 failed
+INFO:docling.cli.main:All documents were converted in 4.75 seconds.

@@ -45,7 +45,7 @@ import {
 } from "src/api/dataSourceApi.ts";
 import { useQuery } from "@tanstack/react-query";
 import messageQueue from "src/utils/messageQueue.ts";
-import { Flex, Input } from "antd";
+import { Flex, Input, Spin, Typography } from "antd";
 import VectorGraph from "pages/DataSources/VisualizationTab/VectorGraph.tsx";
 
 const DataSourceVisualization = () => {
@@ -78,15 +78,26 @@ const DataSourceVisualization = () => {
       dataSourceId: dataSourceId.toString(),
     });
   };
-  if (isPending || questionMutation.isPending || vectorData.length === 0) {
-    return <div>Loading...</div>;
-  }
+  const loading =
+    isPending || questionMutation.isPending || vectorData.length === 0;
 
   return (
     <Flex vertical align="center" justify="center">
-      <VectorGraph rawData={vectorData} userInput={userInput} />
+      <Typography.Title level={4}>2d Chunk Vector Projection</Typography.Title>
+      <Typography.Title level={5}>Lorem Ipsem</Typography.Title>
+      <Flex
+        align="center"
+        justify="center"
+        style={{ width: "100%", height: 500 }}
+      >
+        {loading ? (
+          <Spin />
+        ) : (
+          <VectorGraph rawData={vectorData} userInput={userInput} />
+        )}
+      </Flex>
       <Input
-        disabled={questionMutation.isPending}
+        disabled={loading}
         style={{ width: 700 }}
         placeholder={"Try asking a question"}
         value={userInput}
