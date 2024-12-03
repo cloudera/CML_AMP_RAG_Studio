@@ -35,22 +35,34 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import logging
+import os
+import subprocess
 from pathlib import Path
-from typing import Any, List
+from subprocess import CompletedProcess
+from typing import Any
 
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from .base_reader import BaseReader
+from .simple_file import SimpleFileReader
+
+logger = logging.getLogger(__name__)
 
 
 class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=False)
+        self.markdown_reader = SimpleFileReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+    def load_chunks(self, file_path: Path) -> list[TextNode]:
+        logger.debug(f"{file_path=}")
+        chunks: list[TextNode] = self.process_with_docling(file_path)
+        if chunks:
+            return chunks
+
         pages = self.inner.load_data(file_path)
 
         page_labels = [page.metadata["page_label"] for page in pages]
@@ -88,3 +100,24 @@ class PDFReader(BaseReader):
                 chunk.metadata["page_label"] = chunk_label
 
         return chunks
+
+
+    def process_with_docling(self, file_path: Path) -> list[TextNode] | None:
+        docling_enabled = os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+        if not docling_enabled:
+            return None
+        directory = file_path.parent
+        logger.debug(f"{directory=}")
+        with open("docling-output.txt", "a") as f:
+            process: CompletedProcess[bytes] = subprocess.run(
+                ["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
+        logger.debug(f"docling return code = {process.returncode}")
+        # todo: figure out page numbers & look into the docling llama-index integration
+        markdown_file_path = file_path.with_suffix(".md")
+        if process.returncode == 0 and markdown_file_path.exists():
+            # update chunk metadata to point at the original pdf
+            chunks = self.markdown_reader.load_chunks(markdown_file_path)
+            for chunk in chunks:
+                chunk.metadata["file_name"] = file_path.name
+            return chunks
+        return None

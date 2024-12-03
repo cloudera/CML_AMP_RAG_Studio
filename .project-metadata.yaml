@@ -26,6 +26,10 @@ environment_variables:
         default: ""
         description: "AWS Secret Access Key"
         required: true
+    USE_ENHANCED_PDF_PROCESSING:
+        default: "false"
+        description: "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU is highly recommended to speed up the process."
+        required: false
     CAII_DOMAIN:
       default: ""
       description: "The domain of the CAII service. Setting this will enable CAII as the sole source for both inference and embedding models."
