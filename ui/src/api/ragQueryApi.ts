@@ -94,9 +94,14 @@ const suggestQuestionsQuery = async (
   );
 };
 
-interface ChunkContentsResponse {
+export interface ChunkMetadata {
+  row_number?: number;
+  page_label?: string;
+}
+
+export interface ChunkContentsResponse {
   text: string;
-  metadata: Record<string, string | number>;
+  metadata: ChunkMetadata;
 }
 
 interface ChunkContentsRequest {

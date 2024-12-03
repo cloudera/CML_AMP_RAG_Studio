@@ -44,6 +44,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock import Bedrock
+from llama_index.llms.bedrock.utils import BEDROCK_FOUNDATION_LLMS
 
 from .caii import get_caii_embedding_models, get_caii_llm_models
 from .caii import get_embedding_model as caii_embedding
@@ -67,7 +68,7 @@ def get_llm(model_name: str = None) -> LLM:
         )
     return Bedrock(
         model=model_name,
-        context_size=128000,
+        context_size=BEDROCK_FOUNDATION_LLMS.get(model_name, 8192),
         messages_to_prompt=messages_to_prompt,
         completion_to_prompt=completion_to_prompt,
     )

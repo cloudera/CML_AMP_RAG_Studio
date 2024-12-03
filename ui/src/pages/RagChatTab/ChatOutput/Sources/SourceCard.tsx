@@ -54,6 +54,7 @@ import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
+import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { dataSourceId } = useContext(RagChatContext);
@@ -132,21 +133,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                   >
                     {chunkContents.data.text}
                   </Typography.Paragraph>
-                  {Object.keys(chunkContents.data.metadata).length && (
-                    <Typography.Title level={5} style={{ marginTop: 0 }}>
-                      Metadata
-                    </Typography.Title>
-                  )}
-                  {chunkContents.data.metadata.row_number && (
-                    <Typography.Text>
-                      Row number: {chunkContents.data.metadata.row_number}
-                    </Typography.Text>
-                  )}
-                  {chunkContents.data.metadata.page_label && (
-                    <Typography.Text>
-                      Page label: {chunkContents.data.metadata.page_label}
-                    </Typography.Text>
-                  )}
+                  <MetaData metadata={chunkContents.data.metadata} />
                 </Flex>
               )
             )}
