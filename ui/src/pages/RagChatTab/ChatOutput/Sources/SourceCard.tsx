@@ -36,9 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useGetChunkContents } from "src/api/ragQueryApi.ts";
-import { useContext, useState } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import Icon from "@ant-design/icons";
 import {
   Alert,
   Card,
@@ -49,10 +47,12 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { useContext, useState } from "react";
 import { SourceNode } from "src/api/chatApi.ts";
+import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
-import Icon from "@ant-design/icons";
 import { cdlGray600 } from "src/cuix/variables.ts";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
@@ -122,16 +122,31 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 </div>
               </Flex>
             ) : (
-              <Flex vertical>
-                <Typography.Title level={5} style={{ marginTop: 10 }}>
-                  Extracted reference content
-                </Typography.Title>
-                <Typography.Paragraph
-                  style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-                >
-                  {chunkContents.data}
-                </Typography.Paragraph>
-              </Flex>
+              chunkContents.data && (
+                <Flex vertical>
+                  <Typography.Title level={5} style={{ marginTop: 10 }}>
+                    Extracted reference content
+                  </Typography.Title>
+                  <Typography.Paragraph
+                    style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
+                  >
+                    {chunkContents.data.text}
+                  </Typography.Paragraph>
+                  <Typography.Title level={5} style={{ marginTop: 0 }}>
+                    Metadata
+                  </Typography.Title>
+                  {chunkContents.data.metadata.row_number && (
+                    <Typography.Text>
+                      Row number: {chunkContents.data.metadata.row_number}
+                    </Typography.Text>
+                  )}
+                  {chunkContents.data.metadata.page_label && (
+                    <Typography.Text>
+                      Page label: {chunkContents.data.metadata.page_label}
+                    </Typography.Text>
+                  )}
+                </Flex>
+              )
             )}
           </Flex>
         </Card>

@@ -158,8 +158,6 @@ class TestDocumentIndexing:
             VectorStoreQuery(query_embedding=[0.2] * 1024)
         )
         assert len(vectors.nodes or []) == 1
-        print(document_id)
-        print("\n" * 10)
 
         response = client.delete(
             f"/data_sources/{data_source_id}/documents/{document_id}"

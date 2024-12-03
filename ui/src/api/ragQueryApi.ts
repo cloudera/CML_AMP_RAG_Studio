@@ -37,6 +37,7 @@
  ******************************************************************************/
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { QueryConfiguration } from "src/api/chatApi.ts";
 import {
   getRequest,
   llmServicePath,
@@ -44,7 +45,6 @@ import {
   postRequest,
   QueryKeys,
 } from "src/api/utils.ts";
-import { QueryConfiguration } from "src/api/chatApi.ts";
 
 export interface RagMessage {
   role: "user" | "assistant";
@@ -94,7 +94,10 @@ const suggestQuestionsQuery = async (
   );
 };
 
-type ChunkContents = string;
+interface ChunkContentsResponse {
+  text: string;
+  metadata: Record<string, string | number>;
+}
 
 interface ChunkContentsRequest {
   data_source_id: string;
@@ -110,7 +113,7 @@ export const useGetChunkContents = () => {
 
 const getChunkContents = async (
   request: ChunkContentsRequest,
-): Promise<ChunkContents> => {
+): Promise<ChunkContentsResponse> => {
   return getRequest(
     `${llmServicePath}/data_sources/${request.data_source_id}/chunks/${request.chunk_id}`,
   );
