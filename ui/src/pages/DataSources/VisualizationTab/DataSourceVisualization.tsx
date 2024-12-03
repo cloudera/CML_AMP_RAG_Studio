@@ -45,8 +45,14 @@ import {
 } from "src/api/dataSourceApi.ts";
 import { useQuery } from "@tanstack/react-query";
 import messageQueue from "src/utils/messageQueue.ts";
-import { Flex, Input, Spin, Typography } from "antd";
+import { Flex, Input, Spin, Tooltip, Typography } from "antd";
 import VectorGraph from "pages/DataSources/VisualizationTab/VectorGraph.tsx";
+import {
+  QuestionCircleFilled,
+  QuestionCircleOutlined,
+  QuestionCircleTwoTone,
+  QuestionOutlined,
+} from "@ant-design/icons";
 
 const DataSourceVisualization = () => {
   const dataSourceId = useParams({
@@ -83,8 +89,20 @@ const DataSourceVisualization = () => {
 
   return (
     <Flex vertical align="center" justify="center">
-      <Typography.Title level={4}>2d Chunk Vector Projection</Typography.Title>
-      <Typography.Title level={5}>Lorem Ipsem</Typography.Title>
+      <Flex>
+        <Typography.Title level={4} style={{ marginTop: 0 }}>
+          2d Chunk Vector Projection{" "}
+        </Typography.Title>
+        <Tooltip
+          title={
+            "UMAP (Uniform Manifold Approximation and Projection) is a novel manifold learning technique for dimension reduction. UMAP is constructed from a theoretical framework based in Riemannian geometry and algebraic topology. The result is a practical scalable algorithm that applies to real world data. The UMAP algorithm is competitive with t-SNE for visualization quality, and arguably preserves more of the global structure with superior run time performance. Furthermore, UMAP has no computational restrictions on embedding dimension, making it viable as a general purpose dimension reduction technique for machine learning."
+          }
+        >
+          <QuestionCircleOutlined
+            style={{ width: 14, paddingLeft: 2, marginTop: 0 }}
+          />
+        </Tooltip>
+      </Flex>
       <Flex
         align="center"
         justify="center"
