@@ -65,6 +65,8 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".md": NopReader,
     ".docx": DocxReader,
     ".pptx": PptxReader,
+    ".pptm": PptxReader,
+    ".ppt": PptxReader,
     ".csv": CSVReader,
     ".json": JSONReader,
 }
