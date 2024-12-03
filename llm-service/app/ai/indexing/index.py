@@ -53,15 +53,15 @@ from .readers.base_reader import BaseReader
 from .readers.csv import CSVReader
 from .readers.docx import DocxReader
 from .readers.json import JSONReader
-from .readers.nop import NopReader
+from .readers.simple_file import SimpleFileReader
 from .readers.pdf import PDFReader
 
 logger = logging.getLogger(__name__)
 
 READERS: Dict[str, Type[BaseReader]] = {
     ".pdf": PDFReader,
-    ".txt": NopReader,
-    ".md": NopReader,
+    ".txt": SimpleFileReader,
+    ".md": SimpleFileReader,
     ".docx": DocxReader,
     ".csv": CSVReader,
     ".json": JSONReader,

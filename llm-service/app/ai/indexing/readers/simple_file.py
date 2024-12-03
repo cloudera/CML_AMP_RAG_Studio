@@ -44,7 +44,7 @@ from llama_index.core.schema import Document, TextNode
 from .base_reader import BaseReader
 
 
-class NopReader(BaseReader):
+class SimpleFileReader(BaseReader):
     def load_chunks(self, file_path: Path) -> List[TextNode]:
         with open(file_path, "r") as f:
             document = Document(text=f.read())

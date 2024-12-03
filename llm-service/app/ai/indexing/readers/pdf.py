@@ -36,43 +36,58 @@
 #  DATA.
 #
 import logging
+import os
+import subprocess
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import Any
-import subprocess
-from .nop import NopReader
 
 from llama_index.core.schema import TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from .base_reader import BaseReader
+from .simple_file import SimpleFileReader
 
 logger = logging.getLogger(__name__)
+
 
 class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=True)
-        self.markdown_reader = NopReader(*args, **kwargs)
+        self.markdown_reader = SimpleFileReader(*args, **kwargs)
+
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
-        logger.info(f"{file_path=}")
-        directory = file_path.parent
-        logger.info(f"{directory=}")
-        with open("docling-output.txt", "a") as f:
-            process: CompletedProcess[bytes] = subprocess.run(["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
-        logger.info(f"docling return code = {process.returncode}")
-        markdown_file_path = file_path.with_suffix(".md")
-        if process.returncode == 0 and markdown_file_path.exists():
-            chunks = self.markdown_reader.load_chunks(markdown_file_path)
-            for chunk in chunks:
-                chunk.metadata["file_name"] = file_path.name
+        logger.debug(f"{file_path=}")
+        chunks: list[TextNode] = self.process_with_docling(file_path)
+        if chunks:
             return chunks
-        else:
-            logger.info("Failed to convert pdf to markdown, falling back to pdf reader")
+
+        logger.info("Failed to convert pdf to markdown, falling back to pdf reader")
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
         document = documents[0]
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
         return self._chunks_in_document(document)
+
+
+    def process_with_docling(self, file_path):
+        docling_enabled = os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+        if not docling_enabled:
+            return None
+        directory = file_path.parent
+        logger.debug(f"{directory=}")
+        with open("docling-output.txt", "a") as f:
+            process: CompletedProcess[bytes] = subprocess.run(
+                ["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
+        logger.debug(f"docling return code = {process.returncode}")
+        markdown_file_path = file_path.with_suffix(".md")
+        if process.returncode == 0 and markdown_file_path.exists():
+            # update chunk metadata to point at the original pdf
+            chunks = self.markdown_reader.load_chunks(markdown_file_path)
+            for chunk in chunks:
+                chunk.metadata["file_name"] = file_path.name
+            return chunks
+        return None
