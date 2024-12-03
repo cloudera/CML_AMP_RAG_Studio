@@ -115,7 +115,7 @@ const VectorGraph = ({
   );
 
   if (loading) {
-    return <Skeleton style={{ width: "100%", height: 400 }} active />;
+    return <Skeleton style={{ width: 700, height: 400 }} active />;
   }
 
   return (
@@ -123,7 +123,7 @@ const VectorGraph = ({
       data={{
         datasets: vizDatasets,
       }}
-      style={{ width: "100%" }}
+      style={{ width: 700 }}
       options={{
         plugins: {
           legend: {

@@ -45,14 +45,9 @@ import {
 } from "src/api/dataSourceApi.ts";
 import { useQuery } from "@tanstack/react-query";
 import messageQueue from "src/utils/messageQueue.ts";
-import { Flex, Input, Spin, Tooltip, Typography } from "antd";
+import { Flex, Input, Tooltip, Typography } from "antd";
 import VectorGraph from "pages/DataSources/VisualizationTab/VectorGraph.tsx";
-import {
-  QuestionCircleFilled,
-  QuestionCircleOutlined,
-  QuestionCircleTwoTone,
-  QuestionOutlined,
-} from "@ant-design/icons";
+import { QuestionCircleOutlined } from "@ant-design/icons";
 
 const DataSourceVisualization = () => {
   const dataSourceId = useParams({
@@ -88,14 +83,15 @@ const DataSourceVisualization = () => {
     isPending || questionMutation.isPending || vectorData.length === 0;
 
   return (
-    <Flex vertical align="center" justify="center">
-      <Flex align="start">
+    <Flex vertical align="center" justify="center" gap={20}>
+      <Flex align="start" style={{ marginTop: 10 }}>
         <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 0 }}>
           2d Chunk Vector Projection{" "}
         </Typography.Title>
         <Tooltip
+          overlayInnerStyle={{ width: 500 }}
           title={
-            "UMAP (Uniform Manifold Approximation and Projection) is a novel manifold learning technique for dimension reduction. UMAP is constructed from a theoretical framework based in Riemannian geometry and algebraic topology. The result is a practical scalable algorithm that applies to real world data. The UMAP algorithm is competitive with t-SNE for visualization quality, and arguably preserves more of the global structure with superior run time performance. Furthermore, UMAP has no computational restrictions on embedding dimension, making it viable as a general purpose dimension reduction technique for machine learning."
+            "This graph shows a 2d projection of the chunks of data. Each dot represents a chunk of data from a document, and they are organized in a way such that every document has a consistent color."
           }
         >
           <QuestionCircleOutlined
@@ -103,7 +99,7 @@ const DataSourceVisualization = () => {
           />
         </Tooltip>
       </Flex>
-      <Flex align="center" justify="center">
+      <Flex align="center" justify="center" style={{ width: "100%" }}>
         <VectorGraph
           rawData={vectorData}
           userInput={userInput}
@@ -112,8 +108,8 @@ const DataSourceVisualization = () => {
       </Flex>
       <Input
         disabled={loading}
-        style={{ width: 700 }}
-        placeholder={"Try asking a question"}
+        style={{ width: 700, margin: 20 }}
+        placeholder={"Ask a question to place it on the graph"}
         value={userInput}
         onChange={(e) => {
           setUserInput(e.target.value);
