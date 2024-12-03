@@ -39,21 +39,15 @@
 from llama_index.core.base.response.schema import Response
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator
-from llama_index.llms.bedrock import Bedrock
 
-from .llama_utils import completion_to_prompt, messages_to_prompt
+from ..services import models
 
 
 def evaluate_response(
-    query: str,
-    chat_response: AgentChatResponse,
+        query: str,
+        chat_response: AgentChatResponse,
 ) -> tuple[float, float]:
-    evaluator_llm = Bedrock(
-        model="meta.llama3-8b-instruct-v1:0",
-        context_size=128000,
-        messages_to_prompt=messages_to_prompt,
-        completion_to_prompt=completion_to_prompt,
-    )
+    evaluator_llm = models.get_llm("meta.llama3-8b-instruct-v1:0")
 
     relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
     relevance = relevancy_evaluator.evaluate_response(
