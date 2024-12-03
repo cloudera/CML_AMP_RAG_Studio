@@ -102,7 +102,7 @@ class PDFReader(BaseReader):
         return chunks
 
 
-    def process_with_docling(self, file_path):
+    def process_with_docling(self, file_path: Path) -> list[TextNode] | None:
         docling_enabled = os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         if not docling_enabled:
             return None
