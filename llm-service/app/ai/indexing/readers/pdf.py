@@ -59,9 +59,9 @@ class PDFReader(BaseReader):
         logger.info(f"{file_path=}")
         directory = file_path.parent
         logger.info(f"{directory=}")
-        with open("output.txt", "a") as f:
+        with open("docling-output.txt", "a") as f:
             process: CompletedProcess[bytes] = subprocess.run(["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
-        logger.info(f"hey done return code = {process.returncode}")
+        logger.info(f"docling return code = {process.returncode}")
         markdown_file_path = file_path.with_suffix(".md")
         if process.returncode == 0 and markdown_file_path.exists():
             chunks = self.markdown_reader.load_chunks(markdown_file_path)
