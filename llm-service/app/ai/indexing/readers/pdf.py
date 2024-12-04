@@ -51,7 +51,7 @@ from .simple_file import SimpleFileReader
 logger = logging.getLogger(__name__)
 
 
-class PageCounter:
+class PageTracker:
     def __init__(self, pages: List[Document]) -> None:
         self.page_numbers = [page.metadata["page_label"] for page in pages]
         self.page_contents: List[str] = [page.text for page in pages]
@@ -63,7 +63,7 @@ class PageCounter:
         self.document_text = "\n".join(self.page_contents)
         self.assert_correctness()
 
-    def assert_correctness(self):
+    def assert_correctness(self) -> None:
         # Check computation. Add 1 to length because we're assuming the last page would have the new line
         document_length = len(self.document_text)
         if self.page_start_index[-1] != document_length + 1:
@@ -100,7 +100,7 @@ class PDFReader(BaseReader):
             return chunks
 
         pages: list[Document] = self.inner.load_data(file_path)
-        page_counter = PageCounter(pages)
+        page_counter = PageTracker(pages)
         document = Document(text=page_counter.document_text)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
