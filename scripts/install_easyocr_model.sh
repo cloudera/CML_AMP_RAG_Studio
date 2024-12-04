@@ -38,8 +38,8 @@
 # DATA.
 #
 
-CRAFT_MLT_MODEL_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/untagged-066468eeaf9844e36b18/craft_mlt_25k.pth
-LATIN_G2_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/untagged-066468eeaf9844e36b18/latin_g2.pth
+CRAFT_MLT_MODEL_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth
+LATIN_G2_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth
 
 mkdir -p .EasyOCR/model
 cd .EasyOCR/model
