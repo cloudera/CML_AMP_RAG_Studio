@@ -40,6 +40,7 @@ import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import {
   deleteRequest,
   getRequest,
+  llmServicePath,
   MutationKeys,
   paths,
   postRequest,
@@ -73,6 +74,8 @@ export type DataSourceType = DataSourceBaseType & {
   totalDocSize: number | null;
   documentCount: number;
 };
+
+export type Point2d = [[number, number], string];
 
 export const useCreateDataSourceMutation = ({
   onSuccess,
@@ -152,6 +155,48 @@ const getDataSourceByIdQuery = async (
   dataSourceId: string,
 ): Promise<DataSourceType> => {
   return await getRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
+};
+
+export const getVisualizeDataSource = (dataSourceId: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.getVisualizeDataSource, { dataSourceId }],
+    queryFn: () => getVisualizeDataSourceQuery(dataSourceId),
+    staleTime: 1000 * 5 * 60,
+  });
+};
+
+const getVisualizeDataSourceQuery = async (
+  dataSourceId: string,
+): Promise<Point2d[]> => {
+  return await getRequest(
+    `${llmServicePath}/data_sources/${dataSourceId}/visualize`,
+  );
+};
+
+export const useVisualizeDataSourceWithUserQuery = ({
+  onSuccess,
+  onError,
+}: UseMutationType<Point2d[]>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.visualizeDataSourceWithUserQuery],
+    mutationFn: visualizeDataSourceWithUserQuery,
+    onSuccess,
+    onError,
+  });
+};
+
+export interface VisualizationRequest {
+  dataSourceId: string;
+  userQuery: string;
+}
+
+const visualizeDataSourceWithUserQuery = async (
+  request: VisualizationRequest,
+): Promise<Point2d[]> => {
+  return await postRequest(
+    `${llmServicePath}/data_sources/${request.dataSourceId}/visualize`,
+    { user_query: request.userQuery },
+  );
 };
 
 export const getCdfConfigQuery = async (

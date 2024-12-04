@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -56,6 +56,21 @@ class RagDataSourceServiceTest {
     String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url);
     assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
     assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");
+  }
+
+  @Test
+  void createDataSource() {
+    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    var ragDataSource =
+        ragDataSourceService.createRagDataSource(
+            TestData.createTestDataSourceInstance("test-name", 512, null, ConnectionType.MANUAL)
+                .withCreatedById("abc")
+                .withUpdatedById("abc"));
+    assertThat(ragDataSource).isNotNull();
+    assertThat(ragDataSource.name()).isEqualTo("test-name");
+    assertThat(ragDataSource.createdById()).isEqualTo("abc");
+    assertThat(ragDataSource.updatedById()).isEqualTo("abc");
+    assertThat(ragDataSource.chunkOverlapPercent()).isEqualTo(10);
   }
 
   @Test

@@ -44,113 +44,24 @@ from llama_index.core.chat_engine import CondenseQuestionChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
-from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.readers import SimpleDirectoryReader
 from llama_index.core.response_synthesizers import get_response_synthesizer
-from llama_index.core.storage import StorageContext
-from pydantic import BaseModel
 
-from . import rag_vector_store
+from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
-from .chat_store import RagContext
 from . import models
-from .utils import get_last_segment
+from .chat_store import RagContext
 
 logger = logging.getLogger(__name__)
 
 
-class RagIndexDocumentConfiguration(BaseModel):
-    # TODO: Add more params
-    chunk_size: int = 512  # this is llama-index's default
-    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
-
-
-def download_and_index(
-        tmpdirname: str,
-        data_source_id: int,
-        configuration: RagIndexDocumentConfiguration,
-        s3_document_key: str,
-):
-    try:
-        documents = SimpleDirectoryReader(tmpdirname).load_data()
-        document_id = get_last_segment(s3_document_key)
-        for document in documents:
-            document.id_ = document_id  # this is a terrible way to assign the doc id...
-            document.metadata["document_id"] = document_id
-    except Exception as e:
-        logger.error(
-            "error loading document from temporary directory %s",
-            tmpdirname,
-        )
-        raise HTTPException(
-            status_code=422,
-            detail=f"error loading document from temporary directory {tmpdirname}",
-        ) from e
-
-    logger.info("instantiating vector store")
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
-    logger.info("instantiated vector store")
-
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
-    chunk_overlap_tokens = int(
-        configuration.chunk_overlap * 0.01 * configuration.chunk_size
-    )
-
-    logger.info("indexing document")
-    VectorStoreIndex.from_documents(
-        documents,
-        storage_context=storage_context,
-        embed_model=models.get_embedding_model(),
-        show_progress=False,
-        transformations=[
-            SentenceSplitter(
-                chunk_size=configuration.chunk_size,
-                chunk_overlap=chunk_overlap_tokens,
-            ),
-        ],
-    )
-    logger.info("indexed document")
-
-
-def check_data_source_exists(data_source_size: int) -> None:
-    if data_source_size == -1:
-        raise HTTPException(status_code=404, detail="Knowledge base not found.")
-
-
-def size_of(data_source_id: int) -> int:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id)
-    return vector_store.size()
-
-
-def chunk_contents(data_source_id: int, chunk_id: str) -> str:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
-    node = vector_store.get_nodes([chunk_id])[0]
-    return node.get_content()
-
-
-def delete(data_source_id: int) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id)
-    vector_store.delete()
-
-
-def delete_document(data_source_id: int, document_id: str) -> None:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=models.get_embedding_model(),
-    )
-    index.delete_ref_doc(document_id)
-
-
 def query(
-        data_source_id: int,
-        query_str: str,
-        configuration: RagPredictConfiguration,
-        chat_history: list[RagContext],
+    data_source_id: int,
+    query_str: str,
+    configuration: RagPredictConfiguration,
+    chat_history: list[RagContext],
 ) -> AgentChatResponse:
-    vector_store = rag_vector_store.create_rag_vector_store(data_source_id).access_vector_store()
+    vector_store = QdrantVectorStore.for_chunks(data_source_id).llama_vector_store()
     embedding_model = models.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
@@ -161,21 +72,22 @@ def query(
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
-        embed_model=embedding_model, # is this needed, really, if it's in the index?
+        embed_model=embedding_model,  # is this needed, really, if it's in the index?
     )
     # TODO: factor out LLM and chat engine into a separate function
     llm = models.get_llm(model_name=configuration.model_name)
 
     response_synthesizer = get_response_synthesizer(llm=llm)
     query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer)
+        retriever=retriever, response_synthesizer=response_synthesizer
+    )
     chat_engine = CondenseQuestionChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
     )
 
     logger.info("querying chat engine")
-    chat_history = list(
+    chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
             chat_history,
@@ -183,7 +95,7 @@ def query(
     )
 
     try:
-        chat_response = chat_engine.chat(query_str, chat_history)
+        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response
     except botocore.exceptions.ClientError as error:
@@ -193,4 +105,3 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
-

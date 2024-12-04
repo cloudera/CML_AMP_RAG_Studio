@@ -135,7 +135,6 @@ const RagChatQueryInput = () => {
                   checkedChildren={<DatabaseFilled />}
                   value={!queryConfiguration.exclude_knowledge_base}
                   onChange={handleExcludeKnowledgeBase}
-                  style={{ display: "none" }} // note: disabled for now, until UX is ready
                 />
               </Tooltip>
             }

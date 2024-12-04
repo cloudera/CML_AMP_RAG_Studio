@@ -66,6 +66,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   private final Jdbi jdbi;
   private final RagBackendClient ragBackendClient;
   private final RagDataSourceRepository ragDataSourceRepository;
+  private final RagFileRepository ragFileRepository;
 
   @Autowired
   public RagFileIndexReconciler(
@@ -74,12 +75,14 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       RagBackendClient ragBackendClient,
       RagDataSourceRepository ragDataSourceRepository,
       @Qualifier("singleWorkerReconcilerConfig") ReconcilerConfig reconcilerConfig,
+      RagFileRepository ragFileRepository,
       OpenTelemetry openTelemetry) {
     super(reconcilerConfig, openTelemetry);
     this.bucketName = bucketName;
     this.jdbi = jdbi;
     this.ragBackendClient = ragBackendClient;
     this.ragDataSourceRepository = ragDataSourceRepository;
+    this.ragFileRepository = ragFileRepository;
   }
 
   @Override
@@ -106,6 +109,12 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   public ReconcileResult reconcile(Set<RagDocument> documents) {
     for (RagDocument document : documents) {
       log.info("starting indexing document: {}", document);
+      var currentDocumentState = ragFileRepository.findDocumentByDocumentId(document.documentId());
+      if (currentDocumentState.vectorUploadTimestamp() != null) {
+        log.info("Document already indexed: {}", document.filename());
+        continue;
+      }
+
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
       Instant updateTimestamp = indexFile(document, indexConfiguration);
       String updateSql =
@@ -150,6 +159,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
         RagBackendClient.createNull(),
         RagDataSourceRepository.createNull(),
         ReconcilerConfig.builder().isTestReconciler(true).build(),
+        RagFileRepository.createNull(),
         OpenTelemetry.noop());
   }
 }

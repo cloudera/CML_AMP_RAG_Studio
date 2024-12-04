@@ -1,4 +1,4 @@
-name: PR checks
+name: UI checks
 
 on:
   pull_request:
@@ -13,22 +13,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.BRANCH }}
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
-          cache-dependency-path: backend/build.gradle.kts
-
-      - name: Run Java backend tests
-        run: ./gradlew test
-        working-directory: backend
-
-      - name: Build with Gradle
-        run: ./gradlew build
-        working-directory: backend
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -57,21 +41,3 @@ jobs:
       - name: Build with PNPM
         run: pnpm build
         working-directory: ui
-
-      - name: Set up Python
-        uses: pdm-project/setup-pdm@v3
-        with:
-          python-version: '3.10'
-          cache: true
-          cache-dependency-path: 'llm-service/pdm.lock'
-
-      - name: Install Python dependencies
-        run: |
-          pdm install
-        working-directory: llm-service
-
-      - name: Test with pytest
-        run: |
-          pdm run pytest -sxvvra
-        working-directory: llm-service
-

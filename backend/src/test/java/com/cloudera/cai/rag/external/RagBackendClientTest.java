@@ -57,7 +57,7 @@ class RagBackendClientTest {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
     IndexConfiguration indexConfiguration = new IndexConfiguration(123, 2);
-    RagDocument document = indexRequest("s3Path", 1234L);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L);
 
     client.indexFile(document, "bucketName", indexConfiguration);
 
@@ -68,14 +68,15 @@ class RagBackendClientTest {
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
                 "http://rag-backend:8000/data_sources/" + 1234L + "/documents/download-and-index",
-                new RagBackendClient.IndexRequest("bucketName", "s3Path", indexConfiguration)));
+                new RagBackendClient.IndexRequest(
+                    "documentId", "bucketName", "s3Path", indexConfiguration)));
   }
 
   @Test
   void createSummary() {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
-    RagDocument document = indexRequest("s3Path", 1234L);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L);
 
     client.createSummary(document, "bucketName");
 
@@ -134,13 +135,25 @@ class RagBackendClientTest {
   void null_handlesThrowable() {
     RagBackendClient client =
         RagBackendClient.createNull(new Tracker<>(), new NotFound("not found"));
-    RagDocument document = indexRequest("s3Path", 1234L);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L);
     assertThatThrownBy(() -> client.indexFile(document, "fakeit", null))
         .isInstanceOf(NotFound.class);
   }
 
-  private static RagDocument indexRequest(String s3Path, Long dataSourceId) {
+  private static RagDocument indexRequest(String documentId, String s3Path, Long dataSourceId) {
     return new RagDocument(
-        null, null, dataSourceId, null, s3Path, null, null, null, null, null, null, null, null);
+        null,
+        null,
+        dataSourceId,
+        documentId,
+        s3Path,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 }

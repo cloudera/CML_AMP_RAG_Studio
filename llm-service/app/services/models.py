@@ -37,13 +37,14 @@
 #
 import os
 from enum import Enum
-from typing import Literal
+from typing import Any, Dict, List, Literal
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock import Bedrock
+from llama_index.llms.bedrock.utils import BEDROCK_FOUNDATION_LLMS
 
 from .caii import get_caii_embedding_models, get_caii_llm_models
 from .caii import get_embedding_model as caii_embedding
@@ -67,19 +68,19 @@ def get_llm(model_name: str = None) -> LLM:
         )
     return Bedrock(
         model=model_name,
-        context_size=128000,
+        context_size=BEDROCK_FOUNDATION_LLMS.get(model_name, 8192),
         messages_to_prompt=messages_to_prompt,
         completion_to_prompt=completion_to_prompt,
     )
 
 
-def get_available_embedding_models():
+def get_available_embedding_models() -> List[Dict[str, Any]]:
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
-def get_available_llm_models():
+def get_available_llm_models() -> List[Dict[str, Any]]:
     if is_caii_enabled():
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
@@ -90,7 +91,7 @@ def is_caii_enabled() -> bool:
     return len(domain) > 0
 
 
-def _get_bedrock_llm_models():
+def _get_bedrock_llm_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "meta.llama3-1-8b-instruct-v1:0",
@@ -107,7 +108,7 @@ def _get_bedrock_llm_models():
     ]
 
 
-def _get_bedrock_embedding_models():
+def _get_bedrock_embedding_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "cohere.embed-english-v3",

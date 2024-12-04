@@ -68,7 +68,8 @@ public class RagBackendClient {
               + "/data_sources/"
               + ragDocument.dataSourceId()
               + "/documents/download-and-index",
-          new IndexRequest(bucketName, ragDocument.s3Path(), configuration));
+          new IndexRequest(
+              ragDocument.documentId(), bucketName, ragDocument.s3Path(), configuration));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -97,6 +98,7 @@ public class RagBackendClient {
   }
 
   record IndexRequest(
+      @JsonProperty("document_id") String documentId,
       @JsonProperty("s3_bucket_name") String s3BucketName,
       @JsonProperty("s3_document_key") String s3DocumentKey,
       IndexConfiguration configuration) {}

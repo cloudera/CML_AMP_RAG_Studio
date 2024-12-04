@@ -1,0 +1,44 @@
+name: LLM checks
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.BRANCH }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "./llm-service/uv.lock"
+
+      - name: Install Python dependencies
+        run: |
+          uv python install 3.10
+          uv venv --python 3.10
+          uv sync
+        working-directory: llm-service
+
+      - name: Run ruff
+        run: |
+          uv run ruff check app
+        working-directory: llm-service
+
+      - name: Run mypy
+        run: |
+          uv run mypy app
+        working-directory: llm-service
+
+      - name: Test with pytest
+        run: |
+          uv run pytest -sxvvra
+        working-directory: llm-service
+

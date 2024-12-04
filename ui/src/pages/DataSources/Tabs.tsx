@@ -40,29 +40,68 @@ import { Flex, Tabs, TabsProps } from "antd";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx";
 import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
+import "chart.js/auto";
+import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 export const tabItems: TabsProps["items"] = [
   {
-    key: "1",
+    key: "manage",
     label: "Manage",
     children: <FileManagement />,
   },
   {
-    key: "2",
+    key: "settings",
     label: "Index Settings",
     children: <IndexSettings />,
   },
   {
-    key: "3",
+    key: "connections",
     label: "Connections",
     children: <DataSourceConnections />,
+  },
+  {
+    key: "visualize",
+    label: "Visualize",
+    children: <DataSourceVisualization />,
+    destroyInactiveTabPane: true,
   },
 ];
 
 const DataSourcesTabs = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNav = (key: string) => {
+    navigate({ hash: key }).catch((reason: unknown) => {
+      console.error(reason);
+    });
+  };
+
+  useEffect(() => {
+    if (location.hash) {
+      const tabsIncludeHash = tabItems.find(
+        (item) => item.key === location.hash,
+      );
+
+      if (!tabsIncludeHash) {
+        handleNav("manage");
+      }
+    }
+  }, [location.hash, tabItems, navigate]);
+
   return (
     <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-      <Tabs defaultActiveKey="1" items={tabItems} centered />
+      <Tabs
+        defaultActiveKey="manage"
+        activeKey={location.hash || "manage"}
+        items={tabItems}
+        centered
+        onChange={(key) => {
+          handleNav(key);
+        }}
+      />
     </Flex>
   );
 };

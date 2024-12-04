@@ -67,6 +67,7 @@ export enum MutationKeys {
   "updateAmp" = "updateAmp",
   "testLlmModel" = "testLlmModel",
   "testEmbeddingModel" = "testEmbeddingModel",
+  "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
 }
 
 export enum QueryKeys {
@@ -83,6 +84,7 @@ export enum QueryKeys {
   "getLlmModels" = "getLlmModels",
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
+  "getVisualizeDataSource" = "getVisualizeDataSource",
 }
 
 export const commonHeaders = {

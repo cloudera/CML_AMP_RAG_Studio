@@ -99,6 +99,9 @@ class RagFileIndexReconcilerTest {
         .isNull();
 
     reconciler.submit(document.withId(id));
+    // add a copy that has already been indexed to make sure we don't try to re-index with
+    // long-running index jobs
+    reconciler.submit(document.withId(id).withVectorUploadTimestamp(Instant.now()));
     await().until(reconciler::isEmpty);
     await()
         .untilAsserted(
@@ -108,6 +111,7 @@ class RagFileIndexReconcilerTest {
               assertThat(updatedDocument.vectorUploadTimestamp()).isNotNull();
             });
     assertThat(requestTracker.getValues())
+        .hasSize(1)
         .contains(
             new RagBackendClient.TrackedRequest<>(
                 new TrackedIndexRequest(
@@ -177,6 +181,7 @@ class RagFileIndexReconcilerTest {
             RagBackendClient.createNull(tracker, exceptions),
             RagDataSourceRepository.createNull(),
             reconcilerConfig,
+            RagFileRepository.createNull(),
             OpenTelemetry.noop());
     reconciler.init();
     return reconciler;

@@ -38,9 +38,12 @@
 
 import time
 import uuid
+from typing import List
 
 from llama_index.core.base.llms.types import MessageRole
+from llama_index.core.chat_engine.types import AgentChatResponse
 
+from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 from . import evaluators, qdrant
 from .chat_store import (
@@ -59,7 +62,7 @@ def v2_chat(
     configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
     response_id = str(uuid.uuid4())
-    if qdrant.size_of(data_source_id) == 0:
+    if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
             source_nodes=[],
@@ -96,9 +99,9 @@ def v2_chat(
     return new_chat_message
 
 
-def retrieve_chat_history(session_id) -> list[RagContext]:
+def retrieve_chat_history(session_id: int) -> List[RagContext]:
     chat_history = chat_store.retrieve_chat_history(session_id)[:10]
-    history: [RagContext] = list()
+    history: List[RagContext] = []
     for message in chat_history:
         history.append(
             RagContext(role=MessageRole.USER, content=message.rag_message["user"])
@@ -111,7 +114,7 @@ def retrieve_chat_history(session_id) -> list[RagContext]:
     return history
 
 
-def format_source_nodes(response):
+def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:
         doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
@@ -120,7 +123,7 @@ def format_source_nodes(response):
                 node_id=source_node.node.node_id,
                 doc_id=doc_id,
                 source_file_name=source_node.node.metadata["file_name"],
-                score=source_node.score,
+                score=source_node.score or 0.0,
             )
         )
     response_source_nodes = sorted(
@@ -130,8 +133,11 @@ def format_source_nodes(response):
 
 
 def generate_suggested_questions(
-    configuration, data_source_id, data_source_size, session_id
-):
+    configuration: RagPredictConfiguration,
+    data_source_id: int,
+    data_source_size: int,
+    session_id: int,
+) -> List[str]:
     chat_history = retrieve_chat_history(session_id)
     if data_source_size == 0:
         suggested_questions = []

@@ -46,8 +46,9 @@ cd ui/express
 npm install
 
 cd ../../llm-service
-pip install pdm
-pdm install -v
+pip install uv
+
+uv sync
 
 cd ..
 mkdir -p artifacts

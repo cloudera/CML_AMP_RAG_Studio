@@ -51,7 +51,7 @@ public class TestData {
   public static Types.RagDataSource createTestDataSourceInstance(
       String name,
       Integer chunkSize,
-      int chunkOverlapPercent,
+      Integer chunkOverlapPercent,
       Types.ConnectionType connectionType) {
     return new Types.RagDataSource(
         null,

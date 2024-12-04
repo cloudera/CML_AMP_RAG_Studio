@@ -36,13 +36,37 @@
 #  DATA.
 #
 
-from .rag_qdrant_vector_store import RagQdrantVectorStore
-from .vector_store import VectorStore
+from abc import abstractmethod
+from typing import Optional
+
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
 
-def create_rag_vector_store(data_source_id: int) -> VectorStore:
-    return RagQdrantVectorStore(table_name=f"index_{data_source_id}")
+class VectorStore:
+    """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
 
-def create_summary_vector_store(data_source_id: int) -> VectorStore:
-    return RagQdrantVectorStore(table_name=f"summary_index_{data_source_id}")
+    @abstractmethod
+    def size(self) -> Optional[int]:
+        """
+        If the collection does not exist, return None
+        """
 
+    @abstractmethod
+    def delete(self) -> None:
+        """Delete the vector store"""
+
+    @abstractmethod
+    def delete_document(self, document_id: str) -> None:
+        """Delete a single document from the vector store"""
+
+    @abstractmethod
+    def llama_vector_store(self) -> BasePydanticVectorStore:
+        """Access the underlying llama-index vector store implementation"""
+
+    @abstractmethod
+    def exists(self) -> bool:
+        """Does the vector store exist?"""
+
+    @abstractmethod
+    def visualize(self, user_query: Optional[str] = None) -> list[tuple[tuple[float,float], str]]:
+        """get a 2-d visualization of the vectors in the store"""

@@ -1,4 +1,4 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,5 +34,26 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
+from pathlib import Path
+from typing import Any, List
+
+from llama_index.core.schema import TextNode
+from llama_index.readers.file import DocxReader as LlamaIndexDocxReader
+
+from .base_reader import BaseReader
+
+
+class DocxReader(BaseReader):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.inner = LlamaIndexDocxReader()
+
+    def load_chunks(self, file_path: Path) -> List[TextNode]:
+        documents = self.inner.load_data(file_path)
+        assert len(documents) == 1
+        document = documents[0]
+        document.id_ = self.document_id
+        self._add_document_metadata(document, file_path)
+        return self._chunks_in_document(document)

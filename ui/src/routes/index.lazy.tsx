@@ -45,7 +45,6 @@ const Home = () => {
   const dataSources = useSuspenseQuery(getDataSourcesQueryOptions);
 
   if (dataSources.data.length === 0) {
-    console.log("loading getting started");
     return <GettingStarted />;
   }
   return <Navigate to="/sessions" />;

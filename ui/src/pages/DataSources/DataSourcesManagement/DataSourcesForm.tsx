@@ -109,7 +109,7 @@ export const dataSourceCreationInitialValues = {
   name: "",
   chunkSize: 512,
   connectionType: ConnectionType.MANUAL,
-  chunkOverlapPercent: 0,
+  chunkOverlapPercent: 10,
 };
 
 export interface DataSourcesFormProps {

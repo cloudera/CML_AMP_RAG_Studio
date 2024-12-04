@@ -61,7 +61,7 @@ qdrant/qdrant &
 
 # start Python backend
 cd llm-service
-pdm run fastapi run --host 127.0.0.1 --port 8081 &
+uv run fastapi run --host 127.0.0.1 --port 8081 &
 
 # start up the jarva
 cd ..
