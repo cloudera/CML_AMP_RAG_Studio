@@ -60,8 +60,8 @@ class PageCounter:
             # The number of characters from the start of the document to that page (add one for the newline)
             start_of_page = self.page_start_index[-1] + len(text) + 1
             self.page_start_index.append(start_of_page)
-        self.assert_correctness()
         self.document_text = "\n".join(self.page_contents)
+        self.assert_correctness()
 
     def assert_correctness(self):
         # Check computation. Add 1 to length because we're assuming the last page would have the new line
@@ -79,7 +79,7 @@ class PageCounter:
                 break
         return last_good_page_number
 
-    def populate_chunk_page_numbers(self, chunks):
+    def populate_chunk_page_numbers(self, chunks: List[TextNode]) -> None:
         for chunk in chunks:
             chunk_start = chunk.start_char_idx
             if chunk_start is not None:
