@@ -81,7 +81,7 @@ public class Types {
       Long id,
       String name,
       Integer chunkSize,
-      int chunkOverlapPercent,
+      Integer chunkOverlapPercent,
       Instant timeCreated,
       Instant timeUpdated,
       String createdById,

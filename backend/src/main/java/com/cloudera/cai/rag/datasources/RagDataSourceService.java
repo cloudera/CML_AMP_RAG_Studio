@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -53,6 +53,9 @@ public class RagDataSourceService {
   }
 
   public RagDataSource createRagDataSource(RagDataSource input) {
+    if (input.chunkOverlapPercent() == null) {
+      input = input.withChunkOverlapPercent(10);
+    }
     var id =
         ragDataSourceRepository.createRagDataSource(
             input.withCreatedById(input.createdById()).withUpdatedById(input.updatedById()));

@@ -69,7 +69,7 @@ const MetaData = ({
       {hasMetadata ? (
         <>
           <MetaDataItem label="Row number" value={metadata.row_number} />
-          <MetaDataItem label="Page label" value={metadata.page_number} />
+          <MetaDataItem label="Page number" value={metadata.page_number} />
         </>
       ) : (
         <Typography.Text type={"secondary"}>N/A</Typography.Text>
