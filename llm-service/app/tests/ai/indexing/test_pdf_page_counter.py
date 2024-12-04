@@ -36,7 +36,9 @@ class TestPageCounter:
     def test_populates_chunk_page_numbers():
         pages = [Document(text="Page 1", metadata={"page_label": "1"}), Document(text="Page 2", metadata={"page_label": "2"})]
         page_counter = PageCounter(pages)
-        chunks = [TextNode(start_char_idx=0), TextNode(start_char_idx=7)]
+        chunks = [TextNode(start_char_idx=0), TextNode(start_char_idx=4), TextNode(start_char_idx=7), TextNode(start_char_idx=10)]
         page_counter.populate_chunk_page_numbers(chunks)
         assert chunks[0].metadata["page_number"] == "1"
-        assert chunks[1].metadata["page_number"] == "2"
+        assert chunks[1].metadata["page_number"] == "1"
+        assert chunks[2].metadata["page_number"] == "2"
+        assert chunks[3].metadata["page_number"] == "2"
