@@ -98,8 +98,7 @@ const FileManagement: React.FC = () => {
         );
       }
     },
-    onError: (promises) => {
-      console.log(promises);
+    onError: () => {
       messageQueue.error("upload failed.");
     },
   });
