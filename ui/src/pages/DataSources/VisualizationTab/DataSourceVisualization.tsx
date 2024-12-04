@@ -43,7 +43,6 @@ import {
   Point2d,
   useVisualizeDataSourceWithUserQuery,
 } from "src/api/dataSourceApi.ts";
-import { useQuery } from "@tanstack/react-query";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Flex, Input, Tooltip, Typography } from "antd";
 import VectorGraph from "pages/DataSources/VisualizationTab/VectorGraph.tsx";
@@ -56,7 +55,7 @@ const DataSourceVisualization = () => {
   const [userInput, setUserInput] = useState("");
   const [vectorData, setVectorData] = useState<Point2d[]>([]);
 
-  const { data, isPending } = useQuery(getVisualizeDataSource(dataSourceId));
+  const { data, isPending } = getVisualizeDataSource(dataSourceId);
 
   useEffect(() => {
     if (data) {
@@ -79,14 +78,13 @@ const DataSourceVisualization = () => {
       dataSourceId: dataSourceId.toString(),
     });
   };
-  const loading =
-    isPending || questionMutation.isPending || vectorData.length === 0;
+  const loading = isPending || questionMutation.isPending;
 
   return (
     <Flex vertical align="center" justify="center" gap={20}>
       <Flex align="start" style={{ marginTop: 10 }}>
         <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 0 }}>
-          2d Chunk Vector Projection{" "}
+          2d Chunk Vector Projection
         </Typography.Title>
         <Tooltip
           overlayInnerStyle={{ width: 500 }}
@@ -100,14 +98,20 @@ const DataSourceVisualization = () => {
         </Tooltip>
       </Flex>
       <Flex align="center" justify="center" style={{ width: "100%" }}>
-        <VectorGraph
-          rawData={vectorData}
-          userInput={userInput}
-          loading={loading}
-        />
+        {vectorData.length === 0 ? (
+          <Typography.Text type="secondary" style={{ height: 400 }}>
+            No visualization available
+          </Typography.Text>
+        ) : (
+          <VectorGraph
+            rawData={vectorData}
+            userInput={userInput}
+            loading={loading}
+          />
+        )}
       </Flex>
       <Input
-        disabled={loading}
+        disabled={loading || vectorData.length === 0}
         style={{ width: 700, margin: 20 }}
         placeholder={"Ask a question to place it on the graph"}
         value={userInput}

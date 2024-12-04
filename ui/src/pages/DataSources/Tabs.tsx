@@ -65,6 +65,7 @@ export const tabItems: TabsProps["items"] = [
     key: "visualize",
     label: "Visualize",
     children: <DataSourceVisualization />,
+    destroyInactiveTabPane: true,
   },
 ];
 

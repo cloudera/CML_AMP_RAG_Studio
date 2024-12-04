@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import logging
 import os
 from typing import Optional, Any
 import umap
@@ -50,6 +50,8 @@ from qdrant_client.http.models import CountResult, Record
 
 from .vector_store import VectorStore
 from ...services import models
+
+logger = logging.getLogger(__name__)
 
 
 def new_qdrant_client() -> qdrant_client.QdrantClient:
@@ -109,8 +111,12 @@ class QdrantVectorStore(VectorStore):
 
     def visualize(self, user_query: Optional[str] = None) -> list[tuple[tuple[float, float], str]]:
         records: list[Record]
+        if not self.exists():
+            return []
         records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
-
+        # trap an edge case where there are no records and umap blows up
+        if len(records) <= 2:
+            return []
         if user_query:
             embedding_model = models.get_embedding_model()
             user_query_vector = embedding_model.get_query_embedding(user_query)
@@ -125,7 +131,11 @@ class QdrantVectorStore(VectorStore):
 
         reducer = umap.UMAP()
         embeddings = [record.vector for record in records]
-        reduced_embeddings = reducer.fit_transform(embeddings)
-
-        # todo: figure out how to satisfy mypy on this line
-        return [(tuple(coordinate), filenames[i]) for i, coordinate in enumerate(reduced_embeddings.tolist())] # type: ignore
+        try:
+            reduced_embeddings = reducer.fit_transform(embeddings)
+            # todo: figure out how to satisfy mypy on this line
+            return [(tuple(coordinate), filenames[i]) for i, coordinate in enumerate(reduced_embeddings.tolist())] # type: ignore
+        except Exception as e:
+            # Log the error
+            logger.error(f"Error during UMAP transformation: {e}")
+            return []

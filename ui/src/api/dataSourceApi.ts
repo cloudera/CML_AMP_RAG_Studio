@@ -158,9 +158,10 @@ const getDataSourceByIdQuery = async (
 };
 
 export const getVisualizeDataSource = (dataSourceId: string) => {
-  return queryOptions({
+  return useQuery({
     queryKey: [QueryKeys.getVisualizeDataSource, { dataSourceId }],
     queryFn: () => getVisualizeDataSourceQuery(dataSourceId),
+    staleTime: 1000 * 5 * 60,
   });
 };
 

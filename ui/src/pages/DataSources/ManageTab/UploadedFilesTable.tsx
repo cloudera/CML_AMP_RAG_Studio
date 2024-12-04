@@ -47,7 +47,7 @@ import {
   Typography,
 } from "antd";
 import { useParams } from "@tanstack/react-router";
-import {
+import Icon, {
   CheckCircleOutlined,
   DeleteOutlined,
   LoadingOutlined,
@@ -92,7 +92,7 @@ function SummaryPopover({
       open={visible && documentSummary.isSuccess}
       onOpenChange={setVisible}
     >
-      <DocumentationIcon style={{ height: 20, width: 20 }} />
+      <Icon component={DocumentationIcon} style={{ fontSize: 20 }} />
     </Popover>
   );
 }
@@ -117,7 +117,7 @@ const columns = (
           </Flex>
         }
       >
-        <AiAssistantIcon />
+        <Icon component={AiAssistantIcon} style={{ fontSize: 20 }} />
       </Tooltip>
     ),
     dataIndex: "summaryCreationTimestamp",
