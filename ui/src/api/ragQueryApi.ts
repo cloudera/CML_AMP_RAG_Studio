@@ -96,7 +96,7 @@ const suggestQuestionsQuery = async (
 
 export interface ChunkMetadata {
   row_number?: number;
-  page_label?: string;
+  page_number?: string;
 }
 
 export interface ChunkContentsResponse {

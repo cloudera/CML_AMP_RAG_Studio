@@ -40,7 +40,7 @@ import os
 import subprocess
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import Any
+from typing import Any, List
 
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
@@ -49,6 +49,42 @@ from .base_reader import BaseReader
 from .simple_file import SimpleFileReader
 
 logger = logging.getLogger(__name__)
+
+
+class PageCounter:
+    def __init__(self, pages: List[Document]) -> None:
+        self.page_numbers = [page.metadata["page_label"] for page in pages]
+        self.page_contents: List[str] = [page.text for page in pages]
+        self.page_start_index: List[int] = [0]
+        for i, text in enumerate(self.page_contents):
+            # The number of characters from the start of the document to that page (add one for the newline)
+            start_of_page = self.page_start_index[-1] + len(text) + 1
+            self.page_start_index.append(start_of_page)
+        self.assert_correctness()
+        self.document_text = "\n".join(self.page_contents)
+
+    def assert_correctness(self):
+        # Check computation. Add 1 to length because we're assuming the last page would have the new line
+        document_length = len(self.document_text)
+        if self.page_start_index[-1] != document_length + 1:
+            raise Exception(
+                f"Start of page after last {self.page_start_index[-1]} does not match document text length {document_length + 1}")
+
+    def _find_page_number(self, start_index: int) -> str:
+        last_good_page_number = ""
+        for j, page_start in enumerate(self.page_start_index):
+            if start_index >= page_start:
+                last_good_page_number = self.page_numbers[j]
+            else:
+                break
+        return last_good_page_number
+
+    def populate_chunk_page_numbers(self, chunks):
+        for chunk in chunks:
+            chunk_start = chunk.start_char_idx
+            if chunk_start is not None:
+                chunk_label = self._find_page_number(chunk_start)
+                chunk.metadata["page_number"] = chunk_label
 
 
 class PDFReader(BaseReader):
@@ -63,41 +99,13 @@ class PDFReader(BaseReader):
         if chunks:
             return chunks
 
-        pages = self.inner.load_data(file_path)
-
-        page_labels = [page.metadata["page_label"] for page in pages]
-        page_texts = [page.text for page in pages]
-        # The start of every page
-        page_start_index = [0]
-        for i, text in enumerate(page_texts):
-            page_start_index.append(page_start_index[-1] + len(text) + 1)
-
-        document_text = "\n".join(page_texts)
-        # Check computation. Add 1 to length because we're assuming the last page would have the new line
-        assert (
-            page_start_index[-1] == len(document_text) + 1
-        ), f"Start of page after last {page_start_index[-1]} does not match document text length {len(document_text)+1}"
-
-        document = Document(text=document_text)
+        pages: list[Document] = self.inner.load_data(file_path)
+        page_counter = PageCounter(pages)
+        document = Document(text=page_counter.document_text)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
         chunks = self._chunks_in_document(document)
-
-        def find_label(start_index: int) -> str:
-            last_good_label = ""
-            for i, page_start in enumerate(page_start_index):
-                if start_index >= page_start:
-                    last_good_label = page_labels[i]
-                else:
-                    break
-            return last_good_label
-
-        # Populate the page label for each chunk
-        for chunk in chunks:
-            chunk_start = chunk.start_char_idx
-            if chunk_start is not None:
-                chunk_label = find_label(chunk_start)
-                chunk.metadata["page_label"] = chunk_label
+        page_counter.populate_chunk_page_numbers(chunks)
 
         return chunks
 
