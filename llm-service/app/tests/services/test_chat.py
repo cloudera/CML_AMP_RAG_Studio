@@ -48,8 +48,8 @@ def suggested_questions_responses(
     draw,
     min_questions: int = 0,
     max_questions: int = 10,
-    min_question_length: int = 0,
-    max_question_length: int = 20,
+    min_length: int = 0,
+    max_length: int = 20,
     generate_bold: bool = True,
     generate_empty: bool = True,
     response_can_be_empty: bool = True,
@@ -66,11 +66,10 @@ def suggested_questions_responses(
 
         bullet: str = draw(st.sampled_from(["*", "-"]))
 
-        question_length: int = draw(
-            st.integers(min_question_length, max_question_length),
-        )
+        question_length: int = draw(st.integers(min_length, max_length))
         question: str = lipsum.generate_words(question_length).replace(" - ", " ")
-        if generate_bold and draw(st.booleans()):  # bold
+
+        if generate_bold and draw(st.booleans()):
             question = f"*{question}*"
 
         suggested_questions.append(f"{bullet} {question}")
