@@ -90,5 +90,6 @@ class TestProcessResponse:
             assert not suggested_question.endswith("*")
 
             assert len(suggested_question.split()) <= 15
+
             assert suggested_question != "Empty Response"
             assert suggested_question != ""
