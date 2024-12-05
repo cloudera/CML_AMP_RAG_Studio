@@ -36,6 +36,8 @@
 #  DATA.
 # ##############################################################################
 
+from typing import Callable
+
 import lipsum
 from hypothesis import given
 from hypothesis import strategies as st
@@ -45,7 +47,7 @@ from app.services.chat import process_response
 
 @st.composite
 def suggested_questions_responses(
-    draw,
+    draw: Callable,
     min_questions: int = 0,
     max_questions: int = 10,
     min_length: int = 0,
@@ -79,7 +81,7 @@ def suggested_questions_responses(
 
 class TestProcessResponse:
     @given(suggested_questions_responses())
-    def test_process_response(self, response: str):
+    def test_process_response(self, response: str) -> None:
         processed_response: str = process_response(response)
         assert len(processed_response) <= 5
 
