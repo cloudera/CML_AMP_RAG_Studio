@@ -36,8 +36,6 @@
 #  DATA.
 # ##############################################################################
 
-from typing import Callable
-
 import lipsum
 from hypothesis import given
 from hypothesis import strategies as st
@@ -47,7 +45,7 @@ from app.services.chat import process_response
 
 @st.composite
 def suggested_questions_responses(
-    draw: Callable,
+    draw: st.DrawFn,
     min_questions: int = 0,
     max_questions: int = 10,
     min_length: int = 0,
