@@ -55,7 +55,9 @@ import messageQueue from "src/utils/messageQueue.ts";
 
 const IndexSettings = () => {
   const { dataSourceId } = useContext(DataSourceContext);
-  const { data } = useQuery(getDataSourceById(dataSourceId));
+  const { data: dataSourceMetaData } = useQuery(
+    getDataSourceById(dataSourceId),
+  );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const navigate = useNavigate();
   const [confirmationText, setConfirmationText] = useState("");
@@ -83,8 +85,8 @@ const IndexSettings = () => {
   const { mutate: deleteMe } = useMutation({
     mutationKey: [MutationKeys.deleteDataSource],
     mutationFn: () => {
-      if (data) {
-        return deleteDataSourceMutation(data.id.toString());
+      if (dataSourceMetaData) {
+        return deleteDataSourceMutation(dataSourceMetaData.id.toString());
       }
       return Promise.resolve();
     },
@@ -111,8 +113,11 @@ const IndexSettings = () => {
     form
       .validateFields()
       .then((values) => {
-        if (data) {
-          const payload: DataSourceBaseType = { ...values, id: data.id };
+        if (dataSourceMetaData) {
+          const payload: DataSourceBaseType = {
+            ...values,
+            id: dataSourceMetaData.id,
+          };
           updateDataSourceMutate(payload);
         }
       })
@@ -144,11 +149,11 @@ const IndexSettings = () => {
           gap={20}
           style={{ width: "100%", paddingLeft: 25, maxWidth: 600 }}
         >
-          {data ? (
+          {dataSourceMetaData ? (
             <DataSourcesForm
               form={form}
               updateMode={true}
-              initialValues={data}
+              initialValues={dataSourceMetaData}
             />
           ) : null}
         </Flex>

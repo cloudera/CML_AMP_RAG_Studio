@@ -49,7 +49,7 @@ from llama_index.vector_stores.qdrant import (
 from qdrant_client.http.models import CountResult, Record
 
 from .vector_store import VectorStore
-from ...services import models
+from ...services import models, data_sources_metadata_api
 
 logger = logging.getLogger(__name__)
 
@@ -65,21 +65,25 @@ class QdrantVectorStore(VectorStore):
     def for_chunks(
             data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
     ) -> "QdrantVectorStore":
-        return QdrantVectorStore(table_name=f"index_{data_source_id}", client=client)
+        return QdrantVectorStore(table_name=f"index_{data_source_id}", data_source_id=data_source_id, client=client)
 
     @staticmethod
     def for_summaries(
             data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
     ) -> "QdrantVectorStore":
         return QdrantVectorStore(
-            table_name=f"summary_index_{data_source_id}", client=client
+            table_name=f"summary_index_{data_source_id}", data_source_id=data_source_id, client=client
         )
 
     def __init__(
-            self, table_name: str, client: Optional[qdrant_client.QdrantClient] = None
+            self, table_name: str, data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
     ):
         self.client = client or new_qdrant_client()
         self.table_name = table_name
+        self.data_source_metadata = data_sources_metadata_api.get_metadata(data_source_id)
+
+    def get_embedding_model(self):
+        return models.get_embedding_model(self.data_source_metadata.embedding_model)
 
     def size(self) -> Optional[int]:
         """
@@ -118,7 +122,7 @@ class QdrantVectorStore(VectorStore):
         if len(records) <= 2:
             return []
         if user_query:
-            embedding_model = models.get_embedding_model()
+            embedding_model = self.get_embedding_model()
             user_query_vector = embedding_model.get_query_embedding(user_query)
             records.append(Record(vector=user_query_vector, id="abc123", payload={"file_name": "USER_QUERY"}))
 

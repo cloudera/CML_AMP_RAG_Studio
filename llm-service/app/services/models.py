@@ -151,8 +151,7 @@ def test_embedding_model(model_name: str) -> str:
     for model in models:
         if model["model_id"] == model_name:
             if not is_caii_enabled() or model["available"]:
-                # TODO: Update to pass embedding model in the future when multiple are supported
-                get_embedding_model().get_text_embedding("test")
+                get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")

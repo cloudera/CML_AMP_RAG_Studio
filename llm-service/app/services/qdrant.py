@@ -61,8 +61,9 @@ def query(
     configuration: RagPredictConfiguration,
     chat_history: list[RagContext],
 ) -> AgentChatResponse:
-    vector_store = QdrantVectorStore.for_chunks(data_source_id).llama_vector_store()
-    embedding_model = models.get_embedding_model()
+    qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
+    vector_store = qdrant_store.llama_vector_store()
+    embedding_model = qdrant_store.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
         vector_store=vector_store,
         embed_model=embedding_model,

@@ -114,14 +114,14 @@ def generate_summary(
 
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
-def set_settings_globals() -> None:
+def _set_settings_globals() -> None:
     Settings.llm = models.get_llm()
     Settings.embed_model = models.get_embedding_model()
     Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
 def initialize_summary_index_storage(data_source_id: int) -> None:
-    set_settings_globals()
+    _set_settings_globals()
     doc_summary_index = DocumentSummaryIndex.from_documents(
         [],
         summary_query=SUMMARY_PROMPT,
@@ -132,7 +132,7 @@ def initialize_summary_index_storage(data_source_id: int) -> None:
 def load_document_summary_index(
     storage_context: StorageContext,
 ) -> DocumentSummaryIndex:
-    set_settings_globals()
+    _set_settings_globals()
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
         load_index_from_storage(storage_context, summary_query=SUMMARY_PROMPT),
