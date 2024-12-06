@@ -110,6 +110,7 @@ export const dataSourceCreationInitialValues = {
   chunkSize: 512,
   connectionType: ConnectionType.MANUAL,
   chunkOverlapPercent: 10,
+  embeddingModel: "",
 };
 
 export interface DataSourcesFormProps {
@@ -117,7 +118,11 @@ export interface DataSourcesFormProps {
   updateMode: boolean;
   initialValues: Pick<
     DataSourceBaseType,
-    "name" | "chunkSize" | "connectionType" | "chunkOverlapPercent"
+    | "name"
+    | "chunkSize"
+    | "connectionType"
+    | "chunkOverlapPercent"
+    | "embeddingModel"
   >;
 }
 
@@ -135,7 +140,7 @@ const DataSourcesForm = ({
 
   useEffect(() => {
     form.setFieldsValue({
-      embeddingModel: [embeddingsModels.data?.[0]?.model_id],
+      embeddingModel: embeddingsModels.data?.[0]?.model_id,
     });
   }, [embeddingsModels.data]);
 

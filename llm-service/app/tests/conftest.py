@@ -41,6 +41,7 @@ import pathlib
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, Sequence
 
 import boto3
@@ -66,7 +67,8 @@ from pydantic import Field
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
-from app.services import models
+from app.services import models, data_sources_metadata_api
+from app.services.data_sources_metadata_api import RagDataSource
 from app.services.utils import get_last_segment
 
 
@@ -219,13 +221,37 @@ def summary_vector_store(
         lambda ds_id: original(ds_id, qdrant_client),
     )
 
+@pytest.fixture(autouse=True)
+def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    def get_datasource_metadata(data_source_id: int) -> RagDataSource:
+        return RagDataSource(
+            id=data_source_id,
+            name="test",
+            embedding_model="test",
+            chunk_size=512,
+            chunk_overlap_percent=10,
+            time_created=datetime.now(),
+            time_updated=datetime.now(),
+            created_by_id="test",
+            updated_by_id="test",
+            connection_type="test",
+            document_count=1,
+            total_doc_size=1,
+        )
+
+    monkeypatch.setattr(data_sources_metadata_api, "get_metadata", get_datasource_metadata)
+
 
 @pytest.fixture(autouse=True)
 def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
     model = DummyEmbeddingModel()
 
+    # this is the method signature of the original, even we're not using the model name
+    def get_embedding_model(model_name: str = "dummy_value") -> BaseEmbedding:
+        return model
+
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_embedding_model", lambda: model)
+    monkeypatch.setattr(models, "get_embedding_model", get_embedding_model)
     return model
 
 

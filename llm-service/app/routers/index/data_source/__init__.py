@@ -41,7 +41,7 @@ from .... import exceptions
 from ....ai.indexing.index import Indexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import doc_summaries, models, s3
+from ....services import doc_summaries, models, s3, data_sources_metadata_api
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +176,7 @@ class DataSourceController:
         data_source_id: int,
         request: RagIndexDocumentRequest,
     ) -> None:
+        datasource = data_sources_metadata_api.get_metadata(data_source_id)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             file_path = s3.download(
@@ -192,7 +193,7 @@ class DataSourceController:
                         * request.configuration.chunk_size
                     ),
                 ),
-                embedding_model=models.get_embedding_model(),
+                embedding_model=models.get_embedding_model(datasource.embedding_model),
                 chunks_vector_store=self.chunks_vector_store,
             )
             # Delete to avoid duplicates

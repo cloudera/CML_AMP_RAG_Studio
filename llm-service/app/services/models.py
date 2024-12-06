@@ -53,10 +53,12 @@ from .llama_utils import completion_to_prompt, messages_to_prompt
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 
-def get_embedding_model() -> BaseEmbedding:
+def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
     if is_caii_enabled():
         return caii_embedding()
-    return BedrockEmbedding(model_name="cohere.embed-english-v3")
+    if model_name is None:
+        model_name = "cohere.embed-english-v3"
+    return BedrockEmbedding(model_name=model_name)
 
 
 def get_llm(model_name: str = DEFAULT_BEDROCK_LLM_MODEL) -> LLM:
