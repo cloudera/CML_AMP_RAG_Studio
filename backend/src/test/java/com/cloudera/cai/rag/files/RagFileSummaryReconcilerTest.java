@@ -72,6 +72,7 @@ class RagFileSummaryReconcilerTest {
             new RagDataSource(
                 null,
                 "test_datasource",
+                "test_embedding_model",
                 1024,
                 20,
                 null,
@@ -127,6 +128,7 @@ class RagFileSummaryReconcilerTest {
             new RagDataSource(
                 null,
                 "test_datasource",
+                "test_embedding_model",
                 1024,
                 20,
                 null,

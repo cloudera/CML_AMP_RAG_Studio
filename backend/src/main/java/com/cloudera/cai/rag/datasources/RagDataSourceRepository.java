@@ -62,8 +62,8 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-                INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type)
-                VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType)
+                INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type, embedding_model)
+                VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel)
               """;
           try (var update = handle.createUpdate(sql)) {
             update.bindMethods(input);

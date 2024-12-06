@@ -51,6 +51,22 @@ import org.junit.jupiter.api.Test;
 
 class RagDataSourceRepositoryTest {
   @Test
+  void create() {
+    RagDataSourceRepository repository =
+        new RagDataSourceRepository(JdbiConfiguration.createNull());
+    var id =
+        repository.createRagDataSource(
+            TestData.createTestDataSourceInstance("test-name", 512, 10, MANUAL)
+                .withCreatedById("abc")
+                .withUpdatedById("abc")
+                .withEmbeddingModel("test-embedding-model"));
+    var savedDataSource = repository.getRagDataSourceById(id);
+    assertThat(savedDataSource.name()).isEqualTo("test-name");
+    assertThat(savedDataSource.updatedById()).isEqualTo("abc");
+    assertThat(savedDataSource.embeddingModel()).isEqualTo("test-embedding-model");
+  }
+
+  @Test
   void update() {
     RagDataSourceRepository repository =
         new RagDataSourceRepository(JdbiConfiguration.createNull());

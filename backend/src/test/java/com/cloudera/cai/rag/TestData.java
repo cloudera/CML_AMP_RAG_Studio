@@ -57,6 +57,7 @@ public class TestData {
     return new Types.RagDataSource(
         null,
         name,
+        "test_embedding_model",
         chunkSize,
         chunkOverlapPercent,
         null,

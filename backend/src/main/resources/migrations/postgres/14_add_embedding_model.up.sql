@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+ * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,72 +36,10 @@
  * DATA.
  */
 
-package com.cloudera.cai.rag;
+SET MODE MYSQL;
 
-import jakarta.annotation.Nullable;
-import java.time.Instant;
-import java.util.List;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
-import lombok.With;
+BEGIN;
 
-public class Types {
-  /** Data returned from the file upload endpoint. */
-  public record RagDocumentMetadata(
-      String fileName, String documentId, String extension, long sizeInBytes) {}
+ALTER TABLE rag_data_source ADD COLUMN embedding_model varchar(255);
 
-  /** Data representing the database table for RAG file metadata (llm_project_rag_document) */
-  @Builder(toBuilder = true)
-  public record RagDocument(
-      @With Long id,
-      String filename,
-      Long dataSourceId,
-      String documentId,
-      String s3Path,
-      @With Instant vectorUploadTimestamp,
-      Long sizeInBytes,
-      String extension,
-      Instant timeCreated,
-      Instant timeUpdated,
-      String createdById,
-      String updatedById,
-      @With Instant summaryCreationTimestamp) {}
-
-  @Getter
-  public enum ConnectionType {
-    MANUAL,
-    CDF,
-    API,
-    OTHER
-  }
-
-  @With
-  public record RagDataSource(
-      Long id,
-      String name,
-      String embeddingModel,
-      Integer chunkSize,
-      Integer chunkOverlapPercent,
-      Instant timeCreated,
-      Instant timeUpdated,
-      String createdById,
-      String updatedById,
-      ConnectionType connectionType,
-      @Nullable Integer documentCount,
-      @Nullable Long totalDocSize) {}
-
-  @With
-  @Builder
-  public record Session(
-      Long id,
-      String name,
-      @Singular List<Long> dataSourceIds,
-      Instant timeCreated,
-      Instant timeUpdated,
-      String createdById,
-      String updatedById,
-      Instant lastInteractionTime,
-      String inferenceModel,
-      Integer responseChunks) {}
-}
+COMMIT;

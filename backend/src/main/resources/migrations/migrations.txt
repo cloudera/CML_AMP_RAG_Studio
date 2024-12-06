@@ -25,3 +25,5 @@
 12_add_doc_deleted.up.sql
 13_add_chat_configuration.down.sql
 13_add_chat_configuration.up.sql
+14_add_embedding_model.down.sql
+14_add_embedding_model.up.sql

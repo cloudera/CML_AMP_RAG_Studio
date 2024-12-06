@@ -115,6 +115,7 @@ class RagFileControllerTest {
             new Types.RagDataSource(
                 null,
                 "test_datasource",
+                "test_embedding_model",
                 1024,
                 20,
                 null,
