@@ -41,6 +41,7 @@ from typing import Optional, Any
 import umap
 
 import qdrant_client
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.qdrant import (
@@ -82,7 +83,7 @@ class QdrantVectorStore(VectorStore):
         self.table_name = table_name
         self.data_source_metadata = data_sources_metadata_api.get_metadata(data_source_id)
 
-    def get_embedding_model(self):
+    def get_embedding_model(self) -> BaseEmbedding:
         return models.get_embedding_model(self.data_source_metadata.embedding_model)
 
     def size(self) -> Optional[int]:

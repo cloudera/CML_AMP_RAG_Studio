@@ -39,6 +39,7 @@
 from abc import abstractmethod, ABCMeta
 from typing import Optional
 
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
 
@@ -72,5 +73,5 @@ class VectorStore(metaclass=ABCMeta):
         """get a 2-d visualization of the vectors in the store"""
 
     @abstractmethod
-    def get_embedding_model(self):
+    def get_embedding_model(self) -> BaseEmbedding:
         """get the embedding model used for this vector store"""

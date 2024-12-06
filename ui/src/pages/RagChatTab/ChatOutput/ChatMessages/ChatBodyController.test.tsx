@@ -48,6 +48,7 @@ import { ConnectionType } from "src/api/dataSourceApi.ts";
 const testDataSource = {
   id: 1,
   name: "data source name",
+  embeddingModel: "embedding-model",
   chunkSize: 1,
   totalDocSize: 1,
   documentCount: 1,
