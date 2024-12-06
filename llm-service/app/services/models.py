@@ -53,9 +53,12 @@ from .llama_utils import completion_to_prompt, messages_to_prompt
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 
+
 def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
     if is_caii_enabled():
-        return caii_embedding()
+        return caii_embedding(
+            domain=os.environ["CAII_DOMAIN"],
+            model_name=os.environ["CAII_EMBEDDING_ENDPOINT_NAME"])
     if model_name is None:
         model_name = "cohere.embed-english-v3"
     return BedrockEmbedding(model_name=model_name)
@@ -94,6 +97,7 @@ def get_available_llm_models() -> List[Dict[str, Any]]:
 def is_caii_enabled() -> bool:
     domain: str = os.environ.get("CAII_DOMAIN", "")
     return len(domain) > 0
+
 
 def _get_bedrock_llm_models() -> List[Dict[str, Any]]:
     return [
@@ -141,7 +145,8 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
     for model in models:
         if model["model_id"] == model_name:
             if not is_caii_enabled() or model["available"]:
-                get_llm(model_name).chat(messages=[ChatMessage(role=MessageRole.USER, content="Are you available to answer questions?")])
+                get_llm(model_name).chat(
+                    messages=[ChatMessage(role=MessageRole.USER, content="Are you available to answer questions?")])
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")

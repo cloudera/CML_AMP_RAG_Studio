@@ -103,9 +103,8 @@ def get_llm(
     return llm
 
 
-def get_embedding_model() -> BaseEmbedding:
-    domain = os.environ["CAII_DOMAIN"]
-    endpoint_name = os.environ["CAII_EMBEDDING_ENDPOINT_NAME"]
+def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
+    endpoint_name = model_name
     endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     return CaiiEmbeddingModel(endpoint=endpoint)
 
