@@ -106,6 +106,7 @@ export const advancedOptions = (
 ];
 
 export const dataSourceCreationInitialValues = {
+  id: -1,
   name: "",
   chunkSize: 512,
   connectionType: ConnectionType.MANUAL,
@@ -116,14 +117,7 @@ export const dataSourceCreationInitialValues = {
 export interface DataSourcesFormProps {
   form: FormInstance;
   updateMode: boolean;
-  initialValues: Pick<
-    DataSourceBaseType,
-    | "name"
-    | "chunkSize"
-    | "connectionType"
-    | "chunkOverlapPercent"
-    | "embeddingModel"
-  >;
+  initialValues: DataSourceBaseType;
 }
 
 const layout = {
@@ -139,10 +133,13 @@ const DataSourcesForm = ({
   const embeddingsModels = useGetEmbeddingModels();
 
   useEffect(() => {
+    if (initialValues.embeddingModel) {
+      return;
+    }
     form.setFieldsValue({
       embeddingModel: embeddingsModels.data?.[0]?.model_id,
     });
-  }, [embeddingsModels.data]);
+  }, [embeddingsModels.data, initialValues.embeddingModel]);
 
   return (
     <Form
@@ -185,6 +182,7 @@ const DataSourcesForm = ({
         name="embeddingModel"
         label="Embedding model"
         rules={[{ required: true }]}
+        initialValue={initialValues.embeddingModel}
       >
         <Select
           options={transformModelOptions(embeddingsModels.data)}

@@ -74,7 +74,6 @@ def get_llm(model_name: str = DEFAULT_BEDROCK_LLM_MODEL) -> LLM:
 
     return BedrockConverse(
         model=model_name,
-        # context_size=BEDROCK_MODELS.get(model_name, 8192),
         messages_to_prompt=messages_to_prompt,
         completion_to_prompt=completion_to_prompt,
     )
@@ -117,8 +116,12 @@ def _get_bedrock_embedding_models() -> List[Dict[str, Any]]:
     return [
         {
             "model_id": "cohere.embed-english-v3",
-            "name": "cohere.embed-english-v3",
-        }
+            "name": "Cohere Embed English v3",
+        },
+        {
+            "model_id": "cohere.embed-multilingual-v3",
+            "name": "Cohere Embed Multilingual v3",
+        },
     ]
 
 

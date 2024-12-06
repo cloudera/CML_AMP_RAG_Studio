@@ -91,7 +91,7 @@ class Indexer:
         self.chunks_vector_store = chunks_vector_store
 
     def index_file(self, file_path: Path, document_id: str) -> None:
-        logger.debug(f"Indexing file: {file_path}")
+        logger.debug(f"Indexing file: {file_path} with embedding model: {self.embedding_model.model_name}")
 
         file_extension = os.path.splitext(file_path)[1]
         reader_cls = READERS.get(file_extension)
