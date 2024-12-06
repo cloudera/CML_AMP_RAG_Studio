@@ -37,7 +37,7 @@
 # ##############################################################################
 
 import lipsum
-from hypothesis import example, given, reproduce_failure
+from hypothesis import example, given
 from hypothesis import strategies as st
 
 from app.services.chat import process_response
