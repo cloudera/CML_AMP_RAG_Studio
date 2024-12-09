@@ -68,13 +68,19 @@ def describe_endpoint(endpoint_name: str) -> Endpoint:
 
 def list_endpoints() -> list[ListEndpointEntry]:
     domain=os.environ["CAII_DOMAIN"]
-    headers = _get_access_headers()
-    describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
-    desc_json = {"namespace": DEFAULT_NAMESPACE}
+    try:
+        headers = _get_access_headers()
+        describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
+        desc_json = {"namespace": DEFAULT_NAMESPACE}
 
-    desc = requests.post(describe_url, headers=headers, json=desc_json)
-    endpoints = json.loads(desc.content)['endpoints']
-    return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
+        desc = requests.post(describe_url, headers=headers, json=desc_json)
+        endpoints = json.loads(desc.content)['endpoints']
+        return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
+    except requests.exceptions.ConnectionError as e:
+        raise HTTPException(
+            status_code=421,
+            detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
+        )
 
 def _get_access_headers() -> Dict[str, str]:
     access_token = _get_access_token()
@@ -139,25 +145,16 @@ def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
 # RANK = 7;
 
 def get_caii_llm_models() -> List[Dict[str, Any]]:
-    endpoints = list_endpoints()
-    llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == "TEXT_GENERATION", endpoints))
-    print(llm_endpoints)
+    return get_models_with_task("TEXT_GENERATION")
 
-    endpoint_name = os.environ["CAII_INFERENCE_ENDPOINT_NAME"]
-    try:
-        models = describe_endpoint(endpoint_name=endpoint_name)
-    except requests.exceptions.ConnectionError as e:
-        domain = os.environ["CAII_DOMAIN"]
-        raise HTTPException(
-            status_code=421,
-            detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
-        )
-    except HTTPException as e:
-        if e.status_code == 404:
-            return [{"model_id": endpoint_name}]
-        else:
-            raise e
-    return build_model_response(models)
+
+def get_models_with_task(task_type: str) -> List[Dict[str, Any]]:
+    endpoints = list_endpoints()
+    endpoint_details = list(map(lambda endpoint: describe_endpoint(endpoint.name), endpoints))
+    llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == task_type, endpoint_details))
+    print(llm_endpoints)
+    models = list(map(build_model_response, llm_endpoints))
+    return models
 
 
 def get_caii_embedding_models() -> List[Dict[str, Any]]:
@@ -179,15 +176,14 @@ def get_caii_embedding_models() -> List[Dict[str, Any]]:
             return [{"model_id": endpoint_name}]
         else:
             raise e
-    return build_model_response(models)
+    return [build_model_response(models)]
 
 
-def build_model_response(models: Endpoint) -> List[Dict[str, Any]]:
-    return [
-        {
+def build_model_response(models: Endpoint) -> Dict[str, Any]:
+    return {
             "model_id": models.name,
             "name": models.name,
             "available": models.replica_count > 0,
             "replica_count": models.replica_count,
         }
-    ]
+
