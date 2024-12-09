@@ -113,6 +113,7 @@ const IndexSettings = () => {
     form
       .validateFields()
       .then((values) => {
+        // debugger;
         if (dataSourceMetaData) {
           const payload: DataSourceBaseType = {
             ...values,

@@ -70,7 +70,7 @@ export interface DataSourceBaseType {
   chunkOverlapPercent: number;
   connectionType: ConnectionType;
   embeddingModel: string;
-  summarizationModel: string;
+  summarizationModel?: string;
 }
 
 export type DataSourceType = DataSourceBaseType & {

@@ -78,7 +78,7 @@ public class RagDataSourceRepository {
           var sql =
               """
               UPDATE rag_data_source
-              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById
+              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById, summarization_model = :summarizationModel
               WHERE id = :id AND deleted IS NULL
           """;
           try (var update = handle.createUpdate(sql)) {
@@ -87,6 +87,7 @@ public class RagDataSourceRepository {
                 .bind("updatedById", input.updatedById())
                 .bind("connectionType", input.connectionType())
                 .bind("id", input.id())
+                .bind("summarizationModel", input.summarizationModel())
                 .execute();
           }
         });

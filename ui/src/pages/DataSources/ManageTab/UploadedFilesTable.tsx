@@ -145,7 +145,7 @@ const columns = (
       if (!summarizationModel) {
         return (
           <Popover
-            title={"No summary available."}
+            title={"No summary available"}
             content={"A summarization model must be selected."}
           >
             <MinusCircleOutlined style={{ fontSize: 16 }} />
