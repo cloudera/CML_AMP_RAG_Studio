@@ -47,7 +47,7 @@ from .caii_temp.types import Endpoint
 
 
 class CaiiEmbeddingModel(BaseEmbedding):
-    endpoint: Any = Field(Any, description="The endpoint to use for embeddings")
+    endpoint: Endpoint = Field(Endpoint, description="The endpoint to use for embeddings")
 
     def __init__(self, endpoint: Endpoint):
         super().__init__()
@@ -77,7 +77,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
                 "model": model,
             }
         )
-        connection.request("POST", self.endpoint["url"], body=body, headers=headers)
+        connection.request("POST", self.endpoint.url, body=body, headers=headers)
         res = connection.getresponse()
         data = res.read()
         json_response = data.decode("utf-8")

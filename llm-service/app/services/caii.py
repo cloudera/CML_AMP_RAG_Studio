@@ -106,8 +106,6 @@ def get_llm(
     api_base = endpoint.url.removesuffix("/chat/completions")
     headers = _get_access_headers()
 
-    print(endpoint.endpointmetadata)
-    print(endpoint.endpointmetadata["model_name"])
     model = endpoint.endpointmetadata.model_name
     if "mistral" in endpoint_name.lower():
         llm = CaiiModelMistral(
@@ -164,10 +162,10 @@ def get_caii_embedding_models() -> List[ModelResponse]:
     return get_models_with_task("EMBED")
 
 
-def build_model_response(models: Endpoint) -> ModelResponse:
+def build_model_response(endpoint: Endpoint) -> ModelResponse:
     return ModelResponse(
-        model_id=models.name,
-        name=models.name,
-        available=models.replica_count > 0,
-        replica_count=models.replica_count,
+        model_id=endpoint.name,
+        name=endpoint.name,
+        available=endpoint.replica_count > 0,
+        replica_count=endpoint.replica_count,
     )

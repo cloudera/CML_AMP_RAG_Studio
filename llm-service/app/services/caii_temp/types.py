@@ -38,56 +38,58 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 
+from pydantic import BaseModel, ConfigDict
 
-@dataclass
-class EndpointCondition:
-    type: str
-    status: str
-    severity: str
-    last_transition_time: str
-    reason: str
-    message: str
 
-@dataclass
-class ReplicaMetadata:
-    modelVersion: str
-    replicaCount: int
-    replicaNames: List[str]
+# class EndpointCondition(BaseModel):
+#     type: str
+#     status: str
+#     severity: str
+#     last_transition_time: str
+#     reason: str
+#     message: str
+#
 
-@dataclass
-class RegistrySource:
-    model_id: str
-    version: int
+# class ReplicaMetadata(BaseModel):
+#     modelVersion: str
+#     replicaCount: int
+#     replicaNames: List[str]
 
-@dataclass
-class EndpointStatus:
-    failed_copies: int
-    total_copies: int
-    active_model_state: str
-    target_model_state: str
-    transition_status: str
 
-@dataclass
-class EndpointMetadata:
-    current_model: RegistrySource
-    previous_model: RegistrySource
+# class RegistrySource(BaseModel):
+#     model_config = ConfigDict(protected_namespaces=())
+#     model_id: Optional[str]
+#     version: Optional[int]
+
+# class EndpointStatus(BaseModel):
+#     failed_copies: int
+#     total_copies: int
+#     active_model_state: str
+#     target_model_state: str
+#     transition_status: str
+#
+
+class EndpointMetadata(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    # current_model: Optional[RegistrySource]
+    # previous_model: Optional[RegistrySource]
     model_name: str
 
-@dataclass
-class Endpoint:
+
+class Endpoint(BaseModel):
     namespace: str
     name: str
     url: str
-    conditions: List[EndpointCondition]
-    status: EndpointStatus
+    # conditions: List[EndpointCondition]
+    # status: EndpointStatus
     observed_generation: int
     replica_count: int
-    replica_metadata: List[ReplicaMetadata]
+    # replica_metadata: List[ReplicaMetadata]
     created_by: str
     description: str
     created_at: str
     resources: Dict[str, str]
-    source: Dict[str, RegistrySource]
+    # source: Dict[str, RegistrySource]
     autoscaling: Dict[str, Any]
     endpointmetadata: EndpointMetadata
     traffic: Dict[str, str]
@@ -96,6 +98,7 @@ class Endpoint:
     metricFormat: str
     task: str
     instance_type: str
+
 
 @dataclass
 class ListEndpointEntry:
@@ -109,6 +112,7 @@ class ListEndpointEntry:
     api_standard: str
     has_chat_template: bool
     metricFormat: str
+
 
 @dataclass
 class ModelResponse:
