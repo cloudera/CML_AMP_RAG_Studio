@@ -52,20 +52,67 @@ from .CaiiModel import CaiiModel, CaiiModelMistral
 
 DEFAULT_NAMESPACE = "serving-default"
 
-def describe_endpoint(domain: str, endpoint_name: str) -> Any:
-    headers = _get_access_headers()
-    describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
-    desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
 
-    desc = requests.post(describe_url, headers=headers, json=desc_json)
-    if desc.status_code == 404:
-        raise HTTPException(
-            status_code=404, detail=f"Endpoint '{endpoint_name}' not found"
-        )
-    return json.loads(desc.content)
+@dataclass
+class EndpointCondition:
+    type: str
+    status: str
+    severity: str
+    last_transition_time: str
+    reason: str
+    message: str
+
+@dataclass
+class ReplicaMetadata:
+    modelVersion: str
+    replicaCount: int
+    replicaNames: List[str]
+
+@dataclass
+class RegistrySource:
+    model_id: str
+    version: int
+
+@dataclass
+class EndpointStatus:
+    failed_copies: int
+    total_copies: int
+    active_model_state: str
+    target_model_state: str
+    transition_status: str
+
+@dataclass
+class EndpointMetadata:
+    current_model: RegistrySource
+    previous_model: RegistrySource
+    model_name: str
 
 @dataclass
 class Endpoint:
+    namespace: str
+    name: str
+    url: str
+    conditions: List[EndpointCondition]
+    status: EndpointStatus
+    observed_generation: int
+    replica_count: int
+    replica_metadata: List[ReplicaMetadata]
+    created_by: str
+    description: str
+    created_at: str
+    resources: Dict[str, str]
+    source: Dict[str, RegistrySource]
+    autoscaling: Dict[str, Any]
+    endpointmetadata: EndpointMetadata
+    traffic: Dict[str, str]
+    api_standard: str
+    has_chat_template: bool
+    metricFormat: str
+    task: str
+    instance_type: str
+
+@dataclass
+class ListEndpointEntry:
     namespace: str
     name: str
     url: str
@@ -77,15 +124,30 @@ class Endpoint:
     has_chat_template: bool
     metricFormat: str
 
-def list_endpoints(domain: str) -> list[Endpoint]:
+def describe_endpoint(endpoint_name: str) -> Endpoint:
+    domain=os.environ["CAII_DOMAIN"]
+    headers = _get_access_headers()
+    describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
+    desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
+
+    desc = requests.post(describe_url, headers=headers, json=desc_json)
+    if desc.status_code == 404:
+        raise HTTPException(
+            status_code=404, detail=f"Endpoint '{endpoint_name}' not found"
+        )
+    json_content = json.loads(desc.content)
+    return Endpoint(**json_content)
+
+
+def list_endpoints() -> list[ListEndpointEntry]:
+    domain=os.environ["CAII_DOMAIN"]
     headers = _get_access_headers()
     describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
     desc_json = {"namespace": DEFAULT_NAMESPACE}
 
     desc = requests.post(describe_url, headers=headers, json=desc_json)
-    json_loads = json.loads(desc.content)['endpoints']
-    print("json_loads", json_loads)
-    return [Endpoint(**endpoint) for endpoint in json.loads(desc.content)]
+    endpoints = json.loads(desc.content)['endpoints']
+    return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
 
 def _get_access_headers() -> Dict[str, str]:
     access_token = _get_access_token()
@@ -106,11 +168,11 @@ def get_llm(
     messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
     completion_to_prompt: Callable[[str], str],
 ) -> LLM:
-    endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
+    endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint["url"].removesuffix("/chat/completions")
     headers = _get_access_headers()
 
-    model = endpoint["endpointmetadata"]["model_name"]
+    model = endpoint.endpointmetadata.model_name
     if "mistral" in endpoint_name.lower():
         llm = CaiiModelMistral(
             model=model,
@@ -136,19 +198,32 @@ def get_llm(
 
 def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
-    endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
+    endpoint = describe_endpoint(endpoint_name=endpoint_name)
     return CaiiEmbeddingModel(endpoint=endpoint)
 
+# task types from the proto definition
+# TASK_UNKNOWN = 0;
+# INFERENCE = 1;
+# TEXT_GENERATION = 2;
+# EMBED = 3;
+# TEXT_TO_TEXT_GENERATION = 4;
+# CLASSIFICATION = 5;
+# FILL_MASK = 6;
+# RANK = 7;
 
 def get_caii_llm_models() -> List[Dict[str, Any]]:
-    # list_endpoints(domain=os.environ["CAII_DOMAIN"])
-    print("list_endpoints", list_endpoints(domain=os.environ["CAII_DOMAIN"]))
-    domain = os.environ["CAII_DOMAIN"]
+    endpoints = list_endpoints()
+    for endpoint in endpoints:
+        description = describe_endpoint(endpoint_name=endpoint.name)
+
+        print(description)
+
+
     endpoint_name = os.environ["CAII_INFERENCE_ENDPOINT_NAME"]
     try:
-        models = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
+        models = describe_endpoint(endpoint_name=endpoint_name)
     except requests.exceptions.ConnectionError as e:
-        print(e)
+        domain = os.environ["CAII_DOMAIN"]
         raise HTTPException(
             status_code=421,
             detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
@@ -168,7 +243,7 @@ def get_caii_embedding_models() -> List[Dict[str, Any]]:
     domain = os.environ["CAII_DOMAIN"]
     endpoint_name = os.environ["CAII_EMBEDDING_ENDPOINT_NAME"]
     try:
-        models = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
+        models = describe_endpoint(endpoint_name=endpoint_name)
     except requests.exceptions.ConnectionError as e:
         print(e)
         raise HTTPException(
