@@ -73,6 +73,7 @@ class RagFileSummaryReconcilerTest {
                 null,
                 "test_datasource",
                 "test_embedding_model",
+                "summarizationModel",
                 1024,
                 20,
                 null,
@@ -94,7 +95,7 @@ class RagFileSummaryReconcilerTest {
             .createdById("test-id")
             .build();
     Long id = ragFileRepository.saveDocumentMetadata(document);
-    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 
     reconciler.submit(document.withId(id));
@@ -129,6 +130,7 @@ class RagFileSummaryReconcilerTest {
                 null,
                 "test_datasource",
                 "test_embedding_model",
+                "summarizationModel",
                 1024,
                 20,
                 null,
@@ -150,7 +152,7 @@ class RagFileSummaryReconcilerTest {
             .createdById("test-id")
             .build();
     Long id = ragFileRepository.saveDocumentMetadata(document);
-    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 
     reconciler.submit(document.withId(id));
@@ -167,6 +169,51 @@ class RagFileSummaryReconcilerTest {
                       new RagBackendClient.TrackedRequest<>(
                           new RagBackendClient.SummaryRequest("rag-files", "path_in_s3")));
             });
+  }
+
+  @Test
+  void reconcile_noSummarizationModel() {
+    Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
+    RagFileSummaryReconciler reconciler = createTestInstance(requestTracker);
+
+    String documentId = UUID.randomUUID().toString();
+    long dataSourceId =
+        ragDataSourceRepository.createRagDataSource(
+            new RagDataSource(
+                null,
+                "test_datasource",
+                "test_embedding_model",
+                null,
+                1024,
+                20,
+                null,
+                null,
+                "test-id",
+                "test-id",
+                Types.ConnectionType.API,
+                null,
+                null));
+    RagDocument document =
+        RagDocument.builder()
+            .documentId(documentId)
+            .dataSourceId(dataSourceId)
+            .s3Path("path_in_s3")
+            .extension("pdf")
+            .filename("myfile.pdf")
+            .timeCreated(Instant.now())
+            .timeUpdated(Instant.now())
+            .createdById("test-id")
+            .build();
+    ragFileRepository.saveDocumentMetadata(document);
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
+        .isNull();
+
+    reconciler.resync();
+    assertThat(reconciler.isEmpty()).isTrue();
+
+    RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+    assertThat(updatedDocument.summaryCreationTimestamp()).isNull();
+    assertThat(requestTracker.getValues()).hasSize(0);
   }
 
   private RagFileSummaryReconciler createTestInstance(
