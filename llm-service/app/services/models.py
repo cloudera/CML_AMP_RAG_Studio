@@ -79,15 +79,15 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
     return BedrockEmbedding(model_name=model_name)
 
 
-def get_llm(model_name: str = DEFAULT_BEDROCK_LLM_MODEL) -> LLM:
+def get_llm(model_name: str) -> LLM:
+    if not model_name:
+        model_name = get_available_llm_models()[0].model_id
     if is_caii_enabled():
         return caii_llm(
             endpoint_name=model_name,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
         )
-    if not model_name:
-        model_name = DEFAULT_BEDROCK_LLM_MODEL
 
     return BedrockConverse(
         model=model_name,
