@@ -38,6 +38,7 @@
 import os
 import shutil
 import tempfile
+from pyexpat.errors import messages
 from typing import cast
 
 from fastapi import HTTPException
@@ -144,6 +145,10 @@ def load_document_summary_index(
 
 def summarize_data_source(data_source_id: int) -> str:
     """Return a summary of all documents in the data source."""
+    metadata = data_sources_metadata_api.get_metadata(data_source_id)
+    if not metadata.summarization_model:
+        return "Summarization disabled.  Please specify a summarization model in the knowledge base to enable."
+
     index = index_dir(data_source_id)
     if not os.path.exists(index):
         return ""

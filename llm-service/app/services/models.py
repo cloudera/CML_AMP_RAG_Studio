@@ -69,11 +69,13 @@ def get_noop_embedding_model() -> BaseEmbedding:
     return DummyEmbeddingModel()
 
 
-def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
+def get_embedding_model(model_name: str) -> BaseEmbedding:
+    if model_name is None:
+        model_name = get_available_embedding_models()[0].model_id
+
     if is_caii_enabled():
         return caii_embedding(model_name=model_name)
-    if model_name is None:
-        model_name = "cohere.embed-english-v3"
+
     return BedrockEmbedding(model_name=model_name)
 
 

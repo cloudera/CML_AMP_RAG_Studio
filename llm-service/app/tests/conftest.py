@@ -229,6 +229,7 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
             id=data_source_id,
             name="test",
             embedding_model="test",
+            summarization_model="test",
             chunk_size=512,
             chunk_overlap_percent=10,
             time_created=datetime.now(),
