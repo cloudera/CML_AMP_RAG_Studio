@@ -44,7 +44,7 @@ from typing import List
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from . import evaluators, qdrant, models
+from . import evaluators, qdrant
 from .chat_store import (
     Evaluation,
     RagContext,
@@ -81,11 +81,8 @@ def v2_chat(
         configuration,
         retrieve_chat_history(session_id),
     )
-    # data_source_metadata = data_sources_metadata_api.get_metadata(data_source_id)
-    # todo: get evaluator model name from data source metadata, rather than having to do all this work to get a model?
-    llm_model_name = models.get_available_llm_models()[0].name
     relevance, faithfulness = evaluators.evaluate_response(
-        query, response, llm_model_name
+        query, response, configuration.model_name
     )
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
