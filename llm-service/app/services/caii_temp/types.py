@@ -36,7 +36,7 @@
 #  DATA.
 #
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 @dataclass
@@ -109,3 +109,10 @@ class ListEndpointEntry:
     api_standard: str
     has_chat_template: bool
     metricFormat: str
+
+@dataclass
+class ModelResponse:
+    model_id: str
+    name: str
+    available: Optional[bool]
+    replica_count: Optional[int]

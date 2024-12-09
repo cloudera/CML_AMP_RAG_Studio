@@ -40,12 +40,13 @@ import os
 from typing import Any, Callable, Dict, List, Sequence
 
 import requests
+from attr import dataclass
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 
-from .caii_temp.types import Endpoint, ListEndpointEntry
+from .caii_temp.types import Endpoint, ListEndpointEntry, ModelResponse
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
 
@@ -144,11 +145,11 @@ def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
 # FILL_MASK = 6;
 # RANK = 7;
 
-def get_caii_llm_models() -> List[Dict[str, Any]]:
+def get_caii_llm_models() -> List[ModelResponse]:
     return get_models_with_task("TEXT_GENERATION")
 
 
-def get_models_with_task(task_type: str) -> List[Dict[str, Any]]:
+def get_models_with_task(task_type: str) -> List[ModelResponse]:
     endpoints = list_endpoints()
     endpoint_details = list(map(lambda endpoint: describe_endpoint(endpoint.name), endpoints))
     llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == task_type, endpoint_details))
@@ -157,33 +158,14 @@ def get_models_with_task(task_type: str) -> List[Dict[str, Any]]:
     return models
 
 
-def get_caii_embedding_models() -> List[Dict[str, Any]]:
-    # notes:
-    # NameResolutionError is we can't contact the CAII_DOMAIN
+def get_caii_embedding_models() -> List[ModelResponse]:
+    return get_models_with_task("EMBED")
 
-    domain = os.environ["CAII_DOMAIN"]
-    endpoint_name = os.environ["CAII_EMBEDDING_ENDPOINT_NAME"]
-    try:
-        models = describe_endpoint(endpoint_name=endpoint_name)
-    except requests.exceptions.ConnectionError as e:
-        print(e)
-        raise HTTPException(
-            status_code=421,
-            detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
+def build_model_response(models: Endpoint) -> ModelResponse:
+    return ModelResponse(
+            model_id = models.name,
+            name = models.name,
+            available = models.replica_count > 0,
+            replica_count = models.replica_count,
         )
-    except HTTPException as e:
-        if e.status_code == 404:
-            return [{"model_id": endpoint_name}]
-        else:
-            raise e
-    return [build_model_response(models)]
-
-
-def build_model_response(models: Endpoint) -> Dict[str, Any]:
-    return {
-            "model_id": models.name,
-            "name": models.name,
-            "available": models.replica_count > 0,
-            "replica_count": models.replica_count,
-        }
 

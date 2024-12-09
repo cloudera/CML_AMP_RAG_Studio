@@ -49,6 +49,7 @@ from llama_index.llms.bedrock_converse import BedrockConverse
 from .caii import get_caii_embedding_models, get_caii_llm_models
 from .caii import get_embedding_model as caii_embedding
 from .caii import get_llm as caii_llm
+from .caii_temp.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
@@ -82,13 +83,13 @@ def get_llm(model_name: str = DEFAULT_BEDROCK_LLM_MODEL) -> LLM:
     )
 
 
-def get_available_embedding_models() -> List[Dict[str, Any]]:
+def get_available_embedding_models() -> List[ModelResponse]:
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
-def get_available_llm_models() -> List[Dict[str, Any]]:
+def get_available_llm_models() -> list[ModelResponse]:
     if is_caii_enabled():
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
@@ -99,24 +100,20 @@ def is_caii_enabled() -> bool:
     return len(domain) > 0
 
 
-def _get_bedrock_llm_models() -> List[Dict[str, Any]]:
-    return [
-        {
-            "model_id": DEFAULT_BEDROCK_LLM_MODEL,
-            "name": "Llama3.1 8B Instruct v1",
-        },
-        {
-            "model_id": "meta.llama3-1-70b-instruct-v1:0",
-            "name": "Llama3.1 70B Instruct v1",
-        },
-        {
-            "model_id": "cohere.command-r-plus-v1:0",
-            "name": "Cohere Command R Plus v1",
-        }
+def _get_bedrock_llm_models() -> List[ModelResponse]:
+    return [ModelResponse(
+            model_id = DEFAULT_BEDROCK_LLM_MODEL,
+            name = "Llama3.1 8B Instruct v1"),
+    ModelResponse(
+            model_id = "meta.llama3-1-70b-instruct-v1:0",
+            name = "Llama3.1 70B Instruct v1"),
+        ModelResponse(
+            model_id = "cohere.command-r-plus-v1:0",
+            name = "Cohere Command R Plus v1")
     ]
 
 
-def _get_bedrock_embedding_models() -> List[Dict[str, Any]]:
+def _get_bedrock_embedding_models() -> List[ModelResponse]:
     return [
         {
             "model_id": "cohere.embed-english-v3",
