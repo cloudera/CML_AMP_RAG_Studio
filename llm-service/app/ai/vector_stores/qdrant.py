@@ -103,7 +103,7 @@ class QdrantVectorStore(VectorStore):
         if self.exists():
             index = VectorStoreIndex.from_vector_store(
                 vector_store=self.llama_vector_store(),
-                embed_model=models.get_embedding_model(),
+                embed_model=models.get_noop_embedding_model(),
             )
             index.delete_ref_doc(document_id)
 

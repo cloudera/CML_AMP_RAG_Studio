@@ -40,7 +40,7 @@ from enum import Enum
 from typing import List, Literal
 
 from fastapi import HTTPException
-from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from llama_index.embeddings.bedrock import BedrockEmbedding
@@ -54,6 +54,19 @@ from .llama_utils import completion_to_prompt, messages_to_prompt
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 
+
+def get_noop_embedding_model() -> BaseEmbedding:
+    class DummyEmbeddingModel(BaseEmbedding):
+        def _get_query_embedding(self, query: str) -> Embedding:
+            return []
+
+        async def _aget_query_embedding(self, query: str) -> Embedding:
+            return []
+
+        def _get_text_embedding(self, text: str) -> Embedding:
+            return []
+
+    return DummyEmbeddingModel()
 
 def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
     if is_caii_enabled():

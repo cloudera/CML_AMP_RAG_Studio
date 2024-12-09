@@ -50,6 +50,7 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
+from .data_sources_metadata_api import get_metadata
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..config import settings
 from . import models
@@ -73,7 +74,7 @@ def read_summary(data_source_id: int, document_id: str) -> str:
         raise HTTPException(status_code=404, detail="Knowledge base not found.")
 
     storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context)
+    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
 
     if document_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
         return "No summary found for this document."
@@ -101,7 +102,7 @@ def generate_summary(
             initialize_summary_index_storage(data_source_id)
             storage_context = make_storage_context(data_source_id)
 
-        doc_summary_index = load_document_summary_index(storage_context)
+        doc_summary_index = load_document_summary_index(storage_context, data_source_id)
 
         for document in documents:
             doc_summary_index.insert(document)
@@ -114,14 +115,16 @@ def generate_summary(
 
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
-def _set_settings_globals() -> None:
-    Settings.llm = models.get_llm()
-    Settings.embed_model = models.get_embedding_model()
+def _set_settings_globals(data_source_id: int) -> None:
+    metadata = get_metadata(data_source_id)
+    ### how do we get the CAII LLM model!
+    Settings.llm = models.get_llm(models.get_available_llm_models()[0].model_id)
+    Settings.embed_model = models.get_embedding_model(metadata.embedding_model)
     Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
 def initialize_summary_index_storage(data_source_id: int) -> None:
-    _set_settings_globals()
+    _set_settings_globals(data_source_id)
     doc_summary_index = DocumentSummaryIndex.from_documents(
         [],
         summary_query=SUMMARY_PROMPT,
@@ -129,10 +132,8 @@ def initialize_summary_index_storage(data_source_id: int) -> None:
     doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
 
 
-def load_document_summary_index(
-    storage_context: StorageContext,
-) -> DocumentSummaryIndex:
-    _set_settings_globals()
+def load_document_summary_index(storage_context: StorageContext, data_source_id: int) -> DocumentSummaryIndex:
+    _set_settings_globals(data_source_id)
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
         load_index_from_storage(storage_context, summary_query=SUMMARY_PROMPT),
@@ -147,7 +148,7 @@ def summarize_data_source(data_source_id: int) -> str:
         return ""
 
     storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context)
+    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
     doc_ids = doc_summary_index.index_struct.doc_id_to_summary_id.keys()
     summaries = map(doc_summary_index.get_document_summary, doc_ids)
 
@@ -159,9 +160,7 @@ def summarize_data_source(data_source_id: int) -> str:
 def make_storage_context(data_source_id: int) -> StorageContext:
     storage_context = StorageContext.from_defaults(
         persist_dir=index_dir(data_source_id),
-        vector_store=QdrantVectorStore.for_summaries(
-            data_source_id
-        ).llama_vector_store(),
+        vector_store=QdrantVectorStore.for_summaries(data_source_id).llama_vector_store(),
     )
     return storage_context
 
@@ -183,7 +182,7 @@ def delete_document(data_source_id: int, doc_id: str) -> None:
     if not os.path.exists(index):
         return
     storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context)
+    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
     if doc_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
         return
     doc_summary_index.delete(doc_id)
