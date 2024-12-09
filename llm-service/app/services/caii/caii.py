@@ -106,7 +106,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         desc_json = {"namespace": DEFAULT_NAMESPACE}
 
         desc = requests.post(describe_url, headers=headers, json=desc_json)
-        endpoints = json.loads(desc.content)['endpoints']
+        endpoints = json.loads(desc.content)["endpoints"]
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
     except requests.exceptions.ConnectionError as e:
         raise HTTPException(
@@ -114,10 +114,11 @@ def list_endpoints() -> list[ListEndpointEntry]:
             detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
         )
 
+
 def get_llm(
-        endpoint_name: str,
-        messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
-        completion_to_prompt: Callable[[str], str],
+    endpoint_name: str,
+    messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
+    completion_to_prompt: Callable[[str], str],
 ) -> LLM:
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint.url.removesuffix("/chat/completions")
@@ -163,6 +164,7 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 # FILL_MASK = 6;
 # RANK = 7;
 
+
 def get_caii_llm_models() -> List[ModelResponse]:
     return get_models_with_task("TEXT_GENERATION")
 
@@ -173,8 +175,15 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 def get_models_with_task(task_type: str) -> List[ModelResponse]:
     endpoints = list_endpoints()
-    endpoint_details = list(map(lambda endpoint: describe_endpoint(endpoint.name), endpoints))
-    llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == task_type, endpoint_details))
+    endpoint_details = list(
+        map(lambda endpoint: describe_endpoint(endpoint.name), endpoints)
+    )
+    llm_endpoints = list(
+        filter(
+            lambda endpoint: endpoint.task and endpoint.task == task_type,
+            endpoint_details,
+        )
+    )
     models = list(map(build_model_response, llm_endpoints))
     return models
 

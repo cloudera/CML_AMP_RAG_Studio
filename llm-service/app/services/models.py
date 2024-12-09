@@ -68,6 +68,7 @@ def get_noop_embedding_model() -> BaseEmbedding:
 
     return DummyEmbeddingModel()
 
+
 def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
     if is_caii_enabled():
         return caii_embedding(model_name=model_name)
@@ -112,16 +113,26 @@ def is_caii_enabled() -> bool:
 
 def _get_bedrock_llm_models() -> List[ModelResponse]:
     return [
-        ModelResponse(model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"),
-        ModelResponse(model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"),
-        ModelResponse(model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1")
+        ModelResponse(
+            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
+        ),
     ]
 
 
 def _get_bedrock_embedding_models() -> List[ModelResponse]:
     return [
-        ModelResponse(model_id="cohere.embed-english-v3", name="Cohere Embed English v3"),
-        ModelResponse(model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3")
+        ModelResponse(
+            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
+        ),
+        ModelResponse(
+            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
+        ),
     ]
 
 
@@ -142,7 +153,13 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
         if model.model_id == model_name:
             if not is_caii_enabled() or model.available:
                 get_llm(model_name).chat(
-                    messages=[ChatMessage(role=MessageRole.USER, content="Are you available to answer questions?")])
+                    messages=[
+                        ChatMessage(
+                            role=MessageRole.USER,
+                            content="Are you available to answer questions?",
+                        )
+                    ]
+                )
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")

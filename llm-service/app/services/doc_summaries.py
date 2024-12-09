@@ -132,7 +132,9 @@ def initialize_summary_index_storage(data_source_id: int) -> None:
     doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
 
 
-def load_document_summary_index(storage_context: StorageContext, data_source_id: int) -> DocumentSummaryIndex:
+def load_document_summary_index(
+    storage_context: StorageContext, data_source_id: int
+) -> DocumentSummaryIndex:
     _set_settings_globals(data_source_id)
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
@@ -160,7 +162,9 @@ def summarize_data_source(data_source_id: int) -> str:
 def make_storage_context(data_source_id: int) -> StorageContext:
     storage_context = StorageContext.from_defaults(
         persist_dir=index_dir(data_source_id),
-        vector_store=QdrantVectorStore.for_summaries(data_source_id).llama_vector_store(),
+        vector_store=QdrantVectorStore.for_summaries(
+            data_source_id
+        ).llama_vector_store(),
     )
     return storage_context
 

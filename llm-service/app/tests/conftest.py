@@ -221,6 +221,7 @@ def summary_vector_store(
         lambda ds_id: original(ds_id, qdrant_client),
     )
 
+
 @pytest.fixture(autouse=True)
 def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     def get_datasource_metadata(data_source_id: int) -> RagDataSource:
@@ -239,7 +240,9 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
             total_doc_size=1,
         )
 
-    monkeypatch.setattr(data_sources_metadata_api, "get_metadata", get_datasource_metadata)
+    monkeypatch.setattr(
+        data_sources_metadata_api, "get_metadata", get_datasource_metadata
+    )
 
 
 @pytest.fixture(autouse=True)

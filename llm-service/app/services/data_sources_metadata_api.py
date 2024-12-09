@@ -42,6 +42,7 @@ from typing import Optional
 
 import requests
 
+
 @dataclass
 class RagDataSource:
     id: int
@@ -61,6 +62,7 @@ class RagDataSource:
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/dataSources/{}"
 
+
 def get_metadata(data_source_id: int) -> RagDataSource:
     response = requests.get(url_template.format(data_source_id))
     response.raise_for_status()
@@ -77,5 +79,5 @@ def get_metadata(data_source_id: int) -> RagDataSource:
         updated_by_id=data["updatedById"],
         connection_type=data["connectionType"],
         document_count=data.get("documentCount"),
-        total_doc_size=data.get("totalDocSize")
+        total_doc_size=data.get("totalDocSize"),
     )

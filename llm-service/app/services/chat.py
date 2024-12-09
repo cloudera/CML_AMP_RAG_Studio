@@ -84,7 +84,9 @@ def v2_chat(
     data_source_metadata = data_sources_metadata_api.get_metadata(data_source_id)
     # todo: get evaluator model name from data source metadata, rather than having to do all this work to get a model?
     llm_model_name = models.get_available_llm_models()[0].name
-    relevance, faithfulness = evaluators.evaluate_response(query, response, llm_model_name)
+    relevance, faithfulness = evaluators.evaluate_response(
+        query, response, llm_model_name
+    )
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,

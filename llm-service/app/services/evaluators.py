@@ -44,9 +44,8 @@ from ..services import models
 
 
 def evaluate_response(
-        query: str,
-        chat_response: AgentChatResponse,
-        model_name: str) -> tuple[float, float]:
+    query: str, chat_response: AgentChatResponse, model_name: str
+) -> tuple[float, float]:
     # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
     evaluator_llm = models.get_llm(model_name)
 

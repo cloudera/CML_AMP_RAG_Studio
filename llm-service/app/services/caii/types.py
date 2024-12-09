@@ -68,6 +68,7 @@ from pydantic import BaseModel, ConfigDict
 #     transition_status: str
 #
 
+
 class EndpointMetadata(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     # current_model: Optional[RegistrySource]

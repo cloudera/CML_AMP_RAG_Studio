@@ -48,7 +48,9 @@ from .utils import build_auth_headers
 
 
 class CaiiEmbeddingModel(BaseEmbedding):
-    endpoint: Endpoint = Field(Endpoint, description="The endpoint to use for embeddings")
+    endpoint: Endpoint = Field(
+        Endpoint, description="The endpoint to use for embeddings"
+    )
 
     def __init__(self, endpoint: Endpoint):
         super().__init__()

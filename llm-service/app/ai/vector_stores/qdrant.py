@@ -64,24 +64,35 @@ def new_qdrant_client() -> qdrant_client.QdrantClient:
 class QdrantVectorStore(VectorStore):
     @staticmethod
     def for_chunks(
-            data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
+        data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
     ) -> "QdrantVectorStore":
-        return QdrantVectorStore(table_name=f"index_{data_source_id}", data_source_id=data_source_id, client=client)
+        return QdrantVectorStore(
+            table_name=f"index_{data_source_id}",
+            data_source_id=data_source_id,
+            client=client,
+        )
 
     @staticmethod
     def for_summaries(
-            data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
+        data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
     ) -> "QdrantVectorStore":
         return QdrantVectorStore(
-            table_name=f"summary_index_{data_source_id}", data_source_id=data_source_id, client=client
+            table_name=f"summary_index_{data_source_id}",
+            data_source_id=data_source_id,
+            client=client,
         )
 
     def __init__(
-            self, table_name: str, data_source_id: int, client: Optional[qdrant_client.QdrantClient] = None
+        self,
+        table_name: str,
+        data_source_id: int,
+        client: Optional[qdrant_client.QdrantClient] = None,
     ):
         self.client = client or new_qdrant_client()
         self.table_name = table_name
-        self.data_source_metadata = data_sources_metadata_api.get_metadata(data_source_id)
+        self.data_source_metadata = data_sources_metadata_api.get_metadata(
+            data_source_id
+        )
 
     def get_embedding_model(self) -> BaseEmbedding:
         return models.get_embedding_model(self.data_source_metadata.embedding_model)
@@ -114,7 +125,9 @@ class QdrantVectorStore(VectorStore):
         vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
         return vector_store
 
-    def visualize(self, user_query: Optional[str] = None) -> list[tuple[tuple[float, float], str]]:
+    def visualize(
+        self, user_query: Optional[str] = None
+    ) -> list[tuple[tuple[float, float], str]]:
         records: list[Record]
         if not self.exists():
             return []
@@ -125,7 +138,13 @@ class QdrantVectorStore(VectorStore):
         if user_query:
             embedding_model = self.get_embedding_model()
             user_query_vector = embedding_model.get_query_embedding(user_query)
-            records.append(Record(vector=user_query_vector, id="abc123", payload={"file_name": "USER_QUERY"}))
+            records.append(
+                Record(
+                    vector=user_query_vector,
+                    id="abc123",
+                    payload={"file_name": "USER_QUERY"},
+                )
+            )
 
         record: Record
         filenames = []
@@ -139,7 +158,10 @@ class QdrantVectorStore(VectorStore):
         try:
             reduced_embeddings = reducer.fit_transform(embeddings)
             # todo: figure out how to satisfy mypy on this line
-            return [(tuple(coordinate), filenames[i]) for i, coordinate in enumerate(reduced_embeddings.tolist())] # type: ignore
+            return [
+                (tuple(coordinate), filenames[i])
+                for i, coordinate in enumerate(reduced_embeddings.tolist())
+            ]  # type: ignore
         except Exception as e:
             # Log the error
             logger.error(f"Error during UMAP transformation: {e}")
