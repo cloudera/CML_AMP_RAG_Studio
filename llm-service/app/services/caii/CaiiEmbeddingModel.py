@@ -35,39 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
-#
-#  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
-#  All rights reserved.
-#
-#  Applicable Open Source License: Apache 2.0
-#
-#
-#  This code is provided to you pursuant a written agreement with
-#  (i) Cloudera, Inc. or (ii) a third-party authorized to distribute
-#  this code. If you do not have a written agreement with Cloudera nor
-#  with an authorized and properly licensed third party, you do not
-#  have any rights to access nor to use this code.
-#
-#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
-#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
-#  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
-#  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
-#  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
-#  FITNESS FOR A PARTICULAR PURPOSE; (C) CLOUDERA IS NOT LIABLE TO YOU,
-#  AND WILL NOT DEFEND, INDEMNIFY, NOR HOLD YOU HARMLESS FOR ANY CLAIMS
-#  ARISING FROM OR RELATED TO THE CODE; AND (D)WITH RESPECT TO YOUR EXERCISE
-#  OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
-#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR
-#  CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO, DAMAGES
-#  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
-#  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
-#  DATA.
-#
 import http.client as http_client
 import json
 import os
+from typing import Any, Dict, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
@@ -117,3 +88,30 @@ class CaiiEmbeddingModel(BaseEmbedding):
         assert all(isinstance(x, float) for x in embedding)
 
         return embedding
+
+    def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
+        model = self.endpoint.endpointmetadata.model_name
+        domain = os.environ["CAII_DOMAIN"]
+
+        connection = http_client.HTTPSConnection(domain, 443)
+        headers = build_auth_headers()
+        headers["Content-Type"] = "application/json"
+        body = json.dumps(
+            {
+                "input": texts,
+                "input_type": "passage",
+                "truncate": "END",
+                "model": model,
+            }
+        )
+        connection.request("POST", self.endpoint["url"], body=body, headers=headers)
+        res = connection.getresponse()
+        data = res.read()
+        json_response = data.decode("utf-8")
+        structured_response = json.loads(json_response)
+        embeddings = structured_response["data"][0]["embedding"]
+        assert isinstance(embeddings, list)
+        assert all(isinstance(x, list) for x in embeddings)
+        assert all(all(isinstance(y, float) for y in x) for x in embeddings)
+
+        return embeddings
