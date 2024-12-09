@@ -50,7 +50,7 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
-from .data_sources_metadata_api import get_metadata
+from . import data_sources_metadata_api
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..config import settings
 from . import models
@@ -116,7 +116,7 @@ def generate_summary(
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
 def _set_settings_globals(data_source_id: int) -> None:
-    metadata = get_metadata(data_source_id)
+    metadata = data_sources_metadata_api.get_metadata(data_source_id)
     ### how do we get the CAII LLM model!
     Settings.llm = models.get_llm(models.get_available_llm_models()[0].model_id)
     Settings.embed_model = models.get_embedding_model(metadata.embedding_model)

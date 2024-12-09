@@ -65,11 +65,6 @@ class CaiiEmbeddingModel(BaseEmbedding):
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
         model = self.endpoint.endpointmetadata.model_name
-        domain = os.environ["CAII_DOMAIN"]
-
-        connection = http_client.HTTPSConnection(domain, 443)
-        headers = build_auth_headers()
-        headers["Content-Type"] = "application/json"
         body = json.dumps(
             {
                 "input": query,
@@ -78,24 +73,28 @@ class CaiiEmbeddingModel(BaseEmbedding):
                 "model": model,
             }
         )
-        connection.request("POST", self.endpoint.url, body=body, headers=headers)
-        res = connection.getresponse()
-        data = res.read()
-        json_response = data.decode("utf-8")
-        structured_response = json.loads(json_response)
+        structured_response = self.make_embedding_request(body)
         embedding = structured_response["data"][0]["embedding"]
         assert isinstance(embedding, list)
         assert all(isinstance(x, float) for x in embedding)
 
         return embedding
 
-    def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
-        model = self.endpoint.endpointmetadata.model_name
+    def make_embedding_request(self, body: str) -> Any:
         domain = os.environ["CAII_DOMAIN"]
 
         connection = http_client.HTTPSConnection(domain, 443)
         headers = build_auth_headers()
         headers["Content-Type"] = "application/json"
+        connection.request("POST", self.endpoint.url, body=body, headers=headers)
+        res = connection.getresponse()
+        data = res.read()
+        json_response = data.decode("utf-8")
+        structured_response = json.loads(json_response)
+        return structured_response
+
+    def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
+        model = self.endpoint.endpointmetadata.model_name
         body = json.dumps(
             {
                 "input": texts,
@@ -104,11 +103,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
                 "model": model,
             }
         )
-        connection.request("POST", self.endpoint["url"], body=body, headers=headers)
-        res = connection.getresponse()
-        data = res.read()
-        json_response = data.decode("utf-8")
-        structured_response = json.loads(json_response)
+        structured_response = self.make_embedding_request(body)
         embeddings = structured_response["data"][0]["embedding"]
         assert isinstance(embeddings, list)
         assert all(isinstance(x, list) for x in embeddings)

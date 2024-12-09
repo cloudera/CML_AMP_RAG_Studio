@@ -252,6 +252,7 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
     monkeypatch.setattr(models, "get_embedding_model", get_embedding_model)
+    monkeypatch.setattr(models, "get_noop_embedding_model", get_embedding_model)
     return model
 
 
@@ -259,8 +260,11 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
     model = DummyLlm()
 
+    def get_llm(model_name: str = "dummy_value") -> LLM:
+        return model
+
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_llm", lambda : model)
+    monkeypatch.setattr(models, "get_llm", get_llm)
     return model
 
 
