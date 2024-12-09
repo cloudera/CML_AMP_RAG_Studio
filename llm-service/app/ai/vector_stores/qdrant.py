@@ -38,9 +38,9 @@
 import logging
 import os
 from typing import Optional, Any
-import umap
 
 import qdrant_client
+import umap
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
@@ -159,9 +159,9 @@ class QdrantVectorStore(VectorStore):
             reduced_embeddings = reducer.fit_transform(embeddings)
             # todo: figure out how to satisfy mypy on this line
             return [
-                (tuple(coordinate), filenames[i])
+                (tuple(coordinate), filenames[i])  # type: ignore
                 for i, coordinate in enumerate(reduced_embeddings.tolist())
-            ]  # type: ignore
+            ]
         except Exception as e:
             # Log the error
             logger.error(f"Error during UMAP transformation: {e}")
