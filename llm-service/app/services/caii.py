@@ -37,7 +37,6 @@
 #
 import json
 import os
-from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Sequence
 
 import requests
@@ -45,84 +44,12 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
-from mypy.util import json_loads
 
+from .caii_temp.types import Endpoint, ListEndpointEntry
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
 
 DEFAULT_NAMESPACE = "serving-default"
-
-
-@dataclass
-class EndpointCondition:
-    type: str
-    status: str
-    severity: str
-    last_transition_time: str
-    reason: str
-    message: str
-
-@dataclass
-class ReplicaMetadata:
-    modelVersion: str
-    replicaCount: int
-    replicaNames: List[str]
-
-@dataclass
-class RegistrySource:
-    model_id: str
-    version: int
-
-@dataclass
-class EndpointStatus:
-    failed_copies: int
-    total_copies: int
-    active_model_state: str
-    target_model_state: str
-    transition_status: str
-
-@dataclass
-class EndpointMetadata:
-    current_model: RegistrySource
-    previous_model: RegistrySource
-    model_name: str
-
-@dataclass
-class Endpoint:
-    namespace: str
-    name: str
-    url: str
-    conditions: List[EndpointCondition]
-    status: EndpointStatus
-    observed_generation: int
-    replica_count: int
-    replica_metadata: List[ReplicaMetadata]
-    created_by: str
-    description: str
-    created_at: str
-    resources: Dict[str, str]
-    source: Dict[str, RegistrySource]
-    autoscaling: Dict[str, Any]
-    endpointmetadata: EndpointMetadata
-    traffic: Dict[str, str]
-    api_standard: str
-    has_chat_template: bool
-    metricFormat: str
-    task: str
-    instance_type: str
-
-@dataclass
-class ListEndpointEntry:
-    namespace: str
-    name: str
-    url: str
-    state: str
-    created_by: str
-    replica_count: int
-    replica_metadata: List[Any]
-    api_standard: str
-    has_chat_template: bool
-    metricFormat: str
 
 def describe_endpoint(endpoint_name: str) -> Endpoint:
     domain=os.environ["CAII_DOMAIN"]
@@ -169,7 +96,7 @@ def get_llm(
     completion_to_prompt: Callable[[str], str],
 ) -> LLM:
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
-    api_base = endpoint["url"].removesuffix("/chat/completions")
+    api_base = endpoint.url.removesuffix("/chat/completions")
     headers = _get_access_headers()
 
     model = endpoint.endpointmetadata.model_name
@@ -213,11 +140,8 @@ def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
 
 def get_caii_llm_models() -> List[Dict[str, Any]]:
     endpoints = list_endpoints()
-    for endpoint in endpoints:
-        description = describe_endpoint(endpoint_name=endpoint.name)
-
-        print(description)
-
+    llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == "TEXT_GENERATION", endpoints))
+    print(llm_endpoints)
 
     endpoint_name = os.environ["CAII_INFERENCE_ENDPOINT_NAME"]
     try:
@@ -258,12 +182,12 @@ def get_caii_embedding_models() -> List[Dict[str, Any]]:
     return build_model_response(models)
 
 
-def build_model_response(models: Dict[str, Any]) -> List[Dict[str, Any]]:
+def build_model_response(models: Endpoint) -> List[Dict[str, Any]]:
     return [
         {
-            "model_id": models["name"],
-            "name": models["name"],
-            "available": models["replica_count"] > 0,
-            "replica_count": models["replica_count"],
+            "model_id": models.name,
+            "name": models.name,
+            "available": models.replica_count > 0,
+            "replica_count": models.replica_count,
         }
     ]

@@ -43,11 +43,13 @@ from typing import Any, Dict
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
 
+from .caii_temp.types import Endpoint
+
 
 class CaiiEmbeddingModel(BaseEmbedding):
     endpoint: Any = Field(Any, description="The endpoint to use for embeddings")
 
-    def __init__(self, endpoint: Dict[str, Any]):
+    def __init__(self, endpoint: Endpoint):
         super().__init__()
         self.endpoint = endpoint
 
@@ -61,7 +63,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return self._get_embedding(query, "query")
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
-        model = self.endpoint["endpointmetadata"]["model_name"]
+        model = self.endpoint.endpointmetadata.model_name
         domain = os.environ["CAII_DOMAIN"]
 
         connection = http_client.HTTPSConnection(domain, 443)
