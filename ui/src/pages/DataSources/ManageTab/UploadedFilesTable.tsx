@@ -50,6 +50,7 @@ import Icon, {
   CheckCircleOutlined,
   DeleteOutlined,
   LoadingOutlined,
+  MinusCircleOutlined,
 } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
@@ -63,11 +64,12 @@ import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import { useContext, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
 import { cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { getDataSourceById } from "src/api/dataSourceApi.ts";
 
 function SummaryPopover({
   dataSourceId,
@@ -100,6 +102,7 @@ function SummaryPopover({
 const columns = (
   dataSourceId: string,
   handleDeleteFile: (document: RagDocumentResponseType) => void,
+  summarizationModel?: string,
 ): TableProps<RagDocumentResponseType>["columns"] => [
   {
     title: (
@@ -110,9 +113,12 @@ const columns = (
               Document Summary
             </Typography.Text>
             <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
-              Note: Document summarization can take a significant amount of
-              time, but will not impact the ability to use the document for
-              Chat.
+              Note: Document summarization requires a summarization model to be
+              selected.
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
+              Document summarization can take a significant amount of time, but
+              will not impact the ability to use the document for Chat.
             </Typography.Text>
           </Flex>
         }
@@ -122,16 +128,32 @@ const columns = (
     ),
     dataIndex: "summaryCreationTimestamp",
     key: "summaryCreationTimestamp",
-    render: (timestamp: number | null, data) => {
-      return timestamp == null ? (
-        <LoadingOutlined spin />
-      ) : (
-        <SummaryPopover
-          dataSourceId={dataSourceId}
-          docId={data.documentId}
-          timestamp={timestamp}
-        />
-      );
+    render: (
+      timestamp: RagDocumentResponseType["summaryCreationTimestamp"],
+      data,
+    ) => {
+      if (timestamp) {
+        return (
+          <SummaryPopover
+            dataSourceId={dataSourceId}
+            docId={data.documentId}
+            timestamp={timestamp}
+          />
+        );
+      }
+
+      if (!summarizationModel) {
+        return (
+          <Popover
+            title={"No summary available."}
+            content={"A summarization model must be selected."}
+          >
+            <MinusCircleOutlined style={{ fontSize: 16 }} />
+          </Popover>
+        );
+      }
+
+      return <LoadingOutlined spin />;
     },
   },
   {
@@ -194,6 +216,9 @@ const UploadedFilesTable = () => {
   const deleteConfirmationModal = useModal();
   const queryClient = useQueryClient();
   const getRagDocuments = useGetRagDocuments(dataSourceId);
+  const { data: dataSourceMetaData } = useQuery(
+    getDataSourceById(dataSourceId),
+  );
   const deleteDocumentMutation = useDeleteDocumentMutation({
     onSuccess: () => {
       messageQueue.success("Document deleted successfully");
@@ -247,7 +272,11 @@ const UploadedFilesTable = () => {
       <Table<RagDocumentResponseType>
         loading={docsLoading}
         dataSource={ragDocuments}
-        columns={columns(dataSourceId, handleDeleteFileModal)}
+        columns={columns(
+          dataSourceId,
+          handleDeleteFileModal,
+          dataSourceMetaData?.summarizationModel,
+        )}
       />
       <Modal
         title="Delete document?"
