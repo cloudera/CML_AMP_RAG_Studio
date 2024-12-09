@@ -48,15 +48,12 @@ from llama_index.core.llms import LLM
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
 
+DEFAULT_NAMESPACE = "serving-default"
 
 def describe_endpoint(domain: str, endpoint_name: str) -> Any:
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token = jwt_contents["access_token"]
-
-    headers = {"Authorization": f"Bearer {access_token}"}
+    headers = _get_access_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
-    desc_json = {"name": endpoint_name, "namespace": "serving-default"}
+    desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
 
     desc = requests.post(describe_url, headers=headers, json=desc_json)
     if desc.status_code == 404:
@@ -64,6 +61,41 @@ def describe_endpoint(domain: str, endpoint_name: str) -> Any:
             status_code=404, detail=f"Endpoint '{endpoint_name}' not found"
         )
     return json.loads(desc.content)
+
+class Endpoint:
+    def __init__(self, namespace, name, url, state, created_by, replica_count, replica_metadata, api_standard, has_chat_template, metricFormat):
+        self.namespace = namespace
+        self.name = name
+        self.url = url
+        self.state = state
+        self.created_by = created_by
+        self.replica_count = replica_count
+        self.replica_metadata = replica_metadata
+        self.api_standard = api_standard
+        self.has_chat_template = has_chat_template
+        self.metricFormat = metricFormat
+
+
+def list_endpoints(domain: str) -> list[Endpoint]:
+    headers = _get_access_headers()
+    describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
+    desc_json = {"namespace": DEFAULT_NAMESPACE}
+
+    desc = requests.post(describe_url, headers=headers, json=desc_json)
+    return json.loads(desc.content)
+
+
+def _get_access_headers():
+    access_token = _get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers
+
+
+def _get_access_token():
+    with open("/tmp/jwt", "r") as file:
+        jwt_contents = json.load(file)
+    access_token = jwt_contents["access_token"]
+    return access_token
 
 
 def get_llm(
@@ -74,10 +106,7 @@ def get_llm(
 ) -> LLM:
     endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     api_base = endpoint["url"].removesuffix("/chat/completions")
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token = jwt_contents["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
+    headers = _get_access_headers()
 
     model = endpoint["endpointmetadata"]["model_name"]
     if "mistral" in endpoint_name.lower():
@@ -107,9 +136,6 @@ def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
     endpoint = describe_endpoint(domain=domain, endpoint_name=endpoint_name)
     return CaiiEmbeddingModel(endpoint=endpoint)
-
-
-### metadata methods below here
 
 
 def get_caii_llm_models() -> List[Dict[str, Any]]:
