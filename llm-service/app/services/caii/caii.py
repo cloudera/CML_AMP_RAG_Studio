@@ -35,9 +35,39 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+
+#
+#  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
+#  (C) Cloudera, Inc. 2024
+#  All rights reserved.
+#
+#  Applicable Open Source License: Apache 2.0
+#
+#
+#  This code is provided to you pursuant a written agreement with
+#  (i) Cloudera, Inc. or (ii) a third-party authorized to distribute
+#  this code. If you do not have a written agreement with Cloudera nor
+#  with an authorized and properly licensed third party, you do not
+#  have any rights to access nor to use this code.
+#
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
+#  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
+#  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
+#  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
+#  FITNESS FOR A PARTICULAR PURPOSE; (C) CLOUDERA IS NOT LIABLE TO YOU,
+#  AND WILL NOT DEFEND, INDEMNIFY, NOR HOLD YOU HARMLESS FOR ANY CLAIMS
+#  ARISING FROM OR RELATED TO THE CODE; AND (D)WITH RESPECT TO YOUR EXERCISE
+#  OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR
+#  CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO, DAMAGES
+#  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
+#  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
+#  DATA.
+#
 import json
 import os
-from typing import Callable, Dict, List, Sequence
+from typing import Callable, List, Sequence
 
 import requests
 from fastapi import HTTPException
@@ -47,14 +77,15 @@ from llama_index.core.llms import LLM
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
-from .caii_temp.types import Endpoint, ListEndpointEntry, ModelResponse
+from .types import Endpoint, ListEndpointEntry, ModelResponse
+from .utils import build_auth_headers
 
 DEFAULT_NAMESPACE = "serving-default"
 
 
 def describe_endpoint(endpoint_name: str) -> Endpoint:
     domain = os.environ["CAII_DOMAIN"]
-    headers = _get_access_headers()
+    headers = build_auth_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
     desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
 
@@ -70,7 +101,7 @@ def describe_endpoint(endpoint_name: str) -> Endpoint:
 def list_endpoints() -> list[ListEndpointEntry]:
     domain = os.environ["CAII_DOMAIN"]
     try:
-        headers = _get_access_headers()
+        headers = build_auth_headers()
         describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
         desc_json = {"namespace": DEFAULT_NAMESPACE}
 
@@ -83,20 +114,6 @@ def list_endpoints() -> list[ListEndpointEntry]:
             detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
         )
 
-
-def _get_access_headers() -> Dict[str, str]:
-    access_token = _get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-    return headers
-
-
-def _get_access_token() -> str:
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token: str = jwt_contents["access_token"]
-    return access_token
-
-
 def get_llm(
         endpoint_name: str,
         messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
@@ -104,7 +121,7 @@ def get_llm(
 ) -> LLM:
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint.url.removesuffix("/chat/completions")
-    headers = _get_access_headers()
+    headers = build_auth_headers()
 
     model = endpoint.endpointmetadata.model_name
     if "mistral" in endpoint_name.lower():
@@ -136,7 +153,7 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
     return CaiiEmbeddingModel(endpoint=endpoint)
 
 
-# task types from the proto definition
+# task types from the MLServing proto definition
 # TASK_UNKNOWN = 0;
 # INFERENCE = 1;
 # TEXT_GENERATION = 2;
@@ -150,16 +167,16 @@ def get_caii_llm_models() -> List[ModelResponse]:
     return get_models_with_task("TEXT_GENERATION")
 
 
+def get_caii_embedding_models() -> List[ModelResponse]:
+    return get_models_with_task("EMBED")
+
+
 def get_models_with_task(task_type: str) -> List[ModelResponse]:
     endpoints = list_endpoints()
     endpoint_details = list(map(lambda endpoint: describe_endpoint(endpoint.name), endpoints))
     llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == task_type, endpoint_details))
     models = list(map(build_model_response, llm_endpoints))
     return models
-
-
-def get_caii_embedding_models() -> List[ModelResponse]:
-    return get_models_with_task("EMBED")
 
 
 def build_model_response(endpoint: Endpoint) -> ModelResponse:

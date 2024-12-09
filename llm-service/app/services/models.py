@@ -46,10 +46,10 @@ from llama_index.core.llms import LLM
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 
-from .caii import get_caii_embedding_models, get_caii_llm_models
-from .caii import get_embedding_model as caii_embedding
-from .caii import get_llm as caii_llm
-from .caii_temp.types import ModelResponse
+from .caii.caii import get_caii_embedding_models, get_caii_llm_models
+from .caii.caii import get_embedding_model as caii_embedding
+from .caii.caii import get_llm as caii_llm
+from .caii.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
@@ -57,8 +57,7 @@ DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 
 def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
     if is_caii_enabled():
-        return caii_embedding(
-            model_name=os.environ["CAII_EMBEDDING_ENDPOINT_NAME"])
+        return caii_embedding(model_name=model_name)
     if model_name is None:
         model_name = "cohere.embed-english-v3"
     return BedrockEmbedding(model_name=model_name)
@@ -67,7 +66,7 @@ def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbe
 def get_llm(model_name: str = DEFAULT_BEDROCK_LLM_MODEL) -> LLM:
     if is_caii_enabled():
         return caii_llm(
-            endpoint_name=os.environ["CAII_INFERENCE_ENDPOINT_NAME"],
+            endpoint_name=model_name,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
         )

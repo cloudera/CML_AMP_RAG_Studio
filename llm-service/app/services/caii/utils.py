@@ -35,49 +35,13 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Any, Dict, List, Literal
-
-from fastapi import APIRouter
-
-from .... import exceptions
-from ....services.caii.types import ModelResponse
-from ....services.models import (
-    ModelSource,
-    get_available_embedding_models,
-    get_available_llm_models,
-    get_model_source,
-    test_embedding_model,
-    test_llm_model,
-)
-
-router = APIRouter(prefix="/models", tags=["Models"])
+import json
+from typing import Dict
 
 
-@router.get("/llm", summary="Get LLM Inference models.")
-@exceptions.propagates
-def get_llm_models() -> List[ModelResponse]:
-    return get_available_llm_models()
-
-
-@router.get("/embeddings", summary="Get LLM Embedding models.")
-@exceptions.propagates
-def get_llm_embedding_models() -> List[ModelResponse]:
-    return get_available_embedding_models()
-
-
-@router.get("/model_source", summary="Model source enabled - Bedrock or CAII")
-@exceptions.propagates
-def get_model() -> ModelSource:
-    return get_model_source()
-
-
-@router.get("/llm/{model_name}/test", summary="Test LLM Inference model.")
-@exceptions.propagates
-def llm_model_test(model_name: str) -> Literal["ok"]:
-    return test_llm_model(model_name)
-
-
-@router.get("/embedding/{model_name}/test", summary="Test Embedding model.")
-@exceptions.propagates
-def embedding_model_test(model_name: str) -> str:
-    return test_embedding_model(model_name)
+def build_auth_headers() -> Dict[str, str]:
+    with open("/tmp/jwt", "r") as file:
+        jwt_contents = json.load(file)
+    access_token = jwt_contents["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers

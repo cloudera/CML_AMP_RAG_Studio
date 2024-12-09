@@ -42,13 +42,12 @@ from pydantic import BaseModel, ConfigDict
 
 
 # class EndpointCondition(BaseModel):
-#     type: str
 #     status: str
 #     severity: str
 #     last_transition_time: str
 #     reason: str
 #     message: str
-#
+
 
 # class ReplicaMetadata(BaseModel):
 #     modelVersion: str
