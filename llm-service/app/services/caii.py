@@ -37,6 +37,7 @@
 #
 import json
 import os
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Sequence
 
 import requests
@@ -44,6 +45,7 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
+from mypy.util import json_loads
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
@@ -62,19 +64,18 @@ def describe_endpoint(domain: str, endpoint_name: str) -> Any:
         )
     return json.loads(desc.content)
 
+@dataclass
 class Endpoint:
-    def __init__(self, namespace, name, url, state, created_by, replica_count, replica_metadata, api_standard, has_chat_template, metricFormat):
-        self.namespace = namespace
-        self.name = name
-        self.url = url
-        self.state = state
-        self.created_by = created_by
-        self.replica_count = replica_count
-        self.replica_metadata = replica_metadata
-        self.api_standard = api_standard
-        self.has_chat_template = has_chat_template
-        self.metricFormat = metricFormat
-
+    namespace: str
+    name: str
+    url: str
+    state: str
+    created_by: str
+    replica_count: int
+    replica_metadata: List[Any]
+    api_standard: str
+    has_chat_template: bool
+    metricFormat: str
 
 def list_endpoints(domain: str) -> list[Endpoint]:
     headers = _get_access_headers()
@@ -82,19 +83,20 @@ def list_endpoints(domain: str) -> list[Endpoint]:
     desc_json = {"namespace": DEFAULT_NAMESPACE}
 
     desc = requests.post(describe_url, headers=headers, json=desc_json)
-    return json.loads(desc.content)
+    json_loads = json.loads(desc.content)['endpoints']
+    print("json_loads", json_loads)
+    return [Endpoint(**endpoint) for endpoint in json.loads(desc.content)]
 
-
-def _get_access_headers():
+def _get_access_headers() -> Dict[str, str]:
     access_token = _get_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
 
 
-def _get_access_token():
+def _get_access_token() -> str:
     with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
-    access_token = jwt_contents["access_token"]
+    access_token: str = jwt_contents["access_token"]
     return access_token
 
 
@@ -139,6 +141,8 @@ def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
 
 
 def get_caii_llm_models() -> List[Dict[str, Any]]:
+    # list_endpoints(domain=os.environ["CAII_DOMAIN"])
+    print("list_endpoints", list_endpoints(domain=os.environ["CAII_DOMAIN"]))
     domain = os.environ["CAII_DOMAIN"]
     endpoint_name = os.environ["CAII_INFERENCE_ENDPOINT_NAME"]
     try:
