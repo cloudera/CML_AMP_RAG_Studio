@@ -114,5 +114,5 @@ class ListEndpointEntry:
 class ModelResponse:
     model_id: str
     name: str
-    available: Optional[bool]
-    replica_count: Optional[int]
+    available: Optional[bool] = None
+    replica_count: Optional[int] = None

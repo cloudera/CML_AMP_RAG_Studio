@@ -37,7 +37,7 @@
 #
 import os
 from enum import Enum
-from typing import Any, Dict, List, Literal
+from typing import List, Literal
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -58,7 +58,6 @@ DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbedding:
     if is_caii_enabled():
         return caii_embedding(
-            domain=os.environ["CAII_DOMAIN"],
             model_name=os.environ["CAII_EMBEDDING_ENDPOINT_NAME"])
     if model_name is None:
         model_name = "cohere.embed-english-v3"
@@ -68,7 +67,6 @@ def get_embedding_model(model_name: str = "cohere.embed-english-v3") -> BaseEmbe
 def get_llm(model_name: str = DEFAULT_BEDROCK_LLM_MODEL) -> LLM:
     if is_caii_enabled():
         return caii_llm(
-            domain=os.environ["CAII_DOMAIN"],
             endpoint_name=os.environ["CAII_INFERENCE_ENDPOINT_NAME"],
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
@@ -101,28 +99,17 @@ def is_caii_enabled() -> bool:
 
 
 def _get_bedrock_llm_models() -> List[ModelResponse]:
-    return [ModelResponse(
-            model_id = DEFAULT_BEDROCK_LLM_MODEL,
-            name = "Llama3.1 8B Instruct v1"),
-    ModelResponse(
-            model_id = "meta.llama3-1-70b-instruct-v1:0",
-            name = "Llama3.1 70B Instruct v1"),
-        ModelResponse(
-            model_id = "cohere.command-r-plus-v1:0",
-            name = "Cohere Command R Plus v1")
+    return [
+        ModelResponse(model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"),
+        ModelResponse(model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"),
+        ModelResponse(model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1")
     ]
 
 
 def _get_bedrock_embedding_models() -> List[ModelResponse]:
     return [
-        {
-            "model_id": "cohere.embed-english-v3",
-            "name": "Cohere Embed English v3",
-        },
-        {
-            "model_id": "cohere.embed-multilingual-v3",
-            "name": "Cohere Embed Multilingual v3",
-        },
+        ModelResponse(model_id="cohere.embed-english-v3", name="Cohere Embed English v3"),
+        ModelResponse(model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3")
     ]
 
 
@@ -140,8 +127,8 @@ def get_model_source() -> ModelSource:
 def test_llm_model(model_name: str) -> Literal["ok"]:
     models = get_available_llm_models()
     for model in models:
-        if model["model_id"] == model_name:
-            if not is_caii_enabled() or model["available"]:
+        if model.model_id == model_name:
+            if not is_caii_enabled() or model.available:
                 get_llm(model_name).chat(
                     messages=[ChatMessage(role=MessageRole.USER, content="Are you available to answer questions?")])
                 return "ok"
@@ -154,8 +141,8 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
 def test_embedding_model(model_name: str) -> str:
     models = get_available_embedding_models()
     for model in models:
-        if model["model_id"] == model_name:
-            if not is_caii_enabled() or model["available"]:
+        if model.model_id == model_name:
+            if not is_caii_enabled() or model.available:
                 get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:

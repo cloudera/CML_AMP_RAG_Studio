@@ -37,23 +37,23 @@
 #
 import json
 import os
-from typing import Any, Callable, Dict, List, Sequence
+from typing import Callable, Dict, List, Sequence
 
 import requests
-from attr import dataclass
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 
-from .caii_temp.types import Endpoint, ListEndpointEntry, ModelResponse
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
+from .caii_temp.types import Endpoint, ListEndpointEntry, ModelResponse
 
 DEFAULT_NAMESPACE = "serving-default"
 
+
 def describe_endpoint(endpoint_name: str) -> Endpoint:
-    domain=os.environ["CAII_DOMAIN"]
+    domain = os.environ["CAII_DOMAIN"]
     headers = _get_access_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
     desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
@@ -68,7 +68,7 @@ def describe_endpoint(endpoint_name: str) -> Endpoint:
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
-    domain=os.environ["CAII_DOMAIN"]
+    domain = os.environ["CAII_DOMAIN"]
     try:
         headers = _get_access_headers()
         describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
@@ -82,6 +82,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
             status_code=421,
             detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
         )
+
 
 def _get_access_headers() -> Dict[str, str]:
     access_token = _get_access_token()
@@ -97,15 +98,16 @@ def _get_access_token() -> str:
 
 
 def get_llm(
-    domain: str,
-    endpoint_name: str,
-    messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
-    completion_to_prompt: Callable[[str], str],
+        endpoint_name: str,
+        messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
+        completion_to_prompt: Callable[[str], str],
 ) -> LLM:
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint.url.removesuffix("/chat/completions")
     headers = _get_access_headers()
 
+    print(endpoint.endpointmetadata)
+    print(endpoint.endpointmetadata["model_name"])
     model = endpoint.endpointmetadata.model_name
     if "mistral" in endpoint_name.lower():
         llm = CaiiModelMistral(
@@ -130,10 +132,11 @@ def get_llm(
     return llm
 
 
-def get_embedding_model(domain: str, model_name: str) -> BaseEmbedding:
+def get_embedding_model(model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
     return CaiiEmbeddingModel(endpoint=endpoint)
+
 
 # task types from the proto definition
 # TASK_UNKNOWN = 0;
@@ -153,7 +156,6 @@ def get_models_with_task(task_type: str) -> List[ModelResponse]:
     endpoints = list_endpoints()
     endpoint_details = list(map(lambda endpoint: describe_endpoint(endpoint.name), endpoints))
     llm_endpoints = list(filter(lambda endpoint: endpoint.task and endpoint.task == task_type, endpoint_details))
-    print(llm_endpoints)
     models = list(map(build_model_response, llm_endpoints))
     return models
 
@@ -161,11 +163,11 @@ def get_models_with_task(task_type: str) -> List[ModelResponse]:
 def get_caii_embedding_models() -> List[ModelResponse]:
     return get_models_with_task("EMBED")
 
+
 def build_model_response(models: Endpoint) -> ModelResponse:
     return ModelResponse(
-            model_id = models.name,
-            name = models.name,
-            available = models.replica_count > 0,
-            replica_count = models.replica_count,
-        )
-
+        model_id=models.name,
+        name=models.name,
+        available=models.replica_count > 0,
+        replica_count=models.replica_count,
+    )

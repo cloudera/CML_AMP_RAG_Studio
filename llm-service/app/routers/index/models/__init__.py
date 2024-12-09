@@ -40,6 +40,7 @@ from typing import Any, Dict, List, Literal
 from fastapi import APIRouter
 
 from .... import exceptions
+from ....services.caii_temp.types import ModelResponse
 from ....services.models import (
     ModelSource,
     get_available_embedding_models,
@@ -54,13 +55,13 @@ router = APIRouter(prefix="/models", tags=["Models"])
 
 @router.get("/llm", summary="Get LLM Inference models.")
 @exceptions.propagates
-def get_llm_models() -> List[Dict[str, Any]]:
+def get_llm_models() -> List[ModelResponse]:
     return get_available_llm_models()
 
 
 @router.get("/embeddings", summary="Get LLM Embedding models.")
 @exceptions.propagates
-def get_llm_embedding_models() -> List[Dict[str, Any]]:
+def get_llm_embedding_models() -> List[ModelResponse]:
     return get_available_embedding_models()
 
 
