@@ -117,8 +117,7 @@ def generate_summary(
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
 def _set_settings_globals(data_source_id: int) -> None:
     metadata = data_sources_metadata_api.get_metadata(data_source_id)
-    ### how do we get the CAII LLM model!
-    Settings.llm = models.get_llm(models.get_available_llm_models()[0].model_id)
+    Settings.llm = models.get_llm(metadata.summarization_model)
     Settings.embed_model = models.get_embedding_model(metadata.embedding_model)
     Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 

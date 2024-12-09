@@ -55,6 +55,7 @@ class RagDataSource:
     created_by_id: str
     updated_by_id: str
     connection_type: str
+    summarization_model: Optional[str] = None
     document_count: Optional[int] = None
     total_doc_size: Optional[int] = None
 
@@ -71,6 +72,7 @@ def get_metadata(data_source_id: int) -> RagDataSource:
         id=data["id"],
         name=data["name"],
         embedding_model=data["embeddingModel"],
+        summarization_model=data.get("summarizationModel"),
         chunk_size=data["chunkSize"],
         chunk_overlap_percent=data["chunkOverlapPercent"],
         time_created=datetime.fromtimestamp(data["timeCreated"]),

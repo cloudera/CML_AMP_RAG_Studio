@@ -85,9 +85,11 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
     log.debug("checking for RAG documents to be summarized");
     String sql =
         """
-        SELECT * from rag_data_source_document
-         WHERE summary_creation_timestamp IS NULL
-           AND time_created > :yesterday
+        SELECT rdsd.* from rag_data_source_document rdsd
+         JOIN rag_data_source rds ON rdsd.data_source_id = rds.id
+         WHERE rdsd.summary_creation_timestamp IS NULL
+           AND rdsd.time_created > :yesterday
+           AND rds.summarization_model IS NOT NULL
         """;
     jdbi.useHandle(
         handle -> {
