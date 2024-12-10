@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.util;
 
+import java.util.Random;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -53,6 +54,7 @@ public class IdGenerator {
   }
 
   private static class NullIdGenerator extends IdGenerator {
+    private final Random random = new Random();
 
     private final String[] dummyIds;
 
@@ -62,7 +64,7 @@ public class IdGenerator {
 
     @Override
     public String generateId() {
-      return dummyIds.length == 0 ? "StubbedId" : dummyIds[0];
+      return dummyIds.length == 0 ? "StubbedId-" + random.nextInt() : dummyIds[0];
     }
   }
 }

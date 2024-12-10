@@ -27,7 +27,7 @@ def test_csv_indexing() -> None:
             chunk_size=100,
             chunk_overlap=0,
         ),
-        embedding_model=models.get_embedding_model(),
+        embedding_model=models.get_embedding_model("dummy_model"),
         chunks_vector_store=vector_store,
     )
     indexer.index_file(Path(temp_file.name), document_id)

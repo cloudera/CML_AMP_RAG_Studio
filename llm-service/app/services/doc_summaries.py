@@ -50,11 +50,12 @@ from llama_index.core import (
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
-from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..config import settings
+from . import data_sources_metadata_api
 from . import models
 from .s3 import download
 from .utils import get_last_segment
+from ..ai.vector_stores.qdrant import QdrantVectorStore
+from ..config import settings
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
 
@@ -73,7 +74,7 @@ def read_summary(data_source_id: int, document_id: str) -> str:
         raise HTTPException(status_code=404, detail="Knowledge base not found.")
 
     storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context)
+    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
 
     if document_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
         return "No summary found for this document."
@@ -82,9 +83,9 @@ def read_summary(data_source_id: int, document_id: str) -> str:
 
 
 def generate_summary(
-    data_source_id: int,
-    s3_bucket_name: str,
-    s3_document_key: str,
+        data_source_id: int,
+        s3_bucket_name: str,
+        s3_document_key: str,
 ) -> str:
     """Generate, persist, and return a summary for `s3_document_key`."""
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -101,7 +102,7 @@ def generate_summary(
             initialize_summary_index_storage(data_source_id)
             storage_context = make_storage_context(data_source_id)
 
-        doc_summary_index = load_document_summary_index(storage_context)
+        doc_summary_index = load_document_summary_index(storage_context, data_source_id, read_only_mode=False)
 
         for document in documents:
             doc_summary_index.insert(document)
@@ -114,14 +115,19 @@ def generate_summary(
 
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
-def _set_settings_globals() -> None:
-    Settings.llm = models.get_llm()
-    Settings.embed_model = models.get_embedding_model()
+def _set_settings_globals(data_source_id: int, read_only_mode: bool = True) -> None:
+    metadata = data_sources_metadata_api.get_metadata(data_source_id)
+    if read_only_mode:
+        Settings.llm = models.get_noop_llm_model()
+        Settings.embed_model = models.get_noop_embedding_model()
+    else:
+        Settings.llm = models.get_llm(metadata.summarization_model)
+        Settings.embed_model = models.get_embedding_model(metadata.embedding_model)
     Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
 def initialize_summary_index_storage(data_source_id: int) -> None:
-    _set_settings_globals()
+    _set_settings_globals(data_source_id)
     doc_summary_index = DocumentSummaryIndex.from_documents(
         [],
         summary_query=SUMMARY_PROMPT,
@@ -129,10 +135,9 @@ def initialize_summary_index_storage(data_source_id: int) -> None:
     doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
 
 
-def load_document_summary_index(
-    storage_context: StorageContext,
-) -> DocumentSummaryIndex:
-    _set_settings_globals()
+def load_document_summary_index(storage_context: StorageContext, data_source_id: int,
+                                read_only_mode: bool = True) -> DocumentSummaryIndex:
+    _set_settings_globals(data_source_id, read_only_mode)
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
         load_index_from_storage(storage_context, summary_query=SUMMARY_PROMPT),
@@ -142,12 +147,16 @@ def load_document_summary_index(
 
 def summarize_data_source(data_source_id: int) -> str:
     """Return a summary of all documents in the data source."""
+    metadata = data_sources_metadata_api.get_metadata(data_source_id)
+    if not metadata.summarization_model:
+        return "Summarization disabled.  Please specify a summarization model in the knowledge base to enable."
+
     index = index_dir(data_source_id)
     if not os.path.exists(index):
         return ""
 
     storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context)
+    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
     doc_ids = doc_summary_index.index_struct.doc_id_to_summary_id.keys()
     summaries = map(doc_summary_index.get_document_summary, doc_ids)
 
@@ -183,7 +192,7 @@ def delete_document(data_source_id: int, doc_id: str) -> None:
     if not os.path.exists(index):
         return
     storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context)
+    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
     if doc_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
         return
     doc_summary_index.delete(doc_id)

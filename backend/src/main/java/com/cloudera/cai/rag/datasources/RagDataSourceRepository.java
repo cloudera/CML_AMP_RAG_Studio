@@ -41,6 +41,7 @@ package com.cloudera.cai.rag.datasources;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Jdbi;
@@ -62,8 +63,8 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-                INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type, embedding_model)
-                VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel)
+                INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type, embedding_model, summarization_model)
+                VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel, :summarizationModel)
               """;
           try (var update = handle.createUpdate(sql)) {
             update.bindMethods(input);
@@ -78,7 +79,7 @@ public class RagDataSourceRepository {
           var sql =
               """
               UPDATE rag_data_source
-              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById
+              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById, summarization_model = :summarizationModel, time_updated = :now
               WHERE id = :id AND deleted IS NULL
           """;
           try (var update = handle.createUpdate(sql)) {
@@ -87,6 +88,8 @@ public class RagDataSourceRepository {
                 .bind("updatedById", input.updatedById())
                 .bind("connectionType", input.connectionType())
                 .bind("id", input.id())
+                .bind("summarizationModel", input.summarizationModel())
+                .bind("now", Instant.now())
                 .execute();
           }
         });

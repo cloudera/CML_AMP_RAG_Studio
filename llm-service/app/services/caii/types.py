@@ -35,51 +35,88 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
+from typing import List, Dict, Any, Optional
 
-import requests
+from pydantic import BaseModel, ConfigDict
+
+
+# class EndpointCondition(BaseModel):
+#     status: str
+#     severity: str
+#     last_transition_time: str
+#     reason: str
+#     message: str
+
+
+# class ReplicaMetadata(BaseModel):
+#     modelVersion: str
+#     replicaCount: int
+#     replicaNames: List[str]
+
+
+# class RegistrySource(BaseModel):
+#     model_config = ConfigDict(protected_namespaces=())
+#     model_id: Optional[str]
+#     version: Optional[int]
+
+# class EndpointStatus(BaseModel):
+#     failed_copies: int
+#     total_copies: int
+#     active_model_state: str
+#     target_model_state: str
+#     transition_status: str
+#
+
+
+class EndpointMetadata(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+    # current_model: Optional[RegistrySource]
+    # previous_model: Optional[RegistrySource]
+    model_name: str
+
+
+class Endpoint(BaseModel):
+    namespace: str
+    name: str
+    url: str
+    # conditions: List[EndpointCondition]
+    # status: EndpointStatus
+    observed_generation: int
+    replica_count: int
+    # replica_metadata: List[ReplicaMetadata]
+    created_by: str
+    description: str
+    created_at: str
+    resources: Dict[str, str]
+    # source: Dict[str, RegistrySource]
+    autoscaling: Dict[str, Any]
+    endpointmetadata: EndpointMetadata
+    traffic: Dict[str, str]
+    api_standard: str
+    has_chat_template: bool
+    metricFormat: str
+    task: str
+    instance_type: str
 
 
 @dataclass
-class RagDataSource:
-    id: int
+class ListEndpointEntry:
+    namespace: str
     name: str
-    embedding_model: str
-    chunk_size: int
-    chunk_overlap_percent: int
-    time_created: datetime
-    time_updated: datetime
-    created_by_id: str
-    updated_by_id: str
-    connection_type: str
-    summarization_model: Optional[str] = None
-    document_count: Optional[int] = None
-    total_doc_size: Optional[int] = None
+    url: str
+    state: str
+    created_by: str
+    replica_count: int
+    replica_metadata: List[Any]
+    api_standard: str
+    has_chat_template: bool
+    metricFormat: str
 
 
-BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
-url_template = BACKEND_BASE_URL + "/api/v1/rag/dataSources/{}"
-
-
-def get_metadata(data_source_id: int) -> RagDataSource:
-    response = requests.get(url_template.format(data_source_id))
-    response.raise_for_status()
-    data = response.json()
-    return RagDataSource(
-        id=data["id"],
-        name=data["name"],
-        embedding_model=data["embeddingModel"],
-        summarization_model=data.get("summarizationModel"),
-        chunk_size=data["chunkSize"],
-        chunk_overlap_percent=data["chunkOverlapPercent"],
-        time_created=datetime.fromtimestamp(data["timeCreated"]),
-        time_updated=datetime.fromtimestamp(data["timeUpdated"]),
-        created_by_id=data["createdById"],
-        updated_by_id=data["updatedById"],
-        connection_type=data["connectionType"],
-        document_count=data.get("documentCount"),
-        total_doc_size=data.get("totalDocSize"),
-    )
+@dataclass
+class ModelResponse:
+    model_id: str
+    name: str
+    available: Optional[bool] = None
+    replica_count: Optional[int] = None

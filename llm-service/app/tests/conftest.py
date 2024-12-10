@@ -42,7 +42,7 @@ import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Sequence
+from typing import Any, Dict
 
 import boto3
 import lipsum
@@ -51,24 +51,14 @@ import qdrant_client as q_client
 from boto3.resources.base import ServiceResource
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.base.llms.types import (
-    ChatMessage,
-    ChatResponse,
-    ChatResponseAsyncGen,
-    ChatResponseGen,
-    CompletionResponse,
-    CompletionResponseAsyncGen,
-    CompletionResponseGen,
-    LLMMetadata,
-)
 from llama_index.core.llms import LLM
 from moto import mock_aws
-from pydantic import Field
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
 from app.services import models, data_sources_metadata_api
 from app.services.data_sources_metadata_api import RagDataSource
+from app.services.noop_models import DummyLlm
 from app.services.utils import get_last_segment
 
 
@@ -131,62 +121,6 @@ def index_document_request_body(
     }
 
 
-class DummyLlm(LLM):
-    completion_response: str = Field("this is a completion response")
-    chat_response: str = Field("this is a chat response")
-
-    def __init__(
-        self,
-        completion_response: str = "this is a completion response",
-        chat_response: str = "hello",
-    ):
-        super().__init__()
-        self.completion_response = completion_response
-        self.chat_response = chat_response
-
-    @property
-    def metadata(self) -> LLMMetadata:
-        return LLMMetadata()
-
-    def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
-        return ChatResponse(message=ChatMessage.from_str(self.chat_response))
-
-    def complete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponse:
-        return CompletionResponse(text=self.completion_response)
-
-    def stream_chat(
-        self, messages: Sequence[ChatMessage], **kwargs: Any
-    ) -> ChatResponseGen:
-        raise NotImplementedError("Not implemented")
-
-    def stream_complete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponseGen:
-        raise NotImplementedError("Not implemented")
-
-    async def achat(
-        self, messages: Sequence[ChatMessage], **kwargs: Any
-    ) -> ChatResponse:
-        raise NotImplementedError("Not implemented")
-
-    async def acomplete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponse:
-        raise NotImplementedError("Not implemented")
-
-    async def astream_chat(
-        self, messages: Sequence[ChatMessage], **kwargs: Any
-    ) -> ChatResponseAsyncGen:
-        raise NotImplementedError("Not implemented")
-
-    async def astream_complete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponseAsyncGen:
-        raise NotImplementedError("Not implemented")
-
-
 class DummyEmbeddingModel(BaseEmbedding):
     def _get_query_embedding(self, query: str) -> Embedding:
         return [0.1] * 1024
@@ -221,6 +155,7 @@ def summary_vector_store(
         lambda ds_id: original(ds_id, qdrant_client),
     )
 
+
 @pytest.fixture(autouse=True)
 def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     def get_datasource_metadata(data_source_id: int) -> RagDataSource:
@@ -228,6 +163,7 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
             id=data_source_id,
             name="test",
             embedding_model="test",
+            summarization_model="test",
             chunk_size=512,
             chunk_overlap_percent=10,
             time_created=datetime.now(),
@@ -239,7 +175,9 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
             total_doc_size=1,
         )
 
-    monkeypatch.setattr(data_sources_metadata_api, "get_metadata", get_datasource_metadata)
+    monkeypatch.setattr(
+        data_sources_metadata_api, "get_metadata", get_datasource_metadata
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -252,6 +190,7 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
     monkeypatch.setattr(models, "get_embedding_model", get_embedding_model)
+    monkeypatch.setattr(models, "get_noop_embedding_model", get_embedding_model)
     return model
 
 
@@ -259,8 +198,11 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
     model = DummyLlm()
 
+    def get_llm(model_name: str = "dummy_value") -> LLM:
+        return model
+
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_llm", lambda : model)
+    monkeypatch.setattr(models, "get_llm", get_llm)
     return model
 
 

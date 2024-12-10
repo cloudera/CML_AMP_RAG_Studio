@@ -58,6 +58,7 @@ public class TestData {
         null,
         name,
         "test_embedding_model",
+        "summarizationModel",
         chunkSize,
         chunkOverlapPercent,
         null,

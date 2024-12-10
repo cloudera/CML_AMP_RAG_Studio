@@ -50,7 +50,7 @@ from llama_index.core.vector_stores import VectorStoreQuery
 def get_vector_store_index(data_source_id: int) -> VectorStoreIndex:
     vector_store = QdrantVectorStore.for_chunks(data_source_id).llama_vector_store()
     index = VectorStoreIndex.from_vector_store(
-        vector_store, embed_model=models.get_embedding_model()
+        vector_store, embed_model=models.get_embedding_model("dummy_model")
     )
     return index
 

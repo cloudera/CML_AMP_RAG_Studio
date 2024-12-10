@@ -92,6 +92,7 @@ class RagDataSourceControllerTest {
             newDataSource.id(),
             "updated-name",
             "test_embedding_model",
+            "summarizationModel",
             newDataSource.chunkSize(),
             newDataSource.chunkOverlapPercent(),
             newDataSource.timeCreated(),

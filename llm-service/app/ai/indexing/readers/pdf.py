@@ -68,7 +68,8 @@ class PageTracker:
         document_length = len(self.document_text)
         if self.page_start_index[-1] != document_length + 1:
             raise Exception(
-                f"Start of page after last {self.page_start_index[-1]} does not match document text length {document_length + 1}")
+                f"Start of page after last {self.page_start_index[-1]} does not match document text length {document_length + 1}"
+            )
 
     def _find_page_number(self, start_index: int) -> str:
         last_good_page_number = ""
@@ -110,14 +111,25 @@ class PDFReader(BaseReader):
         return chunks
 
     def process_with_docling(self, file_path: Path) -> list[TextNode] | None:
-        docling_enabled = os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+        docling_enabled = (
+            os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+        )
         if not docling_enabled:
             return None
         directory = file_path.parent
         logger.debug(f"{directory=}")
         with open("docling-output.txt", "a") as f:
             process: CompletedProcess[bytes] = subprocess.run(
-                ["docling", "-v", "--abort-on-error", f"--output={directory}", str(file_path)], stdout=f, stderr=f)
+                [
+                    "docling",
+                    "-v",
+                    "--abort-on-error",
+                    f"--output={directory}",
+                    str(file_path),
+                ],
+                stdout=f,
+                stderr=f,
+            )
         logger.debug(f"docling return code = {process.returncode}")
         # todo: figure out page numbers & look into the docling llama-index integration
         markdown_file_path = file_path.with_suffix(".md")

@@ -44,8 +44,6 @@ from typing import List
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..rag_types import RagPredictConfiguration
 from . import evaluators, qdrant
 from .chat_store import (
     Evaluation,
@@ -54,6 +52,8 @@ from .chat_store import (
     RagStudioChatMessage,
     chat_store,
 )
+from ..ai.vector_stores.qdrant import QdrantVectorStore
+from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
@@ -81,7 +81,9 @@ def v2_chat(
         configuration,
         retrieve_chat_history(session_id),
     )
-    relevance, faithfulness = evaluators.evaluate_response(query, response)
+    relevance, faithfulness = evaluators.evaluate_response(
+        query, response, configuration.model_name
+    )
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,

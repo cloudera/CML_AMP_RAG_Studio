@@ -58,7 +58,7 @@ class IdGeneratorTest {
   @Test
   void nullIdWithNoValues() {
     IdGenerator idGenerator = IdGenerator.createNull();
-    assertThat(idGenerator.generateId()).isEqualTo("StubbedId");
-    assertThat(idGenerator.generateId()).isEqualTo("StubbedId");
+    assertThat(idGenerator.generateId()).startsWith("StubbedId");
+    assertThat(idGenerator.generateId()).startsWith("StubbedId");
   }
 }

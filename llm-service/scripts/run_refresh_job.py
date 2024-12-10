@@ -40,9 +40,9 @@ import cmlapi
 import os
 
 client = cmlapi.default_client()
-project_id =os.environ['CDSW_PROJECT_ID']
+project_id = os.environ["CDSW_PROJECT_ID"]
 ## todo: investigate if we can filter using wildcards or regex on the job name
-jobs = client.list_jobs(project_id, search_filter="{\"name\": \"Update/build RAG Studio\"}")
+jobs = client.list_jobs(project_id, search_filter='{"name": "Update/build RAG Studio"}')
 print(jobs)
 job_id = jobs.jobs[0].id
 print(job_id)

@@ -99,22 +99,20 @@ class DataSourceController:
             metadata=node.metadata,
         )
 
-
     @router.get("/visualize")
     @exceptions.propagates
-    def visualize(self) -> list[tuple[tuple[float,float], str]]:
+    def visualize(self) -> list[tuple[tuple[float, float], str]]:
         return self.chunks_vector_store.visualize()
-
 
     class VisualizationRequest(BaseModel):
         user_query: str
 
-
     @router.post("/visualize")
     @exceptions.propagates
-    def visualize_with_query(self, request: VisualizationRequest) -> list[tuple[tuple[float,float], str]]:
+    def visualize_with_query(
+        self, request: VisualizationRequest
+    ) -> list[tuple[tuple[float, float], str]]:
         return self.chunks_vector_store.visualize(request.user_query)
-
 
     @router.delete(
         "/", summary="Deletes the data source from the index.", response_model=None
