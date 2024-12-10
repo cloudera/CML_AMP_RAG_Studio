@@ -37,7 +37,7 @@
 #
 import logging
 import os
-from typing import Optional, Any
+from typing import List, Optional, cast
 
 import qdrant_client
 import umap
@@ -49,8 +49,8 @@ from llama_index.vector_stores.qdrant import (
 )
 from qdrant_client.http.models import CountResult, Record
 
+from ...services import data_sources_metadata_api, models
 from .vector_store import VectorStore
-from ...services import models, data_sources_metadata_api
 
 logger = logging.getLogger(__name__)
 
@@ -147,20 +147,24 @@ class QdrantVectorStore(VectorStore):
             )
 
         record: Record
-        filenames = []
+        filenames: List[str] = []
         for record in records:
-            payload: dict[str, Any] | None = record.payload
+            payload = record.payload
             if payload:
-                filenames.append(payload.get("file_name"))
+                filename = payload.get("file_name")
+                if filename:
+                    filenames.append(filename)
 
         reducer = umap.UMAP()
         embeddings = [record.vector for record in records]
         try:
-            reduced_embeddings = reducer.fit_transform(embeddings)
+            reduced_embeddings: List[List[float]] = reducer.fit_transform(
+                embeddings
+            ).tolist()
             # todo: figure out how to satisfy mypy on this line
             return [
-                (tuple(coordinate), filenames[i])  # type: ignore
-                for i, coordinate in enumerate(reduced_embeddings.tolist())
+                (cast(tuple[float, float], tuple(coordinate)), filename)
+                for filename, coordinate in zip(filenames, reduced_embeddings)
             ]
         except Exception as e:
             # Log the error
