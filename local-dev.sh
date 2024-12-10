@@ -76,10 +76,10 @@ while ! curl --output /dev/null --silent --fail http://localhost:8000/amp-update
 done
 
 # start up the jarva
-cd ..
-./backend/gradlew --build-file=backend/build.gradle.kts --console=plain bootRun &
+cd ../backend
+./gradlew --console=plain bootRun &
 
 # start frontend development server
-cd ui
+cd ../ui
 pnpm install
 pnpm dev
