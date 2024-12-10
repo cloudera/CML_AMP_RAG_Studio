@@ -38,10 +38,11 @@ from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
 from .... import exceptions
-from ....ai.indexing.index import Indexer
+from ....ai.indexing.embedding_indexer import EmbeddingIndexer
+from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import doc_summaries, models, s3, data_sources_metadata_api
+from ....services import data_sources_metadata_api, doc_summaries, models, s3
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +50,11 @@ router = APIRouter(prefix="/data_sources/{data_source_id}", tags=["Data Sources"
 
 
 class SummarizeDocumentRequest(BaseModel):
+    document_id: str
     s3_bucket_name: str
     s3_document_key: str
     original_filename: str
+
 
 class RagIndexDocumentConfiguration(BaseModel):
     # TODO: Add more params
@@ -77,6 +80,15 @@ class DataSourceController:
     chunks_vector_store: VectorStore = Depends(
         lambda data_source_id: QdrantVectorStore.for_chunks(data_source_id)
     )
+
+    @staticmethod
+    def _get_summary_indexer(data_source_id: int) -> SummaryIndexer:
+        datasource = data_sources_metadata_api.get_metadata(data_source_id)
+        return SummaryIndexer(
+            data_source_id=data_source_id,
+            splitter=SentenceSplitter(chunk_size=2048),
+            llm=models.get_llm(datasource.summarization_model),
+        )
 
     @router.get(
         "/size",
@@ -121,7 +133,7 @@ class DataSourceController:
     @exceptions.propagates
     def delete(self, data_source_id: int) -> None:
         self.chunks_vector_store.delete()
-        doc_summaries.delete_data_source(data_source_id)
+        self._get_summary_indexer(data_source_id).delete_data_source()
 
     @router.get(
         "/documents/{doc_id}/summary",
@@ -130,8 +142,8 @@ class DataSourceController:
     )
     @exceptions.propagates
     def get_document_summary(self, data_source_id: int, doc_id: str) -> str:
-        summaries = doc_summaries.read_summary(data_source_id, doc_id)
-        return summaries
+        indexer = self._get_summary_indexer(data_source_id)
+        return indexer.get_summary(doc_id)
 
     @router.get(
         "/summary",
@@ -151,9 +163,20 @@ class DataSourceController:
         data_source_id: int,
         request: SummarizeDocumentRequest,
     ) -> str:
-        return doc_summaries.generate_summary(
-            data_source_id, request.s3_bucket_name, request.s3_document_key, request.original_filename
-        )
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logger.debug("created temporary directory %s", tmpdirname)
+            file_path = s3.download(
+                tmpdirname,
+                request.s3_bucket_name,
+                request.s3_document_key,
+                request.original_filename,
+            )
+
+            indexer = self._get_summary_indexer(data_source_id)
+            # Delete to avoid duplicates
+            indexer.delete_document(request.document_id)
+            indexer.index_file(file_path, request.document_id)
+            return indexer.get_summary(request.document_id)
 
     @router.delete(
         "/documents/{doc_id}", summary="delete a single document", response_model=None
@@ -161,7 +184,7 @@ class DataSourceController:
     @exceptions.propagates
     def delete_document(self, data_source_id: int, doc_id: str) -> None:
         self.chunks_vector_store.delete_document(doc_id)
-        doc_summaries.delete_document(data_source_id, doc_id)
+        self._get_summary_indexer(data_source_id).delete_document(doc_id)
 
     @router.post(
         "/documents/download-and-index",
@@ -178,9 +201,14 @@ class DataSourceController:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
-            file_path = s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key, request.original_filename)
+            file_path = s3.download(
+                tmpdirname,
+                request.s3_bucket_name,
+                request.s3_document_key,
+                request.original_filename,
+            )
 
-            indexer = Indexer(
+            indexer = EmbeddingIndexer(
                 data_source_id,
                 splitter=SentenceSplitter(
                     chunk_size=request.configuration.chunk_size,

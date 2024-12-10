@@ -83,7 +83,8 @@ public class RagBackendClient {
     try {
       return client.post(
           indexUrl + "/data_sources/" + ragDocument.dataSourceId() + "/summarize-document",
-          new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
+          new SummaryRequest(
+              ragDocument.documentId(), bucketName, ragDocument.s3Path(), ragDocument.filename()));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -109,6 +110,7 @@ public class RagBackendClient {
       IndexConfiguration configuration) {}
 
   public record SummaryRequest(
+      @JsonProperty("document_id") String documentId,
       @JsonProperty("s3_bucket_name") String s3BucketName,
       @JsonProperty("s3_document_key") String s3DocumentKey,
       @JsonProperty("original_filename") String originalFilename) {}
@@ -158,7 +160,11 @@ public class RagBackendClient {
         String result = super.createSummary(ragDocument, bucketName);
         tracker.track(
             new TrackedRequest<>(
-                new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename())));
+                new SummaryRequest(
+                    ragDocument.documentId(),
+                    bucketName,
+                    ragDocument.s3Path(),
+                    ragDocument.filename())));
         checkForException();
         return result;
       }

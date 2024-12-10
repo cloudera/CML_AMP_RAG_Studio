@@ -2,7 +2,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from app.ai.indexing.index import Indexer
+from app.ai.indexing.embedding_indexer import EmbeddingIndexer
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores import VectorStoreQuery
@@ -21,7 +21,7 @@ def test_csv_indexing() -> None:
 
     vector_store = QdrantVectorStore.for_chunks(data_source_id)
 
-    indexer = Indexer(
+    indexer = EmbeddingIndexer(
         data_source_id,
         splitter=SentenceSplitter(
             chunk_size=100,
