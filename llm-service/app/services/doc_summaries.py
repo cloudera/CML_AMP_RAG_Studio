@@ -161,7 +161,7 @@ def summarize_data_source(data_source_id: int) -> str:
     summaries = map(doc_summary_index.get_document_summary, doc_ids)
 
     prompt = 'I have summarized a list of documents that may or may not be related to each other. Please provide an overview of the document corpus as an executive summary.  Do not start with "Here is...".  The summary should be concise and not be frivolous'
-    response = Settings.llm.complete(prompt + "\n".join(summaries))
+    response = models.get_llm(metadata.summarization_model).complete(prompt + "\n".join(summaries))
     return response.text
 
 
