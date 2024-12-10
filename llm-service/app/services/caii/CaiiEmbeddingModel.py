@@ -38,7 +38,7 @@
 import http.client as http_client
 import json
 import os
-from typing import Any, List
+from typing import Any
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field

@@ -51,11 +51,11 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.readers import SimpleDirectoryReader
 
 from . import data_sources_metadata_api
-from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..config import settings
 from . import models
 from .s3 import download
 from .utils import get_last_segment
+from ..ai.vector_stores.qdrant import QdrantVectorStore
+from ..config import settings
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
 
@@ -83,9 +83,9 @@ def read_summary(data_source_id: int, document_id: str) -> str:
 
 
 def generate_summary(
-    data_source_id: int,
-    s3_bucket_name: str,
-    s3_document_key: str,
+        data_source_id: int,
+        s3_bucket_name: str,
+        s3_document_key: str,
 ) -> str:
     """Generate, persist, and return a summary for `s3_document_key`."""
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -102,7 +102,7 @@ def generate_summary(
             initialize_summary_index_storage(data_source_id)
             storage_context = make_storage_context(data_source_id)
 
-        doc_summary_index = load_document_summary_index(storage_context, data_source_id)
+        doc_summary_index = load_document_summary_index(storage_context, data_source_id, read_only_mode=False)
 
         for document in documents:
             doc_summary_index.insert(document)
@@ -115,10 +115,14 @@ def generate_summary(
 
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
-def _set_settings_globals(data_source_id: int) -> None:
+def _set_settings_globals(data_source_id: int, read_only_mode: bool = True) -> None:
     metadata = data_sources_metadata_api.get_metadata(data_source_id)
-    Settings.llm = models.get_llm(metadata.summarization_model)
-    Settings.embed_model = models.get_embedding_model(metadata.embedding_model)
+    if read_only_mode:
+        Settings.llm = models.get_noop_llm_model()
+        Settings.embed_model = models.get_noop_embedding_model()
+    else:
+        Settings.llm = models.get_llm(metadata.summarization_model)
+        Settings.embed_model = models.get_embedding_model(metadata.embedding_model)
     Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
@@ -131,10 +135,9 @@ def initialize_summary_index_storage(data_source_id: int) -> None:
     doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
 
 
-def load_document_summary_index(
-    storage_context: StorageContext, data_source_id: int
-) -> DocumentSummaryIndex:
-    _set_settings_globals(data_source_id)
+def load_document_summary_index(storage_context: StorageContext, data_source_id: int,
+                                read_only_mode: bool = True) -> DocumentSummaryIndex:
+    _set_settings_globals(data_source_id, read_only_mode)
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
         load_index_from_storage(storage_context, summary_query=SUMMARY_PROMPT),

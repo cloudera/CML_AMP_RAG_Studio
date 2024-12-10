@@ -37,10 +37,10 @@
 #
 import os
 from enum import Enum
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from fastapi import HTTPException
-from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from llama_index.embeddings.bedrock import BedrockEmbedding
@@ -51,22 +51,17 @@ from .caii.caii import get_embedding_model as caii_embedding
 from .caii.caii import get_llm as caii_llm
 from .caii.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
+from .noop_models import DummyEmbeddingModel, DummyLlm
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 
 
 def get_noop_embedding_model() -> BaseEmbedding:
-    class DummyEmbeddingModel(BaseEmbedding):
-        def _get_query_embedding(self, query: str) -> Embedding:
-            return []
-
-        async def _aget_query_embedding(self, query: str) -> Embedding:
-            return []
-
-        def _get_text_embedding(self, text: str) -> Embedding:
-            return []
-
     return DummyEmbeddingModel()
+
+
+def get_noop_llm_model() -> LLM:
+    return DummyLlm()
 
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
@@ -79,7 +74,7 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
     return BedrockEmbedding(model_name=model_name)
 
 
-def get_llm(model_name: str) -> LLM:
+def get_llm(model_name: Optional[str]) -> LLM:
     if not model_name:
         model_name = get_available_llm_models()[0].model_id
     if is_caii_enabled():
