@@ -88,7 +88,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
         SELECT rdsd.* from rag_data_source_document rdsd
          JOIN rag_data_source rds ON rdsd.data_source_id = rds.id
          WHERE rdsd.summary_creation_timestamp IS NULL
-           AND rdsd.time_created > :yesterday
+           AND (rdsd.time_created > :yesterday OR rds.time_updated > :yesterday)
            AND rds.summarization_model IS NOT NULL
         """;
     jdbi.useHandle(

@@ -164,15 +164,16 @@ public class SessionRepository {
   }
 
   public void update(Types.Session input) {
+    var updatedInput = input.withTimeUpdated(Instant.now());
     jdbi.useHandle(
         handle -> {
           var sql =
               """
             UPDATE CHAT_SESSION
-            SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel, response_chunks = :responseChunks
+            SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel, response_chunks = :responseChunks, time_updated = :timeUpdated
             WHERE id = :id
           """;
-          handle.createUpdate(sql).bindMethods(input).execute();
+          handle.createUpdate(sql).bindMethods(updatedInput).execute();
         });
   }
 }

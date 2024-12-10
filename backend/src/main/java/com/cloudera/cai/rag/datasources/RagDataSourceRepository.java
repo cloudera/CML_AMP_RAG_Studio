@@ -41,6 +41,7 @@ package com.cloudera.cai.rag.datasources;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Jdbi;
@@ -78,7 +79,7 @@ public class RagDataSourceRepository {
           var sql =
               """
               UPDATE rag_data_source
-              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById, summarization_model = :summarizationModel
+              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById, summarization_model = :summarizationModel, time_updated = :now
               WHERE id = :id AND deleted IS NULL
           """;
           try (var update = handle.createUpdate(sql)) {
@@ -88,6 +89,7 @@ public class RagDataSourceRepository {
                 .bind("connectionType", input.connectionType())
                 .bind("id", input.id())
                 .bind("summarizationModel", input.summarizationModel())
+                .bind("now", Instant.now())
                 .execute();
           }
         });

@@ -80,7 +80,7 @@ class SessionControllerTest {
         new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
     var sessionName = "test";
     Types.Session input = TestData.createTestSessionInstance(sessionName);
-    Types.Session result = sessionController.create(input, request);
+    Types.Session insertedSession = sessionController.create(input, request);
 
     var updatedResponseChunks = 1;
     var updatedInferenceModel = "new-model-name";
@@ -93,7 +93,7 @@ class SessionControllerTest {
 
     var updatedSession =
         sessionController.update(
-            result
+            insertedSession
                 .withInferenceModel(updatedInferenceModel)
                 .withResponseChunks(updatedResponseChunks)
                 .withName(updatedName),
@@ -105,7 +105,7 @@ class SessionControllerTest {
     assertThat(updatedSession.responseChunks()).isEqualTo(updatedResponseChunks);
     assertThat(updatedSession.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
     assertThat(updatedSession.timeCreated()).isNotNull();
-    assertThat(updatedSession.timeUpdated()).isNotNull();
+    assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
     assertThat(updatedSession.updatedById()).isEqualTo("update-test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();

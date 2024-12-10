@@ -118,7 +118,7 @@ class RagFileServiceTest {
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile =
         new MockMultipartFile(name, originalFilename, "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     Types.RagDocumentMetadata result =
         ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id");
@@ -134,7 +134,7 @@ class RagFileServiceTest {
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile =
         new MockMultipartFile(name, originalFilename, "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     var dataSourceId = newDataSourceId();
     String expectedS3Path = "prefix/" + dataSourceId + "/" + documentId;
     var requestTracker = new Tracker<UploadRequest>();
@@ -153,7 +153,7 @@ class RagFileServiceTest {
     String name = "file";
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile = new MockMultipartFile(name, null, "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     assertThatThrownBy(
             () -> ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id"))
@@ -166,7 +166,7 @@ class RagFileServiceTest {
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile =
         new MockMultipartFile(name, "filename", "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     assertThatThrownBy(() -> ragFileService.saveRagFile(mockMultipartFile, -1L, "test-id"))
         .isInstanceOf(NotFound.class);

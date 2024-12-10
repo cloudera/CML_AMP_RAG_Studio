@@ -52,6 +52,7 @@ import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,9 @@ class RagFileSummaryReconcilerTest {
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
   private final RagDataSourceRepository ragDataSourceRepository =
       RagDataSourceRepository.createNull();
+
+  // todo: test for the time limit on how long we will retry document summarization (and also that
+  //   updated the data source will re-trigger tries)
 
   @Test
   void reconcile() {
@@ -176,7 +180,6 @@ class RagFileSummaryReconcilerTest {
     Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
     RagFileSummaryReconciler reconciler = createTestInstance(requestTracker);
 
-    String documentId = UUID.randomUUID().toString();
     long dataSourceId =
         ragDataSourceRepository.createRagDataSource(
             new RagDataSource(
@@ -193,11 +196,12 @@ class RagFileSummaryReconcilerTest {
                 Types.ConnectionType.API,
                 null,
                 null));
+    String documentId = UUID.randomUUID().toString();
     RagDocument document =
         RagDocument.builder()
             .documentId(documentId)
             .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3")
+            .s3Path("path_in_s3_no_summarization_model")
             .extension("pdf")
             .filename("myfile.pdf")
             .timeCreated(Instant.now())
@@ -209,11 +213,20 @@ class RagFileSummaryReconcilerTest {
         .isNull();
 
     reconciler.resync();
-    assertThat(reconciler.isEmpty()).isTrue();
+    await().until(reconciler::isEmpty);
 
     RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
     assertThat(updatedDocument.summaryCreationTimestamp()).isNull();
-    assertThat(requestTracker.getValues()).hasSize(0);
+    List<RagBackendClient.TrackedRequest<?>> values = requestTracker.getValues();
+    var relevantSummarizationRequests =
+        values.stream()
+            .filter(
+                r -> {
+                  var summaryRequest = (RagBackendClient.SummaryRequest) r.detail();
+                  return summaryRequest.s3DocumentKey().equals("path_in_s3_no_summarization_model");
+                })
+            .count();
+    assertThat(relevantSummarizationRequests).isEqualTo(0);
   }
 
   private RagFileSummaryReconciler createTestInstance(
