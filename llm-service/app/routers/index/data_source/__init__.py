@@ -30,7 +30,7 @@
 
 import logging
 import tempfile
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
@@ -44,7 +44,6 @@ from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
 from ....services import (
     data_sources_metadata_api,
-    doc_summaries,
     document_storage,
     models,
 )
@@ -52,6 +51,8 @@ from ....services import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/data_sources/{data_source_id}", tags=["Data Sources"])
+
+SUMMARIZATION_DISABLED = "Summarization disabled. Please specify a summarization model in the knowledge base to enable."
 
 
 class SummarizeDocumentRequest(BaseModel):
@@ -85,8 +86,10 @@ class DataSourceController:
     )
 
     @staticmethod
-    def _get_summary_indexer(data_source_id: int) -> SummaryIndexer:
+    def _get_summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
+        if not datasource.summarization_model:
+            return None
         return SummaryIndexer(
             data_source_id=data_source_id,
             splitter=SentenceSplitter(chunk_size=2048),
@@ -99,7 +102,9 @@ class DataSourceController:
     @exceptions.propagates
     def delete(self, data_source_id: int) -> None:
         self.chunks_vector_store.delete()
-        self._get_summary_indexer(data_source_id).delete_data_source()
+        indexer = self._get_summary_indexer(data_source_id)
+        if indexer:
+            indexer.delete_data_source()
 
     @router.get(
         "/chunks/{chunk_id}",
@@ -120,7 +125,9 @@ class DataSourceController:
     @exceptions.propagates
     def delete_document(self, data_source_id: int, doc_id: str) -> None:
         self.chunks_vector_store.delete_document(doc_id)
-        self._get_summary_indexer(data_source_id).delete_document(doc_id)
+        indexer = self._get_summary_indexer(data_source_id)
+        if indexer:
+            indexer.delete_document(doc_id)
 
     @router.post(
         "/documents/{doc_id}/index",
@@ -170,6 +177,8 @@ class DataSourceController:
     @exceptions.propagates
     def get_document_summary(self, data_source_id: int, doc_id: str) -> str:
         indexer = self._get_summary_indexer(data_source_id)
+        if not indexer:
+            return SUMMARIZATION_DISABLED
         summary = indexer.get_summary(doc_id)
         if not summary:
             return "No summary found for this document."
@@ -198,6 +207,8 @@ class DataSourceController:
             )
 
             indexer = self._get_summary_indexer(data_source_id)
+            if not indexer:
+                return SUMMARIZATION_DISABLED
             # Delete to avoid duplicates
             indexer.delete_document(doc_id)
             indexer.index_file(file_path, doc_id)
@@ -221,7 +232,13 @@ class DataSourceController:
     )
     @exceptions.propagates
     def get_document_summary_of_summaries(self, data_source_id: int) -> str:
-        return doc_summaries.summarize_data_source(data_source_id)
+        indexer = self._get_summary_indexer(data_source_id)
+        if not indexer:
+            return SUMMARIZATION_DISABLED
+        summary = indexer.get_full_summary()
+        if not summary:
+            return "No summary found for this data source."
+        return summary
 
     @router.get("/visualize")
     @exceptions.propagates
