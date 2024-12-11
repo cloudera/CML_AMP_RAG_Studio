@@ -95,7 +95,11 @@ public class RagFileService {
   }
 
   private String buildS3Path(Long dataSourceId, String documentId) {
-    return s3PathPrefix + "/" + dataSourceId + "/" + documentId;
+    var dataSourceDocumentPart = dataSourceId + "/" + documentId;
+    if (s3PathPrefix.isEmpty()) {
+      return dataSourceDocumentPart;
+    }
+    return s3PathPrefix + "/" + dataSourceDocumentPart;
   }
 
   private String extractFileExtension(String originalFilename) {

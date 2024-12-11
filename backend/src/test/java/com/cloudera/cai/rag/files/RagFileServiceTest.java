@@ -57,6 +57,7 @@ import org.springframework.mock.web.MockMultipartFile;
 class RagFileServiceTest {
 
   private final RagDataSourceRepository dataSourceRepository = RagDataSourceRepository.createNull();
+  private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
 
   @Test
   void saveRagFile() {
@@ -128,6 +129,22 @@ class RagFileServiceTest {
   }
 
   @Test
+  void saveRagFile_noS3Prefix() {
+    String originalFilename = "real-filename.";
+    String name = "test-file";
+    byte[] bytes = "23243223423".getBytes();
+    MockMultipartFile mockMultipartFile =
+        new MockMultipartFile(name, originalFilename, "text/plain", bytes);
+    String documentId = UUID.randomUUID().toString();
+    RagFileService ragFileService = createRagFileService(documentId, new Tracker<>(), "");
+    var dataSourceId = newDataSourceId();
+    Types.RagDocumentMetadata result =
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+    var savedDocumentMetadata = ragFileRepository.findDocumentByDocumentId(result.documentId());
+    assertThat(savedDocumentMetadata.s3Path()).isEqualTo(dataSourceId + "/" + documentId);
+  }
+
+  @Test
   void saveRagFile_removeDirectories() {
     String originalFilename = "staging/real-filename.pdf";
     String name = "file";
@@ -185,6 +202,11 @@ class RagFileServiceTest {
 
   private RagFileService createRagFileService(
       String staticDocumentId, Tracker<UploadRequest> tracker) {
+    return createRagFileService(staticDocumentId, tracker, "prefix");
+  }
+
+  private RagFileService createRagFileService(
+      String staticDocumentId, Tracker<UploadRequest> tracker, String prefix) {
     return new RagFileService(
         staticDocumentId == null
             ? IdGenerator.createNull()
@@ -192,7 +214,7 @@ class RagFileServiceTest {
         RagFileRepository.createNull(),
         tracker == null ? RagFileUploader.createNull() : RagFileUploader.createNull(tracker),
         RagFileIndexReconciler.createNull(),
-        "prefix",
+        prefix,
         dataSourceRepository);
   }
 
