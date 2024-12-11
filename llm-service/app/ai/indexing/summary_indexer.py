@@ -91,7 +91,7 @@ class SummaryIndexer:
         )
 
     def __persist_root_dir(self) -> str:
-        return os.path.join(settings.rag_databases_dir, "doc_summary_index_global")
+        return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
 
     def __index_kwargs(self) -> Dict[str, Any]:
         return {
