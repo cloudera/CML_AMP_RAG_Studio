@@ -4,23 +4,22 @@ entries:
   - title: RAG Studio
     label: rag-studio
     short_description: |
-      RAG Studio
+      Build chatbots powered by your data - no code RAG studio for a quick start, easy access and fast innovation.
     long_description: |
-      Build a RAG application to ask questions about your documents
-          ---------------------------
+      RAG Studio is a no-code application built on the Cloudera platform that enables you to create RAG chatbots powered by your enterprise data in minutes. Designed for accessibility, it bridges the gap between business and IT teams, driving collaboration in AI projects.          
+      ---------------------------
       IMPORTANT: Please read the following before proceeding.  This AMP includes or otherwise depends on certain third party software packages. Information about such third party software packages are made available in the notice file associated with this AMP. By configuring and launching this AMP, you will cause such third party software packages to be downloaded and installed into your environment, in some instances, from third parties' websites. For each third party software package, please see the notice file and the applicable websites for more information, including the applicable license terms. If you do not wish to download and install the third party software packages, do not configure, launch or otherwise use this AMP. By configuring, launching or otherwise using the AMP, you acknowledge the foregoing statement and agree that Cloudera is not responsible or liable in any way for the third party software packages.
     long_description_html: |
       Build a RAG application to ask questions about your documents
       <div style="margin-top:10px"><b>IMPORTANT:</b> Please read the following before proceeding.</div>
       <div style="margin-top:10px">This AMP includes or otherwise depends on certain third party software packages.  Information about such third party software packages are made available in the notice file associated with this AMP.  By configuring and launching this AMP, you will cause such third party software packages to be downloaded and installed into your environment, in some instances, from third parties' websites.  For each third party software package, please see the notice file and the applicable websites for more information, including the applicable license terms.</div>
       <div style="margin-top:10px">If you do not wish to download and install the third party software packages, do not configure, launch or otherwise use this AMP.  By configuring, launching or otherwise using the AMP, you acknowledge the foregoing statement and agree that Cloudera is not responsible or liable in any way for the third party software packages.</div>
-#    image_path: "https://raw.githubusercontent.com/kevinbtalbert/CML_AMP_Solr_9/main/assets/amp-cover.png"
+    image_path: >-
+      https://raw.githubusercontent.com/cloudera/CML_AMP_RAG_Studio/refs/heads/main/RAG-AMP.jpg
     tags:
+      - LLM
       - RAG
       - AI
-      - LLM
     git_url: "https://github.com/cloudera/CML_AMP_RAG_Studio"
-    git_ref: "release/1"
     is_prototype: true
-
-
+    is_new: true
