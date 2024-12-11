@@ -165,4 +165,4 @@ class SummaryIndexer:
         with _write_lock:
             # We need to re-load the summary index constantly because of this delete.
             # TODO: figure out a less explosive way to do this.
-            shutil.rmtree(self.__persist_dir())
+            shutil.rmtree(self.__persist_dir(), ignore_errors=True)
