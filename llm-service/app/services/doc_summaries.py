@@ -40,14 +40,16 @@ from typing import cast
 
 from llama_index.core import (
     DocumentSummaryIndex,
-    Settings,
     StorageContext,
     load_index_from_storage,
+)
+from llama_index.core import (
+    Settings as LlamaSettings,
 )
 from llama_index.core.node_parser import SentenceSplitter
 
 from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..config import settings
+from ..config import Settings
 from . import data_sources_metadata_api, models
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
@@ -56,7 +58,7 @@ SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate 
 def index_dir(data_source_id: int) -> str:
     """Return the directory name to be used for a data source's summary index."""
     return os.path.join(
-        settings.rag_databases_dir, f"doc_summary_index_{data_source_id}"
+        Settings().rag_databases_dir, f"doc_summary_index_{data_source_id}"
     )
 
 
@@ -64,12 +66,12 @@ def index_dir(data_source_id: int) -> str:
 def _set_settings_globals(data_source_id: int, read_only_mode: bool = True) -> None:
     metadata = data_sources_metadata_api.get_metadata(data_source_id)
     if read_only_mode:
-        Settings.llm = models.get_noop_llm_model()
-        Settings.embed_model = models.get_noop_embedding_model()
+        LlamaSettings.llm = models.get_noop_llm_model()
+        LlamaSettings.embed_model = models.get_noop_embedding_model()
     else:
-        Settings.llm = models.get_llm(metadata.summarization_model)
-        Settings.embed_model = models.get_embedding_model(metadata.embedding_model)
-    Settings.text_splitter = SentenceSplitter(chunk_size=1024)
+        LlamaSettings.llm = models.get_llm(metadata.summarization_model)
+        LlamaSettings.embed_model = models.get_embedding_model(metadata.embedding_model)
+    LlamaSettings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
 def load_document_summary_index(

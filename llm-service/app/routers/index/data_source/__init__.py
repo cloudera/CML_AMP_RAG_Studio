@@ -42,8 +42,12 @@ from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import data_sources_metadata_api, doc_summaries, models
-from ....services import document_storage
+from ....services import (
+    data_sources_metadata_api,
+    doc_summaries,
+    document_storage,
+    models,
+)
 
 logger = logging.getLogger(__name__)
 

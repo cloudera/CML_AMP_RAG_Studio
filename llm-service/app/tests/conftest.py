@@ -53,20 +53,11 @@ from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from llama_index.core.llms import LLM
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
-from app.config import settings
 from app.main import app
 from app.services import data_sources_metadata_api, models
 from app.services.data_sources_metadata_api import RagDataSource
 from app.services.noop_models import DummyLlm
 
-
-def pytest_configure() -> None:
-    ## todo: don't hardcode, but use test facilities to get a temp dir
-    settings.rag_databases_dir = "/tmp/databases"
-
-def pytest_sessionfinish() -> None:
-    if os.path.exists(settings.rag_databases_dir):
-        shutil.rmtree(settings.rag_databases_dir)
 
 @dataclass
 class BotoObject:
@@ -81,9 +72,16 @@ def qdrant_client() -> q_client.QdrantClient:
 
 @pytest.fixture(autouse=True)
 def databases_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> str:
+    print("tmp_path", tmp_path)
     databases_dir: str = str(tmp_path / "databases")
     monkeypatch.setenv("RAG_DATABASES_DIR", databases_dir)
+    os.makedirs(databases_dir, exist_ok=True)
     return databases_dir
+
+
+@pytest.fixture(autouse=True)
+def use_local_storage(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("S3_RAG_DOCUMENT_BUCKET", "")
 
 
 @pytest.fixture
@@ -198,9 +196,9 @@ def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
 
 
 @pytest.fixture
-def test_file(data_source_id: int, s3_object: BotoObject) -> pathlib.Path:
+def test_file(databases_dir: str, s3_object: BotoObject) -> pathlib.Path:
     body = lipsum.generate_words(1000)
-    target_path = f"/tmp/databases/file_storage/{s3_object.key}"
+    target_path = f"{databases_dir}/file_storage/{s3_object.key}"
     path = pathlib.Path(target_path)
     os.makedirs(path.parent, exist_ok=True)
     with open(target_path, "w") as f:

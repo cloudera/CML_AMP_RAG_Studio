@@ -55,7 +55,3 @@ class Settings(BaseSettings):
 
     rag_log_level: int = logging.INFO
     rag_databases_dir: str = os.path.join("..", "databases")
-
-
-settings = Settings()
-print(f"Initializing settings to {settings}")

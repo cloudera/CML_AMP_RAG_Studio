@@ -55,7 +55,7 @@ from llama_index.core.response_synthesizers import ResponseMode
 
 from app.services.models import get_noop_embedding_model
 
-from ...config import settings
+from ...config import Settings
 from .base import get_reader_class
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class SummaryIndexer:
 
     def __persist_dir(self) -> str:
         return os.path.join(
-            settings.rag_databases_dir, f"doc_summary_index_{self.data_source_id}"
+            Settings().rag_databases_dir, f"doc_summary_index_{self.data_source_id}"
         )
 
     def __index_kwargs(self) -> Dict[str, Any]:
