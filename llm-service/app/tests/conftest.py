@@ -72,7 +72,6 @@ def qdrant_client() -> q_client.QdrantClient:
 
 @pytest.fixture(autouse=True)
 def databases_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> str:
-    print("tmp_path", tmp_path)
     databases_dir: str = str(tmp_path / "databases")
     monkeypatch.setenv("RAG_DATABASES_DIR", databases_dir)
     os.makedirs(databases_dir, exist_ok=True)
