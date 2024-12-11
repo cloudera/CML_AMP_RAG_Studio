@@ -53,6 +53,7 @@ class DocumentStorage(ABC):
 
     @staticmethod
     def from_environment() -> "DocumentStorage":
+        # todo: move this to config, remove bucket_name from download api signature
         bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET")
         if bucket:
             return S3DocumentStorage()
