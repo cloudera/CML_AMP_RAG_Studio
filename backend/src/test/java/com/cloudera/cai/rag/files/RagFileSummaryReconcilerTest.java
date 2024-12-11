@@ -62,8 +62,9 @@ class RagFileSummaryReconcilerTest {
   private final RagDataSourceRepository ragDataSourceRepository =
       RagDataSourceRepository.createNull();
 
-  // todo: test for the time limit on how long we will retry document summarization (and also that
-  //   updated the data source will re-trigger tries)
+  // todo: test for the time limit on how long we will retry document
+  // summarization (and also that
+  // updated the data source will re-trigger tries)
 
   @Test
   void reconcile() {
@@ -103,7 +104,8 @@ class RagFileSummaryReconcilerTest {
         .isNull();
 
     reconciler.submit(document.withId(id));
-    // add a copy that has already been summarized to make sure we don't try to re-summarize with
+    // add a copy that has already been summarized to make sure we don't try to
+    // re-summarize with
     // long-running summarizations
     reconciler.submit(document.withId(id).withSummaryCreationTimestamp(Instant.now()));
     await().until(reconciler::isEmpty);
@@ -118,7 +120,7 @@ class RagFileSummaryReconcilerTest {
                   .contains(
                       new RagBackendClient.TrackedRequest<>(
                           new RagBackendClient.SummaryRequest(
-                              "rag-files", "path_in_s3", "myfile.pdf")));
+                              documentId, "rag-files", "path_in_s3", "myfile.pdf")));
             });
   }
 
@@ -173,7 +175,7 @@ class RagFileSummaryReconcilerTest {
                   .contains(
                       new RagBackendClient.TrackedRequest<>(
                           new RagBackendClient.SummaryRequest(
-                              "rag-files", "path_in_s3", "myfile.pdf")));
+                              documentId, "rag-files", "path_in_s3", "myfile.pdf")));
             });
   }
 

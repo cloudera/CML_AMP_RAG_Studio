@@ -62,6 +62,7 @@ class TestDocumentSummaries:
         post_summarization_response = client.post(
             f"/data_sources/{data_source_id}/summarize-document",
             json={
+                "document_id": document_id,
                 "s3_bucket_name": s3_object.bucket_name,
                 "s3_document_key": s3_object.key,
                 "original_filename": "test.txt",
@@ -102,6 +103,7 @@ class TestDocumentSummaries:
         post_summarization_response = client.post(
             f"/data_sources/{data_source_id}/summarize-document",
             json={
+                "document_id": document_id,
                 "s3_bucket_name": s3_object.bucket_name,
                 "s3_document_key": s3_object.key,
                 "original_filename": "test.txt",

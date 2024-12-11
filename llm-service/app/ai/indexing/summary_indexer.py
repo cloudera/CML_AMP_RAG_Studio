@@ -40,7 +40,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, cast
+from typing import Any, Dict, Optional, cast
 
 from llama_index.core import (
     DocumentSummaryIndex,
@@ -140,7 +140,9 @@ class SummaryIndexer:
 
         logger.debug(f"Summary for file {file_path} created")
 
-    def get_summary(self, document_id: str) -> str:
+    def get_summary(self, document_id: str) -> Optional[str]:
+        if document_id not in self.summary_store.index_struct.doc_id_to_summary_id:
+            return None
         return self.summary_store.get_document_summary(document_id)
 
     def delete_document(self, document_id: str) -> None:

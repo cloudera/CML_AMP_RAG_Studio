@@ -143,7 +143,10 @@ class DataSourceController:
     @exceptions.propagates
     def get_document_summary(self, data_source_id: int, doc_id: str) -> str:
         indexer = self._get_summary_indexer(data_source_id)
-        return indexer.get_summary(doc_id)
+        summary = indexer.get_summary(doc_id)
+        if not summary:
+            return "No summary found for this document."
+        return summary
 
     @router.get(
         "/summary",
