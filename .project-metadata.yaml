@@ -8,24 +8,24 @@ prototype_version: 1.0
 environment_variables:
     AWS_DEFAULT_REGION:
         default: "us-west-2"
-        description: "AWS Region where Bedrock is configured and the S3 bucket is located"
-        required: true
+        description: "AWS Region where Bedrock is configured and the S3 bucket is located. Required if Bedrock or S3 is used."
+        required: false
     S3_RAG_DOCUMENT_BUCKET:
         default: ""
-        description: "The S3 bucket where uploaded documents are stored"
-        required: true
+        description: "The S3 bucket where uploaded documents are stored. Only set if S3 is used for file storage."
+        required: false
     S3_RAG_BUCKET_PREFIX:
         default: "rag-studio"
-        description: "A prefix added to all S3 paths used by Rag Studio"
-        required: true
+        description: "A prefix added to all S3 paths used by Rag Studio. Only needed if S3 is used for file storage."
+        required: false
     AWS_ACCESS_KEY_ID:
         default: ""
-        description: "AWS Access Key ID"
-        required: true
+        description: "AWS Access Key ID. Required if Bedrock or S3 is used."
+        required: false
     AWS_SECRET_ACCESS_KEY:
         default: ""
-        description: "AWS Secret Access Key"
-        required: true
+        description: "AWS Secret Access Key. Required if Bedrock or S3 is used."
+        required: false
     USE_ENHANCED_PDF_PROCESSING:
         default: "false"
         description: "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU is highly recommended to speed up the process."

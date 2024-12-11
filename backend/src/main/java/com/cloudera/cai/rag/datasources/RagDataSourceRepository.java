@@ -59,6 +59,8 @@ public class RagDataSourceRepository {
   }
 
   public Long createRagDataSource(RagDataSource input) {
+
+    RagDataSource cleanedInputs = cleanInputs(input);
     return jdbi.inTransaction(
         handle -> {
           var sql =
@@ -67,13 +69,22 @@ public class RagDataSourceRepository {
                 VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel, :summarizationModel)
               """;
           try (var update = handle.createUpdate(sql)) {
-            update.bindMethods(input);
+            update.bindMethods(cleanedInputs);
             return update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
           }
         });
   }
 
+  private static RagDataSource cleanInputs(RagDataSource input) {
+    if (input.summarizationModel() != null && input.summarizationModel().isEmpty()) {
+      input = input.withSummarizationModel(null);
+    }
+    return input;
+  }
+
   public void updateRagDataSource(RagDataSource input) {
+
+    RagDataSource cleanedInputs = cleanInputs(input);
     jdbi.inTransaction(
         handle -> {
           var sql =
@@ -84,11 +95,11 @@ public class RagDataSourceRepository {
           """;
           try (var update = handle.createUpdate(sql)) {
             return update
-                .bind("name", input.name())
-                .bind("updatedById", input.updatedById())
-                .bind("connectionType", input.connectionType())
-                .bind("id", input.id())
-                .bind("summarizationModel", input.summarizationModel())
+                .bind("name", cleanedInputs.name())
+                .bind("updatedById", cleanedInputs.updatedById())
+                .bind("connectionType", cleanedInputs.connectionType())
+                .bind("id", cleanedInputs.id())
+                .bind("summarizationModel", cleanedInputs.summarizationModel())
                 .bind("now", Instant.now())
                 .execute();
           }

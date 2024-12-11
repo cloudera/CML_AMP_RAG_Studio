@@ -36,7 +36,6 @@ license = {text = "APACHE"}
 
 [dependency-groups]
 dev = [
-    "moto[s3]>=5.0.21",
     "pytest>=8.3.3",
     "ruff>=0.7.4",
     "mypy>=1.13.0",

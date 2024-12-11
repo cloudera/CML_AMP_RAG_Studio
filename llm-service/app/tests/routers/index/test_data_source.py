@@ -37,14 +37,15 @@
 # ##############################################################################
 
 """Integration tests for app/routers/index/data_source/."""
-
+from pathlib import Path
 from typing import Any
 
-from app.ai.vector_stores.qdrant import QdrantVectorStore
-from app.services import models
 from fastapi.testclient import TestClient
 from llama_index.core import VectorStoreIndex
 from llama_index.core.vector_stores import VectorStoreQuery
+
+from app.ai.vector_stores.qdrant import QdrantVectorStore
+from app.services import models
 
 
 def get_vector_store_index(data_source_id: int) -> VectorStoreIndex:
@@ -62,6 +63,7 @@ class TestDocumentIndexing:
         index_document_request_body: dict[str, Any],
         document_id: str,
         data_source_id: int,
+        test_file: Path,
     ) -> None:
         response = client.post(
             f"/data_sources/{data_source_id}/documents/{document_id}/index",
@@ -82,6 +84,7 @@ class TestDocumentIndexing:
         index_document_request_body: dict[str, Any],
         document_id: str,
         data_source_id: int,
+        test_file: Path,
     ) -> None:
         response = client.post(
             f"/data_sources/{data_source_id}/documents/{document_id}/index",
@@ -115,6 +118,7 @@ class TestDocumentIndexing:
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
+        test_file: Path,
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}."""
         client.post(
@@ -145,6 +149,7 @@ class TestDocumentIndexing:
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
+        test_file: Path,
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}/documents/{document_id}."""
         client.post(
@@ -175,6 +180,7 @@ class TestDocumentIndexing:
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
+        test_file: Path,
     ) -> None:
         """Test GET /data_sources/{data_source_id}/size."""
         client.post(

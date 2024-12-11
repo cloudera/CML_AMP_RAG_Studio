@@ -51,6 +51,8 @@ for sig in INT QUIT HUP TERM; do
 done
 trap cleanup EXIT
 
+export RAG_DATABASES_DIR=$(pwd)/databases
+
 # start Qdrant vector DB
 qdrant/qdrant & 2>&1
 

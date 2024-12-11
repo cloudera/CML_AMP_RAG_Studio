@@ -38,38 +38,34 @@
 
 package com.cloudera.cai.rag.files;
 
-import com.cloudera.cai.util.s3.AmazonS3Client;
-import com.cloudera.cai.util.s3.RefCountedS3Client;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
-public class S3RagFileUploader implements RagFileUploader {
-  private final AmazonS3Client s3Client;
-  private final String bucketName;
+@Component
+public class FileSystemRagFileUploader implements RagFileUploader {
 
-  public S3RagFileUploader(
-      AmazonS3Client s3Client, @Qualifier("s3BucketName") String s3BucketName) {
-    this.s3Client = s3Client;
-    this.bucketName = s3BucketName;
-  }
+  private static final String FILE_STORAGE_ROOT = fileStoragePath();
 
   @Override
   public void uploadFile(MultipartFile file, String s3Path) {
-    log.info("Uploading file to S3: {}", s3Path);
-    PutObjectRequest objectRequest =
-        PutObjectRequest.builder().bucket(bucketName).key(s3Path).build();
-    try (RefCountedS3Client refCountedS3Client = s3Client.getRefCountedClient()) {
-      refCountedS3Client
-          .getClient()
-          .putObject(
-              objectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+    log.info("Uploading file to FS: {}", s3Path);
+    try {
+      Path filePath = Path.of(FILE_STORAGE_ROOT, s3Path);
+      Files.createDirectories(filePath.getParent());
+      Files.write(filePath, file.getBytes());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static String fileStoragePath() {
+    var fileStoragePath = System.getenv("RAG_DATABASES_DIR") + "/file_storage";
+    log.info("configured with fileStoragePath = {}", fileStoragePath);
+    return fileStoragePath;
   }
 }

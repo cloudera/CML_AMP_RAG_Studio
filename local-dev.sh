@@ -39,6 +39,8 @@
 set -exo pipefail
 set -a && source .env && set +a
 
+export RAG_DATABASES_DIR=$(pwd)/databases
+
 cleanup() {
     # kill all processes whose parent is this process
     pkill -P $$

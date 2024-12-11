@@ -1,12 +1,4 @@
-"""
-RAG app configuration.
-
-All configuration values can be set as environment variables; the variable name is
-simply the field name in all capital letters.
-
-"""
-
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -28,7 +20,7 @@ simply the field name in all capital letters.
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -42,20 +34,18 @@ simply the field name in all capital letters.
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
+import os
 
-import logging
-import os.path
-
-from pydantic_settings import BaseSettings
-
-
-class Settings(BaseSettings):
-    """RAG configuration."""
-
-    rag_log_level: int = logging.INFO
-    rag_databases_dir: str = os.path.join("..", "databases")
+from .base import DocumentStorage
+from .file_storage import FileSystemDocumentStorage
+from .s3 import S3DocumentStorage
 
 
-settings = Settings()
-print(f"Initializing settings to {settings}")
+def from_environment() -> DocumentStorage:
+    # todo: move this to config, remove bucket_name from download api signature
+    bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET")
+    if bucket:
+        return S3DocumentStorage()
+    else:
+        return FileSystemDocumentStorage()
