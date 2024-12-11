@@ -181,8 +181,6 @@ class DataSourceController:
         doc_id: str,
         request: SummarizeDocumentRequest,
     ) -> str:
-        print("doc_id", doc_id)
-        print("request", request)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             file_path = s3.download(
