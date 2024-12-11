@@ -179,7 +179,9 @@ class DataSourceController:
             # Delete to avoid duplicates
             indexer.delete_document(request.document_id)
             indexer.index_file(file_path, request.document_id)
-            return indexer.get_summary(request.document_id)
+            summary = indexer.get_summary(request.document_id)
+            assert summary is not None
+            return summary
 
     @router.delete(
         "/documents/{doc_id}", summary="delete a single document", response_model=None
