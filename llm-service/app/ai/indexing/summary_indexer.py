@@ -52,6 +52,10 @@ from llama_index.core import (
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.response_synthesizers import ResponseMode
+from llama_index.core.schema import (
+    Document,
+    NodeRelationship,
+)
 
 from app.services.models import get_noop_embedding_model
 
@@ -61,7 +65,7 @@ from .base import get_reader_class
 logger = logging.getLogger(__name__)
 
 
-SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
+SUMMARY_PROMPT = 'Summarize the contents into less than 100 words. If an adequate summary is not possible, please return "No summary available.".'
 
 # Since we don't use anything fancy to store the summaries, it's possible that two threads
 # try to do a write operation at the same time and we end up with a race condition.
@@ -86,6 +90,9 @@ class SummaryIndexer:
             settings.rag_databases_dir, f"doc_summary_index_{self.data_source_id}"
         )
 
+    def __persist_root_dir(self) -> str:
+        return os.path.join(settings.rag_databases_dir, "doc_summary_index_global")
+
     def __index_kwargs(self) -> Dict[str, Any]:
         return {
             "llm": self.llm,
@@ -101,18 +108,18 @@ class SummaryIndexer:
             "summary_query": SUMMARY_PROMPT,
         }
 
-    def __init_summary_store(self) -> DocumentSummaryIndex:
+    def __init_summary_store(self, persist_dir: str) -> DocumentSummaryIndex:
         doc_summary_index = DocumentSummaryIndex.from_documents(
             [],
             **self.__index_kwargs(),
         )
-        doc_summary_index.storage_context.persist(persist_dir=self.__persist_dir())
+        doc_summary_index.storage_context.persist(persist_dir=persist_dir)
         return doc_summary_index
 
-    def __summary_indexer(self) -> DocumentSummaryIndex:
+    def __summary_indexer(self, persist_dir: str) -> DocumentSummaryIndex:
         try:
             storage_context = StorageContext.from_defaults(
-                persist_dir=self.__persist_dir(),
+                persist_dir=persist_dir,
             )
             doc_summary_index: DocumentSummaryIndex = cast(
                 DocumentSummaryIndex,
@@ -123,7 +130,7 @@ class SummaryIndexer:
             )
             return doc_summary_index
         except FileNotFoundError:
-            doc_summary_index = self.__init_summary_store()
+            doc_summary_index = self.__init_summary_store(persist_dir)
             return doc_summary_index
 
     def index_file(self, file_path: Path, document_id: str) -> None:
@@ -142,27 +149,119 @@ class SummaryIndexer:
         chunks = reader.load_chunks(file_path)
 
         with _write_lock:
-            summary_store = self.__summary_indexer()
+            persist_dir = self.__persist_dir()
+            summary_store = self.__summary_indexer(persist_dir)
             summary_store.insert_nodes(chunks)
-            summary_store.storage_context.persist(persist_dir=self.__persist_dir())
+            summary_store.storage_context.persist(persist_dir=persist_dir)
+
+            self.__update_global_summary_store(summary_store, added_node_id=document_id)
 
         logger.debug(f"Summary for file {file_path} created")
 
+    def __update_global_summary_store(
+        self,
+        summary_store: DocumentSummaryIndex,
+        added_node_id: Optional[str] = None,
+        deleted_node_id: Optional[str] = None,
+    ) -> None:
+        # Llama index doesn't seem to support updating the summary when we add more documents.
+        # So what we do instead is re-load all the summaries for the documents already associated with the data source
+        # and re-index it with the addition/removal.
+        global_persist_dir = self.__persist_root_dir()
+        global_summary_store = self.__summary_indexer(global_persist_dir)
+        data_source_node = Document(doc_id=str(self.data_source_id), text="")
+
+        summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
+            str(self.data_source_id)
+        )
+
+        new_nodes = []
+        if summary_id:
+            document_ids = global_summary_store.index_struct.summary_id_to_node_ids.get(
+                summary_id
+            )
+            if document_ids:
+                # Reload the summary for each existing node id, which correspond to full documents
+                summaries = [
+                    summary_store.get_document_summary(document_id)
+                    for document_id in document_ids
+                ]
+
+                new_nodes = [
+                    Document(
+                        doc_id=document_id,
+                        text=document_summary,
+                        relationships={
+                            NodeRelationship.SOURCE: data_source_node.as_related_node_info()
+                        },
+                    )
+                    for document_id, document_summary in zip(document_ids, summaries)
+                ]
+
+        if added_node_id:
+            new_nodes.append(
+                Document(
+                    doc_id=added_node_id,
+                    text=summary_store.get_document_summary(added_node_id),
+                    relationships={
+                        NodeRelationship.SOURCE: data_source_node.as_related_node_info()
+                    },
+                )
+            )
+
+        if deleted_node_id:
+            new_nodes = [node for node in new_nodes if node.id_ != deleted_node_id]
+
+        # Delete first so that we don't accumulate trash in the summary store.
+        try:
+            global_summary_store.delete_ref_doc(str(self.data_source_id))
+        except KeyError:
+            pass
+        global_summary_store.insert_nodes(new_nodes)
+        global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
+
     def get_summary(self, document_id: str) -> Optional[str]:
         with _write_lock:
-            summary_store = self.__summary_indexer()
+            persist_dir = self.__persist_dir()
+            summary_store = self.__summary_indexer(persist_dir)
             if document_id not in summary_store.index_struct.doc_id_to_summary_id:
                 return None
             return summary_store.get_document_summary(document_id)
 
+    def get_full_summary(self) -> Optional[str]:
+        with _write_lock:
+            global_persist_dir = self.__persist_root_dir()
+            global_summary_store = self.__summary_indexer(global_persist_dir)
+            document_id = str(self.data_source_id)
+            if (
+                document_id
+                not in global_summary_store.index_struct.doc_id_to_summary_id
+            ):
+                return None
+            return global_summary_store.get_document_summary(document_id)
+
     def delete_document(self, document_id: str) -> None:
         with _write_lock:
-            summary_store = self.__summary_indexer()
+            persist_dir = self.__persist_dir()
+            summary_store = self.__summary_indexer(persist_dir)
+
+            self.__update_global_summary_store(
+                summary_store, deleted_node_id=document_id
+            )
+
             summary_store.delete_ref_doc(document_id)
-            summary_store.storage_context.persist(persist_dir=self.__persist_dir())
+            summary_store.storage_context.persist(persist_dir=persist_dir)
 
     def delete_data_source(self) -> None:
         with _write_lock:
             # We need to re-load the summary index constantly because of this delete.
             # TODO: figure out a less explosive way to do this.
             shutil.rmtree(self.__persist_dir(), ignore_errors=True)
+
+            global_persist_dir = self.__persist_root_dir()
+            global_summary_store = self.__summary_indexer(global_persist_dir)
+            try:
+                global_summary_store.delete_ref_doc(str(self.data_source_id))
+            except KeyError:
+                pass
+            global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
