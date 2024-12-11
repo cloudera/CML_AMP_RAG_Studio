@@ -56,10 +56,9 @@ from moto import mock_aws
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
-from app.services import models, data_sources_metadata_api
+from app.services import data_sources_metadata_api, models
 from app.services.data_sources_metadata_api import RagDataSource
 from app.services.noop_models import DummyLlm
-from app.services.utils import get_last_segment
 
 
 @dataclass
@@ -96,8 +95,8 @@ def s3_client(
 
 
 @pytest.fixture
-def document_id() -> str:
-    return str(uuid.uuid4())
+def document_id(index_document_request_body: dict[str, Any]) -> str:
+    return index_document_request_body["s3_document_key"].split("/")[-1]
 
 
 @pytest.fixture
@@ -110,7 +109,6 @@ def index_document_request_body(
     data_source_id: int, s3_object: BotoObject
 ) -> Dict[str, Any]:
     return {
-        "document_id": get_last_segment(s3_object.key),
         "data_source_id": data_source_id,
         "s3_bucket_name": s3_object.bucket_name,
         "s3_document_key": s3_object.key,
@@ -208,12 +206,10 @@ def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
 
 
 @pytest.fixture
-def s3_object(
-    s3_client: ServiceResource, aws_region: str, document_id: str
-) -> BotoObject:
+def s3_object(s3_client: ServiceResource, aws_region: str) -> BotoObject:
     """Put and return a mocked S3 object"""
     bucket_name = "test_bucket"
-    key = "test/" + document_id
+    key = "test/" + str(uuid.uuid4())
 
     body = lipsum.generate_words(1000)
 
@@ -222,7 +218,7 @@ def s3_object(
     bucket.put_object(
         Key=key,
         # TODO: fixturize file
-        Body=body.encode("utf-8")
+        Body=body.encode("utf-8"),
     )
     return BotoObject(bucket_name=bucket_name, key=key)
 

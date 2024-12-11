@@ -53,16 +53,15 @@ class TestDocumentSummaries:
         s3_object: BotoObject,
     ) -> None:
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
         assert response.status_code == 200
 
         post_summarization_response = client.post(
-            f"/data_sources/{data_source_id}/summarize-document",
+            f"/data_sources/{data_source_id}/documents/{document_id}/summary",
             json={
-                "document_id": document_id,
                 "s3_bucket_name": s3_object.bucket_name,
                 "s3_document_key": s3_object.key,
                 "original_filename": "test.txt",
@@ -94,16 +93,15 @@ class TestDocumentSummaries:
         s3_object: BotoObject,
     ) -> None:
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
         assert response.status_code == 200
 
         post_summarization_response = client.post(
-            f"/data_sources/{data_source_id}/summarize-document",
+            f"/data_sources/{data_source_id}/documents/{document_id}/summary",
             json={
-                "document_id": document_id,
                 "s3_bucket_name": s3_object.bucket_name,
                 "s3_document_key": s3_object.key,
                 "original_filename": "test.txt",

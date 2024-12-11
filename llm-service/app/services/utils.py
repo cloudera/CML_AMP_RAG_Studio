@@ -79,10 +79,6 @@ def parse_choice_select_answer_fn(
     return answer_nums, answer_relevances
 
 
-def get_last_segment(path: str) -> str:
-    return path.split("/")[-1]
-
-
 T = TypeVar("T")
 
 

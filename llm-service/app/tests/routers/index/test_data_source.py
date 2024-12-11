@@ -63,9 +63,8 @@ class TestDocumentIndexing:
         document_id: str,
         data_source_id: int,
     ) -> None:
-        """Test POST /download-and-index."""
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -84,9 +83,8 @@ class TestDocumentIndexing:
         document_id: str,
         data_source_id: int,
     ) -> None:
-        """Test POST /download-and-index."""
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -98,7 +96,7 @@ class TestDocumentIndexing:
         size1 = response.json()
 
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -120,7 +118,7 @@ class TestDocumentIndexing:
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}."""
         client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -150,7 +148,7 @@ class TestDocumentIndexing:
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}/documents/{document_id}."""
         client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -175,11 +173,12 @@ class TestDocumentIndexing:
     def test_get_size(
         client: TestClient,
         data_source_id: int,
+        document_id: str,
         index_document_request_body: dict[str, Any],
     ) -> None:
         """Test GET /data_sources/{data_source_id}/size."""
         client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 

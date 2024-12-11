@@ -120,7 +120,7 @@ class RagFileSummaryReconcilerTest {
                   .contains(
                       new RagBackendClient.TrackedRequest<>(
                           new RagBackendClient.SummaryRequest(
-                              documentId, "rag-files", "path_in_s3", "myfile.pdf")));
+                              "rag-files", "path_in_s3", "myfile.pdf")));
             });
   }
 
@@ -175,7 +175,7 @@ class RagFileSummaryReconcilerTest {
                   .contains(
                       new RagBackendClient.TrackedRequest<>(
                           new RagBackendClient.SummaryRequest(
-                              documentId, "rag-files", "path_in_s3", "myfile.pdf")));
+                              "rag-files", "path_in_s3", "myfile.pdf")));
             });
   }
 

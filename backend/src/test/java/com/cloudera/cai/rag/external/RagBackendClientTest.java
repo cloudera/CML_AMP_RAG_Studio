@@ -67,9 +67,13 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://rag-backend:8000/data_sources/" + 1234L + "/documents/download-and-index",
+                "http://rag-backend:8000/data_sources/"
+                    + 1234L
+                    + "/documents/"
+                    + "documentId"
+                    + "/index",
                 new RagBackendClient.IndexRequest(
-                    "documentId", "bucketName", "s3Path", "myfile.pdf", indexConfiguration)));
+                    "bucketName", "s3Path", "myfile.pdf", indexConfiguration)));
   }
 
   @Test
@@ -86,9 +90,8 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://rag-backend:8000/data_sources/1234/summarize-document",
-                new RagBackendClient.SummaryRequest(
-                    "documentId", "bucketName", "s3Path", "myfile.pdf")));
+                "http://rag-backend:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
   }
 
   @Test
