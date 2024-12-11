@@ -46,55 +46,12 @@ simply the field name in all capital letters.
 
 import logging
 import os.path
-from typing import Optional
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-class OTelSettings(BaseSettings, str_strip_whitespace=True):
-    """
-    OpenTelemetry configuration.
-
-    Environment variable names are taken from the OTel spec. This exists to enforce
-    values we require and set our own defaults; otherwise OTel will use its defaults
-    which could error at runtime.
-
-    """
-
-    model_config = SettingsConfigDict(env_prefix="otel_")
-
-    service_name: str = "llm-service"
-    exporter_otlp_endpoint: Optional[str] = None
-
-
-class PGVectorStoreSettings(BaseSettings, str_strip_whitespace=True):
-    """Postgres vector store configuration."""
-
-    db_url: str = "postgresql://postgres:password@localhost:5432"
-    db_name: str = "vector_db"
-
-
-class PrometheusSettings(BaseSettings, str_strip_whitespace=True):
-    """Prometheus client configuration."""
-
-    model_config = SettingsConfigDict(env_prefix="prometheus_")
-
-    port: int = 9464
-
-
-class S3Settings(BaseSettings, str_strip_whitespace=True):
-    """S3 configuration."""
-
-    endpoint_url: str = "http://s3:9090"
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """RAG configuration."""
-
-    otel: OTelSettings = OTelSettings()
-    pgvector: PGVectorStoreSettings = PGVectorStoreSettings()
-    prometheus: PrometheusSettings = PrometheusSettings()
-    s3: S3Settings = S3Settings()
 
     rag_log_level: int = logging.INFO
     rag_databases_dir: str = os.path.join("..", "databases")
