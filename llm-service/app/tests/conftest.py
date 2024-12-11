@@ -42,7 +42,7 @@ import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 import boto3
 import lipsum
@@ -96,7 +96,7 @@ def s3_client(
 
 @pytest.fixture
 def document_id(index_document_request_body: dict[str, Any]) -> str:
-    return index_document_request_body["s3_document_key"].split("/")[-1]
+    return cast(str, index_document_request_body["s3_document_key"].split("/")[-1])
 
 
 @pytest.fixture
