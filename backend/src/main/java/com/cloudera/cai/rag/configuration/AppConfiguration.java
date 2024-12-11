@@ -38,7 +38,7 @@
 
 package com.cloudera.cai.rag.configuration;
 
-import com.cloudera.cai.rag.files.FsRagFileUploader;
+import com.cloudera.cai.rag.files.FileSystemRagFileUploader;
 import com.cloudera.cai.rag.files.RagFileUploader;
 import com.cloudera.cai.rag.files.S3RagFileUploader;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
@@ -105,7 +105,7 @@ public class AppConfiguration {
   @Bean
   public RagFileUploader ragFileUploader(S3Config configuration) {
     if (configuration.getBucketName().isEmpty()) {
-      return new FsRagFileUploader();
+      return new FileSystemRagFileUploader();
     }
     AmazonS3Client s3Client = new AmazonS3Client(configuration);
     return new S3RagFileUploader(s3Client, configuration.getBucketName());

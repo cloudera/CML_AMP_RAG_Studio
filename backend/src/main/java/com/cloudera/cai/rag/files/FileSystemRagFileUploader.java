@@ -47,18 +47,25 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Component
-public class FsRagFileUploader implements RagFileUploader {
+public class FileSystemRagFileUploader implements RagFileUploader {
+
+  private static final String FILE_STORAGE_ROOT = fileStoragePath();
+
   @Override
   public void uploadFile(MultipartFile file, String s3Path) {
     log.info("Uploading file to FS: {}", s3Path);
-    System.out.println("Uploading file to FS: " + s3Path);
     try {
-      Path filePath = Path.of("databases/" + s3Path);
-      System.out.println("filePath: " + filePath);
+      Path filePath = Path.of(FILE_STORAGE_ROOT, s3Path);
       Files.createDirectories(filePath.getParent());
       Files.write(filePath, file.getBytes());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static String fileStoragePath() {
+    var fileStoragePath = System.getenv("RAG_DATABASES_DIR") + "/file_storage";
+    log.info("configured with fileStoragePath = {}", fileStoragePath);
+    return fileStoragePath;
   }
 }

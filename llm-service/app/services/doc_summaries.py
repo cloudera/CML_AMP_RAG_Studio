@@ -52,7 +52,7 @@ from llama_index.core.readers import SimpleDirectoryReader
 
 from . import data_sources_metadata_api
 from . import models
-from .s3 import download
+from .document_storage import DocumentStorage
 from .utils import get_last_segment
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..config import settings
@@ -87,7 +87,8 @@ def generate_summary(data_source_id: int, s3_bucket_name: str, s3_document_key: 
     """
     with tempfile.TemporaryDirectory() as tmpdirname:
         # load document(s)
-        downloaded_path = download(tmpdirname, s3_bucket_name, s3_document_key, original_filename)
+        document_storage = DocumentStorage.from_environment()
+        downloaded_path = document_storage.download(tmpdirname, s3_bucket_name, s3_document_key, original_filename)
         documents = SimpleDirectoryReader(input_files=[downloaded_path]).load_data()
         document_id = get_last_segment(s3_document_key)
         for document in documents:

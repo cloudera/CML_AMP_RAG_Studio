@@ -42,6 +42,7 @@ from ....ai.indexing.index import Indexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
 from ....services import doc_summaries, models, s3, data_sources_metadata_api
+from ....services.document_storage import DocumentStorage
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +179,8 @@ class DataSourceController:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
-            file_path = s3.download(tmpdirname, request.s3_bucket_name, request.s3_document_key, request.original_filename)
+            document_storage = DocumentStorage.from_environment()
+            file_path = document_storage.download(tmpdirname, request.s3_bucket_name, request.s3_document_key, request.original_filename)
 
             indexer = Indexer(
                 data_source_id,
