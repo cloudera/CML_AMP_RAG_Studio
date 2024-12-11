@@ -38,7 +38,6 @@
 
 import os
 import pathlib
-import shutil
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
