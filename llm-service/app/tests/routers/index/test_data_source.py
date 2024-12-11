@@ -138,7 +138,8 @@ class TestDocumentIndexing:
         get_summary_response = client.get(
             f"/data_sources/{data_source_id}/documents/{document_id}/summary"
         )
-        assert get_summary_response.status_code == 404
+        assert get_summary_response.status_code == 200
+        assert get_summary_response.text == '"No summary found for this document."'
 
     @staticmethod
     def test_delete_document(

@@ -87,7 +87,8 @@ class RagBackendClientTest {
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
                 "http://rag-backend:8000/data_sources/1234/summarize-document",
-                new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
+                new RagBackendClient.SummaryRequest(
+                    "documentId", "bucketName", "s3Path", "myfile.pdf")));
   }
 
   @Test

@@ -36,11 +36,8 @@
 #  DATA.
 #
 import os
-import shutil
-import tempfile
 from typing import cast
 
-from fastapi import HTTPException
 from llama_index.core import (
     DocumentSummaryIndex,
     Settings,
@@ -48,14 +45,10 @@ from llama_index.core import (
     load_index_from_storage,
 )
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.readers import SimpleDirectoryReader
 
-from . import data_sources_metadata_api
-from . import models
-from .s3 import download
-from .utils import get_last_segment
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..config import settings
+from . import data_sources_metadata_api, models
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
 
@@ -65,50 +58,6 @@ def index_dir(data_source_id: int) -> str:
     return os.path.join(
         settings.rag_databases_dir, f"doc_summary_index_{data_source_id}"
     )
-
-
-def read_summary(data_source_id: int, document_id: str) -> str:
-    """Return the summary of `document_id`."""
-    index = index_dir(data_source_id)
-    if not os.path.exists(index):
-        raise HTTPException(status_code=404, detail="Knowledge base not found.")
-
-    storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
-
-    if document_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
-        return "No summary found for this document."
-
-    return doc_summary_index.get_document_summary(doc_id=document_id)
-
-
-def generate_summary(data_source_id: int, s3_bucket_name: str, s3_document_key: str, original_filename: str) -> str:
-    """Generate, persist, and return a summary for `s3_document_key`.
-    """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        # load document(s)
-        downloaded_path = download(tmpdirname, s3_bucket_name, s3_document_key, original_filename)
-        documents = SimpleDirectoryReader(input_files=[downloaded_path]).load_data()
-        document_id = get_last_segment(s3_document_key)
-        for document in documents:
-            document.id_ = document_id
-
-        try:
-            storage_context = make_storage_context(data_source_id)
-        except FileNotFoundError:
-            initialize_summary_index_storage(data_source_id)
-            storage_context = make_storage_context(data_source_id)
-
-        doc_summary_index = load_document_summary_index(storage_context, data_source_id, read_only_mode=False)
-
-        for document in documents:
-            doc_summary_index.insert(document)
-        index = index_dir(data_source_id)
-        doc_summary_index.storage_context.persist(
-            persist_dir=index,
-        )
-
-        return doc_summary_index.get_document_summary(doc_id=document_id)
 
 
 ## todo: move to somewhere better; these are defaults to use when none are explicitly provided
@@ -123,17 +72,9 @@ def _set_settings_globals(data_source_id: int, read_only_mode: bool = True) -> N
     Settings.text_splitter = SentenceSplitter(chunk_size=1024)
 
 
-def initialize_summary_index_storage(data_source_id: int) -> None:
-    _set_settings_globals(data_source_id)
-    doc_summary_index = DocumentSummaryIndex.from_documents(
-        [],
-        summary_query=SUMMARY_PROMPT,
-    )
-    doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
-
-
-def load_document_summary_index(storage_context: StorageContext, data_source_id: int,
-                                read_only_mode: bool = True) -> DocumentSummaryIndex:
+def load_document_summary_index(
+    storage_context: StorageContext, data_source_id: int, read_only_mode: bool = True
+) -> DocumentSummaryIndex:
     _set_settings_globals(data_source_id, read_only_mode)
     doc_summary_index: DocumentSummaryIndex = cast(
         DocumentSummaryIndex,
@@ -158,7 +99,9 @@ def summarize_data_source(data_source_id: int) -> str:
     summaries = map(doc_summary_index.get_document_summary, doc_ids)
 
     prompt = 'I have summarized a list of documents that may or may not be related to each other. Please provide an overview of the document corpus as an executive summary.  Do not start with "Here is...".  The summary should be concise and not be frivolous'
-    response = models.get_llm(metadata.summarization_model).complete(prompt + "\n".join(summaries))
+    response = models.get_llm(metadata.summarization_model).complete(
+        prompt + "\n".join(summaries)
+    )
     return response.text
 
 
@@ -170,27 +113,3 @@ def make_storage_context(data_source_id: int) -> StorageContext:
         ).llama_vector_store(),
     )
     return storage_context
-
-
-def doc_summary_vector_table_name_from(data_source_id: int) -> str:
-    return f"summary_index_{data_source_id}"
-
-
-def delete_data_source(data_source_id: int) -> None:
-    """Delete the summary index for `data_source_id`."""
-    index = index_dir(data_source_id)
-    if os.path.exists(index):
-        shutil.rmtree(index)
-    QdrantVectorStore.for_summaries(data_source_id).delete()
-
-
-def delete_document(data_source_id: int, doc_id: str) -> None:
-    index = index_dir(data_source_id)
-    if not os.path.exists(index):
-        return
-    storage_context = make_storage_context(data_source_id)
-    doc_summary_index = load_document_summary_index(storage_context, data_source_id)
-    if doc_id not in doc_summary_index.index_struct.doc_id_to_summary_id:
-        return
-    doc_summary_index.delete(doc_id)
-    doc_summary_index.storage_context.persist(persist_dir=index_dir(data_source_id))
