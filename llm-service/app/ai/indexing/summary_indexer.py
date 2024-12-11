@@ -40,6 +40,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
+from threading import Lock
 from typing import Any, Dict, Optional, cast
 
 from llama_index.core import (
@@ -62,6 +63,12 @@ logger = logging.getLogger(__name__)
 
 SUMMARY_PROMPT = 'Summarize the document into a single sentence. If an adequate summary is not possible, please return "No summary available.".'
 
+# Since we don't use anything fancy to store the summaries, it's possible that two threads
+# try to do a write operation at the same time and we end up with a race condition.
+# Basically filesystems aren't ACID, so don't pretend that they are.
+# We could have a lock per data source, but this is simpler.
+_write_lock = Lock()
+
 
 class SummaryIndexer:
     def __init__(
@@ -73,7 +80,6 @@ class SummaryIndexer:
         self.data_source_id = data_source_id
         self.splitter = splitter
         self.llm = llm
-        self.summary_store = self.__summary_indexer()
 
     def __persist_dir(self) -> str:
         return os.path.join(
@@ -135,19 +141,28 @@ class SummaryIndexer:
 
         chunks = reader.load_chunks(file_path)
 
-        self.summary_store.insert_nodes(chunks)
-        self.summary_store.storage_context.persist(persist_dir=self.__persist_dir())
+        with _write_lock:
+            summary_store = self.__summary_indexer()
+            summary_store.insert_nodes(chunks)
+            summary_store.storage_context.persist(persist_dir=self.__persist_dir())
 
         logger.debug(f"Summary for file {file_path} created")
 
     def get_summary(self, document_id: str) -> Optional[str]:
-        if document_id not in self.summary_store.index_struct.doc_id_to_summary_id:
-            return None
-        return self.summary_store.get_document_summary(document_id)
+        with _write_lock:
+            summary_store = self.__summary_indexer()
+            if document_id not in summary_store.index_struct.doc_id_to_summary_id:
+                return None
+            return summary_store.get_document_summary(document_id)
 
     def delete_document(self, document_id: str) -> None:
-        self.summary_store.delete_ref_doc(document_id)
-        self.summary_store.storage_context.persist(persist_dir=self.__persist_dir())
+        with _write_lock:
+            summary_store = self.__summary_indexer()
+            summary_store.delete_ref_doc(document_id)
+            summary_store.storage_context.persist(persist_dir=self.__persist_dir())
 
     def delete_data_source(self) -> None:
-        shutil.rmtree(self.__persist_dir())
+        with _write_lock:
+            # We need to re-load the summary index constantly because of this delete.
+            # TODO: figure out a less explosive way to do this.
+            shutil.rmtree(self.__persist_dir())
