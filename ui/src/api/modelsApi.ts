@@ -49,7 +49,7 @@ import {
 export interface Model {
   name?: string;
   model_id: string;
-  available?: boolean;
+  available: boolean | null;
   replica_count?: number;
 }
 

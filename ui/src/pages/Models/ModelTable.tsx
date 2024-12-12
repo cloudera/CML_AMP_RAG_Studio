@@ -103,7 +103,7 @@ export const modelColumns: TableProps<Model>["columns"] = [
       if (!model.name) {
         return null;
       }
-      if (model.available === undefined) {
+      if (model.available === null) {
         return "Unknown";
       }
       return model.available ? "Available" : "Not Ready";
