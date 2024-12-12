@@ -38,7 +38,7 @@
 import http.client as http_client
 import json
 import os
-from typing import Any
+from typing import Any, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
@@ -95,27 +95,25 @@ class CaiiEmbeddingModel(BaseEmbedding):
         structured_response = json.loads(json_response)
         return structured_response
 
-## TODO: get this working. At the moment, the shape of the data in the response isn't what the code is expecting
 
-    # def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
-    #     if len(texts) == 1:
-    #         return [self._get_text_embedding(texts[0])]
-    #
-    #     print(f"Getting embeddings for {len(texts)} texts")
-    #     model = self.endpoint.endpointmetadata.model_name
-    #     body = json.dumps(
-    #         {
-    #             "input": texts,
-    #             "input_type": "passage",
-    #             "truncate": "END",
-    #             "model": model,
-    #         }
-    #     )
-    #     structured_response = self.make_embedding_request(body)
-    #     embeddings = structured_response["data"][0]["embedding"]
-    #     print(f"Got embeddings for {len(embeddings)} texts")
-    #     assert isinstance(embeddings, list)
-    #     assert all(isinstance(x, list) for x in embeddings)
-    #     assert all(all(isinstance(y, float) for y in x) for x in embeddings)
-    #
-    #     return embeddings
+    def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
+        if len(texts) == 1:
+            return [self._get_text_embedding(texts[0])]
+
+        model = self.endpoint.endpointmetadata.model_name
+        body = json.dumps(
+            {
+                "input": texts,
+                "input_type": "passage",
+                "truncate": "END",
+                "model": model,
+            }
+        )
+        structured_response = self.make_embedding_request(body)
+
+        embeddings = list(map(lambda data: data["embedding"], structured_response["data"]))
+        assert isinstance(embeddings, list)
+        assert all(isinstance(x, list) for x in embeddings)
+        assert all(all(isinstance(y, float) for y in x) for x in embeddings)
+
+        return embeddings
