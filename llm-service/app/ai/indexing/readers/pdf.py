@@ -45,7 +45,7 @@ from typing import Any, List
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 from .simple_file import SimpleFileReader
 
 logger = logging.getLogger(__name__)
@@ -94,23 +94,41 @@ class PDFReader(BaseReader):
         self.inner = LlamaIndexPDFReader(return_full_document=False)
         self.markdown_reader = SimpleFileReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> list[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         logger.debug(f"{file_path=}")
-        chunks: list[TextNode] = self.process_with_docling(file_path)
-        if chunks:
-            return chunks
+        ret = self._process_with_docling(file_path)
+        if ret is not None:
+            return ret
+
+        ret = ChunksResult()
 
         pages: list[Document] = self.inner.load_data(file_path)
         page_counter = PageTracker(pages)
-        document = Document(text=page_counter.document_text)
+
+        content = page_counter.document_text
+
+        secrets = self._block_secrets([content])
+        if secrets is not None:
+            ret.secret_types = secrets
+            return ret
+
+        anonymized_text = self._anonymize_pii(content)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            content = anonymized_text
+
+        document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
         chunks = self._chunks_in_document(document)
+
+        # TODO: check if PPI removal breaks the page numbers slightly because the text changes
         page_counter.populate_chunk_page_numbers(chunks)
 
-        return chunks
+        ret.chunks = chunks
+        return ret
 
-    def process_with_docling(self, file_path: Path) -> list[TextNode] | None:
+    def _process_with_docling(self, file_path: Path) -> ChunksResult | None:
         docling_enabled = (
             os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         )
@@ -135,8 +153,8 @@ class PDFReader(BaseReader):
         markdown_file_path = file_path.with_suffix(".md")
         if process.returncode == 0 and markdown_file_path.exists():
             # update chunk metadata to point at the original pdf
-            chunks = self.markdown_reader.load_chunks(markdown_file_path)
-            for chunk in chunks:
+            result = self.markdown_reader.load_chunks(markdown_file_path)
+            for chunk in result.chunks:
                 chunk.metadata["file_name"] = file_path.name
-            return chunks
+            return result
         return None
