@@ -39,16 +39,19 @@
 import shutil
 from pathlib import Path
 
-from app.config import settings
+from app.config import Settings
+
 from .base import DocumentStorage
 
 
 class FileSystemDocumentStorage(DocumentStorage):
-    def download(self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str) -> Path:
+    def download(
+        self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str
+    ) -> Path:
         """
         Copy file from local filesystem into the temp directory
         """
-        source_file = Path(settings.rag_databases_dir, "file_storage", document_key)
+        source_file = Path(Settings().rag_databases_dir, "file_storage", document_key)
         target_file = Path(temp_dir, original_filename)
         shutil.copy(source_file, target_file)
         return target_file

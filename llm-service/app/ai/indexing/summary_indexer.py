@@ -59,7 +59,7 @@ from llama_index.core.schema import (
 
 from app.services.models import get_noop_embedding_model
 
-from ...config import settings
+from ...config import Settings
 from .base_indexer import BaseTextIndexer
 from .readers.base_reader import ReaderConfig
 
@@ -89,11 +89,11 @@ class SummaryIndexer(BaseTextIndexer):
 
     def __persist_dir(self) -> str:
         return os.path.join(
-            settings.rag_databases_dir, f"doc_summary_index_{self.data_source_id}"
+            Settings().rag_databases_dir, f"doc_summary_index_{self.data_source_id}"
         )
 
     def __persist_root_dir(self) -> str:
-        return os.path.join(settings.rag_databases_dir, "doc_summary_index_global")
+        return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
 
     def __index_kwargs(self) -> Dict[str, Any]:
         return {

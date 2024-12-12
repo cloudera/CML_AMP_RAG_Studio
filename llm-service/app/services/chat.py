@@ -44,16 +44,16 @@ from typing import List
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
+from ..ai.vector_stores.qdrant import QdrantVectorStore
+from ..rag_types import RagPredictConfiguration
 from . import evaluators, qdrant
 from .chat_store import (
+    ChatHistoryManager,
     Evaluation,
     RagContext,
     RagPredictSourceNode,
     RagStudioChatMessage,
-    chat_store,
 )
-from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
@@ -98,12 +98,12 @@ def v2_chat(
         ],
         timestamp=time.time(),
     )
-    chat_store.append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = chat_store.retrieve_chat_history(session_id)[:10]
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(

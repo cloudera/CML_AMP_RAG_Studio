@@ -40,7 +40,7 @@ import itertools
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 
 from ..rag_types import RagPredictConfiguration
-from .chat_store import RagStudioChatMessage, chat_store
+from .chat_store import ChatHistoryManager, RagStudioChatMessage
 from .models import get_llm
 
 
@@ -54,7 +54,7 @@ def completion(
     session_id: int, question: str, configuration: RagPredictConfiguration
 ) -> ChatResponse:
     model = get_llm(configuration.model_name)
-    chat_history = chat_store.retrieve_chat_history(session_id)[:10]
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
             map(lambda x: make_chat_messages(x), chat_history)
