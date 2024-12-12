@@ -51,10 +51,10 @@ def evaluate_response(
 
     relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
     relevance = relevancy_evaluator.evaluate_response(
-        query=query, response=Response(response=chat_response.response)
+        query=query, response=Response(response=chat_response.response, source_nodes=chat_response.source_nodes, metadata=chat_response.metadata)
     )
     faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
     faithfulness = faithfulness_evaluator.evaluate_response(
-        query=query, response=Response(response=chat_response.response)
+        query=query, response=Response(response=chat_response.response, source_nodes=chat_response.source_nodes, metadata=chat_response.metadata)
     )
     return relevance.score or 0, faithfulness.score or 0
