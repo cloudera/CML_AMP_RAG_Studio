@@ -131,6 +131,10 @@ def suggest_questions(
         session_id: int,
         request: SuggestQuestionsRequest,
 ) -> RagSuggestedQuestionsResponse:
+
+    if len(request.data_source_ids) != 1:
+        raise HTTPException(status_code=400, detail="Only one datasource is supported for question suggestion.")
+
     total_data_sources_size: int = sum(
         map(lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0, request.data_source_ids))
     if total_data_sources_size == 0:
