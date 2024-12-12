@@ -73,7 +73,7 @@ export interface QueryConfiguration {
 
 export interface ChatMutationRequest {
   query: string;
-  data_source_id: string;
+  data_source_ids: number[];
   session_id: string;
   configuration: QueryConfiguration;
 }
@@ -176,7 +176,7 @@ export const useChatMutation = ({
         (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
       );
       await queryClient.invalidateQueries({
-        queryKey: suggestedQuestionKey(variables.data_source_id),
+        queryKey: suggestedQuestionKey(variables.data_source_ids),
       });
       onSuccess?.(data);
     },
