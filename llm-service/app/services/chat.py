@@ -58,11 +58,12 @@ from .chat_store import (
 
 def v2_chat(
     session_id: int,
-    data_source_id: int,
+    data_source_ids: list[int],
     query: str,
     configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
     response_id = str(uuid.uuid4())
+    data_source_id: int = data_source_ids[0]
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,

@@ -77,7 +77,7 @@ def delete_chat_history(session_id: int) -> str:
 
 
 class RagStudioChatRequest(BaseModel):
-    data_source_id: int
+    data_source_ids: list[int]
     query: str
     configuration: RagPredictConfiguration
 
@@ -91,7 +91,7 @@ def chat(
     if request.configuration.exclude_knowledge_base:
         return llm_talk(session_id, request)
     return v2_chat(
-        session_id, request.data_source_id, request.query, request.configuration
+        session_id, request.data_source_ids, request.query, request.configuration
     )
 
 
@@ -117,7 +117,7 @@ def llm_talk(
 
 
 class SuggestQuestionsRequest(BaseModel):
-    data_source_id: int
+    data_source_ids: list[int]
     configuration: RagPredictConfiguration = RagPredictConfiguration()
 
 
@@ -131,8 +131,10 @@ def suggest_questions(
     session_id: int,
     request: SuggestQuestionsRequest,
 ) -> RagSuggestedQuestionsResponse:
-    data_source_size = QdrantVectorStore.for_chunks(request.data_source_id).size()
-    if data_source_size is None:
+    data_sources_size: int = 0
+    for data_source_id in request.data_source_ids:
+        data_sources_size += QdrantVectorStore.for_chunks(data_source_id).size() or 0
+    if data_sources_size == 0:
         raise HTTPException(status_code=404, detail="Knowledge base not found.")
     suggested_questions = generate_suggested_questions(
         request.configuration, request.data_source_id, data_source_size, session_id
