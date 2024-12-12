@@ -34,12 +34,12 @@ class BaseReader(ABC):
         splitter: SentenceSplitter,
         document_id: str,
         data_source_id: int,
-        config: ReaderConfig = ReaderConfig(),
+        config: Optional[ReaderConfig] = None,
     ):
         self.splitter = splitter
         self.document_id = document_id
         self.data_source_id = data_source_id
-        self.config = config
+        self.config = config or ReaderConfig()
 
     @abstractmethod
     def load_chunks(self, file_path: Path) -> ChunksResult:

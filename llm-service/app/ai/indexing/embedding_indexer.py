@@ -39,7 +39,7 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Generator, List
+from typing import Generator, List, Optional
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.node_parser import SentenceSplitter
@@ -60,7 +60,7 @@ class EmbeddingIndexer(BaseTextIndexer):
         splitter: SentenceSplitter,
         embedding_model: BaseEmbedding,
         chunks_vector_store: VectorStore,
-        reader_config: ReaderConfig = ReaderConfig(),
+        reader_config: Optional[ReaderConfig] = None,
     ):
         super().__init__(data_source_id, reader_config)
         self.splitter = splitter

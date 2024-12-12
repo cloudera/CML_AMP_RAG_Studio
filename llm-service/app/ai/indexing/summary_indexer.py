@@ -81,7 +81,7 @@ class SummaryIndexer(BaseTextIndexer):
         data_source_id: int,
         splitter: SentenceSplitter,
         llm: LLM,
-        reader_config: ReaderConfig = ReaderConfig(),
+        reader_config: Optional[ReaderConfig] = None,
     ):
         super().__init__(data_source_id, reader_config)
         self.splitter = splitter

@@ -2,7 +2,7 @@ import os
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Type
+from typing import Dict, Optional, Type
 
 from .readers.base_reader import BaseReader, ReaderConfig
 from .readers.csv import CSVReader
@@ -34,7 +34,7 @@ class BaseTextIndexer:
     def __init__(
         self,
         data_source_id: int,
-        reader_config: ReaderConfig = ReaderConfig(),
+        reader_config: Optional[ReaderConfig] = None,
     ):
         self.data_source_id = data_source_id
         self.reader_config = reader_config
