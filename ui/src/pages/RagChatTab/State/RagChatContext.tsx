@@ -37,40 +37,30 @@
  ******************************************************************************/
 
 import { createContext, Dispatch, SetStateAction } from "react";
-import { ChatMessageType, QueryConfiguration } from "src/api/chatApi.ts";
+import { ChatMessageType } from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 export interface RagChatContextType {
-  dataSourceId?: number;
-  queryConfiguration: QueryConfiguration;
-  setQueryConfiguration: Dispatch<SetStateAction<QueryConfiguration>>;
-  setCurrentQuestion: Dispatch<SetStateAction<string>>;
-  currentQuestion: string;
-  chatHistory: ChatMessageType[];
-  chatHistoryStatus?: "error" | "success" | "pending";
-  dataSourceSize: number | null;
-  dataSourcesStatus?: "error" | "success" | "pending";
   activeSession?: Session;
-  dataSources: DataSourceType[];
+  currentQuestionState: [string, Dispatch<SetStateAction<string>>];
+  chatHistoryQuery: {
+    chatHistory: ChatMessageType[];
+    chatHistoryStatus?: "error" | "success" | "pending";
+  };
+  dataSourcesQuery: {
+    dataSources: DataSourceType[];
+    dataSourcesStatus?: "error" | "success" | "pending";
+  };
+  dataSourceSize: number | null;
+  excludeKnowledgeBaseState: [boolean, Dispatch<SetStateAction<boolean>>];
 }
 
-export const defaultQueryConfig = {
-  top_k: 5,
-  model_name: "",
-  exclude_knowledge_base: false,
-};
-
 export const RagChatContext = createContext<RagChatContextType>({
-  dataSourceId: undefined, // TODO: remove this and have it pulled from active session
   activeSession: undefined,
-  dataSources: [],
-  queryConfiguration: defaultQueryConfig,
-  setQueryConfiguration: () => null,
-  setCurrentQuestion: () => null,
-  currentQuestion: "",
-  chatHistory: [],
+  currentQuestionState: ["", () => null],
+  chatHistoryQuery: { chatHistory: [], chatHistoryStatus: undefined },
+  dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
-  chatHistoryStatus: undefined,
-  dataSourcesStatus: undefined,
+  excludeKnowledgeBaseState: [false, () => null],
 });

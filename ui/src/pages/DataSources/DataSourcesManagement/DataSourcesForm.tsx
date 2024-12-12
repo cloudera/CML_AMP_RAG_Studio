@@ -36,12 +36,22 @@
  * DATA.
  ******************************************************************************/
 
-import { Collapse, Form, FormInstance, Input, InputNumber, Select } from "antd";
+import {
+  Collapse,
+  Form,
+  FormInstance,
+  Input,
+  InputNumber,
+  Select,
+  Tooltip,
+  Typography,
+} from "antd";
 import { ConnectionType, DataSourceBaseType } from "src/api/dataSourceApi";
 import RequestConfigureOptions from "pages/DataSources/DataSourcesManagement/RequestConfigureOptions.tsx";
-import { useGetEmbeddingModels } from "src/api/modelsApi.ts";
+import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import { useEffect } from "react";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { InfoCircleOutlined } from "@ant-design/icons";
 
 export const distanceMetricOptions = [
   {
@@ -106,19 +116,19 @@ export const advancedOptions = (
 ];
 
 export const dataSourceCreationInitialValues = {
+  id: -1,
   name: "",
   chunkSize: 512,
   connectionType: ConnectionType.MANUAL,
   chunkOverlapPercent: 10,
+  embeddingModel: "",
+  summarizationModel: "",
 };
 
 export interface DataSourcesFormProps {
   form: FormInstance;
   updateMode: boolean;
-  initialValues: Pick<
-    DataSourceBaseType,
-    "name" | "chunkSize" | "connectionType" | "chunkOverlapPercent"
-  >;
+  initialValues: DataSourceBaseType;
 }
 
 const layout = {
@@ -132,12 +142,16 @@ const DataSourcesForm = ({
   initialValues = dataSourceCreationInitialValues,
 }: DataSourcesFormProps) => {
   const embeddingsModels = useGetEmbeddingModels();
+  const llmModels = useGetLlmModels();
 
   useEffect(() => {
+    if (initialValues.embeddingModel) {
+      return;
+    }
     form.setFieldsValue({
-      embeddingModel: [embeddingsModels.data?.[0]?.model_id],
+      embeddingModel: embeddingsModels.data?.[0]?.model_id,
     });
-  }, [embeddingsModels.data]);
+  }, [embeddingsModels.data, initialValues.embeddingModel]);
 
   return (
     <Form
@@ -180,10 +194,12 @@ const DataSourcesForm = ({
         name="embeddingModel"
         label="Embedding model"
         rules={[{ required: true }]}
+        initialValue={initialValues.embeddingModel}
       >
         <Select
           options={transformModelOptions(embeddingsModels.data)}
           disabled={updateMode}
+          loading={embeddingsModels.isLoading}
         />
       </Form.Item>
       <Form.Item
@@ -192,6 +208,24 @@ const DataSourcesForm = ({
         initialValue={initialValues.connectionType}
       >
         <Select options={connectionsOptions} />
+      </Form.Item>
+      <Form.Item
+        name="summarizationModel"
+        label={
+          <Typography>
+            Summarization model
+            <Tooltip title="Summarization relies on an response synthesizer model to generate summaries.  Leaving this field blank will disable summarization.">
+              <InfoCircleOutlined style={{ marginLeft: 4 }} />
+            </Tooltip>
+          </Typography>
+        }
+        initialValue={initialValues.summarizationModel}
+      >
+        <Select
+          options={transformModelOptions(llmModels.data)}
+          allowClear
+          loading={llmModels.isLoading}
+        />
       </Form.Item>
       <Collapse items={advancedOptions(updateMode, initialValues)} />
       <RequestConfigureOptions />

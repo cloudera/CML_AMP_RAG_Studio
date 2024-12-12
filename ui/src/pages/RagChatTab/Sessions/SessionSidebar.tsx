@@ -95,7 +95,9 @@ export function SessionSidebar({
 }: {
   sessionsByDate: Dictionary<Session[]>;
 }) {
-  const { dataSources } = useContext(RagChatContext);
+  const {
+    dataSourcesQuery: { dataSources },
+  } = useContext(RagChatContext);
   const { isModalOpen, setIsModalOpen, showModal, handleCancel } = useModal();
   const { activeSession } = useContext(RagChatContext);
   const [collapsed, setCollapsed] = useState(false);

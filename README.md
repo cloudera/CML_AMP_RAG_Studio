@@ -10,9 +10,9 @@ RAG Studio requires AWS for access to both LLM and embedding models. Please comp
 
 - A S3 bucket to store the documents
 - The following models configured and accessible via AWS Bedrock. Any of the models not enabled will not function in the UI.
-  - Llama3.1 8b Instruct V1 (`meta.llama3-1-8b-instruct-v1:0`) - This model is required for the RAG Studio to function
-  - Llama3.1 70b Instruct V1 (`meta.llama3-1-70b-instruct-v1:0`)
-  - Llama3.1 405b Instruct V1 (`meta.llama3-1-405b-instruct-v1:0`)
+  - Llama3.1 8b Instruct v1 (`meta.llama3-1-8b-instruct-v1:0`) - This model is required for the RAG Studio to function
+  - Llama3.1 70b Instruct v1 (`meta.llama3-1-70b-instruct-v1:0`)
+  - Cohere Command R+ v1 (`cohere.command-r-plus-v1:0`)
 - For Embedding, you will need to enable the following model in AWS Bedrock:
   - Cohere English Embedding v3 (`meta.cohere-english-embedding-v3:0`)
 

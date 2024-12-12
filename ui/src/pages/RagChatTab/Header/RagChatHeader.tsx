@@ -38,14 +38,11 @@
 
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { Button, Flex, Layout, Tooltip, Typography } from "antd";
-import QueryTimeSettingsModal from "pages/RagChatTab/Settings/QueryTimeSettingsModal.tsx";
-import { useContext } from "react";
-import { QueryConfiguration } from "src/api/chatApi.ts";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { Button, Flex, Layout, Typography } from "antd";
+import ChatSettingsModal from "pages/RagChatTab/Settings/ChatSettingsModal.tsx";
 import useModal from "src/utils/useModal.ts";
 import SettingsIcon from "src/cuix/icons/SettingsIcon";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGray600 } from "src/cuix/variables.ts";
 
 const { Header } = Layout;
 
@@ -62,22 +59,19 @@ function getHeaderTitle(
   return `${activeSession.name} / ${currentDataSource.name}`;
 }
 
-export const RagChatHeader = (props: {
+export const RagChatHeader = ({
+  activeSession,
+  currentDataSource,
+}: {
   activeSession?: Session;
   currentDataSource?: DataSourceType;
 }) => {
-  const { queryConfiguration, setQueryConfiguration } =
-    useContext(RagChatContext);
   const settingsModal = useModal();
 
   const handleOpenModal = () => {
     settingsModal.setIsModalOpen(!settingsModal.isModalOpen);
   };
 
-  const handleUpdateConfiguration = (formValues: QueryConfiguration) => {
-    setQueryConfiguration(formValues);
-    settingsModal.setIsModalOpen(false);
-  };
   return (
     <Header style={{ padding: 0, margin: 0, width: "100%" }}>
       <Flex justify="space-between">
@@ -91,33 +85,35 @@ export const RagChatHeader = (props: {
             marginBottom: 0,
           }}
         >
-          {getHeaderTitle(props.activeSession, props.currentDataSource)}
+          {getHeaderTitle(activeSession, currentDataSource)}
         </Typography.Title>
-        <Tooltip title={"Query-Time Settings"}>
-          <Button
-            style={{ width: 116, alignItems: "center" }}
-            onClick={handleOpenModal}
+        <Button
+          style={{ width: 140, alignItems: "center" }}
+          onClick={handleOpenModal}
+          disabled={!activeSession}
+        >
+          <Flex
+            align="center"
+            gap={5}
+            style={{ margin: 0, padding: 0, height: "100%" }}
           >
-            <Flex
-              align="center"
-              gap={5}
-              style={{ margin: 0, padding: 0, height: "100%" }}
+            <SettingsIcon
+              color={activeSession ? cdlBlue600 : cdlGray600}
+              fontSize={18}
+            />
+            <Typography.Text
+              style={{ color: activeSession ? cdlBlue600 : cdlGray600 }}
             >
-              <SettingsIcon color={cdlBlue600} fontSize={18} />
-              <Typography.Text style={{ color: cdlBlue600 }}>
-                Settings
-              </Typography.Text>
-            </Flex>
-          </Button>
-        </Tooltip>
+              Chat Settings
+            </Typography.Text>
+          </Flex>
+        </Button>
       </Flex>{" "}
-      <QueryTimeSettingsModal
+      <ChatSettingsModal
         open={settingsModal.isModalOpen}
         closeModal={() => {
           settingsModal.setIsModalOpen(false);
         }}
-        queryConfiguration={queryConfiguration}
-        handleUpdateConfiguration={handleUpdateConfiguration}
       />
     </Header>
   );

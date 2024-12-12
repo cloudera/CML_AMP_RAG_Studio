@@ -44,10 +44,10 @@ from ..services import models
 
 
 def evaluate_response(
-        query: str,
-        chat_response: AgentChatResponse,
+    query: str, chat_response: AgentChatResponse, model_name: str
 ) -> tuple[float, float]:
-    evaluator_llm = models.get_llm("meta.llama3-8b-instruct-v1:0")
+    # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
+    evaluator_llm = models.get_llm(model_name)
 
     relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
     relevance = relevancy_evaluator.evaluate_response(

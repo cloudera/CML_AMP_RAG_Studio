@@ -53,6 +53,7 @@ export interface CreateDataSourceType {
   name: string;
   chunkSize: number;
   chunkOverlapPercent: number;
+  embeddingModel: string;
 }
 
 export enum ConnectionType {
@@ -68,6 +69,8 @@ export interface DataSourceBaseType {
   chunkSize: number;
   chunkOverlapPercent: number;
   connectionType: ConnectionType;
+  embeddingModel: string;
+  summarizationModel?: string;
 }
 
 export type DataSourceType = DataSourceBaseType & {
@@ -148,6 +151,7 @@ export const getDataSourceById = (dataSourceId: string) => {
   return queryOptions({
     queryKey: [QueryKeys.getDataSourceById, { dataSourceId }],
     queryFn: () => getDataSourceByIdQuery(dataSourceId),
+    staleTime: 1000 * 5,
   });
 };
 

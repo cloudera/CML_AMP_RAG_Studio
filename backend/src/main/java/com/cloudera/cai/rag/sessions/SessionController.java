@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -61,6 +61,13 @@ public class SessionController {
     String username = userTokenCookieDecoder.extractUsername(request.getCookies());
     input = input.withCreatedById(username).withUpdatedById(username);
     return sessionService.create(input);
+  }
+
+  @PostMapping(path = "/{id}", consumes = "application/json", produces = "application/json")
+  public Types.Session update(@RequestBody Types.Session input, HttpServletRequest request) {
+    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    input = input.withUpdatedById(username);
+    return sessionService.update(input);
   }
 
   @DeleteMapping(path = "/{id}")

@@ -127,7 +127,10 @@ export interface RagDocumentResponseType {
   summaryCreationTimestamp: number | null;
 }
 
-export const useGetRagDocuments = (dataSourceId: string) => {
+export const useGetRagDocuments = (
+  dataSourceId: string,
+  summarizationModel?: string,
+) => {
   return useQuery({
     queryKey: [QueryKeys.getRagDocuments, { dataSourceId }],
     queryFn: () => getRagDocuments(dataSourceId),
@@ -139,10 +142,16 @@ export const useGetRagDocuments = (dataSourceId: string) => {
       const nullTimestampDocuments = data.find(
         (file: RagDocumentResponseType) => file.vectorUploadTimestamp === null,
       );
-      const nullSummaryCreation = data.find(
-        (file: RagDocumentResponseType) =>
-          file.summaryCreationTimestamp === null,
-      );
+
+      let nullSummaryCreation = null;
+
+      if (summarizationModel && summarizationModel.length > 0) {
+        nullSummaryCreation = data.find(
+          (file: RagDocumentResponseType) =>
+            file.summaryCreationTimestamp === null,
+        );
+      }
+
       return nullTimestampDocuments || nullSummaryCreation ? 3000 : false;
     },
   });

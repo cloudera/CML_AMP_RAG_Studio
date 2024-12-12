@@ -59,13 +59,15 @@ class RagDataSourceControllerTest {
     RagDataSourceController controller =
         new RagDataSourceController(RagDataSourceService.createNull());
     RagDataSource dataSource =
-        TestData.createTestDataSourceInstance("test-name", 512, 10, Types.ConnectionType.MANUAL);
+        TestData.createTestDataSourceInstance("test-name", 512, 10, Types.ConnectionType.MANUAL)
+            .withEmbeddingModel("test_embedding_model");
     var request = new MockHttpServletRequest();
     request.setCookies(
         new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
     var res = controller.create(dataSource, request);
     assertThat(res.id()).isNotNull();
     assertThat(res.name()).isEqualTo(dataSource.name());
+    assertThat(res.embeddingModel()).isEqualTo("test_embedding_model");
     assertThat(res.timeCreated()).isNotNull();
     assertThat(res.timeUpdated()).isNotNull();
     assertThat(res.createdById()).isEqualTo("test-user");
@@ -89,6 +91,8 @@ class RagDataSourceControllerTest {
         new RagDataSource(
             newDataSource.id(),
             "updated-name",
+            "test_embedding_model",
+            "summarizationModel",
             newDataSource.chunkSize(),
             newDataSource.chunkOverlapPercent(),
             newDataSource.timeCreated(),

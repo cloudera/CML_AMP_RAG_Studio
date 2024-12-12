@@ -38,6 +38,7 @@
 
 import time
 import uuid
+from collections.abc import Iterator
 from typing import List
 
 from llama_index.core.base.llms.types import MessageRole
@@ -47,11 +48,11 @@ from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 from . import evaluators, qdrant
 from .chat_store import (
+    ChatHistoryManager,
     Evaluation,
     RagContext,
     RagPredictSourceNode,
     RagStudioChatMessage,
-    chat_store,
 )
 
 
@@ -80,7 +81,9 @@ def v2_chat(
         configuration,
         retrieve_chat_history(session_id),
     )
-    relevance, faithfulness = evaluators.evaluate_response(query, response)
+    relevance, faithfulness = evaluators.evaluate_response(
+        query, response, configuration.model_name
+    )
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
@@ -95,12 +98,12 @@ def v2_chat(
         ],
         timestamp=time.time(),
     )
-    chat_store.append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = chat_store.retrieve_chat_history(session_id)[:10]
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(
@@ -144,6 +147,7 @@ def generate_suggested_questions(
     else:
         query_str = (
             "Give me a list of questions that you can answer."
+            " Each question should be on a new line."
             " There should be no more than four (4) questions."
             " Each question should be no longer than fifteen (15) words."
             " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
@@ -177,9 +181,12 @@ def process_response(response: str | None) -> list[str]:
     if response is None:
         return []
 
-    sentences = response.split("*")
-    sentences = filter(lambda x: len(x.split()) <= 15, sentences)
+    sentences: Iterator[str] = response.splitlines()
     sentences = map(lambda x: x.strip(), sentences)
+    sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
+    sentences = map(lambda x: x.removeprefix("-").strip(), sentences)
+    sentences = map(lambda x: x.strip("*"), sentences)
+    sentences = filter(lambda x: len(x.split()) <= 15, sentences)
     sentences = filter(lambda x: x != "Empty Response", sentences)
     sentences = filter(lambda x: x != "", sentences)
     return list(sentences)[:5]

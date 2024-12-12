@@ -37,7 +37,10 @@
  ******************************************************************************/
 
 import { Button, Form, Modal } from "antd";
-import { useCreateDataSourceMutation } from "src/api/dataSourceApi.ts";
+import {
+  DataSourceBaseType,
+  useCreateDataSourceMutation,
+} from "src/api/dataSourceApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -62,8 +65,7 @@ const CreateNewDataSourcesModal = ({
   const [form] = Form.useForm<DataSourcesFormProps["initialValues"]>();
 
   const createDatasourceMutation = useCreateDataSourceMutation({
-    // TODO: annotate `data` type ?
-    onSuccess: (data) => {
+    onSuccess: (data: DataSourceBaseType) => {
       setIsModalOpen(false);
       queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getDataSources] })

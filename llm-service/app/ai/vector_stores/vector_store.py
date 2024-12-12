@@ -36,13 +36,14 @@
 #  DATA.
 #
 
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 from typing import Optional
 
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
 
-class VectorStore:
+class VectorStore(metaclass=ABCMeta):
     """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
 
     @abstractmethod
@@ -68,5 +69,11 @@ class VectorStore:
         """Does the vector store exist?"""
 
     @abstractmethod
-    def visualize(self, user_query: Optional[str] = None) -> list[tuple[tuple[float,float], str]]:
+    def visualize(
+        self, user_query: Optional[str] = None
+    ) -> list[tuple[tuple[float, float], str]]:
         """get a 2-d visualization of the vectors in the store"""
+
+    @abstractmethod
+    def get_embedding_model(self) -> BaseEmbedding:
+        """get the embedding model used for this vector store"""

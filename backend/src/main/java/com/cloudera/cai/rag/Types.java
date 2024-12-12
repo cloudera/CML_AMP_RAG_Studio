@@ -80,6 +80,8 @@ public class Types {
   public record RagDataSource(
       Long id,
       String name,
+      String embeddingModel,
+      String summarizationModel,
       Integer chunkSize,
       Integer chunkOverlapPercent,
       Instant timeCreated,
@@ -100,5 +102,7 @@ public class Types {
       Instant timeUpdated,
       String createdById,
       String updatedById,
-      Instant lastInteractionTime) {}
+      Instant lastInteractionTime,
+      String inferenceModel,
+      Integer responseChunks) {}
 }

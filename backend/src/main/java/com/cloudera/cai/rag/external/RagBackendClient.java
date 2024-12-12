@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -67,9 +67,11 @@ public class RagBackendClient {
           indexUrl
               + "/data_sources/"
               + ragDocument.dataSourceId()
-              + "/documents/download-and-index",
+              + "/documents/"
+              + ragDocument.documentId()
+              + "/index",
           new IndexRequest(
-              ragDocument.documentId(), bucketName, ragDocument.s3Path(), configuration));
+              bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -78,8 +80,13 @@ public class RagBackendClient {
   public String createSummary(Types.RagDocument ragDocument, String bucketName) {
     try {
       return client.post(
-          indexUrl + "/data_sources/" + ragDocument.dataSourceId() + "/summarize-document",
-          new SummaryRequest(bucketName, ragDocument.s3Path()));
+          indexUrl
+              + "/data_sources/"
+              + ragDocument.dataSourceId()
+              + "/documents/"
+              + ragDocument.documentId()
+              + "/summary",
+          new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -98,14 +105,15 @@ public class RagBackendClient {
   }
 
   record IndexRequest(
-      @JsonProperty("document_id") String documentId,
       @JsonProperty("s3_bucket_name") String s3BucketName,
       @JsonProperty("s3_document_key") String s3DocumentKey,
+      @JsonProperty("original_filename") String originalFilename,
       IndexConfiguration configuration) {}
 
   public record SummaryRequest(
       @JsonProperty("s3_bucket_name") String s3BucketName,
-      @JsonProperty("s3_document_key") String s3DocumentKey) {}
+      @JsonProperty("s3_document_key") String s3DocumentKey,
+      @JsonProperty("original_filename") String originalFilename) {}
 
   public record IndexConfiguration(
       @JsonProperty("chunk_size") int chunkSize,
@@ -150,7 +158,9 @@ public class RagBackendClient {
       @Override
       public String createSummary(Types.RagDocument ragDocument, String bucketName) {
         String result = super.createSummary(ragDocument, bucketName);
-        tracker.track(new TrackedRequest<>(new SummaryRequest(bucketName, ragDocument.s3Path())));
+        tracker.track(
+            new TrackedRequest<>(
+                new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename())));
         checkForException();
         return result;
       }

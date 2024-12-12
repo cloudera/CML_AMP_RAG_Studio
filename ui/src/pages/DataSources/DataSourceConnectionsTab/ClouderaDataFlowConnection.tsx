@@ -36,19 +36,17 @@
  * DATA.
  ******************************************************************************/
 
-import { useParams } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { MutationKeys } from "src/api/utils.ts";
 import { getCdfConfigQuery } from "src/api/dataSourceApi.ts";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { downloadObjectAsJson } from "src/utils/convertJsonToFile.ts";
 import { Button, Card, Flex, Typography } from "antd";
 import { CheckCircleOutlined } from "@ant-design/icons";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 
 export const ClouderaDataFlowConnection = () => {
-  const { dataSourceId } = useParams({
-    from: "/_layout/data/_layout-datasources/$dataSourceId",
-  });
+  const { dataSourceId } = useContext(DataSourceContext);
   const {
     data,
     isPending,

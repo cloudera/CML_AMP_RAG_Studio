@@ -36,8 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   getVisualizeDataSource,
   Point2d,
@@ -47,15 +46,15 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { Flex, Input, Tooltip, Typography } from "antd";
 import VectorGraph from "pages/DataSources/VisualizationTab/VectorGraph.tsx";
 import { QuestionCircleOutlined } from "@ant-design/icons";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 
 const DataSourceVisualization = () => {
-  const dataSourceId = useParams({
-    from: "/_layout/data/_layout-datasources/$dataSourceId",
-  }).dataSourceId;
+  const { dataSourceId } = useContext(DataSourceContext);
   const [userInput, setUserInput] = useState("");
   const [vectorData, setVectorData] = useState<Point2d[]>([]);
 
-  const { data, isPending } = getVisualizeDataSource(dataSourceId);
+  const { data, isLoading: isGetVisualizationIsLoading } =
+    getVisualizeDataSource(dataSourceId);
 
   useEffect(() => {
     if (data) {
@@ -78,7 +77,8 @@ const DataSourceVisualization = () => {
       dataSourceId: dataSourceId.toString(),
     });
   };
-  const loading = isPending || questionMutation.isPending;
+
+  const loading = isGetVisualizationIsLoading || questionMutation.isPending;
 
   return (
     <Flex vertical align="center" justify="center" gap={20}>
@@ -98,7 +98,7 @@ const DataSourceVisualization = () => {
         </Tooltip>
       </Flex>
       <Flex align="center" justify="center" style={{ width: "100%" }}>
-        {vectorData.length === 0 ? (
+        {!isGetVisualizationIsLoading && vectorData.length === 0 ? (
           <Typography.Text type="secondary" style={{ height: 400 }}>
             No visualization available
           </Typography.Text>

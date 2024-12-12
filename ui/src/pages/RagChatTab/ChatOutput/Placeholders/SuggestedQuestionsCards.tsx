@@ -41,21 +41,26 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { useChatMutation } from "src/api/chatApi.ts";
-import { useParams } from "@tanstack/react-router";
+import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 
 const SuggestedQuestionsCards = () => {
-  const { dataSourceId, setCurrentQuestion, queryConfiguration } =
-    useContext(RagChatContext);
-  const { sessionId } = useParams({ strict: false });
-
+  const {
+    currentQuestionState: [, setCurrentQuestion],
+    activeSession,
+    excludeKnowledgeBaseState: [excludeKnowledgeBase],
+  } = useContext(RagChatContext);
+  const dataSourceId = activeSession?.dataSourceIds[0];
+  const sessionId = activeSession?.id.toString();
   const {
     data,
     isPending: suggestedQuestionsIsPending,
     isFetching: suggestedQuestionsIsFetching,
   } = useSuggestQuestions({
     data_source_id: dataSourceId?.toString() ?? "",
-    configuration: queryConfiguration,
+    configuration: createQueryConfiguration(
+      excludeKnowledgeBase,
+      activeSession,
+    ),
     session_id: sessionId ?? "",
   });
 
@@ -80,7 +85,10 @@ const SuggestedQuestionsCards = () => {
         query: suggestedQuestion,
         data_source_id: dataSourceId.toString(),
         session_id: sessionId,
-        configuration: queryConfiguration,
+        configuration: createQueryConfiguration(
+          excludeKnowledgeBase,
+          activeSession,
+        ),
       });
     }
   };

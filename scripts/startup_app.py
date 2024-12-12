@@ -38,5 +38,6 @@
 
 import subprocess
 
-print(subprocess.run(["bash /home/cdsw/scripts/startup_app.sh"], shell=True, check=True))
-print("Starting up the application is complete")
+while True:
+    print(subprocess.run(["bash /home/cdsw/scripts/startup_app.sh"], shell=True))
+    print("Application Restarting")

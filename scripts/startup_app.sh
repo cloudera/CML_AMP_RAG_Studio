@@ -51,20 +51,24 @@ for sig in INT QUIT HUP TERM; do
 done
 trap cleanup EXIT
 
-# start Node production server
-cd ui
-node express/index.js &
+export RAG_DATABASES_DIR=$(pwd)/databases
 
 # start Qdrant vector DB
-cd ..
-qdrant/qdrant &
+qdrant/qdrant & 2>&1
+
+# start up the jarva
+scripts/startup_java.sh & 2>&1
 
 # start Python backend
 cd llm-service
-uv run fastapi run --host 127.0.0.1 --port 8081 &
+uv run fastapi run --reload --host 127.0.0.1 --port 8081 & 2>&1
 
-# start up the jarva
-cd ..
-export JAVA_ROOT=`ls /home/cdsw/java-home`
-export JAVA_HOME="/home/cdsw/java-home/${JAVA_ROOT}"
-"$JAVA_HOME"/bin/java -jar artifacts/rag-api.jar
+# wait for the python backend to be ready
+while ! curl --output /dev/null --silent --fail http://localhost:8081/amp-update; do
+    echo "Waiting for the Python backend to be ready..."
+    sleep 4
+done
+
+# start Node production server
+cd ../ui
+node express/index.js

@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -35,69 +35,61 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-
-import { RagDocumentResponseType } from "src/api/ragDocumentsApi.ts";
-import { Card, Flex, Typography } from "antd";
-import { bytesConversion } from "src/utils/bytesConversion.ts";
-import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import { Card, Typography } from "antd";
 import { useGetDataSourceSummary } from "src/api/summaryApi.ts";
+import { useContext, useEffect, useState } from "react";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { RagDocumentResponseType } from "src/api/ragDocumentsApi.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
 
-const StatsWidget = ({
+const KnowledgeBaseSummary = ({
   ragDocuments,
-  docsLoading,
-  dataSourceId,
 }: {
   ragDocuments: RagDocumentResponseType[];
-  docsLoading: boolean;
-  dataSourceId: string;
 }) => {
-  const completedIndexing = ragDocuments.filter(
-    (doc) => doc.vectorUploadTimestamp !== null,
-  ).length;
-  const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
-
-  const docsSummarized = ragDocuments.find(
+  const { dataSourceId } = useContext(DataSourceContext);
+  const [numberOfDocsSummarized, setNumberOfDocsSummarized] = useState(0);
+  const queryClient = useQueryClient();
+  const docsSummarized = ragDocuments.filter(
     (doc) => doc.summaryCreationTimestamp !== null,
   );
 
-  const shouldLoadSummary = !docsLoading && Boolean(docsSummarized);
+  useEffect(() => {
+    setNumberOfDocsSummarized(docsSummarized.length);
+  }, [setNumberOfDocsSummarized, docsSummarized.length]);
+
+  useEffect(() => {
+    queryClient
+      .invalidateQueries({
+        queryKey: [
+          QueryKeys.getDataSourceSummary,
+          { data_source_id: dataSourceId },
+        ],
+      })
+      .catch((error: unknown) => {
+        console.error("Error invalidating query", error);
+      });
+  }, [numberOfDocsSummarized, queryClient]);
 
   const dataSourceSummary = useGetDataSourceSummary({
     data_source_id: dataSourceId,
-    queryEnabled: shouldLoadSummary,
+    queryEnabled: true,
   });
 
   return (
-    <Flex style={{ width: "100%", marginBottom: 10 }} vertical gap={10}>
-      <Flex flex={1} style={{ width: "100%" }}>
-        <Card
-          style={{ width: "100%" }}
-          title="Knowledge Base Summary"
-          loading={dataSourceSummary.isLoading}
-        >
-          <Typography.Text>
-            {dataSourceSummary.data ?? (
-              <Typography.Text italic>No summary available</Typography.Text>
-            )}
-          </Typography.Text>
-        </Card>
-      </Flex>
-      <Flex vertical justify="end" align="end">
-        <Typography.Text type="secondary">
-          Total Documents: {ragDocuments.length} (
-          {bytesConversion(totalSize.toString())})
-        </Typography.Text>
-        <Typography.Text type="secondary">
-          Documents indexed: {completedIndexing} / {ragDocuments.length}
-          {docsLoading || ragDocuments.length !== completedIndexing ? (
-            <LoadingOutlined style={{ marginLeft: 5 }} />
-          ) : (
-            <CheckCircleOutlined style={{ marginLeft: 5, color: "green" }} />
-          )}
-        </Typography.Text>
-      </Flex>
-    </Flex>
+    <Card
+      style={{ width: "100%" }}
+      title="Knowledge Base Summary"
+      loading={dataSourceSummary.isLoading}
+    >
+      <Typography.Text>
+        {dataSourceSummary.data ?? (
+          <Typography.Text italic>No summary available</Typography.Text>
+        )}
+      </Typography.Text>
+    </Card>
   );
 };
 
-export default StatsWidget;
+export default KnowledgeBaseSummary;

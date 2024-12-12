@@ -37,50 +37,68 @@
 #
 import os
 from enum import Enum
-from typing import Any, Dict, List, Literal
+from typing import List, Literal, Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from llama_index.embeddings.bedrock import BedrockEmbedding
-from llama_index.llms.bedrock import Bedrock
-from llama_index.llms.bedrock.utils import BEDROCK_FOUNDATION_LLMS
+from llama_index.llms.bedrock_converse import BedrockConverse
 
-from .caii import get_caii_embedding_models, get_caii_llm_models
-from .caii import get_embedding_model as caii_embedding
-from .caii import get_llm as caii_llm
+from .caii.caii import get_caii_embedding_models, get_caii_llm_models
+from .caii.caii import get_embedding_model as caii_embedding
+from .caii.caii import get_llm as caii_llm
+from .caii.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
+from .noop_models import DummyEmbeddingModel, DummyLlm
+
+DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 
 
-def get_embedding_model() -> BaseEmbedding:
+def get_noop_embedding_model() -> BaseEmbedding:
+    return DummyEmbeddingModel()
+
+
+def get_noop_llm_model() -> LLM:
+    return DummyLlm()
+
+
+def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
+    if model_name is None:
+        model_name = get_available_embedding_models()[0].model_id
+
     if is_caii_enabled():
-        return caii_embedding()
-    return BedrockEmbedding(model_name="cohere.embed-english-v3")
+        return caii_embedding(model_name=model_name)
+
+    return BedrockEmbedding(model_name=model_name)
 
 
-def get_llm(model_name: str = None) -> LLM:
+def get_llm(model_name: Optional[str] = None) -> LLM:
+    if not model_name:
+        model_name = get_available_llm_models()[0].model_id
+
     if is_caii_enabled():
         return caii_llm(
-            domain=os.environ["CAII_DOMAIN"],
-            endpoint_name=os.environ["CAII_INFERENCE_ENDPOINT_NAME"],
+            endpoint_name=model_name,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
         )
-    return Bedrock(
+
+    return BedrockConverse(
         model=model_name,
-        context_size=BEDROCK_FOUNDATION_LLMS.get(model_name, 8192),
         messages_to_prompt=messages_to_prompt,
         completion_to_prompt=completion_to_prompt,
     )
 
 
-def get_available_embedding_models() -> List[Dict[str, Any]]:
+def get_available_embedding_models() -> List[ModelResponse]:
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
-def get_available_llm_models() -> List[Dict[str, Any]]:
+def get_available_llm_models() -> list[ModelResponse]:
     if is_caii_enabled():
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
@@ -91,29 +109,28 @@ def is_caii_enabled() -> bool:
     return len(domain) > 0
 
 
-def _get_bedrock_llm_models() -> List[Dict[str, Any]]:
+def _get_bedrock_llm_models() -> List[ModelResponse]:
     return [
-        {
-            "model_id": "meta.llama3-1-8b-instruct-v1:0",
-            "name": "Llama3.1 8B Instruct v1",
-        },
-        {
-            "model_id": "meta.llama3-1-70b-instruct-v1:0",
-            "name": "Llama3.1 70B Instruct v1",
-        },
-        {
-            "model_id": "meta.llama3-1-405b-instruct-v1:0",
-            "name": "Llama3.1 405B Instruct v1",
-        },
+        ModelResponse(
+            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
+        ),
     ]
 
 
-def _get_bedrock_embedding_models() -> List[Dict[str, Any]]:
+def _get_bedrock_embedding_models() -> List[ModelResponse]:
     return [
-        {
-            "model_id": "cohere.embed-english-v3",
-            "name": "cohere.embed-english-v3",
-        }
+        ModelResponse(
+            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
+        ),
+        ModelResponse(
+            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
+        ),
     ]
 
 
@@ -131,9 +148,16 @@ def get_model_source() -> ModelSource:
 def test_llm_model(model_name: str) -> Literal["ok"]:
     models = get_available_llm_models()
     for model in models:
-        if model["model_id"] == model_name:
-            if not is_caii_enabled() or model["available"]:
-                get_llm(model_name).complete("Are you available to answer questions?")
+        if model.model_id == model_name:
+            if not is_caii_enabled() or model.available:
+                get_llm(model_name).chat(
+                    messages=[
+                        ChatMessage(
+                            role=MessageRole.USER,
+                            content="Are you available to answer questions?",
+                        )
+                    ]
+                )
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")
@@ -144,10 +168,9 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
 def test_embedding_model(model_name: str) -> str:
     models = get_available_embedding_models()
     for model in models:
-        if model["model_id"] == model_name:
-            if not is_caii_enabled() or model["available"]:
-                # TODO: Update to pass embedding model in the future when multiple are supported
-                get_embedding_model().get_text_embedding("test")
+        if model.model_id == model_name:
+            if not is_caii_enabled() or model.available:
+                get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")

@@ -48,7 +48,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.logging import DefaultFormatter
 
-from .config import settings
+from .config import Settings
 from .routers import index
 
 _APP_PKG_NAME = __name__.split(".", maxsplit=1)[0]
@@ -66,7 +66,7 @@ def _configure_logger() -> None:
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
-    logger.setLevel(settings.rag_log_level)
+    logger.setLevel(Settings().rag_log_level)
     # prevent duplicate outputs with the app logger
     logger.propagate = False
 
@@ -113,7 +113,7 @@ def _configure_app_logger(app_logger: logging.Logger) -> None:
                 app_logger.removeHandler(handler)
 
     app_logger.addHandler(_get_app_log_handler())
-    app_logger.setLevel(settings.rag_log_level)
+    app_logger.setLevel(Settings().rag_log_level)
 
 
 def initialize_logging() -> None:

@@ -41,33 +41,21 @@ import pathlib
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Any, Dict, Sequence
+from datetime import datetime
+from typing import Any, Dict, cast
 
-import boto3
 import lipsum
 import pytest
 import qdrant_client as q_client
-from boto3.resources.base import ServiceResource
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.base.llms.types import (
-    ChatMessage,
-    ChatResponse,
-    ChatResponseAsyncGen,
-    ChatResponseGen,
-    CompletionResponse,
-    CompletionResponseAsyncGen,
-    CompletionResponseGen,
-    LLMMetadata,
-)
 from llama_index.core.llms import LLM
-from moto import mock_aws
-from pydantic import Field
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
-from app.services import models
-from app.services.utils import get_last_segment
+from app.services import data_sources_metadata_api, models
+from app.services.data_sources_metadata_api import RagDataSource
+from app.services.noop_models import DummyLlm
 
 
 @dataclass
@@ -81,31 +69,22 @@ def qdrant_client() -> q_client.QdrantClient:
     return q_client.QdrantClient(":memory:")
 
 
-@pytest.fixture
-def aws_region() -> str:
-    return os.environ.get("AWS_DEFAULT_REGION", "us-west-2")
-
-
 @pytest.fixture(autouse=True)
 def databases_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> str:
     databases_dir: str = str(tmp_path / "databases")
     monkeypatch.setenv("RAG_DATABASES_DIR", databases_dir)
+    os.makedirs(databases_dir, exist_ok=True)
     return databases_dir
 
 
-@pytest.fixture
-def s3_client(
-    monkeypatch: pytest.MonkeyPatch,
-) -> Iterator[ServiceResource]:
-    """Mock all S3 interactions."""
-
-    with mock_aws():
-        yield boto3.resource("s3")
+@pytest.fixture(autouse=True)
+def use_local_storage(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("S3_RAG_DOCUMENT_BUCKET", "")
 
 
 @pytest.fixture
-def document_id() -> str:
-    return str(uuid.uuid4())
+def document_id(index_document_request_body: dict[str, Any]) -> str:
+    return cast(str, index_document_request_body["s3_document_key"].split("/")[-1])
 
 
 @pytest.fixture
@@ -118,71 +97,15 @@ def index_document_request_body(
     data_source_id: int, s3_object: BotoObject
 ) -> Dict[str, Any]:
     return {
-        "document_id": get_last_segment(s3_object.key),
         "data_source_id": data_source_id,
         "s3_bucket_name": s3_object.bucket_name,
         "s3_document_key": s3_object.key,
+        "original_filename": "test.txt",
         "configuration": {
             "chunk_size": 512,
             "chunk_overlap": 10,
         },
     }
-
-
-class DummyLlm(LLM):
-    completion_response = Field("this is a completion response")
-    chat_response = Field("this is a chat response")
-
-    def __init__(
-        self,
-        completion_response: str = "this is a completion response",
-        chat_response: str = "hello",
-    ):
-        super().__init__()
-        self.completion_response = completion_response
-        self.chat_response = chat_response
-
-    @property
-    def metadata(self) -> LLMMetadata:
-        return LLMMetadata()
-
-    def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
-        return ChatResponse(message=ChatMessage.from_str(self.chat_response))
-
-    def complete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponse:
-        return CompletionResponse(text=self.completion_response)
-
-    def stream_chat(
-        self, messages: Sequence[ChatMessage], **kwargs: Any
-    ) -> ChatResponseGen:
-        raise NotImplementedError("Not implemented")
-
-    def stream_complete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponseGen:
-        raise NotImplementedError("Not implemented")
-
-    async def achat(
-        self, messages: Sequence[ChatMessage], **kwargs: Any
-    ) -> ChatResponse:
-        raise NotImplementedError("Not implemented")
-
-    async def acomplete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponse:
-        raise NotImplementedError("Not implemented")
-
-    async def astream_chat(
-        self, messages: Sequence[ChatMessage], **kwargs: Any
-    ) -> ChatResponseAsyncGen:
-        raise NotImplementedError("Not implemented")
-
-    async def astream_complete(
-        self, prompt: str, formatted: bool = False, **kwargs: Any
-    ) -> CompletionResponseAsyncGen:
-        raise NotImplementedError("Not implemented")
 
 
 class DummyEmbeddingModel(BaseEmbedding):
@@ -221,11 +144,40 @@ def summary_vector_store(
 
 
 @pytest.fixture(autouse=True)
+def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    def get_datasource_metadata(data_source_id: int) -> RagDataSource:
+        return RagDataSource(
+            id=data_source_id,
+            name="test",
+            embedding_model="test",
+            summarization_model="test",
+            chunk_size=512,
+            chunk_overlap_percent=10,
+            time_created=datetime.now(),
+            time_updated=datetime.now(),
+            created_by_id="test",
+            updated_by_id="test",
+            connection_type="test",
+            document_count=1,
+            total_doc_size=1,
+        )
+
+    monkeypatch.setattr(
+        data_sources_metadata_api, "get_metadata", get_datasource_metadata
+    )
+
+
+@pytest.fixture(autouse=True)
 def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
     model = DummyEmbeddingModel()
 
+    # this is the method signature of the original, even we're not using the model name
+    def get_embedding_model(model_name: str = "dummy_value") -> BaseEmbedding:
+        return model
+
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_embedding_model", lambda: model)
+    monkeypatch.setattr(models, "get_embedding_model", get_embedding_model)
+    monkeypatch.setattr(models, "get_noop_embedding_model", get_embedding_model)
     return model
 
 
@@ -233,36 +185,35 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
     model = DummyLlm()
 
+    def get_llm(model_name: str = "dummy_value") -> LLM:
+        return model
+
     # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_llm", lambda model_name: model)
+    monkeypatch.setattr(models, "get_llm", get_llm)
     return model
 
 
 @pytest.fixture
-def s3_object(
-    s3_client: ServiceResource, aws_region: str, document_id: str
-) -> BotoObject:
-    """Put and return a mocked S3 object"""
-    bucket_name = "test_bucket"
-    key = "test/" + document_id
-
+def test_file(databases_dir: str, s3_object: BotoObject) -> pathlib.Path:
     body = lipsum.generate_words(1000)
+    target_path = f"{databases_dir}/file_storage/{s3_object.key}"
+    path = pathlib.Path(target_path)
+    os.makedirs(path.parent, exist_ok=True)
+    with open(target_path, "w") as f:
+        f.write(body)
+    return path
 
-    bucket = s3_client.Bucket(bucket_name)
-    bucket.create(CreateBucketConfiguration={"LocationConstraint": aws_region})
-    bucket.put_object(
-        Key=key,
-        # TODO: fixturize file
-        Body=body.encode("utf-8"),
-        Metadata={"originalfilename": "test.txt"},
-    )
+
+@pytest.fixture
+def s3_object() -> BotoObject:
+    """Return a mocked S3 object"""
+    bucket_name = "test_bucket"
+    key = "test/" + str(uuid.uuid4())
     return BotoObject(bucket_name=bucket_name, key=key)
 
 
 @pytest.fixture
-def client(
-    s3_client: ServiceResource,
-) -> Iterator[TestClient]:
+def client() -> Iterator[TestClient]:
     """Return a test client for making calls to the service.
 
     https://www.starlette.io/testclient/

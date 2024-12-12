@@ -38,11 +38,15 @@
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+from app.services.models import DEFAULT_BEDROCK_LLM_MODEL
 
 
 class RagPredictConfiguration(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     top_k: int = 5
     chunk_size: int = 512
-    model_name: str = "meta.llama3-1-8b-instruct-v1:0"
+    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
     exclude_knowledge_base: Optional[bool] = False

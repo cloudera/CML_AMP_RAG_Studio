@@ -57,7 +57,7 @@ class RagBackendClientTest {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
     IndexConfiguration indexConfiguration = new IndexConfiguration(123, 2);
-    RagDocument document = indexRequest("documentId", "s3Path", 1234L);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
 
     client.indexFile(document, "bucketName", indexConfiguration);
 
@@ -67,16 +67,20 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://rag-backend:8000/data_sources/" + 1234L + "/documents/download-and-index",
+                "http://rag-backend:8000/data_sources/"
+                    + 1234L
+                    + "/documents/"
+                    + "documentId"
+                    + "/index",
                 new RagBackendClient.IndexRequest(
-                    "documentId", "bucketName", "s3Path", indexConfiguration)));
+                    "bucketName", "s3Path", "myfile.pdf", indexConfiguration)));
   }
 
   @Test
   void createSummary() {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
-    RagDocument document = indexRequest("documentId", "s3Path", 1234L);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
 
     client.createSummary(document, "bucketName");
 
@@ -86,8 +90,8 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://rag-backend:8000/data_sources/1234/summarize-document",
-                new RagBackendClient.SummaryRequest("bucketName", "s3Path")));
+                "http://rag-backend:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
   }
 
   @Test
@@ -135,15 +139,16 @@ class RagBackendClientTest {
   void null_handlesThrowable() {
     RagBackendClient client =
         RagBackendClient.createNull(new Tracker<>(), new NotFound("not found"));
-    RagDocument document = indexRequest("documentId", "s3Path", 1234L);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
     assertThatThrownBy(() -> client.indexFile(document, "fakeit", null))
         .isInstanceOf(NotFound.class);
   }
 
-  private static RagDocument indexRequest(String documentId, String s3Path, Long dataSourceId) {
+  private static RagDocument indexRequest(
+      String documentId, String s3Path, Long dataSourceId, String filename) {
     return new RagDocument(
         null,
-        null,
+        filename,
         dataSourceId,
         documentId,
         s3Path,

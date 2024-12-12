@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -34,65 +34,14 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { Flex, Form, Modal, Select, Slider, SliderSingleProps } from "antd";
-import { QueryConfiguration } from "src/api/chatApi.ts";
-import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
+SET MODE MYSQL;
 
-const marks: SliderSingleProps["marks"] = {
-  1: "1",
-  10: "10",
-};
+BEGIN;
 
-const QueryTimeSettingsModal = ({
-  open,
-  closeModal,
-  queryConfiguration,
-  handleUpdateConfiguration,
-}: {
-  open: boolean;
-  closeModal: () => void;
-  queryConfiguration: QueryConfiguration;
-  handleUpdateConfiguration: (queryConfiguration: QueryConfiguration) => void;
-}) => {
-  const [form] = Form.useForm<QueryConfiguration>();
-  const { data } = useGetLlmModels();
+ALTER TABLE CHAT_SESSION ADD COLUMN inference_model VARCHAR(255);
+ALTER TABLE CHAT_SESSION ADD COLUMN response_chunks INTEGER DEFAULT 5;
 
-  return (
-    <Modal
-      title="Query-Time Settings"
-      open={open}
-      onCancel={closeModal}
-      onOk={() => {
-        handleUpdateConfiguration(form.getFieldsValue());
-      }}
-      maskClosable={false}
-      width={600}
-    >
-      <Flex vertical gap={10}>
-        <Form autoCorrect="off" form={form}>
-          <Form.Item<QueryConfiguration>
-            initialValue={queryConfiguration.model_name}
-            name="model_name"
-            label="Response synthesizer model"
-          >
-            <Select options={transformModelOptions(data)} />
-          </Form.Item>
-          <RequestModels />
-          <Form.Item<QueryConfiguration>
-            name="top_k"
-            initialValue={queryConfiguration.top_k}
-            label="Maximum number of documents"
-          >
-            <Slider marks={marks} min={1} max={10} />
-          </Form.Item>
-        </Form>
-      </Flex>
-    </Modal>
-  );
-};
 
-export default QueryTimeSettingsModal;
+COMMIT;

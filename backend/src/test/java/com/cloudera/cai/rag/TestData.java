@@ -45,7 +45,8 @@ import java.util.List;
 
 public class TestData {
   public static Types.Session createTestSessionInstance(String sessionName) {
-    return new Types.Session(null, sessionName, List.of(1L, 2L, 3L), null, null, null, null, null);
+    return new Types.Session(
+        null, sessionName, List.of(1L, 2L, 3L), null, null, null, null, null, "test-model", 3);
   }
 
   public static Types.RagDataSource createTestDataSourceInstance(
@@ -56,6 +57,8 @@ public class TestData {
     return new Types.RagDataSource(
         null,
         name,
+        "test_embedding_model",
+        "summarizationModel",
         chunkSize,
         chunkOverlapPercent,
         null,

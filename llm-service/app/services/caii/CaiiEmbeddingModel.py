@@ -38,16 +38,21 @@
 import http.client as http_client
 import json
 import os
-from typing import Any, Dict
+from typing import Any
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
 
+from .types import Endpoint
+from .utils import build_auth_headers
+
 
 class CaiiEmbeddingModel(BaseEmbedding):
-    endpoint = Field(any, description="The endpoint to use for embeddings")
+    endpoint: Endpoint = Field(
+        Endpoint, description="The endpoint to use for embeddings"
+    )
 
-    def __init__(self, endpoint: Dict[str, Any]):
+    def __init__(self, endpoint: Endpoint):
         super().__init__()
         self.endpoint = endpoint
 
@@ -61,12 +66,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return self._get_embedding(query, "query")
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
-        model = self.endpoint["endpointmetadata"]["model_name"]
-        domain = os.environ["CAII_DOMAIN"]
-
-        connection = http_client.HTTPSConnection(domain, 443)
-        headers = self.build_auth_headers()
-        headers["Content-Type"] = "application/json"
+        model = self.endpoint.endpointmetadata.model_name
         body = json.dumps(
             {
                 "input": query,
@@ -75,20 +75,47 @@ class CaiiEmbeddingModel(BaseEmbedding):
                 "model": model,
             }
         )
-        connection.request("POST", self.endpoint["url"], body=body, headers=headers)
-        res = connection.getresponse()
-        data = res.read()
-        json_response = data.decode("utf-8")
-        structured_response = json.loads(json_response)
+        structured_response = self.make_embedding_request(body)
         embedding = structured_response["data"][0]["embedding"]
         assert isinstance(embedding, list)
         assert all(isinstance(x, float) for x in embedding)
 
         return embedding
 
-    def build_auth_headers(self) -> Dict[str, str]:
-        with open("/tmp/jwt", "r") as file:
-            jwt_contents = json.load(file)
-        access_token = jwt_contents["access_token"]
-        headers = {"Authorization": f"Bearer {access_token}"}
-        return headers
+    def make_embedding_request(self, body: str) -> Any:
+        domain = os.environ["CAII_DOMAIN"]
+
+        connection = http_client.HTTPSConnection(domain, 443)
+        headers = build_auth_headers()
+        headers["Content-Type"] = "application/json"
+        connection.request("POST", self.endpoint.url, body=body, headers=headers)
+        res = connection.getresponse()
+        data = res.read()
+        json_response = data.decode("utf-8")
+        structured_response = json.loads(json_response)
+        return structured_response
+
+## TODO: get this working. At the moment, the shape of the data in the response isn't what the code is expecting
+
+    # def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
+    #     if len(texts) == 1:
+    #         return [self._get_text_embedding(texts[0])]
+    #
+    #     print(f"Getting embeddings for {len(texts)} texts")
+    #     model = self.endpoint.endpointmetadata.model_name
+    #     body = json.dumps(
+    #         {
+    #             "input": texts,
+    #             "input_type": "passage",
+    #             "truncate": "END",
+    #             "model": model,
+    #         }
+    #     )
+    #     structured_response = self.make_embedding_request(body)
+    #     embeddings = structured_response["data"][0]["embedding"]
+    #     print(f"Got embeddings for {len(embeddings)} texts")
+    #     assert isinstance(embeddings, list)
+    #     assert all(isinstance(x, list) for x in embeddings)
+    #     assert all(all(isinstance(y, float) for y in x) for x in embeddings)
+    #
+    #     return embeddings

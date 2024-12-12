@@ -46,11 +46,13 @@ import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
 const { Footer, Content } = Layout;
 
 const RagChat = () => {
-  const { dataSourceId, dataSources, activeSession } =
-    useContext(RagChatContext);
+  const {
+    dataSourcesQuery: { dataSources },
+    activeSession,
+  } = useContext(RagChatContext);
 
   const currentDataSource = dataSources.find((dataSource) => {
-    return dataSource.id === dataSourceId;
+    return dataSource.id === activeSession?.dataSourceIds[0];
   });
 
   return (

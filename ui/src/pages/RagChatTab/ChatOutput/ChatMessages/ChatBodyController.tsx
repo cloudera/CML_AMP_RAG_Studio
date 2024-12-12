@@ -49,12 +49,10 @@ import NoDataSourceForSession from "pages/RagChatTab/ChatOutput/Placeholders/NoD
 
 const ChatBodyController = () => {
   const {
-    currentQuestion,
-    chatHistory,
-    dataSourcesStatus,
-    chatHistoryStatus,
+    currentQuestionState: [currentQuestion],
+    chatHistoryQuery: { chatHistory, chatHistoryStatus },
+    dataSourcesQuery: { dataSources, dataSourcesStatus },
     dataSourceSize,
-    dataSources,
     activeSession,
   } = useContext(RagChatContext);
   const { sessionId } = useParams({ strict: false });

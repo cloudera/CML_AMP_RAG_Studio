@@ -4,6 +4,7 @@ from llama_index.core.schema import TextNode
 
 from app.ai.indexing.readers.pdf import PageTracker
 
+
 class TestPageTracker:
     @staticmethod
     def test_initializes_correctly() -> None:
@@ -44,7 +45,12 @@ class TestPageTracker:
         pages[0].metadata["page_label"] = "1"
         pages[1].metadata["page_label"] = "2"
         page_counter = PageTracker(pages)
-        chunks = [TextNode(start_char_idx=0), TextNode(start_char_idx=4), TextNode(start_char_idx=7), TextNode(start_char_idx=10)]
+        chunks = [
+            TextNode(start_char_idx=0),
+            TextNode(start_char_idx=4),
+            TextNode(start_char_idx=7),
+            TextNode(start_char_idx=10),
+        ]
         page_counter.populate_chunk_page_numbers(chunks)
         assert chunks[0].metadata["page_number"] == "1"
         assert chunks[1].metadata["page_number"] == "1"

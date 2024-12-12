@@ -52,6 +52,8 @@ import { useNavigate } from "@tanstack/react-router";
 export interface CreateSessionType {
   name: string;
   dataSourceId: number;
+  inferenceModel: string;
+  responseChunks: number;
 }
 
 const CreateSessionModal = ({
@@ -65,7 +67,9 @@ const CreateSessionModal = ({
 }) => {
   const [form] = Form.useForm<CreateSessionType>();
   const queryClient = useQueryClient();
-  const { dataSources } = useContext(RagChatContext);
+  const {
+    dataSourcesQuery: { dataSources },
+  } = useContext(RagChatContext);
   const navigate = useNavigate();
   const { mutate: createSessionMutation } = useCreateSessionMutation({
     onSuccess: async (data) => {
@@ -95,6 +99,8 @@ const CreateSessionModal = ({
         const responseBody: CreateSessionRequest = {
           name: values.name,
           dataSourceIds: [values.dataSourceId],
+          inferenceModel: values.inferenceModel,
+          responseChunks: values.responseChunks,
         };
         createSessionMutation(responseBody);
       })
@@ -107,6 +113,7 @@ const CreateSessionModal = ({
     <Modal
       title="Create New Chat"
       open={isModalOpen}
+      width={600}
       onOk={() => {
         setIsModalOpen(false);
       }}

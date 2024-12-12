@@ -38,11 +38,21 @@
 
 import subprocess
 
-print(subprocess.run(["bash /home/cdsw/scripts/install_java.sh"], shell=True, check=True))
+print(
+    subprocess.run(["bash /home/cdsw/scripts/install_java.sh"], shell=True, check=True)
+)
 print("Installing Java 21 is complete")
 
-print(subprocess.run(["bash /home/cdsw/scripts/install_qdrant.sh"], shell=True, check=True))
+print(
+    subprocess.run(
+        ["bash /home/cdsw/scripts/install_qdrant.sh"], shell=True, check=True
+    )
+)
 print("Installing Qdrant is complete")
 
-print(subprocess.run(["bash /home/cdsw/scripts/install_easyocr_model.sh"], shell=True, check=True))
+print(
+    subprocess.run(
+        ["bash /home/cdsw/scripts/install_easyocr_model.sh"], shell=True, check=True
+    )
+)
 print("Downloading EASYOCR models complete")

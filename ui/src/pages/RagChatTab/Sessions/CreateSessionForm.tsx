@@ -36,9 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import { Form, FormInstance, Input, Select } from "antd";
+import { Form, FormInstance, Input, Select, Slider } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
+import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
@@ -46,11 +49,13 @@ export interface CreateSessionFormProps {
 }
 
 const layout = {
-  labelCol: { span: 8 },
-  wrapperCol: { span: 16 },
+  labelCol: { span: 12 },
+  wrapperCol: { span: 12 },
 };
 
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
+  const { data } = useGetLlmModels();
+
   const formatDataSource = (value: DataSourceType) => {
     return {
       ...value,
@@ -88,6 +93,23 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       </Form.Item>
       <Form.Item name="name" label="Name" rules={[{ required: true }]}>
         <Input />
+      </Form.Item>
+      <Form.Item<CreateSessionType>
+        initialValue={
+          data === undefined || data.length === 0 ? "" : data[0].model_id
+        }
+        name="inferenceModel"
+        label="Response synthesizer model"
+        rules={[{ required: true }]}
+      >
+        <Select options={transformModelOptions(data)} />
+      </Form.Item>
+      <Form.Item<CreateSessionType>
+        name="responseChunks"
+        initialValue={5}
+        label="Maximum number of documents"
+      >
+        <Slider marks={ResponseChunksRange} min={1} max={10} />
       </Form.Item>
     </Form>
   );

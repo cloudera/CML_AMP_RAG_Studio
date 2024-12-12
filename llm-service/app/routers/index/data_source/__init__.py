@@ -30,7 +30,7 @@
 
 import logging
 import tempfile
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends
 from fastapi_utils.cbv import cbv
@@ -38,19 +38,27 @@ from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
 from .... import exceptions
-from ....ai.indexing.index import Indexer
+from ....ai.indexing.embedding_indexer import EmbeddingIndexer
+from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import doc_summaries, models, s3
+from ....services import (
+    data_sources_metadata_api,
+    document_storage,
+    models,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/data_sources/{data_source_id}", tags=["Data Sources"])
 
+SUMMARIZATION_DISABLED = "Summarization disabled. Please specify a summarization model in the knowledge base to enable."
+
 
 class SummarizeDocumentRequest(BaseModel):
     s3_bucket_name: str
     s3_document_key: str
+    original_filename: str
 
 
 class RagIndexDocumentConfiguration(BaseModel):
@@ -60,9 +68,9 @@ class RagIndexDocumentConfiguration(BaseModel):
 
 
 class RagIndexDocumentRequest(BaseModel):
-    document_id: str
     s3_bucket_name: str
     s3_document_key: str
+    original_filename: str
     configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
@@ -77,14 +85,26 @@ class DataSourceController:
         lambda data_source_id: QdrantVectorStore.for_chunks(data_source_id)
     )
 
-    @router.get(
-        "/size",
-        summary="Returns the number of chunks in the data source.",
-        response_model=None,
+    @staticmethod
+    def _get_summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
+        datasource = data_sources_metadata_api.get_metadata(data_source_id)
+        if not datasource.summarization_model:
+            return None
+        return SummaryIndexer(
+            data_source_id=data_source_id,
+            splitter=SentenceSplitter(chunk_size=2048),
+            llm=models.get_llm(datasource.summarization_model),
+        )
+
+    @router.delete(
+        "/", summary="Deletes the data source from the index.", response_model=None
     )
     @exceptions.propagates
-    def size(self) -> int:
-        return self.chunks_vector_store.size() or 0
+    def delete(self, data_source_id: int) -> None:
+        self.chunks_vector_store.delete()
+        indexer = self._get_summary_indexer(data_source_id)
+        if indexer:
+            indexer.delete_data_source()
 
     @router.get(
         "/chunks/{chunk_id}",
@@ -99,90 +119,40 @@ class DataSourceController:
             metadata=node.metadata,
         )
 
-
-    @router.get("/visualize")
-    @exceptions.propagates
-    def visualize(self) -> list[tuple[tuple[float,float], str]]:
-        return self.chunks_vector_store.visualize()
-
-
-    class VisualizationRequest(BaseModel):
-        user_query: str
-
-
-    @router.post("/visualize")
-    @exceptions.propagates
-    def visualize_with_query(self, request: VisualizationRequest) -> list[tuple[tuple[float,float], str]]:
-        return self.chunks_vector_store.visualize(request.user_query)
-
-
-    @router.delete(
-        "/", summary="Deletes the data source from the index.", response_model=None
-    )
-    @exceptions.propagates
-    def delete(self, data_source_id: int) -> None:
-        self.chunks_vector_store.delete()
-        doc_summaries.delete_data_source(data_source_id)
-
-    @router.get(
-        "/documents/{doc_id}/summary",
-        summary="summarize a single document",
-        response_model=None,
-    )
-    @exceptions.propagates
-    def get_document_summary(self, data_source_id: int, doc_id: str) -> str:
-        summaries = doc_summaries.read_summary(data_source_id, doc_id)
-        return summaries
-
-    @router.get(
-        "/summary",
-        summary="summarize all documents for a datasource",
-        response_model=None,
-    )
-    @exceptions.propagates
-    def get_document_summary_of_summaries(self, data_source_id: int) -> str:
-        return doc_summaries.summarize_data_source(data_source_id)
-
-    @router.post(
-        "/summarize-document", summary="summarize a document", response_model=None
-    )
-    @exceptions.propagates
-    def summarize_document(
-        self,
-        data_source_id: int,
-        request: SummarizeDocumentRequest,
-    ) -> str:
-        return doc_summaries.generate_summary(
-            data_source_id, request.s3_bucket_name, request.s3_document_key
-        )
-
     @router.delete(
         "/documents/{doc_id}", summary="delete a single document", response_model=None
     )
     @exceptions.propagates
     def delete_document(self, data_source_id: int, doc_id: str) -> None:
         self.chunks_vector_store.delete_document(doc_id)
-        doc_summaries.delete_document(data_source_id, doc_id)
+        indexer = self._get_summary_indexer(data_source_id)
+        if indexer:
+            indexer.delete_document(doc_id)
 
     @router.post(
-        "/documents/download-and-index",
+        "/documents/{doc_id}/index",
         summary="Download and index document",
-        description="Download document from S3 and index in Pinecone",
         response_model=None,
     )
     @exceptions.propagates
     def download_and_index(
         self,
         data_source_id: int,
+        doc_id: str,
         request: RagIndexDocumentRequest,
     ) -> None:
+        datasource = data_sources_metadata_api.get_metadata(data_source_id)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
-            file_path = s3.download(
-                tmpdirname, request.s3_bucket_name, request.s3_document_key
+            doc_storage = document_storage.from_environment()
+            file_path = doc_storage.download(
+                tmpdirname,
+                request.s3_bucket_name,
+                request.s3_document_key,
+                request.original_filename,
             )
 
-            indexer = Indexer(
+            indexer = EmbeddingIndexer(
                 data_source_id,
                 splitter=SentenceSplitter(
                     chunk_size=request.configuration.chunk_size,
@@ -192,9 +162,95 @@ class DataSourceController:
                         * request.configuration.chunk_size
                     ),
                 ),
-                embedding_model=models.get_embedding_model(),
+                embedding_model=models.get_embedding_model(datasource.embedding_model),
                 chunks_vector_store=self.chunks_vector_store,
             )
             # Delete to avoid duplicates
-            self.chunks_vector_store.delete_document(request.document_id)
-            indexer.index_file(file_path, request.document_id)
+            self.chunks_vector_store.delete_document(doc_id)
+            indexer.index_file(file_path, doc_id)
+
+    @router.get(
+        "/documents/{doc_id}/summary",
+        summary="summarize a single document",
+        response_model=None,
+    )
+    @exceptions.propagates
+    def get_document_summary(self, data_source_id: int, doc_id: str) -> str:
+        indexer = self._get_summary_indexer(data_source_id)
+        if not indexer:
+            return SUMMARIZATION_DISABLED
+        summary = indexer.get_summary(doc_id)
+        if not summary:
+            return "No summary found for this document."
+        return summary
+
+    @router.post(
+        "/documents/{doc_id}/summary",
+        summary="summarize a document",
+        response_model=None,
+    )
+    @exceptions.propagates
+    def summarize_document(
+        self,
+        data_source_id: int,
+        doc_id: str,
+        request: SummarizeDocumentRequest,
+    ) -> str:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            logger.debug("created temporary directory %s", tmpdirname)
+            doc_storage = document_storage.from_environment()
+            file_path = doc_storage.download(
+                tmpdirname,
+                request.s3_bucket_name,
+                request.s3_document_key,
+                request.original_filename,
+            )
+
+            indexer = self._get_summary_indexer(data_source_id)
+            if not indexer:
+                return SUMMARIZATION_DISABLED
+            # Delete to avoid duplicates
+            indexer.delete_document(doc_id)
+            indexer.index_file(file_path, doc_id)
+            summary = indexer.get_summary(doc_id)
+            assert summary is not None
+            return summary
+
+    @router.get(
+        "/size",
+        summary="Returns the number of chunks in the data source.",
+        response_model=None,
+    )
+    @exceptions.propagates
+    def size(self) -> int:
+        return self.chunks_vector_store.size() or 0
+
+    @router.get(
+        "/summary",
+        summary="summarize all documents for a datasource",
+        response_model=None,
+    )
+    @exceptions.propagates
+    def get_document_summary_of_summaries(self, data_source_id: int) -> str:
+        indexer = self._get_summary_indexer(data_source_id)
+        if not indexer:
+            return SUMMARIZATION_DISABLED
+        summary = indexer.get_full_summary()
+        if not summary:
+            return "No summary found for this data source."
+        return summary
+
+    @router.get("/visualize")
+    @exceptions.propagates
+    def visualize(self) -> list[tuple[tuple[float, float], str]]:
+        return self.chunks_vector_store.visualize()
+
+    class VisualizationRequest(BaseModel):
+        user_query: str
+
+    @router.post("/visualize")
+    @exceptions.propagates
+    def visualize_with_query(
+        self, request: VisualizationRequest
+    ) -> list[tuple[tuple[float, float], str]]:
+        return self.chunks_vector_store.visualize(request.user_query)

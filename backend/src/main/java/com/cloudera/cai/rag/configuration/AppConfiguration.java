@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -38,6 +38,9 @@
 
 package com.cloudera.cai.rag.configuration;
 
+import com.cloudera.cai.rag.files.FileSystemRagFileUploader;
+import com.cloudera.cai.rag.files.RagFileUploader;
+import com.cloudera.cai.rag.files.S3RagFileUploader;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import com.cloudera.cai.util.s3.AmazonS3Client;
 import com.cloudera.cai.util.s3.S3Config;
@@ -65,19 +68,13 @@ public class AppConfiguration {
   }
 
   @Bean
-  public AmazonS3Client amazonS3Client(S3Config s3Config) {
-    return new AmazonS3Client(s3Config);
-  }
-
-  @Bean
   public S3Config s3Config() {
     return S3Config.builder()
         .endpointUrl(System.getenv("AWS_ENDPOINT_URL_S3"))
         .accessKey(System.getenv("AWS_ACCESS_KEY_ID"))
         .secretKey(System.getenv("AWS_SECRET_ACCESS_KEY"))
         .awsRegion(System.getenv("AWS_DEFAULT_REGION"))
-        .bucketName(
-            Optional.ofNullable(System.getenv("S3_RAG_DOCUMENT_BUCKET")).orElse("rag-files"))
+        .bucketName(Optional.ofNullable(System.getenv("S3_RAG_DOCUMENT_BUCKET")).orElse(""))
         .bucketPrefix(Optional.ofNullable(System.getenv("S3_RAG_BUCKET_PREFIX")).orElse(""))
         .build();
   }
@@ -103,6 +100,15 @@ public class AppConfiguration {
     return JavaHttpClientTelemetry.builder(openTelemetry)
         .build()
         .newHttpClient(HttpClient.newHttpClient());
+  }
+
+  @Bean
+  public RagFileUploader ragFileUploader(S3Config configuration) {
+    if (configuration.getBucketName().isEmpty()) {
+      return new FileSystemRagFileUploader();
+    }
+    AmazonS3Client s3Client = new AmazonS3Client(configuration);
+    return new S3RagFileUploader(s3Client, configuration.getBucketName());
   }
 
   public static String getRagIndexUrl() {

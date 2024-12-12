@@ -46,7 +46,7 @@ from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import RagStudioChatMessage, chat_store
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -57,7 +57,7 @@ router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 )
 @exceptions.propagates
 def chat_history(session_id: int) -> list[RagStudioChatMessage]:
-    return chat_store.retrieve_chat_history(session_id=session_id)
+    return ChatHistoryManager().retrieve_chat_history(session_id=session_id)
 
 
 @router.delete(
@@ -65,14 +65,14 @@ def chat_history(session_id: int) -> list[RagStudioChatMessage]:
 )
 @exceptions.propagates
 def clear_chat_history(session_id: int) -> str:
-    chat_store.clear_chat_history(session_id=session_id)
+    ChatHistoryManager().clear_chat_history(session_id=session_id)
     return "Chat history cleared."
 
 
 @router.delete("", summary="Deletes the requested session.")
 @exceptions.propagates
 def delete_chat_history(session_id: int) -> str:
-    chat_store.delete_chat_history(session_id=session_id)
+    ChatHistoryManager().delete_chat_history(session_id=session_id)
     return "Chat history deleted."
 
 
@@ -112,7 +112,7 @@ def llm_talk(
         },
         timestamp=time.time(),
     )
-    chat_store.append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
 

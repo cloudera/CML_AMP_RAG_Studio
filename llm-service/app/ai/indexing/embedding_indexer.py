@@ -37,11 +37,9 @@
 #
 
 import logging
-import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Generator, List, Type
+from typing import Generator, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.node_parser import SentenceSplitter
@@ -49,35 +47,12 @@ from llama_index.core.schema import BaseNode, TextNode
 
 from ...ai.vector_stores.vector_store import VectorStore
 from ...services.utils import batch_sequence, flatten_sequence
-from .readers.base_reader import BaseReader
-from .readers.csv import CSVReader
-from .readers.docx import DocxReader
-from .readers.json import JSONReader
-from .readers.simple_file import SimpleFileReader
-from .readers.pdf import PDFReader
-from .readers.pptx import PptxReader
+from .base import get_reader_class
 
 logger = logging.getLogger(__name__)
 
-READERS: Dict[str, Type[BaseReader]] = {
-    ".pdf": PDFReader,
-    ".txt": SimpleFileReader,
-    ".md": SimpleFileReader,
-    ".docx": DocxReader,
-    ".pptx": PptxReader,
-    ".pptm": PptxReader,
-    ".ppt": PptxReader,
-    ".csv": CSVReader,
-    ".json": JSONReader,
-}
 
-
-@dataclass
-class NotSupportedFileExtensionError(Exception):
-    file_extension: str
-
-
-class Indexer:
+class EmbeddingIndexer:
     def __init__(
         self,
         data_source_id: int,
@@ -91,12 +66,11 @@ class Indexer:
         self.chunks_vector_store = chunks_vector_store
 
     def index_file(self, file_path: Path, document_id: str) -> None:
-        logger.debug(f"Indexing file: {file_path}")
+        logger.debug(
+            f"Indexing file: {file_path} with embedding model: {self.embedding_model.model_name}"
+        )
 
-        file_extension = os.path.splitext(file_path)[1]
-        reader_cls = READERS.get(file_extension)
-        if not reader_cls:
-            raise NotSupportedFileExtensionError(file_extension)
+        reader_cls = get_reader_class(file_path)
 
         reader = reader_cls(
             splitter=self.splitter,

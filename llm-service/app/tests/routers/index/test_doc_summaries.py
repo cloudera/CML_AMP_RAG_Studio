@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -51,19 +51,21 @@ class TestDocumentSummaries:
         data_source_id: int,
         document_id: str,
         s3_object: BotoObject,
+        test_file: Path,
     ) -> None:
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
         assert response.status_code == 200
 
         post_summarization_response = client.post(
-            f"/data_sources/{data_source_id}/summarize-document",
+            f"/data_sources/{data_source_id}/documents/{document_id}/summary",
             json={
                 "s3_bucket_name": s3_object.bucket_name,
                 "s3_document_key": s3_object.key,
+                "original_filename": "test.txt",
             },
         )
 
@@ -90,19 +92,21 @@ class TestDocumentSummaries:
         data_source_id: int,
         document_id: str,
         s3_object: BotoObject,
+        test_file: Path,
     ) -> None:
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
         assert response.status_code == 200
 
         post_summarization_response = client.post(
-            f"/data_sources/{data_source_id}/summarize-document",
+            f"/data_sources/{data_source_id}/documents/{document_id}/summary",
             json={
                 "s3_bucket_name": s3_object.bucket_name,
                 "s3_document_key": s3_object.key,
+                "original_filename": "test.txt",
             },
         )
 

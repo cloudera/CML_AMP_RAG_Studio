@@ -46,11 +46,6 @@ import {
   QueryKeys,
 } from "src/api/utils.ts";
 
-export interface RagMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
 export interface SuggestQuestionsRequest {
   data_source_id: string;
   configuration: QueryConfiguration;
@@ -78,9 +73,7 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: suggestedQuestionKey(request.data_source_id),
     queryFn: () => suggestQuestionsQuery(request),
-    enabled:
-      Boolean(request.data_source_id) &&
-      Boolean(request.configuration.model_name),
+    enabled: Boolean(request.data_source_id),
     gcTime: 0,
   });
 };

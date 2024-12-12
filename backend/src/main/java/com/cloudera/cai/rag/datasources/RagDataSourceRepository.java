@@ -41,6 +41,7 @@ package com.cloudera.cai.rag.datasources;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Jdbi;
@@ -58,35 +59,48 @@ public class RagDataSourceRepository {
   }
 
   public Long createRagDataSource(RagDataSource input) {
+
+    RagDataSource cleanedInputs = cleanInputs(input);
     return jdbi.inTransaction(
         handle -> {
           var sql =
               """
-                INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type)
-                VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType)
+                INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type, embedding_model, summarization_model)
+                VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel, :summarizationModel)
               """;
           try (var update = handle.createUpdate(sql)) {
-            update.bindMethods(input);
+            update.bindMethods(cleanedInputs);
             return update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
           }
         });
   }
 
+  private static RagDataSource cleanInputs(RagDataSource input) {
+    if (input.summarizationModel() != null && input.summarizationModel().isEmpty()) {
+      input = input.withSummarizationModel(null);
+    }
+    return input;
+  }
+
   public void updateRagDataSource(RagDataSource input) {
+
+    RagDataSource cleanedInputs = cleanInputs(input);
     jdbi.inTransaction(
         handle -> {
           var sql =
               """
               UPDATE rag_data_source
-              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById
+              SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById, summarization_model = :summarizationModel, time_updated = :now
               WHERE id = :id AND deleted IS NULL
           """;
           try (var update = handle.createUpdate(sql)) {
             return update
-                .bind("name", input.name())
-                .bind("updatedById", input.updatedById())
-                .bind("connectionType", input.connectionType())
-                .bind("id", input.id())
+                .bind("name", cleanedInputs.name())
+                .bind("updatedById", cleanedInputs.updatedById())
+                .bind("connectionType", cleanedInputs.connectionType())
+                .bind("id", cleanedInputs.id())
+                .bind("summarizationModel", cleanedInputs.summarizationModel())
+                .bind("now", Instant.now())
                 .execute();
           }
         });

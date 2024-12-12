@@ -57,6 +57,7 @@ import org.springframework.mock.web.MockMultipartFile;
 class RagFileServiceTest {
 
   private final RagDataSourceRepository dataSourceRepository = RagDataSourceRepository.createNull();
+  private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
 
   @Test
   void saveRagFile() {
@@ -84,7 +85,7 @@ class RagFileServiceTest {
     assertThat(savedDocument.extension()).isEqualTo("pdf");
     assertThat(savedDocument.dataSourceId()).isEqualTo(dataSourceId);
     assertThat(requestTracker.getValues())
-        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path, "real-filename.pdf"));
+        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
   }
 
   @Test
@@ -118,7 +119,7 @@ class RagFileServiceTest {
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile =
         new MockMultipartFile(name, originalFilename, "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     Types.RagDocumentMetadata result =
         ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id");
@@ -128,13 +129,29 @@ class RagFileServiceTest {
   }
 
   @Test
+  void saveRagFile_noS3Prefix() {
+    String originalFilename = "real-filename.";
+    String name = "test-file";
+    byte[] bytes = "23243223423".getBytes();
+    MockMultipartFile mockMultipartFile =
+        new MockMultipartFile(name, originalFilename, "text/plain", bytes);
+    String documentId = UUID.randomUUID().toString();
+    RagFileService ragFileService = createRagFileService(documentId, new Tracker<>(), "");
+    var dataSourceId = newDataSourceId();
+    Types.RagDocumentMetadata result =
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+    var savedDocumentMetadata = ragFileRepository.findDocumentByDocumentId(result.documentId());
+    assertThat(savedDocumentMetadata.s3Path()).isEqualTo(dataSourceId + "/" + documentId);
+  }
+
+  @Test
   void saveRagFile_removeDirectories() {
     String originalFilename = "staging/real-filename.pdf";
     String name = "file";
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile =
         new MockMultipartFile(name, originalFilename, "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     var dataSourceId = newDataSourceId();
     String expectedS3Path = "prefix/" + dataSourceId + "/" + documentId;
     var requestTracker = new Tracker<UploadRequest>();
@@ -145,7 +162,7 @@ class RagFileServiceTest {
         new Types.RagDocumentMetadata("real-filename.pdf", documentId, "pdf", 11);
     assertThat(result).isEqualTo(expected);
     assertThat(requestTracker.getValues())
-        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path, "real-filename.pdf"));
+        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
   }
 
   @Test
@@ -153,7 +170,7 @@ class RagFileServiceTest {
     String name = "file";
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile = new MockMultipartFile(name, null, "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     assertThatThrownBy(
             () -> ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id"))
@@ -166,7 +183,7 @@ class RagFileServiceTest {
     byte[] bytes = "23243223423".getBytes();
     MockMultipartFile mockMultipartFile =
         new MockMultipartFile(name, "filename", "text/plain", bytes);
-    String documentId = "TestID";
+    String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     assertThatThrownBy(() -> ragFileService.saveRagFile(mockMultipartFile, -1L, "test-id"))
         .isInstanceOf(NotFound.class);
@@ -185,6 +202,11 @@ class RagFileServiceTest {
 
   private RagFileService createRagFileService(
       String staticDocumentId, Tracker<UploadRequest> tracker) {
+    return createRagFileService(staticDocumentId, tracker, "prefix");
+  }
+
+  private RagFileService createRagFileService(
+      String staticDocumentId, Tracker<UploadRequest> tracker, String prefix) {
     return new RagFileService(
         staticDocumentId == null
             ? IdGenerator.createNull()
@@ -192,7 +214,7 @@ class RagFileServiceTest {
         RagFileRepository.createNull(),
         tracker == null ? RagFileUploader.createNull() : RagFileUploader.createNull(tracker),
         RagFileIndexReconciler.createNull(),
-        "prefix",
+        prefix,
         dataSourceRepository);
   }
 

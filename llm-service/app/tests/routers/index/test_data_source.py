@@ -37,20 +37,21 @@
 # ##############################################################################
 
 """Integration tests for app/routers/index/data_source/."""
-
+from pathlib import Path
 from typing import Any
 
-from app.ai.vector_stores.qdrant import QdrantVectorStore
-from app.services import models
 from fastapi.testclient import TestClient
 from llama_index.core import VectorStoreIndex
 from llama_index.core.vector_stores import VectorStoreQuery
+
+from app.ai.vector_stores.qdrant import QdrantVectorStore
+from app.services import models
 
 
 def get_vector_store_index(data_source_id: int) -> VectorStoreIndex:
     vector_store = QdrantVectorStore.for_chunks(data_source_id).llama_vector_store()
     index = VectorStoreIndex.from_vector_store(
-        vector_store, embed_model=models.get_embedding_model()
+        vector_store, embed_model=models.get_embedding_model("dummy_model")
     )
     return index
 
@@ -62,10 +63,10 @@ class TestDocumentIndexing:
         index_document_request_body: dict[str, Any],
         document_id: str,
         data_source_id: int,
+        test_file: Path,
     ) -> None:
-        """Test POST /download-and-index."""
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -83,10 +84,10 @@ class TestDocumentIndexing:
         index_document_request_body: dict[str, Any],
         document_id: str,
         data_source_id: int,
+        test_file: Path,
     ) -> None:
-        """Test POST /download-and-index."""
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -98,7 +99,7 @@ class TestDocumentIndexing:
         size1 = response.json()
 
         response = client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -117,10 +118,11 @@ class TestDocumentIndexing:
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
+        test_file: Path,
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}."""
         client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -138,7 +140,8 @@ class TestDocumentIndexing:
         get_summary_response = client.get(
             f"/data_sources/{data_source_id}/documents/{document_id}/summary"
         )
-        assert get_summary_response.status_code == 404
+        assert get_summary_response.status_code == 200
+        assert get_summary_response.text == '"No summary found for this document."'
 
     @staticmethod
     def test_delete_document(
@@ -146,10 +149,11 @@ class TestDocumentIndexing:
         data_source_id: int,
         document_id: str,
         index_document_request_body: dict[str, Any],
+        test_file: Path,
     ) -> None:
         """Test DELETE /data_sources/{data_source_id}/documents/{document_id}."""
         client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 
@@ -174,11 +178,13 @@ class TestDocumentIndexing:
     def test_get_size(
         client: TestClient,
         data_source_id: int,
+        document_id: str,
         index_document_request_body: dict[str, Any],
+        test_file: Path,
     ) -> None:
         """Test GET /data_sources/{data_source_id}/size."""
         client.post(
-            f"/data_sources/{data_source_id}/documents/download-and-index",
+            f"/data_sources/{data_source_id}/documents/{document_id}/index",
             json=index_document_request_body,
         )
 

@@ -46,6 +46,7 @@ import {
 } from "src/api/utils.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
+import { Session } from "src/api/sessionApi.ts";
 
 export interface SourceNode {
   node_id: string;
@@ -190,4 +191,23 @@ const chatMutation = async (
     `${llmServicePath}/sessions/${request.session_id}/chat`,
     request,
   );
+};
+
+export const createQueryConfiguration = (
+  excludeKnowledgeBase: boolean,
+  activeSession?: Session,
+): QueryConfiguration => {
+  // todo: maybe we should just throw an exception here?
+  if (!activeSession) {
+    return {
+      top_k: 5,
+      model_name: "",
+      exclude_knowledge_base: false,
+    };
+  }
+  return {
+    top_k: activeSession.responseChunks,
+    model_name: activeSession.inferenceModel ?? "",
+    exclude_knowledge_base: excludeKnowledgeBase,
+  };
 };

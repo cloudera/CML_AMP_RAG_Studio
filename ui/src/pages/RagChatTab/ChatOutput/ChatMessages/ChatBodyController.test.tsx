@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { cleanup, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   RagChatContext,
   RagChatContextType,
@@ -48,6 +48,7 @@ import { ConnectionType } from "src/api/dataSourceApi.ts";
 const testDataSource = {
   id: 1,
   name: "data source name",
+  embeddingModel: "embedding-model",
   chunkSize: 1,
   totalDocSize: 1,
   documentCount: 1,
@@ -64,6 +65,8 @@ const testSession = {
   createdById: "1",
   updatedById: "1",
   lastInteractionTime: 123,
+  responseChunks: 5,
+  inferenceModel: "",
 };
 
 describe("ChatBodyController", () => {
@@ -92,20 +95,23 @@ describe("ChatBodyController", () => {
 
   const renderWithContext = (contextValue: Partial<RagChatContextType>) => {
     const defaultContextValue: RagChatContextType = {
-      currentQuestion: "",
-      chatHistory: [],
-      dataSourceId: undefined,
-      dataSourcesStatus: undefined,
-      queryConfiguration: {
-        top_k: 5,
-        model_name: "",
-        exclude_knowledge_base: false,
-      },
-      setQueryConfiguration: () => null,
-      setCurrentQuestion: () => null,
+      chatHistoryQuery: { chatHistoryStatus: undefined, chatHistory: [] },
+      currentQuestionState: ["", () => null],
+      dataSourcesQuery: { dataSourcesStatus: undefined, dataSources: [] },
+      excludeKnowledgeBaseState: [false, () => null],
       dataSourceSize: null,
-      dataSources: [],
-      activeSession: undefined,
+      activeSession: {
+        dataSourceIds: [],
+        id: 0,
+        name: "",
+        timeCreated: 0,
+        timeUpdated: 0,
+        createdById: "",
+        updatedById: "",
+        lastInteractionTime: 0,
+        responseChunks: 5,
+        inferenceModel: "",
+      },
     };
 
     return render(
@@ -119,10 +125,8 @@ describe("ChatBodyController", () => {
 
   it("renders NoSessionState when no sessionId and dataSources are available", () => {
     renderWithContext({
-      dataSourceId: undefined,
-      dataSourcesStatus: undefined,
+      dataSourcesQuery: { dataSourcesStatus: undefined, dataSources: [] },
       dataSourceSize: null,
-      dataSources: [],
       activeSession: undefined,
     });
 
@@ -131,7 +135,7 @@ describe("ChatBodyController", () => {
 
   it("renders ChatLoading when dataSourcesStatus or chatHistoryStatus is pending", () => {
     renderWithContext({
-      dataSourcesStatus: "pending",
+      dataSourcesQuery: { dataSourcesStatus: "pending", dataSources: [] },
     });
 
     expect(screen.getByTestId("chatLoadingSpinner")).toBeTruthy();
@@ -139,7 +143,7 @@ describe("ChatBodyController", () => {
 
   it("renders error message when dataSourcesStatus or chatHistoryStatus is error", () => {
     renderWithContext({
-      dataSourcesStatus: "error",
+      dataSourcesQuery: { dataSourcesStatus: "error", dataSources: [] },
     });
 
     expect(screen.getByText("We encountered an error")).toBeTruthy();
@@ -147,18 +151,21 @@ describe("ChatBodyController", () => {
 
   it("renders ChatMessageController when chatHistory exists", () => {
     renderWithContext({
-      chatHistory: [
-        {
-          id: "1",
-          rag_message: {
-            user: "a test question",
-            assistant: "a test response",
+      chatHistoryQuery: {
+        chatHistoryStatus: undefined,
+        chatHistory: [
+          {
+            id: "1",
+            rag_message: {
+              user: "a test question",
+              assistant: "a test response",
+            },
+            source_nodes: [],
+            evaluations: [],
+            timestamp: 123,
           },
-          source_nodes: [],
-          evaluations: [],
-          timestamp: 123,
-        },
-      ],
+        ],
+      },
     });
 
     expect(screen.getByTestId("chat-message")).toBeTruthy();
@@ -166,7 +173,7 @@ describe("ChatBodyController", () => {
 
   it("renders NoDataSourcesState when no dataSources are available", () => {
     renderWithContext({
-      dataSources: [],
+      dataSourcesQuery: { dataSources: [] },
       activeSession: testSession,
     });
 
@@ -179,8 +186,7 @@ describe("ChatBodyController", () => {
 
   it("renders NoDataSourceForSession when no currentDataSource is found", () => {
     renderWithContext({
-      dataSources: [testDataSource],
-      dataSourceId: undefined,
+      dataSourcesQuery: { dataSources: [testDataSource] },
       activeSession: { ...testSession, dataSourceIds: [2] },
     });
 
@@ -191,9 +197,9 @@ describe("ChatBodyController", () => {
 
   it("renders ChatMessageController when currentQuestion and dataSourceSize are available", () => {
     renderWithContext({
-      currentQuestion: "What is AI?",
+      currentQuestionState: ["What is AI?", () => null],
       dataSourceSize: 1,
-      dataSources: [testDataSource],
+      dataSourcesQuery: { dataSources: [testDataSource] },
       activeSession: testSession,
     });
 
@@ -213,7 +219,7 @@ describe("ChatBodyController", () => {
 
     renderWithContext({
       dataSourceSize: 1,
-      dataSources: [testDataSource],
+      dataSourcesQuery: { dataSources: [testDataSource] },
       activeSession: testSession,
     });
 

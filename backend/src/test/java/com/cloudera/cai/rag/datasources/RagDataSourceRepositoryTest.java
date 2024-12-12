@@ -42,14 +42,32 @@ import static com.cloudera.cai.rag.Types.ConnectionType.API;
 import static com.cloudera.cai.rag.Types.ConnectionType.MANUAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.time.Duration;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 class RagDataSourceRepositoryTest {
+  @Test
+  void create() {
+    RagDataSourceRepository repository =
+        new RagDataSourceRepository(JdbiConfiguration.createNull());
+    var id =
+        repository.createRagDataSource(
+            TestData.createTestDataSourceInstance("test-name", 512, 10, MANUAL)
+                .withCreatedById("abc")
+                .withUpdatedById("abc")
+                .withEmbeddingModel("test-embedding-model"));
+    var savedDataSource = repository.getRagDataSourceById(id);
+    assertThat(savedDataSource.name()).isEqualTo("test-name");
+    assertThat(savedDataSource.updatedById()).isEqualTo("abc");
+    assertThat(savedDataSource.embeddingModel()).isEqualTo("test-embedding-model");
+  }
+
   @Test
   void update() {
     RagDataSourceRepository repository =
@@ -59,8 +77,11 @@ class RagDataSourceRepositoryTest {
             TestData.createTestDataSourceInstance("test-name", 512, 10, MANUAL)
                 .withCreatedById("abc")
                 .withUpdatedById("abc"));
-    assertThat(repository.getRagDataSourceById(id).name()).isEqualTo("test-name");
-    assertThat(repository.getRagDataSourceById(id).updatedById()).isEqualTo("abc");
+    var insertedDataSource = repository.getRagDataSourceById(id);
+    assertThat(insertedDataSource.name()).isEqualTo("test-name");
+    assertThat(insertedDataSource.updatedById()).isEqualTo("abc");
+    var timeInserted = insertedDataSource.timeUpdated();
+    assertThat(timeInserted).isNotNull();
 
     var expectedRagDataSource =
         TestData.createTestDataSourceInstance("new-name", 512, 10, API)
@@ -68,12 +89,15 @@ class RagDataSourceRepositoryTest {
             .withUpdatedById("def")
             .withId(id)
             .withDocumentCount(0);
-
+    // wait a moment so the updated time will always be later than insert time
+    await().atLeast(Duration.ofMillis(1));
     repository.updateRagDataSource(expectedRagDataSource);
-    assertThat(repository.getRagDataSourceById(id))
+    var updatedDataSource = repository.getRagDataSourceById(id);
+    assertThat(updatedDataSource)
         .usingRecursiveComparison()
         .ignoringFieldsOfTypes(Instant.class)
         .isEqualTo(expectedRagDataSource);
+    assertThat(updatedDataSource.timeUpdated()).isAfter(timeInserted);
   }
 
   @Test

@@ -83,7 +83,7 @@ public class RagFileService {
     String documentId = idGenerator.generateId();
     var s3Path = buildS3Path(dataSourceId, documentId);
 
-    ragFileUploader.uploadFile(file, s3Path, removeDirectories(file.getOriginalFilename()));
+    ragFileUploader.uploadFile(file, s3Path);
     var ragDocument = createUnsavedDocument(file, documentId, s3Path, dataSourceId, actorCrn);
     Long id = ragFileRepository.saveDocumentMetadata(ragDocument);
     log.info("Saved document with id: {}", id);
@@ -95,7 +95,11 @@ public class RagFileService {
   }
 
   private String buildS3Path(Long dataSourceId, String documentId) {
-    return s3PathPrefix + "/" + dataSourceId + "/" + documentId;
+    var dataSourceDocumentPart = dataSourceId + "/" + documentId;
+    if (s3PathPrefix.isEmpty()) {
+      return dataSourceDocumentPart;
+    }
+    return s3PathPrefix + "/" + dataSourceDocumentPart;
   }
 
   private String extractFileExtension(String originalFilename) {

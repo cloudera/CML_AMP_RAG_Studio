@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -54,6 +54,11 @@ public class SessionService {
   public Types.Session create(Types.Session input) {
     var id = sessionRepository.create(input);
     return sessionRepository.getSessionById(id);
+  }
+
+  public Types.Session update(Types.Session input) {
+    sessionRepository.update(input);
+    return sessionRepository.getSessionById(input.id());
   }
 
   public List<Types.Session> getSessions() {

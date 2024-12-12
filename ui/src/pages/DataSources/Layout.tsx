@@ -40,21 +40,17 @@ import { Layout, Typography } from "antd";
 import DataSourcesTabs from "pages/DataSources/Tabs.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { DataSourceType, getDataSourceById } from "src/api/dataSourceApi.ts";
-import { useParams } from "@tanstack/react-router";
 import { createContext } from "react";
+import { Route } from "src/routes/_layout/data/_layout-datasources/$dataSourceId";
 
 export const DataSourceContext = createContext<{
-  isLoading: boolean;
-  data?: DataSourceType;
-}>({ isLoading: true, data: undefined });
+  dataSourceId: string;
+  dataSourceMetaData?: DataSourceType;
+}>({ dataSourceId: "" });
 
 function DataSourceLayout() {
-  const { dataSourceId } = useParams({
-    from: "/_layout/data/_layout-datasources/$dataSourceId",
-  });
-  const { data, isPending, isLoading } = useQuery(
-    getDataSourceById(dataSourceId),
-  );
+  const { dataSourceId } = Route.useParams();
+  const { data } = useQuery(getDataSourceById(dataSourceId));
 
   return (
     <Layout
@@ -65,7 +61,7 @@ function DataSourceLayout() {
     >
       <Typography.Title level={1}>{data?.name}</Typography.Title>
       <DataSourceContext.Provider
-        value={{ isLoading: isLoading || isPending, data }}
+        value={{ dataSourceId, dataSourceMetaData: data }}
       >
         <DataSourcesTabs />
       </DataSourceContext.Provider>

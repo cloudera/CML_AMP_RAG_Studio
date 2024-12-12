@@ -57,9 +57,10 @@ import { cdlGray600 } from "src/cuix/variables.ts";
 import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
-  const { dataSourceId } = useContext(RagChatContext);
+  const { activeSession } = useContext(RagChatContext);
   const [showContent, setShowContent] = useState(false);
   const chunkContents = useGetChunkContents();
+  const dataSourceId = activeSession?.dataSourceIds[0];
   const documentSummary = useGetDocumentSummary({
     data_source_id: dataSourceId?.toString() ?? "",
     doc_id: source.doc_id,

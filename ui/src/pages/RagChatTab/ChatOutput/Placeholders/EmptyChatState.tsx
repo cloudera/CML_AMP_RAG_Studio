@@ -46,8 +46,8 @@ import { cdlGray700 } from "src/cuix/variables.ts";
 import Images from "src/components/images/Images.ts";
 
 const DataSourceSummaryCard = () => {
-  const { dataSourceId } = useContext(RagChatContext);
-
+  const { activeSession } = useContext(RagChatContext);
+  const dataSourceId = activeSession?.dataSourceIds[0];
   const dataSourceSummary = useGetDataSourceSummary({
     data_source_id: dataSourceId?.toString() ?? "",
     queryEnabled: true,
@@ -81,7 +81,9 @@ const DataSourceSummaryCard = () => {
 };
 
 const EmptyChatState = ({ dataSourceSize }: { dataSourceSize: number }) => {
-  const { dataSourceId } = useContext(RagChatContext);
+  const { activeSession } = useContext(RagChatContext);
+  const dataSourceId = activeSession?.dataSourceIds[0];
+
   return (
     <Flex vertical align="center" style={{ height: "100%" }}>
       <Image

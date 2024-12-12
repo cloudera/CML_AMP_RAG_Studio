@@ -38,12 +38,13 @@
 
 package com.cloudera.cai.rag.files;
 
-import static com.cloudera.cai.rag.Types.*;
-
+import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.exceptions.NotFound;
-import com.cloudera.cai.util.reconcilers.*;
+import com.cloudera.cai.util.reconcilers.BaseReconciler;
+import com.cloudera.cai.util.reconcilers.ReconcileResult;
+import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -85,9 +86,11 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
     log.debug("checking for RAG documents to be summarized");
     String sql =
         """
-        SELECT * from rag_data_source_document
-         WHERE summary_creation_timestamp IS NULL
-           AND time_created > :yesterday
+        SELECT rdsd.* from rag_data_source_document rdsd
+         JOIN rag_data_source rds ON rdsd.data_source_id = rds.id
+         WHERE rdsd.summary_creation_timestamp IS NULL
+           AND (rdsd.time_created > :yesterday OR rds.time_updated > :yesterday)
+           AND rds.summarization_model IS NOT NULL AND rds.summarization_model != ''
         """;
     jdbi.useHandle(
         handle -> {
@@ -113,10 +116,10 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
       log.info("finished requesting summarization of file {}", document);
       String updateSql =
           """
-        UPDATE rag_data_source_document
-        SET summary_creation_timestamp = :now
-        WHERE id = :id
-      """;
+            UPDATE rag_data_source_document
+            SET summary_creation_timestamp = :now
+            WHERE id = :id
+          """;
       jdbi.useHandle(
           handle -> {
             try (Update update = handle.createUpdate(updateSql)) {
