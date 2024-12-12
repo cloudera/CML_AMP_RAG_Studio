@@ -138,10 +138,11 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
 
 def generate_suggested_questions(
     configuration: RagPredictConfiguration,
-    data_source_id: int,
+    data_source_id: list[int],
     data_source_size: int,
     session_id: int,
 ) -> List[str]:
+    data_source_id = data_source_id[0]
     chat_history = retrieve_chat_history(session_id)
     if data_source_size == 0:
         suggested_questions = []
