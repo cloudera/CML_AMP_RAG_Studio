@@ -37,17 +37,31 @@
 #
 
 from pathlib import Path
-from typing import List
 
-from llama_index.core.schema import Document, TextNode
+from llama_index.core.schema import Document
 
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 
 
 class SimpleFileReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
+        ret = ChunksResult()
+
         with open(file_path, "r") as f:
-            document = Document(text=f.read())
+            content = f.read()
+
+        secrets = self._block_secrets([content])
+        if secrets is not None:
+            ret.secret_types = secrets
+            return ret
+
+        anonymized_text = self._anonymize_pii(content)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            content = anonymized_text
+
+        document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
-        return self._chunks_in_document(document)
+        ret.chunks = self._chunks_in_document(document)
+        return ret
