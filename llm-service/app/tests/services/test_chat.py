@@ -85,7 +85,7 @@ class TestProcessResponse:
     @example(response="Empty Response")
     def test_process_response(self, response: str) -> None:
         """Verify process_response() cleans and filters an LLM's suggested questions."""
-        processed_response: str = process_response(response)
+        processed_response: list[str] = process_response(response)
         assert len(processed_response) <= 5
 
         for suggested_question in processed_response:

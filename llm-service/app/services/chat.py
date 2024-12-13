@@ -41,6 +41,7 @@ import uuid
 from collections.abc import Iterator
 from typing import List
 
+from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
@@ -58,11 +59,16 @@ from .chat_store import (
 
 def v2_chat(
     session_id: int,
-    data_source_id: int,
+    data_source_ids: list[int],
     query: str,
     configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
     response_id = str(uuid.uuid4())
+
+    if len(data_source_ids) != 1:
+        raise HTTPException(status_code=400, detail="Only one datasource is supported for chat.")
+
+    data_source_id: int = data_source_ids[0]
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
@@ -137,10 +143,11 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
 
 def generate_suggested_questions(
     configuration: RagPredictConfiguration,
-    data_source_id: int,
+    data_source_ids: list[int],
     data_source_size: int,
     session_id: int,
 ) -> List[str]:
+    data_source_id = data_source_ids[0]
     chat_history = retrieve_chat_history(session_id)
     if data_source_size == 0:
         suggested_questions = []

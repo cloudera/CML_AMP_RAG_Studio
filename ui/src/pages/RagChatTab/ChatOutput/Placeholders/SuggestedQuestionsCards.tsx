@@ -49,14 +49,13 @@ const SuggestedQuestionsCards = () => {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
   } = useContext(RagChatContext);
-  const dataSourceId = activeSession?.dataSourceIds[0];
   const sessionId = activeSession?.id.toString();
   const {
     data,
     isPending: suggestedQuestionsIsPending,
     isFetching: suggestedQuestionsIsFetching,
   } = useSuggestQuestions({
-    data_source_id: dataSourceId?.toString() ?? "",
+    data_source_ids: activeSession?.dataSourceIds ?? [],
     configuration: createQueryConfiguration(
       excludeKnowledgeBase,
       activeSession,
@@ -75,15 +74,15 @@ const SuggestedQuestionsCards = () => {
 
   const handleAskSample = (suggestedQuestion: string) => {
     if (
-      dataSourceId &&
-      dataSourceId > 0 &&
+      activeSession &&
+      activeSession.dataSourceIds.length > 0 &&
       suggestedQuestion.length > 0 &&
       sessionId
     ) {
       setCurrentQuestion(suggestedQuestion);
       chatMutation({
         query: suggestedQuestion,
-        data_source_id: dataSourceId.toString(),
+        data_source_ids: activeSession.dataSourceIds,
         session_id: sessionId,
         configuration: createQueryConfiguration(
           excludeKnowledgeBase,

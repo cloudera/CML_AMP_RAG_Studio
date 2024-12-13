@@ -98,9 +98,7 @@ class QdrantVectorStore(VectorStore):
         return models.get_embedding_model(self.data_source_metadata.embedding_model)
 
     def size(self) -> Optional[int]:
-        """
-        If the collection does not exist, return -1
-        """
+        """If the collection does not exist, return None."""
         if not self.client.collection_exists(self.table_name):
             return None
         document_count: CountResult = self.client.count(self.table_name)
