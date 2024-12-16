@@ -57,9 +57,7 @@ import { cdlGray600 } from "src/cuix/variables.ts";
 import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
-import styled from "styled-components";
-
-const StyledMarkdown = styled(Markdown)``;
+import "./sourceCard.css";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
@@ -135,9 +133,14 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                     Extracted reference content
                   </Typography.Title>
                   {chunkContents.data.metadata.chunk_format === "markdown" ? (
-                    <Markdown skipHtml remarkPlugins={[Remark]}>
-                      {chunkContents.data.text}
-                    </Markdown>
+                    <div
+                      style={{ marginBottom: 12 }}
+                      className="styled-markdown"
+                    >
+                      <Markdown skipHtml remarkPlugins={[Remark]}>
+                        {chunkContents.data.text}
+                      </Markdown>
+                    </div>
                   ) : (
                     <Typography.Paragraph
                       style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
