@@ -226,7 +226,7 @@ class SummaryIndexer:
 
         # Delete first so that we don't accumulate trash in the summary store.
         try:
-            global_summary_store.delete_ref_doc(str(self.data_source_id))
+            global_summary_store.delete_ref_doc(str(self.data_source_id), delete_from_docstore=True)
         except KeyError:
             pass
         global_summary_store.insert_nodes(new_nodes)
@@ -246,8 +246,7 @@ class SummaryIndexer:
             global_summary_store = self.__summary_indexer(global_persist_dir)
             document_id = str(self.data_source_id)
             if (
-                    document_id
-                    not in global_summary_store.index_struct.doc_id_to_summary_id
+                document_id not in global_summary_store.index_struct.doc_id_to_summary_id
             ):
                 return None
             return global_summary_store.get_document_summary(document_id)
