@@ -102,9 +102,7 @@ class DataSourceController:
     @exceptions.propagates
     def delete(self, data_source_id: int) -> None:
         self.chunks_vector_store.delete()
-        summary_indexer = self._get_summary_indexer(data_source_id)
-        if summary_indexer:
-            summary_indexer.delete_data_source()
+        SummaryIndexer.delete_data_source_by_id(data_source_id)
 
     @router.get(
         "/chunks/{chunk_id}",
