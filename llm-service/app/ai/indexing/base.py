@@ -7,6 +7,7 @@ from .readers.base_reader import BaseReader
 from .readers.csv import CSVReader
 from .readers.docx import DocxReader
 from .readers.json import JSONReader
+from .readers.markdown import MdReader
 from .readers.pdf import PDFReader
 from .readers.pptx import PptxReader
 from .readers.simple_file import SimpleFileReader
@@ -14,7 +15,7 @@ from .readers.simple_file import SimpleFileReader
 READERS: Dict[str, Type[BaseReader]] = {
     ".pdf": PDFReader,
     ".txt": SimpleFileReader,
-    ".md": SimpleFileReader,
+    ".md": MdReader,
     ".docx": DocxReader,
     ".pptx": PptxReader,
     ".pptm": PptxReader,

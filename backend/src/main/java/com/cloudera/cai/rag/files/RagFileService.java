@@ -61,6 +61,7 @@ public class RagFileService {
   private final RagFileIndexReconciler ragFileIndexReconciler;
   private final String s3PathPrefix;
   private final RagDataSourceRepository ragDataSourceRepository;
+  private final RagFileDeleteReconciler ragFileDeleteReconciler;
 
   @Autowired
   public RagFileService(
@@ -69,13 +70,15 @@ public class RagFileService {
       RagFileUploader ragFileUploader,
       RagFileIndexReconciler ragFileIndexReconciler,
       @Qualifier("s3BucketPrefix") String s3PathPrefix,
-      RagDataSourceRepository ragDataSourceRepository) {
+      RagDataSourceRepository ragDataSourceRepository,
+      RagFileDeleteReconciler ragFileDeleteReconciler) {
     this.idGenerator = idGenerator;
     this.ragFileRepository = ragFileRepository;
     this.ragFileUploader = ragFileUploader;
     this.ragFileIndexReconciler = ragFileIndexReconciler;
     this.s3PathPrefix = s3PathPrefix;
     this.ragDataSourceRepository = ragDataSourceRepository;
+    this.ragFileDeleteReconciler = ragFileDeleteReconciler;
   }
 
   public RagDocumentMetadata saveRagFile(MultipartFile file, Long dataSourceId, String actorCrn) {
@@ -144,6 +147,7 @@ public class RagFileService {
       throw new NotFound("Document with id " + id + " not found for dataSourceId: " + dataSourceId);
     }
     ragFileRepository.deleteById(id);
+    ragFileDeleteReconciler.submit(document);
   }
 
   // Nullables stuff down here
@@ -155,7 +159,8 @@ public class RagFileService {
         RagFileUploader.createNull(),
         RagFileIndexReconciler.createNull(),
         "prefix",
-        RagDataSourceRepository.createNull());
+        RagDataSourceRepository.createNull(),
+        RagFileDeleteReconciler.createNull());
   }
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {

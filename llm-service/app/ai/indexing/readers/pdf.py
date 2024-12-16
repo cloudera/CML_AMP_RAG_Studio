@@ -114,6 +114,7 @@ class PDFReader(BaseReader):
         docling_enabled = (
             os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         )
+        logger.info(f"{docling_enabled=}")
         if not docling_enabled:
             return None
         directory = file_path.parent

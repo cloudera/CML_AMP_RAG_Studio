@@ -215,7 +215,8 @@ class RagFileServiceTest {
         tracker == null ? RagFileUploader.createNull() : RagFileUploader.createNull(tracker),
         RagFileIndexReconciler.createNull(),
         prefix,
-        dataSourceRepository);
+        dataSourceRepository,
+        RagFileDeleteReconciler.createNull());
   }
 
   private long newDataSourceId() {
