@@ -40,7 +40,7 @@ import { Divider, Flex, Typography } from "antd";
 import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
-import { cdlBlue500, cdlGray500 } from "src/cuix/variables.ts";
+import { cdlBlue500, cdlGray200, cdlGray500 } from "src/cuix/variables.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import Images from "src/components/images/Images.ts";
@@ -83,7 +83,7 @@ const ChatMessage = ({
                 <Images.Models
                   style={{
                     padding: 4,
-                    backgroundColor: cdlGray500,
+                    backgroundColor: cdlGray200,
                     borderRadius: 20,
                     width: 24,
                     height: 24,
