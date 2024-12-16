@@ -85,6 +85,7 @@ interface ChatHistoryRequestType {
 export interface ChatMessageType {
   id: string;
   source_nodes: SourceNode[];
+  inference_model?: string;
   rag_message: RagMessageV2;
   evaluations: Evaluation[];
   timestamp: number;
