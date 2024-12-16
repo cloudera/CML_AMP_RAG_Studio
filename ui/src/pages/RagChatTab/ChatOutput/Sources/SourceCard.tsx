@@ -57,6 +57,9 @@ import { cdlGray600 } from "src/cuix/variables.ts";
 import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
+import styled from "styled-components";
+
+const StyledMarkdown = styled(Markdown)``;
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
