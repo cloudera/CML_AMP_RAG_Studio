@@ -261,7 +261,7 @@ class SummaryIndexer:
                 summary_store, deleted_node_id=document_id
             )
 
-            summary_store.delete_ref_doc(document_id)
+            summary_store.delete_ref_doc(document_id, delete_from_docstore=True)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
     def delete_data_source(self) -> None:
@@ -282,7 +282,7 @@ class SummaryIndexer:
                 ## global summary store doesn't exist, nothing to do
                 return
             try:
-                global_summary_store.delete_ref_doc(str(data_source_id))
+                global_summary_store.delete_ref_doc(str(data_source_id), delete_from_docstore=True)
                 global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
             except KeyError:
                 pass
