@@ -55,6 +55,7 @@ import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
 import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
+import Markdown from "react-markdown";
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
@@ -129,11 +130,15 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                   <Typography.Title level={5} style={{ marginTop: 10 }}>
                     Extracted reference content
                   </Typography.Title>
-                  <Typography.Paragraph
-                    style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-                  >
-                    {chunkContents.data.text}
-                  </Typography.Paragraph>
+                  {chunkContents.data.metadata.chunk_format === "markdown" ? (
+                    <Markdown skipHtml>{chunkContents.data.text}</Markdown>
+                  ) : (
+                    <Typography.Paragraph
+                      style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
+                    >
+                      chunkContents.data.text
+                    </Typography.Paragraph>
+                  )}
                   <MetaData metadata={chunkContents.data.metadata} />
                 </Flex>
               )

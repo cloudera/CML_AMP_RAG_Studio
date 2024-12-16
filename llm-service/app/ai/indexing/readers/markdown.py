@@ -94,5 +94,6 @@ class MdReader(BaseReader):
         for i, node in enumerate(nodes):
             tn = cast(TextNode, node)
             self._add_document_metadata(tn, file_path)
+            tn.metadata["chunk_format"] = "markdown"
             results.append(tn)
         return results
