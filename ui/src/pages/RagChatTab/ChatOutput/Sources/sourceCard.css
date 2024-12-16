@@ -45,6 +45,7 @@
     padding: 4px;
 }
 .styled-markdown table th {
+    padding: 4px;
     border: 1px solid #838b92;
 }
 .styled-markdown table thead {

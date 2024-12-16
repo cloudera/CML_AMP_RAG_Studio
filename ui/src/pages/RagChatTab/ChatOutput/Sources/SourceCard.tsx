@@ -40,6 +40,7 @@ import Icon from "@ant-design/icons";
 import {
   Alert,
   Card,
+  Divider,
   Flex,
   Popover,
   Spin,
@@ -58,6 +59,30 @@ import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
 import "./sourceCard.css";
+
+export const SourceCardTitle = ({ titleText }: { titleText: string }) => {
+  return (
+    <Typography.Title level={5} style={{ marginTop: 10 }}>
+      {titleText}
+      <Divider style={{ margin: "8px 0px" }} />
+    </Typography.Title>
+  );
+};
+
+const CardTitle = ({ source }: { source: SourceNode }) => {
+  return (
+    <Flex justify="space-between">
+      <Tooltip title={source.source_file_name}>
+        <Typography.Paragraph ellipsis style={{ width: "70%" }}>
+          {source.source_file_name}
+        </Typography.Paragraph>
+      </Tooltip>
+      <Typography.Text style={{ color: cdlGray600 }}>
+        Score: {source.score}
+      </Typography.Text>
+    </Flex>
+  );
+};
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
@@ -86,26 +111,13 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
       onOpenChange={handleGetChunkContents}
       content={
         <Card
-          title={
-            <Flex justify="space-between">
-              <Tooltip title={source.source_file_name}>
-                <Typography.Paragraph ellipsis style={{ width: "70%" }}>
-                  {source.source_file_name}
-                </Typography.Paragraph>
-              </Tooltip>
-              <Typography.Text style={{ color: cdlGray600 }}>
-                Score: {source.score}
-              </Typography.Text>
-            </Flex>
-          }
+          title={<CardTitle source={source} />}
           bordered={false}
           style={{ width: 600, height: 300, overflowY: "auto" }}
         >
           <Flex justify="center" vertical>
             <Flex vertical>
-              <Typography.Title level={5} style={{ marginTop: 10 }}>
-                Generated document summary
-              </Typography.Title>
+              <SourceCardTitle titleText={"Generated document summary"} />
               <Typography.Text>
                 {documentSummary.data ?? "No summary available"}
               </Typography.Text>
@@ -129,9 +141,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
             ) : (
               chunkContents.data && (
                 <Flex vertical>
-                  <Typography.Title level={5} style={{ marginTop: 10 }}>
-                    Extracted reference content
-                  </Typography.Title>
+                  <SourceCardTitle titleText={"Extracted reference content"} />
                   {chunkContents.data.metadata.chunk_format === "markdown" ? (
                     <div
                       style={{ marginBottom: 12 }}
