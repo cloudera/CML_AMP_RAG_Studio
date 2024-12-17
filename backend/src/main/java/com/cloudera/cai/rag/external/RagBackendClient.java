@@ -43,6 +43,7 @@ import com.cloudera.cai.rag.configuration.AppConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.ClientError;
+import com.cloudera.cai.util.exceptions.HttpError;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -78,19 +79,19 @@ public class RagBackendClient {
               + "/index",
           new IndexRequest(
               bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
-    } catch (ClientError e) {
-      throw convertUnsupportedMediaType(e);
+    } catch (HttpError e) {
+      throw convertFastApiError(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private ClientError convertUnsupportedMediaType(ClientError e) {
+  private HttpError convertFastApiError(HttpError e) {
     try {
       return new ClientError(
-          objectMapper.readValue(e.getMessage(), FastApiError.class).detail());
+          objectMapper.readValue(e.getMessage(), FastApiError.class).detail(), e.getStatusCode());
     } catch (JsonProcessingException ex) {
-      throw e;
+      return e;
     }
   }
 
@@ -104,8 +105,8 @@ public class RagBackendClient {
               + ragDocument.documentId()
               + "/summary",
           new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
-    } catch (ClientError e) {
-      throw convertUnsupportedMediaType(e);
+    } catch (HttpError e) {
+      throw convertFastApiError(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

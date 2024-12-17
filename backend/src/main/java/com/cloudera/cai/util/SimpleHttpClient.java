@@ -38,8 +38,9 @@
 
 package com.cloudera.cai.util;
 
-import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.exceptions.ClientError;
+import com.cloudera.cai.util.exceptions.NotFound;
+import com.cloudera.cai.util.exceptions.ServerError;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -80,12 +81,11 @@ public class SimpleHttpClient {
       }
 
       if (400 <= statusCode && statusCode < 500) {
-        throw new ClientError(response.body());
+        throw new ClientError(response.body(), statusCode);
       }
 
-      if (statusCode >= 400) {
-        throw new RuntimeException(
-            "Failed to post to " + url + " code: " + statusCode + ", body : " + response.body());
+      if (statusCode >= 500) {
+        throw new ServerError(response.body(), statusCode);
       }
       return response.body();
     } catch (InterruptedException e) {

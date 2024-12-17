@@ -38,12 +38,9 @@
 
 package com.cloudera.cai.util.exceptions;
 
-import lombok.Getter;
 
-@Getter
-public class ClientError extends HttpError {
-
-  public ClientError(String message, int statusCode) {
+public class ServerError extends HttpError {
+  public ServerError(String message, int statusCode) {
     super(message, statusCode);
   }
 }

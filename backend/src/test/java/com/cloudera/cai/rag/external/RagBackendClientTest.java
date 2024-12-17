@@ -46,8 +46,8 @@ import com.cloudera.cai.rag.external.RagBackendClient.IndexConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.SimpleHttpClient.TrackedHttpRequest;
 import com.cloudera.cai.util.Tracker;
-import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.exceptions.ClientError;
+import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -83,7 +83,7 @@ class RagBackendClientTest {
     RagBackendClient client =
         new RagBackendClient(
             SimpleHttpClient.createNull(
-                tracker, new ClientError("{\"detail\": \"Unsupported media type\"}")));
+                tracker, new ClientError("{\"detail\": \"Unsupported media type\"}", 415)));
     IndexConfiguration indexConfiguration = new IndexConfiguration(123, 2);
     RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.mp3");
 
@@ -130,7 +130,7 @@ class RagBackendClientTest {
     RagBackendClient client =
         new RagBackendClient(
             SimpleHttpClient.createNull(
-                tracker, new ClientError("{\"detail\": \"Unsupported media type\"}")));
+                tracker, new ClientError("{\"detail\": \"Unsupported media type\"}", 415)));
     RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
 
     assertThatThrownBy(() -> client.createSummary(document, "bucketName"))
