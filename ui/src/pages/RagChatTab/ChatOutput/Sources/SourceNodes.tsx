@@ -41,24 +41,14 @@ import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 import { ChatMessageType } from "src/api/chatApi.ts";
 import { WarningTwoTone } from "@ant-design/icons";
 import { cdlOrange050, cdlOrange500 } from "src/cuix/variables.ts";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { useGetModelById } from "src/api/modelsApi.ts";
 
 const SourceNodes = ({ data }: { data: ChatMessageType }) => {
-  const { data: inferenceModels } = useGetLlmModels();
+  const { data: inferenceModel } = useGetModelById(data.inference_model);
 
   const nodes = data.source_nodes.map((node) => (
     <SourceCard key={node.node_id} source={node} />
   ));
-
-  const modelName = () => {
-    if (!data.inference_model) {
-      return "the model";
-    }
-    const model = inferenceModels
-      ?.filter((model) => model.model_id === data.inference_model)
-      .pop();
-    return model?.name ?? "the model";
-  };
 
   if (nodes.length === 0) {
     return (
@@ -69,7 +59,7 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
         <Typography.Text>
           This answer is provided directly by{" "}
           <Typography.Text style={{ fontWeight: "bold" }}>
-            {modelName()}
+            {inferenceModel?.name ?? "the model"}
           </Typography.Text>{" "}
           and does not reference the Knowledge Base.
         </Typography.Text>
