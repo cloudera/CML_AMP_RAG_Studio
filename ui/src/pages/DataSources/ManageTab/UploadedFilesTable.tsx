@@ -70,6 +70,14 @@ import useModal from "src/utils/useModal.ts";
 import { cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 
+const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
+  return file.vectorUploadTimestamp == null ? (
+    <LoadingOutlined spin />
+  ) : (
+    <CheckCircleOutlined />
+  );
+};
+
 function SummaryPopover({
   dataSourceId,
   timestamp,
@@ -189,8 +197,7 @@ const columns = (
     title: <Tooltip title="Document indexing complete">Ready</Tooltip>,
     dataIndex: "vectorUploadTimestamp",
     key: "vectorUploadTimestamp",
-    render: (timestamp?: number) =>
-      timestamp == null ? <LoadingOutlined spin /> : <CheckCircleOutlined />,
+    render: (_, file: RagDocumentResponseType) => <ReadyColumn file={file} />,
   },
   {
     title: "Actions",
