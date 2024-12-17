@@ -103,9 +103,11 @@ from subprocess import CompletedProcess
 
 from llama_index.core.schema import TextNode
 
+from .markdown import MdReader
+
 logger = logging.getLogger(__name__)
 
-def load_chunks(markdown_reader, file_path: Path) -> list[TextNode] | None:
+def load_chunks(markdown_reader: MdReader, file_path: Path) -> list[TextNode] | None:
     directory = file_path.parent
     logger.debug(f"{directory=}")
     with open("docling-output.txt", "a") as f:
