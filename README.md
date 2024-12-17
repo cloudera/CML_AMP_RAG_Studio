@@ -42,6 +42,10 @@ RAG Studio can utilize the local file system or an S3 bucket for storing documen
 
 S3 will also require providing the AWS credentials for the bucket.
 
+### Enhanced Parsing Options:
+
+RAG Studio can optionally enable enhanced parsing by providing the `USE_ENHANCED_PDF_PROCESSING` environment variable.  Enabling this will allow RAG Studio to parse images and tables from PDFs.  When enabling this feature, we strongly recommend using this with a GPU and at least 16GB of memory.
+
 ### Cloudera DataFlow (Nifi) Setup:
 
 Rag Studio provides a Nifi template that can be downloaded for a given Knowledge Base from the `Connections` tab.
