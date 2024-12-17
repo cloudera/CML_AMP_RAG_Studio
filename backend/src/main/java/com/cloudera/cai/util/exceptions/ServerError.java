@@ -38,7 +38,6 @@
 
 package com.cloudera.cai.util.exceptions;
 
-
 public class ServerError extends HttpError {
   public ServerError(String message, int statusCode) {
     super(message, statusCode);

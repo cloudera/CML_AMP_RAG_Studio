@@ -100,6 +100,50 @@ const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
   return <CheckCircleOutlined />;
 };
 
+const SummaryColumn = ({
+  file,
+  summarizationModel,
+  dataSourceId,
+}: {
+  file: RagDocumentResponseType;
+  summarizationModel?: string;
+  dataSourceId: string;
+}) => {
+  if (
+    file.summaryStatus === RagDocumentStatus.ERROR &&
+    file.summaryCreationTimestamp !== null
+  ) {
+    return (
+      <Tooltip title={file.summaryError}>
+        <ExclamationCircleOutlined style={{ color: cdlRed400 }} />
+      </Tooltip>
+    );
+  }
+
+  if (file.summaryCreationTimestamp) {
+    return (
+      <SummaryPopover
+        dataSourceId={dataSourceId}
+        docId={file.documentId}
+        timestamp={file.summaryCreationTimestamp}
+      />
+    );
+  }
+
+  if (!summarizationModel) {
+    return (
+      <Popover
+        title={"No summary available"}
+        content={"A summarization model must be selected."}
+      >
+        <MinusCircleOutlined style={{ fontSize: 16 }} />
+      </Popover>
+    );
+  }
+
+  return <LoadingOutlined spin />;
+};
+
 function SummaryPopover({
   dataSourceId,
   timestamp,
@@ -157,32 +201,14 @@ const columns = (
     ),
     dataIndex: "summaryCreationTimestamp",
     key: "summaryCreationTimestamp",
-    render: (
-      timestamp: RagDocumentResponseType["summaryCreationTimestamp"],
-      data,
-    ) => {
-      if (timestamp) {
-        return (
-          <SummaryPopover
-            dataSourceId={dataSourceId}
-            docId={data.documentId}
-            timestamp={timestamp}
-          />
-        );
-      }
-
-      if (!summarizationModel) {
-        return (
-          <Popover
-            title={"No summary available"}
-            content={"A summarization model must be selected."}
-          >
-            <MinusCircleOutlined style={{ fontSize: 16 }} />
-          </Popover>
-        );
-      }
-
-      return <LoadingOutlined spin />;
+    render: (_, data) => {
+      return (
+        <SummaryColumn
+          file={data}
+          dataSourceId={dataSourceId}
+          summarizationModel={summarizationModel}
+        />
+      );
     },
   },
   {

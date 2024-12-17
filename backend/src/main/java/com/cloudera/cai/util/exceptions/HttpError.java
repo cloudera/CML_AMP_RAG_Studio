@@ -48,5 +48,4 @@ public class HttpError extends RuntimeException {
     super(message);
     this.statusCode = statusCode;
   }
-
 }
