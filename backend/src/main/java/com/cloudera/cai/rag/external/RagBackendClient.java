@@ -79,14 +79,18 @@ public class RagBackendClient {
           new IndexRequest(
               bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
     } catch (UnsupportedMediaType e) {
-      try {
-        throw new UnsupportedMediaType(
-            objectMapper.readValue(e.getMessage(), FastApiError.class).detail());
-      } catch (JsonProcessingException ex) {
-        throw e;
-      }
+      throw convertUnsupportedMediaType(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private UnsupportedMediaType convertUnsupportedMediaType(UnsupportedMediaType e) {
+    try {
+      return new UnsupportedMediaType(
+          objectMapper.readValue(e.getMessage(), FastApiError.class).detail());
+    } catch (JsonProcessingException ex) {
+      throw e;
     }
   }
 
@@ -100,6 +104,8 @@ public class RagBackendClient {
               + ragDocument.documentId()
               + "/summary",
           new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
+    } catch (UnsupportedMediaType e) {
+      throw convertUnsupportedMediaType(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

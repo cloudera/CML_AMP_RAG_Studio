@@ -125,6 +125,29 @@ class RagBackendClientTest {
   }
 
   @Test
+  void createSummary_unsupportedMediaType() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(
+            SimpleHttpClient.createNull(
+                tracker, new UnsupportedMediaType("{\"detail\": \"Unsupported media type\"}")));
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
+
+    assertThatThrownBy(() -> client.createSummary(document, "bucketName"))
+        .isInstanceOf(UnsupportedMediaType.class)
+        .hasMessage("Unsupported media type");
+
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.POST,
+                "http://rag-backend:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
+  }
+
+  @Test
   void deleteDataSource() {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));

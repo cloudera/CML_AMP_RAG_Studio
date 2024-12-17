@@ -43,6 +43,7 @@ import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.cloudera.cai.util.exceptions.UnsupportedMediaType;
 import com.cloudera.cai.util.reconcilers.BaseReconciler;
 import com.cloudera.cai.util.reconcilers.ReconcileResult;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
@@ -143,7 +144,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
       return document
           .withSummaryStatus(Types.RagDocumentStatus.SUCCESS)
           .withSummaryCreationTimestamp(Instant.now());
-    } catch (NotFound e) {
+    } catch (NotFound | UnsupportedMediaType e) {
       return document
           .withSummaryStatus(Types.RagDocumentStatus.ERROR)
           .withSummaryError(e.getMessage())

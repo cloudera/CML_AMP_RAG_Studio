@@ -214,10 +214,13 @@ class DataSourceController:
                 return SUMMARIZATION_DISABLED
             # Delete to avoid duplicates
             indexer.delete_document(doc_id)
-            indexer.index_file(file_path, doc_id)
-            summary = indexer.get_summary(doc_id)
-            assert summary is not None
-            return summary
+            try:
+                indexer.index_file(file_path, doc_id)
+                summary = indexer.get_summary(doc_id)
+                assert summary is not None
+                return summary
+            except NotSupportedFileExtensionError as e:
+                raise HTTPException(status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE, detail=f"Unsupported file extension: {e.file_extension}")
 
     @router.get(
         "/size",
