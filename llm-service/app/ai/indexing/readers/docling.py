@@ -44,6 +44,7 @@ from subprocess import CompletedProcess
 
 from llama_index.core.schema import TextNode
 
+from ....exceptions import DocumentParseError
 from .markdown import MdReader
 
 logger = logging.getLogger(__name__)
@@ -74,4 +75,4 @@ def load_chunks(markdown_reader: MdReader, file_path: Path) -> list[TextNode] | 
         for chunk in chunks:
             chunk.metadata["file_name"] = file_path.name
         return chunks
-    return None
+    raise DocumentParseError(f"docling failed to process {file_path} with return code {process.returncode}")

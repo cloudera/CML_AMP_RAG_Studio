@@ -43,6 +43,7 @@ from typing import Any, List
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
+from ....exceptions import DocumentParseError
 from .base_reader import BaseReader
 from .docling import load_chunks
 from .markdown import MdReader
@@ -98,11 +99,14 @@ class PDFReader(BaseReader):
                 os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         )
         logger.info(f"{docling_enabled=}")
-        if docling_enabled:
-            logger.debug(f"{file_path=}")
-            chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
-            if chunks:
-                return chunks
+        try:
+            if docling_enabled:
+                logger.debug(f"{file_path=}")
+                chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
+                if chunks:
+                    return chunks
+        except DocumentParseError as e:
+            logger.warning(f"Failed to parse document with docling: {e}")
 
         pages: list[Document] = self.inner.load_data(file_path)
         page_counter = PageTracker(pages)
