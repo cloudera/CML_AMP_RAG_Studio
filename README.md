@@ -6,15 +6,30 @@ An AMP that provides a no-code tool to build RAG applications
 
 ### Pre-requisites
 
-RAG Studio requires AWS for access to both LLM and embedding models. Please complete the following steps before using the RAG Studio:
+RAG Studio can be used with both Cloudera Inference (CAII) or AWS Bedrock for selecting LLM and embedding models. 
 
-- A S3 bucket to store the documents
-- The following models configured and accessible via AWS Bedrock. Any of the models not enabled will not function in the UI.
-  - Llama3.1 8b Instruct v1 (`meta.llama3-1-8b-instruct-v1:0`) - This model is required for the RAG Studio to function
-  - Llama3.1 70b Instruct v1 (`meta.llama3-1-70b-instruct-v1:0`)
-  - Cohere Command R+ v1 (`cohere.command-r-plus-v1:0`)
-- For Embedding, you will need to enable the following model in AWS Bedrock:
-  - Cohere English Embedding v3 (`meta.cohere-english-embedding-v3:0`)
+#### Cloudera Inference (CAII) Setup:
+
+To use CAII, you must provide the following environment variables:
+
+- `CAII_DOMAIN` - The domain of the CAII instance
+
+#### AWS Bedrock Setup:
+
+To use AWS Bedrock, you must provide the following environment variables:
+
+- `AWS_DEFAULT_REGION` - defaults to `us-west-2`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+#### Document Storage:
+
+RAG Studio can utilize the local file system or an S3 bucket for storing documents. If you are using an S3 bucket, you will need to provide the following environment variables:
+
+- `S3_RAG_BUCKET_PREFIX` - A prefix added to all S3 paths used by Rag Studio
+- `S3_RAG_DOCUMENT_BUCKET` - The S3 bucket where uploaded documents are stored
+
+S3 will also require providing the AWS credentials for the bucket.
 
 ### Cloudera DataFlow (Nifi) Setup:
 

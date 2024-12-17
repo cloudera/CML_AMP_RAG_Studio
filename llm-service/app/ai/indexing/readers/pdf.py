@@ -46,7 +46,7 @@ from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from .base_reader import BaseReader
-from .simple_file import SimpleFileReader
+from .markdown import MdReader
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=False)
-        self.markdown_reader = SimpleFileReader(*args, **kwargs)
+        self.markdown_reader = MdReader(*args, **kwargs)
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
         logger.debug(f"{file_path=}")
@@ -114,6 +114,7 @@ class PDFReader(BaseReader):
         docling_enabled = (
             os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         )
+        logger.info(f"{docling_enabled=}")
         if not docling_enabled:
             return None
         directory = file_path.parent

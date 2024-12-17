@@ -1,0 +1,165 @@
+BNL\_47931 AD/RHC-113 Informal Report
+
+A Review of the Saturation Induced Harmonics in the 80 mm Aperture RHIC Arc Dipole Magnets
+
+R. Gupta, P. Thompson and P. Wanderer
+
+August 1992
+
+R HI C P R 0 J E C T
+
+Brookhaven National Laboratory Associated Universities, Inc. Upton, NY 11973
+
+Under Contract No. DE-AC02-76CHOO016 with the UNITED STATES DEPARTMENT OF ENERGY
+
+A Review of the Saturation Induced Harmonics in the 80 mm Aperture RHIC Arc Dipole Magnets
+
+R. Gupta, P. Thompson and P. Wanderer
+
+1. Introduction
+
+In this note we shall review, at times with a sense of history, the measured and computed saturation induced harmonics in the cross section of all and short 80 mm aperture RHIC dipole magnets built so far. A somewhat similar study for a fewer magnets has been presented earlier in reference 1 . With the help of several iterations in the crOSS section, we have been able to reduce the saturation induced b2 and b4 harmonics by more then an order of magnitude. We shall briefly describe those iterations. The calculations described in this note have generally been done with the computer program POISSON. However, while comparing the calculations and measurements, we have included the results of field calculations with the code PEZD and MDP as well. The measurements are the average of up and down ramps. A small difference between the calculations and measurements has been observed consistently in the saturation induced b2 and b4 harmonics in all magnets DRAOO1 through DRA0O9. More work is still needed to the current dependence of skew quadrupole harmonic (a1) We refer to current dependence of harmonics loosely as the saturation induced harmonics; but in an actual magnet it includes other effects like the harmonics induced by the coil deformation due to lorentz forces, etc. long yoke explain
+
+2 . Measurements
+
+In Fig. 2.1 through 2.4, we have summarized the measured current dependence of b2, b4, b6 and a1 harmonics in the 80 mm aperture RHIC dipoles built and tested to date. We present measurements only after 2 kAmp and are the results of the averaging the up and down ramp. In order to make it easier to compare, we have shifted all harmonics to start them from a zero value at 2 kAmp. These measurements have been presented and discussed in detail earlier in various Testing and Measuring Group Notes by Wanderer? et.al. and in Magnet Division Notes by Thompson? . Fig; they
+
+One can note in Fig. 2.1 and Fig. 2.2 that the b2 and b4 saturation in the most recent dipole DRSGR (DRSOOG Rebuilt with saturation suppressor hole) is signifcantly lower4 then in the earliest dipole DRAI through DRA4. In DRAl the maximum measured b2 saturation till the design current of 5 kAmp was 43 unit; in contrast to that in DRSOOGR it is under 2 unit. Similarly; in DRAI the maximum measured b4 saturation till 5 kAmp current was 8.5 unit; in contrast in DRSGRit is under 0.5 unit. The b6 saturation (Fig. 2.3) had a large fluctuations in the measurements in the earlier RHIC dipoles. It may have been -1 unit in DRAl; in magnet DRSGR, it is observed to be 1.2 unit maximum
+
+In 2.4, we have plotted the a1 saturation in the and short dipoles. It is clear that a large magnet to magnet variation has been observed both in the and in the short dipoles. A current dependence is to be expected in the skew quadrupole harmonics (a1) at high current when the fux lines can not be contained in the iron and start going through the low carbon steel cryostat which is asymmetrically located with respect to the magnet center. However, n0 current dependence was to be expected in the earlier magnets which were located symmetrically in the cryostat and in the short dipoles which are not inside a cryostat. long Fig: long yoke they long put
+
+In Table 2.1 through Table 2.9, we have presented the numerical values of the harmonics plotted in 2.1 through Fig. 2.4 for each magnet DRAOOI through DRDOO9. We have not presented the short magnets as most of them were measured with a 30' coil. The 30 coil measurements in the short magnets not only reflect the measured harmonics in the straight section but also include the effects of the ends (coil length 36.9" ), particularly in the iron saturation at high current where field lines tend to move more toward the two ends. The measurements with the 9" coils in magnets DRSOO6 and DRSOO8 have been described in detail in reference 4. long Fig:
+
+History of 62 Saturation in RHIC Dipoles
+
+<missing-text>
+<missing-text>
+History of b6 Saturation in RHIC Dipoles
+
+<missing-text>
+History of al Saturation in RHIC Dipoles
+
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+3. Calculations
+
+In this section we present the results of the POISSON calculations for all magnets built and tested 50 namely DRAOOI through DRDOO9. We have ignored the effect of cryostat wall on field harmonics, which is present in all magnets. The most recent short magnets are discussed in reference 4 Just as in the case of measurements, we have shifted the harmonics to start them from zero, however, in the case of calculations are made zero at zero current (i.e., for %u calculations) instead of 2 kAlong far , long they
+
+The magnets DRAOOI, DRAOO2 and DRAOO3 were built at BBC with an identical iron Cross section. A POISSON model for them is shown in 3.1 and the results of calculations are given in Table 3.1. These magnets have a 5 mm gap between the coil and yoke. The POISSON model is made as per the drawings obtained from BBC. Fig;
+
+The magnet DRAOO4 was built at BNL with some modifications in the the DRA0O3 CrOSS sectionA POISSON model for DRAOO4 is shown in 3.2 and the results of calculations are given in Table 3.2. This magnet also has a 5 mm gap between the coil and yoke. The iron yoke model is based on the drawing No. 22-242.04-4 Revision B. Fig:
+
+The magnets DRBOO5 and DRBOO6 were built at BNL with an identical iron crOSS section. A POISSON model for them is shown in 3.3 and the results of calculations are given in Table 3.3. These magnets have a 10 mm gap between the coil and The model is based on the drawing No. 22-398.05-5. The is made of non-magnetic stainless steel. Fig; yoke. yoke key
+
+The magnets DRCOO7 and DRCOO8 were built at BNL with an identical iron cross section. A POISSON model for them is shown in Fig. 3.4 and the results of calculations are given in Table 3.4. These magnets have à 10 mm gap between the coil and As in the case of DRBOO5, the iron model is based on the drawing No. 22-398.05-5. The only difference between the DRBOO5 (or DRBOO6) and DRCOO7 (or DRCOO8) is that the material is changed from non-magnetic stainless steel to low carbon magnet steel. yoke. key
+
+The magnet DRDOO9 was built at BNL with a new iron Cross section. A POISSON model for it is shown in 3.5 and the results of calculations are given in Table 3.5. This magnet, like all other dipoles starting from DRBOO5, has a 10 mm gap between the coil and the The POISSON model for the is based on the drawing No. 22-714.02-5 Revision A Fig; yoke. yoke
+
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+<missing-text>
+4. Calculations versus Measurements
+
+In this section we compare measurements and the calculations for the current dependence of the field harmonics (b2 and b4 only) in all magnets . The calculations are done for the saturation induced harmonics with the computer codes POISSON, PEZD and MDP. Tle current dependence on the feld harmonics maj also come due to a small coil deformation as a result of the Lorentz force on the coil. This has not been included in the calculations. The b6 harmonic could not be obtained to the desired accuracy in the earlier magnets (DRAOOI through DRCO08) to make any meaningful comparison. In the latest magnet DRDO09, the agreement between the calculations and measurements for the current dependence of b6 is better than 4 unit. long long
+
+In Fig. 4.1 and 4.2 we have plotted computed and measured b2 and b4 as a function of current for the three magnets DRAOOI, DRAO02 and DRA003, made with the same iron cross-section. Tle calculations are made with the code POISSON, PEZD and MDP. Fig
+
+In 4.3 and 4.4 we have done the same comparison between the calculations and measurements for the magnet DRAOO4. The calculations are made with the code POISSON, PEZD and MDP. FigFig;
+
+In 4.5 and 4.6 b2 and b4 are plotted for magnets DRBOO5 and DRBOO6 for the calculations and measurements. The calculations are made with the code POISSON, PEZD and MDP. Fig; Fig.
+
+In the case of magnets DRCOO7 and DRCO08 the calculations are made with POISSON and PEZD The computed and measured b2 and b4 are plotted in Fig. 4.7 and Fig. 4.8.
+
+In 4.9 and Fig- 4.10 we have done the same comparison between the calculations and measurements for the magnet DRDOO9. The calculations are made with the code POISSON and PEZD Fig
+
+Computed and measured b2 in DRAOOI , DRAOO2 and DRAOO3
+
+<missing-text>
+Computed and measured b4 in DRAOOI, DRAOO2 and DRAOO3
+
+<missing-text>
+Computed and measured b2 in DRAOO4
+
+[GUPTARHICDIPIDRA4 RESO;5 2 0PARHI81PPRA88 2E2,5592
+
+<missing-text>
+
+ 4 IGUPTAMEASURE RHICIDRAOO4A4 HARM:2
+ 4
+ 4
+
+<missing-text>
+
+ 8 2
+ 8 2
+
+Computed and measured 64 in DRAOO4
+
+ EGUPTSRHICDIPBRA884PEPRES:2
+
+<missing-text>
+
+ 8 [GUPTAMEASURE RHICIDRAOOZA4 HARM:2
+
+Computed and measured b2 in DRBOO5 and DRBOO6
+
+<missing-text>
+Computed and measured b4 in DRBOO5 and DRBOO6
+
+<missing-text>
+Computed and measured b2 in DRCOO7 and DRCOO8
+
+<missing-text>
+Computed and measured b4 in DRCOO7 and DRCOO8
+
+<missing-text>
+Computed and measured 62 in DRDOO9
+
+<missing-text>
+Computed and measured b4 in DRDOO9
+
+<missing-text>
+5. DRE cross section
+
+For the sake of completeness  we present the expected and computed harmonics in the next series of magnets DREOIl and DREO12. The only difference in the yoke design between DRDOO9 and DREOIl is the presence of a : diameter saturation suppressor hole at a radius of 7.5 cm and at an angle of 330 degree. It has been described in detail in reference 5. Computed harmonics are obtained from the POISSON calculations and the expected harmonics are obtained by first taking the measured harmonics in the magnet DRDOO9, and then empirically adding to them the differences between the calculations and measurements in DRDO09. The results are given in 5.1. long Fig;
+
+<missing-text>
+6 . Discussion
+
+One can see from Fig. 2.1 that we have been able t0 reduce the current dependence of the sextupole harmonic (b2) by over an order of magnitude between 2 kA and 5 kA. The value of design current in the arc dipole for RHIC operation is ~5 kA. In the first magnet DRAOO1, the maximum variation in the b2 harmonic between the 2 kA and 5 kA current was over 42 unit and in the most recent short magnet this variation is reduced to under 2 unit. In the dipole magnet DREOll, we expect this to be under 2 unit as well. Similarly one can see from 2.2 that b4 variation has also been reduced by over an order of magnitude between 2 kA and 5 kA. In the first magnet DRAOOI, the maximum variation in the b4 harmonic between the 2 kA and 5 kA current was over 8 unit and in the most recent short magnet this variation is reduced to under 1/2 unit. In the dipole magnet DREOll, we expect the current dependent variation in the b4 harmonic to be under 1/2 unit as well. In the following paragraph we shall discuss what has been done to achieve this. We shall only discuss the features which were important from the iron saturation of view only and mechanical changes in the would be ignored. long long Fig; long long design point
+
+DRAOOI, DRAOO2 and DRA0O3 dipoles were constructed by BBC. They had a 5mm radial gap between coil and and had a notch at the location. A small gap and a notch both give a large iron saturation and hence we had over 42 unit of b2 harmonic and -8 unit of b4 DRAOO4 had the same basic feature except for some small changes near the outer surface of iron. These changes do not alter the iron saturation significantly. pole yoke pole
+
+To reduce iron saturation; the radial gap between the coil and was increased from 5mm to lOmm and the coil-yoke locating notch was moved from to midplane in the magnets DRBOO5 and DRBOO6. This brought b2 saturation down from +42 unit to -6 unit and b4 saturation from -8.5 unit to -3.6 unit. As before, these are the maximum deviation between 2 kA and 5 kA. This magnet had a non-magnetic stainless steel midplane In the magnets DRCOO7 and DRCO08, the material of this was changed from non-magnetic stainless steel to magnetic low carbon steel This change reduced b2 saturation to -2.5 unit and b4 saturation to -2.4 unit. In between a short magnet was built where the 5 mm midplane notch was modified to a 5mm iron tooth That reduced b2 saturation to +8 unit and b4 to -1.1 unit. However, the tooth idea was not adopted in DRCOO7 because of its mechanical complications. yoke pole yoke key. key key key.
+
+Neither the midplane notch nor the tooth (better magnetically but worse mechanically) was preferred for the production magnets. It is believed that a locating notch would be better able to define the location of the coil. As mentioned earlier, notch is bad magnetically. That in itself would make an already unacceptable saturation worse\_ pole pole pole
+
+Therefore, a detailed study was undertaken to modify the cross section to significanty change the magnetics of the with the desired mechanical properties. After considering a large number of variations, the one chosen for DRDOO9 was the one in which the location of the bypass hole was changed. This, with a notch and stainless steel actually improved the iron saturation (in b4 harmonic) relative to DRBOO5 instead of making it worse. The b2 saturation became +7 unit and b4 -1.3 unit. yoke pole key,
+
+Finally a small saturation suppressor hole was added to practically eliminate all b2 and b4 saturation in DREOII cross section Before we discuss that, let uS examine the differences between the calculations and measurements as are given in Table 6.1. These calculations are done with the code POISSON and ignore cryostat. Typically, at 5 kA cryostat induced b2 is ~+1.5 unit and b4 is ~-0.1 unit. Moreover, as mentioned earlier; the calculations are done only for the saturation induced harmonics and the harmonics due to coil deformation as a result of the Lorentz force on the coil are ignored. We have also ignored a small gap (of the order of 10 mil) between the and bottom halves of the yokes. Some calculations show that this maj give as much of 2 units of b2 and 0.2 units of b4 at 5 kA they they top
+
+In Table 6.1, we have also given the maximum change in the measured values of b2 and b4 harmonics till 5 kA. The diference between the calculations and measurements did not bother much when the actual value of the saturation induced harmonic was However, at this stage did matter as the target to make those harmonic becamne so small. The target was to make b2 saturation less then 2 unit and b4 saturation less then ! unit. This is within the difference between the calculations and measurements Therefore, we empirically cancel out these small unexplained differences between the calculations and measurements (in this particular cross section) in arriving to an optimized location of the hole. The approach indeed worked as can be seen in Fig. 2.1 and 2.2 and described in detail in reference 4. In these figures please see curves marked for DRSGR where DRSGR represents the short dipole "DRSOO6 rebuilt with the saturation suppressor holes" large. they Fig.
+
+<missing-text>
+7 References
+
+ 1. P.A. Thompson; et.al., "Iron saturation control in RHIC dipole magnets" Presented at 1991 Particle Accelerator Conference
+ 2 . Testing and Measurement Group Notes describing the results of magnetic measurements.
+ 3 . P.A. Thompson, Magnet Division Notes describing design and comparing calculations with measurements.
+ 4 R. Gupta, "DRSOO6 with Saturation Suppressor Holes" = Magnet Division Note No. 457-16 (RHIC-MD-165), July 28, 1992.
+ 5. R. Gupta, "Reducing iron saturation in arc dipoles with a saturation suppressor hole" Magnet Division Note No. 447-16 (RHIC-MD-158) June 10, 1992.

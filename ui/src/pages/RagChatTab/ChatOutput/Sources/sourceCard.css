@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -34,47 +34,20 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
-import { Typography } from "antd";
-import { ChunkContentsResponse } from "src/api/ragQueryApi.ts";
-import { SourceCardTitle } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
+ */
 
-const MetaData = ({
-  metadata,
-}: {
-  metadata: ChunkContentsResponse["metadata"];
-}) => {
-  const MetaDataItem = ({
-    label,
-    value,
-  }: {
-    label: string;
-    value: string | number | undefined;
-  }) => (
-    <>
-      {value && (
-        <Typography.Text>
-          {label}: {value}
-        </Typography.Text>
-      )}
-    </>
-  );
-
-  const hasMetadata = metadata.row_number ?? metadata.page_number;
-
-  return (
-    <>
-      <SourceCardTitle titleText="Metadata" />
-      {hasMetadata ? (
-        <>
-          <MetaDataItem label="Row number" value={metadata.row_number} />
-          <MetaDataItem label="Page number" value={metadata.page_number} />
-        </>
-      ) : (
-        <Typography.Text type={"secondary"}>N/A</Typography.Text>
-      )}
-    </>
-  );
-};
-
-export default MetaData;
+.styled-markdown table {
+    border: 1px solid #838b92;
+    border-collapse: collapse;
+}
+.styled-markdown table td {
+    border: 1px solid #838b92;
+    padding: 4px;
+}
+.styled-markdown table th {
+    padding: 4px;
+    border: 1px solid #838b92;
+}
+.styled-markdown table thead {
+    border-bottom: 2px solid #838b92;
+}
