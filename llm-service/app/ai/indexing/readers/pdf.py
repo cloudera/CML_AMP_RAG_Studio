@@ -35,17 +35,16 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import logging
 import os
-import subprocess
+import logging
 from pathlib import Path
-from subprocess import CompletedProcess
 from typing import Any, List
 
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from .base_reader import BaseReader
+from .docling import load_chunks
 from .markdown import MdReader
 
 logger = logging.getLogger(__name__)
@@ -95,10 +94,15 @@ class PDFReader(BaseReader):
         self.markdown_reader = MdReader(*args, **kwargs)
 
     def load_chunks(self, file_path: Path) -> list[TextNode]:
-        logger.debug(f"{file_path=}")
-        chunks: list[TextNode] = self.process_with_docling(file_path)
-        if chunks:
-            return chunks
+        docling_enabled: bool = (
+                os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+        )
+        logger.info(f"{docling_enabled=}")
+        if docling_enabled:
+            logger.debug(f"{file_path=}")
+            chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
+            if chunks:
+                return chunks
 
         pages: list[Document] = self.inner.load_data(file_path)
         page_counter = PageTracker(pages)
@@ -109,36 +113,3 @@ class PDFReader(BaseReader):
         page_counter.populate_chunk_page_numbers(chunks)
 
         return chunks
-
-    def process_with_docling(self, file_path: Path) -> list[TextNode] | None:
-        docling_enabled = (
-            os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
-        )
-        logger.info(f"{docling_enabled=}")
-        if not docling_enabled:
-            return None
-        directory = file_path.parent
-        logger.debug(f"{directory=}")
-        with open("docling-output.txt", "a") as f:
-            process: CompletedProcess[bytes] = subprocess.run(
-                [
-                    "docling",
-                    "-v",
-                    "--image-export-mode=placeholder",
-                    "--abort-on-error",
-                    f"--output={directory}",
-                    str(file_path),
-                ],
-                stdout=f,
-                stderr=f,
-            )
-        logger.info(f"docling return code = {process.returncode}")
-        # todo: figure out page numbers & look into the docling llama-index integration
-        markdown_file_path = file_path.with_suffix(".md")
-        if process.returncode == 0 and markdown_file_path.exists():
-            # update chunk metadata to point at the original pdf
-            chunks = self.markdown_reader.load_chunks(markdown_file_path)
-            for chunk in chunks:
-                chunk.metadata["file_name"] = file_path.name
-            return chunks
-        return None

@@ -6,6 +6,7 @@ from typing import Dict, Type
 from .readers.base_reader import BaseReader
 from .readers.csv import CSVReader
 from .readers.docx import DocxReader
+from .readers.images import ImagesReader
 from .readers.json import JSONReader
 from .readers.markdown import MdReader
 from .readers.pdf import PDFReader
@@ -22,6 +23,9 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".ppt": PptxReader,
     ".csv": CSVReader,
     ".json": JSONReader,
+    ".jpg": ImagesReader,
+    ".jpeg": ImagesReader,
+    ".png": ImagesReader,
 }
 
 
