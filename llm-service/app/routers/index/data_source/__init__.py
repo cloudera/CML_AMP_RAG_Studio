@@ -44,11 +44,7 @@ from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import (
-    data_sources_metadata_api,
-    document_storage,
-    models,
-)
+from ....services import data_sources_metadata_api, document_storage, models
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +137,7 @@ class DataSourceController:
         doc_id: str,
         request: RagIndexDocumentRequest,
     ) -> None:
+        raise RuntimeError(":(")
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
@@ -170,7 +167,10 @@ class DataSourceController:
             try:
                 indexer.index_file(file_path, doc_id)
             except NotSupportedFileExtensionError as e:
-                raise HTTPException(status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE, detail=f"Unsupported file extension: {e.file_extension}")
+                raise HTTPException(
+                    status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                    detail=f"Unsupported file extension: {e.file_extension}",
+                )
 
     @router.get(
         "/documents/{doc_id}/summary",
@@ -199,6 +199,7 @@ class DataSourceController:
         doc_id: str,
         request: SummarizeDocumentRequest,
     ) -> str:
+        raise RuntimeError(":(")
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             doc_storage = document_storage.from_environment()
@@ -220,7 +221,10 @@ class DataSourceController:
                 assert summary is not None
                 return summary
             except NotSupportedFileExtensionError as e:
-                raise HTTPException(status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE, detail=f"Unsupported file extension: {e.file_extension}")
+                raise HTTPException(
+                    status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                    detail=f"Unsupported file extension: {e.file_extension}",
+                )
 
     @router.get(
         "/size",

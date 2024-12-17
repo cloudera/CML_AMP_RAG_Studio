@@ -120,14 +120,16 @@ const SummaryColumn = ({
     );
   }
 
-  if (file.summaryCreationTimestamp) {
-    return (
-      <SummaryPopover
-        dataSourceId={dataSourceId}
-        docId={file.documentId}
-        timestamp={file.summaryCreationTimestamp}
-      />
-    );
+  if (file.summaryCreationTimestamp == null) {
+    if (file.summaryStatus === RagDocumentStatus.ERROR) {
+      return (
+        <Tooltip title={file.summaryError}>
+          <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
+          <LoadingOutlined spin />
+        </Tooltip>
+      );
+    }
+    return <LoadingOutlined spin />;
   }
 
   if (!summarizationModel) {
@@ -141,7 +143,13 @@ const SummaryColumn = ({
     );
   }
 
-  return <LoadingOutlined spin />;
+  return (
+    <SummaryPopover
+      dataSourceId={dataSourceId}
+      docId={file.documentId}
+      timestamp={file.summaryCreationTimestamp}
+    />
+  );
 };
 
 function SummaryPopover({
