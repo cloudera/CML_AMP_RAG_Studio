@@ -74,10 +74,10 @@ public class Types {
       String createdById,
       String updatedById,
       @With Instant summaryCreationTimestamp,
-      RagDocumentStatus summaryStatus,
-      String summaryError,
-      RagDocumentStatus indexingStatus,
-      String indexingError) {}
+      @With RagDocumentStatus summaryStatus,
+      @With String summaryError,
+      @With RagDocumentStatus indexingStatus,
+      @With String indexingError) {}
 
   @Getter
   public enum ConnectionType {
