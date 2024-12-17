@@ -45,7 +45,7 @@ import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.exceptions.NotFound;
-import com.cloudera.cai.util.exceptions.UnsupportedMediaType;
+import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
@@ -147,7 +147,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       return document
           .withIndexingStatus(RagDocumentStatus.SUCCESS)
           .withVectorUploadTimestamp(Instant.now());
-    } catch (NotFound | UnsupportedMediaType e) {
+    } catch (NotFound | ClientError e) {
       return document
           .withIndexingStatus(RagDocumentStatus.ERROR)
           .withIndexingError(e.getMessage())

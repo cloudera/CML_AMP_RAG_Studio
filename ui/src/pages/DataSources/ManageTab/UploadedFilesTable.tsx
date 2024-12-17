@@ -70,7 +70,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
-import { cdlRed400, cdlWhite } from "src/cuix/variables.ts";
+import { cdlAmber600, cdlRed400, cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 
 const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
@@ -89,7 +89,7 @@ const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
     if (file.indexingStatus === RagDocumentStatus.ERROR) {
       return (
         <Tooltip title={file.indexingError}>
-          <WarningOutlined style={{ color: cdlRed400 }} />
+          <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
           <LoadingOutlined spin />
         </Tooltip>
       );
