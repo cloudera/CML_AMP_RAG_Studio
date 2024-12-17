@@ -82,11 +82,11 @@ const ChatMessage = ({
               ) : (
                 <Images.Models
                   style={{
-                    padding: "1",
+                    padding: "4",
                     backgroundColor: cdlGray200,
                     borderRadius: 20,
-                    width: 20,
-                    height: 18,
+                    width: 26,
+                    height: 24,
                     flex: 1,
                   }}
                 />
