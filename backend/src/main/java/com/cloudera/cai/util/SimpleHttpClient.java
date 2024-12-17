@@ -39,6 +39,7 @@
 package com.cloudera.cai.util;
 
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.cloudera.cai.util.exceptions.UnsupportedMediaType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -76,6 +77,10 @@ public class SimpleHttpClient {
       int statusCode = response.statusCode();
       if (statusCode == 404) {
         throw new NotFound("Failed to post to " + url + " code: " + statusCode);
+      }
+
+      if (statusCode == 415) {
+        throw new UnsupportedMediaType(response.body());
       }
 
       if (statusCode >= 400) {
