@@ -116,22 +116,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       }
 
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
-      try {
-        ragBackendClient.indexFile(document, bucketName, indexConfiguration);
-        document =
-            document
-                .withIndexingStatus(RagDocumentStatus.SUCCESS)
-                .withVectorUploadTimestamp(Instant.now());
-      } catch (NotFound e) {
-        document =
-            document
-                .withIndexingStatus(RagDocumentStatus.ERROR)
-                .withIndexingError(e.getMessage())
-                .withVectorUploadTimestamp(Instant.EPOCH);
-      } catch (Exception e) {
-        document =
-            document.withIndexingStatus(RagDocumentStatus.ERROR).withIndexingError(e.getMessage());
-      }
+      document = doIndexing(document, indexConfiguration);
       String updateSql =
           """
         UPDATE rag_data_source_document
@@ -153,6 +138,25 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
           });
     }
     return new ReconcileResult();
+  }
+
+  private RagDocument doIndexing(RagDocument document, IndexConfiguration indexConfiguration) {
+    try {
+      ragBackendClient.indexFile(document, bucketName, indexConfiguration);
+      return
+          document
+              .withIndexingStatus(RagDocumentStatus.SUCCESS)
+              .withVectorUploadTimestamp(Instant.now());
+    } catch (NotFound e) {
+      return
+          document
+              .withIndexingStatus(RagDocumentStatus.ERROR)
+              .withIndexingError(e.getMessage())
+              .withVectorUploadTimestamp(Instant.EPOCH);
+    } catch (Exception e) {
+      return
+          document.withIndexingStatus(RagDocumentStatus.ERROR).withIndexingError(e.getMessage());
+    }
   }
 
   private IndexConfiguration fetchIndexConfiguration(Long dataSourceId) {
