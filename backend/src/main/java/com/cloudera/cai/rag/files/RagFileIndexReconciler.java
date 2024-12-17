@@ -44,6 +44,7 @@ import static com.cloudera.cai.rag.external.RagBackendClient.*;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.external.RagBackendClient;
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
@@ -115,14 +116,18 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       }
 
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
-      Instant updateTimestamp = null;
       try {
         ragBackendClient.indexFile(document, bucketName, indexConfiguration);
-        updateTimestamp = Instant.now();
         document =
             document
                 .withIndexingStatus(RagDocumentStatus.SUCCESS)
-                .withVectorUploadTimestamp(updateTimestamp);
+                .withVectorUploadTimestamp(Instant.now());
+      } catch (NotFound e) {
+        document =
+            document
+                .withIndexingStatus(RagDocumentStatus.ERROR)
+                .withIndexingError(e.getMessage())
+                .withVectorUploadTimestamp(Instant.EPOCH);
       } catch (Exception e) {
         document =
             document.withIndexingStatus(RagDocumentStatus.ERROR).withIndexingError(e.getMessage());
@@ -133,14 +138,13 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
         SET vector_upload_timestamp = :upload_timestamp, indexing_status = :indexingStatus, indexing_error = :indexingError, time_updated = :now
         WHERE id = :id
       """;
-      Instant finalUpdateTimestamp = updateTimestamp;
       RagDocument finalDocument = document;
       jdbi.useHandle(
           handle -> {
             try (Update update = handle.createUpdate(updateSql)) {
               update
                   .bind("id", finalDocument.id())
-                  .bind("upload_timestamp", finalUpdateTimestamp)
+                  .bind("upload_timestamp", finalDocument.vectorUploadTimestamp())
                   .bind("indexingStatus", finalDocument.indexingStatus())
                   .bind("indexingError", finalDocument.indexingError())
                   .bind("now", Instant.now())

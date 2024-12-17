@@ -70,7 +70,7 @@ public class Types {
       Long sizeInBytes,
       String extension,
       Instant timeCreated,
-      Instant timeUpdated,
+      @With Instant timeUpdated,
       String createdById,
       String updatedById,
       @With Instant summaryCreationTimestamp,
