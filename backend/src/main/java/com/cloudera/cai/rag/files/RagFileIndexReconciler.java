@@ -139,9 +139,12 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       ragBackendClient.indexFile(document, bucketName, indexConfiguration);
       updateTimestamp = Instant.now();
       log.info("finished requesting indexing of file {}", document);
-    } catch (NotFound e) {
+    } catch (Exception e) {
       updateTimestamp = Instant.EPOCH;
-      log.info("not found exception from RAG Backend: {}", e.getMessage());
+      log.info("exception from RAG Backend: {}", e.getMessage());
+
+      document.setIndexingStatus(RagDocumentStatus.ERROR);
+      document.setIndexingError(e.getMessage());
     }
     return updateTimestamp;
   }
