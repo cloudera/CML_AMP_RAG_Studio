@@ -42,6 +42,7 @@ import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.configuration.AppConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
+import com.cloudera.cai.util.exceptions.UnsupportedMediaType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.io.IOException;
