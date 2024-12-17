@@ -170,6 +170,65 @@ class RagFileSummaryReconcilerTest {
               assertThat(reconciler.isEmpty()).isTrue();
               RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
               assertThat(updatedDocument.summaryCreationTimestamp()).isEqualTo(Instant.EPOCH);
+              assertThat(updatedDocument.summaryStatus()).isEqualTo(Types.RagDocumentStatus.ERROR);
+              assertThat(updatedDocument.summaryError()).isEqualTo("not found");
+              assertThat(requestTracker.getValues())
+                  .hasSize(1)
+                  .contains(
+                      new RagBackendClient.TrackedRequest<>(
+                          new RagBackendClient.SummaryRequest(
+                              "rag-files", "path_in_s3", "myfile.pdf")));
+            });
+  }
+
+  @Test
+  void reconcile_exception() {
+    Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
+    RagFileSummaryReconciler reconciler =
+        createTestInstance(requestTracker, new RuntimeException("document summarization failed"));
+
+    String documentId = UUID.randomUUID().toString();
+    long dataSourceId =
+        ragDataSourceRepository.createRagDataSource(
+            new RagDataSource(
+                null,
+                "test_datasource",
+                "test_embedding_model",
+                "summarizationModel",
+                1024,
+                20,
+                null,
+                null,
+                "test-id",
+                "test-id",
+                Types.ConnectionType.API,
+                null,
+                null));
+    RagDocument document =
+        RagDocument.builder()
+            .documentId(documentId)
+            .dataSourceId(dataSourceId)
+            .s3Path("path_in_s3")
+            .extension("pdf")
+            .filename("myfile.pdf")
+            .timeCreated(Instant.now())
+            .timeUpdated(Instant.now())
+            .createdById("test-id")
+            .build();
+    Long id = ragFileRepository.saveDocumentMetadata(document);
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
+        .isNull();
+
+    reconciler.submit(document.withId(id));
+    await().until(reconciler::isEmpty);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(reconciler.isEmpty()).isTrue();
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.summaryCreationTimestamp()).isNull();
+              assertThat(updatedDocument.summaryStatus()).isEqualTo(Types.RagDocumentStatus.ERROR);
+              assertThat(updatedDocument.summaryError()).isEqualTo("document summarization failed");
               assertThat(requestTracker.getValues())
                   .hasSize(1)
                   .contains(

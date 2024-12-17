@@ -120,7 +120,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       String updateSql =
           """
         UPDATE rag_data_source_document
-        SET vector_upload_timestamp = :upload_timestamp, indexing_status = :indexingStatus, indexing_error = :indexingError, time_updated = :now
+        SET vector_upload_timestamp = :uploadTimestamp, indexing_status = :indexingStatus, indexing_error = :indexingError, time_updated = :now
         WHERE id = :id
       """;
       RagDocument finalDocument = document;
@@ -129,7 +129,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
             try (Update update = handle.createUpdate(updateSql)) {
               update
                   .bind("id", finalDocument.id())
-                  .bind("upload_timestamp", finalDocument.vectorUploadTimestamp())
+                  .bind("uploadTimestamp", finalDocument.vectorUploadTimestamp())
                   .bind("indexingStatus", finalDocument.indexingStatus())
                   .bind("indexingError", finalDocument.indexingError())
                   .bind("now", Instant.now())
@@ -143,19 +143,16 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   private RagDocument doIndexing(RagDocument document, IndexConfiguration indexConfiguration) {
     try {
       ragBackendClient.indexFile(document, bucketName, indexConfiguration);
-      return
-          document
-              .withIndexingStatus(RagDocumentStatus.SUCCESS)
-              .withVectorUploadTimestamp(Instant.now());
+      return document
+          .withIndexingStatus(RagDocumentStatus.SUCCESS)
+          .withVectorUploadTimestamp(Instant.now());
     } catch (NotFound e) {
-      return
-          document
-              .withIndexingStatus(RagDocumentStatus.ERROR)
-              .withIndexingError(e.getMessage())
-              .withVectorUploadTimestamp(Instant.EPOCH);
+      return document
+          .withIndexingStatus(RagDocumentStatus.ERROR)
+          .withIndexingError(e.getMessage())
+          .withVectorUploadTimestamp(Instant.EPOCH);
     } catch (Exception e) {
-      return
-          document.withIndexingStatus(RagDocumentStatus.ERROR).withIndexingError(e.getMessage());
+      return document.withIndexingStatus(RagDocumentStatus.ERROR).withIndexingError(e.getMessage());
     }
   }
 
