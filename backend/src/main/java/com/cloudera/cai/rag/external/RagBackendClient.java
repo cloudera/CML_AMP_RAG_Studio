@@ -44,6 +44,8 @@ import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.UnsupportedMediaType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +55,9 @@ import org.springframework.stereotype.Component;
 public class RagBackendClient {
   private final SimpleHttpClient client;
   private final String indexUrl;
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
+  private record FastApiError(String detail) {}
 
   @Autowired
   public RagBackendClient(SimpleHttpClient client) {
@@ -73,6 +78,13 @@ public class RagBackendClient {
               + "/index",
           new IndexRequest(
               bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
+    } catch (UnsupportedMediaType e) {
+      try {
+        throw new UnsupportedMediaType(
+            objectMapper.readValue(e.getMessage(), FastApiError.class).detail());
+      } catch (JsonProcessingException ex) {
+        throw e;
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
