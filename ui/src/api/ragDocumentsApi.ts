@@ -111,11 +111,11 @@ const createRagDocumentMutation = async (
   });
 };
 
-enum RagDocumentStatus {
-  QUEUED,
-  IN_PROGRESS,
-  SUCCESS,
-  ERROR,
+export enum RagDocumentStatus {
+  QUEUED = "QUEUED",
+  IN_PROGRESS = "IN_PROGRESS",
+  SUCCESS = "SUCCESS",
+  ERROR = "ERROR",
 }
 
 export interface RagDocumentResponseType {

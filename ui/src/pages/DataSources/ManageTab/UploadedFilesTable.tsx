@@ -49,11 +49,14 @@ import {
 import Icon, {
   CheckCircleOutlined,
   DeleteOutlined,
+  ExclamationCircleOutlined,
   LoadingOutlined,
   MinusCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
+  RagDocumentStatus,
   useDeleteDocumentMutation,
   useGetRagDocuments,
 } from "src/api/ragDocumentsApi.ts";
@@ -67,15 +70,34 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
-import { cdlWhite } from "src/cuix/variables.ts";
+import { cdlRed400, cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 
 const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
-  return file.vectorUploadTimestamp == null ? (
-    <LoadingOutlined spin />
-  ) : (
-    <CheckCircleOutlined />
-  );
+  if (
+    file.indexingStatus === RagDocumentStatus.ERROR &&
+    file.vectorUploadTimestamp !== null
+  ) {
+    return (
+      <Tooltip title={file.indexingError}>
+        <ExclamationCircleOutlined style={{ color: cdlRed400 }} />
+      </Tooltip>
+    );
+  }
+
+  if (file.vectorUploadTimestamp == null) {
+    if (file.indexingStatus === RagDocumentStatus.ERROR) {
+      return (
+        <Tooltip title={file.indexingError}>
+          <WarningOutlined style={{ color: cdlRed400 }} />
+          <LoadingOutlined spin />
+        </Tooltip>
+      );
+    }
+    return <LoadingOutlined spin />;
+  }
+
+  return <CheckCircleOutlined />;
 };
 
 function SummaryPopover({
