@@ -51,6 +51,13 @@ public class Types {
   public record RagDocumentMetadata(
       String fileName, String documentId, String extension, long sizeInBytes) {}
 
+  public enum RagDocumentStatus {
+    QUEUED,
+    IN_PROGRESS,
+    SUCCESS,
+    ERROR
+  }
+
   /** Data representing the database table for RAG file metadata (llm_project_rag_document) */
   @Builder(toBuilder = true)
   public record RagDocument(
@@ -66,7 +73,11 @@ public class Types {
       Instant timeUpdated,
       String createdById,
       String updatedById,
-      @With Instant summaryCreationTimestamp) {}
+      @With Instant summaryCreationTimestamp,
+      RagDocumentStatus summaryStatus,
+      String summaryError,
+      RagDocumentStatus indexingStatus,
+      String indexingError) {}
 
   @Getter
   public enum ConnectionType {

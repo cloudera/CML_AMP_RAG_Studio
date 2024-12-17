@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -152,6 +152,10 @@ class RagBackendClientTest {
         dataSourceId,
         documentId,
         s3Path,
+        null,
+        null,
+        null,
+        null,
         null,
         null,
         null,
