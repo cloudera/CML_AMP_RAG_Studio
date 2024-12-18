@@ -137,7 +137,6 @@ class DataSourceController:
         doc_id: str,
         request: RagIndexDocumentRequest,
     ) -> None:
-        raise RuntimeError(":(")
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
@@ -199,7 +198,6 @@ class DataSourceController:
         doc_id: str,
         request: SummarizeDocumentRequest,
     ) -> str:
-        raise RuntimeError(":(")
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             doc_storage = document_storage.from_environment()

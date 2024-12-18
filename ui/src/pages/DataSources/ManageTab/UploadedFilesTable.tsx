@@ -40,145 +40,29 @@ import {
   Button,
   Flex,
   Modal,
-  Popover,
   Table,
   TableProps,
   Tooltip,
   Typography,
 } from "antd";
-import Icon, {
-  CheckCircleOutlined,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
-  LoadingOutlined,
-  MinusCircleOutlined,
-  WarningOutlined,
-} from "@ant-design/icons";
+import Icon, { DeleteOutlined } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
-  RagDocumentStatus,
   useDeleteDocumentMutation,
   useGetRagDocuments,
 } from "src/api/ragDocumentsApi.ts";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
 import UploadedFilesHeader from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
-import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
-import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import { useContext, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
-import { cdlAmber600, cdlRed400, cdlWhite } from "src/cuix/variables.ts";
+import { cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-
-const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
-  if (
-    file.indexingStatus === RagDocumentStatus.ERROR &&
-    file.vectorUploadTimestamp !== null
-  ) {
-    return (
-      <Tooltip title={file.indexingError}>
-        <ExclamationCircleOutlined style={{ color: cdlRed400 }} />
-      </Tooltip>
-    );
-  }
-
-  if (file.vectorUploadTimestamp == null) {
-    if (file.indexingStatus === RagDocumentStatus.ERROR) {
-      return (
-        <Tooltip title={file.indexingError}>
-          <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
-          <LoadingOutlined spin />
-        </Tooltip>
-      );
-    }
-    return <LoadingOutlined spin />;
-  }
-
-  return <CheckCircleOutlined />;
-};
-
-const SummaryColumn = ({
-  file,
-  summarizationModel,
-  dataSourceId,
-}: {
-  file: RagDocumentResponseType;
-  summarizationModel?: string;
-  dataSourceId: string;
-}) => {
-  if (
-    file.summaryStatus === RagDocumentStatus.ERROR &&
-    file.summaryCreationTimestamp !== null
-  ) {
-    return (
-      <Tooltip title={file.summaryError}>
-        <ExclamationCircleOutlined style={{ color: cdlRed400 }} />
-      </Tooltip>
-    );
-  }
-
-  if (file.summaryCreationTimestamp == null) {
-    if (file.summaryStatus === RagDocumentStatus.ERROR) {
-      return (
-        <Tooltip title={file.summaryError}>
-          <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
-          <LoadingOutlined spin />
-        </Tooltip>
-      );
-    }
-    return <LoadingOutlined spin />;
-  }
-
-  if (!summarizationModel) {
-    return (
-      <Popover
-        title={"No summary available"}
-        content={"A summarization model must be selected."}
-      >
-        <MinusCircleOutlined style={{ fontSize: 16 }} />
-      </Popover>
-    );
-  }
-
-  return (
-    <SummaryPopover
-      dataSourceId={dataSourceId}
-      docId={file.documentId}
-      timestamp={file.summaryCreationTimestamp}
-    />
-  );
-};
-
-function SummaryPopover({
-  dataSourceId,
-  timestamp,
-  docId,
-}: {
-  dataSourceId: string;
-  timestamp: number | null;
-  docId: string;
-}) {
-  const [visible, setVisible] = useState(false);
-  const documentSummary = useGetDocumentSummary({
-    data_source_id: dataSourceId,
-    doc_id: docId,
-    queryEnabled: timestamp != null && visible,
-  });
-
-  return (
-    <Popover
-      title="Generated summary"
-      content={<div style={{ width: 400 }}>{documentSummary.data}</div>}
-      open={visible && documentSummary.isSuccess}
-      onOpenChange={setVisible}
-    >
-      <Icon component={DocumentationIcon} style={{ fontSize: 20 }} />
-    </Popover>
-  );
-}
+import ReadyColumn from "pages/DataSources/ManageTab/ReadyColumn.tsx";
+import SummaryColumn from "pages/DataSources/ManageTab/SummaryColumn.tsx";
 
 const columns = (
   dataSourceId: string,

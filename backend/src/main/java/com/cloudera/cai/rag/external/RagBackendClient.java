@@ -113,16 +113,7 @@ public class RagBackendClient {
               + "/summary",
           new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
     } catch (HttpError e) {
-      ClientError result;
-      try {
-        result =
-            new ClientError(
-                objectMapper.readValue(e.getMessage(), FastApiError.class).detail(),
-                e.getStatusCode());
-      } catch (JsonProcessingException ex) {
-        result = (ClientError) e;
-      }
-      throw result;
+      throw convertError(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
