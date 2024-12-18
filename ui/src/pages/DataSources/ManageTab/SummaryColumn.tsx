@@ -89,6 +89,16 @@ const SummaryColumn = ({
   summarizationModel?: string;
   dataSourceId: string;
 }) => {
+  if (!summarizationModel) {
+    return (
+      <Popover
+        title={"No summary available"}
+        content={"A summarization model must be selected."}
+      >
+        <MinusCircleOutlined style={{ fontSize: 16 }} />
+      </Popover>
+    );
+  }
   if (
     file.summaryStatus === RagDocumentStatus.ERROR &&
     file.summaryCreationTimestamp !== null
@@ -110,17 +120,6 @@ const SummaryColumn = ({
       );
     }
     return <LoadingOutlined spin />;
-  }
-
-  if (!summarizationModel) {
-    return (
-      <Popover
-        title={"No summary available"}
-        content={"A summarization model must be selected."}
-      >
-        <MinusCircleOutlined style={{ fontSize: 16 }} />
-      </Popover>
-    );
   }
 
   return (
