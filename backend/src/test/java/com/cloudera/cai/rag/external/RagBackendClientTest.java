@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -46,7 +46,9 @@ import com.cloudera.cai.rag.external.RagBackendClient.IndexConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.SimpleHttpClient.TrackedHttpRequest;
 import com.cloudera.cai.util.Tracker;
+import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.cloudera.cai.util.exceptions.ServerError;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -77,12 +79,116 @@ class RagBackendClientTest {
   }
 
   @Test
+  void indexFile_unsupportedType() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(
+            SimpleHttpClient.createNull(
+                tracker, new ClientError("{\"detail\": \"Unsupported media type\"}", 415)));
+    IndexConfiguration indexConfiguration = new IndexConfiguration(123, 2);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.mp3");
+
+    assertThatThrownBy(() -> client.indexFile(document, "bucketName", indexConfiguration))
+        .isInstanceOf(ClientError.class)
+        .hasMessage("Unsupported media type");
+
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.POST,
+                "http://rag-backend:8000/data_sources/"
+                    + 1234L
+                    + "/documents/"
+                    + "documentId"
+                    + "/index",
+                new RagBackendClient.IndexRequest(
+                    "bucketName", "s3Path", "myfile.mp3", indexConfiguration)));
+  }
+
+  @Test
+  void indexFile_serverError() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(
+            SimpleHttpClient.createNull(
+                tracker, new ServerError("{\"detail\": \"things are bad\"}", 500)));
+    IndexConfiguration indexConfiguration = new IndexConfiguration(123, 2);
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.mp3");
+
+    assertThatThrownBy(() -> client.indexFile(document, "bucketName", indexConfiguration))
+        .isInstanceOf(ServerError.class)
+        .hasMessage("things are bad");
+
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.POST,
+                "http://rag-backend:8000/data_sources/"
+                    + 1234L
+                    + "/documents/"
+                    + "documentId"
+                    + "/index",
+                new RagBackendClient.IndexRequest(
+                    "bucketName", "s3Path", "myfile.mp3", indexConfiguration)));
+  }
+
+  @Test
   void createSummary() {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
     RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
 
     client.createSummary(document, "bucketName");
+
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.POST,
+                "http://rag-backend:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
+  }
+
+  @Test
+  void createSummary_unsupportedMediaType() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(
+            SimpleHttpClient.createNull(
+                tracker, new ClientError("{\"detail\": \"Unsupported media type\"}", 415)));
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
+
+    assertThatThrownBy(() -> client.createSummary(document, "bucketName"))
+        .isInstanceOf(ClientError.class)
+        .hasMessage("Unsupported media type");
+
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.POST,
+                "http://rag-backend:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
+  }
+
+  @Test
+  void createSummary_serverError() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(
+            SimpleHttpClient.createNull(
+                tracker, new ServerError("{\"detail\": \"things are bad\"}", 500)));
+    RagDocument document = indexRequest("documentId", "s3Path", 1234L, "myfile.pdf");
+
+    assertThatThrownBy(() -> client.createSummary(document, "bucketName"))
+        .isInstanceOf(ServerError.class)
+        .hasMessage("things are bad");
 
     List<TrackedHttpRequest<?>> values = tracker.getValues();
     assertThat(values)
@@ -152,6 +258,10 @@ class RagBackendClientTest {
         dataSourceId,
         documentId,
         s3Path,
+        null,
+        null,
+        null,
+        null,
         null,
         null,
         null,

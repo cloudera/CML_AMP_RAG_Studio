@@ -83,7 +83,7 @@ describe("ChatBodyController", () => {
   }));
 
   vi.mock("src/api/modelsApi.ts", () => ({
-    useGetLlmModels: vi.fn(() => ({
+    useGetModelById: vi.fn(() => ({
       data: [],
       isLoading: false,
     })),

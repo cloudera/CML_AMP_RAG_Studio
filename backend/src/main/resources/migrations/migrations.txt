@@ -29,3 +29,5 @@
 14_add_embedding_model.up.sql
 15_add_summarization_model.down.sql
 15_add_summarization_model.up.sql
+16_add_doc_status.down.sql
+16_add_doc_status.up.sql

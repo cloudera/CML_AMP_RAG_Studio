@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -127,6 +127,10 @@ public class RagFileService {
         Instant.now(),
         actorCrn,
         actorCrn,
+        null,
+        null,
+        null,
+        null,
         null);
   }
 

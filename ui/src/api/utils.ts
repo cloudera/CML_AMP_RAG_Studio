@@ -86,6 +86,7 @@ export enum QueryKeys {
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
   "getVisualizeDataSource" = "getVisualizeDataSource",
+  "getModelById" = "getModelById",
 }
 
 export const commonHeaders = {

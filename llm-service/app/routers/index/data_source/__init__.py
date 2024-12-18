@@ -30,23 +30,21 @@
 
 import logging
 import tempfile
+from http import HTTPStatus
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
 from .... import exceptions
+from ....ai.indexing.base import NotSupportedFileExtensionError
 from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import (
-    data_sources_metadata_api,
-    document_storage,
-    models,
-)
+from ....services import data_sources_metadata_api, document_storage, models
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +163,13 @@ class DataSourceController:
             )
             # Delete to avoid duplicates
             self.chunks_vector_store.delete_document(doc_id)
-            indexer.index_file(file_path, doc_id)
+            try:
+                indexer.index_file(file_path, doc_id)
+            except NotSupportedFileExtensionError as e:
+                raise HTTPException(
+                    status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                    detail=f"Unsupported file extension: {e.file_extension}",
+                )
 
     @router.get(
         "/documents/{doc_id}/summary",
@@ -209,10 +213,16 @@ class DataSourceController:
                 return SUMMARIZATION_DISABLED
             # Delete to avoid duplicates
             indexer.delete_document(doc_id)
-            indexer.index_file(file_path, doc_id)
-            summary = indexer.get_summary(doc_id)
-            assert summary is not None
-            return summary
+            try:
+                indexer.index_file(file_path, doc_id)
+                summary = indexer.get_summary(doc_id)
+                assert summary is not None
+                return summary
+            except NotSupportedFileExtensionError as e:
+                raise HTTPException(
+                    status_code=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                    detail=f"Unsupported file extension: {e.file_extension}",
+                )
 
     @router.get(
         "/size",

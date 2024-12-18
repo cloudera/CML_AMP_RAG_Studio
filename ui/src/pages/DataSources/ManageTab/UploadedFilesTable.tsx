@@ -40,18 +40,12 @@ import {
   Button,
   Flex,
   Modal,
-  Popover,
   Table,
   TableProps,
   Tooltip,
   Typography,
 } from "antd";
-import Icon, {
-  CheckCircleOutlined,
-  DeleteOutlined,
-  LoadingOutlined,
-  MinusCircleOutlined,
-} from "@ant-design/icons";
+import Icon, { DeleteOutlined } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
   useDeleteDocumentMutation,
@@ -60,8 +54,6 @@ import {
 import { bytesConversion } from "src/utils/bytesConversion.ts";
 import UploadedFilesHeader from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
-import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
-import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import { useContext, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
@@ -69,34 +61,8 @@ import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
 import { cdlWhite } from "src/cuix/variables.ts";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-
-function SummaryPopover({
-  dataSourceId,
-  timestamp,
-  docId,
-}: {
-  dataSourceId: string;
-  timestamp: number | null;
-  docId: string;
-}) {
-  const [visible, setVisible] = useState(false);
-  const documentSummary = useGetDocumentSummary({
-    data_source_id: dataSourceId,
-    doc_id: docId,
-    queryEnabled: timestamp != null && visible,
-  });
-
-  return (
-    <Popover
-      title="Generated summary"
-      content={<div style={{ width: 400 }}>{documentSummary.data}</div>}
-      open={visible && documentSummary.isSuccess}
-      onOpenChange={setVisible}
-    >
-      <Icon component={DocumentationIcon} style={{ fontSize: 20 }} />
-    </Popover>
-  );
-}
+import ReadyColumn from "pages/DataSources/ManageTab/ReadyColumn.tsx";
+import SummaryColumn from "pages/DataSources/ManageTab/SummaryColumn.tsx";
 
 const columns = (
   dataSourceId: string,
@@ -127,32 +93,14 @@ const columns = (
     ),
     dataIndex: "summaryCreationTimestamp",
     key: "summaryCreationTimestamp",
-    render: (
-      timestamp: RagDocumentResponseType["summaryCreationTimestamp"],
-      data,
-    ) => {
-      if (timestamp) {
-        return (
-          <SummaryPopover
-            dataSourceId={dataSourceId}
-            docId={data.documentId}
-            timestamp={timestamp}
-          />
-        );
-      }
-
-      if (!summarizationModel) {
-        return (
-          <Popover
-            title={"No summary available"}
-            content={"A summarization model must be selected."}
-          >
-            <MinusCircleOutlined style={{ fontSize: 16 }} />
-          </Popover>
-        );
-      }
-
-      return <LoadingOutlined spin />;
+    render: (_, data) => {
+      return (
+        <SummaryColumn
+          file={data}
+          dataSourceId={dataSourceId}
+          summarizationModel={summarizationModel}
+        />
+      );
     },
   },
   {
@@ -189,8 +137,7 @@ const columns = (
     title: <Tooltip title="Document indexing complete">Ready</Tooltip>,
     dataIndex: "vectorUploadTimestamp",
     key: "vectorUploadTimestamp",
-    render: (timestamp?: number) =>
-      timestamp == null ? <LoadingOutlined spin /> : <CheckCircleOutlined />,
+    render: (_, file: RagDocumentResponseType) => <ReadyColumn file={file} />,
   },
   {
     title: "Actions",

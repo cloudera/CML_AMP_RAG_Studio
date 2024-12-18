@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,43 +34,18 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { Flex, Typography } from "antd";
-import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
-import { ChatMessageType } from "src/api/chatApi.ts";
-import { WarningTwoTone } from "@ant-design/icons";
-import { cdlOrange050, cdlOrange500 } from "src/cuix/variables.ts";
-import { useGetModelById } from "src/api/modelsApi.ts";
+package com.cloudera.cai.util.exceptions;
 
-const SourceNodes = ({ data }: { data: ChatMessageType }) => {
-  const { data: inferenceModel } = useGetModelById(data.inference_model);
+import lombok.Getter;
 
-  const nodes = data.source_nodes.map((node) => (
-    <SourceCard key={node.node_id} source={node} />
-  ));
+@Getter
+public class HttpError extends RuntimeException {
+  private final int statusCode;
 
-  if (nodes.length === 0) {
-    return (
-      <Flex
-        style={{ gap: 8, padding: "6px 12px", backgroundColor: cdlOrange050 }}
-      >
-        <WarningTwoTone twoToneColor={cdlOrange500} />
-        <Typography.Text>
-          This answer is provided directly by{" "}
-          <Typography.Text style={{ fontWeight: "bold" }}>
-            {inferenceModel?.name ?? "the model"}
-          </Typography.Text>{" "}
-          and does not reference the Knowledge Base.
-        </Typography.Text>
-      </Flex>
-    );
+  public HttpError(String message, int statusCode) {
+    super(message);
+    this.statusCode = statusCode;
   }
-  return (
-    <Flex wrap="wrap" style={{ gap: 8 }}>
-      {nodes}
-    </Flex>
-  );
-};
-
-export default SourceNodes;
+}

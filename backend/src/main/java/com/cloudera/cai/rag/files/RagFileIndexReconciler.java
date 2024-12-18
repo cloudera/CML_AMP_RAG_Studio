@@ -44,6 +44,7 @@ import static com.cloudera.cai.rag.external.RagBackendClient.*;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.external.RagBackendClient;
+import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
@@ -116,34 +117,44 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       }
 
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
-      Instant updateTimestamp = indexFile(document, indexConfiguration);
+      document = doIndexing(document, indexConfiguration);
       String updateSql =
           """
         UPDATE rag_data_source_document
-        SET vector_upload_timestamp = :now
+        SET vector_upload_timestamp = :uploadTimestamp, indexing_status = :indexingStatus, indexing_error = :indexingError, time_updated = :now
         WHERE id = :id
       """;
+      RagDocument finalDocument = document;
       jdbi.useHandle(
           handle -> {
             try (Update update = handle.createUpdate(updateSql)) {
-              update.bind("id", document.id()).bind("now", updateTimestamp).execute();
+              update
+                  .bind("id", finalDocument.id())
+                  .bind("uploadTimestamp", finalDocument.vectorUploadTimestamp())
+                  .bind("indexingStatus", finalDocument.indexingStatus())
+                  .bind("indexingError", finalDocument.indexingError())
+                  .bind("now", Instant.now())
+                  .execute();
             }
           });
     }
     return new ReconcileResult();
   }
 
-  private Instant indexFile(RagDocument document, IndexConfiguration indexConfiguration) {
-    Instant updateTimestamp;
+  private RagDocument doIndexing(RagDocument document, IndexConfiguration indexConfiguration) {
     try {
       ragBackendClient.indexFile(document, bucketName, indexConfiguration);
-      updateTimestamp = Instant.now();
-      log.info("finished requesting indexing of file {}", document);
-    } catch (NotFound e) {
-      updateTimestamp = Instant.EPOCH;
-      log.info("not found exception from RAG Backend: {}", e.getMessage());
+      return document
+          .withIndexingStatus(RagDocumentStatus.SUCCESS)
+          .withVectorUploadTimestamp(Instant.now());
+    } catch (NotFound | ClientError e) {
+      return document
+          .withIndexingStatus(RagDocumentStatus.ERROR)
+          .withIndexingError(e.getMessage())
+          .withVectorUploadTimestamp(Instant.EPOCH);
+    } catch (Exception e) {
+      return document.withIndexingStatus(RagDocumentStatus.ERROR).withIndexingError(e.getMessage());
     }
-    return updateTimestamp;
   }
 
   private IndexConfiguration fetchIndexConfiguration(Long dataSourceId) {

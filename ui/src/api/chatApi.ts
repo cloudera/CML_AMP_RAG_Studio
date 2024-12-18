@@ -171,14 +171,18 @@ export const useChatMutation = ({
           appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
         (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
       );
-      await queryClient.invalidateQueries({
-        queryKey: suggestedQuestionKey(variables.data_source_ids),
-      });
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(variables.data_source_ids),
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
       onSuccess?.(data);
     },
     onError: (error: Error) => onError?.(error),

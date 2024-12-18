@@ -4,8 +4,19 @@
 
 An AMP that provides a no-code tool to build RAG applications
 
-### Pre-requisites
+## Installation
 
+### Important
+
+#### The latest stable version of the AMP lives on the `release/1` branch. The `main` branch is the development branch and may contain unstable code.
+
+Follow the [standard instructions](https://docs.cloudera.com/machine-learning/cloud/applied-ml-prototypes/topics/ml-amp-add-catalog.html) for installing this AMP into your CML workspace.
+The "File Name" to use is `catalog-entry.yaml`.
+
+If you do not want to use the catalog-entry, then you should specify the release branch when installing the AMP directly:
+- `release/1` is the branch name to use for the latest stable release.
+
+### LLM Model Options
 RAG Studio can be used with both Cloudera Inference (CAII) or AWS Bedrock for selecting LLM and embedding models. 
 
 #### Cloudera Inference (CAII) Setup:
@@ -22,7 +33,7 @@ To use AWS Bedrock, you must provide the following environment variables:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 
-#### Document Storage:
+### Document Storage Options:
 
 RAG Studio can utilize the local file system or an S3 bucket for storing documents. If you are using an S3 bucket, you will need to provide the following environment variables:
 
@@ -30,6 +41,10 @@ RAG Studio can utilize the local file system or an S3 bucket for storing documen
 - `S3_RAG_DOCUMENT_BUCKET` - The S3 bucket where uploaded documents are stored
 
 S3 will also require providing the AWS credentials for the bucket.
+
+### Enhanced Parsing Options:
+
+RAG Studio can optionally enable enhanced parsing by providing the `USE_ENHANCED_PDF_PROCESSING` environment variable.  Enabling this will allow RAG Studio to parse images and tables from PDFs.  When enabling this feature, we strongly recommend using this with a GPU and at least 16GB of memory.
 
 ### Cloudera DataFlow (Nifi) Setup:
 
@@ -47,27 +62,7 @@ Cloudera for assistance. Additionally, further details on the AMP status can be 
 
 ### Common Issues
 
-- Both the Llama and Cohere models must be enabled in AWS Bedrock for the Rag Studio to function properly. If the models are not enabled, Rag Studio will not function as expected.
-
-## Installation
-
-### Important
-
-#### The latest stable version of the AMP lives on the `release/1` branch. The `main` branch is the development branch and may contain unstable code.
-
-Follow the [standard instructions](https://docs.cloudera.com/machine-learning/cloud/applied-ml-prototypes/topics/ml-amp-add-catalog.html) for installing this AMP into your CML workspace.
-The "File Name" to use is `catalog-entry.yaml`.
-
-If you do not want to use the catalog-entry, then you should specify the release branch when installing the AMP directly:
-- `release/1` is the branch name to use for the latest stable release.
-
-For configuring the project, you will need to provide some environment variables.
-
-- `S3_RAG_BUCKET_PREFIX` - A prefix added to all S3 paths used by Rag Studio
-- `S3_RAG_DOCUMENT_BUCKET` - The S3 bucket where uploaded documents are stored
-- `AWS_DEFAULT_REGION` - defaults to `us-west-2`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
+- TBD
 
 ## Developer Information
 

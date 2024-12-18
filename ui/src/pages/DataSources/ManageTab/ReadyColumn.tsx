@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,41 +36,44 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Typography } from "antd";
-import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
-import { ChatMessageType } from "src/api/chatApi.ts";
-import { WarningTwoTone } from "@ant-design/icons";
-import { cdlOrange050, cdlOrange500 } from "src/cuix/variables.ts";
-import { useGetModelById } from "src/api/modelsApi.ts";
+import {
+  RagDocumentResponseType,
+  RagDocumentStatus,
+} from "src/api/ragDocumentsApi.ts";
+import { Tooltip } from "antd";
+import {
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  LoadingOutlined,
+  WarningOutlined,
+} from "@ant-design/icons";
+import { cdlAmber600, cdlRed400 } from "src/cuix/variables.ts";
 
-const SourceNodes = ({ data }: { data: ChatMessageType }) => {
-  const { data: inferenceModel } = useGetModelById(data.inference_model);
-
-  const nodes = data.source_nodes.map((node) => (
-    <SourceCard key={node.node_id} source={node} />
-  ));
-
-  if (nodes.length === 0) {
+const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
+  if (
+    file.indexingStatus === RagDocumentStatus.ERROR &&
+    file.vectorUploadTimestamp !== null
+  ) {
     return (
-      <Flex
-        style={{ gap: 8, padding: "6px 12px", backgroundColor: cdlOrange050 }}
-      >
-        <WarningTwoTone twoToneColor={cdlOrange500} />
-        <Typography.Text>
-          This answer is provided directly by{" "}
-          <Typography.Text style={{ fontWeight: "bold" }}>
-            {inferenceModel?.name ?? "the model"}
-          </Typography.Text>{" "}
-          and does not reference the Knowledge Base.
-        </Typography.Text>
-      </Flex>
+      <Tooltip title={file.indexingError}>
+        <ExclamationCircleOutlined style={{ color: cdlRed400 }} />
+      </Tooltip>
     );
   }
-  return (
-    <Flex wrap="wrap" style={{ gap: 8 }}>
-      {nodes}
-    </Flex>
-  );
+
+  if (file.vectorUploadTimestamp == null) {
+    if (file.indexingStatus === RagDocumentStatus.ERROR) {
+      return (
+        <Tooltip title={file.indexingError}>
+          <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
+          <LoadingOutlined spin />
+        </Tooltip>
+      );
+    }
+    return <LoadingOutlined spin />;
+  }
+
+  return <CheckCircleOutlined />;
 };
 
-export default SourceNodes;
+export default ReadyColumn;
