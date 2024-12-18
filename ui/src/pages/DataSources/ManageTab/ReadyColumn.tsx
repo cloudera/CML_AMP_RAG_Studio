@@ -55,7 +55,7 @@ const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
     file.vectorUploadTimestamp !== null
   ) {
     return (
-      <Tooltip title={file.indexingError}>
+      <Tooltip title={file.indexingError} test-id={"tooltip"}>
         <ExclamationCircleOutlined style={{ color: cdlRed400 }} />
       </Tooltip>
     );
