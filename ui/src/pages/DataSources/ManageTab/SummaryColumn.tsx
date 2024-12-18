@@ -38,9 +38,10 @@
 
 import { useState } from "react";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
-import { Popover, Tooltip } from "antd";
+import { Popover, Tooltip, theme } from "antd";
 import Icon, {
   ExclamationCircleOutlined,
+  HourglassOutlined,
   LoadingOutlined,
   MinusCircleOutlined,
   WarningOutlined,
@@ -75,7 +76,15 @@ const SummaryPopover = ({
       open={visible && documentSummary.isSuccess}
       onOpenChange={setVisible}
     >
-      <Icon component={DocumentationIcon} style={{ fontSize: 20 }} />
+      <Icon
+        component={DocumentationIcon}
+        style={{
+          fontSize: 20,
+          color: theme.getDesignToken().colorLink,
+          cursor: "pointer",
+        }}
+        data-testid="documentation-icon"
+      />
     </Popover>
   );
 };
@@ -111,15 +120,24 @@ const SummaryColumn = ({
   }
 
   if (file.summaryCreationTimestamp == null) {
+    if (file.summaryStatus === RagDocumentStatus.IN_PROGRESS) {
+      return <LoadingOutlined spin />;
+    }
+
     if (file.summaryStatus === RagDocumentStatus.ERROR) {
       return (
         <Tooltip title={file.summaryError}>
           <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
-          <LoadingOutlined spin />
+          <HourglassOutlined />
         </Tooltip>
       );
     }
-    return <LoadingOutlined spin />;
+
+    return (
+      <Tooltip title="queued">
+        <HourglassOutlined />
+      </Tooltip>
+    );
   }
 
   return (

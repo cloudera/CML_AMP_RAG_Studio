@@ -37,8 +37,21 @@
  ******************************************************************************/
 
 import React, { useRef, useState } from "react";
-import { DatabaseFilled, DesktopOutlined } from "@ant-design/icons";
-import { Flex, Image, Layout, Menu, MenuProps, Tag, Typography } from "antd";
+import {
+  CloudOutlined,
+  DatabaseFilled,
+  DesktopOutlined,
+} from "@ant-design/icons";
+import {
+  Flex,
+  Image,
+  Layout,
+  Menu,
+  MenuProps,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import Images from "src/components/images/Images.ts";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
@@ -46,6 +59,7 @@ import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
+import "./style.css";
 
 const { Sider } = Layout;
 
@@ -100,7 +114,28 @@ const Sidebar: React.FC = () => {
 
   const baseItems: MenuItem[] = [
     {
-      label: (
+      label: collapsed ? (
+        <Tooltip title="Technical Preview">
+          <Tag
+            color={cdlAmber200}
+            style={{
+              borderRadius: 4,
+              height: 24,
+              width: 30,
+              marginLeft: 18,
+            }}
+          >
+            <Flex
+              gap={4}
+              justify="center"
+              align="center"
+              style={{ height: "100%" }}
+            >
+              <LightbulbIcon color="#000" />
+            </Flex>
+          </Tag>
+        </Tooltip>
+      ) : (
         <Tag
           color={cdlAmber200}
           style={{
@@ -145,7 +180,7 @@ const Sidebar: React.FC = () => {
     <div data-testid="data-management-nav">Models</div>,
     "models",
     navToModels,
-    <DatabaseFilled />,
+    <CloudOutlined />,
   );
 
   const feedbackItem = getItem(
@@ -176,6 +211,7 @@ const Sidebar: React.FC = () => {
       onCollapse={(value) => {
         setCollapsed(value);
       }}
+      style={{ transition: "none" }}
       width={250}
       ref={ref}
     >
@@ -184,13 +220,13 @@ const Sidebar: React.FC = () => {
           src={Images.ClouderaSmall}
           preview={false}
           height={36}
-          style={{ paddingRight: 5 }}
+          style={{ paddingLeft: 4 }}
         />
         {!collapsed ? (
           <Image
             src={Images.RagStudioProduct}
             preview={false}
-            style={{ transition: "ease-in" }}
+            style={{ transition: "ease-in", paddingLeft: 5 }}
           />
         ) : null}
       </div>

@@ -114,6 +114,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
         log.info("Document already summarized: {}", document.filename());
         continue;
       }
+      setToInProgress(document);
       var updatedDocument = doSummarization(document);
       log.info("finished requesting summarization of file {}", document);
       String updateSql =
@@ -136,6 +137,25 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
           });
     }
     return new ReconcileResult();
+  }
+
+  private void setToInProgress(RagDocument document) {
+    jdbi.useTransaction(
+        handle -> {
+          String updateSql =
+              """
+                UPDATE rag_data_source_document
+                SET summary_status = :summaryStatus, time_updated = :now
+                WHERE id = :id
+              """;
+          try (Update update = handle.createUpdate(updateSql)) {
+            update
+                .bind("id", document.id())
+                .bind("summaryStatus", Types.RagDocumentStatus.IN_PROGRESS)
+                .bind("now", Instant.now())
+                .execute();
+          }
+        });
   }
 
   private RagDocument doSummarization(RagDocument document) {
