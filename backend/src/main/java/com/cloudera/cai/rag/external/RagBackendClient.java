@@ -44,6 +44,7 @@ import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.exceptions.HttpError;
+import com.cloudera.cai.util.exceptions.ServerError;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,16 +81,22 @@ public class RagBackendClient {
           new IndexRequest(
               bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
     } catch (HttpError e) {
-      throw convertFastApiError(e);
+      throw convertError(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private HttpError convertFastApiError(HttpError e) {
+  private <T extends HttpError> T convertError(T e) {
     try {
-      return new ClientError(
-          objectMapper.readValue(e.getMessage(), FastApiError.class).detail(), e.getStatusCode());
+      String parsedMessage = objectMapper.readValue(e.getMessage(), FastApiError.class).detail();
+      if (e instanceof ClientError) {
+        return (T) new ClientError(parsedMessage, e.getStatusCode());
+      } else if (e instanceof ServerError) {
+        return (T) new ServerError(parsedMessage, e.getStatusCode());
+      } else {
+        return e;
+      }
     } catch (JsonProcessingException ex) {
       return e;
     }
@@ -106,7 +113,16 @@ public class RagBackendClient {
               + "/summary",
           new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
     } catch (HttpError e) {
-      throw convertFastApiError(e);
+      ClientError result;
+      try {
+        result =
+            new ClientError(
+                objectMapper.readValue(e.getMessage(), FastApiError.class).detail(),
+                e.getStatusCode());
+      } catch (JsonProcessingException ex) {
+        result = (ClientError) e;
+      }
+      throw result;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
