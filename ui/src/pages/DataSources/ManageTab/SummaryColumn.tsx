@@ -38,7 +38,7 @@
 
 import { useState } from "react";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
-import { Popover, Tooltip } from "antd";
+import { Popover, Tooltip, theme } from "antd";
 import Icon, {
   ExclamationCircleOutlined,
   HourglassOutlined,
@@ -78,7 +78,11 @@ const SummaryPopover = ({
     >
       <Icon
         component={DocumentationIcon}
-        style={{ fontSize: 20 }}
+        style={{
+          fontSize: 20,
+          color: theme.getDesignToken().colorLink,
+          cursor: "pointer",
+        }}
         data-testid="documentation-icon"
       />
     </Popover>
