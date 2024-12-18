@@ -45,6 +45,7 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   LoadingOutlined,
+  PauseCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import { cdlAmber600, cdlRed400 } from "src/cuix/variables.ts";
@@ -70,7 +71,10 @@ const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
         </Tooltip>
       );
     }
-    return <LoadingOutlined spin />;
+    if (file.indexingStatus === RagDocumentStatus.IN_PROGRESS) {
+      return <LoadingOutlined spin />;
+    }
+    return <PauseCircleOutlined />;
   }
 
   return <CheckCircleOutlined />;

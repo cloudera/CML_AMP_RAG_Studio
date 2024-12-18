@@ -72,6 +72,16 @@ afterEach(() => {
 });
 
 describe("ReadyColumn", () => {
+  it("displays the pause icon when the status is unset", () => {
+    const file = mockFile({
+      indexingStatus: null,
+      vectorUploadTimestamp: null,
+    });
+    render(<ReadyColumn file={file} />);
+    const icon = screen.getByRole("img", { name: "pause-circle" });
+    expect(icon).toBeTruthy();
+  });
+
   it("displays error icon with tooltip when indexing status is ERROR and vector upload timestamp is not null", () => {
     const file = mockFile({
       indexingStatus: RagDocumentStatus.ERROR,
