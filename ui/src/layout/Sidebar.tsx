@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { DatabaseFilled, DesktopOutlined } from "@ant-design/icons";
 import { Flex, Image, Layout, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -68,6 +68,7 @@ function getItem(
 }
 
 const Sidebar: React.FC = () => {
+  const [collapsed, setCollapsed] = useState(false);
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
@@ -169,7 +170,15 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <Sider width={250} ref={ref} collapsed={false}>
+    <Sider
+      collapsible
+      collapsed={collapsed}
+      onCollapse={(value) => {
+        setCollapsed(value);
+      }}
+      width={250}
+      ref={ref}
+    >
       <div style={{ padding: 20 }}>
         <Image
           src={Images.ClouderaSmall}
@@ -177,7 +186,13 @@ const Sidebar: React.FC = () => {
           height={36}
           style={{ paddingRight: 5 }}
         />
-        <Image src={Images.RagStudioProduct} preview={false} />
+        {!collapsed ? (
+          <Image
+            src={Images.RagStudioProduct}
+            preview={false}
+            style={{ transition: "ease-in" }}
+          />
+        ) : null}
       </div>
       <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
       <FeedbackModal
