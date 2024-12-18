@@ -43,6 +43,7 @@ import Icon, {
   ExclamationCircleOutlined,
   LoadingOutlined,
   MinusCircleOutlined,
+  PauseCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
@@ -75,7 +76,11 @@ const SummaryPopover = ({
       open={visible && documentSummary.isSuccess}
       onOpenChange={setVisible}
     >
-      <Icon component={DocumentationIcon} style={{ fontSize: 20 }} />
+      <Icon
+        component={DocumentationIcon}
+        style={{ fontSize: 20 }}
+        data-testid="documentation-icon"
+      />
     </Popover>
   );
 };
@@ -111,6 +116,10 @@ const SummaryColumn = ({
   }
 
   if (file.summaryCreationTimestamp == null) {
+    if (file.summaryStatus === RagDocumentStatus.IN_PROGRESS) {
+      return <LoadingOutlined spin />;
+    }
+
     if (file.summaryStatus === RagDocumentStatus.ERROR) {
       return (
         <Tooltip title={file.summaryError}>
@@ -119,7 +128,8 @@ const SummaryColumn = ({
         </Tooltip>
       );
     }
-    return <LoadingOutlined spin />;
+
+    return <PauseCircleOutlined />;
   }
 
   return (
