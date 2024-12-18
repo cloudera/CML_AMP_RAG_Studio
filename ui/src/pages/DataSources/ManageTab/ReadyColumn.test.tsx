@@ -78,7 +78,7 @@ describe("ReadyColumn", () => {
       vectorUploadTimestamp: null,
     });
     render(<ReadyColumn file={file} />);
-    const icon = screen.getByRole("img", { name: "pause-circle" });
+    const icon = screen.getByRole("img", { name: "hourglass" });
     expect(icon).toBeTruthy();
   });
 
@@ -100,7 +100,7 @@ describe("ReadyColumn", () => {
     });
     render(<ReadyColumn file={file} />);
     const warningIcon = screen.getByRole("img", { name: "warning" });
-    const loadingIcon = screen.getByRole("img", { name: "loading" });
+    const loadingIcon = screen.getByRole("img", { name: "hourglass" });
     expect(warningIcon).toBeTruthy();
     expect(loadingIcon).toBeTruthy();
   });

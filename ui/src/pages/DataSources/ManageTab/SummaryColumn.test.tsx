@@ -72,7 +72,7 @@ afterEach(() => {
 });
 
 describe("SummaryColumn", () => {
-  it("displays the paused icon when the status is unset", () => {
+  it("displays the hourglass icon when the status is unset", () => {
     const file = mockFile({
       summaryStatus: null,
       summaryCreationTimestamp: null,
@@ -84,7 +84,7 @@ describe("SummaryColumn", () => {
         dataSourceId="1234"
       />,
     );
-    const icon = screen.getByRole("img", { name: "pause-circle" });
+    const icon = screen.getByRole("img", { name: "hourglass" });
     expect(icon).toBeTruthy();
   });
 
@@ -119,7 +119,7 @@ describe("SummaryColumn", () => {
       />,
     );
     const warningIcon = screen.getByRole("img", { name: "warning" });
-    const loadingIcon = screen.getByRole("img", { name: "loading" });
+    const loadingIcon = screen.getByRole("img", { name: "hourglass" });
     expect(warningIcon).toBeTruthy();
     expect(loadingIcon).toBeTruthy();
   });

@@ -93,6 +93,7 @@ const columns = (
     ),
     dataIndex: "summaryCreationTimestamp",
     key: "summaryCreationTimestamp",
+    align: "center",
     render: (_, data) => {
       return (
         <SummaryColumn

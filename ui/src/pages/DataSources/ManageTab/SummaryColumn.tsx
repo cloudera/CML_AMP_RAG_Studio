@@ -41,9 +41,9 @@ import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import { Popover, Tooltip } from "antd";
 import Icon, {
   ExclamationCircleOutlined,
+  HourglassOutlined,
   LoadingOutlined,
   MinusCircleOutlined,
-  PauseCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
@@ -124,12 +124,16 @@ const SummaryColumn = ({
       return (
         <Tooltip title={file.summaryError}>
           <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
-          <LoadingOutlined spin />
+          <HourglassOutlined />
         </Tooltip>
       );
     }
 
-    return <PauseCircleOutlined />;
+    return (
+      <Tooltip title="queued">
+        <HourglassOutlined />
+      </Tooltip>
+    );
   }
 
   return (

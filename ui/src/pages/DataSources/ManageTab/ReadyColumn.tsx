@@ -44,8 +44,8 @@ import { Tooltip } from "antd";
 import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
+  HourglassOutlined,
   LoadingOutlined,
-  PauseCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import { cdlAmber600, cdlRed400 } from "src/cuix/variables.ts";
@@ -63,18 +63,24 @@ const ReadyColumn = ({ file }: { file: RagDocumentResponseType }) => {
   }
 
   if (file.vectorUploadTimestamp == null) {
+    if (file.indexingStatus === RagDocumentStatus.IN_PROGRESS) {
+      return <LoadingOutlined spin />;
+    }
+
     if (file.indexingStatus === RagDocumentStatus.ERROR) {
       return (
         <Tooltip title={file.indexingError}>
           <WarningOutlined style={{ color: cdlAmber600, marginRight: 8 }} />
-          <LoadingOutlined spin />
+          <HourglassOutlined />
         </Tooltip>
       );
     }
-    if (file.indexingStatus === RagDocumentStatus.IN_PROGRESS) {
-      return <LoadingOutlined spin />;
-    }
-    return <PauseCircleOutlined />;
+
+    return (
+      <Tooltip title="queued">
+        <HourglassOutlined />
+      </Tooltip>
+    );
   }
 
   return <CheckCircleOutlined />;
