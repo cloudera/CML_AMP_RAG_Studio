@@ -60,7 +60,7 @@ public class RagFileRepository {
     this.jdbi = jdbi;
   }
 
-  public Long saveDocumentMetadata(RagDocument ragDocument) {
+  public Long insertDocumentMetadata(RagDocument ragDocument) {
     return jdbi.inTransaction(
         handle -> {
           String insertSql =

@@ -115,30 +115,54 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
         log.info("Document already indexed: {}", document.filename());
         continue;
       }
+      // todo: is there a way to test intermediate state?
+      setToInProgress(document);
 
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
-      document = doIndexing(document, indexConfiguration);
-      String updateSql =
-          """
-        UPDATE rag_data_source_document
-        SET vector_upload_timestamp = :uploadTimestamp, indexing_status = :indexingStatus, indexing_error = :indexingError, time_updated = :now
-        WHERE id = :id
-      """;
-      RagDocument finalDocument = document;
-      jdbi.useHandle(
-          handle -> {
-            try (Update update = handle.createUpdate(updateSql)) {
-              update
-                  .bind("id", finalDocument.id())
-                  .bind("uploadTimestamp", finalDocument.vectorUploadTimestamp())
-                  .bind("indexingStatus", finalDocument.indexingStatus())
-                  .bind("indexingError", finalDocument.indexingError())
-                  .bind("now", Instant.now())
-                  .execute();
-            }
-          });
+      RagDocument finalDocument = doIndexing(document, indexConfiguration);
+      updateFinalStatus(finalDocument);
     }
     return new ReconcileResult();
+  }
+
+  private void updateFinalStatus(RagDocument finalDocument) {
+    jdbi.useTransaction(
+        handle -> {
+          String updateSql =
+              """
+                UPDATE rag_data_source_document
+                SET vector_upload_timestamp = :uploadTimestamp, indexing_status = :indexingStatus, indexing_error = :indexingError, time_updated = :now
+                WHERE id = :id
+              """;
+          try (Update update = handle.createUpdate(updateSql)) {
+            update
+                .bind("id", finalDocument.id())
+                .bind("uploadTimestamp", finalDocument.vectorUploadTimestamp())
+                .bind("indexingStatus", finalDocument.indexingStatus())
+                .bind("indexingError", finalDocument.indexingError())
+                .bind("now", Instant.now())
+                .execute();
+          }
+        });
+  }
+
+  private void setToInProgress(RagDocument document) {
+    jdbi.useTransaction(
+        handle -> {
+          String updateSql =
+              """
+        UPDATE rag_data_source_document
+        SET indexing_status = :indexingStatus, time_updated = :now
+        WHERE id = :id
+      """;
+          try (Update update = handle.createUpdate(updateSql)) {
+            update
+                .bind("id", document.id())
+                .bind("indexingStatus", RagDocumentStatus.IN_PROGRESS)
+                .bind("now", Instant.now())
+                .execute();
+          }
+        });
   }
 
   private RagDocument doIndexing(RagDocument document, IndexConfiguration indexConfiguration) {

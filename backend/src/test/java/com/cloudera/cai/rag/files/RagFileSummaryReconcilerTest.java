@@ -99,7 +99,7 @@ class RagFileSummaryReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 
@@ -158,7 +158,7 @@ class RagFileSummaryReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 
@@ -215,7 +215,7 @@ class RagFileSummaryReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 
@@ -271,7 +271,7 @@ class RagFileSummaryReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    ragFileRepository.saveDocumentMetadata(document);
+    ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 

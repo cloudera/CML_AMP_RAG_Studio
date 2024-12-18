@@ -96,7 +96,7 @@ class RagFileIndexReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
         .isNull();
 
@@ -153,7 +153,7 @@ class RagFileIndexReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
         .isNull();
 
@@ -209,7 +209,7 @@ class RagFileIndexReconcilerTest {
             .timeUpdated(Instant.now())
             .createdById("test-id")
             .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
         .isNull();
 
