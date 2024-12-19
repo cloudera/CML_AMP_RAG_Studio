@@ -36,6 +36,7 @@
 #  DATA.
 #
 import itertools
+from typing import Generator
 
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 
@@ -62,3 +63,17 @@ def completion(
     )
     messages.append(ChatMessage.from_str(question, role="user"))
     return model.chat(messages)
+
+
+def streaming_completion(
+        session_id: int, question: str, configuration: RagPredictConfiguration
+) -> Generator[ChatResponse, None, None]:
+    model = get_llm(configuration.model_name)
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
+    messages = list(
+        itertools.chain.from_iterable(
+            map(lambda x: make_chat_messages(x), chat_history)
+        )
+    )
+    messages.append(ChatMessage.from_str(question, role="user"))
+    return model.stream_chat(messages)

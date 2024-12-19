@@ -47,6 +47,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 import { Session } from "src/api/sessionApi.ts";
+import { useEffect } from "react";
 
 export interface SourceNode {
   node_id: string;
@@ -215,4 +216,40 @@ export const createQueryConfiguration = (
     model_name: activeSession.inferenceModel ?? "",
     exclude_knowledge_base: excludeKnowledgeBase,
   };
+};
+
+export const createWebSocket = (url: string): WebSocket => {
+  const ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    console.log("WebSocket connection opened");
+  };
+
+  ws.onclose = () => {
+    console.log("WebSocket connection closed");
+  };
+
+  ws.onerror = (error) => {
+    console.error("WebSocket error:", error);
+  };
+
+  return ws;
+};
+
+export const useWebSocket = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const ws = createWebSocket("/ws");
+
+    ws.onmessage = (event) => {
+      console.log(event);
+      const message = JSON.parse(event.data);
+      console.log("WebSocket message:", message);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [queryClient]);
 };

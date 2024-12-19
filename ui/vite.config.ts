@@ -60,6 +60,7 @@ export default defineConfig({
         target: "http://localhost:8000",
         rewrite: (path) => path.replace(/^\/llm-service/, ""),
       },
+      "/ws": "ws://localhost:3000/ws",
     },
   },
 });

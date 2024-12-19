@@ -1179,6 +1179,7 @@ dependencies = [
     { name = "torch" },
     { name = "transformers" },
     { name = "umap-learn" },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -1215,6 +1216,7 @@ requires-dist = [
     { name = "torch", specifier = ">=2.5.1" },
     { name = "transformers", specifier = ">=4.46.3" },
     { name = "umap-learn", specifier = ">=0.5.7" },
+    { name = "websockets", specifier = ">=14.1" },
 ]
 
 [package.metadata.requires-dev]

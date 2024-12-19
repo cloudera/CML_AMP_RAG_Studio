@@ -37,8 +37,11 @@
 # ##############################################################################
 import time
 import uuid
+from collections.abc import Generator
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket
+from fastapi.responses import HTMLResponse
+from llama_index.core.base.llms.types import ChatResponse
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -154,3 +157,70 @@ def suggest_questions(
         session_id,
     )
     return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var ws = new WebSocket("ws://localhost:8000/sessions/1/ws");
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('span')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+"""
+
+
+@router.get("/test")
+async def get():
+    return HTMLResponse(html)
+
+
+def streaming_llm_talk(
+        session_id: int,
+        request: RagStudioChatRequest,
+) -> Generator[ChatResponse, None, None]:
+    return llm_completion.streaming_completion(
+        session_id, request.query, request.configuration
+    )
+
+
+@router.websocket("/ws")
+async def websocket_endpoint(
+        websocket: WebSocket,
+        session_id: int,
+):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        request = RagStudioChatRequest(
+            data_source_ids=[1],
+            query=data,
+            configuration=RagPredictConfiguration(),
+        )
+        res = streaming_llm_talk(session_id, request)
+        for x in res:
+            print(x.delta)
+            await websocket.send_text(x.delta)

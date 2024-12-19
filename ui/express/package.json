@@ -10,6 +10,8 @@
   "description": "",
   "dependencies": {
     "express": "^4.21.1",
-    "http-proxy-middleware": "^3.0.3"
+    "express-ws": "^5.0.2",
+    "http-proxy-middleware": "^3.0.3",
+    "ws": "^8.18.0"
   }
 }
