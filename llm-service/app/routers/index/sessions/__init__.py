@@ -35,11 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import logging
 import time
 import uuid
 from collections.abc import Generator
 
-from fastapi import APIRouter, HTTPException, WebSocket
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from llama_index.core.base.llms.types import ChatResponse
 from pydantic import BaseModel
@@ -52,6 +53,8 @@ from ....services.chat import generate_suggested_questions, v2_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -207,20 +210,50 @@ def streaming_llm_talk(
     )
 
 
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        print('websocket accepted')
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        print('websocket disconnected')
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+
+manager = ConnectionManager()
+
+
 @router.websocket("/ws")
 async def websocket_endpoint(
         websocket: WebSocket,
         session_id: int,
 ):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        request = RagStudioChatRequest(
-            data_source_ids=[1],
-            query=data,
-            configuration=RagPredictConfiguration(),
-        )
-        res = streaming_llm_talk(session_id, request)
-        for x in res:
-            print(x.delta)
-            await websocket.send_text(x.delta)
+    await manager.connect(websocket)
+    print('websocket accepted')
+    try:
+        while True:
+            print('waiting for data')
+            data = await websocket.receive_text()
+            request = RagStudioChatRequest(
+                data_source_ids=[1],
+                query=data,
+                configuration=RagPredictConfiguration(),
+            )
+            res = streaming_llm_talk(session_id, request)
+            for x in res:
+                print(x.delta)
+                await websocket.send_text(x.delta)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        logger.info('websocket disconnected')

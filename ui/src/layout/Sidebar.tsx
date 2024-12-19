@@ -46,7 +46,6 @@ import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
-import { useWebSocket } from "src/api/chatApi.ts";
 
 const { Sider } = Layout;
 
@@ -74,7 +73,6 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
   const feedbackModal = useModal();
-  useWebSocket();
 
   const navToRagApp = () => {
     navigate({ to: "/sessions" })

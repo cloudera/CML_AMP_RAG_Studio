@@ -40,6 +40,66 @@ import { Alert, Flex, Typography } from "antd";
 import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
 import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
+import { useEffect, useState } from "react";
+
+export const useWebSocket = (url: string) => {
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [messages, setMessages] = useState<string[]>([]);
+
+  useEffect(() => {
+    const ws = new WebSocket(url);
+    setSocket(ws);
+
+    ws.onmessage = (event) => {
+      setMessages((prevMessages) => [...prevMessages, event.data]);
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [url]);
+
+  const sendMessage = (message: string) => {
+    if (socket) {
+      socket.send(message);
+    }
+  };
+
+  return { messages, sendMessage };
+};
+
+const WebSocketComponent = () => {
+  const { messages, sendMessage } = useWebSocket("/sessions/1/ws");
+  const [input, setInput] = useState("");
+
+  const handleSend = () => {
+    sendMessage(input);
+    setInput("");
+  };
+
+  return (
+    <div>
+      <h1>WebSocket Messages</h1>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button onClick={handleSend}>Send</button>
+      <div>
+        {messages.length ? <div>response: {messages}</div> : "no messages yet"}
+      </div>
+    </div>
+  );
+};
 
 const ModelPage = () => {
   const {
@@ -72,6 +132,7 @@ const ModelPage = () => {
         ) : null}
       </div>
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
+        <WebSocketComponent />
         <Typography.Title level={3}>Embedding Models</Typography.Title>
         <EmbeddingModelTable
           embeddingModels={embeddingModels}

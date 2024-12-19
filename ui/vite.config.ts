@@ -55,12 +55,16 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      "/sessions/1/ws": {
+        target: "ws://localhost:8000",
+        changeOrigin: true,
+        ws: true,
+      },
       "/api": "http://localhost:8080",
       "/llm-service": {
         target: "http://localhost:8000",
         rewrite: (path) => path.replace(/^\/llm-service/, ""),
       },
-      "/ws": "ws://localhost:3000/ws",
     },
   },
 });

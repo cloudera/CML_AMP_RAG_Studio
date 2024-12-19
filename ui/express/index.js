@@ -39,67 +39,17 @@
 const express = require("express");
 const { join } = require("path");
 const { createProxyMiddleware } = require("http-proxy-middleware");
-const WebSocket = require("ws");
-const expressWs = require("express-ws");
 
 const app = express();
-expressWs(app);
 const port = process.env.CDSW_APP_PORT ?? 3000;
 const host = process.env.NODE_HOST ?? "127.0.0.1";
 
-app.get("/test", (req, res) => {
-  res.send(`<!DOCTYPE html>
-  <html>
-  <head>
-  <title>Chat</title>
-</head>
-  <body>
-  <h1>WebSocket Chat</h1>
-  <form action="" onsubmit="sendMessage(event)">
-    <input type="text" id="messageText" autocomplete="off"/>
-    <button>Send</button>
-  </form>
-  <ul id='messages'>
-  </ul>
-  <script>
-    var ws = new WebSocket("ws://localhost:3000/ws");
-    ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('span')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-    };
-    function sendMessage(event) {
-    var input = document.getElementById("messageText")
-    ws.send(input.value)
-    input.value = ''
-    event.preventDefault()
-  }
-  </script>
-  </body>
-</html>
-  `);
-});
-
-app.ws("/ws", (ws, req) => {
-  ws.on("message", function (msg) {
-    console.log("received: %s", msg);
-    ws.send(msg);
-  });
-
-  console.log("socket", req.testing);
-  // const destinationWs = new WebSocket("ws://localhost:8000/sessions/1/ws");
-  //
-  // destinationWs.on("error", console.error);
-  //
-  // destinationWs.on("open", function open() {
-  //   ws.send("something");
-  // });
-  //
-  // destinationWs.on("message", function message(data) {
-  //   console.log("received: %s", data);
-  // });
+const wsProxy = createProxyMiddleware({
+  // should we update LLM_SERVICE_URL to just use the port 8000?
+  target: "ws://localhost:8000",
+  changeOrigin: true,
+  ws: true,
+  logger: console,
 });
 
 const apiProxy = createProxyMiddleware({
@@ -114,6 +64,7 @@ const llmServiceProxy = createProxyMiddleware({
 
 app.use(express.static(join(__dirname, "..", "dist")));
 app.use("/api", apiProxy);
+app.use("/llm-service", wsProxy);
 app.use("/llm-service", llmServiceProxy);
 
 app.get("*", (req, res) => {
