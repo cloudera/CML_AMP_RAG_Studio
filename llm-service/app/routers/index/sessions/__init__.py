@@ -40,8 +40,9 @@ import textwrap
 import time
 import uuid
 from collections.abc import Generator
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from llama_index.core.base.llms.types import ChatResponse
 from pydantic import BaseModel
@@ -175,20 +176,28 @@ async def get():
             <body>
                 <h1>WebSocket Chat</h1>
                 <form action="" onsubmit="sendMessage(event)">
-                    <input type="text" id="messageText" autocomplete="off"/>
+                    <label>Data Source ID: <input type="text" id="dataSourceId" autocomplete="off" value="hard-coded to 1 & 2"/></label>
+                    <button onclick="connect(event)">Connect</button>
+                    <hr>
+                    <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
                     <button>Send</button>
                 </form>
                 <ul id='messages'>
                 </ul>
                 <script>
-                    var ws = new WebSocket("ws://localhost:8000/sessions/1/ws");
-                    ws.onmessage = function(event) {
-                        var messages = document.getElementById('messages')
-                        var message = document.createElement('span')
-                        var content = document.createTextNode(event.data)
-                        message.appendChild(content)
-                        messages.appendChild(message)
-                    };
+                var ws = null;
+                    function connect(event) {
+                        var dataSourceId = document.getElementById("dataSourceId")
+                        var ws = new WebSocket("ws://localhost:8000/sessions/1/ws?data_source_id=1&data_source_id=2");
+                        ws.onmessage = function(event) {
+                            var messages = document.getElementById('messages')
+                            var message = document.createElement('li')
+                            var content = document.createTextNode(event.data)
+                            message.appendChild(content)
+                            messages.appendChild(message)
+                        };
+                        event.preventDefault()
+                    }
                     function sendMessage(event) {
                         var input = document.getElementById("messageText")
                         ws.send(input.value)
@@ -238,8 +247,10 @@ manager = ConnectionManager()
 
 @router.websocket("/ws")
 async def websocket_endpoint(
+    *,
     websocket: WebSocket,
     session_id: int,
+    data_source_id: Annotated[list[int] | None, Query()] = None,
 ):
     await manager.connect(websocket)
     print("websocket accepted")
@@ -248,12 +259,11 @@ async def websocket_endpoint(
             print("waiting for data")
             data = await websocket.receive_text()
             request = RagStudioChatRequest(
-                data_source_ids=[1],
+                data_source_ids=data_source_id or [],
                 query=data,
                 configuration=RagPredictConfiguration(),
             )
-            res = streaming_llm_talk(session_id, request)
-            for x in res:
+            for x in streaming_llm_talk(session_id, request):
                 print(x.delta)
                 await websocket.send_text(x.delta)
     except WebSocketDisconnect:
