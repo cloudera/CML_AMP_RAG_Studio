@@ -36,6 +36,7 @@
 #  DATA.
 # ##############################################################################
 import logging
+import textwrap
 import time
 import uuid
 from collections.abc import Generator
@@ -161,49 +162,50 @@ def suggest_questions(
     )
     return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://localhost:8000/sessions/1/ws");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('span')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
-
 
 @router.get("/test")
 async def get():
+    html = textwrap.dedent(
+        """\
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Chat</title>
+            </head>
+            <body>
+                <h1>WebSocket Chat</h1>
+                <form action="" onsubmit="sendMessage(event)">
+                    <input type="text" id="messageText" autocomplete="off"/>
+                    <button>Send</button>
+                </form>
+                <ul id='messages'>
+                </ul>
+                <script>
+                    var ws = new WebSocket("ws://localhost:8000/sessions/1/ws");
+                    ws.onmessage = function(event) {
+                        var messages = document.getElementById('messages')
+                        var message = document.createElement('span')
+                        var content = document.createTextNode(event.data)
+                        message.appendChild(content)
+                        messages.appendChild(message)
+                    };
+                    function sendMessage(event) {
+                        var input = document.getElementById("messageText")
+                        ws.send(input.value)
+                        input.value = ''
+                        event.preventDefault()
+                    }
+                </script>
+            </body>
+        </html>
+    """
+    )
     return HTMLResponse(html)
 
 
 def streaming_llm_talk(
-        session_id: int,
-        request: RagStudioChatRequest,
+    session_id: int,
+    request: RagStudioChatRequest,
 ) -> Generator[ChatResponse, None, None]:
     return llm_completion.streaming_completion(
         session_id, request.query, request.configuration
@@ -215,12 +217,12 @@ class ConnectionManager:
         self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
-        print('websocket accepted')
+        print("websocket accepted")
         await websocket.accept()
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        print('websocket disconnected')
+        print("websocket disconnected")
         self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
@@ -236,14 +238,14 @@ manager = ConnectionManager()
 
 @router.websocket("/ws")
 async def websocket_endpoint(
-        websocket: WebSocket,
-        session_id: int,
+    websocket: WebSocket,
+    session_id: int,
 ):
     await manager.connect(websocket)
-    print('websocket accepted')
+    print("websocket accepted")
     try:
         while True:
-            print('waiting for data')
+            print("waiting for data")
             data = await websocket.receive_text()
             request = RagStudioChatRequest(
                 data_source_ids=[1],
@@ -256,4 +258,4 @@ async def websocket_endpoint(
                 await websocket.send_text(x.delta)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        logger.info('websocket disconnected')
+        logger.info("websocket disconnected")
