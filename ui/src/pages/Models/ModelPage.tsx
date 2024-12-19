@@ -41,6 +41,7 @@ import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
 import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
 import { useEffect, useState } from "react";
+import { useChat } from "ai/react";
 
 export const useWebSocket = (url: string) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -72,30 +73,38 @@ export const useWebSocket = (url: string) => {
       socket.send(message);
     }
   };
-
   return { messages, sendMessage };
 };
 
 const WebSocketComponent = () => {
-  const { messages, sendMessage } = useWebSocket("/sessions/1/ws");
-  const [input, setInput] = useState("");
-
-  const handleSend = () => {
-    sendMessage(input);
-    setInput("");
-  };
+  const chat = useChat({
+    api: "/sessions/1/ws",
+  });
+  console.log(chat);
+  // console.log(chat);
+  // const { messages, sendMessage } = useWebSocket("/sessions/1/ws");
+  // const [input, setInput] = useState("");
+  //
+  // const handleSend = () => {
+  //   sendMessage(input);
+  //   setInput("");
+  // };
 
   return (
     <div>
       <h1>WebSocket Messages</h1>
       <input
         type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
+        value={chat.input}
+        onChange={(e) => chat.setInput(e.target.value)}
       />
-      <button onClick={handleSend}>Send</button>
+      <button onClick={chat.handleSubmit}>Send</button>
+      {chat.isLoading ? <div>loading...</div> : null}
       <div>
-        {messages.length ? <div>response: {messages}</div> : "no messages yet"}
+        {chat.messages.map((message, i) => (
+          <div key={i}>{message.content}</div>
+        ))}
+        {/*{messages.length ? <div>response: {messages}</div> : "no messages yet"}*/}
       </div>
     </div>
   );

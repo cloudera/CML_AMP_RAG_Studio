@@ -40,10 +40,9 @@ import time
 import uuid
 from collections.abc import Generator
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import HTMLResponse
 from llama_index.core.base.llms.types import ChatResponse
-from pydantic import BaseModel
 
 from .... import exceptions
 from ....ai.vector_stores.qdrant import QdrantVectorStore
@@ -51,6 +50,93 @@ from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from fastapi.responses import StreamingResponse
+import json
+from pydantic import BaseModel
+from typing import List, Optional
+
+class ClientAttachment(BaseModel):
+    name: str
+    contentType: str
+    url: str
+
+
+class ToolInvocation(BaseModel):
+    toolCallId: str
+    toolName: str
+    args: dict
+    result: dict
+
+
+class ClientMessage(BaseModel):
+    role: str
+    content: str
+    experimental_attachments: Optional[List[ClientAttachment]] = None
+    toolInvocations: Optional[List[ToolInvocation]] = None
+
+
+def convert_to_openai_messages(messages: List[ClientMessage]):
+    openai_messages = []
+
+    for message in messages:
+        parts = []
+
+        parts.append({
+            'type': 'text',
+            'text': message.content
+        })
+
+        if (message.experimental_attachments):
+            for attachment in message.experimental_attachments:
+                if (attachment.contentType.startswith('image')):
+                    parts.append({
+                        'type': 'image_url',
+                        'image_url': {
+                            'url': attachment.url
+                        }
+                    })
+
+                elif (attachment.contentType.startswith('text')):
+                    parts.append({
+                        'type': 'text',
+                        'text': attachment.url
+                    })
+
+        if (message.toolInvocations):
+            tool_calls = [
+                {
+                    'id': tool_invocation.toolCallId,
+                    'type': 'function',
+                    'function': {
+                        'name': tool_invocation.toolName,
+                        'arguments': json.dumps(tool_invocation.args)
+                    }
+                }
+                for tool_invocation in message.toolInvocations]
+
+            openai_messages.append({
+                "role": 'assistant',
+                "tool_calls": tool_calls
+            })
+
+            tool_results = [
+                {
+                    'role': 'tool',
+                    'content': json.dumps(tool_invocation.result),
+                    'tool_call_id': tool_invocation.toolCallId
+                }
+                for tool_invocation in message.toolInvocations]
+
+            openai_messages.extend(tool_results)
+
+            continue
+
+        openai_messages.append({
+            "role": message.role,
+            "content": parts
+        })
+
+    return openai_messages
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -161,45 +247,6 @@ def suggest_questions(
     )
     return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://localhost:8000/sessions/1/ws");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('span')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
-
-
-@router.get("/test")
-async def get():
-    return HTMLResponse(html)
-
 
 def streaming_llm_talk(
         session_id: int,
@@ -257,3 +304,62 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logger.info('websocket disconnected')
+
+class Request(BaseModel):
+    messages: List[ClientMessage]
+
+
+def stream_text(messages: List[ClientMessage], protocol: str = 'data'):
+    stream = client.chat.completions.create(
+        messages=messages,
+        model="gpt-4o",
+        stream=True,
+    )
+
+    # When protocol is set to "text", you will send a stream of plain text chunks
+    # https://sdk.vercel.ai/docs/ai-sdk-ui/stream-protocol#text-stream-protocol
+
+    if (protocol == 'text'):
+        for chunk in stream:
+            for choice in chunk.choices:
+                if choice.finish_reason == "stop":
+                    break
+                else:
+                    yield "{text}".format(text=choice.delta.content)
+
+    # When protocol is set to "data", you will send a stream data part chunks
+    # https://sdk.vercel.ai/docs/ai-sdk-ui/stream-protocol#data-stream-protocol
+
+    elif (protocol == 'data'):
+        draft_tool_calls = []
+        draft_tool_calls_index = -1
+
+        for chunk in stream:
+            for choice in chunk.choices:
+                if choice.finish_reason == "stop":
+                    continue
+
+                else:
+                    yield '0:{text}\n'.format(text=json.dumps(choice.delta.content))
+
+            if chunk.choices == []:
+                usage = chunk.usage
+                prompt_tokens = usage.prompt_tokens
+                completion_tokens = usage.completion_tokens
+
+                yield 'd:{{"finishReason":"{reason}","usage":{{"promptTokens":{prompt},"completionTokens":{completion}}}}}\n'.format(
+                    reason="tool-calls" if len(
+                        draft_tool_calls) > 0 else "stop",
+                    prompt=prompt_tokens,
+                    completion=completion_tokens
+                )
+
+
+@router.post("/api/chat")
+async def handle_chat_data(request: Request, protocol: str = Query('data')):
+    messages = request.messages
+    openai_messages = convert_to_openai_messages(messages)
+
+    response = StreamingResponse(stream_text(openai_messages, protocol))
+    response.headers['x-vercel-ai-data-stream'] = 'v1'
+    return response
