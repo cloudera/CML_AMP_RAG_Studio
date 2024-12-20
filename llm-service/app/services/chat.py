@@ -43,7 +43,10 @@ from typing import List
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
-from llama_index.core.chat_engine.types import AgentChatResponse, StreamingAgentChatResponse
+from llama_index.core.chat_engine.types import (
+    AgentChatResponse,
+    StreamingAgentChatResponse,
+)
 from llama_index.core.schema import NodeWithScore
 
 from ..ai.vector_stores.qdrant import QdrantVectorStore
@@ -145,7 +148,7 @@ def v2_chat_streaming(
         configuration,
         retrieve_chat_history(session_id),
     )
-    response_source_nodes = format_source_nodes(response.source_nodes)
+    # response_source_nodes = format_source_nodes(response.source_nodes)
     # todo: evaluate response and save the chat history (somewhere?)
     # ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return response

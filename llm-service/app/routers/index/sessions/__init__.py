@@ -102,12 +102,13 @@ async def chat_stream(session_id, request):
     for content in contents:
         yield f"{content}"
 
+    yield "\n"
     yield f"chunks\n"
     yield f"evaluations\n"
 
 async def full_chat_stream(stream: StreamingAgentChatResponse):
     for message in stream.chat_stream:
-        yield f"data: {message}\n\n"
+        yield f"data: {message.delta}\n\n"
     # for chunk in chunks:
     #     yield f"data: {chunk}\n\n"
 
