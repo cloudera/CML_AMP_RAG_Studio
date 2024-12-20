@@ -37,16 +37,21 @@
 # ##############################################################################
 import time
 import uuid
+import json
+from dataclasses import dataclass
+from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
-from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.chat import generate_suggested_questions, v2_chat, v2_chat_streaming
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagPredictSourceNode
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -93,6 +98,49 @@ def chat(
     return v2_chat(
         session_id, request.data_source_ids, request.query, request.configuration
     )
+
+
+def chat_stream(session_id, request):
+    contents = llm_talk_streaming(session_id, request)
+    for content in contents:
+        yield f"{content}"
+
+    yield "\n"
+    yield f"chunks\n"
+    yield f"evaluations\n"
+
+
+def full_chat_stream(stream: StreamingAgentChatResponse, chunks: List[RagPredictSourceNode]):
+    yield '{"message_id": "abc123"}\n'
+    for message in stream.response_gen:
+        yield '{"delta": "' + message + '"}\n'
+    yield '{"meta": "content complete"}\n'
+    yield f'{{"source_nodes": {json.dumps(list(map(lambda c: c.model_dump(), chunks)))}}}\n'
+
+
+@router.post("/chat-es", summary="Chat with your documents in the requested datasource")
+@exceptions.propagates
+def chat_es(
+    session_id: int,
+    request: RagStudioChatRequest,
+) -> StreamingResponse:
+    if request.configuration.exclude_knowledge_base:
+        return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
+
+    stream, source_nodes = v2_chat_streaming(session_id, request.data_source_ids, request.query, request.configuration)
+    # stream.print_response_stream()
+    return StreamingResponse(media_type="text/event-stream", content=full_chat_stream(stream, source_nodes))
+
+def llm_talk_streaming(
+        session_id: int,
+        request: RagStudioChatRequest,
+):
+    chat_response = llm_completion.completion_streaming(
+        session_id, request.query, request.configuration
+    )
+
+    for x in chat_response:
+        yield x.delta
 
 
 def llm_talk(

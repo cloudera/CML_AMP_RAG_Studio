@@ -35,20 +35,36 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import Generator
+
 import itertools
 
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 
 from ..rag_types import RagPredictConfiguration
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
 from .models import get_llm
 
 
-def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
+def _make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
     user = ChatMessage.from_str(x.rag_message["user"], role="user")
     assistant = ChatMessage.from_str(x.rag_message["assistant"], role="assistant")
     return [user, assistant]
 
+
+def completion_streaming(
+        session_id: int, question: str, configuration: RagPredictConfiguration
+) -> Generator[ChatResponse, None, None]:
+    model = get_llm(configuration.model_name)
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
+    messages = list(
+        itertools.chain.from_iterable(
+            map(lambda x: _make_chat_messages(x), chat_history)
+        )
+    )
+    messages.append(ChatMessage.from_str(question, role="user"))
+    return model.stream_chat(messages)
 
 def completion(
     session_id: int, question: str, configuration: RagPredictConfiguration
@@ -57,7 +73,7 @@ def completion(
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
-            map(lambda x: make_chat_messages(x), chat_history)
+            map(lambda x: _make_chat_messages(x), chat_history)
         )
     )
     messages.append(ChatMessage.from_str(question, role="user"))
