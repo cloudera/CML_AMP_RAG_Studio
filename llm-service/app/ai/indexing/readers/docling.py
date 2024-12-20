@@ -71,7 +71,7 @@ def load_chunks(markdown_reader: MdReader, file_path: Path) -> list[TextNode] | 
     logger.info(f"{markdown_file_path=}")
     if process.returncode == 0 and markdown_file_path.exists():
         # update chunk metadata to point at the original file
-        chunks = markdown_reader.load_chunks(markdown_file_path)
+        chunks = markdown_reader.load_chunks(markdown_file_path).chunks
         for chunk in chunks:
             chunk.metadata["file_name"] = file_path.name
         return chunks
