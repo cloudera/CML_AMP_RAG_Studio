@@ -44,23 +44,26 @@ from typing import Generator, List
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode, TextNode
+from typing_extensions import Optional
 
+from .base import BaseTextIndexer
+from .readers.base_reader import ReaderConfig, ChunksResult
 from ...ai.vector_stores.vector_store import VectorStore
 from ...services.utils import batch_sequence, flatten_sequence
-from .base import get_reader_class
 
 logger = logging.getLogger(__name__)
 
 
-class EmbeddingIndexer:
+class EmbeddingIndexer(BaseTextIndexer):
     def __init__(
-        self,
-        data_source_id: int,
-        splitter: SentenceSplitter,
-        embedding_model: BaseEmbedding,
-        chunks_vector_store: VectorStore,
+            self,
+            data_source_id: int,
+            splitter: SentenceSplitter,
+            embedding_model: BaseEmbedding,
+            chunks_vector_store: VectorStore,
+            reader_config: Optional[ReaderConfig] = None,
     ):
-        self.data_source_id = data_source_id
+        super().__init__(data_source_id, reader_config)
         self.splitter = splitter
         self.embedding_model = embedding_model
         self.chunks_vector_store = chunks_vector_store
@@ -70,26 +73,31 @@ class EmbeddingIndexer:
             f"Indexing file: {file_path} with embedding model: {self.embedding_model.model_name}"
         )
 
-        reader_cls = get_reader_class(file_path)
+        reader_cls = self._get_reader_class(file_path)
 
         reader = reader_cls(
             splitter=self.splitter,
             document_id=document_id,
             data_source_id=self.data_source_id,
+            config=self.reader_config
         )
 
         logger.debug(f"Parsing file: {file_path}")
 
-        chunks = reader.load_chunks(file_path)
+        chunks: ChunksResult = reader.load_chunks(file_path)
 
-        logger.debug(f"Embedding {len(chunks)} chunks")
+        if not chunks.chunks:
+            logger.warning(f"No chunks found in file: {file_path}")
+            return
 
-        chunks_with_embeddings = flatten_sequence(self._compute_embeddings(chunks))
+        logger.debug(f"Embedding {len(chunks.chunks)} chunks")
+
+        chunks_with_embeddings = flatten_sequence(self._compute_embeddings(chunks.chunks))
 
         acc = 0
         for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
             acc += len(chunk_batch)
-            logger.debug(f"Adding {acc}/{len(chunks)} chunks to vector store")
+            logger.debug(f"Adding {acc}/{len(chunks.chunks)} chunks to vector store")
 
             # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
             # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because
@@ -102,7 +110,7 @@ class EmbeddingIndexer:
         logger.debug(f"Indexing file: {file_path} completed")
 
     def _compute_embeddings(
-        self, chunks: List[TextNode]
+            self, chunks: List[TextNode]
     ) -> Generator[List[TextNode], None, None]:
         batched_chunks = list(batch_sequence(chunks, 100))
         batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]

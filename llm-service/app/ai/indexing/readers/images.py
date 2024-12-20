@@ -41,7 +41,7 @@ from typing import Any
 
 from llama_index.core.schema import TextNode
 
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 from .docling import load_chunks
 from .markdown import MdReader
 
@@ -51,7 +51,8 @@ class ImagesReader(BaseReader):
         super().__init__(*args, **kwargs)
         self.markdown_reader = MdReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> list[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
         # todo: what should we do if there are no chunks?
-        return chunks or []
+        # todo: handle PII & secrets
+        return ChunksResult(chunks=chunks)

@@ -44,7 +44,7 @@ from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
 from ....exceptions import DocumentParseError
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 from .docling import load_chunks
 from .markdown import MdReader
 
@@ -94,7 +94,7 @@ class PDFReader(BaseReader):
         self.inner = LlamaIndexPDFReader(return_full_document=False)
         self.markdown_reader = MdReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> list[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         docling_enabled: bool = (
                 os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         )
@@ -104,16 +104,36 @@ class PDFReader(BaseReader):
                 logger.debug(f"{file_path=}")
                 chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
                 if chunks:
-                    return chunks
+                    # todo: handle pii & secrets
+                    return ChunksResult(chunks = chunks)
         except DocumentParseError as e:
             logger.warning(f"Failed to parse document with docling: {e}")
 
+
+        ret = ChunksResult()
+
         pages: list[Document] = self.inner.load_data(file_path)
         page_counter = PageTracker(pages)
-        document = Document(text=page_counter.document_text)
+
+        content = page_counter.document_text
+
+        secrets = self._block_secrets([content])
+        if secrets is not None:
+            ret.secret_types = secrets
+            return ret
+
+        anonymized_text = self._anonymize_pii(content)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            content = anonymized_text
+
+        document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
         chunks = self._chunks_in_document(document)
+
+        # TODO: check if PPI removal breaks the page numbers slightly because the text changes
         page_counter.populate_chunk_page_numbers(chunks)
 
-        return chunks
+        ret.chunks = chunks
+        return ret

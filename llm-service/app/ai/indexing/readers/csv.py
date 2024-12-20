@@ -36,6 +36,7 @@
 #  DATA.
 #
 
+import logging
 import io
 import json
 from pathlib import Path
@@ -45,8 +46,9 @@ import pandas as pd
 from llama_index.core.node_parser.interface import MetadataAwareTextSplitter
 from llama_index.core.schema import Document, TextNode
 
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 
+logger = logging.getLogger(__name__)
 
 class _CsvSplitter(MetadataAwareTextSplitter):
     def split_text_metadata_aware(self, text: str, metadata_str: str) -> List[str]:
@@ -63,17 +65,34 @@ class _CsvSplitter(MetadataAwareTextSplitter):
 
 
 class CSVReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
+
         # Create the base document
         with open(file_path, "r") as f:
             content = f.read()
+
+        secrets = self._block_secrets([content])
+        if secrets is not None:
+            return ChunksResult(secret_types=secrets)
+
+        ret = ChunksResult()
+
+        anonymized_text = self._anonymize_pii(content)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            content = anonymized_text
+
         document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
 
         local_splitter = _CsvSplitter()
 
-        rows = local_splitter.get_nodes_from_documents([document])
+        try:
+            rows = local_splitter.get_nodes_from_documents([document])
+        except Exception as e:
+            logger.error(f"Error processing CSV file {file_path}: {e}")
+            return ret
 
         for i, row in enumerate(rows):
             row.metadata["file_name"] = document.metadata["file_name"]
@@ -87,4 +106,5 @@ class CSVReader(BaseReader):
             assert isinstance(row, TextNode)
             converted_rows.append(row)
 
-        return converted_rows
+        ret.chunks = converted_rows
+        return ret
