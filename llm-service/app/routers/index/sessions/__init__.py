@@ -37,6 +37,8 @@
 # ##############################################################################
 import time
 import uuid
+import json
+from dataclasses import dataclass
 from typing import List
 
 from fastapi import APIRouter, HTTPException, Response
@@ -107,12 +109,13 @@ def chat_stream(session_id, request):
     yield f"chunks\n"
     yield f"evaluations\n"
 
+
 def full_chat_stream(stream: StreamingAgentChatResponse, chunks: List[RagPredictSourceNode]):
+    yield '{"message_id": "abc123"}\n'
     for message in stream.response_gen:
-        yield f"{message}"
-    yield "\n"
-    for chunk in chunks:
-        yield f"source: {chunk}\n"
+        yield '{"delta": "' + message + '"}\n'
+    yield '{"meta": "content complete"}\n'
+    yield f'{{"source_nodes": {json.dumps(list(map(lambda c: c.model_dump(), chunks)))}}}\n'
 
 
 @router.post("/chat-es", summary="Chat with your documents in the requested datasource")
