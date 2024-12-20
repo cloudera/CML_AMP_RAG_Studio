@@ -115,7 +115,6 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
         log.info("Document already indexed: {}", document.filename());
         continue;
       }
-      // todo: is there a way to test intermediate state?
       setToInProgress(document);
 
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
