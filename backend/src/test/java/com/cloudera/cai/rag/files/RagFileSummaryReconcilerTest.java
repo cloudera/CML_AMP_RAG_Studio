@@ -52,8 +52,10 @@ import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Test;
 
@@ -72,42 +74,84 @@ class RagFileSummaryReconcilerTest {
     RagFileSummaryReconciler reconciler = createTestInstance(requestTracker);
 
     String documentId = UUID.randomUUID().toString();
-    long dataSourceId =
-        ragDataSourceRepository.createRagDataSource(
-            new RagDataSource(
-                null,
-                "test_datasource",
-                "test_embedding_model",
-                "summarizationModel",
-                1024,
-                20,
-                null,
-                null,
-                "test-id",
-                "test-id",
-                Types.ConnectionType.API,
-                null,
-                null));
-    RagDocument document =
-        RagDocument.builder()
-            .documentId(documentId)
-            .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3")
-            .extension("pdf")
-            .filename("myfile.pdf")
-            .timeCreated(Instant.now())
-            .timeUpdated(Instant.now())
-            .createdById("test-id")
-            .build();
+    var dataSourceId = createDataSource("summarizationModel");
+    var document = createTestDoc(documentId, dataSourceId, "path_in_s3");
     Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
 
     reconciler.submit(document.withId(id));
     // add a copy that has already been summarized to make sure we don't try to
-    // re-summarize with
-    // long-running summarizations
+    // re-summarize with long-running summarizations
     reconciler.submit(document.withId(id).withSummaryCreationTimestamp(Instant.now()));
+
+    await().until(reconciler::isEmpty);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(reconciler.isEmpty()).isTrue();
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.summaryCreationTimestamp()).isNotNull();
+              assertThat(updatedDocument.summaryStatus())
+                  .isEqualTo(Types.RagDocumentStatus.SUCCESS);
+              assertThat(requestTracker.getValues())
+                  .hasSize(1)
+                  .contains(
+                      new RagBackendClient.TrackedRequest<>(
+                          new RagBackendClient.SummaryRequest(
+                              "rag-files", document.s3Path(), document.filename())));
+            });
+  }
+
+  private static RagDocument createTestDoc(
+      String documentId, long dataSourceId, String path_in_s3) {
+    return RagDocument.builder()
+        .documentId(documentId)
+        .dataSourceId(dataSourceId)
+        .s3Path(path_in_s3)
+        .extension("pdf")
+        .filename("myfile.pdf")
+        .timeCreated(Instant.now())
+        .timeUpdated(Instant.now())
+        .createdById("test-id")
+        .build();
+  }
+
+  @Test
+  void reconcile_stateChanges() {
+    Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
+    var waiter = new CountDownLatch(1);
+    RagFileSummaryReconciler reconciler =
+        createTestInstance(
+            requestTracker,
+            List.of(
+                () -> {
+                  try {
+                    waiter.await();
+                  } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                  }
+                }));
+
+    String documentId = UUID.randomUUID().toString();
+    var dataSourceId = createDataSource("summarizationModel");
+    var document = createTestDoc(documentId, dataSourceId, "path_in_s3");
+    Long id = ragFileRepository.insertDocumentMetadata(document);
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
+        .isNull();
+
+    reconciler.submit(document.withId(id));
+
+    await()
+        .untilAsserted(
+            () -> {
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.summaryCreationTimestamp()).isNull();
+              assertThat(updatedDocument.summaryStatus())
+                  .isEqualTo(Types.RagDocumentStatus.IN_PROGRESS);
+            });
+
+    waiter.countDown();
     await().until(reconciler::isEmpty);
     await()
         .untilAsserted(
@@ -120,8 +164,26 @@ class RagFileSummaryReconcilerTest {
                   .contains(
                       new RagBackendClient.TrackedRequest<>(
                           new RagBackendClient.SummaryRequest(
-                              "rag-files", "path_in_s3", "myfile.pdf")));
+                              "rag-files", document.s3Path(), document.filename())));
             });
+  }
+
+  private long createDataSource(String summarizationModel) {
+    return ragDataSourceRepository.createRagDataSource(
+        new RagDataSource(
+            null,
+            "test_datasource",
+            "test_embedding_model",
+            summarizationModel,
+            1024,
+            20,
+            null,
+            null,
+            "test-id",
+            "test-id",
+            Types.ConnectionType.API,
+            null,
+            null));
   }
 
   @Test
@@ -131,33 +193,8 @@ class RagFileSummaryReconcilerTest {
         createTestInstance(requestTracker, new NotFound("not found"));
 
     String documentId = UUID.randomUUID().toString();
-    long dataSourceId =
-        ragDataSourceRepository.createRagDataSource(
-            new RagDataSource(
-                null,
-                "test_datasource",
-                "test_embedding_model",
-                "summarizationModel",
-                1024,
-                20,
-                null,
-                null,
-                "test-id",
-                "test-id",
-                Types.ConnectionType.API,
-                null,
-                null));
-    RagDocument document =
-        RagDocument.builder()
-            .documentId(documentId)
-            .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3")
-            .extension("pdf")
-            .filename("myfile.pdf")
-            .timeCreated(Instant.now())
-            .timeUpdated(Instant.now())
-            .createdById("test-id")
-            .build();
+    var dataSourceId = createDataSource("summarizationModel");
+    var document = createTestDoc(documentId, dataSourceId, "path_in_s3");
     Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
@@ -188,33 +225,8 @@ class RagFileSummaryReconcilerTest {
         createTestInstance(requestTracker, new RuntimeException("document summarization failed"));
 
     String documentId = UUID.randomUUID().toString();
-    long dataSourceId =
-        ragDataSourceRepository.createRagDataSource(
-            new RagDataSource(
-                null,
-                "test_datasource",
-                "test_embedding_model",
-                "summarizationModel",
-                1024,
-                20,
-                null,
-                null,
-                "test-id",
-                "test-id",
-                Types.ConnectionType.API,
-                null,
-                null));
-    RagDocument document =
-        RagDocument.builder()
-            .documentId(documentId)
-            .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3")
-            .extension("pdf")
-            .filename("myfile.pdf")
-            .timeCreated(Instant.now())
-            .timeUpdated(Instant.now())
-            .createdById("test-id")
-            .build();
+    var dataSourceId = createDataSource("summarizationModel");
+    var document = createTestDoc(documentId, dataSourceId, "path_in_s3");
     Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
@@ -243,34 +255,9 @@ class RagFileSummaryReconcilerTest {
     Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
     RagFileSummaryReconciler reconciler = createTestInstance(requestTracker);
 
-    long dataSourceId =
-        ragDataSourceRepository.createRagDataSource(
-            new RagDataSource(
-                null,
-                "test_datasource",
-                "test_embedding_model",
-                null,
-                1024,
-                20,
-                null,
-                null,
-                "test-id",
-                "test-id",
-                Types.ConnectionType.API,
-                null,
-                null));
+    var dataSourceId = createDataSource(null);
     String documentId = UUID.randomUUID().toString();
-    RagDocument document =
-        RagDocument.builder()
-            .documentId(documentId)
-            .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3_no_summarization_model")
-            .extension("pdf")
-            .filename("myfile.pdf")
-            .timeCreated(Instant.now())
-            .timeUpdated(Instant.now())
-            .createdById("test-id")
-            .build();
+    var document = createTestDoc(documentId, dataSourceId, "path_in_s3_no_summarization_model");
     ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).summaryCreationTimestamp())
         .isNull();
@@ -294,13 +281,27 @@ class RagFileSummaryReconcilerTest {
 
   private RagFileSummaryReconciler createTestInstance(
       Tracker<RagBackendClient.TrackedRequest<?>> tracker, RuntimeException... exceptions) {
+    return createTestInstance(
+        tracker,
+        Arrays.stream(exceptions)
+            .map(
+                e ->
+                    (Runnable)
+                        () -> {
+                          throw e;
+                        })
+            .toList());
+  }
+
+  private RagFileSummaryReconciler createTestInstance(
+      Tracker<RagBackendClient.TrackedRequest<?>> tracker, List<Runnable> runnables) {
     Jdbi jdbi = new JdbiConfiguration().jdbi();
     var reconcilerConfig = ReconcilerConfig.builder().isTestReconciler(true).workerCount(1).build();
     RagFileSummaryReconciler reconciler =
         new RagFileSummaryReconciler(
             "rag-files",
             jdbi,
-            RagBackendClient.createNull(tracker, exceptions),
+            RagBackendClient.createNull(tracker, runnables),
             ragFileRepository,
             reconcilerConfig,
             OpenTelemetry.noop());

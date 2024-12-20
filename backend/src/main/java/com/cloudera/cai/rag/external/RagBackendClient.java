@@ -50,6 +50,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -152,11 +154,10 @@ public class RagBackendClient {
     return createNull(new Tracker<>());
   }
 
-  public static RagBackendClient createNull(
-      Tracker<TrackedRequest<?>> tracker, RuntimeException... t) {
+  public static RagBackendClient createNull(Tracker<TrackedRequest<?>> tracker, List<Runnable> r) {
     return new RagBackendClient(SimpleHttpClient.createNull()) {
-      private final RuntimeException[] exceptions = t;
-      private int exceptionIndex = 0;
+      private final List<Runnable> runnables = r;
+      private int runnableIndex = 0;
 
       @Override
       public void indexFile(
@@ -170,8 +171,8 @@ public class RagBackendClient {
       }
 
       private void checkForException() {
-        if (exceptionIndex < exceptions.length) {
-          throw exceptions[exceptionIndex++];
+        if (runnableIndex < runnables.size()) {
+          runnables.get(runnableIndex++).run();
         }
       }
 
@@ -207,6 +208,20 @@ public class RagBackendClient {
         checkForException();
       }
     };
+  }
+
+  public static RagBackendClient createNull(
+      Tracker<TrackedRequest<?>> tracker, RuntimeException... t) {
+    return RagBackendClient.createNull(
+        tracker,
+        Arrays.stream(t)
+            .map(
+                e ->
+                    (Runnable)
+                        () -> {
+                          throw e;
+                        })
+            .toList());
   }
 
   public record TrackedIndexRequest(
