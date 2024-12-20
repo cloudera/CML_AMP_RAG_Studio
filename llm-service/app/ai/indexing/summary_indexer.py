@@ -43,7 +43,6 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast
 
-from docling_core.types.legacy_doc.base import BaseText
 from llama_index.core import (
     DocumentSummaryIndex,
     StorageContext,
@@ -59,7 +58,7 @@ from llama_index.core.schema import (
 )
 
 from app.services.models import get_noop_embedding_model, get_noop_llm_model
-from .base import get_reader_class, BaseTextIndexer
+from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ...config import Settings
 

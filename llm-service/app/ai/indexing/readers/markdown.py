@@ -37,7 +37,7 @@
 #
 
 from pathlib import Path
-from typing import Any, List, cast
+from typing import Any, cast
 
 from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.core.schema import TextNode, Document, BaseNode

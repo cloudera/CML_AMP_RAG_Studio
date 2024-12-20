@@ -37,9 +37,8 @@
 #
 
 from pathlib import Path
-from typing import List
 
-from llama_index.core.schema import Document, TextNode
+from llama_index.core.schema import Document
 
 from .base_reader import BaseReader, ChunksResult
 
