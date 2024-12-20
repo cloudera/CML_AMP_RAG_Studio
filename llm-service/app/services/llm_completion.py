@@ -44,7 +44,7 @@ from .chat_store import ChatHistoryManager, RagStudioChatMessage
 from .models import get_llm
 
 
-def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
+def _make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
     user = ChatMessage.from_str(x.rag_message["user"], role="user")
     assistant = ChatMessage.from_str(x.rag_message["assistant"], role="assistant")
     return [user, assistant]
@@ -57,7 +57,7 @@ def completion(
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
-            map(lambda x: make_chat_messages(x), chat_history)
+            map(lambda x: _make_chat_messages(x), chat_history)
         )
     )
     messages.append(ChatMessage.from_str(question, role="user"))

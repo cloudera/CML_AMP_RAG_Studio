@@ -38,7 +38,8 @@
 import time
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -93,6 +94,20 @@ def chat(
     return v2_chat(
         session_id, request.data_source_ids, request.query, request.configuration
     )
+
+
+def chat_stream(session_id, request):
+    pass
+
+
+@router.post("/chat-es", summary="Chat with your documents in the requested datasource")
+@exceptions.propagates
+def chat(
+    session_id: int,
+    request: RagStudioChatRequest,
+) -> StreamingResponse:
+
+    return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
 
 
 def llm_talk(
