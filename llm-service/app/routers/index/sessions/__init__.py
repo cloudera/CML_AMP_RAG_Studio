@@ -96,13 +96,15 @@ def chat(
     )
 
 
-def chat_stream(session_id, request):
-    pass
+async def chat_stream(session_id, request):
+    for i in range(10):
+        yield f"data: {i}\n"
+        time.sleep(0.2)
 
 
 @router.post("/chat-es", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
-def chat(
+async def chat_es(
     session_id: int,
     request: RagStudioChatRequest,
 ) -> StreamingResponse:
