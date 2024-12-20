@@ -46,7 +46,7 @@ from .... import exceptions
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
-from ....services.chat import generate_suggested_questions, v2_chat
+from ....services.chat import generate_suggested_questions, v2_chat, v2_chat_streaming
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
@@ -104,6 +104,12 @@ async def chat_stream(session_id, request):
     yield f"chunks\n"
     yield f"evaluations\n"
 
+async def full_chat_stream(chunks, stream):
+    for chunk in chunks:
+        yield f"data: {chunk}\n\n"
+    for message in stream:
+        yield f"data: {message}\n\n"
+
 
 @router.post("/chat-es", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
@@ -111,8 +117,11 @@ async def chat_es(
     session_id: int,
     request: RagStudioChatRequest,
 ) -> StreamingResponse:
+    if request.configuration.exclude_knowledge_base:
+        return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
 
-    return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
+    chunks, stream = v2_chat_streaming(session_id, request.data_source_ids, request.query, request.configuration)
+    return StreamingResponse(media_type="text/event-stream", content=full_chat_stream(chunks, stream))
 
 def llm_talk_streaming(
         session_id: int,
@@ -124,8 +133,6 @@ def llm_talk_streaming(
 
     for x in chat_response:
         yield x.delta
-
-
 
 
 def llm_talk(

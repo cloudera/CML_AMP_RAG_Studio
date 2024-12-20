@@ -43,7 +43,8 @@ from typing import List
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
-from llama_index.core.chat_engine.types import AgentChatResponse
+from llama_index.core.chat_engine.types import AgentChatResponse, StreamingAgentChatResponse
+from llama_index.core.schema import NodeWithScore
 
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
@@ -93,7 +94,7 @@ def v2_chat(
     relevance, faithfulness = evaluators.evaluate_response(
         query, response, configuration.model_name
     )
-    response_source_nodes = format_source_nodes(response)
+    response_source_nodes = format_source_nodes(response.source_nodes)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         source_nodes=response_source_nodes,
@@ -111,6 +112,44 @@ def v2_chat(
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
+def v2_chat_streaming(
+    session_id: int,
+    data_source_ids: list[int],
+    query: str,
+    configuration: RagPredictConfiguration,
+) -> (List[RagPredictSourceNode], StreamingAgentChatResponse):
+    response_id = str(uuid.uuid4())
+
+    if len(data_source_ids) != 1:
+        raise HTTPException(
+            status_code=400, detail="Only one datasource is supported for chat."
+        )
+
+    data_source_id: int = data_source_ids[0]
+    if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
+        return RagStudioChatMessage(
+            id=response_id,
+            source_nodes=[],
+            inference_model=None,
+            rag_message={
+                "user": query,
+                "assistant": "I don't have any documents to answer your question.",
+            },
+            evaluations=[],
+            timestamp=time.time(),
+        )
+
+    response: StreamingAgentChatResponse = qdrant.query_streaming(
+        data_source_id,
+        query,
+        configuration,
+        retrieve_chat_history(session_id),
+    )
+    response_source_nodes = format_source_nodes(response.source_nodes)
+    # todo: evaluate response and save the chat history (somewhere?)
+    # ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    return response_source_nodes, response
+
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
@@ -127,9 +166,9 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     return history
 
 
-def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNode]:
+def format_source_nodes(source_nodes: List[NodeWithScore]) -> List[RagPredictSourceNode]:
     response_source_nodes = []
-    for source_node in response.source_nodes:
+    for source_node in source_nodes:
         doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
         response_source_nodes.append(
             RagPredictSourceNode(
