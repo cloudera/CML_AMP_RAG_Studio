@@ -97,9 +97,12 @@ def chat(
 
 
 async def chat_stream(session_id, request):
-    for i in range(10):
-        yield f"data: {i}\n"
-        time.sleep(0.2)
+    contents = llm_talk_streaming(session_id, request)
+    for content in contents:
+        yield f"{content}"
+
+    yield f"chunks\n"
+    yield f"evaluations\n"
 
 
 @router.post("/chat-es", summary="Chat with your documents in the requested datasource")
@@ -110,6 +113,19 @@ async def chat_es(
 ) -> StreamingResponse:
 
     return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
+
+def llm_talk_streaming(
+        session_id: int,
+        request: RagStudioChatRequest,
+):
+    chat_response = llm_completion.completion_streaming(
+        session_id, request.query, request.configuration
+    )
+
+    for x in chat_response:
+        yield x.delta
+
+
 
 
 def llm_talk(
