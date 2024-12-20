@@ -69,6 +69,7 @@ export enum MutationKeys {
   "testEmbeddingModel" = "testEmbeddingModel",
   "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
   "updateSession" = "updateSession",
+  "chatStreamingMutation" = "chatStreamingMutation",
 }
 
 export enum QueryKeys {
@@ -118,11 +119,13 @@ export class ApiError extends Error {
 export const postRequest = async <T>(
   url: string,
   body: Record<never, never>,
+  headers?: Record<string, string>,
 ): Promise<T> => {
   const res = await fetch(url, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
+      ...headers,
       ...commonHeaders,
       "Content-Type": "application/json",
     },

@@ -216,3 +216,33 @@ export const createQueryConfiguration = (
     exclude_knowledge_base: excludeKnowledgeBase,
   };
 };
+
+export const useChatStreamingMutation = () => {
+  return useMutation({
+    mutationKey: [MutationKeys.chatStreamingMutation],
+    mutationFn: chatStreamMutation,
+  });
+};
+
+const chatStreamMutation = async (request: ChatMutationRequest) => {
+  const response = await fetch(
+    `${llmServicePath}/sessions/${request.session_id}/chat-es`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+      body: JSON.stringify(request),
+    },
+  );
+  if (response.body) {
+    const reader = response.body
+      .pipeThrough(new TextDecoderStream())
+      .getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      console.log("Received", value);
+    }
+  }
+};
