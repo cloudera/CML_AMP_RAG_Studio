@@ -42,6 +42,7 @@ import {
   MutationKeys,
   postRequest,
   QueryKeys,
+  rawPostRequest,
   UseMutationType,
 } from "src/api/utils.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -225,15 +226,9 @@ export const useChatStreamingMutation = () => {
 };
 
 const chatStreamMutation = async (request: ChatMutationRequest) => {
-  const response = await fetch(
+  const response = await rawPostRequest(
     `${llmServicePath}/sessions/${request.session_id}/chat-es`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/event-stream",
-      },
-      body: JSON.stringify(request),
-    },
+    request,
   );
   if (response.body) {
     const reader = response.body

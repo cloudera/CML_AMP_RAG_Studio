@@ -116,16 +116,14 @@ export class ApiError extends Error {
   }
 }
 
-export const postRequest = async <T>(
+export const rawPostRequest = async (
   url: string,
   body: Record<never, never>,
-  headers?: Record<string, string>,
-): Promise<T> => {
+) => {
   const res = await fetch(url, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
-      ...headers,
       ...commonHeaders,
       "Content-Type": "application/json",
     },
@@ -134,6 +132,14 @@ export const postRequest = async <T>(
     const detail = (await res.json()) as CustomError;
     throw new ApiError(detail.message ?? detail.detail, res.status);
   }
+  return res;
+};
+
+export const postRequest = async <T>(
+  url: string,
+  body: Record<never, never>,
+): Promise<T> => {
+  const res = await rawPostRequest(url, body);
   return await ((await res.json()) as Promise<T>);
 };
 
