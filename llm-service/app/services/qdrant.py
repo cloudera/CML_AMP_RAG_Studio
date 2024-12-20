@@ -147,14 +147,4 @@ def query_streaming(
         )
     )
 
-    try:
-        chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(query_str, chat_messages)
-        logger.info("query response received from chat engine")
-        return chat_response
-    except botocore.exceptions.ClientError as error:
-        logger.warning(error.response)
-        json_error = error.response
-        raise HTTPException(
-            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["message"],
-        ) from error
+    return chat_engine.stream_chat(query_str, chat_messages)

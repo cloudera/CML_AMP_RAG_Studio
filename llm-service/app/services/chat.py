@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import logging
 import time
 import uuid
 from collections.abc import Iterator
@@ -120,7 +120,7 @@ def v2_chat_streaming(
     data_source_ids: list[int],
     query: str,
     configuration: RagPredictConfiguration,
-) -> StreamingAgentChatResponse:
+) -> tuple[StreamingAgentChatResponse, List[RagPredictSourceNode]]:
     response_id = str(uuid.uuid4())
 
     if len(data_source_ids) != 1:
@@ -148,10 +148,10 @@ def v2_chat_streaming(
         configuration,
         retrieve_chat_history(session_id),
     )
-    # response_source_nodes = format_source_nodes(response.source_nodes)
+    response_source_nodes = format_source_nodes(response.source_nodes)
     # todo: evaluate response and save the chat history (somewhere?)
     # ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-    return response
+    return response, response_source_nodes
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:

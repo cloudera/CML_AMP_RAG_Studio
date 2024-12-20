@@ -37,6 +37,7 @@
 # ##############################################################################
 import time
 import uuid
+from typing import List
 
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import StreamingResponse
@@ -48,7 +49,7 @@ from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat, v2_chat_streaming
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagPredictSourceNode
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -97,7 +98,7 @@ def chat(
     )
 
 
-async def chat_stream(session_id, request):
+def chat_stream(session_id, request):
     contents = llm_talk_streaming(session_id, request)
     for content in contents:
         yield f"{content}"
@@ -106,24 +107,26 @@ async def chat_stream(session_id, request):
     yield f"chunks\n"
     yield f"evaluations\n"
 
-async def full_chat_stream(stream: StreamingAgentChatResponse):
-    for message in stream.chat_stream:
-        yield f"data: {message.delta}\n\n"
-    # for chunk in chunks:
-    #     yield f"data: {chunk}\n\n"
+def full_chat_stream(stream: StreamingAgentChatResponse, chunks: List[RagPredictSourceNode]):
+    for message in stream.response_gen:
+        yield f"{message}"
+    yield "\n"
+    for chunk in chunks:
+        yield f"source: {chunk}\n"
 
 
 @router.post("/chat-es", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
-async def chat_es(
+def chat_es(
     session_id: int,
     request: RagStudioChatRequest,
 ) -> StreamingResponse:
     if request.configuration.exclude_knowledge_base:
         return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
 
-    stream = v2_chat_streaming(session_id, request.data_source_ids, request.query, request.configuration)
-    return StreamingResponse(media_type="text/event-stream", content=map(lambda x: x.delta, stream.chat_stream))
+    stream, source_nodes = v2_chat_streaming(session_id, request.data_source_ids, request.query, request.configuration)
+    # stream.print_response_stream()
+    return StreamingResponse(media_type="text/event-stream", content=full_chat_stream(stream, source_nodes))
 
 def llm_talk_streaming(
         session_id: int,
