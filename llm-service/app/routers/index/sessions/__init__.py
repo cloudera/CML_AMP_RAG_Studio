@@ -40,6 +40,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import StreamingResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -104,11 +105,11 @@ async def chat_stream(session_id, request):
     yield f"chunks\n"
     yield f"evaluations\n"
 
-async def full_chat_stream(chunks, stream):
-    for chunk in chunks:
-        yield f"data: {chunk}\n\n"
-    for message in stream:
+async def full_chat_stream(stream: StreamingAgentChatResponse):
+    for message in stream.chat_stream:
         yield f"data: {message}\n\n"
+    # for chunk in chunks:
+    #     yield f"data: {chunk}\n\n"
 
 
 @router.post("/chat-es", summary="Chat with your documents in the requested datasource")
@@ -120,8 +121,8 @@ async def chat_es(
     if request.configuration.exclude_knowledge_base:
         return StreamingResponse(media_type="text/event-stream", content=chat_stream(session_id, request))
 
-    chunks, stream = v2_chat_streaming(session_id, request.data_source_ids, request.query, request.configuration)
-    return StreamingResponse(media_type="text/event-stream", content=full_chat_stream(chunks, stream))
+    stream = v2_chat_streaming(session_id, request.data_source_ids, request.query, request.configuration)
+    return StreamingResponse(media_type="text/event-stream", content=map(lambda x: x.delta, stream.chat_stream))
 
 def llm_talk_streaming(
         session_id: int,

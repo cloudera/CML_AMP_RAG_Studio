@@ -117,7 +117,7 @@ def v2_chat_streaming(
     data_source_ids: list[int],
     query: str,
     configuration: RagPredictConfiguration,
-) -> (List[RagPredictSourceNode], StreamingAgentChatResponse):
+) -> StreamingAgentChatResponse:
     response_id = str(uuid.uuid4())
 
     if len(data_source_ids) != 1:
@@ -126,18 +126,18 @@ def v2_chat_streaming(
         )
 
     data_source_id: int = data_source_ids[0]
-    if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
-        return RagStudioChatMessage(
-            id=response_id,
-            source_nodes=[],
-            inference_model=None,
-            rag_message={
-                "user": query,
-                "assistant": "I don't have any documents to answer your question.",
-            },
-            evaluations=[],
-            timestamp=time.time(),
-        )
+    # if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
+    #     return RagStudioChatMessage(
+    #         id=response_id,
+    #         source_nodes=[],
+    #         inference_model=None,
+    #         rag_message={
+    #             "user": query,
+    #             "assistant": "I don't have any documents to answer your question.",
+    #         },
+    #         evaluations=[],
+    #         timestamp=time.time(),
+    #     )
 
     response: StreamingAgentChatResponse = qdrant.query_streaming(
         data_source_id,
@@ -148,7 +148,7 @@ def v2_chat_streaming(
     response_source_nodes = format_source_nodes(response.source_nodes)
     # todo: evaluate response and save the chat history (somewhere?)
     # ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-    return response_source_nodes, response
+    return response
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
