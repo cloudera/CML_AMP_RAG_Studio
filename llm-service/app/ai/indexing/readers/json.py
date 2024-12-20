@@ -36,20 +36,39 @@
 #  DATA.
 #
 
+import logging
 import json
 from pathlib import Path
 from typing import List
 
 from llama_index.core.schema import Document, TextNode
 
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 
+logger = logging.getLogger(__name__)
 
 class JSONReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         with open(file_path, "r") as f:
             content = json.load(f)
-        document = Document(text=json.dumps(content, sort_keys=True))
+
+        secrets = self._block_secrets([content])
+        if secrets is not None:
+            return ChunksResult(secret_types=secrets)
+
+        ret = ChunksResult()
+        anonymized_text = self._anonymize_pii(content)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            content = anonymized_text
+
+        try:
+            document = Document(text=json.dumps(content, sort_keys=True))
+        except Exception as e:
+            logger.error(f"Error parsing JSON file {file_path}: {e}")
+            return ret
+
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
-        return [document]
+        ret.chunks = self._chunks_in_document(document)
+        return ret

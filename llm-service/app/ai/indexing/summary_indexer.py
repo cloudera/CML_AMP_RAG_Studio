@@ -43,6 +43,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast
 
+from docling_core.types.legacy_doc.base import BaseText
 from llama_index.core import (
     DocumentSummaryIndex,
     StorageContext,
@@ -58,7 +59,8 @@ from llama_index.core.schema import (
 )
 
 from app.services.models import get_noop_embedding_model, get_noop_llm_model
-from .base import get_reader_class
+from .base import get_reader_class, BaseTextIndexer
+from .readers.base_reader import ReaderConfig, ChunksResult
 from ...config import Settings
 
 logger = logging.getLogger(__name__)
@@ -72,14 +74,15 @@ SUMMARY_PROMPT = 'Summarize the contents into less than 100 words. If an adequat
 _write_lock = Lock()
 
 
-class SummaryIndexer:
+class SummaryIndexer(BaseTextIndexer):
     def __init__(
             self,
             data_source_id: int,
             splitter: SentenceSplitter,
             llm: LLM,
+            reader_config: Optional[ReaderConfig] = None,
     ):
-        self.data_source_id = data_source_id
+        super().__init__(data_source_id, reader_config=reader_config)
         self.splitter = splitter
         self.llm = llm
 
@@ -148,22 +151,27 @@ class SummaryIndexer:
     def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(f"Creating summary for file {file_path}")
 
-        reader_cls = get_reader_class(file_path)
+        reader_cls = self._get_reader_class(file_path)
 
         reader = reader_cls(
             splitter=self.splitter,
             document_id=document_id,
             data_source_id=self.data_source_id,
+            config=self.reader_config,
         )
 
         logger.debug(f"Parsing file: {file_path}")
 
-        chunks = reader.load_chunks(file_path)
+        chunks: ChunksResult = reader.load_chunks(file_path)
+
+        if not chunks.chunks:
+            logger.warning(f"No chunks found for file {file_path}")
+            return
 
         with _write_lock:
             persist_dir = self.__persist_dir()
             summary_store = self.__summary_indexer(persist_dir)
-            summary_store.insert_nodes(chunks)
+            summary_store.insert_nodes(chunks.chunks)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)

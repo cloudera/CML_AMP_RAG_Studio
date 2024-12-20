@@ -42,7 +42,7 @@ from typing import Any, List
 from llama_index.core.schema import TextNode
 from llama_index.readers.file import PptxReader as LlamaIndexPptxReader
 
-from .base_reader import BaseReader
+from .base_reader import BaseReader, ChunksResult
 
 
 class PptxReader(BaseReader):
@@ -50,10 +50,28 @@ class PptxReader(BaseReader):
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPptxReader()
 
-    def load_chunks(self, file_path: Path) -> List[TextNode]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
+
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
         document = documents[0]
         document.id_ = self.document_id
+
+        document_text = document.text
+
+        secrets = self._block_secrets([document_text])
+        if secrets is not None:
+            return ChunksResult(secret_types=secrets)
+
+        ret = ChunksResult()
+
+        anonymized_text = self._anonymize_pii(document_text)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            document_text = anonymized_text
+
+        document.text = document_text
+
         self._add_document_metadata(document, file_path)
-        return self._chunks_in_document(document)
+        ret.chunks = self._chunks_in_document(document)
+        return ret
