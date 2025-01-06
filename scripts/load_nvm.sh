@@ -1,5 +1,3 @@
-#!/usr/bin/bash
-
 #
 # CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 # (C) Cloudera, Inc. 2024
@@ -22,7 +20,7 @@
 # with an authorized and properly licensed third party, you do not
 # have any rights to access nor to use this code.
 #
-# Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+# Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 # contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 # KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 # WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -37,24 +35,8 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
-
-
-# Download and install nvm:
+set -eo pipefail
 set +x
-
-# NVM installer updates bashrc if exists
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
-nvm install 22
-nvm use 22
-
-# Verify the Node.js version:
-echo $(which node)
-node -v
-nvm current
-
-# Verify npm version:
-echo $(which npm)
-npm -v
