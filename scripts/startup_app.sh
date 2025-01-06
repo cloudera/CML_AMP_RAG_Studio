@@ -72,6 +72,6 @@ done
 # start Node production server
 
 cd ..
-source scripts/setup_nvm.sh
+source ~/.bashrc
 cd ui
 node express/index.js
