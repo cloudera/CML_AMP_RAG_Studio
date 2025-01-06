@@ -72,6 +72,9 @@ done
 # start Node production server
 
 cd ..
-source ~/.bashrc > /dev/null
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
+
 cd ui
 node express/index.js

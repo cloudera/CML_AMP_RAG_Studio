@@ -42,7 +42,6 @@
 # Download and install nvm:
 
 # NVM installer updates bashrc if exists
-touch ~/.bashrc
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 
 export NVM_DIR="$HOME/.nvm"

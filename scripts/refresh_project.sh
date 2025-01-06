@@ -42,7 +42,8 @@ set -eox pipefail
 ## set the RELEASE_TAG env var from the file, if it exists
 source scripts/release_version.txt || true
 
-source ~/.bashrc > /dev/null
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
 
 set +e
 nvm use 22
