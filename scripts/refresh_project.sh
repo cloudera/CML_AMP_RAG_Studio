@@ -49,6 +49,9 @@ set -e
 if [ $return_code -ne 0 ]; then
     echo "NVM or required Node version not found.  Installing and using..."
     bash scripts/install_node.sh
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
     nvm use 22
 fi
 cd ui/express
