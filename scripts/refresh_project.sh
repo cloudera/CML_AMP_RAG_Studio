@@ -48,7 +48,7 @@ return_code=$?
 set -e
 if [ $return_code -ne 0 ]; then
     echo "NVM or required Node version not found.  Installing and using..."
-    scripts/install_node.sh
+    bash scripts/install_node.sh
     nvm use 22
 fi
 cd ui/express
