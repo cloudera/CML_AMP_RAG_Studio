@@ -42,6 +42,9 @@ set -eox pipefail
 ## set the RELEASE_TAG env var from the file, if it exists
 source scripts/release_version.txt || true
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
 set +e
 nvm use 22
 return_code=$?
@@ -49,8 +52,6 @@ set -e
 if [ $return_code -ne 0 ]; then
     echo "NVM or required Node version not found.  Installing and using..."
     bash scripts/install_node.sh
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
     nvm use 22
 fi
