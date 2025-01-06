@@ -37,11 +37,19 @@
 # DATA.
 #
 
-set -e
+set -eox pipefail
 
 ## set the RELEASE_TAG env var from the file, if it exists
 source scripts/release_version.txt || true
 
+set +e
+nvm use 22
+return_code=$?
+if [ $return_code -ne 0 ]; then
+    echo "Node 22 is not installed. Please install it using nvm."
+    exit 1
+fi
+set -e
 cd ui/express
 npm install
 

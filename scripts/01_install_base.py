@@ -41,6 +41,11 @@ import subprocess
 print(subprocess.run(["python /home/cdsw/scripts/validator/validate_env.py"], shell=True, check=True))
 
 print(
+    subprocess.run("bash /home/cdsw/scripts/install_node.sh", shell=True, check=True)
+)
+print("Installing Node is complete")
+
+print(
     subprocess.run(["bash /home/cdsw/scripts/install_java.sh"], shell=True, check=True)
 )
 print("Installing Java 21 is complete")

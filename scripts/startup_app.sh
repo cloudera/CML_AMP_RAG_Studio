@@ -70,5 +70,6 @@ while ! curl --output /dev/null --silent --fail http://localhost:8081/amp-update
 done
 
 # start Node production server
+nvm use 22
 cd ../ui
 node express/index.js
