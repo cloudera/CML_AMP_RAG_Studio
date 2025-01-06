@@ -42,8 +42,7 @@ set -eox pipefail
 ## set the RELEASE_TAG env var from the file, if it exists
 source scripts/release_version.txt || true
 
-set +x && source ~/.bashrc
-set -x
+source ~/.bashrc > /dev/null
 
 set +e
 nvm use 22

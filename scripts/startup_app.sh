@@ -72,7 +72,6 @@ done
 # start Node production server
 
 cd ..
-set +x && source ~/.bashrc
-set -x
+source ~/.bashrc > /dev/null
 cd ui
 node express/index.js
