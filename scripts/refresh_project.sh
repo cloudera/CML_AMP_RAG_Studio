@@ -45,11 +45,12 @@ source scripts/release_version.txt || true
 set +e
 nvm use 22
 return_code=$?
-if [ $return_code -ne 0 ]; then
-    echo "Node 22 is not installed. Please install it using nvm."
-    exit 1
-fi
 set -e
+if [ $return_code -ne 0 ]; then
+    echo "NVM or required Node version not found.  Installing and using..."
+    scripts/install_node.sh
+    nvm use 22
+fi
 cd ui/express
 npm install
 
