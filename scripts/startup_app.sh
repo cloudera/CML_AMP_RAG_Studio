@@ -70,8 +70,8 @@ while ! curl --output /dev/null --silent --fail http://localhost:8081/amp-update
 done
 
 # start Node production server
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-nvm use 22
-cd ../ui
+
+cd ..
+source scripts/setup_nvm.sh
+cd ui
 node express/index.js
