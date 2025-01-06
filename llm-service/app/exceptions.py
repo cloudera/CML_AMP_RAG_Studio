@@ -53,6 +53,9 @@ P = ParamSpec("P")
 
 logger = logging.getLogger(__name__)
 
+class DocumentParseError(RuntimeError):
+    """Exception raised when a document cannot be parsed."""
+
 
 @contextlib.contextmanager
 def _exception_propagation() -> Iterator[None]:

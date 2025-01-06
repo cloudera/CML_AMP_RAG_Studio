@@ -57,13 +57,12 @@ from llama_index.core.schema import (
     NodeRelationship,
 )
 
-from app.services.models import get_noop_embedding_model
-
+from app.services.models import get_noop_embedding_model, get_noop_llm_model
+from .base import BaseTextIndexer
+from .readers.base_reader import ReaderConfig, ChunksResult
 from ...config import Settings
-from .base import get_reader_class
 
 logger = logging.getLogger(__name__)
-
 
 SUMMARY_PROMPT = 'Summarize the contents into less than 100 words. If an adequate summary is not possible, please return "No summary available.".'
 
@@ -74,31 +73,39 @@ SUMMARY_PROMPT = 'Summarize the contents into less than 100 words. If an adequat
 _write_lock = Lock()
 
 
-class SummaryIndexer:
+class SummaryIndexer(BaseTextIndexer):
     def __init__(
-        self,
-        data_source_id: int,
-        splitter: SentenceSplitter,
-        llm: LLM,
+            self,
+            data_source_id: int,
+            splitter: SentenceSplitter,
+            llm: LLM,
+            reader_config: Optional[ReaderConfig] = None,
     ):
-        self.data_source_id = data_source_id
+        super().__init__(data_source_id, reader_config=reader_config)
         self.splitter = splitter
         self.llm = llm
 
-    def __persist_dir(self) -> str:
-        return os.path.join(
-            Settings().rag_databases_dir, f"doc_summary_index_{self.data_source_id}"
-        )
+    @staticmethod
+    def __database_dir(data_source_id: int) -> str:
+        return os.path.join(Settings().rag_databases_dir, f"doc_summary_index_{data_source_id}")
 
-    def __persist_root_dir(self) -> str:
+    def __persist_dir(self) -> str:
+        return SummaryIndexer.__database_dir(self.data_source_id)
+
+    @staticmethod
+    def __persist_root_dir() -> str:
         return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
 
     def __index_kwargs(self) -> Dict[str, Any]:
+        return SummaryIndexer.__index_configuration(self.llm)
+
+    @staticmethod
+    def __index_configuration(llm: LLM) -> Dict[str, Any]:
         return {
-            "llm": self.llm,
+            "llm": llm,
             "response_synthesizer": get_response_synthesizer(
                 response_mode=ResponseMode.TREE_SUMMARIZE,
-                llm=self.llm,
+                llm=llm,
                 use_async=True,
                 verbose=True,
             ),
@@ -118,40 +125,52 @@ class SummaryIndexer:
 
     def __summary_indexer(self, persist_dir: str) -> DocumentSummaryIndex:
         try:
-            storage_context = StorageContext.from_defaults(
+            return SummaryIndexer.__summary_indexer_with_config(
                 persist_dir=persist_dir,
+                index_configuration=self.__index_kwargs(),
             )
-            doc_summary_index: DocumentSummaryIndex = cast(
-                DocumentSummaryIndex,
-                load_index_from_storage(
-                    storage_context=storage_context,
-                    **self.__index_kwargs(),
-                ),
-            )
-            return doc_summary_index
         except FileNotFoundError:
             doc_summary_index = self.__init_summary_store(persist_dir)
             return doc_summary_index
 
+    @staticmethod
+    def __summary_indexer_with_config(persist_dir: str, index_configuration: Dict[str, Any]) -> DocumentSummaryIndex:
+        storage_context = StorageContext.from_defaults(
+            persist_dir=persist_dir,
+        )
+        doc_summary_index: DocumentSummaryIndex = cast(
+            DocumentSummaryIndex,
+            load_index_from_storage(
+                storage_context=storage_context,
+                **index_configuration,
+            ),
+        )
+        return doc_summary_index
+
     def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(f"Creating summary for file {file_path}")
 
-        reader_cls = get_reader_class(file_path)
+        reader_cls = self._get_reader_class(file_path)
 
         reader = reader_cls(
             splitter=self.splitter,
             document_id=document_id,
             data_source_id=self.data_source_id,
+            config=self.reader_config,
         )
 
         logger.debug(f"Parsing file: {file_path}")
 
-        chunks = reader.load_chunks(file_path)
+        chunks: ChunksResult = reader.load_chunks(file_path)
+
+        if not chunks.chunks:
+            logger.warning(f"No chunks found for file {file_path}")
+            return
 
         with _write_lock:
             persist_dir = self.__persist_dir()
             summary_store = self.__summary_indexer(persist_dir)
-            summary_store.insert_nodes(chunks)
+            summary_store.insert_nodes(chunks.chunks)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)
@@ -159,10 +178,10 @@ class SummaryIndexer:
         logger.debug(f"Summary for file {file_path} created")
 
     def __update_global_summary_store(
-        self,
-        summary_store: DocumentSummaryIndex,
-        added_node_id: Optional[str] = None,
-        deleted_node_id: Optional[str] = None,
+            self,
+            summary_store: DocumentSummaryIndex,
+            added_node_id: Optional[str] = None,
+            deleted_node_id: Optional[str] = None,
     ) -> None:
         # Llama index doesn't seem to support updating the summary when we add more documents.
         # So what we do instead is re-load all the summaries for the documents already associated with the data source
@@ -214,7 +233,7 @@ class SummaryIndexer:
 
         # Delete first so that we don't accumulate trash in the summary store.
         try:
-            global_summary_store.delete_ref_doc(str(self.data_source_id))
+            global_summary_store.delete_ref_doc(str(self.data_source_id), delete_from_docstore=True)
         except KeyError:
             pass
         global_summary_store.insert_nodes(new_nodes)
@@ -234,8 +253,7 @@ class SummaryIndexer:
             global_summary_store = self.__summary_indexer(global_persist_dir)
             document_id = str(self.data_source_id)
             if (
-                document_id
-                not in global_summary_store.index_struct.doc_id_to_summary_id
+                document_id not in global_summary_store.index_struct.doc_id_to_summary_id
             ):
                 return None
             return global_summary_store.get_document_summary(document_id)
@@ -249,19 +267,28 @@ class SummaryIndexer:
                 summary_store, deleted_node_id=document_id
             )
 
-            summary_store.delete_ref_doc(document_id)
+            summary_store.delete_ref_doc(document_id, delete_from_docstore=True)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
     def delete_data_source(self) -> None:
         with _write_lock:
-            # We need to re-load the summary index constantly because of this delete.
-            # TODO: figure out a less explosive way to do this.
-            shutil.rmtree(self.__persist_dir(), ignore_errors=True)
+            SummaryIndexer.delete_data_source_by_id(self.data_source_id)
 
-            global_persist_dir = self.__persist_root_dir()
-            global_summary_store = self.__summary_indexer(global_persist_dir)
+    @staticmethod
+    def delete_data_source_by_id(data_source_id: int) -> None:
+        with _write_lock:
+            # TODO: figure out a less explosive way to do this.
+            shutil.rmtree(SummaryIndexer.__database_dir(data_source_id), ignore_errors=True)
+            global_persist_dir = SummaryIndexer.__persist_root_dir()
             try:
-                global_summary_store.delete_ref_doc(str(self.data_source_id))
+                global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir,
+                                                                                SummaryIndexer.__index_configuration(
+                                                                                    get_noop_llm_model()))
+            except FileNotFoundError:
+                ## global summary store doesn't exist, nothing to do
+                return
+            try:
+                global_summary_store.delete_ref_doc(str(data_source_id), delete_from_docstore=True)
+                global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
             except KeyError:
                 pass
-            global_summary_store.storage_context.persist(persist_dir=global_persist_dir)

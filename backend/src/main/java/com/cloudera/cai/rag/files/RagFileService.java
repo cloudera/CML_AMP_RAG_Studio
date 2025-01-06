@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -61,6 +61,7 @@ public class RagFileService {
   private final RagFileIndexReconciler ragFileIndexReconciler;
   private final String s3PathPrefix;
   private final RagDataSourceRepository ragDataSourceRepository;
+  private final RagFileDeleteReconciler ragFileDeleteReconciler;
 
   @Autowired
   public RagFileService(
@@ -69,13 +70,15 @@ public class RagFileService {
       RagFileUploader ragFileUploader,
       RagFileIndexReconciler ragFileIndexReconciler,
       @Qualifier("s3BucketPrefix") String s3PathPrefix,
-      RagDataSourceRepository ragDataSourceRepository) {
+      RagDataSourceRepository ragDataSourceRepository,
+      RagFileDeleteReconciler ragFileDeleteReconciler) {
     this.idGenerator = idGenerator;
     this.ragFileRepository = ragFileRepository;
     this.ragFileUploader = ragFileUploader;
     this.ragFileIndexReconciler = ragFileIndexReconciler;
     this.s3PathPrefix = s3PathPrefix;
     this.ragDataSourceRepository = ragDataSourceRepository;
+    this.ragFileDeleteReconciler = ragFileDeleteReconciler;
   }
 
   public RagDocumentMetadata saveRagFile(MultipartFile file, Long dataSourceId, String actorCrn) {
@@ -85,7 +88,7 @@ public class RagFileService {
 
     ragFileUploader.uploadFile(file, s3Path);
     var ragDocument = createUnsavedDocument(file, documentId, s3Path, dataSourceId, actorCrn);
-    Long id = ragFileRepository.saveDocumentMetadata(ragDocument);
+    Long id = ragFileRepository.insertDocumentMetadata(ragDocument);
     log.info("Saved document with id: {}", id);
 
     ragFileIndexReconciler.submit(ragDocument.withId(id));
@@ -124,6 +127,10 @@ public class RagFileService {
         Instant.now(),
         actorCrn,
         actorCrn,
+        null,
+        null,
+        null,
+        null,
         null);
   }
 
@@ -144,6 +151,7 @@ public class RagFileService {
       throw new NotFound("Document with id " + id + " not found for dataSourceId: " + dataSourceId);
     }
     ragFileRepository.deleteById(id);
+    ragFileDeleteReconciler.submit(document);
   }
 
   // Nullables stuff down here
@@ -155,7 +163,8 @@ public class RagFileService {
         RagFileUploader.createNull(),
         RagFileIndexReconciler.createNull(),
         "prefix",
-        RagDataSourceRepository.createNull());
+        RagDataSourceRepository.createNull(),
+        RagFileDeleteReconciler.createNull());
   }
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {

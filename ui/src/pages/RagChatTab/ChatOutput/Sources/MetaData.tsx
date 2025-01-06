@@ -37,6 +37,7 @@
  ******************************************************************************/
 import { Typography } from "antd";
 import { ChunkContentsResponse } from "src/api/ragQueryApi.ts";
+import { SourceCardTitle } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 
 const MetaData = ({
   metadata,
@@ -63,9 +64,7 @@ const MetaData = ({
 
   return (
     <>
-      <Typography.Title level={5} style={{ marginTop: 0 }}>
-        Metadata
-      </Typography.Title>
+      <SourceCardTitle titleText="Metadata" />
       {hasMetadata ? (
         <>
           <MetaDataItem label="Row number" value={metadata.row_number} />

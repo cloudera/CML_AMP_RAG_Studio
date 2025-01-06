@@ -54,7 +54,10 @@ import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Test;
 
@@ -69,34 +72,9 @@ class RagFileIndexReconcilerTest {
     RagFileIndexReconciler reconciler = createTestInstance(requestTracker);
 
     String documentId = UUID.randomUUID().toString();
-    long dataSourceId =
-        ragDataSourceRepository.createRagDataSource(
-            new RagDataSource(
-                null,
-                "test_datasource",
-                "test_embedding_model",
-                "summarizationModel",
-                1024,
-                20,
-                null,
-                null,
-                "test-id",
-                "test-id",
-                Types.ConnectionType.API,
-                null,
-                null));
-    RagDocument document =
-        RagDocument.builder()
-            .documentId(documentId)
-            .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3")
-            .extension("pdf")
-            .filename("myfile.pdf")
-            .timeCreated(Instant.now())
-            .timeUpdated(Instant.now())
-            .createdById("test-id")
-            .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    var dataSourceId = newDataSource();
+    var document = createTestDoc(documentId, dataSourceId);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
         .isNull();
 
@@ -121,39 +99,101 @@ class RagFileIndexReconcilerTest {
   }
 
   @Test
+  void reconcile_stateChanges() {
+    Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
+    var waiter = new CountDownLatch(1);
+    RagFileIndexReconciler reconciler =
+        createTestInstance(
+            requestTracker,
+            List.of(
+                () -> {
+                  try {
+                    waiter.await();
+                  } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                  }
+                }));
+
+    String documentId = UUID.randomUUID().toString();
+    var dataSourceId = newDataSource();
+    var document = createTestDoc(documentId, dataSourceId);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
+        .isNull();
+
+    reconciler.submit(document.withId(id));
+    // verify the doc is in a in-progress state
+    await()
+        .untilAsserted(
+            () -> {
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.vectorUploadTimestamp()).isNull();
+              assertThat(updatedDocument.indexingStatus())
+                  .isEqualTo(Types.RagDocumentStatus.IN_PROGRESS);
+            });
+
+    waiter.countDown();
+    await().until(reconciler::isEmpty);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(reconciler.isEmpty()).isTrue();
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.vectorUploadTimestamp()).isNotNull();
+              assertThat(updatedDocument.indexingStatus())
+                  .isEqualTo(Types.RagDocumentStatus.SUCCESS);
+            });
+    assertThat(requestTracker.getValues())
+        .hasSize(1)
+        .contains(
+            new RagBackendClient.TrackedRequest<>(
+                new TrackedIndexRequest(
+                    "rag-files",
+                    document.s3Path(),
+                    dataSourceId,
+                    new IndexConfiguration(1024, 20))));
+  }
+
+  private static RagDocument createTestDoc(String documentId, long dataSourceId) {
+    return RagDocument.builder()
+        .documentId(documentId)
+        .dataSourceId(dataSourceId)
+        .s3Path("path_in_s3")
+        .extension("pdf")
+        .filename("myfile.pdf")
+        .timeCreated(Instant.now())
+        .timeUpdated(Instant.now())
+        .createdById("test-id")
+        .build();
+  }
+
+  private long newDataSource() {
+    return ragDataSourceRepository.createRagDataSource(
+        new RagDataSource(
+            null,
+            "test_datasource",
+            "test_embedding_model",
+            "summarizationModel",
+            1024,
+            20,
+            null,
+            null,
+            "test-id",
+            "test-id",
+            Types.ConnectionType.API,
+            null,
+            null));
+  }
+
+  @Test
   void reconcile_notFound() {
     var requestTracker = new Tracker<RagBackendClient.TrackedRequest<?>>();
     RagFileIndexReconciler reconciler =
         createTestInstance(requestTracker, new NotFound("datasource not found in the rag backend"));
     String documentId = UUID.randomUUID().toString();
-    long dataSourceId =
-        ragDataSourceRepository.createRagDataSource(
-            new RagDataSource(
-                null,
-                "test_datasource",
-                "test_embedding_model",
-                "summarizationModel",
-                1024,
-                20,
-                null,
-                null,
-                "test-id",
-                "test-id",
-                Types.ConnectionType.API,
-                null,
-                null));
-    RagDocument document =
-        RagDocument.builder()
-            .documentId(documentId)
-            .dataSourceId(dataSourceId)
-            .s3Path("path_in_s3")
-            .extension("pdf")
-            .filename("myfile.pdf")
-            .timeCreated(Instant.now())
-            .timeUpdated(Instant.now())
-            .createdById("test-id")
-            .build();
-    Long id = ragFileRepository.saveDocumentMetadata(document);
+    var dataSourceId = newDataSource();
+    var document = createTestDoc(documentId, dataSourceId);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
     assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
         .isNull();
 
@@ -165,6 +205,39 @@ class RagFileIndexReconcilerTest {
               assertThat(reconciler.isEmpty()).isTrue();
               RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
               assertThat(updatedDocument.vectorUploadTimestamp()).isEqualTo(Instant.EPOCH);
+              assertThat(updatedDocument.indexingStatus()).isEqualTo(Types.RagDocumentStatus.ERROR);
+              assertThat(updatedDocument.indexingError())
+                  .isEqualTo("datasource not found in the rag backend");
+            });
+    assertThat(requestTracker.getValues())
+        .contains(
+            new RagBackendClient.TrackedRequest<>(
+                new TrackedIndexRequest(
+                    "rag-files", "path_in_s3", dataSourceId, new IndexConfiguration(1024, 20))));
+  }
+
+  @Test
+  void reconcile_exception() {
+    var requestTracker = new Tracker<RagBackendClient.TrackedRequest<?>>();
+    RagFileIndexReconciler reconciler =
+        createTestInstance(requestTracker, new RuntimeException("document indexing failed"));
+    String documentId = UUID.randomUUID().toString();
+    var dataSourceId = newDataSource();
+    var document = createTestDoc(documentId, dataSourceId);
+    Long id = ragFileRepository.insertDocumentMetadata(document);
+    assertThat(ragFileRepository.findDocumentByDocumentId(documentId).vectorUploadTimestamp())
+        .isNull();
+
+    reconciler.submit(document.withId(id));
+    await().until(reconciler::isEmpty);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(reconciler.isEmpty()).isTrue();
+              RagDocument updatedDocument = ragFileRepository.findDocumentByDocumentId(documentId);
+              assertThat(updatedDocument.vectorUploadTimestamp()).isNull();
+              assertThat(updatedDocument.indexingStatus()).isEqualTo(Types.RagDocumentStatus.ERROR);
+              assertThat(updatedDocument.indexingError()).isEqualTo("document indexing failed");
             });
     assertThat(requestTracker.getValues())
         .contains(
@@ -175,6 +248,20 @@ class RagFileIndexReconcilerTest {
 
   private RagFileIndexReconciler createTestInstance(
       Tracker<RagBackendClient.TrackedRequest<?>> tracker, RuntimeException... exceptions) {
+    return createTestInstance(
+        tracker,
+        Arrays.stream(exceptions)
+            .map(
+                e ->
+                    (Runnable)
+                        () -> {
+                          throw e;
+                        })
+            .toList());
+  }
+
+  private RagFileIndexReconciler createTestInstance(
+      Tracker<RagBackendClient.TrackedRequest<?>> tracker, List<Runnable> runnables) {
     Jdbi jdbi = new JdbiConfiguration().jdbi();
     var reconcilerConfig = ReconcilerConfig.builder().isTestReconciler(true).workerCount(1).build();
 
@@ -182,7 +269,7 @@ class RagFileIndexReconcilerTest {
         new RagFileIndexReconciler(
             "rag-files",
             jdbi,
-            RagBackendClient.createNull(tracker, exceptions),
+            RagBackendClient.createNull(tracker, runnables),
             RagDataSourceRepository.createNull(),
             reconcilerConfig,
             RagFileRepository.createNull(),

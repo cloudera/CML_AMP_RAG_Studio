@@ -36,14 +36,36 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex } from "antd";
+import { Flex, Typography } from "antd";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
-import {ChatMessageType} from "src/api/chatApi.ts";
+import { ChatMessageType } from "src/api/chatApi.ts";
+import { WarningTwoTone } from "@ant-design/icons";
+import { cdlOrange050, cdlOrange500 } from "src/cuix/variables.ts";
+import { useGetModelById } from "src/api/modelsApi.ts";
 
 const SourceNodes = ({ data }: { data: ChatMessageType }) => {
+  const { data: inferenceModel } = useGetModelById(data.inference_model);
+
   const nodes = data.source_nodes.map((node) => (
     <SourceCard key={node.node_id} source={node} />
   ));
+
+  if (nodes.length === 0) {
+    return (
+      <Flex
+        style={{ gap: 8, padding: "6px 12px", backgroundColor: cdlOrange050 }}
+      >
+        <WarningTwoTone twoToneColor={cdlOrange500} />
+        <Typography.Text>
+          This answer is provided directly by{" "}
+          <Typography.Text style={{ fontWeight: "bold" }}>
+            {inferenceModel?.name ?? "the model"}
+          </Typography.Text>{" "}
+          and does not reference the Knowledge Base.
+        </Typography.Text>
+      </Flex>
+    );
+  }
   return (
     <Flex wrap="wrap" style={{ gap: 8 }}>
       {nodes}

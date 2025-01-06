@@ -37,7 +37,7 @@
 # ##############################################################################
 
 import os
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.storage.chat_store import SimpleChatStore
@@ -66,6 +66,7 @@ class RagContext(BaseModel):
 class RagStudioChatMessage(BaseModel):
     id: str
     source_nodes: list[RagPredictSourceNode]
+    inference_model: Optional[str]  # `None` for legacy data or no chunks
     rag_message: dict[Literal["user", "assistant"], str]
     evaluations: list[Evaluation]
     timestamp: float
@@ -100,6 +101,9 @@ class ChatHistoryManager:
                     id=user_message.additional_kwargs["id"],
                     source_nodes=assistant_message.additional_kwargs.get(
                         "source_nodes", []
+                    ),
+                    inference_model=assistant_message.additional_kwargs.get(
+                        "inference_model", None
                     ),
                     rag_message={
                         MessageRole.USER.value: str(user_message.content),
@@ -158,6 +162,7 @@ class ChatHistoryManager:
                     additional_kwargs={
                         "id": message.id,
                         "source_nodes": message.source_nodes,
+                        "inference_model": message.inference_model,
                         "evaluations": message.evaluations,
                         "timestamp": message.timestamp,
                     },

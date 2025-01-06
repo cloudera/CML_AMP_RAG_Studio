@@ -66,13 +66,16 @@ def v2_chat(
     response_id = str(uuid.uuid4())
 
     if len(data_source_ids) != 1:
-        raise HTTPException(status_code=400, detail="Only one datasource is supported for chat.")
+        raise HTTPException(
+            status_code=400, detail="Only one datasource is supported for chat."
+        )
 
     data_source_id: int = data_source_ids[0]
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
             source_nodes=[],
+            inference_model=None,
             rag_message={
                 "user": query,
                 "assistant": "I don't have any documents to answer your question.",
@@ -94,6 +97,7 @@ def v2_chat(
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         source_nodes=response_source_nodes,
+        inference_model=configuration.model_name,
         rag_message={
             "user": query,
             "assistant": response.response,

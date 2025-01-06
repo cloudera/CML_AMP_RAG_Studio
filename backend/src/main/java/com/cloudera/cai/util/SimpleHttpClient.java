@@ -38,7 +38,9 @@
 
 package com.cloudera.cai.util;
 
+import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.cloudera.cai.util.exceptions.ServerError;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -78,9 +80,12 @@ public class SimpleHttpClient {
         throw new NotFound("Failed to post to " + url + " code: " + statusCode);
       }
 
-      if (statusCode >= 400) {
-        throw new RuntimeException(
-            "Failed to post to " + url + " code: " + statusCode + ", body : " + response.body());
+      if (400 <= statusCode && statusCode < 500) {
+        throw new ClientError(response.body(), statusCode);
+      }
+
+      if (statusCode >= 500) {
+        throw new ServerError(response.body(), statusCode);
       }
       return response.body();
     } catch (InterruptedException e) {
@@ -118,17 +123,29 @@ public class SimpleHttpClient {
     return createNull(new Tracker<>());
   }
 
-  public static SimpleHttpClient createNull(Tracker<TrackedHttpRequest<?>> tracker) {
+  public static SimpleHttpClient createNull(
+      Tracker<TrackedHttpRequest<?>> tracker, RuntimeException... t) {
     return new SimpleHttpClient(null, new ObjectMapper()) {
+      private final RuntimeException[] exceptions = t;
+      private int exceptionIndex = 0;
+
+      private void checkForException() {
+        if (exceptionIndex < exceptions.length) {
+          throw exceptions[exceptionIndex++];
+        }
+      }
+
       @Override
       public <T> String post(String url, T bodyObject) {
         tracker.track(new TrackedHttpRequest<>(HttpMethod.POST, url, bodyObject));
+        checkForException();
         return "";
       }
 
       @Override
       public void delete(String path) {
         tracker.track(new TrackedHttpRequest<>(HttpMethod.DELETE, path, null));
+        checkForException();
         // no-op
       }
     };

@@ -111,6 +111,13 @@ const createRagDocumentMutation = async (
   });
 };
 
+export enum RagDocumentStatus {
+  QUEUED = "QUEUED",
+  IN_PROGRESS = "IN_PROGRESS",
+  SUCCESS = "SUCCESS",
+  ERROR = "ERROR",
+}
+
 export interface RagDocumentResponseType {
   id: number;
   filename: string;
@@ -125,6 +132,10 @@ export interface RagDocumentResponseType {
   createdById: number;
   updatedById: number;
   summaryCreationTimestamp: number | null;
+  summaryStatus: RagDocumentStatus | null;
+  summaryError: string | null;
+  indexingStatus: RagDocumentStatus | null;
+  indexingError: string | null;
 }
 
 export const useGetRagDocuments = (

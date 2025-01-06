@@ -38,9 +38,11 @@
 
 package com.cloudera.cai.rag.files;
 
+import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
+import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.BaseReconciler;
 import com.cloudera.cai.util.reconcilers.ReconcileResult;
@@ -112,34 +114,66 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
         log.info("Document already summarized: {}", document.filename());
         continue;
       }
-      var updateTimestamp = generateSummary(document);
+      setToInProgress(document);
+      var updatedDocument = doSummarization(document);
       log.info("finished requesting summarization of file {}", document);
       String updateSql =
           """
             UPDATE rag_data_source_document
-            SET summary_creation_timestamp = :now
+            SET summary_creation_timestamp = :summaryTimestamp, summary_status = :summaryStatus, summary_error = :summaryError, time_updated = :now
             WHERE id = :id
           """;
       jdbi.useHandle(
           handle -> {
             try (Update update = handle.createUpdate(updateSql)) {
-              update.bind("id", document.id()).bind("now", updateTimestamp).execute();
+              update
+                  .bind("id", document.id())
+                  .bind("now", Instant.now())
+                  .bind("summaryTimestamp", updatedDocument.summaryCreationTimestamp())
+                  .bind("summaryStatus", updatedDocument.summaryStatus())
+                  .bind("summaryError", updatedDocument.summaryError())
+                  .execute();
             }
           });
     }
     return new ReconcileResult();
   }
 
-  private Instant generateSummary(RagDocument document) {
-    var updateTimestamp = Instant.now();
+  private void setToInProgress(RagDocument document) {
+    jdbi.useTransaction(
+        handle -> {
+          String updateSql =
+              """
+                UPDATE rag_data_source_document
+                SET summary_status = :summaryStatus, time_updated = :now
+                WHERE id = :id
+              """;
+          try (Update update = handle.createUpdate(updateSql)) {
+            update
+                .bind("id", document.id())
+                .bind("summaryStatus", Types.RagDocumentStatus.IN_PROGRESS)
+                .bind("now", Instant.now())
+                .execute();
+          }
+        });
+  }
+
+  private RagDocument doSummarization(RagDocument document) {
     try {
-      String summary = ragBackendClient.createSummary(document, bucketName);
-      log.info("Doc summary: {}", summary);
-    } catch (NotFound e) {
-      updateTimestamp = Instant.EPOCH;
-      log.info("got a not found exception from the rag backend: {}", e.getMessage());
+      ragBackendClient.createSummary(document, bucketName);
+      return document
+          .withSummaryStatus(Types.RagDocumentStatus.SUCCESS)
+          .withSummaryCreationTimestamp(Instant.now());
+    } catch (NotFound | ClientError e) {
+      return document
+          .withSummaryStatus(Types.RagDocumentStatus.ERROR)
+          .withSummaryError(e.getMessage())
+          .withSummaryCreationTimestamp(Instant.EPOCH);
+    } catch (Exception e) {
+      return document
+          .withSummaryStatus(Types.RagDocumentStatus.ERROR)
+          .withSummaryError(e.getMessage());
     }
-    return updateTimestamp;
   }
 
   // nullables stuff below here...

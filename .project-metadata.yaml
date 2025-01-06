@@ -16,7 +16,7 @@ environment_variables:
         required: false
     S3_RAG_BUCKET_PREFIX:
         default: "rag-studio"
-        description: "A prefix added to all S3 paths used by Rag Studio. Only needed if S3 is used for file storage."
+        description: "A prefix added to all S3 paths used by Rag Studio. Only recommended if S3 is used for file storage."
         required: false
     AWS_ACCESS_KEY_ID:
         default: ""

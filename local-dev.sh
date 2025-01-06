@@ -39,6 +39,8 @@
 set -exo pipefail
 set -a && source .env && set +a
 
+python3.12 scripts/validator/validate_env.py
+
 export RAG_DATABASES_DIR=$(pwd)/databases
 
 cleanup() {
@@ -62,7 +64,7 @@ docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databas
 
 cd llm-service
 if [ -z "$USE_SYSTEM_UV" ]; then
-  python3.10 -m venv venv
+  python3.12 -m venv venv
   source venv/bin/activate
   python -m pip install uv
 fi

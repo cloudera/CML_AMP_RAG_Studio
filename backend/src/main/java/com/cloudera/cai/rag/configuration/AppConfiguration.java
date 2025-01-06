@@ -99,7 +99,7 @@ public class AppConfiguration {
   public HttpClient httpClient(OpenTelemetry openTelemetry) {
     return JavaHttpClientTelemetry.builder(openTelemetry)
         .build()
-        .newHttpClient(HttpClient.newHttpClient());
+        .newHttpClient(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build());
   }
 
   @Bean

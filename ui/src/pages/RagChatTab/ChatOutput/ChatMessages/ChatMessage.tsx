@@ -40,7 +40,7 @@ import { Divider, Flex, Typography } from "antd";
 import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
-import { cdlBlue500 } from "src/cuix/variables.ts";
+import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import Images from "src/components/images/Images.ts";
@@ -68,21 +68,36 @@ const ChatMessage = ({
             gap={8}
           >
             <div style={{ flex: 1 }}>
-              <Images.AiAssistantWhite
-                style={{
-                  padding: 4,
-                  backgroundColor: cdlBlue500,
-                  borderRadius: 20,
-                  width: 24,
-                  height: 24,
-                  flex: 1,
-                }}
-              />
+              {data.source_nodes.length > 0 ? (
+                <Images.AiAssistantWhite
+                  style={{
+                    padding: 4,
+                    backgroundColor: cdlBlue500,
+                    borderRadius: 20,
+                    width: 24,
+                    height: 24,
+                    flex: 1,
+                  }}
+                />
+              ) : (
+                <Images.Models
+                  style={{
+                    padding: "4",
+                    backgroundColor: cdlGray200,
+                    borderRadius: 20,
+                    width: 26,
+                    height: 24,
+                    flex: 1,
+                  }}
+                />
+              )}
             </div>
-            <Flex vertical gap={12} style={{ width: "100%" }}>
+            <Flex vertical gap={8} style={{ width: "100%" }}>
               <SourceNodes data={data} />
-              <Typography.Text style={{ fontSize: 16, whiteSpace: "pre-wrap" }}>
-                {data.rag_message.assistant}
+              <Typography.Text
+                style={{ fontSize: 16, whiteSpace: "pre-wrap", marginTop: 8 }}
+              >
+                {data.rag_message.assistant.trimStart()}
               </Typography.Text>
               <Evaluations evaluations={data.evaluations} />
             </Flex>

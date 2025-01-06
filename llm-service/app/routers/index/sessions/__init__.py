@@ -85,8 +85,8 @@ class RagStudioChatRequest(BaseModel):
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
 def chat(
-        session_id: int,
-        request: RagStudioChatRequest,
+    session_id: int,
+    request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
     if request.configuration.exclude_knowledge_base:
         return llm_talk(session_id, request)
@@ -96,8 +96,8 @@ def chat(
 
 
 def llm_talk(
-        session_id: int,
-        request: RagStudioChatRequest,
+    session_id: int,
+    request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
     chat_response = llm_completion.completion(
         session_id, request.query, request.configuration
@@ -105,6 +105,7 @@ def llm_talk(
     new_chat_message = RagStudioChatMessage(
         id=str(uuid.uuid4()),
         source_nodes=[],
+        inference_model=request.configuration.model_name,
         evaluations=[],
         rag_message={
             "user": request.query,
@@ -128,18 +129,28 @@ class RagSuggestedQuestionsResponse(BaseModel):
 @router.post("/suggest-questions", summary="Suggest questions with context")
 @exceptions.propagates
 def suggest_questions(
-        session_id: int,
-        request: SuggestQuestionsRequest,
+    session_id: int,
+    request: SuggestQuestionsRequest,
 ) -> RagSuggestedQuestionsResponse:
 
     if len(request.data_source_ids) != 1:
-        raise HTTPException(status_code=400, detail="Only one datasource is supported for question suggestion.")
+        raise HTTPException(
+            status_code=400,
+            detail="Only one datasource is supported for question suggestion.",
+        )
 
     total_data_sources_size: int = sum(
-        map(lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0, request.data_source_ids))
+        map(
+            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            request.data_source_ids,
+        )
+    )
     if total_data_sources_size == 0:
         raise HTTPException(status_code=404, detail="Knowledge base not found.")
     suggested_questions = generate_suggested_questions(
-        request.configuration, request.data_source_ids, total_data_sources_size, session_id
+        request.configuration,
+        request.data_source_ids,
+        total_data_sources_size,
+        session_id,
     )
     return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)

@@ -35,18 +35,18 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import logging
 import os
-import subprocess
+import logging
 from pathlib import Path
-from subprocess import CompletedProcess
 from typing import Any, List
 
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 
-from .base_reader import BaseReader
-from .simple_file import SimpleFileReader
+from ....exceptions import DocumentParseError
+from .base_reader import BaseReader, ChunksResult
+from .docling import load_chunks
+from .markdown import MdReader
 
 logger = logging.getLogger(__name__)
 
@@ -92,51 +92,48 @@ class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPDFReader(return_full_document=False)
-        self.markdown_reader = SimpleFileReader(*args, **kwargs)
+        self.markdown_reader = MdReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> list[TextNode]:
-        logger.debug(f"{file_path=}")
-        chunks: list[TextNode] = self.process_with_docling(file_path)
-        if chunks:
-            return chunks
+    def load_chunks(self, file_path: Path) -> ChunksResult:
+        docling_enabled: bool = (
+                os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+        )
+        logger.info(f"{docling_enabled=}")
+        try:
+            if docling_enabled:
+                logger.debug(f"{file_path=}")
+                chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
+                if chunks:
+                    # todo: handle pii & secrets
+                    return ChunksResult(chunks = chunks)
+        except DocumentParseError as e:
+            logger.warning(f"Failed to parse document with docling: {e}")
+
+
+        ret = ChunksResult()
 
         pages: list[Document] = self.inner.load_data(file_path)
         page_counter = PageTracker(pages)
-        document = Document(text=page_counter.document_text)
+
+        content = page_counter.document_text
+
+        secrets = self._block_secrets([content])
+        if secrets is not None:
+            ret.secret_types = secrets
+            return ret
+
+        anonymized_text = self._anonymize_pii(content)
+        if anonymized_text is not None:
+            ret.pii_found = True
+            content = anonymized_text
+
+        document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
         chunks = self._chunks_in_document(document)
+
+        # TODO: check if PPI removal breaks the page numbers slightly because the text changes
         page_counter.populate_chunk_page_numbers(chunks)
 
-        return chunks
-
-    def process_with_docling(self, file_path: Path) -> list[TextNode] | None:
-        docling_enabled = (
-            os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
-        )
-        if not docling_enabled:
-            return None
-        directory = file_path.parent
-        logger.debug(f"{directory=}")
-        with open("docling-output.txt", "a") as f:
-            process: CompletedProcess[bytes] = subprocess.run(
-                [
-                    "docling",
-                    "-v",
-                    "--abort-on-error",
-                    f"--output={directory}",
-                    str(file_path),
-                ],
-                stdout=f,
-                stderr=f,
-            )
-        logger.debug(f"docling return code = {process.returncode}")
-        # todo: figure out page numbers & look into the docling llama-index integration
-        markdown_file_path = file_path.with_suffix(".md")
-        if process.returncode == 0 and markdown_file_path.exists():
-            # update chunk metadata to point at the original pdf
-            chunks = self.markdown_reader.load_chunks(markdown_file_path)
-            for chunk in chunks:
-                chunk.metadata["file_name"] = file_path.name
-            return chunks
-        return None
+        ret.chunks = chunks
+        return ret

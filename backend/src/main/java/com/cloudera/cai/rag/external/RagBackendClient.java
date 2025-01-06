@@ -42,9 +42,16 @@ import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.configuration.AppConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
+import com.cloudera.cai.util.exceptions.ClientError;
+import com.cloudera.cai.util.exceptions.HttpError;
+import com.cloudera.cai.util.exceptions.ServerError;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +59,9 @@ import org.springframework.stereotype.Component;
 public class RagBackendClient {
   private final SimpleHttpClient client;
   private final String indexUrl;
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
+  private record FastApiError(String detail) {}
 
   @Autowired
   public RagBackendClient(SimpleHttpClient client) {
@@ -72,8 +82,25 @@ public class RagBackendClient {
               + "/index",
           new IndexRequest(
               bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
+    } catch (HttpError e) {
+      throw convertError(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private <T extends HttpError> T convertError(T e) {
+    try {
+      String parsedMessage = objectMapper.readValue(e.getMessage(), FastApiError.class).detail();
+      if (e instanceof ClientError) {
+        return (T) new ClientError(parsedMessage, e.getStatusCode());
+      } else if (e instanceof ServerError) {
+        return (T) new ServerError(parsedMessage, e.getStatusCode());
+      } else {
+        return e;
+      }
+    } catch (JsonProcessingException ex) {
+      return e;
     }
   }
 
@@ -87,6 +114,8 @@ public class RagBackendClient {
               + ragDocument.documentId()
               + "/summary",
           new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
+    } catch (HttpError e) {
+      throw convertError(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -125,11 +154,10 @@ public class RagBackendClient {
     return createNull(new Tracker<>());
   }
 
-  public static RagBackendClient createNull(
-      Tracker<TrackedRequest<?>> tracker, RuntimeException... t) {
+  public static RagBackendClient createNull(Tracker<TrackedRequest<?>> tracker, List<Runnable> r) {
     return new RagBackendClient(SimpleHttpClient.createNull()) {
-      private final RuntimeException[] exceptions = t;
-      private int exceptionIndex = 0;
+      private final List<Runnable> runnables = r;
+      private int runnableIndex = 0;
 
       @Override
       public void indexFile(
@@ -143,8 +171,8 @@ public class RagBackendClient {
       }
 
       private void checkForException() {
-        if (exceptionIndex < exceptions.length) {
-          throw exceptions[exceptionIndex++];
+        if (runnableIndex < runnables.size()) {
+          runnables.get(runnableIndex++).run();
         }
       }
 
@@ -180,6 +208,20 @@ public class RagBackendClient {
         checkForException();
       }
     };
+  }
+
+  public static RagBackendClient createNull(
+      Tracker<TrackedRequest<?>> tracker, RuntimeException... t) {
+    return RagBackendClient.createNull(
+        tracker,
+        Arrays.stream(t)
+            .map(
+                e ->
+                    (Runnable)
+                        () -> {
+                          throw e;
+                        })
+            .toList());
   }
 
   public record TrackedIndexRequest(

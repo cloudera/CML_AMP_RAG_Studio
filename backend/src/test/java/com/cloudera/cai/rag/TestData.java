@@ -90,6 +90,6 @@ public class TestData {
             .createdById("doesn't matter")
             .updatedById("doesn't matter")
             .build();
-    return ragFileRepository.saveDocumentMetadata(ragDocument);
+    return ragFileRepository.insertDocumentMetadata(ragDocument);
   }
 }

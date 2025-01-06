@@ -82,6 +82,13 @@ describe("ChatBodyController", () => {
     })),
   }));
 
+  vi.mock("src/api/modelsApi.ts", () => ({
+    useGetModelById: vi.fn(() => ({
+      data: [],
+      isLoading: false,
+    })),
+  }));
+
   vi.mock("src/api/summaryApi.ts", () => ({
     useGetDataSourceSummary: vi.fn(() => ({
       data: "Mocked summary data",

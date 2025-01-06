@@ -39,5 +39,7 @@
 import subprocess
 
 while True:
+    print(subprocess.run(["python /home/cdsw/scripts/validator/validate_env.py"], shell=True, check=True))
+
     print(subprocess.run(["bash /home/cdsw/scripts/startup_app.sh"], shell=True))
     print("Application Restarting")

@@ -84,7 +84,7 @@ class DeleteDataSourceReconcilerTest {
             .createdById("test-id")
             .build();
 
-    ragFileRepository.saveDocumentMetadata(document);
+    ragFileRepository.insertDocumentMetadata(document);
     reconciler.resync();
     await().until(reconciler::isEmpty);
     ragDataSourceRepository.deleteDataSource(dataSourceId);
