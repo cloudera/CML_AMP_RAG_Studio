@@ -41,12 +41,12 @@ import socket
 
 def validate():
     print("Validating environment variables...")
-    access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
-    secret_key_id = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
-    default_region = os.environ.get("AWS_DEFAULT_REGION", None)
-    document_bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET", None)
+    access_key_id = os.environ.get("AWS_ACCESS_KEY_ID") or None
+    secret_key_id = os.environ.get("AWS_SECRET_ACCESS_KEY") or None
+    default_region = os.environ.get("AWS_DEFAULT_REGION") or None
+    document_bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET") or None
 
-    caii_domain = os.environ.get("CAII_DOMAIN", None)
+    caii_domain = os.environ.get("CAII_DOMAIN") or None
 
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is None:
