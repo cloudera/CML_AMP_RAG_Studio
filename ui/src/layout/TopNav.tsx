@@ -49,24 +49,7 @@ import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import "./style.css";
-
-type MenuItem = Required<MenuProps>["items"][number];
-
-function getItem(
-  label: React.ReactNode,
-  key: React.Key,
-  onClick: () => void,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
-): MenuItem {
-  return {
-    key,
-    icon,
-    children,
-    label,
-    onClick,
-  } as MenuItem;
-}
+import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
@@ -97,43 +80,43 @@ const TopNav: React.FC = () => {
     feedbackModal.setIsModalOpen(true);
   };
 
-  const baseItems: MenuItem[] = [
-    {
-      label: (
-        <Tag
-          color={cdlAmber200}
-          style={{
-            borderRadius: 20,
-            height: 24,
-            paddingLeft: 6,
-            paddingRight: 8,
-            marginLeft: 10,
-          }}
+  const techPreviewItem: MenuItem = {
+    label: (
+      <Tag
+        color={cdlAmber200}
+        style={{
+          borderRadius: 20,
+          height: 24,
+          paddingLeft: 6,
+          paddingRight: 8,
+          marginLeft: 10,
+        }}
+      >
+        <Flex
+          gap={4}
+          justify="center"
+          align="center"
+          style={{ height: "100%" }}
         >
-          <Flex
-            gap={4}
-            justify="center"
-            align="center"
-            style={{ height: "100%" }}
-          >
-            <LightbulbIcon color="#000" />
-            <Typography.Text style={{ fontSize: 12 }} color={cdlAmber900}>
-              Technical Preview
-            </Typography.Text>
-          </Flex>
-        </Tag>
-      ),
-      key: "tech-preview",
-      type: "group",
-    },
+          <LightbulbIcon color="#000" />
+          <Typography.Text style={{ fontSize: 12 }} color={cdlAmber900}>
+            Technical Preview
+          </Typography.Text>
+        </Flex>
+      </Tag>
+    ),
+    key: "tech-preview",
+    type: "group",
+  };
+  const baseItems: MenuItem[] = [
     getItem(
-      <div data-testid="rag-apps-nav">Chats</div>,
+      <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
       navToRagApp,
       <DesktopOutlined />,
     ),
     getItem(
-      <div data-testid="data-management-nav">Knowledge Bases</div>,
+      <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
       navToData,
       <DatabaseFilled />,
@@ -141,20 +124,20 @@ const TopNav: React.FC = () => {
   ];
 
   const models = getItem(
-    <div data-testid="data-management-nav">Models</div>,
+    <span data-testid="data-management-nav">Models</span>,
     "models",
     navToModels,
     <CloudOutlined />,
   );
 
   const feedbackItem = getItem(
-    <div data-testid="data-management-nav">Leave Feedback</div>,
+    <span data-testid="data-management-nav">Leave Feedback</span>,
     "leave-feedback",
     popupFeedback,
     <ThumbUpIcon />,
   );
 
-  const items = [...baseItems, models, feedbackItem];
+  const items = [...baseItems, models, feedbackItem, techPreviewItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -169,14 +152,34 @@ const TopNav: React.FC = () => {
   }
 
   return (
-    <Menu selectedKeys={chooseRoute()} mode="horizontal" items={items} />
-    // <FeedbackModal
-    //   handleCancel={() => {
-    //     feedbackModal.setIsModalOpen(false);
-    //   }}
-    //   isModalOpen={feedbackModal.isModalOpen}
-    // />
+    <div>
+      <Menu selectedKeys={chooseRoute()} mode="horizontal" items={items} />
+      <FeedbackModal
+        handleCancel={() => {
+          feedbackModal.setIsModalOpen(false);
+        }}
+        isModalOpen={feedbackModal.isModalOpen}
+      />
+    </div>
   );
 };
+
+type MenuItem = Required<MenuProps>["items"][number];
+
+function getItem(
+  label: React.ReactNode,
+  key: React.Key,
+  onClick: () => void,
+  icon?: React.ReactNode,
+  children?: MenuItem[],
+): MenuItem {
+  return {
+    key,
+    icon,
+    children,
+    label,
+    onClick,
+  } as MenuItem;
+}
 
 export default TopNav;
