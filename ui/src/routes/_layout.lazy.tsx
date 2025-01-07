@@ -42,7 +42,6 @@ import TopNav from "src/layout/TopNav.tsx";
 import Sidebar from "src/layout/Sidebar.tsx";
 import { getAmpIsComposableQueryOptions } from "src/api/ampMetadataApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 import { createContext, Dispatch, SetStateAction, useState } from "react";
 
 const { Content } = Layout;
@@ -73,7 +72,6 @@ const GlobalLayout = () => {
       <Layout>
         {isComposable ? null : <Sidebar />}
         <Content style={{ margin: "0", height: "100%" }}>
-          <AmpUpdateBanner />
           {isComposable ? <TopNav /> : null}
           <Outlet />
         </Content>

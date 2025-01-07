@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Button, Flex, Modal, Typography } from "antd";
+import { Button, Flex, Modal, Tooltip, Typography } from "antd";
 import useModal from "src/utils/useModal.ts";
 import {
   JobStatus,
@@ -54,6 +54,7 @@ import {
 } from "react";
 import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
 import { GlobalContext } from "src/routes/_layout.lazy.tsx";
+import { cdlSlate800 } from "src/cuix/variables.ts";
 
 const RefreshButton = () => {
   return (
@@ -73,41 +74,28 @@ const RefreshButton = () => {
   );
 };
 
-const UpdateAlert = ({
+const UpdateButton = ({
   setIsModalOpen,
 }: {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const {
-    updateBannerDismissed: [, setIsUpdateBannerDismissed],
-  } = useContext(GlobalContext);
-
   return (
-    <Alert
-      message={
-        <>
-          <Typography.Text>
-            Your RAG Studio version is out of date. Please update to the latest
-            version.
-          </Typography.Text>
-          <Button
-            type="primary"
-            danger
-            style={{ marginLeft: 20 }}
-            onClick={() => {
-              setIsModalOpen(true);
-            }}
-          >
-            Click here to update
-          </Button>
-        </>
-      }
-      onClose={() => {
-        setIsUpdateBannerDismissed(true);
-      }}
-      banner
-      closable
-    />
+    <Flex justify="center" align="center" style={{ background: cdlSlate800 }}>
+      <Tooltip
+        title="Your RAG Studio version is out of date. Click here to update to the latest
+          version."
+      >
+        <Button
+          danger
+          type="primary"
+          onClick={() => {
+            setIsModalOpen(true);
+          }}
+        >
+          Update Available
+        </Button>
+      </Tooltip>
+    </Flex>
   );
 };
 
@@ -150,7 +138,7 @@ const AmpUpdateBanner = () => {
   return (
     <>
       {ampUpdateStatus ? (
-        <UpdateAlert setIsModalOpen={updateModal.setIsModalOpen} />
+        <UpdateButton setIsModalOpen={updateModal.setIsModalOpen} />
       ) : null}
       <Modal
         okButtonProps={{ style: { display: "none" } }}

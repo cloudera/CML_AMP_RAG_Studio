@@ -50,6 +50,7 @@ import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import "./style.css";
 import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
+import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
@@ -168,6 +169,7 @@ const TopNav: React.FC = () => {
         items={items}
         style={{ width: "100%" }}
       />
+      <AmpUpdateBanner />
       <TechPreviewItem />
       <FeedbackModal
         handleCancel={() => {
