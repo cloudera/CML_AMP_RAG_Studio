@@ -48,9 +48,10 @@ import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
-import "./style.css";
 import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
+
+import "./style.css";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
