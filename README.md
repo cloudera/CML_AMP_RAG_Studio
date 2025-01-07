@@ -86,7 +86,7 @@ at `http://localhost:5173`. Additionally, each service can be started individual
 #### FE Setup
 
 - Navigate to the FE subdirectory (`cd ./ui`)
-- Make sure node is installed (if not, run `brew install node@20`)
+- Make sure node is installed (if not, run `brew install node@22`)
 - Run `pnpm install` (if pnpm is not installed on your system, install globally `brew install pnpm`)
 - Start the dev server (`pnpm dev`) [if you want to run the dev server standalone, for debugging, for instance?]
 
