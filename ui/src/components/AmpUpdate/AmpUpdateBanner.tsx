@@ -45,8 +45,15 @@ import {
   useUpdateAmpMutation,
 } from "src/api/ampMetadataApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
+import { GlobalContext } from "src/routes/_layout.lazy.tsx";
 
 const RefreshButton = () => {
   return (
@@ -71,6 +78,10 @@ const UpdateAlert = ({
 }: {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
+  const {
+    updateBannerDismissed: [, setIsUpdateBannerDismissed],
+  } = useContext(GlobalContext);
+
   return (
     <Alert
       message={
@@ -91,6 +102,9 @@ const UpdateAlert = ({
           </Button>
         </>
       }
+      onClose={() => {
+        setIsUpdateBannerDismissed(true);
+      }}
       banner
       closable
     />
@@ -102,6 +116,9 @@ const AmpUpdateBanner = () => {
   const updateModal = useModal();
   const ampUpdateJobStatus = useGetAmpUpdateJobStatus(updateModal.isModalOpen);
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
+  const {
+    updateBannerDismissed: [, setIsUpdateBannerDismissed],
+  } = useContext(GlobalContext);
   const updateAmpMutation = useUpdateAmpMutation({
     onSuccess: () => {
       messageQueue.success(
@@ -113,6 +130,12 @@ const AmpUpdateBanner = () => {
       updateModal.setIsModalOpen(false);
     },
   });
+
+  useEffect(() => {
+    if (ampUpdateStatus) {
+      setIsUpdateBannerDismissed(false);
+    }
+  }, [ampUpdateStatus, setIsUpdateBannerDismissed]);
 
   useEffect(() => {
     if (ampUpdateJobStatus.data === JobStatus.RESTARTING) {
@@ -134,7 +157,9 @@ const AmpUpdateBanner = () => {
         destroyOnClose={true}
         title="Update RAG Studio to the latest version?"
         open={updateModal.isModalOpen}
-        onCancel={updateModal.handleCancel}
+        onCancel={() => {
+          updateModal.handleCancel();
+        }}
         cancelText="Close"
       >
         <Typography.Paragraph>

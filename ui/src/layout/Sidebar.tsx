@@ -211,7 +211,7 @@ const Sidebar: React.FC = () => {
       onCollapse={(value) => {
         setCollapsed(value);
       }}
-      style={{ transition: "none" }}
+      style={{ transition: "none", height: "100vh" }}
       width={250}
       ref={ref}
     >

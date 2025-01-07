@@ -153,7 +153,7 @@ export function SessionSidebar({
             mode="inline"
             style={{
               backgroundColor: cdlWhite,
-              height: "97vh",
+              height: "100%",
               borderRight: 0,
               overflowY: "auto",
               scrollbarWidth: "thin",

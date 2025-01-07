@@ -42,22 +42,43 @@ import TopNav from "src/layout/TopNav.tsx";
 import Sidebar from "src/layout/Sidebar.tsx";
 import { getAmpIsComposableQueryOptions } from "src/api/ampMetadataApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
+import { createContext, Dispatch, SetStateAction, useState } from "react";
 
 const { Content } = Layout;
 
+export interface GlobalContextType {
+  updateBannerDismissed: [boolean, Dispatch<SetStateAction<boolean>>];
+}
+
+export const GlobalContext = createContext<GlobalContextType>({
+  updateBannerDismissed: [true, () => true],
+});
+
 const GlobalLayout = () => {
+  const [updateBannerDismissed, setUpdateBannerDismissed] = useState(true);
   const { data: isComposable } = useSuspenseQuery(
     getAmpIsComposableQueryOptions,
   );
-
+  console.log(updateBannerDismissed);
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      {isComposable ? null : <Sidebar />}
-      <Content style={{ margin: "0", overflowY: "auto" }}>
-        {isComposable ? <TopNav /> : null}
-        <Outlet />
-      </Content>
-    </Layout>
+    <GlobalContext.Provider
+      value={{
+        updateBannerDismissed: [
+          updateBannerDismissed,
+          setUpdateBannerDismissed,
+        ],
+      }}
+    >
+      <Layout>
+        {isComposable ? null : <Sidebar />}
+        <Content style={{ margin: "0", height: "100%" }}>
+          <AmpUpdateBanner />
+          {isComposable ? <TopNav /> : null}
+          <Outlet />
+        </Content>
+      </Layout>
+    </GlobalContext.Provider>
   );
 };
 
