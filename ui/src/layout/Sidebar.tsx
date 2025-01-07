@@ -231,8 +231,8 @@ const Sidebar: React.FC = () => {
           />
         ) : null}
       </div>
-      <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
-      <Flex align="end" style={{ height: "100%" }}>
+      <Flex vertical justify="space-between" style={{ height: "85%" }}>
+        <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
         <AmpUpdateBanner />
       </Flex>
       <FeedbackModal
