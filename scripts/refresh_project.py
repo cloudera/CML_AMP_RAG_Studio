@@ -41,9 +41,12 @@ import subprocess
 
 import cmlapi
 
+root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE") else "/home/cdsw"
+os.chdir(root_dir)
+
 print(subprocess.run(["git", "stash"], check=True))
 print(subprocess.run(["git", "pull", "--rebase"], check=True))
-print(subprocess.run(["bash", "/home/cdsw/scripts/refresh_project.sh"], check=True))
+print(subprocess.run(["bash", "scripts/refresh_project.sh"], check=True))
 
 print(
     "Project refresh complete. Restarting the RagStudio Application to pick up changes, if this isn't the initial deployment."

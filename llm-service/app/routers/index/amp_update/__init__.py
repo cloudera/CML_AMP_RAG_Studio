@@ -45,6 +45,7 @@ from ....services.amp_update import check_amp_update_status
 
 router = APIRouter(prefix="/amp-update", tags=["AMP Update"])
 
+root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE") else "/home/cdsw"
 
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
@@ -57,7 +58,7 @@ def amp_up_to_date_status() -> bool:
 def update_amp() -> str:
     print(
         subprocess.run(
-            ["python /home/cdsw/llm-service/scripts/run_refresh_job.py"],
+            [f"python {root_dir}/llm-service/scripts/run_refresh_job.py"],
             shell=True,
             check=True,
         )
@@ -69,7 +70,7 @@ def update_amp() -> str:
 @exceptions.propagates
 def get_amp_status() -> str:
     process: CompletedProcess[bytes] = subprocess.run(
-        ["python /home/cdsw/llm-service/scripts/get_job_run_status.py"],
+        [f"python {root_dir}/llm-service/scripts/get_job_run_status.py"],
         shell=True,
         check=True,
         capture_output=True,

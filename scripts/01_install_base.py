@@ -37,29 +37,33 @@
 # ##############################################################################
 
 import subprocess
+import os
 
-print(subprocess.run(["python /home/cdsw/scripts/validator/validate_env.py"], shell=True, check=True))
+root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE") else "/home/cdsw"
+os.chdir(root_dir)
+
+print(subprocess.run(["python scripts/validator/validate_env.py"], shell=True, check=True))
 
 print(
-    subprocess.run("bash /home/cdsw/scripts/install_node.sh", shell=True, check=True)
+    subprocess.run("bash scripts/install_node.sh", shell=True, check=True)
 )
 print("Installing Node is complete")
 
 print(
-    subprocess.run(["bash /home/cdsw/scripts/install_java.sh"], shell=True, check=True)
+    subprocess.run(["bash scripts/install_java.sh"], shell=True, check=True)
 )
 print("Installing Java 21 is complete")
 
 print(
     subprocess.run(
-        ["bash /home/cdsw/scripts/install_qdrant.sh"], shell=True, check=True
+        ["bash scripts/install_qdrant.sh"], shell=True, check=True
     )
 )
 print("Installing Qdrant is complete")
 
 print(
     subprocess.run(
-        ["bash /home/cdsw/scripts/install_easyocr_model.sh"], shell=True, check=True
+        ["bash scripts/install_easyocr_model.sh"], shell=True, check=True
     )
 )
 print("Downloading EASYOCR models complete")
