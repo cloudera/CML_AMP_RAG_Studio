@@ -42,6 +42,8 @@
 # Download and install nvm:
 set +x
 
+touch .bashrc
+
 # NVM installer updates bashrc if exists
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 
