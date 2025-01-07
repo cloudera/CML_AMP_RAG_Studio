@@ -60,6 +60,7 @@ import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
 import "./style.css";
+import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 const { Sider } = Layout;
 
@@ -231,6 +232,9 @@ const Sidebar: React.FC = () => {
         ) : null}
       </div>
       <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
+      <Flex align="end" style={{ height: "100%" }}>
+        <AmpUpdateBanner />
+      </Flex>
       <FeedbackModal
         handleCancel={() => {
           feedbackModal.setIsModalOpen(false);

@@ -43,12 +43,11 @@ import { getSessionsQueryOptions, Session } from "src/api/sessionApi.ts";
 import { groupBy } from "lodash";
 import { format } from "date-fns";
 import { useParams } from "@tanstack/react-router";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { GlobalContext } from "src/routes/_layout.lazy.tsx";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
@@ -56,9 +55,7 @@ const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
 
 function ChatLayout() {
   const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
-  const {
-    updateBannerDismissed: [isUpdateBannerDismissed],
-  } = useContext(GlobalContext);
+
   const { sessionId } = useParams({ strict: false });
   const [currentQuestion, setCurrentQuestion] = useState("");
   const { data: dataSources, status: dataSourcesStatus } =
@@ -67,8 +64,6 @@ function ChatLayout() {
   const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery(
     sessionId?.toString() ?? "",
   );
-
-  console.log(isUpdateBannerDismissed);
 
   const activeSession = getSessionForSessionId(sessionId, sessions);
   const dataSourceId = activeSession?.dataSourceIds[0];
@@ -108,7 +103,7 @@ function ChatLayout() {
       <Layout
         style={{
           width: "100%",
-          height: isUpdateBannerDismissed ? "95vh" : "92vh",
+          height: "95vh",
           transition: "height 0.5s",
         }}
       >
