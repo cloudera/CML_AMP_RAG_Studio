@@ -37,6 +37,7 @@
 # ##############################################################################
 
 import subprocess
+import os
 
 from fastapi import APIRouter
 from subprocess import CompletedProcess
