@@ -38,5 +38,5 @@
 set -eo pipefail
 set +x
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
+# shellcheck disable=SC1090
+source ~/.bashrc > /dev/null
