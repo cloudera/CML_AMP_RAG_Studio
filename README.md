@@ -17,6 +17,7 @@ If you do not want to use the catalog-entry, then you should specify the release
 - `release/1` is the branch name to use for the latest stable release.
 
 ### LLM Model Options
+
 RAG Studio can be used with both Cloudera Inference (CAII) or AWS Bedrock for selecting LLM and embedding models. 
 
 #### Cloudera Inference (CAII) Setup:
@@ -72,6 +73,11 @@ Ignore this section unless you are working on developing or enhancing this AMP.
 
 Make a copy of the `.env.example` file and rename it to `.env`. Fill in the values for the environment variables.
 
+### Upgrading EasyOCR Model Artifacts
+
+We store EasyOCR model artifacts in a placeholder Github Release located [here](https://github.com/cloudera/CML_AMP_RAG_Studio/releases/tag/model_download) to facilitate faster downloads.
+To upgrade the EasyOCR model artifacts, download the latest model artifacts from the EasyOCR repository and upload them to a Github Release.
+
 ### Local Development
 
 Every service can be started locally for development by running `./local-dev.sh`. Once started, the UI can be accessed
@@ -80,7 +86,7 @@ at `http://localhost:5173`. Additionally, each service can be started individual
 #### FE Setup
 
 - Navigate to the FE subdirectory (`cd ./ui`)
-- Make sure node is installed (if not, run `brew install node@20`)
+- Make sure node is installed (if not, run `brew install node@22`)
 - Run `pnpm install` (if pnpm is not installed on your system, install globally `brew install pnpm`)
 - Start the dev server (`pnpm dev`) [if you want to run the dev server standalone, for debugging, for instance?]
 

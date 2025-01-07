@@ -1,4 +1,3 @@
-#!/usr/bin/bash
 #
 # CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 # (C) Cloudera, Inc. 2024
@@ -21,7 +20,7 @@
 # with an authorized and properly licensed third party, you do not
 # have any rights to access nor to use this code.
 #
-# Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+# Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 # contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 # KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 # WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,44 +35,8 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
+set -eo pipefail
+set +x
 
-set -eox pipefail
-
-## set the RELEASE_TAG env var from the file, if it exists
-source scripts/release_version.txt || true
-
-source scripts/load_nvm.sh > /dev/null
-
-set +e
-nvm use 22
-return_code=$?
-set -e
-if [ $return_code -ne 0 ]; then
-    echo "NVM or required Node version not found.  Installing and using..."
-    bash scripts/install_node.sh
-
-    nvm use 22
-fi
-cd ui/express
-npm install
-
-cd ../../llm-service
-pip install uv
-
-uv sync
-
-cd ..
-mkdir -p artifacts
-
-RELEASE_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download
-if  [ -n "${RELEASE_TAG}" ] && [ "${RELEASE_TAG}" != "latest" ]; then
-    RELEASE_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/${RELEASE_TAG}
-fi
-
-echo "Downloading release artifacts from ${RELEASE_URL}"
-wget "${RELEASE_URL}/rag-api.jar" -O artifacts/rag-api.jar
-wget "${RELEASE_URL}/fe-dist.tar.gz" -O artifacts/fe-dist.tar.gz
-
-# unzip the frontend tarball
-cd ui
-tar -xzf ../artifacts/fe-dist.tar.gz
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
