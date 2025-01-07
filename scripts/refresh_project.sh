@@ -58,8 +58,14 @@ cd ui/express
 npm install
 
 cd ../../llm-service
-pip install uv
 
+set +e
+uv --version
+return_code = $?
+set -e
+if [ $return_code -ne 0 ]; then
+  pip install uv
+fi
 uv sync
 
 cd ..
