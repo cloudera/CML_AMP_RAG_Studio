@@ -43,7 +43,7 @@ import {
   useGetAmpUpdateJobStatus,
   useGetAmpUpdateStatus,
   useUpdateAmpMutation,
-} from "src/api/ampUpdateApi.ts";
+} from "src/api/ampMetadataApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";

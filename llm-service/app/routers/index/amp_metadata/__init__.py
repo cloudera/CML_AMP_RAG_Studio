@@ -79,7 +79,7 @@ def get_amp_status() -> str:
     stdout = process.stdout.decode("utf-8")
     return stdout.strip()
 
-@router.get("", summary="Returns a boolean for whether AMP is composable.")
+@router.get("/is-composable", summary="Returns a boolean for whether AMP is composable.")
 @exceptions.propagates
 def amp_is_composed() -> bool:
     return os.getenv("IS_COMPOSABLE") or False

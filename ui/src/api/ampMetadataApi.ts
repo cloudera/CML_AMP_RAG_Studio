@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import {
   commonHeaders,
   getRequest,
@@ -57,6 +57,15 @@ export const useGetAmpUpdateStatus = () => {
 const getAmpUpdateStatus = async (): Promise<boolean> => {
   return getRequest(`${llmServicePath}/amp-update`);
 };
+
+const getAmpIsComposable = async (): Promise<boolean> => {
+  return getRequest(`${llmServicePath}/is-composable`);
+};
+
+export const getAmpIsComposableQueryOptions = queryOptions({
+  queryKey: [QueryKeys.getAmpIsComposable],
+  queryFn: getAmpIsComposable,
+});
 
 export enum JobStatus {
   SCHEDULING = "ENGINE_SCHEDULING",

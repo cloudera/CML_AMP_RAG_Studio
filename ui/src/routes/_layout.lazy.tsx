@@ -43,8 +43,8 @@ import Sidebar from "src/layout/Sidebar.tsx";
 
 const { Content } = Layout;
 
-export const Route = createLazyFileRoute("/_layout")({
-  component: () => (
+const OurLayout = () => {
+  return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sidebar />
       <Content style={{ margin: "0", overflowY: "auto" }}>
@@ -52,5 +52,9 @@ export const Route = createLazyFileRoute("/_layout")({
         <Outlet />
       </Content>
     </Layout>
-  ),
+  );
+};
+
+export const Route = createLazyFileRoute("/_layout")({
+  component: <OurLayout />,
 });
