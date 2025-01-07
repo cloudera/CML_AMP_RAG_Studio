@@ -39,4 +39,5 @@ set -eo pipefail
 set +x
 
 # shellcheck disable=SC1090
+touch ~/.bashrc
 source ~/.bashrc > /dev/null
