@@ -42,6 +42,8 @@
 # Download and install nvm:
 set +x
 
+touch ~/.bashrc
+
 # NVM installer updates bashrc if exists
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 
@@ -51,10 +53,10 @@ nvm install 22
 nvm use 22
 
 # Verify the Node.js version:
-echo $(which node)
+which node
 node -v
 nvm current
 
 # Verify npm version:
-echo $(which npm)
+which npm
 npm -v

@@ -42,9 +42,9 @@ set -eox pipefail
 ## set the RELEASE_TAG env var from the file, if it exists
 source scripts/release_version.txt || true
 
-source scripts/load_nvm.sh > /dev/null
 
 set +e
+source scripts/load_nvm.sh > /dev/null
 nvm use 22
 return_code=$?
 set -e

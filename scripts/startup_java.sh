@@ -37,8 +37,13 @@
 #
 set -ox pipefail
 
-export JAVA_ROOT=`ls /home/cdsw/java-home`
-export JAVA_HOME="/home/cdsw/java-home/${JAVA_ROOT}"
+RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+fi
+
+export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
+export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
 
 for i in {1..3}; do
   echo "Starting Java application..."

@@ -35,8 +35,9 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
-set -eo pipefail
+set -o pipefail
 set +x
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
+touch ~/.bashrc
+# shellcheck disable=SC1090
+source ~/.bashrc > /dev/null
