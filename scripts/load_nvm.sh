@@ -35,9 +35,9 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
-set -eo pipefail
+set -o pipefail
 set +x
 
-# shellcheck disable=SC1090
 touch ~/.bashrc
+# shellcheck disable=SC1090
 source ~/.bashrc > /dev/null
