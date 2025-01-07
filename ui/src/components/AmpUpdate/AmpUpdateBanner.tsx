@@ -69,11 +69,21 @@ const RefreshButton = () => {
 
 const UpdateButton = ({
   setIsModalOpen,
+  isCollapsed,
 }: {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+  isCollapsed: boolean;
 }) => {
   return (
-    <Flex justify="center" align="center" style={{ background: cdlSlate800 }}>
+    <Flex
+      justify="center"
+      align="center"
+      style={{
+        background: cdlSlate800,
+        rotate: isCollapsed ? "-450deg" : "0deg",
+        transition: "rotate 0.3s",
+      }}
+    >
       <Tooltip
         title="Your RAG Studio version is out of date. Click here to update to the latest
           version."
@@ -92,7 +102,7 @@ const UpdateButton = ({
   );
 };
 
-const AmpUpdateBanner = () => {
+const AmpUpdateBanner = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const { data: ampUpdateStatus } = useGetAmpUpdateStatus();
   const updateModal = useModal();
   const ampUpdateJobStatus = useGetAmpUpdateJobStatus(updateModal.isModalOpen);
@@ -122,7 +132,10 @@ const AmpUpdateBanner = () => {
   return (
     <>
       {ampUpdateStatus ? (
-        <UpdateButton setIsModalOpen={updateModal.setIsModalOpen} />
+        <UpdateButton
+          setIsModalOpen={updateModal.setIsModalOpen}
+          isCollapsed={isCollapsed}
+        />
       ) : null}
       <Modal
         okButtonProps={{ style: { display: "none" } }}

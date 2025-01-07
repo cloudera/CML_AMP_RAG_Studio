@@ -233,7 +233,7 @@ const Sidebar: React.FC = () => {
       </div>
       <Flex vertical justify="space-between" style={{ height: "85%" }}>
         <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
-        <AmpUpdateBanner />
+        <AmpUpdateBanner isCollapsed={collapsed} />
       </Flex>
       <FeedbackModal
         handleCancel={() => {
