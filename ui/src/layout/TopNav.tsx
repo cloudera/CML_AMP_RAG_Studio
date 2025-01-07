@@ -45,12 +45,7 @@ import {
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
-import {
-  cdlAmber200,
-  cdlAmber900,
-  cdlBlack,
-  cdlOrange050,
-} from "src/cuix/variables.ts";
+import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import "./style.css";
@@ -91,7 +86,8 @@ const TopNav: React.FC = () => {
         justify="center"
         align="center"
         style={{
-          backgroundColor: cdlBlack,
+          paddingRight: 20,
+          backgroundColor: cdlSlate800,
         }}
       >
         <Tag

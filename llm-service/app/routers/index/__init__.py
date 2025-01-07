@@ -42,7 +42,7 @@ from fastapi import APIRouter
 
 from . import data_source
 from . import sessions
-from . import amp_update
+from . import amp_metadata
 from . import models
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 router.include_router(data_source.router)
 router.include_router(sessions.router)
-router.include_router(amp_update.router)
+router.include_router(amp_metadata.router)
 # include this for legacy UI calls
-router.include_router(amp_update.router, prefix="/index", deprecated=True)
+router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
 router.include_router(models.router)
