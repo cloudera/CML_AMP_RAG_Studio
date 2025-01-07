@@ -45,7 +45,12 @@ import {
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
-import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
+import {
+  cdlAmber200,
+  cdlAmber900,
+  cdlBlack,
+  cdlOrange050,
+} from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import "./style.css";
@@ -80,34 +85,42 @@ const TopNav: React.FC = () => {
     feedbackModal.setIsModalOpen(true);
   };
 
-  const techPreviewItem: MenuItem = {
-    label: (
-      <Tag
-        color={cdlAmber200}
+  const TechPreviewItem = () => {
+    return (
+      <Flex
+        justify="center"
+        align="center"
         style={{
-          borderRadius: 20,
-          height: 24,
-          paddingLeft: 6,
-          paddingRight: 8,
-          marginLeft: 10,
+          backgroundColor: cdlBlack,
         }}
       >
-        <Flex
-          gap={4}
-          justify="center"
-          align="center"
-          style={{ height: "100%" }}
+        <Tag
+          color={cdlAmber200}
+          style={{
+            borderRadius: 20,
+            height: 24,
+            paddingLeft: 6,
+            paddingRight: 8,
+            marginLeft: 10,
+            cursor: "default",
+          }}
         >
-          <LightbulbIcon color="#000" />
-          <Typography.Text style={{ fontSize: 12 }} color={cdlAmber900}>
-            Technical Preview
-          </Typography.Text>
-        </Flex>
-      </Tag>
-    ),
-    key: "tech-preview",
-    type: "group",
+          <Flex
+            gap={4}
+            justify="center"
+            align="center"
+            style={{ height: "100%" }}
+          >
+            <LightbulbIcon color="#000" />
+            <Typography.Text style={{ fontSize: 12 }} color={cdlAmber900}>
+              Technical Preview
+            </Typography.Text>
+          </Flex>
+        </Tag>
+      </Flex>
+    );
   };
+
   const baseItems: MenuItem[] = [
     getItem(
       <span data-testid="rag-apps-nav">Chats</span>,
@@ -137,7 +150,7 @@ const TopNav: React.FC = () => {
     <ThumbUpIcon />,
   );
 
-  const items = [...baseItems, models, feedbackItem, techPreviewItem];
+  const items = [...baseItems, models, feedbackItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -152,15 +165,21 @@ const TopNav: React.FC = () => {
   }
 
   return (
-    <div>
-      <Menu selectedKeys={chooseRoute()} mode="horizontal" items={items} />
+    <Flex justify="space-between" style={{ width: "100vw" }}>
+      <Menu
+        selectedKeys={chooseRoute()}
+        mode="horizontal"
+        items={items}
+        style={{ width: "100%" }}
+      />
+      <TechPreviewItem />
       <FeedbackModal
         handleCancel={() => {
           feedbackModal.setIsModalOpen(false);
         }}
         isModalOpen={feedbackModal.isModalOpen}
       />
-    </div>
+    </Flex>
   );
 };
 
