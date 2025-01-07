@@ -102,7 +102,11 @@ const UpdateButton = ({
   );
 };
 
-const AmpUpdateBanner = ({ isCollapsed }: { isCollapsed: boolean }) => {
+const AmpUpdateBanner = ({
+  isCollapsed = false,
+}: {
+  isCollapsed?: boolean;
+}) => {
   const { data: ampUpdateStatus } = useGetAmpUpdateStatus();
   const updateModal = useModal();
   const ampUpdateJobStatus = useGetAmpUpdateJobStatus(updateModal.isModalOpen);
