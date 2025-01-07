@@ -59,7 +59,7 @@ const getAmpUpdateStatus = async (): Promise<boolean> => {
 };
 
 const getAmpIsComposable = async (): Promise<boolean> => {
-  return getRequest(`${llmServicePath}/is-composable`);
+  return getRequest(`${llmServicePath}/amp-update/is-composable`);
 };
 
 export const getAmpIsComposableQueryOptions = queryOptions({

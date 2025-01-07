@@ -40,15 +40,21 @@ import { createLazyFileRoute, Outlet } from "@tanstack/react-router";
 import { Layout } from "antd";
 import TopNav from "src/layout/TopNav.tsx";
 import Sidebar from "src/layout/Sidebar.tsx";
+import { getAmpIsComposableQueryOptions } from "src/api/ampMetadataApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const { Content } = Layout;
 
-const OurLayout = () => {
+const GlobalLayout = () => {
+  const { data: isComposable } = useSuspenseQuery(
+    getAmpIsComposableQueryOptions,
+  );
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sidebar />
+      {isComposable ? null : <Sidebar />}
       <Content style={{ margin: "0", overflowY: "auto" }}>
-        <TopNav />
+        {isComposable ? <TopNav /> : null}
         <Outlet />
       </Content>
     </Layout>
@@ -56,5 +62,5 @@ const OurLayout = () => {
 };
 
 export const Route = createLazyFileRoute("/_layout")({
-  component: <OurLayout />,
+  component: () => <GlobalLayout />,
 });
