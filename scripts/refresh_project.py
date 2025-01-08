@@ -56,9 +56,14 @@ client = cmlapi.default_client()
 project_id = os.environ["CDSW_PROJECT_ID"]
 apps = client.list_applications(project_id=project_id)
 if len(apps.applications) > 0:
-    # todo: handle case where there are multiple apps
-    app_id = apps.applications[0].id
-    print("Restarting app with ID: ", app_id)
-    client.restart_application(application_id=app_id, project_id=project_id)
+    # find the application named "RagStudio" and restart it
+    ragstudio_app = next((app for app in apps.applications if app.name == "RagStudio"), None)
+    if ragstudio_app:
+        app_id = ragstudio_app.id
+        print("Restarting app with ID: ", app_id)
+        client.restart_application(application_id=app_id, project_id=project_id)
+    else:
+        print("No RagStudio application found to restart. This can happen if someone renamed the application.")
+        raise ValueError("No RagStudio application found to restart.")
 else:
     print("No applications found to restart. This is likely the initial deployment.")
