@@ -34,14 +34,6 @@ environment_variables:
         default: ""
         description: "The domain of the CAII service. Setting this will enable CAII as the sole source for both inference and embedding models."
         required: false
-    LLM_SERVICE_URL:
-        default: "http://localhost:8081"
-        description: "Internal API URL. Do not change."
-        required: true
-    API_URL:
-        default: "http://localhost:8080"
-        description: "Internal API URL. Do not change."
-        required: true
 
 
 runtimes:
@@ -85,5 +77,3 @@ tasks:
     memory: 4
     environment_variables:
       TASK_TYPE: START_APPLICATION
-      LLM_SERVICE_URL: "http://localhost:8081"
-      API_URL: "http://localhost:8080"
