@@ -36,17 +36,18 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Button, Flex, Modal, Typography } from "antd";
+import { Button, Flex, Modal, Tooltip, Typography } from "antd";
 import useModal from "src/utils/useModal.ts";
 import {
   JobStatus,
   useGetAmpUpdateJobStatus,
   useGetAmpUpdateStatus,
   useUpdateAmpMutation,
-} from "src/api/ampUpdateApi.ts";
+} from "src/api/ampMetadataApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
+import { cdlSlate800 } from "src/cuix/variables.ts";
 
 const RefreshButton = () => {
   return (
@@ -66,38 +67,46 @@ const RefreshButton = () => {
   );
 };
 
-const UpdateAlert = ({
+const UpdateButton = ({
   setIsModalOpen,
+  isCollapsed,
 }: {
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+  isCollapsed: boolean;
 }) => {
   return (
-    <Alert
-      message={
-        <>
-          <Typography.Text>
-            Your RAG Studio version is out of date. Please update to the latest
-            version.
-          </Typography.Text>
-          <Button
-            type="primary"
-            danger
-            style={{ marginLeft: 20 }}
-            onClick={() => {
-              setIsModalOpen(true);
-            }}
-          >
-            Click here to update
-          </Button>
-        </>
-      }
-      banner
-      closable
-    />
+    <Flex
+      justify="center"
+      align="center"
+      style={{
+        background: cdlSlate800,
+        rotate: isCollapsed ? "-450deg" : "0deg",
+        transition: "rotate 0.3s",
+      }}
+    >
+      <Tooltip
+        title="Your RAG Studio version is out of date. Click here to update to the latest
+          version."
+      >
+        <Button
+          danger
+          type="primary"
+          onClick={() => {
+            setIsModalOpen(true);
+          }}
+        >
+          Update Available
+        </Button>
+      </Tooltip>
+    </Flex>
   );
 };
 
-const AmpUpdateBanner = () => {
+const AmpUpdateBanner = ({
+  isCollapsed = false,
+}: {
+  isCollapsed?: boolean;
+}) => {
   const { data: ampUpdateStatus } = useGetAmpUpdateStatus();
   const updateModal = useModal();
   const ampUpdateJobStatus = useGetAmpUpdateJobStatus(updateModal.isModalOpen);
@@ -127,14 +136,19 @@ const AmpUpdateBanner = () => {
   return (
     <>
       {ampUpdateStatus ? (
-        <UpdateAlert setIsModalOpen={updateModal.setIsModalOpen} />
+        <UpdateButton
+          setIsModalOpen={updateModal.setIsModalOpen}
+          isCollapsed={isCollapsed}
+        />
       ) : null}
       <Modal
         okButtonProps={{ style: { display: "none" } }}
         destroyOnClose={true}
         title="Update RAG Studio to the latest version?"
         open={updateModal.isModalOpen}
-        onCancel={updateModal.handleCancel}
+        onCancel={() => {
+          updateModal.handleCancel();
+        }}
         cancelText="Close"
       >
         <Typography.Paragraph>

@@ -39,7 +39,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { describe, it, expect, afterEach } from "vitest";
 import JobStatusTracker from "./JobStatusTracker";
-import { JobStatus } from "src/api/ampUpdateApi.ts";
+import { JobStatus } from "src/api/ampMetadataApi.ts";
 
 afterEach(() => {
   cleanup();

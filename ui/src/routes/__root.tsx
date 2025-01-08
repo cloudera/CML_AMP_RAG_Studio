@@ -47,7 +47,6 @@ import {
   cdlSlate800,
   cdlWhite,
 } from "src/cuix/variables.ts";
-import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 const customDarkTheme = {
   algorithm: theme.darkAlgorithm,
@@ -102,7 +101,6 @@ const RootComponent = () => {
 
   return (
     <ConfigProvider theme={darkMode ? customDarkTheme : customLightTheme}>
-      <AmpUpdateBanner />
       <Outlet />
     </ConfigProvider>
   );
