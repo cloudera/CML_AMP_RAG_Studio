@@ -61,7 +61,7 @@ cd ../../llm-service
 
 set +e
 uv --version
-return_code = $?
+return_code=$?
 set -e
 if [ $return_code -ne 0 ]; then
   pip install uv
