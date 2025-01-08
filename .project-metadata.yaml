@@ -34,6 +34,10 @@ environment_variables:
         default: ""
         description: "The domain of the CAII service. Setting this will enable CAII as the sole source for both inference and embedding models."
         required: false
+    INSTALL_DIR:
+        default: "/home/cdsw"
+        description: "The directory where the project will be installed. This env var should not be set by the installer, but is controlled by the system."
+        required: true
 
 
 runtimes:

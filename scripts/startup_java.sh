@@ -37,12 +37,8 @@
 #
 set -ox pipefail
 
-RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
-DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
-if [ -z "$IS_COMPOSABLE" ]; then
-  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
-  DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
-fi
+RAG_STUDIO_INSTALL_DIR=${INSTALL_DIR:-/home/cdsw}
+DB_URL_LOCATION="jdbc:h2:file:${RAG_STUDIO_INSTALL_DIR}/databases/rag"
 
 export DB_URL=$DB_URL_LOCATION
 export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`

@@ -39,7 +39,7 @@
 import subprocess
 import os
 
-root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+root_dir = os.getenv("INSTALL_DIR", "/home/cdsw")
 os.chdir(root_dir)
 
 while True:
