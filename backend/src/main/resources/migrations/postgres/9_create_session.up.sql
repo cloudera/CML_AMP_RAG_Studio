@@ -46,16 +46,14 @@ CREATE TABLE chat_session
     time_updated          TIMESTAMP             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by_id         VARCHAR(255)                NOT NULL,
     updated_by_id         VARCHAR(255)                NOT NULL,
-    last_interaction_time BIGINT                NULL,
-    CONSTRAINT PK_chat_session PRIMARY KEY (id)
+    last_interaction_time BIGINT                NULL
 );
 
 CREATE TABLE chat_session_data_source
 (
     id SERIAL PRIMARY KEY,
     chat_session_id BIGINT                NOT NULL,
-    data_source_id  BIGINT                NOT NULL,
-    CONSTRAINT PK_chat_session_ds PRIMARY KEY (id)
+    data_source_id  BIGINT                NOT NULL
 );
 
 COMMIT;

@@ -61,6 +61,9 @@ class RagDataSource:
 
 
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
+print("*******************************")
+print("API_URL: ", BACKEND_BASE_URL)
+print("*******************************")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/dataSources/{}"
 
 

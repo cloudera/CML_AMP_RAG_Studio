@@ -36,8 +36,6 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
 ALTER TABLE chat_session ADD COLUMN deleted boolean;
