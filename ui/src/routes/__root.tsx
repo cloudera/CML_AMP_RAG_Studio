@@ -74,12 +74,19 @@ const customLightTheme = {
       colorLink: cdlBlue600,
     },
     Menu: {
+      colorText: cdlGray400,
+
       itemSelectedBg: cdlSlate800,
       itemActiveBg: cdlSlate800,
       itemBg: cdlSlate800,
-      colorText: cdlGray400,
       itemColor: cdlGray400,
       itemSelectedColor: cdlGreen500,
+
+      horizontalItemSelectedBg: cdlSlate800,
+      horizontalItemActiveBg: cdlSlate800,
+      horizontalItemBg: cdlSlate800,
+      horizontalItemColor: cdlGray400,
+      horizontalItemSelectedColor: cdlGreen500,
     },
     Layout: {
       triggerBg: cdlSlate800,
