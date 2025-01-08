@@ -99,8 +99,9 @@ def check_if_ahead_or_behind(current_hash: str, current_branch: str) -> tuple[in
         )
 
 
-def check_amp_update_status() -> bool:
-    """Check if the AMP is up-to-date."""
+def does_amp_need_updating() -> bool:
+    """Check if the AMP is up-to-date. Returns True if the AMP needs updating."""
+
     # Retrieve the current branch only once
     current_branch = (
         subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])

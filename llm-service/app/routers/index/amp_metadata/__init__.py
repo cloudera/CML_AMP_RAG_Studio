@@ -42,7 +42,7 @@ import os
 from fastapi import APIRouter
 from subprocess import CompletedProcess
 from .... import exceptions
-from ....services.amp_update import check_amp_update_status
+from ....services.amp_update import does_amp_need_updating
 
 router = APIRouter(prefix="/amp-update", tags=["AMP Update"])
 
@@ -51,7 +51,11 @@ root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else 
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
 def amp_up_to_date_status() -> bool:
-    return check_amp_update_status()
+    # noinspection PyBroadException
+    try:
+        return does_amp_need_updating()
+    except Exception:
+        return False
 
 
 @router.post("", summary="Updates AMP.")
