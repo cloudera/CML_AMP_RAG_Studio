@@ -69,6 +69,8 @@ export interface QueryConfiguration {
   top_k: number;
   model_name: string;
   exclude_knowledge_base: boolean;
+  use_question_condensing: boolean;
+  use_hyde: boolean;
 }
 
 export interface ChatMutationRequest {
@@ -200,6 +202,7 @@ const chatMutation = async (
 
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean,
+  forSuggestedQuestions: boolean,
   activeSession?: Session,
 ): QueryConfiguration => {
   // todo: maybe we should just throw an exception here?
@@ -208,11 +211,16 @@ export const createQueryConfiguration = (
       top_k: 5,
       model_name: "",
       exclude_knowledge_base: false,
+      use_question_condensing: false,
+      use_hyde: false,
     };
   }
+
   return {
     top_k: activeSession.responseChunks,
     model_name: activeSession.inferenceModel ?? "",
     exclude_knowledge_base: excludeKnowledgeBase,
+    use_question_condensing: !forSuggestedQuestions,
+    use_hyde: false,
   };
 };

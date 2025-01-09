@@ -95,6 +95,22 @@ def chat(
     )
 
 
+@router.post("/hypo-chat", summary="Chat with your documents in the requested datasource")
+@exceptions.propagates
+def hypo_chat(
+        session_id: int,
+        request: RagStudioChatRequest,
+) -> RagStudioChatMessage:
+    if request.configuration.exclude_knowledge_base:
+        return llm_talk(session_id, request)
+    hypothetical_answer = llm_completion.hypothetical(request.query, request.configuration)
+    print(f"hypothetical_answer: {hypothetical_answer}")
+    #todo: implement HyDE.
+    # 1. use the hypothetical answer to get chunks out of the vector store
+    # 2. send the original question and the chunks into the synthesis.
+    raise HTTPException(status_code=501, detail="Not implemented")
+
+
 def llm_talk(
     session_id: int,
     request: RagStudioChatRequest,

@@ -63,6 +63,7 @@ const RagChatQueryInput = () => {
 
   const configuration = createQueryConfiguration(
     excludeKnowledgeBase,
+    true,
     activeSession,
   );
   const {
@@ -99,6 +100,7 @@ const RagChatQueryInput = () => {
         session_id: sessionId,
         configuration: createQueryConfiguration(
           excludeKnowledgeBase,
+          false,
           activeSession,
         ),
       });

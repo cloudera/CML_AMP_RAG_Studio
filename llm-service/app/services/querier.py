@@ -36,30 +36,101 @@
 #  DATA.
 # ##############################################################################
 import logging
+from typing import Optional, List, Any
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core import QueryBundle, PromptTemplate
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
+from llama_index.core.llms import LLM
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 
+from . import models, llm_completion
+from .chat_store import RagContext
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
-from . import models
-from .chat_store import RagContext
 
 logger = logging.getLogger(__name__)
 
+CUSTOM_TEMPLATE = """\
+Given a conversation (between Human and Assistant) and a follow up message from Human, \
+rewrite the message to be a standalone question that captures all relevant context \
+from the conversation. Just provide the question, not any description of it.
+
+<Chat History>
+{chat_history}
+
+<Follow Up Message>
+{question}
+
+<Standalone question>
+"""
+
+CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
+
+
+class FlexibleChatEngine(CondenseQuestionChatEngine):
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self._configuration : RagPredictConfiguration = RagPredictConfiguration()
+
+    @property
+    def configuration(self) -> RagPredictConfiguration:
+        return self._configuration
+
+    @configuration.setter
+    def configuration(self, value: RagPredictConfiguration) -> None:
+        self._configuration = value
+
+    @trace_method("chat")
+    def chat(
+            self, message: str, chat_history: Optional[List[ChatMessage]] = None
+    ) -> AgentChatResponse:
+        chat_history = chat_history or self._memory.get(input=message)
+
+        if self.configuration.use_question_condensing:
+            # Generate standalone question from conversation context and last message
+            condensed_question = self._condense_question(chat_history, message)
+            log_str = f"Querying with condensed question: {condensed_question}"
+            logger.info(log_str)
+            if self._verbose:
+                print(log_str)
+            message = condensed_question
+
+        embedding_strings = None
+        if self.configuration.use_hyde:
+            hypothetical = llm_completion.hypothetical(message, self.configuration)
+            logger.info(f"hypothetical document: {hypothetical}")
+            embedding_strings = [hypothetical]
+
+        # Query with standalone question
+        query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
+        query_response = self._query_engine.query(query_bundle)
+
+        tool_output = self._get_tool_output_from_response(
+            message, query_response
+        )
+
+        # Record response
+        self._memory.put(ChatMessage(role=MessageRole.USER, content=message))
+        self._memory.put(
+            ChatMessage(role=MessageRole.ASSISTANT, content=str(query_response))
+        )
+
+        return AgentChatResponse(response=str(query_response), sources=[tool_output])
+
 
 def query(
-    data_source_id: int,
-    query_str: str,
-    configuration: RagPredictConfiguration,
-    chat_history: list[RagContext],
+        data_source_id: int,
+        query_str: str,
+        configuration: RagPredictConfiguration,
+        chat_history: list[RagContext],
 ) -> AgentChatResponse:
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
@@ -75,17 +146,13 @@ def query(
         similarity_top_k=configuration.top_k,
         embed_model=embedding_model,  # is this needed, really, if it's in the index?
     )
-    # TODO: factor out LLM and chat engine into a separate function
     llm = models.get_llm(model_name=configuration.model_name)
 
     response_synthesizer = get_response_synthesizer(llm=llm)
     query_engine = RetrieverQueryEngine(
         retriever=retriever, response_synthesizer=response_synthesizer
     )
-    chat_engine = CondenseQuestionChatEngine.from_defaults(
-        query_engine=query_engine,
-        llm=llm,
-    )
+    chat_engine = build_chat_engine(configuration, llm, query_engine)
 
     logger.info("querying chat engine")
     chat_messages = list(
@@ -106,3 +173,13 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
+
+
+def build_chat_engine(configuration: RagPredictConfiguration, llm: LLM, query_engine: RetrieverQueryEngine)-> FlexibleChatEngine:
+    chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
+        query_engine=query_engine,
+        llm=llm,
+        condense_question_prompt=CUSTOM_PROMPT,
+    )
+    chat_engine.configuration = configuration
+    return chat_engine
