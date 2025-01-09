@@ -152,7 +152,7 @@ def query(
     query_engine = RetrieverQueryEngine(
         retriever=retriever, response_synthesizer=response_synthesizer
     )
-    chat_engine = build_chat_engine(configuration, llm, query_engine)
+    chat_engine = _build_chat_engine(configuration, llm, query_engine)
 
     logger.info("querying chat engine")
     chat_messages = list(
@@ -175,7 +175,7 @@ def query(
         ) from error
 
 
-def build_chat_engine(configuration: RagPredictConfiguration, llm: LLM, query_engine: RetrieverQueryEngine)-> FlexibleChatEngine:
+def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM, query_engine: RetrieverQueryEngine)-> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
