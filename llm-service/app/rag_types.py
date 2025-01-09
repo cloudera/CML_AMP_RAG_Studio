@@ -50,3 +50,5 @@ class RagPredictConfiguration(BaseModel):
     chunk_size: int = 512
     model_name: str = DEFAULT_BEDROCK_LLM_MODEL
     exclude_knowledge_base: Optional[bool] = False
+    use_question_condensing: Optional[bool] = True
+    use_hyde: Optional[bool] = False

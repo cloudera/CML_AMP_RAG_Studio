@@ -58,6 +58,7 @@ const SuggestedQuestionsCards = () => {
     data_source_ids: activeSession?.dataSourceIds ?? [],
     configuration: createQueryConfiguration(
       excludeKnowledgeBase,
+      true,
       activeSession,
     ),
     session_id: sessionId ?? "",
@@ -86,6 +87,7 @@ const SuggestedQuestionsCards = () => {
         session_id: sessionId,
         configuration: createQueryConfiguration(
           excludeKnowledgeBase,
+          false,
           activeSession,
         ),
       });
