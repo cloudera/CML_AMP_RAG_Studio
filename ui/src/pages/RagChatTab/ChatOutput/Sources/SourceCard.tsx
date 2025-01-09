@@ -155,7 +155,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                     <Typography.Paragraph
                       style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
                     >
-                      chunkContents.data.text
+                      {chunkContents.data.text}
                     </Typography.Paragraph>
                   )}
                   <MetaData metadata={chunkContents.data.metadata} />
