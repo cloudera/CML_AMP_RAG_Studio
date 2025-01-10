@@ -91,6 +91,7 @@ class DataSourceController:
         return SummaryIndexer(
             data_source_id=data_source_id,
             splitter=SentenceSplitter(chunk_size=2048),
+            embedding_model=models.get_embedding_model(datasource.embedding_model),
             llm=models.get_llm(datasource.summarization_model),
         )
 

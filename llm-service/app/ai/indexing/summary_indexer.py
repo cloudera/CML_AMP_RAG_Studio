@@ -49,17 +49,20 @@ from llama_index.core import (
     get_response_synthesizer,
     load_index_from_storage,
 )
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.response_synthesizers import ResponseMode
 from llama_index.core.schema import (
     Document,
-    NodeRelationship,
+    NodeRelationship, TextNode,
 )
+from qdrant_client.http.exceptions import UnexpectedResponse
 
-from app.services.models import get_noop_embedding_model, get_noop_llm_model
+from app.services.models import get_noop_llm_model
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
+from ..vector_stores.qdrant import QdrantVectorStore
 from ...config import Settings
 
 logger = logging.getLogger(__name__)
@@ -79,11 +82,13 @@ class SummaryIndexer(BaseTextIndexer):
             data_source_id: int,
             splitter: SentenceSplitter,
             llm: LLM,
+            embedding_model: BaseEmbedding,
             reader_config: Optional[ReaderConfig] = None,
     ):
         super().__init__(data_source_id, reader_config=reader_config)
         self.splitter = splitter
         self.llm = llm
+        self.embedding_model = embedding_model
 
     @staticmethod
     def __database_dir(data_source_id: int) -> str:
@@ -97,10 +102,10 @@ class SummaryIndexer(BaseTextIndexer):
         return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
 
     def __index_kwargs(self) -> Dict[str, Any]:
-        return SummaryIndexer.__index_configuration(self.llm)
+        return SummaryIndexer.__index_configuration(self.llm, self.embedding_model, self.data_source_id)
 
     @staticmethod
-    def __index_configuration(llm: LLM) -> Dict[str, Any]:
+    def __index_configuration(llm: LLM, embedding_model: BaseEmbedding, data_source_id: int) -> Dict[str, Any]:
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
@@ -110,9 +115,10 @@ class SummaryIndexer(BaseTextIndexer):
                 verbose=True,
             ),
             "show_progress": True,
-            "embed_model": get_noop_embedding_model(),
+            "embed_model": embedding_model,
             "embed_summaries": False,
             "summary_query": SUMMARY_PROMPT,
+            "data_source_id": data_source_id,
         }
 
     def __init_summary_store(self, persist_dir: str) -> DocumentSummaryIndex:
@@ -137,6 +143,8 @@ class SummaryIndexer(BaseTextIndexer):
     def __summary_indexer_with_config(persist_dir: str, index_configuration: Dict[str, Any]) -> DocumentSummaryIndex:
         storage_context = StorageContext.from_defaults(
             persist_dir=persist_dir,
+            vector_store=QdrantVectorStore.for_summaries(
+                data_source_id=index_configuration.get("data_source_id")).llama_vector_store()
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
@@ -171,6 +179,14 @@ class SummaryIndexer(BaseTextIndexer):
             persist_dir = self.__persist_dir()
             summary_store = self.__summary_indexer(persist_dir)
             summary_store.insert_nodes(chunks.chunks)
+            summary = summary_store.get_document_summary(document_id)
+
+            summary_node = TextNode()
+            summary_node.embedding = self.embedding_model.get_text_embedding(summary)
+            summary_node.text = summary
+
+            summary_node.metadata["document_id"] = document_id
+            summary_store.vector_store.add(nodes=[summary_node])
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)
@@ -234,7 +250,8 @@ class SummaryIndexer(BaseTextIndexer):
         # Delete first so that we don't accumulate trash in the summary store.
         try:
             global_summary_store.delete_ref_doc(str(self.data_source_id), delete_from_docstore=True)
-        except KeyError:
+        except (KeyError, UnexpectedResponse):
+            # UnexpectedResponse is raised when the collection doesn't exist, which is fine, since it might be a new index.
             pass
         global_summary_store.insert_nodes(new_nodes)
         global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
@@ -269,6 +286,7 @@ class SummaryIndexer(BaseTextIndexer):
 
             summary_store.delete_ref_doc(document_id, delete_from_docstore=True)
             summary_store.storage_context.persist(persist_dir=persist_dir)
+            ## todo: delete from the vector store
 
     def delete_data_source(self) -> None:
         with _write_lock:
@@ -282,8 +300,9 @@ class SummaryIndexer(BaseTextIndexer):
             global_persist_dir = SummaryIndexer.__persist_root_dir()
             try:
                 global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir,
-                                                                                SummaryIndexer.__index_configuration(
-                                                                                    get_noop_llm_model()))
+                                                                                    SummaryIndexer.__index_configuration(
+                                                                                        get_noop_llm_model(),
+                                                                                        data_source_id=data_source_id))
             except FileNotFoundError:
                 ## global summary store doesn't exist, nothing to do
                 return
