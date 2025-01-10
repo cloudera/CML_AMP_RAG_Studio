@@ -139,7 +139,7 @@ def summary_vector_store(
     monkeypatch.setattr(
         QdrantVectorStore,
         "for_summaries",
-        lambda ds_id: original(ds_id, qdrant_client),
+        lambda data_source_id: original(data_source_id, qdrant_client),
     )
 
 

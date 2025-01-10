@@ -144,8 +144,7 @@ class SummaryIndexer(BaseTextIndexer):
         data_source_id: int = index_configuration.get("data_source_id")
         storage_context = StorageContext.from_defaults(
             persist_dir=persist_dir,
-            vector_store=QdrantVectorStore.for_summaries(
-                data_source_id=data_source_id).llama_vector_store()
+            vector_store=QdrantVectorStore.for_summaries(data_source_id).llama_vector_store()
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
