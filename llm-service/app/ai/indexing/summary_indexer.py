@@ -184,7 +184,7 @@ class SummaryIndexer(BaseTextIndexer):
             summary_node = TextNode()
             summary_node.embedding = self.embedding_model.get_text_embedding(summary)
             summary_node.text = summary
-
+            summary_node.relationships[NodeRelationship.SOURCE] = Document(doc_id=document_id).as_related_node_info()
             summary_node.metadata["document_id"] = document_id
             summary_store.vector_store.add(nodes=[summary_node])
             summary_store.storage_context.persist(persist_dir=persist_dir)
@@ -286,7 +286,7 @@ class SummaryIndexer(BaseTextIndexer):
 
             summary_store.delete_ref_doc(document_id, delete_from_docstore=True)
             summary_store.storage_context.persist(persist_dir=persist_dir)
-            ## todo: delete from the vector store
+            summary_store.vector_store.delete(document_id)
 
     def delete_data_source(self) -> None:
         with _write_lock:
