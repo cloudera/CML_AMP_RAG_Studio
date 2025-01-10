@@ -270,7 +270,7 @@ class SummaryIndexer(BaseTextIndexer):
             global_summary_store = self.__summary_indexer(global_persist_dir)
             document_id = str(self.data_source_id)
             if (
-                document_id not in global_summary_store.index_struct.doc_id_to_summary_id
+                    document_id not in global_summary_store.index_struct.doc_id_to_summary_id
             ):
                 return None
             return global_summary_store.get_document_summary(document_id)
@@ -299,13 +299,12 @@ class SummaryIndexer(BaseTextIndexer):
             vector_store.delete()
             # TODO: figure out a less explosive way to do this.
             shutil.rmtree(SummaryIndexer.__database_dir(data_source_id), ignore_errors=True)
-            global_persist_dir = SummaryIndexer.__persist_root_dir()
+            global_persist_dir: str = SummaryIndexer.__persist_root_dir()
             try:
-                global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir,
-                                                                                    SummaryIndexer.__index_configuration(
-                                                                                        get_noop_llm_model(),
-                                                                                        get_noop_embedding_model(),
-                                                                                        data_source_id=data_source_id))
+                configuration: Dict[str, Any] = SummaryIndexer.__index_configuration(get_noop_llm_model(),
+                                                                                     get_noop_embedding_model(),
+                                                                                     data_source_id=data_source_id)
+                global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir, configuration)
             except FileNotFoundError:
                 ## global summary store doesn't exist, nothing to do
                 return
