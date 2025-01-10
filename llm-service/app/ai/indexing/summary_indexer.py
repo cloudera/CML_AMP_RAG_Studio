@@ -141,10 +141,11 @@ class SummaryIndexer(BaseTextIndexer):
 
     @staticmethod
     def __summary_indexer_with_config(persist_dir: str, index_configuration: Dict[str, Any]) -> DocumentSummaryIndex:
+        data_source_id: int = index_configuration.get("data_source_id")
         storage_context = StorageContext.from_defaults(
             persist_dir=persist_dir,
             vector_store=QdrantVectorStore.for_summaries(
-                data_source_id=index_configuration.get("data_source_id")).llama_vector_store()
+                data_source_id=data_source_id).llama_vector_store()
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
