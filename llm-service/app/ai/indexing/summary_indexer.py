@@ -59,7 +59,7 @@ from llama_index.core.schema import (
 )
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from app.services.models import get_noop_llm_model
+from app.services.models import get_noop_llm_model, get_noop_embedding_model
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
@@ -295,6 +295,8 @@ class SummaryIndexer(BaseTextIndexer):
     @staticmethod
     def delete_data_source_by_id(data_source_id: int) -> None:
         with _write_lock:
+            vector_store = QdrantVectorStore.for_summaries(data_source_id)
+            vector_store.delete()
             # TODO: figure out a less explosive way to do this.
             shutil.rmtree(SummaryIndexer.__database_dir(data_source_id), ignore_errors=True)
             global_persist_dir = SummaryIndexer.__persist_root_dir()
@@ -302,6 +304,7 @@ class SummaryIndexer(BaseTextIndexer):
                 global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir,
                                                                                     SummaryIndexer.__index_configuration(
                                                                                         get_noop_llm_model(),
+                                                                                        get_noop_embedding_model(),
                                                                                         data_source_id=data_source_id))
             except FileNotFoundError:
                 ## global summary store doesn't exist, nothing to do
