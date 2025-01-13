@@ -42,7 +42,6 @@ import botocore.exceptions
 from fastapi import HTTPException
 from llama_index.core import QueryBundle, PromptTemplate, Response
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
-from llama_index.core.base.response.schema import StreamingResponse, AsyncStreamingResponse, PydanticResponse
 from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
@@ -81,7 +80,7 @@ CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 class FlexibleChatEngine(CondenseQuestionChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        self._configuration : RagPredictConfiguration = RagPredictConfiguration()
+        self._configuration: RagPredictConfiguration = RagPredictConfiguration()
 
     @property
     def configuration(self) -> RagPredictConfiguration:
@@ -106,18 +105,20 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
         return AgentChatResponse(response=str(query_response), sources=[tool_output])
 
     def retrieve(self, message: str, chat_history: Optional[List[ChatMessage]]) -> List[NodeWithScore]:
-        message, query_bundle = self._generate_query_message(chat_history, message)
+        message, query_bundle = self._generate_query_message(message, chat_history)
         return self._query_engine.retrieve(query_bundle)
 
-    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[str, Response, ToolOutput]:
-        message, query_bundle = self._generate_query_message(chat_history, message)
+    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[
+        str, Response, ToolOutput]:
+        message, query_bundle = self._generate_query_message(message, chat_history)
         query_response: Response = self._query_engine.query(query_bundle)
         tool_output: ToolOutput = self._get_tool_output_from_response(
             message, query_response
         )
         return message, query_response, tool_output
 
-    def _generate_query_message(self, chat_history, message) -> tuple[str, QueryBundle]:
+    def _generate_query_message(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[
+        str, QueryBundle]:
         chat_history = chat_history or self._memory.get(input=message)
         if self.configuration.use_question_condensing:
             # Generate standalone question from conversation context and last message
@@ -186,7 +187,8 @@ def query(
         ) from error
 
 
-def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM, query_engine: RetrieverQueryEngine)-> FlexibleChatEngine:
+def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM,
+                       query_engine: RetrieverQueryEngine) -> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
