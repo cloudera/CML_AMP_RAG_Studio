@@ -92,30 +92,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
     def chat(
             self, message: str, chat_history: Optional[List[ChatMessage]] = None
     ) -> AgentChatResponse:
-        chat_history = chat_history or self._memory.get(input=message)
-
-        if self.configuration.use_question_condensing:
-            # Generate standalone question from conversation context and last message
-            condensed_question = self._condense_question(chat_history, message)
-            log_str = f"Querying with condensed question: {condensed_question}"
-            logger.info(log_str)
-            if self._verbose:
-                print(log_str)
-            message = condensed_question
-
-        embedding_strings = None
-        if self.configuration.use_hyde:
-            hypothetical = llm_completion.hypothetical(message, self.configuration)
-            logger.info(f"hypothetical document: {hypothetical}")
-            embedding_strings = [hypothetical]
-
-        # Query with standalone question
-        query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
-        query_response = self._query_engine.query(query_bundle)
-
-        tool_output = self._get_tool_output_from_response(
-            message, query_response
-        )
+        message, query_response, tool_output = self.chat_internal(message, chat_history)
 
         # Record response
         self._memory.put(ChatMessage(role=MessageRole.USER, content=message))
@@ -124,6 +101,29 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
         )
 
         return AgentChatResponse(response=str(query_response), sources=[tool_output])
+
+    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]):
+        chat_history = chat_history or self._memory.get(input=message)
+        if self.configuration.use_question_condensing:
+            # Generate standalone question from conversation context and last message
+            condensed_question = self._condense_question(chat_history, message)
+            log_str = f"Querying with condensed question: {condensed_question}"
+            logger.info(log_str)
+            if self._verbose:
+                print(log_str)
+            message = condensed_question
+        embedding_strings = None
+        if self.configuration.use_hyde:
+            hypothetical = llm_completion.hypothetical(message, self.configuration)
+            logger.info(f"hypothetical document: {hypothetical}")
+            embedding_strings = [hypothetical]
+        # Query with standalone question
+        query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
+        query_response = self._query_engine.query(query_bundle)
+        tool_output = self._get_tool_output_from_response(
+            message, query_response
+        )
+        return message, query_response, tool_output
 
 
 def query(
