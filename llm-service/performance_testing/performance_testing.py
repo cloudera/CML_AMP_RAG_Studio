@@ -109,7 +109,7 @@ def main():
                         score_count += 1
                         for index, node in enumerate(nodes):
                             # timestamp,hyde,score,chunk_no,question
-                            details.write(f'{time.time()},{hyde},{node.score},{index + 1},"{question}"\n')
+                            details.write(f'{time.time()},{hyde},{node.score},{node.metadata.get("file_name")},{node.node_id}{index + 1},"{question}"\n')
                     details.flush()
 
                 average_score = score_sum / score_count
