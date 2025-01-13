@@ -40,8 +40,9 @@ from typing import Optional, List, Any
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import QueryBundle, PromptTemplate
+from llama_index.core import QueryBundle, PromptTemplate, Response
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.response.schema import StreamingResponse, AsyncStreamingResponse, PydanticResponse
 from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
@@ -50,6 +51,8 @@ from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.schema import NodeWithScore
+from llama_index.core.tools import ToolOutput
 
 from . import models, llm_completion
 from .chat_store import RagContext
@@ -102,7 +105,19 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
 
         return AgentChatResponse(response=str(query_response), sources=[tool_output])
 
-    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]):
+    def retrieve(self, message: str, chat_history: Optional[List[ChatMessage]]) -> List[NodeWithScore]:
+        message, query_bundle = self._generate_query_message(chat_history, message)
+        return self._query_engine.retrieve(query_bundle)
+
+    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[str, Response, ToolOutput]:
+        message, query_bundle = self._generate_query_message(chat_history, message)
+        query_response: Response = self._query_engine.query(query_bundle)
+        tool_output: ToolOutput = self._get_tool_output_from_response(
+            message, query_response
+        )
+        return message, query_response, tool_output
+
+    def _generate_query_message(self, chat_history, message) -> tuple[str, QueryBundle]:
         chat_history = chat_history or self._memory.get(input=message)
         if self.configuration.use_question_condensing:
             # Generate standalone question from conversation context and last message
@@ -119,11 +134,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
             embedding_strings = [hypothetical]
         # Query with standalone question
         query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
-        query_response = self._query_engine.query(query_bundle)
-        tool_output = self._get_tool_output_from_response(
-            message, query_response
-        )
-        return message, query_response, tool_output
+        return message, query_bundle
 
 
 def query(

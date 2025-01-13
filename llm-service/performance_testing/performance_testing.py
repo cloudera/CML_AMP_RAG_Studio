@@ -67,6 +67,8 @@
 #
 import os
 import sys
+import time
+
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -81,43 +83,50 @@ from app.rag_types import RagPredictConfiguration
 from app.services import models
 from app.services.querier import FlexibleChatEngine, CUSTOM_PROMPT
 
-full_questions = "questions.csv"
-mini_questions = "mini_questions.csv"
 
+# usage: uv run --env-file=../.env performance_testing/performance_testing.py <data_source_id> questions_mini.csv
 def main():
-    file = sys.argv[1]
+    data_source_id: int = int(sys.argv[1])
+    file: str = sys.argv[2]
     with open(os.path.abspath(os.path.join(os.path.dirname(__file__), file)), "r") as f:
         df = pd.read_csv(f)
         questions: list[str] = df["Question"].tolist()
 
+    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a") as details:
+        for hyde in [True, False]:
+            for condensing in [False]:
+                print(f"Running with hyde={hyde}")
+                score_sum = 0
+                score_count = 0
+                max_score = 0
+                chat_engine = setup(use_question_condensing=condensing, use_hyde=hyde, data_source_id=data_source_id)
+                for question in questions:
+                    nodes = chat_engine.retrieve(message=question, chat_history=None)
+                    if nodes:
+                        max_score = max(max_score, max(node.score for node in nodes))
+                        avg_score = sum(node.score for node in nodes) / len(nodes)
+                        score_sum += avg_score
+                        score_count += 1
+                        for index, node in enumerate(nodes):
+                            # timestamp,hyde,score,chunk_no,question
+                            details.write(f'{time.time()},{hyde},{node.score},{index + 1},"{question}"\n')
+                    details.flush()
 
-    for hyde in [True, False]:
-        for condensing in [False]:
-            print(f"Running with hyde={hyde}")
-            score_sum = 0
-            score_count = 0
-            chat_engine = setup(use_question_condensing=condensing, use_hyde=hyde)
-            for question in questions:
-                message, query_response, tool_output = chat_engine.chat_internal(message=question, chat_history=None)
-                if query_response.source_nodes:
-                    avg_score = sum(node.score for node in query_response.source_nodes) / len(query_response.source_nodes)
-                    score_sum += avg_score
-                    score_count += 1
-
-            average_score = score_sum / score_count
-            print(f"{chat_engine.configuration=}")
-            print(f"Average score: {average_score}")
-            with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "results.csv")), "a") as f:
-                f.write(f"{hyde},{average_score}\n")
+                average_score = score_sum / score_count
+                print(f"{chat_engine.configuration=}")
+                print(f"Average score: {average_score}")
+                with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "results.csv")), "a") as f:
+                    f.write(f"{hyde},{max_score},{average_score}\n")
+                    f.flush()
 
 
-def setup(use_question_condensing=True, use_hyde=True):
+def setup(data_source_id: int, use_question_condensing=True, use_hyde=True):
     configuration = RagPredictConfiguration(use_question_condensing=use_question_condensing, top_k=5,
                                             model_name="meta.llama3-1-8b-instruct-v1:0",
                                             use_hyde=use_hyde)
     llm = models.get_llm(model_name=configuration.model_name)
     response_synthesizer = get_response_synthesizer(llm=llm)
-    qdrant_store = QdrantVectorStore.for_chunks(6)
+    qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
