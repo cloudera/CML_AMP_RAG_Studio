@@ -39,8 +39,8 @@
 import os
 from typing import List, Literal, Optional
 
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.storage.chat_store import SimpleChatStore
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from pydantic import BaseModel
 
 from ..config import Settings
