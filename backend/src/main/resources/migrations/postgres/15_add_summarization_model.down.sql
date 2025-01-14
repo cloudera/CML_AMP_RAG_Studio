@@ -36,10 +36,8 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
-ALTER TABLE rag_data_source DROP COLUMN embedding_model;
+ALTER TABLE rag_data_source DROP COLUMN summarization_model;
 
 COMMIT;

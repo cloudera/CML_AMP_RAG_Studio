@@ -36,8 +36,6 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
 ALTER TABLE rag_data_source ADD COLUMN embedding_model varchar(255);

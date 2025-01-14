@@ -36,57 +36,26 @@
  * DATA.
  ******************************************************************************/
 
-import React, { useRef, useState } from "react";
+import React from "react";
 import {
   CloudOutlined,
   DatabaseFilled,
   DesktopOutlined,
 } from "@ant-design/icons";
-import {
-  Flex,
-  Image,
-  Layout,
-  Menu,
-  MenuProps,
-  Tag,
-  Tooltip,
-  Typography,
-} from "antd";
+import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
-import Images from "src/components/images/Images.ts";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
-import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
+import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
 import useModal from "src/utils/useModal.ts";
 import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
-import "./style.css";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
-const { Sider } = Layout;
+import "./style.css";
 
-type MenuItem = Required<MenuProps>["items"][number];
-
-function getItem(
-  label: React.ReactNode,
-  key: React.Key,
-  onClick: () => void,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
-): MenuItem {
-  return {
-    key,
-    icon,
-    children,
-    label,
-    onClick,
-  } as MenuItem;
-}
-
-const Sidebar: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(false);
+const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
-  const ref = useRef<HTMLDivElement>(null);
   const feedbackModal = useModal();
 
   const navToRagApp = () => {
@@ -113,30 +82,16 @@ const Sidebar: React.FC = () => {
     feedbackModal.setIsModalOpen(true);
   };
 
-  const baseItems: MenuItem[] = [
-    {
-      label: collapsed ? (
-        <Tooltip title="Technical Preview">
-          <Tag
-            color={cdlAmber200}
-            style={{
-              borderRadius: 4,
-              height: 24,
-              width: 30,
-              marginLeft: 18,
-            }}
-          >
-            <Flex
-              gap={4}
-              justify="center"
-              align="center"
-              style={{ height: "100%" }}
-            >
-              <LightbulbIcon color="#000" />
-            </Flex>
-          </Tag>
-        </Tooltip>
-      ) : (
+  const TechPreviewItem = () => {
+    return (
+      <Flex
+        justify="center"
+        align="center"
+        style={{
+          paddingRight: 20,
+          backgroundColor: cdlSlate800,
+        }}
+      >
         <Tag
           color={cdlAmber200}
           style={{
@@ -145,6 +100,7 @@ const Sidebar: React.FC = () => {
             paddingLeft: 6,
             paddingRight: 8,
             marginLeft: 10,
+            cursor: "default",
           }}
         >
           <Flex
@@ -159,18 +115,19 @@ const Sidebar: React.FC = () => {
             </Typography.Text>
           </Flex>
         </Tag>
-      ),
-      key: "tech-preview",
-      type: "group",
-    },
+      </Flex>
+    );
+  };
+
+  const baseItems: MenuItem[] = [
     getItem(
-      <div data-testid="rag-apps-nav">Chats</div>,
+      <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
       navToRagApp,
       <DesktopOutlined />,
     ),
     getItem(
-      <div data-testid="data-management-nav">Knowledge Bases</div>,
+      <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
       navToData,
       <DatabaseFilled />,
@@ -178,14 +135,14 @@ const Sidebar: React.FC = () => {
   ];
 
   const models = getItem(
-    <div data-testid="data-management-nav">Models</div>,
+    <span data-testid="data-management-nav">Models</span>,
     "models",
     navToModels,
     <CloudOutlined />,
   );
 
   const feedbackItem = getItem(
-    <div data-testid="data-management-nav">Leave Feedback</div>,
+    <span data-testid="data-management-nav">Leave Feedback</span>,
     "leave-feedback",
     popupFeedback,
     <ThumbUpIcon />,
@@ -206,48 +163,41 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <Sider
-      collapsible
-      collapsed={collapsed}
-      onCollapse={(value) => {
-        setCollapsed(value);
-      }}
-      style={{
-        transition: "none",
-        height: "100vh",
-        top: 0,
-        position: "sticky",
-      }}
-      width={250}
-      ref={ref}
-    >
-      <div style={{ padding: 20 }}>
-        <Image
-          src={Images.ClouderaSmall}
-          preview={false}
-          height={36}
-          style={{ paddingLeft: 4 }}
-        />
-        {!collapsed ? (
-          <Image
-            src={Images.RagStudioProduct}
-            preview={false}
-            style={{ transition: "ease-in", paddingLeft: 5 }}
-          />
-        ) : null}
-      </div>
-      <Flex vertical justify="space-between" style={{ height: "85%" }}>
-        <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
-        <AmpUpdateBanner isCollapsed={collapsed} />
-      </Flex>
+    <Flex justify="space-between" style={{ width: "100vw" }}>
+      <Menu
+        selectedKeys={chooseRoute()}
+        mode="horizontal"
+        items={items}
+        style={{ width: "100%" }}
+      />
+      <AmpUpdateBanner />
+      <TechPreviewItem />
       <FeedbackModal
         handleCancel={() => {
           feedbackModal.setIsModalOpen(false);
         }}
         isModalOpen={feedbackModal.isModalOpen}
       />
-    </Sider>
+    </Flex>
   );
 };
 
-export default Sidebar;
+type MenuItem = Required<MenuProps>["items"][number];
+
+function getItem(
+  label: React.ReactNode,
+  key: React.Key,
+  onClick: () => void,
+  icon?: React.ReactNode,
+  children?: MenuItem[],
+): MenuItem {
+  return {
+    key,
+    icon,
+    children,
+    label,
+    onClick,
+  } as MenuItem;
+}
+
+export default TopNav;

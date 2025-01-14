@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_layout/models/_layout-models")({
   component: () => (
     <Layout
       style={{
-        minHeight: "100vh",
+        minHeight: "100%",
         width: "100%",
         margin: 0,
       }}

@@ -79,8 +79,6 @@ def suggested_questions_responses(
 
 
 class TestProcessResponse:
-    # todo: add below for a failing case to be fixed!
-    # @reproduce_failure('6.122.1', b'AAAJAQAADQABAAEEAAABCgEAAQ0BAAEMAAAADQEAAA0A')
     @given(response=suggested_questions_responses())
     @example(response="Empty Response")
     def test_process_response(self, response: str) -> None:

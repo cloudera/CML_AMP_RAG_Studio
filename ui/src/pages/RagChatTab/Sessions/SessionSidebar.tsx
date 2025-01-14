@@ -143,7 +143,7 @@ export function SessionSidebar({
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
         <Layout.Sider
-          style={{ height: "97vh" }}
+          style={{ height: "88vh" }}
           collapsible
           onCollapse={handleCollapse}
           collapsed={collapsed}
@@ -153,7 +153,7 @@ export function SessionSidebar({
             mode="inline"
             style={{
               backgroundColor: cdlWhite,
-              height: "97vh",
+              height: "100%",
               borderRight: 0,
               overflowY: "auto",
               scrollbarWidth: "thin",

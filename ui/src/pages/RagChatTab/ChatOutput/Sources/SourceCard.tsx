@@ -116,12 +116,6 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
           style={{ width: 600, height: 300, overflowY: "auto" }}
         >
           <Flex justify="center" vertical>
-            <Flex vertical>
-              <SourceCardTitle titleText={"Generated document summary"} />
-              <Typography.Text>
-                {documentSummary.data ?? "No summary available"}
-              </Typography.Text>
-            </Flex>
             {chunkContents.isError ? (
               <Alert
                 message="Error: Could not fetch source node contents"
@@ -155,13 +149,36 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                     <Typography.Paragraph
                       style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
                     >
-                      chunkContents.data.text
+                      {chunkContents.data.text}
                     </Typography.Paragraph>
                   )}
                   <MetaData metadata={chunkContents.data.metadata} />
                 </Flex>
               )
             )}
+            <Flex vertical>
+              <SourceCardTitle titleText={"Generated document summary"} />
+              <Typography.Paragraph
+                ellipsis={
+                  documentSummary.isLoading
+                    ? false
+                    : {
+                        rows: 2,
+                        expandable: true,
+                      }
+                }
+              >
+                {documentSummary.isLoading ? (
+                  <Flex align="center" justify="center" vertical gap={20}>
+                    <div>
+                      <Spin />
+                    </div>
+                  </Flex>
+                ) : (
+                  (documentSummary.data ?? "No summary available")
+                )}
+              </Typography.Paragraph>
+            </Flex>
           </Flex>
         </Card>
       }

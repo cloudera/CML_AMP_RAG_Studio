@@ -18,7 +18,7 @@ services:
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_PROPAGATORS=tracecontext
       - S3_RAG_DOCUMENT_BUCKET=cloudera-ai-rag-dev-us-west-2
-      - RAG_BACKEND_URL=http://rag-backend:8000
+      - LLM_SERVICE_URL=http://rag-backend:8000
       - AWS_DEFAULT_REGION=us-west-2
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -50,9 +50,9 @@ services:
       - AWS_DEFAULT_REGION=us-west-2
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
-      - OTEL_SEMCONV_STABILITY_OPT_IN=http
+      - S3_RAG_DOCUMENT_BUCKET=cloudera-ai-rag-dev-us-west-2
       - QDRANT_HOST=qdrant
+      - API_URL=http://api:8080
     depends_on:
       - qdrant
   db:

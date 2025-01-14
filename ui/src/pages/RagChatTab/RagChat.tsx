@@ -56,13 +56,14 @@ const RagChat = () => {
   });
 
   return (
-    <Layout style={{ height: "95vh", width: "100%" }}>
+    <Layout style={{ height: "100%", width: "100%" }}>
       <RagChatHeader
         activeSession={activeSession}
         currentDataSource={currentDataSource}
       />
       <Content
         style={{
+          height: "20vh",
           overflowY: "auto",
           width: "100%",
           paddingRight: 20,

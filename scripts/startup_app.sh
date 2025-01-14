@@ -52,6 +52,8 @@ done
 trap cleanup EXIT
 
 export RAG_DATABASES_DIR=$(pwd)/databases
+export LLM_SERVICE_URL="http://localhost:8081"
+export API_URL="http://localhost:8080"
 
 # start Qdrant vector DB
 qdrant/qdrant & 2>&1
@@ -70,5 +72,10 @@ while ! curl --output /dev/null --silent --fail http://localhost:8081/amp-update
 done
 
 # start Node production server
-cd ../ui
+
+cd ..
+
+source scripts/load_nvm.sh > /dev/null
+
+cd ui
 node express/index.js

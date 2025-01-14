@@ -103,7 +103,8 @@ function ChatLayout() {
       <Layout
         style={{
           width: "100%",
-          height: "100%",
+          height: "95vh",
+          transition: "height 0.5s",
         }}
       >
         <div style={{ paddingTop: 20 }}>

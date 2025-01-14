@@ -47,7 +47,6 @@ import {
   cdlSlate800,
   cdlWhite,
 } from "src/cuix/variables.ts";
-import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 const customDarkTheme = {
   algorithm: theme.darkAlgorithm,
@@ -75,12 +74,19 @@ const customLightTheme = {
       colorLink: cdlBlue600,
     },
     Menu: {
+      colorText: cdlGray400,
+
       itemSelectedBg: cdlSlate800,
       itemActiveBg: cdlSlate800,
       itemBg: cdlSlate800,
-      colorText: cdlGray400,
       itemColor: cdlGray400,
       itemSelectedColor: cdlGreen500,
+
+      horizontalItemSelectedBg: cdlSlate800,
+      horizontalItemActiveBg: cdlSlate800,
+      horizontalItemBg: cdlSlate800,
+      horizontalItemColor: cdlGray400,
+      horizontalItemSelectedColor: cdlGreen500,
     },
     Layout: {
       triggerBg: cdlSlate800,
@@ -102,7 +108,6 @@ const RootComponent = () => {
 
   return (
     <ConfigProvider theme={darkMode ? customDarkTheme : customLightTheme}>
-      <AmpUpdateBanner />
       <Outlet />
     </ConfigProvider>
   );

@@ -36,8 +36,6 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
 ALTER TABLE CHAT_SESSION DROP COLUMN inference_model;

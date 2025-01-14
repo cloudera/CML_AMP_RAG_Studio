@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { JobStatus } from "src/api/ampUpdateApi.ts";
+import { JobStatus } from "src/api/ampMetadataApi.ts";
 import { Flex, Progress, Typography } from "antd";
 import {
   cdlAmber400,

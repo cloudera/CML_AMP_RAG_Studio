@@ -87,6 +87,7 @@ export enum QueryKeys {
   "getModelSource" = "getModelSource",
   "getVisualizeDataSource" = "getVisualizeDataSource",
   "getModelById" = "getModelById",
+  "getAmpIsComposable" = "getAmpIsComposable",
 }
 
 export const commonHeaders = {

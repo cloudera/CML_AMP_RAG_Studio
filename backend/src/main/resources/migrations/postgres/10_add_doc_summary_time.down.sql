@@ -36,8 +36,6 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
 ALTER TABLE RAG_DATA_SOURCE_DOCUMENT DROP COLUMN summary_creation_timestamp;

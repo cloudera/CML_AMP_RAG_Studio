@@ -112,6 +112,9 @@ public class AppConfiguration {
   }
 
   public static String getRagIndexUrl() {
-    return Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://rag-backend:8000");
+    var llmServiceUrl =
+        Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://localhost:8000");
+    log.info("LLM Service URL: {}", llmServiceUrl);
+    return llmServiceUrl;
   }
 }
