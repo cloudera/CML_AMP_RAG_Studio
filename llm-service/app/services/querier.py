@@ -40,7 +40,7 @@ from typing import Optional, List, Any
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import QueryBundle, PromptTemplate
+from llama_index.core import QueryBundle, PromptTemplate, Response
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
@@ -50,6 +50,8 @@ from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.schema import NodeWithScore
+from llama_index.core.tools import ToolOutput
 
 from . import models, llm_completion
 from .chat_store import RagContext
@@ -78,7 +80,7 @@ CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 class FlexibleChatEngine(CondenseQuestionChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        self._configuration : RagPredictConfiguration = RagPredictConfiguration()
+        self._configuration: RagPredictConfiguration = RagPredictConfiguration()
 
     @property
     def configuration(self) -> RagPredictConfiguration:
@@ -92,30 +94,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
     def chat(
             self, message: str, chat_history: Optional[List[ChatMessage]] = None
     ) -> AgentChatResponse:
-        chat_history = chat_history or self._memory.get(input=message)
-
-        if self.configuration.use_question_condensing:
-            # Generate standalone question from conversation context and last message
-            condensed_question = self._condense_question(chat_history, message)
-            log_str = f"Querying with condensed question: {condensed_question}"
-            logger.info(log_str)
-            if self._verbose:
-                print(log_str)
-            message = condensed_question
-
-        embedding_strings = None
-        if self.configuration.use_hyde:
-            hypothetical = llm_completion.hypothetical(message, self.configuration)
-            logger.info(f"hypothetical document: {hypothetical}")
-            embedding_strings = [hypothetical]
-
-        # Query with standalone question
-        query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
-        query_response = self._query_engine.query(query_bundle)
-
-        tool_output = self._get_tool_output_from_response(
-            message, query_response
-        )
+        message, query_response, tool_output = self.chat_internal(message, chat_history)
 
         # Record response
         self._memory.put(ChatMessage(role=MessageRole.USER, content=message))
@@ -124,6 +103,39 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
         )
 
         return AgentChatResponse(response=str(query_response), sources=[tool_output])
+
+    def retrieve(self, message: str, chat_history: Optional[List[ChatMessage]]) -> List[NodeWithScore]:
+        message, query_bundle = self._generate_query_message(message, chat_history)
+        return self._query_engine.retrieve(query_bundle)
+
+    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[
+        str, Response, ToolOutput]:
+        message, query_bundle = self._generate_query_message(message, chat_history)
+        query_response: Response = self._query_engine.query(query_bundle)
+        tool_output: ToolOutput = self._get_tool_output_from_response(
+            message, query_response
+        )
+        return message, query_response, tool_output
+
+    def _generate_query_message(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[
+        str, QueryBundle]:
+        chat_history = chat_history or self._memory.get(input=message)
+        if self.configuration.use_question_condensing:
+            # Generate standalone question from conversation context and last message
+            condensed_question = self._condense_question(chat_history, message)
+            log_str = f"Querying with condensed question: {condensed_question}"
+            logger.info(log_str)
+            if self._verbose:
+                print(log_str)
+            message = condensed_question
+        embedding_strings = None
+        if self.configuration.use_hyde:
+            hypothetical = llm_completion.hypothetical(message, self.configuration)
+            logger.info(f"hypothetical document: {hypothetical}")
+            embedding_strings = [hypothetical]
+        # Query with standalone question
+        query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
+        return message, query_bundle
 
 
 def query(
@@ -175,7 +187,8 @@ def query(
         ) from error
 
 
-def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM, query_engine: RetrieverQueryEngine)-> FlexibleChatEngine:
+def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM,
+                       query_engine: RetrieverQueryEngine) -> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
