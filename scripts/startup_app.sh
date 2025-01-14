@@ -52,6 +52,8 @@ done
 trap cleanup EXIT
 
 export RAG_DATABASES_DIR=$(pwd)/databases
+export LLM_SERVICE_URL="http://localhost:8081"
+export API_URL="http://localhost:8080"
 
 # start Qdrant vector DB
 qdrant/qdrant & 2>&1
