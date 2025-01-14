@@ -113,7 +113,7 @@ public class AppConfiguration {
 
   public static String getRagIndexUrl() {
     var llmServiceUrl =
-        Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://localhost:8000");
+        Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://localhost:8081");
     log.info("LLM Service URL: {}", llmServiceUrl);
     return llmServiceUrl;
   }

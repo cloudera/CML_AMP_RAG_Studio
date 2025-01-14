@@ -18,7 +18,7 @@ services:
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_PROPAGATORS=tracecontext
       - S3_RAG_DOCUMENT_BUCKET=cloudera-ai-rag-dev-us-west-2
-      - LLM_SERVICE_URL=http://rag-backend:8000
+      - LLM_SERVICE_URL=http://rag-backend:8081
       - AWS_DEFAULT_REGION=us-west-2
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -35,7 +35,7 @@ services:
       - rag-backend
     environment:
       - API_URL=http://api:8080
-      - LLM_SERVICE_URL=http://rag-backend:8000
+      - LLM_SERVICE_URL=http://rag-backend:8081
       - NODE_ENV=development
       - NODE_HOST=0.0.0.0
   rag-backend:
@@ -45,7 +45,7 @@ services:
         - action: rebuild
           path: .
     ports:
-      - "8000:8000"
+      - "8081:8081"
     environment:
       - AWS_DEFAULT_REGION=us-west-2
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}

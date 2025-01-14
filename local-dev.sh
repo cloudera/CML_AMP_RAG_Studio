@@ -71,10 +71,10 @@ fi
 uv sync
 uv run pytest -sxvvra app
 
-uv run fastapi dev &
+uv run fastapi dev --port=8081 &
 
 # wait for the python backend to be ready
-while ! curl --output /dev/null --silent --fail http://localhost:8000/amp-update; do
+while ! curl --output /dev/null --silent --fail http://localhost:8081/amp-update; do
     echo "Waiting for the Python backend to be ready..."
     sleep 4
 done
