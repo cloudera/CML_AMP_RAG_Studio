@@ -73,7 +73,7 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
   return (
     <Flex justify="space-between">
       <Tooltip title={source.source_file_name}>
-        <Typography.Paragraph ellipsis style={{ width: "70%" }}>
+        <Typography.Paragraph ellipsis style={{ width: "100%" }}>
           {source.source_file_name}
         </Typography.Paragraph>
       </Tooltip>
@@ -113,7 +113,13 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
         <Card
           title={<CardTitle source={source} />}
           bordered={false}
-          style={{ width: 600, height: 300, overflowY: "auto" }}
+          style={{
+            width: 800,
+            height: 600,
+            overflowY: "auto",
+            maxWidth: "100%",
+            maxHeight: "100%",
+          }}
         >
           <Flex justify="center" vertical>
             {chunkContents.isError ? (
@@ -135,7 +141,6 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
             ) : (
               chunkContents.data && (
                 <Flex vertical>
-                  <SourceCardTitle titleText={"Extracted reference content"} />
                   {chunkContents.data.metadata.chunk_format === "markdown" ? (
                     <div
                       style={{ marginBottom: 12 }}
@@ -156,8 +161,11 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 </Flex>
               )
             )}
-            <Flex vertical>
-              <SourceCardTitle titleText={"Generated document summary"} />
+            <Card
+              title={"Generated document summary"}
+              type="inner"
+              style={{ marginTop: 16 }}
+            >
               <Typography.Paragraph
                 ellipsis={
                   documentSummary.isLoading
@@ -178,7 +186,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                   (documentSummary.data ?? "No summary available")
                 )}
               </Typography.Paragraph>
-            </Flex>
+            </Card>
           </Flex>
         </Card>
       }

@@ -100,6 +100,7 @@ class CSVReader(BaseReader):
             row.metadata["data_source_id"] = document.metadata["data_source_id"]
             row.metadata["chunk_number"] = i
             row.metadata["row_number"] = i + 1
+            row.metadata['chunk_format'] = 'json'
 
         converted_rows: List[TextNode] = []
         for row in rows:
