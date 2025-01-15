@@ -40,9 +40,7 @@ import Icon from "@ant-design/icons";
 import {
   Alert,
   Card,
-  Divider,
   Flex,
-  List,
   Popover,
   Spin,
   Tag,
@@ -52,28 +50,12 @@ import {
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useContext, useState } from "react";
 import { SourceNode } from "src/api/chatApi.ts";
-import {
-  ChunkContentsRequest,
-  ChunkContentsResponse,
-  useGetChunkContents,
-} from "src/api/ragQueryApi.ts";
+import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
-import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
-import Markdown from "react-markdown";
-import Remark from "remark-gfm";
 import "./sourceCard.css";
-import { UseMutationResult } from "@tanstack/react-query";
-
-export const SourceCardTitle = ({ titleText }: { titleText: string }) => {
-  return (
-    <Typography.Title level={5} style={{ marginTop: 10 }}>
-      {titleText}
-      <Divider style={{ margin: "8px 0px" }} />
-    </Typography.Title>
-  );
-};
+import ChunkContainer from "pages/RagChatTab/ChatOutput/Sources/ChunkContainer.tsx";
 
 const CardTitle = ({ source }: { source: SourceNode }) => {
   return (
@@ -89,93 +71,6 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
     </Flex>
   );
 };
-
-function ChunkContents({ data }: { data: ChunkContentsResponse }) {
-  if (data.metadata.chunk_format === "markdown") {
-    return (
-      <div style={{ marginBottom: 12 }} className="styled-markdown">
-        <Markdown skipHtml remarkPlugins={[Remark]}>
-          {data.text}
-        </Markdown>
-      </div>
-    );
-  }
-  if (data.metadata.chunk_format === "json") {
-    try {
-      const jsonData = JSON.parse(data.text) as Record<string, unknown>;
-
-      const formattedData = Object.keys(jsonData).map((key) => ({
-        title: key,
-        content: String(jsonData[key]) || "",
-      }));
-
-      return (
-        <List
-          itemLayout="horizontal"
-          dataSource={formattedData}
-          renderItem={(item, index) => {
-            return (
-              <List.Item key={index}>
-                <List.Item.Meta
-                  title={item.title}
-                  description={
-                    <Typography.Text>{item.content}</Typography.Text>
-                  }
-                />
-              </List.Item>
-            );
-          }}
-        />
-      );
-    } catch (e: unknown) {
-      console.error("Error parsing JSON data", e);
-      return (
-        <Typography.Paragraph
-          style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-        >
-          {data.text}
-        </Typography.Paragraph>
-      );
-    }
-  }
-  return (
-    <Typography.Paragraph style={{ textAlign: "left", whiteSpace: "pre-wrap" }}>
-      {data.text}
-    </Typography.Paragraph>
-  );
-}
-
-function ChunkContainer({
-  chunkContents,
-}: {
-  chunkContents: UseMutationResult<
-    ChunkContentsResponse,
-    Error,
-    ChunkContentsRequest
-  >;
-}) {
-  if (chunkContents.isPending) {
-    return (
-      <Flex align="center" justify="center" vertical gap={20}>
-        <Typography.Text type="secondary">
-          Fetching source contents
-        </Typography.Text>
-        <div>
-          <Spin />
-        </div>
-      </Flex>
-    );
-  }
-  if (!chunkContents.data) {
-    return null;
-  }
-  return (
-    <Flex vertical gap={16}>
-      <ChunkContents data={chunkContents.data} />
-      <MetaData metadata={chunkContents.data.metadata} />
-    </Flex>
-  );
-}
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
