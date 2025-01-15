@@ -51,7 +51,11 @@ import {
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useContext, useState } from "react";
 import { SourceNode } from "src/api/chatApi.ts";
-import { useGetChunkContents } from "src/api/ragQueryApi.ts";
+import {
+  ChunkContentsRequest,
+  ChunkContentsResponse,
+  useGetChunkContents,
+} from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
@@ -59,6 +63,7 @@ import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
 import "./sourceCard.css";
+import { UseMutationResult } from "@tanstack/react-query";
 
 export const SourceCardTitle = ({ titleText }: { titleText: string }) => {
   return (
@@ -83,6 +88,51 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
     </Flex>
   );
 };
+
+function ChunkContents({
+  chunkContents,
+}: {
+  chunkContents: UseMutationResult<
+    ChunkContentsResponse,
+    Error,
+    ChunkContentsRequest
+  >;
+}) {
+  if (chunkContents.isPending) {
+    return (
+      <Flex align="center" justify="center" vertical gap={20}>
+        <Typography.Text type="secondary">
+          Fetching source contents
+        </Typography.Text>
+        <div>
+          <Spin />
+        </div>
+      </Flex>
+    );
+  }
+  return (
+    <>
+      chunkContents.data && (
+      <Flex vertical>
+        {chunkContents.data.metadata.chunk_format === "markdown" ? (
+          <div style={{ marginBottom: 12 }} className="styled-markdown">
+            <Markdown skipHtml remarkPlugins={[Remark]}>
+              {chunkContents.data.text}
+            </Markdown>
+          </div>
+        ) : (
+          <Typography.Paragraph
+            style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
+          >
+            {chunkContents.data.text}
+          </Typography.Paragraph>
+        )}
+        <MetaData metadata={chunkContents.data.metadata} />
+      </Flex>
+      )
+    </>
+  );
+}
 
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
@@ -129,38 +179,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 showIcon
               />
             ) : null}
-            {chunkContents.isPending ? (
-              <Flex align="center" justify="center" vertical gap={20}>
-                <Typography.Text type="secondary">
-                  Fetching source contents
-                </Typography.Text>
-                <div>
-                  <Spin />
-                </div>
-              </Flex>
-            ) : (
-              chunkContents.data && (
-                <Flex vertical>
-                  {chunkContents.data.metadata.chunk_format === "markdown" ? (
-                    <div
-                      style={{ marginBottom: 12 }}
-                      className="styled-markdown"
-                    >
-                      <Markdown skipHtml remarkPlugins={[Remark]}>
-                        {chunkContents.data.text}
-                      </Markdown>
-                    </div>
-                  ) : (
-                    <Typography.Paragraph
-                      style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-                    >
-                      {chunkContents.data.text}
-                    </Typography.Paragraph>
-                  )}
-                  <MetaData metadata={chunkContents.data.metadata} />
-                </Flex>
-              )
-            )}
+            <ChunkContents chunkContents={chunkContents} />
             <Card
               title={"Generated document summary"}
               type="inner"
