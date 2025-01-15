@@ -35,9 +35,8 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Typography } from "antd";
+import { Card, Typography } from "antd";
 import { ChunkContentsResponse } from "src/api/ragQueryApi.ts";
-import { SourceCardTitle } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 
 const MetaData = ({
   metadata,
@@ -63,8 +62,7 @@ const MetaData = ({
   const hasMetadata = metadata.row_number ?? metadata.page_number;
 
   return (
-    <>
-      <SourceCardTitle titleText="Metadata" />
+    <Card title="Metadata" type="inner">
       {hasMetadata ? (
         <>
           <MetaDataItem label="Row number" value={metadata.row_number} />
@@ -73,7 +71,7 @@ const MetaData = ({
       ) : (
         <Typography.Text type={"secondary"}>N/A</Typography.Text>
       )}
-    </>
+    </Card>
   );
 };
 

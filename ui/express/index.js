@@ -36,49 +36,50 @@
  * DATA.
  */
 
-const express = require('express')
-const {join} = require("path");
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const express = require("express");
+const { join } = require("path");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 
-const app = express()
-const port = process.env.CDSW_APP_PORT ?? 3000
-const host = process.env.NODE_HOST ?? '127.0.0.1'
+const app = express();
+const port = process.env.CDSW_APP_PORT ?? 3000;
+const host = process.env.NODE_HOST ?? "127.0.0.1";
 
 const apiProxy = createProxyMiddleware({
-    target: (process.env.API_URL || "http://localhost:8080") + "/api",
-    changeOrigin: true,
+  target: (process.env.API_URL || "http://localhost:8080") + "/api",
+  changeOrigin: true,
 });
 
 const llmServiceProxy = createProxyMiddleware({
-    target: process.env.LLM_SERVICE_URL ?? 'http://localhost:8000',
-    changeOrigin: true,
+  target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
+  changeOrigin: true,
 });
 
-app.use(express.static(join(__dirname, '..', 'dist')));
-app.use('/api', apiProxy);
-app.use('/llm-service', llmServiceProxy);
+app.use(express.static(join(__dirname, "..", "dist")));
+app.use("/api", apiProxy);
+app.use("/llm-service", llmServiceProxy);
 
-app.get('*', (req, res) => {
-    console.log('Serving up req.url: ', req.url)
-    res.sendFile(join(__dirname, '..', 'dist', 'index.html'))
-    console.log('Served up req.url: ', req.url)
-})
+app.get("*", (req, res) => {
+  console.log("Serving up req.url: ", req.url);
+  res.sendFile(join(__dirname, "..", "dist", "index.html"));
+  console.log("Served up req.url: ", req.url);
+});
 
 const server = app.listen(port, host, () => {
-    console.log(`Node proxy listening on host:port ${host}:${port}`)
-})
+  console.log(`Node proxy listening on host:port ${host}:${port}`);
+});
 
 function shutdown() {
-    console.log("termination signal received: closing HTTP server");
-    server.close(() => {
-        process.exit(0);
-        console.log("HTTP server closed");
-    });
-    setTimeout(() => {
-        console.error("Could not close connections in time, forcefully shutting down");
-        process.exit(1);
-    }, 5000);
-
+  console.log("termination signal received: closing HTTP server");
+  server.close(() => {
+    process.exit(0);
+    console.log("HTTP server closed");
+  });
+  setTimeout(() => {
+    console.error(
+      "Could not close connections in time, forcefully shutting down",
+    );
+    process.exit(1);
+  }, 5000);
 }
-process.on('SIGINT', shutdown)
-process.on('SIGTERM', shutdown)
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

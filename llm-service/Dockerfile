@@ -12,4 +12,5 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
 
-CMD [ "fastapi", "run", "--host", "0.0.0.0" ]
+EXPOSE 8081
+CMD [ "fastapi", "run", "--host", "0.0.0.0", "--port", "8081" ]

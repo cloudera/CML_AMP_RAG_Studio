@@ -98,7 +98,7 @@ export interface ChunkContentsResponse {
   metadata: ChunkMetadata;
 }
 
-interface ChunkContentsRequest {
+export interface ChunkContentsRequest {
   data_source_id: string;
   chunk_id: string;
 }
