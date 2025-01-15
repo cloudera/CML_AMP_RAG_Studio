@@ -42,6 +42,7 @@ import {
   Card,
   Divider,
   Flex,
+  List,
   Popover,
   Spin,
   Tag,
@@ -99,26 +100,43 @@ function ChunkContents({ data }: { data: ChunkContentsResponse }) {
       </div>
     );
   }
-  if (data.metadata.chunk_format === "json" && JSON.) {
-    const jsonData = JSON.parse(data.text);
-    return (
-      <table>
-        <thead>
-          <tr>
-            {Object.keys(jsonData).map((key) => (
-              <th key={key}>{key}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {Object.values(jsonData).map((value, index) => (
-              <td key={index}>{value}</td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
-    );
+  if (data.metadata.chunk_format === "json") {
+    try {
+      const jsonData = JSON.parse(data.text) as Record<string, unknown>;
+
+      const formattedData = Object.keys(jsonData).map((key) => ({
+        title: key,
+        content: String(jsonData[key]) || "",
+      }));
+
+      return (
+        <List
+          itemLayout="horizontal"
+          dataSource={formattedData}
+          renderItem={(item, index) => {
+            return (
+              <List.Item key={index}>
+                <List.Item.Meta
+                  title={item.title}
+                  description={
+                    <Typography.Text>{item.content}</Typography.Text>
+                  }
+                />
+              </List.Item>
+            );
+          }}
+        />
+      );
+    } catch (e: unknown) {
+      console.error("Error parsing JSON data", e);
+      return (
+        <Typography.Paragraph
+          style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
+        >
+          {data.text}
+        </Typography.Paragraph>
+      );
+    }
   }
   return (
     <Typography.Paragraph style={{ textAlign: "left", whiteSpace: "pre-wrap" }}>
@@ -152,14 +170,10 @@ function ChunkContainer({
     return null;
   }
   return (
-    <>
-      {
-        <Flex vertical>
-          <ChunkContents data={chunkContents.data} />
-          <MetaData metadata={chunkContents.data.metadata} />
-        </Flex>
-      }
-    </>
+    <Flex vertical gap={16}>
+      <ChunkContents data={chunkContents.data} />
+      <MetaData metadata={chunkContents.data.metadata} />
+    </Flex>
   );
 }
 
