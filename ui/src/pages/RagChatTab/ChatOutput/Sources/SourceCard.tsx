@@ -89,7 +89,45 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
   );
 };
 
-function ChunkContents({
+function ChunkContents({ data }: { data: ChunkContentsResponse }) {
+  if (data.metadata.chunk_format === "markdown") {
+    return (
+      <div style={{ marginBottom: 12 }} className="styled-markdown">
+        <Markdown skipHtml remarkPlugins={[Remark]}>
+          {data.text}
+        </Markdown>
+      </div>
+    );
+  }
+  if (data.metadata.chunk_format === "json" && JSON.) {
+    const jsonData = JSON.parse(data.text);
+    return (
+      <table>
+        <thead>
+          <tr>
+            {Object.keys(jsonData).map((key) => (
+              <th key={key}>{key}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {Object.values(jsonData).map((value, index) => (
+              <td key={index}>{value}</td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    );
+  }
+  return (
+    <Typography.Paragraph style={{ textAlign: "left", whiteSpace: "pre-wrap" }}>
+      {data.text}
+    </Typography.Paragraph>
+  );
+}
+
+function ChunkContainer({
   chunkContents,
 }: {
   chunkContents: UseMutationResult<
@@ -110,26 +148,17 @@ function ChunkContents({
       </Flex>
     );
   }
+  if (!chunkContents.data) {
+    return null;
+  }
   return (
     <>
-      chunkContents.data && (
-      <Flex vertical>
-        {chunkContents.data.metadata.chunk_format === "markdown" ? (
-          <div style={{ marginBottom: 12 }} className="styled-markdown">
-            <Markdown skipHtml remarkPlugins={[Remark]}>
-              {chunkContents.data.text}
-            </Markdown>
-          </div>
-        ) : (
-          <Typography.Paragraph
-            style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-          >
-            {chunkContents.data.text}
-          </Typography.Paragraph>
-        )}
-        <MetaData metadata={chunkContents.data.metadata} />
-      </Flex>
-      )
+      {
+        <Flex vertical>
+          <ChunkContents data={chunkContents.data} />
+          <MetaData metadata={chunkContents.data.metadata} />
+        </Flex>
+      }
     </>
   );
 }
@@ -179,7 +208,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 showIcon
               />
             ) : null}
-            <ChunkContents chunkContents={chunkContents} />
+            <ChunkContainer chunkContents={chunkContents} />
             <Card
               title={"Generated document summary"}
               type="inner"
