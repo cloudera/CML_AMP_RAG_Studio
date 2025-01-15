@@ -159,6 +159,8 @@ def query(
         embed_model=embedding_model,  # is this needed, really, if it's in the index?
     )
     llm = models.get_llm(model_name=configuration.model_name)
+    query_entities = llm_completion.generate_entities(llm, query_str)
+    print(f"generated query_entities: {query_entities}")
 
     response_synthesizer = get_response_synthesizer(llm=llm)
     query_engine = RetrieverQueryEngine(

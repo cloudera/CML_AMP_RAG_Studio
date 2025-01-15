@@ -148,7 +148,9 @@ class DataSourceController:
                 request.s3_document_key,
                 request.original_filename,
             )
-
+            llm: Optional[models.LLM] = None
+            if datasource.summarization_model:
+                llm = models.get_llm(datasource.summarization_model)
             indexer = EmbeddingIndexer(
                 data_source_id,
                 splitter=SentenceSplitter(
@@ -160,6 +162,7 @@ class DataSourceController:
                     ),
                 ),
                 embedding_model=models.get_embedding_model(datasource.embedding_model),
+                llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )
             # Delete to avoid duplicates

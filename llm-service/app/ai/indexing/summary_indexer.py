@@ -41,7 +41,7 @@ import os
 import shutil
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, cast, List
 
 from llama_index.core import (
     DocumentSummaryIndex,
@@ -64,6 +64,7 @@ from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
 from ...config import Settings
+from ...services import llm_completion
 
 logger = logging.getLogger(__name__)
 
@@ -170,15 +171,24 @@ class SummaryIndexer(BaseTextIndexer):
         logger.debug(f"Parsing file: {file_path}")
 
         chunks: ChunksResult = reader.load_chunks(file_path)
+        nodes: List[TextNode] = chunks.chunks
+        # for node in nodes:
+        #     # prompt = f"Given this chunk from a large document, provide a minimal OWL ontology that can be parsed and interpreted by `deeponto`. Please respond with only the raw xml, and no commentary. The xml must be complete and parsable.\nContent: {node.text}"
+        #     chunk_ontology = llm_completion.generate_entities(self.llm, node.text)
+        #     print("---------------------------------------")
+        #     print("Contents")
+        #     print(node.text)
+        #     print("Generated Ontology")
+        #     print(chunk_ontology)
 
-        if not chunks.chunks:
+        if not nodes:
             logger.warning(f"No chunks found for file {file_path}")
             return
 
         with _write_lock:
             persist_dir = self.__persist_dir()
             summary_store = self.__summary_indexer(persist_dir)
-            summary_store.insert_nodes(chunks.chunks)
+            summary_store.insert_nodes(nodes)
             summary = summary_store.get_document_summary(document_id)
 
             summary_node = TextNode()
