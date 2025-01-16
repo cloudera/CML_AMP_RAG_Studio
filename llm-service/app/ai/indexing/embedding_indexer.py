@@ -94,13 +94,13 @@ class EmbeddingIndexer(BaseTextIndexer):
         if not nodes:
             logger.warning(f"No chunks found in file: {file_path}")
             return
-        if self.llm:
-            for node in nodes:
-                try:
-                    entities = llm_completion.generate_entities(self.llm, node.text)
-                    node.metadata["entities"] = entities
-                except Exception as e:
-                    logger.warning(e)
+        # if self.llm:
+        #     for node in nodes:
+        #         try:
+        #             entities = llm_completion.generate_entities(self.llm, node.text)
+        #             node.metadata["entities"] = entities
+        #         except Exception as e:
+        #             logger.warning(e)
 
         logger.debug(f"Embedding {len(nodes)} chunks")
 

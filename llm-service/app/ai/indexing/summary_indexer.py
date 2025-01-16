@@ -117,7 +117,7 @@ class SummaryIndexer(BaseTextIndexer):
             ),
             "show_progress": True,
             "embed_model": embedding_model,
-            "embed_summaries": False,
+            "embed_summaries": True,
             "summary_query": SUMMARY_PROMPT,
             "data_source_id": data_source_id,
         }
@@ -187,16 +187,17 @@ class SummaryIndexer(BaseTextIndexer):
 
         with _write_lock:
             persist_dir = self.__persist_dir()
-            summary_store = self.__summary_indexer(persist_dir)
+            summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
             summary_store.insert_nodes(nodes)
-            summary = summary_store.get_document_summary(document_id)
 
-            summary_node = TextNode()
-            summary_node.embedding = self.embedding_model.get_text_embedding(summary)
-            summary_node.text = summary
-            summary_node.relationships[NodeRelationship.SOURCE] = Document(doc_id=document_id).as_related_node_info()
-            summary_node.metadata["document_id"] = document_id
-            summary_store.vector_store.add(nodes=[summary_node])
+            # summary = summary_store.get_document_summary(document_id)
+
+            # summary_node = TextNode()
+            # summary_node.embedding = self.embedding_model.get_text_embedding(summary)
+            # summary_node.text = summary
+            # summary_node.relationships[NodeRelationship.SOURCE] = Document(doc_id=document_id).as_related_node_info()
+            # summary_node.metadata["document_id"] = document_id
+            # summary_store.vector_store.add(nodes=[summary_node])
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)
@@ -214,6 +215,7 @@ class SummaryIndexer(BaseTextIndexer):
         # and re-index it with the addition/removal.
         global_persist_dir = self.__persist_root_dir()
         global_summary_store = self.__summary_indexer(global_persist_dir)
+        global_summary_store._embed_summaries = False
         data_source_node = Document(doc_id=str(self.data_source_id), text="")
 
         summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
