@@ -64,11 +64,10 @@ from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
 from ...config import Settings
-from ...services import llm_completion
 
 logger = logging.getLogger(__name__)
 
-SUMMARY_PROMPT = 'Summarize the contents into less than 100 words. If an adequate summary is not possible, please return "No summary available.".'
+SUMMARY_PROMPT = 'Summarize the contents into less than 100 words.'
 
 # Since we don't use anything fancy to store the summaries, it's possible that two threads
 # try to do a write operation at the same time and we end up with a race condition.
