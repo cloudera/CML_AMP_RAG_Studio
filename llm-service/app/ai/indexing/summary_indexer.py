@@ -49,6 +49,7 @@ from llama_index.core import (
     get_response_synthesizer,
     load_index_from_storage,
 )
+from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
@@ -283,6 +284,10 @@ class SummaryIndexer(BaseTextIndexer):
             ):
                 return None
             return global_summary_store.get_document_summary(document_id)
+
+    def as_query_engine(self) -> BaseQueryEngine:
+        persist_dir = self.__persist_dir()
+        return self.__summary_indexer(persist_dir).as_query_engine(self.llm)
 
     def delete_document(self, document_id: str) -> None:
         with _write_lock:

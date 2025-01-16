@@ -48,6 +48,7 @@ from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
@@ -55,6 +56,7 @@ from llama_index.core.tools import ToolOutput
 
 from . import models, llm_completion
 from .chat_store import RagContext
+from ..ai.indexing.summary_indexer import SummaryIndexer
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
@@ -152,11 +154,23 @@ def query(
         embed_model=embedding_model,
     )
     logger.info("fetched Qdrant index")
+    llm = models.get_llm(model_name=configuration.model_name)
 
+    # first query the summary index to get documents to filter by (assuming summarization is enabled)
+    summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
+                                    embedding_model=embedding_model, llm=llm, ).as_query_engine()
+    summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
+
+    def document_ids(node: NodeWithScore) -> str:
+        return node.metadata["document_id"]
+
+    doc_ids: list[str] = list(map(document_ids, summaries))
+    # add a filter to the retriever with the resulting document ids.
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
         embed_model=embedding_model,  # is this needed, really, if it's in the index?
+        doc_ids=doc_ids or None,
     )
     llm = models.get_llm(model_name=configuration.model_name)
     query_entities = llm_completion.generate_entities(llm, query_str)
