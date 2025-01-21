@@ -156,15 +156,7 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    # first query the summary index to get documents to filter by (assuming summarization is enabled)
-    summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
-                                    embedding_model=embedding_model, llm=llm, ).as_query_engine()
-    summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
-
-    def document_ids(node: NodeWithScore) -> str:
-        return node.metadata["document_id"]
-
-    doc_ids: list[str] = list(map(document_ids, summaries))
+    doc_ids = filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str)
     # add a filter to the retriever with the resulting document ids.
     retriever = VectorIndexRetriever(
         index=index,
@@ -201,6 +193,19 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
+
+
+def filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str):
+    # first query the summary index to get documents to filter by (assuming summarization is enabled)
+    summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
+                                    embedding_model=embedding_model, llm=llm, ).as_query_engine()
+    summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
+
+    def document_ids(node: NodeWithScore) -> str:
+        return node.metadata["document_id"]
+
+    doc_ids: list[str] = list(map(document_ids, summaries))
+    return doc_ids
 
 
 def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM,
