@@ -107,6 +107,7 @@ class SummaryIndexer(BaseTextIndexer):
 
     @staticmethod
     def __index_configuration(llm: LLM, embedding_model: BaseEmbedding, data_source_id: int) -> Dict[str, Any]:
+        # enable_summary_embedding = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or False
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
@@ -172,14 +173,6 @@ class SummaryIndexer(BaseTextIndexer):
 
         chunks: ChunksResult = reader.load_chunks(file_path)
         nodes: List[TextNode] = chunks.chunks
-        # for node in nodes:
-        #     # prompt = f"Given this chunk from a large document, provide a minimal OWL ontology that can be parsed and interpreted by `deeponto`. Please respond with only the raw xml, and no commentary. The xml must be complete and parsable.\nContent: {node.text}"
-        #     chunk_ontology = llm_completion.generate_entities(self.llm, node.text)
-        #     print("---------------------------------------")
-        #     print("Contents")
-        #     print(node.text)
-        #     print("Generated Ontology")
-        #     print(chunk_ontology)
 
         if not nodes:
             logger.warning(f"No chunks found for file {file_path}")
@@ -189,15 +182,6 @@ class SummaryIndexer(BaseTextIndexer):
             persist_dir = self.__persist_dir()
             summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
             summary_store.insert_nodes(nodes)
-
-            # summary = summary_store.get_document_summary(document_id)
-
-            # summary_node = TextNode()
-            # summary_node.embedding = self.embedding_model.get_text_embedding(summary)
-            # summary_node.text = summary
-            # summary_node.relationships[NodeRelationship.SOURCE] = Document(doc_id=document_id).as_related_node_info()
-            # summary_node.metadata["document_id"] = document_id
-            # summary_store.vector_store.add(nodes=[summary_node])
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)

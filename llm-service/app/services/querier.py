@@ -36,6 +36,7 @@
 #  DATA.
 # ##############################################################################
 import logging
+import os
 from typing import Optional, List, Any
 
 import botocore.exceptions
@@ -156,7 +157,11 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    doc_ids = filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str)
+    enable_doc_id_filtering = os.environ.get('ENABLE_TWO_STAGE_RETRIEVAL', 'false') or None
+    doc_ids = None
+    if enable_doc_id_filtering:
+        doc_ids = filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str)
+
     # add a filter to the retriever with the resulting document ids.
     retriever = VectorIndexRetriever(
         index=index,

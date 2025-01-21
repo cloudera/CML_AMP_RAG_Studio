@@ -36,9 +36,8 @@
 #  DATA.
 #
 import itertools
-import json
 
-from llama_index.core.base.llms.types import ChatMessage, ChatResponse, CompletionResponse
+from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.llms import LLM
 
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
@@ -71,12 +70,3 @@ def hypothetical(question: str, configuration: RagPredictConfiguration) -> str:
     prompt: str = (f"You are an expert. You are asked: {question}. "
                    "Produce a brief document that would hypothetically answer this question.")
     return model.complete(prompt).text
-
-def generate_entities(llm: LLM, text: str):
-    prompt = f"Given this chunk from a larger document, provide a JSON list of named entities that the content relates to. Please return nothing but the valid JSON.\nContent: {text}"
-    chunk_ontology: CompletionResponse = completion_with_llm(llm, prompt)
-
-    return json.loads(chunk_ontology.text)
-
-def completion_with_llm(llm: LLM, prompt: str)-> CompletionResponse:
-    return llm.complete(prompt)
