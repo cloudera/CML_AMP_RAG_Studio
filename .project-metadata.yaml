@@ -48,7 +48,7 @@ tasks:
     short_summary: Install Project Dependencies
     kernel: python3
     cpu: 2
-    memory: 4
+    memory: 8
 
   - type: create_job
     name: Update/build RAG Studio
@@ -56,7 +56,7 @@ tasks:
     script: scripts/refresh_project.py
     arguments: None
     cpu: 2
-    memory: 4
+    memory: 8
     short_summary: Create job to allow refreshing the project from source and rebuilding.
     environment:
       TASK_TYPE: CREATE/RUN_JOB
@@ -74,6 +74,6 @@ tasks:
     short_summary: Create and start RagStudio.
     long_summary: Create and start RagStudio.
     cpu: 2
-    memory: 4
+    memory: 8
     environment_variables:
       TASK_TYPE: START_APPLICATION
