@@ -67,7 +67,7 @@ set -e
 if [ $return_code -ne 0 ]; then
   pip install uv
 fi
-uv sync
+uv sync --no-cache
 
 cd ..
 mkdir -p artifacts
