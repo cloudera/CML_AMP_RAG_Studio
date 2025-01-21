@@ -50,7 +50,6 @@ from typing_extensions import Optional
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ...ai.vector_stores.vector_store import VectorStore
-from ...services import llm_completion
 from ...services.utils import batch_sequence, flatten_sequence
 
 logger = logging.getLogger(__name__)
