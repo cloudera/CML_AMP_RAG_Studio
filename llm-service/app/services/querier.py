@@ -37,11 +37,12 @@
 # ##############################################################################
 import logging
 import os
-from typing import Optional, List, Any
+from typing import Optional, List, Any, cast
 
 import botocore.exceptions
 from fastapi import HTTPException
 from llama_index.core import QueryBundle, PromptTemplate, Response
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
@@ -198,7 +199,7 @@ def query(
         ) from error
 
 
-def filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str) -> list[str] | None:
+def filter_doc_ids_by_summary(data_source_id: int, embedding_model: BaseEmbedding, llm: LLM, query_str: str) -> list[str] | None:
     try:
         # first query the summary index to get documents to filter by (assuming summarization is enabled)
         summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
@@ -206,7 +207,7 @@ def filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str) -
         summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
 
         def document_ids(node: NodeWithScore) -> str:
-            return node.metadata["document_id"]
+            return cast(str, node.metadata["document_id"])
 
         doc_ids: list[str] = list(map(document_ids, summaries))
         return doc_ids

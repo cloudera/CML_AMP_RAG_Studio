@@ -35,6 +35,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
+from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
@@ -148,7 +149,7 @@ class DataSourceController:
                 request.s3_document_key,
                 request.original_filename,
             )
-            llm: Optional[models.LLM] = None
+            llm: Optional[LLM] = None
             if datasource.summarization_model:
                 llm = models.get_llm(datasource.summarization_model)
             indexer = EmbeddingIndexer(
