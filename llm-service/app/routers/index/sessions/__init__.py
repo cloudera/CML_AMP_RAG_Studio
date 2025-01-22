@@ -37,7 +37,6 @@
 # ##############################################################################
 import time
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel

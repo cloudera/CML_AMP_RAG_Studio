@@ -38,10 +38,7 @@
 
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models import DEFAULT_BEDROCK_LLM_MODEL
-
+from pydantic import BaseModel
 
 class RagPredictConfiguration(BaseModel):
     exclude_knowledge_base: Optional[bool] = False

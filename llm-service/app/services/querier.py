@@ -62,7 +62,6 @@ from .chat_store import RagContext
 from .models import DEFAULT_BEDROCK_LLM_MODEL
 from ..ai.indexing.summary_indexer import SummaryIndexer
 from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..rag_types import RagPredictConfiguration
 
 logger = logging.getLogger(__name__)
 

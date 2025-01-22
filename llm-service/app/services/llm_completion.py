@@ -41,7 +41,6 @@ from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.llms import LLM
 
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
-from .metadata_apis import session_metadata_api
 from .models import get_llm
 from .querier import QueryConfiguration
 
