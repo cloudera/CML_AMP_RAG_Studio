@@ -159,7 +159,7 @@ def query(
     llm = models.get_llm(model_name=configuration.model_name)
 
     enable_doc_id_filtering = os.environ.get('ENABLE_TWO_STAGE_RETRIEVAL') or None
-    doc_ids = None
+    doc_ids: list[str] | None = None
     if enable_doc_id_filtering:
         doc_ids = filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str)
 
