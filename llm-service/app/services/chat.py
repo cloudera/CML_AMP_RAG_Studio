@@ -88,9 +88,9 @@ def v2_chat(
             source_nodes=[],
             inference_model=None,
             rag_message=RagMessage(
-                user= query,
-                assistant=  "I don't have any documents to answer your question.",
-        ),
+                user=query,
+                assistant="I don't have any documents to answer your question.",
+            ),
             evaluations=[],
             timestamp=time.time(),
         )
@@ -110,9 +110,9 @@ def v2_chat(
         source_nodes=response_source_nodes,
         inference_model=session.inference_model,
         rag_message=RagMessage(
-            user= query,
-            assistant= response.response,
-    ),
+            user=query,
+            assistant=response.response,
+        ),
         evaluations=[
             Evaluation(name="relevance", value=relevance),
             Evaluation(name="faithfulness", value=faithfulness),
@@ -156,15 +156,26 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
     return response_source_nodes
 
 
-def generate_suggested_questions(
-        configuration: RagPredictConfiguration,
-        data_source_ids: list[int],
-        data_source_size: int,
-        session_id: int,
-) -> List[str]:
-    data_source_id = data_source_ids[0]
+def generate_suggested_questions(session_id: int, ) -> List[str]:
+    session = session_metadata_api.get_session(session_id)
+    if len(session.data_source_ids) != 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Only one datasource is supported for question suggestion.",
+        )
+    data_source_id = session.data_source_ids[0]
+
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if total_data_sources_size == 0:
+        raise HTTPException(status_code=404, detail="Knowledge base not found.")
+
     chat_history = retrieve_chat_history(session_id)
-    if data_source_size == 0:
+    if total_data_sources_size == 0:
         suggested_questions = []
     else:
         query_str = (
@@ -191,7 +202,10 @@ def generate_suggested_questions(
         response = querier.query(
             data_source_id,
             query_str,
-            configuration,
+            QueryConfiguration(top_k=session.response_chunks, model_name=session.inference_model,
+                               exclude_knowledge_base=False,
+                               use_question_condensing=False,
+                               use_hyde=False),
             [],
         )
 

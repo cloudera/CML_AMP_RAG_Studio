@@ -41,9 +41,9 @@ from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.llms import LLM
 
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
+from .metadata_apis import session_metadata_api
 from .models import get_llm
 from .querier import QueryConfiguration
-from ..rag_types import RagPredictConfiguration
 
 
 def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
@@ -53,9 +53,10 @@ def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
 
 
 def completion(
-        session_id: int, question: str, configuration: QueryConfiguration
+        session_id: int, question: str
 ) -> ChatResponse:
-    model = get_llm(configuration.model_name)
+    session_metadata = session_metadata_api.get_session(session_id)
+    model = get_llm(session_metadata.inference_model)
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
