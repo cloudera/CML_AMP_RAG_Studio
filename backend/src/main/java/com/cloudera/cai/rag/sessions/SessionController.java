@@ -38,7 +38,8 @@
 
 package com.cloudera.cai.rag.sessions;
 
-import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.Types.CreateSession;
+import com.cloudera.cai.rag.Types.Session;
 import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -57,19 +58,19 @@ public class SessionController {
   }
 
   @GetMapping(path = "/{id}", produces = "application/json")
-  public Types.Session getSession(@PathVariable Long id) {
+  public Session getSession(@PathVariable Long id) {
     return sessionService.getSessionById(id);
   }
 
   @PostMapping(consumes = "application/json", produces = "application/json")
-  public Types.Session create(@RequestBody Types.Session input, HttpServletRequest request) {
+  public Session create(@RequestBody CreateSession input, HttpServletRequest request) {
     String username = userTokenCookieDecoder.extractUsername(request.getCookies());
-    input = input.withCreatedById(username).withUpdatedById(username);
-    return sessionService.create(input);
+    Session toCreate = Session.fromCreateRequest(input, username);
+    return sessionService.create(toCreate);
   }
 
   @PostMapping(path = "/{id}", consumes = "application/json", produces = "application/json")
-  public Types.Session update(@RequestBody Types.Session input, HttpServletRequest request) {
+  public Session update(@RequestBody Session input, HttpServletRequest request) {
     String username = userTokenCookieDecoder.extractUsername(request.getCookies());
     input = input.withUpdatedById(username);
     return sessionService.update(input);
@@ -81,7 +82,7 @@ public class SessionController {
   }
 
   @GetMapping(produces = "application/json")
-  public List<Types.Session> getSessions() {
+  public List<Session> getSessions() {
     return sessionService.getSessions();
   }
 }

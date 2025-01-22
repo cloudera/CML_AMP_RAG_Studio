@@ -115,5 +115,26 @@ public class Types {
       String updatedById,
       Instant lastInteractionTime,
       String inferenceModel,
+      Integer responseChunks) {
+
+    public static Session fromCreateRequest(CreateSession input, String username) {
+      return new Session(
+          null,
+          input.name(),
+          input.dataSourceIds(),
+          null,
+          null,
+          username,
+          username,
+          null,
+          input.inferenceModel(),
+          input.responseChunks());
+    }
+  }
+
+  public record CreateSession(
+      String name,
+      @Singular List<Long> dataSourceIds,
+      String inferenceModel,
       Integer responseChunks) {}
 }
