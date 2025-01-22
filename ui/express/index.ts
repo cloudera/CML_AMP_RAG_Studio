@@ -14,11 +14,16 @@ const apiProxy: Options = {
 const llmServiceProxy: Options = {
   target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
   changeOrigin: true,
+  pathRewrite: {
+    "^/llm-service": "",
+    "/api/v1/rag/sessions/8/chat": "/sessions/8/chat",
+  },
 };
 
 app.use(express.static(join(__dirname, "../..", "dist")));
-app.use("/api", createProxyMiddleware(apiProxy));
 app.use("/llm-service", createProxyMiddleware(llmServiceProxy));
+app.use("/api/v1/rag/sessions/8/chat", createProxyMiddleware(llmServiceProxy));
+app.use("/api", createProxyMiddleware(apiProxy));
 
 app.get("*", (req: Request, res: Response) => {
   console.log("Serving up req.url: ", req.url);
