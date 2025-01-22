@@ -53,6 +53,7 @@ from .chat_store import (
     RagPredictSourceNode,
     RagStudioChatMessage, RagMessage,
 )
+from .metadata_apis import session_metadata_api
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
@@ -63,6 +64,8 @@ def v2_chat(
         query: str,
         configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
+
     response_id = str(uuid.uuid4())
 
     if len(data_source_ids) != 1:

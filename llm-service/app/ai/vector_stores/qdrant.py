@@ -49,7 +49,8 @@ from llama_index.vector_stores.qdrant import (
 )
 from qdrant_client.http.models import CountResult, Record
 
-from ...services import data_sources_metadata_api, models
+from ...services.metadata_apis import data_sources_metadata_api
+from ...services import models
 from .vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
