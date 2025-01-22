@@ -86,4 +86,9 @@ cd ../backend
 # start frontend development server
 cd ../ui
 pnpm install
-pnpm dev
+pnpm build
+pnpm dev &
+
+# start the proxy
+cd express
+npm run serve
