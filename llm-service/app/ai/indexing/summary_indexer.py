@@ -102,12 +102,11 @@ class SummaryIndexer(BaseTextIndexer):
     def __persist_root_dir() -> str:
         return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
 
-    def __index_kwargs(self) -> Dict[str, Any]:
-        return SummaryIndexer.__index_configuration(self.llm, self.embedding_model, self.data_source_id)
+    def __index_kwargs(self, embed_summaries: bool = True) -> Dict[str, Any]:
+        return SummaryIndexer.__index_configuration(self.llm, self.embedding_model, self.data_source_id, embed_summaries)
 
     @staticmethod
-    def __index_configuration(llm: LLM, embedding_model: BaseEmbedding, data_source_id: int) -> Dict[str, Any]:
-        # enable_summary_embedding = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or False
+    def __index_configuration(llm: LLM, embedding_model: BaseEmbedding, data_source_id: int, embed_summaries: bool = True) -> Dict[str, Any]:
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
@@ -118,7 +117,7 @@ class SummaryIndexer(BaseTextIndexer):
             ),
             "show_progress": True,
             "embed_model": embedding_model,
-            "embed_summaries": True,
+            "embed_summaries": embed_summaries,
             "summary_query": SUMMARY_PROMPT,
             "data_source_id": data_source_id,
         }
@@ -131,11 +130,11 @@ class SummaryIndexer(BaseTextIndexer):
         doc_summary_index.storage_context.persist(persist_dir=persist_dir)
         return doc_summary_index
 
-    def __summary_indexer(self, persist_dir: str) -> DocumentSummaryIndex:
+    def __summary_indexer(self, persist_dir: str, embed_summaries: bool = True) -> DocumentSummaryIndex:
         try:
             return SummaryIndexer.__summary_indexer_with_config(
                 persist_dir=persist_dir,
-                index_configuration=self.__index_kwargs(),
+                index_configuration=self.__index_kwargs(embed_summaries),
             )
         except FileNotFoundError:
             doc_summary_index = self.__init_summary_store(persist_dir)
@@ -198,9 +197,8 @@ class SummaryIndexer(BaseTextIndexer):
         # So what we do instead is re-load all the summaries for the documents already associated with the data source
         # and re-index it with the addition/removal.
         global_persist_dir = self.__persist_root_dir()
-        global_summary_store = self.__summary_indexer(global_persist_dir)
-        global_summary_store._embed_summaries = False
-        data_source_node = Document(doc_id=str(self.data_source_id), text="")
+        global_summary_store = self.__summary_indexer(global_persist_dir, embed_summaries=False)
+        data_source_node = Document(id_=str(self.data_source_id))
 
         summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
             str(self.data_source_id)
@@ -220,7 +218,7 @@ class SummaryIndexer(BaseTextIndexer):
 
                 new_nodes = [
                     Document(
-                        doc_id=document_id,
+                        id_=document_id,
                         text=document_summary,
                         relationships={
                             NodeRelationship.SOURCE: data_source_node.as_related_node_info()
@@ -232,7 +230,7 @@ class SummaryIndexer(BaseTextIndexer):
         if added_node_id:
             new_nodes.append(
                 Document(
-                    doc_id=added_node_id,
+                    id_=added_node_id,
                     text=summary_store.get_document_summary(added_node_id),
                     relationships={
                         NodeRelationship.SOURCE: data_source_node.as_related_node_info()
@@ -303,7 +301,8 @@ class SummaryIndexer(BaseTextIndexer):
             try:
                 configuration: Dict[str, Any] = SummaryIndexer.__index_configuration(get_noop_llm_model(),
                                                                                      get_noop_embedding_model(),
-                                                                                     data_source_id=data_source_id)
+                                                                                     data_source_id=data_source_id,
+                                                                                     embed_summaries=False)
                 global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir, configuration)
             except FileNotFoundError:
                 ## global summary store doesn't exist, nothing to do
