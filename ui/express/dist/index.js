@@ -13,15 +13,15 @@ const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.
 const apiProxy = {
     target: process.env.API_URL || "http://localhost:8080",
     changeOrigin: true,
-    pathFilter: ["/api/**", "!/api/v1/rag/sessions/*/chat"],
+    pathFilter: ["/api/**"],
 };
 const llmServiceProxy = {
     target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
     changeOrigin: true,
-    pathFilter: ["/llm-service/**", "/api/v1/rag/sessions/*/chat"],
+    pathFilter: ["/llm-service/**", "/rag-studio/api/v1/sessions/*/chat"],
     pathRewrite: (path, req) => {
-        if (path.startsWith("/api/v1/rag")) {
-            return path.replace("/api/v1/rag", "/");
+        if (path.startsWith("/rag-studio/api/v1/")) {
+            return path.replace("/rag-studio/api/v1/", "/");
         }
         return path;
     },
