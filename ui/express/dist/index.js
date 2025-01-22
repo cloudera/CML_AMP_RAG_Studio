@@ -11,7 +11,7 @@ const app = (0, express_1.default)();
 const port = parseInt((_a = process.env.CDSW_APP_PORT) !== null && _a !== void 0 ? _a : "3000", 10);
 const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.0.0.1";
 const apiProxy = {
-    target: (process.env.API_URL || "http://localhost:8080") + "/api",
+    target: process.env.API_URL || "http://localhost:8080",
     changeOrigin: true,
     pathFilter: ["/api/**", "!/api/v1/rag/sessions/*/chat"],
 };
@@ -19,6 +19,12 @@ const llmServiceProxy = {
     target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
     changeOrigin: true,
     pathFilter: ["/llm-service/**", "/api/v1/rag/sessions/*/chat"],
+    pathRewrite: (path, req) => {
+        if (path.startsWith("/api/v1/rag")) {
+            return path.replace("/api/v1/rag", "/");
+        }
+        return path;
+    },
 };
 app.use(express_1.default.static((0, path_1.join)(__dirname, "../..", "dist")));
 app.use((0, http_proxy_middleware_1.createProxyMiddleware)(llmServiceProxy));

@@ -7,7 +7,7 @@ const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
 const apiProxy: Options = {
-  target: (process.env.API_URL || "http://localhost:8080") + "/api",
+  target: process.env.API_URL || "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**", "!/api/v1/rag/sessions/*/chat"],
 };
@@ -16,6 +16,12 @@ const llmServiceProxy: Options = {
   target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
   changeOrigin: true,
   pathFilter: ["/llm-service/**", "/api/v1/rag/sessions/*/chat"],
+  pathRewrite: (path, req) => {
+    if (path.startsWith("/api/v1/rag")) {
+      return path.replace("/api/v1/rag", "/");
+    }
+    return path;
+  },
 };
 
 app.use(express.static(join(__dirname, "../..", "dist")));
