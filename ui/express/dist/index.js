@@ -13,15 +13,16 @@ const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.
 const apiProxy = {
     target: (process.env.API_URL || "http://localhost:8080") + "/api",
     changeOrigin: true,
+    pathFilter: ["/api/**", "!/api/v1/rag/sessions/*/chat"],
 };
 const llmServiceProxy = {
     target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
     changeOrigin: true,
+    pathFilter: ["/llm-service/**", "/api/v1/rag/sessions/*/chat"],
 };
 app.use(express_1.default.static((0, path_1.join)(__dirname, "../..", "dist")));
-app.use("/llm-service", (0, http_proxy_middleware_1.createProxyMiddleware)(llmServiceProxy));
-app.use("/api", (0, http_proxy_middleware_1.createProxyMiddleware)(apiProxy));
-app.use("/api/v1/rag/sessions/1/chat", (0, http_proxy_middleware_1.createProxyMiddleware)(llmServiceProxy));
+app.use((0, http_proxy_middleware_1.createProxyMiddleware)(llmServiceProxy));
+app.use((0, http_proxy_middleware_1.createProxyMiddleware)(apiProxy));
 app.get("*", (req, res) => {
     console.log("Serving up req.url: ", req.url);
     res.sendFile((0, path_1.join)(__dirname, "../..", "dist", "index.html"));

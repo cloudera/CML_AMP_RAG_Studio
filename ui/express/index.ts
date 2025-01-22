@@ -9,17 +9,18 @@ const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 const apiProxy: Options = {
   target: (process.env.API_URL || "http://localhost:8080") + "/api",
   changeOrigin: true,
+  pathFilter: ["/api/**", "!/api/v1/rag/sessions/*/chat"],
 };
 
 const llmServiceProxy: Options = {
   target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
   changeOrigin: true,
+  pathFilter: ["/llm-service/**", "/api/v1/rag/sessions/*/chat"],
 };
 
 app.use(express.static(join(__dirname, "../..", "dist")));
-app.use("/llm-service", createProxyMiddleware(llmServiceProxy));
-app.use("/api", createProxyMiddleware(apiProxy));
-app.use("/api/v1/rag/sessions/1/chat", createProxyMiddleware(llmServiceProxy));
+app.use(createProxyMiddleware(llmServiceProxy));
+app.use(createProxyMiddleware(apiProxy));
 
 app.get("*", (req: Request, res: Response) => {
   console.log("Serving up req.url: ", req.url);
