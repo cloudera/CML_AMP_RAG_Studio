@@ -37,6 +37,7 @@
 # ##############################################################################
 import time
 import uuid
+from typing import Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -78,7 +79,7 @@ def delete_chat_history(session_id: int) -> str:
 
 class RagStudioChatRequest(BaseModel):
     query: str
-    configuration: RagPredictConfiguration
+    configuration: RagPredictConfiguration | None = None
 
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
@@ -87,20 +88,19 @@ def chat(
         session_id: int,
         request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
-    if request.configuration.exclude_knowledge_base:
-        return llm_talk(session_id, request)
-    return v2_chat(
-        session_id, request.query, request.configuration
-    )
+    configuration = request.configuration or RagPredictConfiguration()
+    if configuration.exclude_knowledge_base:
+        return llm_talk(session_id, request.query)
+    return v2_chat(session_id, request.query, configuration)
 
 
 def llm_talk(
         session_id: int,
-        request: RagStudioChatRequest,
+        query: str,
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     chat_response = llm_completion.completion(
-        session_id, request.query, session.inference_model
+        session_id, query, session.inference_model
     )
     new_chat_message = RagStudioChatMessage(
         id=str(uuid.uuid4()),
@@ -108,7 +108,7 @@ def llm_talk(
         inference_model=session.inference_model,
         evaluations=[],
         rag_message=RagMessage(
-            user=request.query,
+            user=query,
             assistant=str(chat_response.message.content),
         ),
         timestamp=time.time(),
