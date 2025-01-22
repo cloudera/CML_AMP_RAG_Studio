@@ -55,9 +55,11 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import ToolOutput
+from pydantic import BaseModel, ConfigDict
 
 from . import models, llm_completion
 from .chat_store import RagContext
+from .models import DEFAULT_BEDROCK_LLM_MODEL
 from ..ai.indexing.summary_indexer import SummaryIndexer
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
@@ -80,18 +82,27 @@ from the conversation. Just provide the question, not any description of it.
 
 CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 
+class QueryConfiguration(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    top_k: int = 5
+    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
+    exclude_knowledge_base: Optional[bool] = False
+    use_question_condensing: Optional[bool] = True
+    use_hyde: Optional[bool] = False
+
 
 class FlexibleChatEngine(CondenseQuestionChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        self._configuration: RagPredictConfiguration = RagPredictConfiguration()
+        self._configuration: QueryConfiguration = QueryConfiguration()
 
     @property
-    def configuration(self) -> RagPredictConfiguration:
+    def configuration(self) -> QueryConfiguration:
         return self._configuration
 
     @configuration.setter
-    def configuration(self, value: RagPredictConfiguration) -> None:
+    def configuration(self, value: QueryConfiguration) -> None:
         self._configuration = value
 
     @trace_method("chat")
@@ -145,7 +156,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
 def query(
         data_source_id: int,
         query_str: str,
-        configuration: RagPredictConfiguration,
+        configuration: QueryConfiguration,
         chat_history: list[RagContext],
 ) -> AgentChatResponse:
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
@@ -216,7 +227,7 @@ def filter_doc_ids_by_summary(data_source_id: int, embedding_model: BaseEmbeddin
         return None
 
 
-def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM,
+def _build_chat_engine(configuration: QueryConfiguration, llm: LLM,
                        query_engine: RetrieverQueryEngine) -> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine,

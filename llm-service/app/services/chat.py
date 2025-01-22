@@ -54,6 +54,7 @@ from .chat_store import (
     RagStudioChatMessage, RagMessage,
 )
 from .metadata_apis import session_metadata_api
+from .querier import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
@@ -65,6 +66,13 @@ def v2_chat(
         configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
+    query_configuration = QueryConfiguration(
+        top_k=session.response_chunks,
+        model_name=session.inference_model,
+        exclude_knowledge_base=configuration.exclude_knowledge_base,
+        use_question_condensing=configuration.use_question_condensing,
+        use_hyde=configuration.use_hyde,
+    )
 
     response_id = str(uuid.uuid4())
 
@@ -90,17 +98,17 @@ def v2_chat(
     response = querier.query(
         data_source_id,
         query,
-        configuration,
+        query_configuration,
         retrieve_chat_history(session_id),
     )
     relevance, faithfulness = evaluators.evaluate_response(
-        query, response, configuration.model_name
+        query, response, session.inference_model
     )
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         source_nodes=response_source_nodes,
-        inference_model=configuration.model_name,
+        inference_model=session.inference_model,
         rag_message=RagMessage(
             user= query,
             assistant= response.response,

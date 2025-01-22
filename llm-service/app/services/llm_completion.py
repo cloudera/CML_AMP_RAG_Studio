@@ -42,6 +42,7 @@ from llama_index.core.llms import LLM
 
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
 from .models import get_llm
+from .querier import QueryConfiguration
 from ..rag_types import RagPredictConfiguration
 
 
@@ -52,7 +53,7 @@ def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
 
 
 def completion(
-        session_id: int, question: str, configuration: RagPredictConfiguration
+        session_id: int, question: str, configuration: QueryConfiguration
 ) -> ChatResponse:
     model = get_llm(configuration.model_name)
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
@@ -65,7 +66,7 @@ def completion(
     return model.chat(messages)
 
 
-def hypothetical(question: str, configuration: RagPredictConfiguration) -> str:
+def hypothetical(question: str, configuration: QueryConfiguration) -> str:
     model: LLM = get_llm(configuration.model_name)
     prompt: str = (f"You are an expert. You are asked: {question}. "
                    "Produce a brief document that would hypothetically answer this question.")
