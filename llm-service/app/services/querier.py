@@ -140,8 +140,6 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
             condensed_question = self._condense_question(chat_history, message)
             log_str = f"Querying with condensed question: {condensed_question}"
             logger.info(log_str)
-            if self._verbose:
-                print(log_str)
             message = condensed_question
         embedding_strings = None
         if self.configuration.use_hyde:

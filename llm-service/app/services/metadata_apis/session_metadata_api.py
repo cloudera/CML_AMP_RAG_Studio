@@ -52,7 +52,6 @@ class Session:
     time_updated: datetime
     created_by_id: str
     updated_by_id: str
-    last_interaction_time: datetime
     inference_model: str
     response_chunks: int
 
@@ -71,7 +70,6 @@ def get_session(session_id: int) -> Session:
         time_updated=datetime.fromtimestamp(data["timeUpdated"]),
         created_by_id=data["createdById"],
         updated_by_id=data["updatedById"],
-        last_interaction_time=datetime.fromtimestamp(data["lastInteractionTime"]),
         inference_model=data["inferenceModel"],
         response_chunks=data["responseChunks"],
     )

@@ -56,6 +56,11 @@ public class SessionController {
     this.sessionService = sessionService;
   }
 
+  @GetMapping(path = "/{id}", produces = "application/json")
+  public Types.Session getSession(@PathVariable Long id) {
+    return sessionService.getSessionById(id);
+  }
+
   @PostMapping(consumes = "application/json", produces = "application/json")
   public Types.Session create(@RequestBody Types.Session input, HttpServletRequest request) {
     String username = userTokenCookieDecoder.extractUsername(request.getCookies());

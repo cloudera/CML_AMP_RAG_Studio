@@ -46,6 +46,7 @@ from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagMessage
+from ....services.metadata_apis import session_metadata_api
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -98,13 +99,14 @@ def llm_talk(
         session_id: int,
         request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
     chat_response = llm_completion.completion(
-        session_id, request.query
+        session_id, request.query, session.inference_model
     )
     new_chat_message = RagStudioChatMessage(
         id=str(uuid.uuid4()),
         source_nodes=[],
-        inference_model=request.configuration.model_name,
+        inference_model=session.inference_model,
         evaluations=[],
         rag_message=RagMessage(
             user=request.query,

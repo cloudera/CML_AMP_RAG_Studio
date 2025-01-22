@@ -53,10 +53,9 @@ def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
 
 
 def completion(
-        session_id: int, question: str
+        session_id: int, question: str, model_name: str
 ) -> ChatResponse:
-    session_metadata = session_metadata_api.get_session(session_id)
-    model = get_llm(session_metadata.inference_model)
+    model = get_llm(model_name)
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
