@@ -61,11 +61,7 @@ const RagChatQueryInput = () => {
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
-  const configuration = createQueryConfiguration(
-    excludeKnowledgeBase,
-    true,
-    activeSession,
-  );
+  const configuration = createQueryConfiguration(excludeKnowledgeBase, true);
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
@@ -98,11 +94,7 @@ const RagChatQueryInput = () => {
         query: userInput,
         data_source_ids: activeSession.dataSourceIds,
         session_id: sessionId,
-        configuration: createQueryConfiguration(
-          excludeKnowledgeBase,
-          false,
-          activeSession,
-        ),
+        configuration: createQueryConfiguration(excludeKnowledgeBase, false),
       });
     }
   };

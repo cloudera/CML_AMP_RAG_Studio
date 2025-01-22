@@ -56,11 +56,7 @@ const SuggestedQuestionsCards = () => {
     isFetching: suggestedQuestionsIsFetching,
   } = useSuggestQuestions({
     data_source_ids: activeSession?.dataSourceIds ?? [],
-    configuration: createQueryConfiguration(
-      excludeKnowledgeBase,
-      true,
-      activeSession,
-    ),
+    configuration: createQueryConfiguration(excludeKnowledgeBase, true),
     session_id: sessionId ?? "",
   });
 
@@ -85,11 +81,7 @@ const SuggestedQuestionsCards = () => {
         query: suggestedQuestion,
         data_source_ids: activeSession.dataSourceIds,
         session_id: sessionId,
-        configuration: createQueryConfiguration(
-          excludeKnowledgeBase,
-          false,
-          activeSession,
-        ),
+        configuration: createQueryConfiguration(excludeKnowledgeBase, false),
       });
     }
   };

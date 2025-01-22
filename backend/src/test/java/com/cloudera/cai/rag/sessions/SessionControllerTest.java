@@ -73,6 +73,16 @@ class SessionControllerTest {
   }
 
   @Test
+  void get() {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    var input = TestData.createTestSessionInstance("test");
+    var createdSession = sessionController.create(input, request);
+    var result = sessionController.getSession(createdSession.id());
+    assertThat(result).isEqualTo(createdSession);
+  }
+
+  @Test
   void update() throws JsonProcessingException {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
