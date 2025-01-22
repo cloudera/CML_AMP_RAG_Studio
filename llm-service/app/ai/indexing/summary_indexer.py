@@ -198,7 +198,7 @@ class SummaryIndexer(BaseTextIndexer):
         # and re-index it with the addition/removal.
         global_persist_dir = self.__persist_root_dir()
         global_summary_store = self.__summary_indexer(global_persist_dir, embed_summaries=False)
-        data_source_node = Document(id_=str(self.data_source_id))
+        data_source_node = Document(doc_id=str(self.data_source_id))
 
         summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
             str(self.data_source_id)
@@ -218,7 +218,7 @@ class SummaryIndexer(BaseTextIndexer):
 
                 new_nodes = [
                     Document(
-                        id_=document_id,
+                        doc_id=document_id,
                         text=document_summary,
                         relationships={
                             NodeRelationship.SOURCE: data_source_node.as_related_node_info()
@@ -230,7 +230,7 @@ class SummaryIndexer(BaseTextIndexer):
         if added_node_id:
             new_nodes.append(
                 Document(
-                    id_=added_node_id,
+                    doc_id=added_node_id,
                     text=summary_store.get_document_summary(added_node_id),
                     relationships={
                         NodeRelationship.SOURCE: data_source_node.as_related_node_info()
