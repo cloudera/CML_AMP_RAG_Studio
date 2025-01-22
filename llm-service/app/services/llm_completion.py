@@ -46,8 +46,8 @@ from ..rag_types import RagPredictConfiguration
 
 
 def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
-    user = ChatMessage.from_str(x.rag_message["user"], role="user")
-    assistant = ChatMessage.from_str(x.rag_message["assistant"], role="assistant")
+    user = ChatMessage.from_str(x.rag_message.user, role="user")
+    assistant = ChatMessage.from_str(x.rag_message.assistant, role="assistant")
     return [user, assistant]
 
 

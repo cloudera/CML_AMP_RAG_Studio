@@ -63,8 +63,8 @@ class RagContext(BaseModel):
     content: str
 
 class RagMessage(BaseModel):
-    user: Optional[str]
-    assistant: Optional[str]
+    user: str
+    assistant: str
 
 class RagStudioChatMessage(BaseModel):
     id: str
@@ -151,7 +151,7 @@ class ChatHistoryManager:
                 self.build_chat_key(session_id),
                 ChatMessage(
                     role=MessageRole.USER,
-                    content=message.rag_message["user"],
+                    content=message.rag_message.user,
                     additional_kwargs={
                         "id": message.id,
                     },
@@ -161,7 +161,7 @@ class ChatHistoryManager:
                 self.build_chat_key(session_id),
                 ChatMessage(
                     role=MessageRole.ASSISTANT,
-                    content=message.rag_message["assistant"],
+                    content=message.rag_message.assistant,
                     additional_kwargs={
                         "id": message.id,
                         "source_nodes": message.source_nodes,

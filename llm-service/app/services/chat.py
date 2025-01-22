@@ -117,11 +117,11 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     history: List[RagContext] = []
     for message in chat_history:
         history.append(
-            RagContext(role=MessageRole.USER, content=message.rag_message["user"])
+            RagContext(role=MessageRole.USER, content=message.rag_message.user)
         )
         history.append(
             RagContext(
-                role=MessageRole.ASSISTANT, content=message.rag_message["assistant"]
+                role=MessageRole.ASSISTANT, content=message.rag_message.assistant
             )
         )
     return history
