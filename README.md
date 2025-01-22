@@ -98,7 +98,7 @@ the Node service locally, you can do so by following these steps:
 
 - Build the FE service (`cd ./ui` and then `pnpm build`)
 - Navigate to the Node subdirectory (`cd ./express`)
-- Start the Node server (`node index.ts`)
+- Start the Node server (`npm run start`)
 
 #### Python Setup
 
