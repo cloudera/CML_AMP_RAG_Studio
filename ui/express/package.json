@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx tsc",
+    "prestart": "npm run build",
+    "start": "node dist/index.js",
+    "preserve": "npm run build",
+    "serve": "npx tsc -w & nodemon dist/index.js"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -14,5 +18,11 @@
   "dependencies": {
     "express": "^4.21.1",
     "http-proxy-middleware": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.7",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.7.3"
   }
 }

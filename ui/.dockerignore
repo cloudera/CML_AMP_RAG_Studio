@@ -2,6 +2,6 @@ node_modules
 .git
 .gitignore
 *.md
-dist
+/dist
 server/node_modules
 server/dist
