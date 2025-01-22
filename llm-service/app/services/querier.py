@@ -36,11 +36,13 @@
 #  DATA.
 # ##############################################################################
 import logging
-from typing import Optional, List, Any
+import os
+from typing import Optional, List, Any, cast
 
 import botocore.exceptions
 from fastapi import HTTPException
 from llama_index.core import QueryBundle, PromptTemplate, Response
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
@@ -48,6 +50,7 @@ from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
@@ -55,6 +58,7 @@ from llama_index.core.tools import ToolOutput
 
 from . import models, llm_completion
 from .chat_store import RagContext
+from ..ai.indexing.summary_indexer import SummaryIndexer
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
@@ -152,11 +156,19 @@ def query(
         embed_model=embedding_model,
     )
     logger.info("fetched Qdrant index")
+    llm = models.get_llm(model_name=configuration.model_name)
 
+    enable_doc_id_filtering = os.environ.get('ENABLE_TWO_STAGE_RETRIEVAL') or None
+    doc_ids: list[str] | None = None
+    if enable_doc_id_filtering:
+        doc_ids = filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str)
+
+    # add a filter to the retriever with the resulting document ids.
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
         embed_model=embedding_model,  # is this needed, really, if it's in the index?
+        doc_ids=doc_ids or None,
     )
     llm = models.get_llm(model_name=configuration.model_name)
 
@@ -185,6 +197,23 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
+
+
+def filter_doc_ids_by_summary(data_source_id: int, embedding_model: BaseEmbedding, llm: LLM, query_str: str) -> list[str] | None:
+    try:
+        # first query the summary index to get documents to filter by (assuming summarization is enabled)
+        summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
+                                        embedding_model=embedding_model, llm=llm, ).as_query_engine()
+        summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
+
+        def document_ids(node: NodeWithScore) -> str:
+            return cast(str, node.metadata["document_id"])
+
+        doc_ids: list[str] = list(map(document_ids, summaries))
+        return doc_ids
+    except Exception as e:
+        logger.debug(f"Failed to retrieve document ids from summary index: {e}")
+        return None
 
 
 def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM,

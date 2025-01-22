@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Generator, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode, TextNode
 from typing_extensions import Optional
@@ -61,12 +62,14 @@ class EmbeddingIndexer(BaseTextIndexer):
             splitter: SentenceSplitter,
             embedding_model: BaseEmbedding,
             chunks_vector_store: VectorStore,
+            llm: Optional[LLM],
             reader_config: Optional[ReaderConfig] = None,
     ):
         super().__init__(data_source_id, reader_config)
         self.splitter = splitter
         self.embedding_model = embedding_model
         self.chunks_vector_store = chunks_vector_store
+        self.llm = llm
 
     def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(
@@ -86,18 +89,19 @@ class EmbeddingIndexer(BaseTextIndexer):
 
         chunks: ChunksResult = reader.load_chunks(file_path)
 
-        if not chunks.chunks:
+        nodes: list[TextNode] = chunks.chunks
+        if not nodes:
             logger.warning(f"No chunks found in file: {file_path}")
             return
 
-        logger.debug(f"Embedding {len(chunks.chunks)} chunks")
+        logger.debug(f"Embedding {len(nodes)} chunks")
 
-        chunks_with_embeddings = flatten_sequence(self._compute_embeddings(chunks.chunks))
+        chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
         acc = 0
         for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
             acc += len(chunk_batch)
-            logger.debug(f"Adding {acc}/{len(chunks.chunks)} chunks to vector store")
+            logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
 
             # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
             # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because

@@ -80,7 +80,7 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.rag_types import RagPredictConfiguration
-from app.services import models
+from app.services import models, querier
 from app.services.querier import FlexibleChatEngine, CUSTOM_PROMPT
 
 
@@ -93,14 +93,14 @@ def main():
         questions: list[str] = df["Question"].tolist()
 
     with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a") as details:
-        for hyde in [True, False]:
+        for hyde in [False]:
             for condensing in [False]:
                 print(f"Running with hyde={hyde}")
                 score_sum = 0
                 score_count = 0
                 max_score = 0
-                chat_engine = setup(use_question_condensing=condensing, use_hyde=hyde, data_source_id=data_source_id)
                 for question in questions:
+                    chat_engine = setup(use_question_condensing=condensing, question=question, use_hyde=hyde, data_source_id=data_source_id)
                     nodes = chat_engine.retrieve(message=question, chat_history=None)
                     if nodes:
                         max_score = max(max_score, max(node.score for node in nodes))
@@ -120,7 +120,7 @@ def main():
                     f.flush()
 
 
-def setup(data_source_id: int, use_question_condensing=True, use_hyde=True):
+def setup(data_source_id: int, question: str, use_question_condensing=True, use_hyde=True):
     configuration = RagPredictConfiguration(use_question_condensing=use_question_condensing, top_k=5,
                                             model_name="meta.llama3-1-8b-instruct-v1:0",
                                             use_hyde=use_hyde)
@@ -133,10 +133,12 @@ def setup(data_source_id: int, use_question_condensing=True, use_hyde=True):
         vector_store=vector_store,
         embed_model=embedding_model,
     )
+    doc_ids = querier.filter_doc_ids_by_summary(data_source_id, embedding_model, llm, question)
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
         embed_model=embedding_model,  # is this needed, really, if it's in the index?
+        doc_ids=doc_ids or None,
     )
     query_engine = RetrieverQueryEngine(
         retriever=retriever, response_synthesizer=response_synthesizer
