@@ -51,7 +51,7 @@ from .chat_store import (
     Evaluation,
     RagContext,
     RagPredictSourceNode,
-    RagStudioChatMessage,
+    RagStudioChatMessage, RagMessage,
 )
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
@@ -76,10 +76,10 @@ def v2_chat(
             id=response_id,
             source_nodes=[],
             inference_model=None,
-            rag_message={
-                "user": query,
-                "assistant": "I don't have any documents to answer your question.",
-            },
+            rag_message=RagMessage(
+                user= query,
+                assistant=  "I don't have any documents to answer your question.",
+        ),
             evaluations=[],
             timestamp=time.time(),
         )
@@ -98,10 +98,10 @@ def v2_chat(
         id=response_id,
         source_nodes=response_source_nodes,
         inference_model=configuration.model_name,
-        rag_message={
-            "user": query,
-            "assistant": response.response,
-        },
+        rag_message=RagMessage(
+            user= query,
+            assistant= response.response,
+    ),
         evaluations=[
             Evaluation(name="relevance", value=relevance),
             Evaluation(name="faithfulness", value=faithfulness),

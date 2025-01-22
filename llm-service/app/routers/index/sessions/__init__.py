@@ -46,7 +46,7 @@ from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagMessage
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -107,10 +107,10 @@ def llm_talk(
         source_nodes=[],
         inference_model=request.configuration.model_name,
         evaluations=[],
-        rag_message={
-            "user": request.query,
-            "assistant": str(chat_response.message.content),
-        },
+        rag_message=RagMessage(
+            user= request.query,
+            assistant= str(chat_response.message.content),
+    ),
         timestamp=time.time(),
     )
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])

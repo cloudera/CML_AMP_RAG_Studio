@@ -62,12 +62,15 @@ class RagContext(BaseModel):
     role: MessageRole
     content: str
 
+class RagMessage(BaseModel):
+    user: Optional[str]
+    assistant: Optional[str]
 
 class RagStudioChatMessage(BaseModel):
     id: str
     source_nodes: list[RagPredictSourceNode]
     inference_model: Optional[str]  # `None` for legacy data or no chunks
-    rag_message: dict[Literal["user", "assistant"], str]
+    rag_message: RagMessage
     evaluations: list[Evaluation]
     timestamp: float
 
@@ -105,10 +108,10 @@ class ChatHistoryManager:
                     inference_model=assistant_message.additional_kwargs.get(
                         "inference_model", None
                     ),
-                    rag_message={
-                        MessageRole.USER.value: str(user_message.content),
-                        MessageRole.ASSISTANT.value: str(assistant_message.content),
-                    },
+                    rag_message=RagMessage(
+                        user= str(user_message.content),
+                        assistant= str(assistant_message.content),
+                    ),
                     evaluations=assistant_message.additional_kwargs.get(
                         "evaluations", []
                     ),
