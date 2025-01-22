@@ -47,7 +47,6 @@ import {
 } from "src/api/utils.ts";
 
 export interface SuggestQuestionsRequest {
-  data_source_ids: number[];
   configuration: QueryConfiguration;
   session_id: string;
 }
@@ -73,7 +72,7 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: suggestedQuestionKey(request.session_id),
     queryFn: () => suggestQuestionsQuery(request),
-    enabled: Boolean(request.data_source_ids.length),
+    enabled: Boolean(request.session_id),
     gcTime: 0,
   });
 };

@@ -77,7 +77,6 @@ def delete_chat_history(session_id: int) -> str:
 
 
 class RagStudioChatRequest(BaseModel):
-    data_source_ids: list[int]
     query: str
     configuration: RagPredictConfiguration
 
@@ -91,7 +90,7 @@ def chat(
     if request.configuration.exclude_knowledge_base:
         return llm_talk(session_id, request)
     return v2_chat(
-        session_id, request.data_source_ids, request.query, request.configuration
+        session_id, request.query, request.configuration
     )
 
 

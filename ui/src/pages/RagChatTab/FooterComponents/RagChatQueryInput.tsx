@@ -67,7 +67,6 @@ const RagChatQueryInput = () => {
     isPending: sampleQuestionsIsPending,
     isFetching: sampleQuestionsIsFetching,
   } = useSuggestQuestions({
-    data_source_ids: activeSession?.dataSourceIds ?? [],
     configuration,
     session_id: sessionId ?? "",
   });
@@ -92,7 +91,6 @@ const RagChatQueryInput = () => {
       setCurrentQuestion(userInput);
       chatMutation.mutate({
         query: userInput,
-        data_source_ids: activeSession.dataSourceIds,
         session_id: sessionId,
         configuration: createQueryConfiguration(excludeKnowledgeBase, false),
       });

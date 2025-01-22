@@ -61,7 +61,6 @@ from ..rag_types import RagPredictConfiguration
 
 def v2_chat(
         session_id: int,
-        data_source_ids: list[int],
         query: str,
         configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
@@ -76,12 +75,12 @@ def v2_chat(
 
     response_id = str(uuid.uuid4())
 
-    if len(data_source_ids) != 1:
+    if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400, detail="Only one datasource is supported for chat."
         )
 
-    data_source_id: int = data_source_ids[0]
+    data_source_id: int = session.data_source_ids[0]
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,

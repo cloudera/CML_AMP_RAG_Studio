@@ -72,7 +72,6 @@ export interface QueryConfiguration {
 
 export interface ChatMutationRequest {
   query: string;
-  data_source_ids: number[];
   session_id: string;
   configuration: QueryConfiguration;
 }
@@ -177,7 +176,7 @@ export const useChatMutation = ({
       );
       queryClient
         .invalidateQueries({
-          queryKey: suggestedQuestionKey(variables.data_source_ids),
+          queryKey: suggestedQuestionKey(variables.session_id),
         })
         .catch((error: unknown) => {
           console.error(error);
