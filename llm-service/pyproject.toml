@@ -45,6 +45,7 @@ dev = [
     "mypy>=1.13.0",
     "lipsum>=0.1.2",
     "hypothesis>=6.122.1",
+    "black>=24.10.0",
 ]
 
 [tool.pytest.ini_options]
