@@ -8,7 +8,7 @@ const express_1 = __importDefault(require("express"));
 const path_1 = require("path");
 const http_proxy_middleware_1 = require("http-proxy-middleware");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
-const api_json_1 = __importDefault(require("./api.json"));
+// import swaggerDocument from "./api.json";
 const app = (0, express_1.default)();
 const port = parseInt((_a = process.env.CDSW_APP_PORT) !== null && _a !== void 0 ? _a : "3000", 10);
 const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.0.0.1";
@@ -29,7 +29,7 @@ const llmServiceProxy = {
     },
 };
 app.use("/api-docs", swagger_ui_express_1.default.serve);
-app.get("/api-docs", swagger_ui_express_1.default.setup(api_json_1.default));
+// app.get("/api-docs", swaggerUi.setup(swaggerDocument));
 app.use(express_1.default.static((0, path_1.join)(__dirname, "../..", "dist")));
 app.use((0, http_proxy_middleware_1.createProxyMiddleware)(llmServiceProxy));
 app.use((0, http_proxy_middleware_1.createProxyMiddleware)(apiProxy));

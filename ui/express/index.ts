@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import swaggerUi from "swagger-ui-express";
-import swaggerDocument from "./api.json";
+// import swaggerDocument from "./api.json";
 
 const app = express();
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
@@ -27,7 +27,7 @@ const llmServiceProxy: Options = {
 };
 
 app.use("/api-docs", swaggerUi.serve);
-app.get("/api-docs", swaggerUi.setup(swaggerDocument));
+// app.get("/api-docs", swaggerUi.setup(swaggerDocument));
 app.use(express.static(join(__dirname, "../..", "dist")));
 app.use(createProxyMiddleware(llmServiceProxy));
 app.use(createProxyMiddleware(apiProxy));
