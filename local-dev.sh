@@ -91,4 +91,4 @@ pnpm dev &
 
 # start the proxy
 cd express
-npm run serve
+npm run dev

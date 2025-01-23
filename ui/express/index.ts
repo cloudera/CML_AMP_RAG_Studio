@@ -1,8 +1,6 @@
 import express, { Request, Response } from "express";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import swaggerUi from "swagger-ui-express";
-// import swaggerDocument from "./api.json";
 
 const app = express();
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
@@ -17,17 +15,12 @@ const apiProxy: Options = {
 const llmServiceProxy: Options = {
   target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
   changeOrigin: true,
-  pathFilter: ["/llm-service/**", "/rag-studio/api/v1/sessions/*/chat"],
-  pathRewrite: (path, req) => {
-    if (path.startsWith("/rag-studio/api/v1/")) {
-      return path.replace("/rag-studio/api/v1/", "/");
-    }
-    return path;
+  pathFilter: ["/llm-service/**"],
+  pathRewrite: {
+    "^/llm-service": "",
   },
 };
 
-app.use("/api-docs", swaggerUi.serve);
-// app.get("/api-docs", swaggerUi.setup(swaggerDocument));
 app.use(express.static(join(__dirname, "../..", "dist")));
 app.use(createProxyMiddleware(llmServiceProxy));
 app.use(createProxyMiddleware(apiProxy));

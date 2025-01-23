@@ -5,9 +5,9 @@
   "scripts": {
     "build": "npx tsc",
     "prestart": "npm run build",
-    "start": "node dist/index.js",
-    "preserve": "npm run build",
-    "serve": "npx tsc -w & nodemon dist/index.js"
+    "start": "node --trace-deprecation dist/index.js",
+    "predev": "npm run build",
+    "dev": "npx tsc -w & nodemon --trace-deprecation dist/index.js"
   },
   "engines": {
     "node": ">=22.0.0"
