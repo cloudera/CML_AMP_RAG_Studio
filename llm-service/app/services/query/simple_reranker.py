@@ -45,11 +45,8 @@ from pydantic import Field
 class SimpleReranker(BaseNodePostprocessor):
     top_n: int = Field(description="The number of nodes to return", gt=0)
 
-    def __init__(self, top_n: int = 5):
-        super().__init__(top_n=top_n)
-
     def _postprocess_nodes(
         self, nodes: list[NodeWithScore], query_bundle: Optional[QueryBundle] = None
     ) -> list[NodeWithScore]:
-        nodes.sort(key=lambda x: x.score, reverse=True)
+        nodes.sort(key=lambda node: node.score or 0, reverse=True)
         return nodes[: self.top_n]

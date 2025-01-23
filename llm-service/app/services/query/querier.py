@@ -66,33 +66,25 @@
 #  DATA.
 # ##############################################################################
 import logging
-import os
-from typing import List, Optional, cast
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import PromptTemplate, QueryBundle
+from llama_index.core import PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
-from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
-from llama_index.core.node_parser import SentenceSplitter
-
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
-from llama_index.core.schema import NodeWithScore
-from pydantic import Field
 
-from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models
 from app.services.chat_store import RagContext
 from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
-
+from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
 
 logger = logging.getLogger(__name__)
