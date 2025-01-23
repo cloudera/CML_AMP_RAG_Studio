@@ -49,6 +49,10 @@ public class TestData {
         null, sessionName, List.of(1L, 2L, 3L), null, null, null, null, null, "test-model", 3);
   }
 
+  public static Types.CreateSession createSessionInstance(String sessionName) {
+    return new Types.CreateSession(sessionName, List.of(1L, 2L, 3L), "test-model", 3);
+  }
+
   public static Types.RagDataSource createTestDataSourceInstance(
       String name,
       Integer chunkSize,

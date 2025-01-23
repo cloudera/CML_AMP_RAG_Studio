@@ -51,35 +51,45 @@ from .chat_store import (
     Evaluation,
     RagContext,
     RagPredictSourceNode,
-    RagStudioChatMessage,
+    RagStudioChatMessage, RagMessage,
 )
+from .metadata_apis import session_metadata_api
+from .querier import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
         session_id: int,
-        data_source_ids: list[int],
         query: str,
         configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
+    query_configuration = QueryConfiguration(
+        top_k=session.response_chunks,
+        model_name=session.inference_model,
+        exclude_knowledge_base=configuration.exclude_knowledge_base,
+        use_question_condensing=configuration.use_question_condensing,
+        use_hyde=configuration.use_hyde,
+    )
+
     response_id = str(uuid.uuid4())
 
-    if len(data_source_ids) != 1:
+    if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400, detail="Only one datasource is supported for chat."
         )
 
-    data_source_id: int = data_source_ids[0]
+    data_source_id: int = session.data_source_ids[0]
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
             source_nodes=[],
             inference_model=None,
-            rag_message={
-                "user": query,
-                "assistant": "I don't have any documents to answer your question.",
-            },
+            rag_message=RagMessage(
+                user=query,
+                assistant="I don't have any documents to answer your question.",
+            ),
             evaluations=[],
             timestamp=time.time(),
         )
@@ -87,21 +97,21 @@ def v2_chat(
     response = querier.query(
         data_source_id,
         query,
-        configuration,
+        query_configuration,
         retrieve_chat_history(session_id),
     )
     relevance, faithfulness = evaluators.evaluate_response(
-        query, response, configuration.model_name
+        query, response, session.inference_model
     )
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         source_nodes=response_source_nodes,
-        inference_model=configuration.model_name,
-        rag_message={
-            "user": query,
-            "assistant": response.response,
-        },
+        inference_model=session.inference_model,
+        rag_message=RagMessage(
+            user=query,
+            assistant=response.response,
+        ),
         evaluations=[
             Evaluation(name="relevance", value=relevance),
             Evaluation(name="faithfulness", value=faithfulness),
@@ -117,11 +127,11 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     history: List[RagContext] = []
     for message in chat_history:
         history.append(
-            RagContext(role=MessageRole.USER, content=message.rag_message["user"])
+            RagContext(role=MessageRole.USER, content=message.rag_message.user)
         )
         history.append(
             RagContext(
-                role=MessageRole.ASSISTANT, content=message.rag_message["assistant"]
+                role=MessageRole.ASSISTANT, content=message.rag_message.assistant
             )
         )
     return history
@@ -145,15 +155,26 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
     return response_source_nodes
 
 
-def generate_suggested_questions(
-        configuration: RagPredictConfiguration,
-        data_source_ids: list[int],
-        data_source_size: int,
-        session_id: int,
-) -> List[str]:
-    data_source_id = data_source_ids[0]
+def generate_suggested_questions(session_id: int, ) -> List[str]:
+    session = session_metadata_api.get_session(session_id)
+    if len(session.data_source_ids) != 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Only one datasource is supported for question suggestion.",
+        )
+    data_source_id = session.data_source_ids[0]
+
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if total_data_sources_size == 0:
+        raise HTTPException(status_code=404, detail="Knowledge base not found.")
+
     chat_history = retrieve_chat_history(session_id)
-    if data_source_size == 0:
+    if total_data_sources_size == 0:
         suggested_questions = []
     else:
         query_str = (
@@ -180,7 +201,10 @@ def generate_suggested_questions(
         response = querier.query(
             data_source_id,
             query_str,
-            configuration,
+            QueryConfiguration(top_k=session.response_chunks, model_name=session.inference_model,
+                               exclude_knowledge_base=False,
+                               use_question_condensing=False,
+                               use_hyde=False),
             [],
         )
 

@@ -1,4 +1,4 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,13 +34,42 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
+import os
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List
 
-from typing import Optional
+import requests
 
-from pydantic import BaseModel
 
-class RagPredictConfiguration(BaseModel):
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
+@dataclass
+class Session:
+    id: int
+    name: str
+    data_source_ids: List[int]
+    time_created: datetime
+    time_updated: datetime
+    created_by_id: str
+    updated_by_id: str
+    inference_model: str
+    response_chunks: int
+
+BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
+url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
+
+def get_session(session_id: int) -> Session:
+    response = requests.get(url_template.format(session_id))
+    response.raise_for_status()
+    data = response.json()
+    return Session(
+        id=data["id"],
+        name=data["name"],
+        data_source_ids=data["dataSourceIds"],
+        time_created=datetime.fromtimestamp(data["timeCreated"]),
+        time_updated=datetime.fromtimestamp(data["timeUpdated"]),
+        created_by_id=data["createdById"],
+        updated_by_id=data["updatedById"],
+        inference_model=data["inferenceModel"],
+        response_chunks=data["responseChunks"],
+    )

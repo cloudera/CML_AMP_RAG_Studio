@@ -46,7 +46,6 @@ import {
 } from "src/api/utils.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
-import { Session } from "src/api/sessionApi.ts";
 
 export interface SourceNode {
   node_id: string;
@@ -66,8 +65,6 @@ export interface RagMessageV2 {
 }
 
 export interface QueryConfiguration {
-  top_k: number;
-  model_name: string;
   exclude_knowledge_base: boolean;
   use_question_condensing: boolean;
   use_hyde: boolean;
@@ -75,7 +72,6 @@ export interface QueryConfiguration {
 
 export interface ChatMutationRequest {
   query: string;
-  data_source_ids: number[];
   session_id: string;
   configuration: QueryConfiguration;
 }
@@ -180,7 +176,7 @@ export const useChatMutation = ({
       );
       queryClient
         .invalidateQueries({
-          queryKey: suggestedQuestionKey(variables.data_source_ids),
+          queryKey: suggestedQuestionKey(variables.session_id),
         })
         .catch((error: unknown) => {
           console.error(error);
@@ -203,22 +199,8 @@ const chatMutation = async (
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean,
   forSuggestedQuestions: boolean,
-  activeSession?: Session,
 ): QueryConfiguration => {
-  // todo: maybe we should just throw an exception here?
-  if (!activeSession) {
-    return {
-      top_k: 5,
-      model_name: "",
-      exclude_knowledge_base: false,
-      use_question_condensing: false,
-      use_hyde: false,
-    };
-  }
-
   return {
-    top_k: activeSession.responseChunks,
-    model_name: activeSession.inferenceModel ?? "",
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: !forSuggestedQuestions,
     use_hyde: false,
