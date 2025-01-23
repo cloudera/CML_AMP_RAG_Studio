@@ -67,11 +67,11 @@
 # ##############################################################################
 import logging
 import os
-from typing import List, cast, Optional
+from typing import List, Optional, cast
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import QueryBundle, PromptTemplate
+from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
@@ -80,7 +80,7 @@ from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
+
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
@@ -92,6 +92,8 @@ from app.services import models
 from app.services.chat_store import RagContext
 from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
+
+from .simple_reranker import SimpleReranker
 
 logger = logging.getLogger(__name__)
 
@@ -152,61 +154,15 @@ def query(
         ) from error
 
 
-class FlexibleRetriever(BaseRetriever):
-    def __init__(self, configuration: QueryConfiguration, index: VectorStoreIndex, embedding_model: BaseEmbedding, data_source_id: int, llm: LLM) -> None:
-        super().__init__()
-        self.index = index
-        self.configuration = configuration
-        self.embedding_model = embedding_model
-        self.data_source_id = data_source_id
-        self.llm = llm
 
-    def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
-        enable_doc_id_filtering = os.environ.get('ENABLE_TWO_STAGE_RETRIEVAL') or None
-        # add a filter to the retriever with the resulting document ids.
-        doc_ids: list[str] | None = None
-        if enable_doc_id_filtering:
-            doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)
-
-        base_retriever = VectorIndexRetriever(
-            index=self.index,
-            similarity_top_k=self.configuration.top_k,
-            embed_model=self.embedding_model,  # is this needed, really, if it's in the index?
-            doc_ids=doc_ids or None,
-        )
-        res: List[NodeWithScore] = base_retriever.retrieve(query_bundle)
-        return res
-
-    def _filter_doc_ids_by_summary(self, query_str: str) -> list[str] | None:
-        try:
-            # first query the summary index to get documents to filter by (assuming summarization is enabled)
-            summary_engine = SummaryIndexer(data_source_id=self.data_source_id, splitter=SentenceSplitter(chunk_size=2048),
-                                            embedding_model=self.embedding_model, llm=self.llm, ).as_query_engine()
-            summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
-
-            def document_ids(node: NodeWithScore) -> str:
-                return cast(str, node.metadata["document_id"])
-
-            doc_ids: list[str] = list(map(document_ids, summaries))
-            return doc_ids
-        except Exception as e:
-            logger.debug(f"Failed to retrieve document ids from summary index: {e}")
-            return None
 
 def _create_retriever(configuration: QueryConfiguration, embedding_model: BaseEmbedding,
                       index: VectorStoreIndex, data_source_id: int, llm: LLM) -> BaseRetriever:
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
 
-class SimpleReranker(BaseNodePostprocessor):
-    top_n: int = Field(description="The number of nodes to return", gt=0)
-    def __init__(self, top_n: int = 5):
-        super().__init__(top_n=top_n)
 
-    def _postprocess_nodes(self,
-                            nodes: List[NodeWithScore],
-                            query_bundle: Optional[QueryBundle] = None) -> List[NodeWithScore]:
-        nodes.sort(key=lambda x: x.score, reverse=True)
-        return nodes[:self.top_n]
+
+
 
 
 def _create_query_engine(configuration: QueryConfiguration, data_source_id: int, embedding_model: BaseEmbedding, index: VectorStoreIndex, llm: LLM) -> RetrieverQueryEngine:
