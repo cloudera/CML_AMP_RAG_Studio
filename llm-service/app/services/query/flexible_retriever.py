@@ -55,12 +55,12 @@ logger = logging.getLogger(__name__)
 
 class FlexibleRetriever(BaseRetriever):
     def __init__(
-        self,
-        configuration: QueryConfiguration,
-        index: VectorStoreIndex,
-        embedding_model: BaseEmbedding,
-        data_source_id: int,
-        llm: LLM,
+            self,
+            configuration: QueryConfiguration,
+            index: VectorStoreIndex,
+            embedding_model: BaseEmbedding,
+            data_source_id: int,
+            llm: LLM,
     ) -> None:
         super().__init__()
         self.index = index
@@ -70,20 +70,28 @@ class FlexibleRetriever(BaseRetriever):
         self.llm = llm
 
     def _retrieve(self, query_bundle: QueryBundle) -> list[NodeWithScore]:
-        enable_doc_id_filtering = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or None
-        # add a filter to the retriever with the resulting document ids.
-        doc_ids: list[str] | None = None
-        if enable_doc_id_filtering:
-            doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)
-
         base_retriever = VectorIndexRetriever(
             index=self.index,
             similarity_top_k=self.configuration.top_k,
             embed_model=self.embedding_model,  # is this needed, really, if it's in the index?
-            doc_ids=doc_ids or None,
         )
-        res: list[NodeWithScore] = base_retriever.retrieve(query_bundle)
-        return res
+
+        result_nodes: list[NodeWithScore] = base_retriever.retrieve(query_bundle)
+
+        enable_two_stage = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or None
+        if enable_two_stage:
+            # add a filter to the retriever with the resulting document ids.
+            doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)
+            if doc_ids:
+                simple_retriever = VectorIndexRetriever(
+                    index=self.index,
+                    similarity_top_k=self.configuration.top_k,
+                    embed_model=self.embedding_model,  # is this needed, really, if it's in the index?
+                    doc_ids=doc_ids,
+                )
+                result_nodes.extend(simple_retriever.retrieve(query_bundle))
+            print(f"Retrieved {len(result_nodes)} nodes")
+        return result_nodes
 
     def _filter_doc_ids_by_summary(self, query_str: str) -> list[str] | None:
         try:

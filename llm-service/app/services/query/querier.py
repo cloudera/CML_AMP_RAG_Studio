@@ -146,15 +146,9 @@ def query(
         ) from error
 
 
-
-
 def _create_retriever(configuration: QueryConfiguration, embedding_model: BaseEmbedding,
                       index: VectorStoreIndex, data_source_id: int, llm: LLM) -> BaseRetriever:
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
-
-
-
-
 
 
 def _create_query_engine(configuration: QueryConfiguration, data_source_id: int, embedding_model: BaseEmbedding, index: VectorStoreIndex, llm: LLM) -> RetrieverQueryEngine:
