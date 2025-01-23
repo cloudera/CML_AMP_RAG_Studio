@@ -67,7 +67,7 @@
 # ##############################################################################
 import logging
 import os
-from typing import List, cast
+from typing import List, cast, Optional
 
 import botocore.exceptions
 from fastapi import HTTPException
@@ -80,9 +80,11 @@ from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
+from pydantic import Field
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.ai.vector_stores.qdrant import QdrantVectorStore
@@ -126,14 +128,7 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    # add a filter to the retriever with the resulting document ids.
-    retriever = _create_retriever(configuration, embedding_model, index, data_source_id, llm)
-    llm = models.get_llm(model_name=configuration.model_name)
-
-    response_synthesizer = get_response_synthesizer(llm=llm)
-    query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer
-    )
+    query_engine = _create_query_engine(configuration, data_source_id, embedding_model, index, llm)
     chat_engine = _build_chat_engine(configuration, llm, query_engine)
 
     logger.info("querying chat engine")
@@ -168,9 +163,10 @@ class FlexibleRetriever(BaseRetriever):
 
     def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
         enable_doc_id_filtering = os.environ.get('ENABLE_TWO_STAGE_RETRIEVAL') or None
+        # add a filter to the retriever with the resulting document ids.
         doc_ids: list[str] | None = None
         if enable_doc_id_filtering:
-            doc_ids = filter_doc_ids_by_summary(self.data_source_id, self.embedding_model, self.llm, query_bundle.query_str)
+            doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)
 
         base_retriever = VectorIndexRetriever(
             index=self.index,
@@ -178,30 +174,48 @@ class FlexibleRetriever(BaseRetriever):
             embed_model=self.embedding_model,  # is this needed, really, if it's in the index?
             doc_ids=doc_ids or None,
         )
-        return base_retriever.retrieve(query_bundle)
+        res: List[NodeWithScore] = base_retriever.retrieve(query_bundle)
+        return res
+
+    def _filter_doc_ids_by_summary(self, query_str: str) -> list[str] | None:
+        try:
+            # first query the summary index to get documents to filter by (assuming summarization is enabled)
+            summary_engine = SummaryIndexer(data_source_id=self.data_source_id, splitter=SentenceSplitter(chunk_size=2048),
+                                            embedding_model=self.embedding_model, llm=self.llm, ).as_query_engine()
+            summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
+
+            def document_ids(node: NodeWithScore) -> str:
+                return cast(str, node.metadata["document_id"])
+
+            doc_ids: list[str] = list(map(document_ids, summaries))
+            return doc_ids
+        except Exception as e:
+            logger.debug(f"Failed to retrieve document ids from summary index: {e}")
+            return None
 
 def _create_retriever(configuration: QueryConfiguration, embedding_model: BaseEmbedding,
                       index: VectorStoreIndex, data_source_id: int, llm: LLM) -> BaseRetriever:
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
 
+class SimpleReranker(BaseNodePostprocessor):
+    top_n: int = Field(description="The number of nodes to return", gt=0)
+    def __init__(self, top_n: int = 5):
+        super().__init__(top_n=top_n)
 
-def filter_doc_ids_by_summary(data_source_id: int, embedding_model: BaseEmbedding,
-                              llm: LLM, query_str: str) -> list[str] | None:
-    try:
-        # first query the summary index to get documents to filter by (assuming summarization is enabled)
-        summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
-                                        embedding_model=embedding_model, llm=llm, ).as_query_engine()
-        summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
+    def _postprocess_nodes(self,
+                            nodes: List[NodeWithScore],
+                            query_bundle: Optional[QueryBundle] = None) -> List[NodeWithScore]:
+        nodes.sort(key=lambda x: x.score, reverse=True)
+        return nodes[:self.top_n]
 
-        def document_ids(node: NodeWithScore) -> str:
-            return cast(str, node.metadata["document_id"])
 
-        doc_ids: list[str] = list(map(document_ids, summaries))
-        return doc_ids
-    except Exception as e:
-        logger.debug(f"Failed to retrieve document ids from summary index: {e}")
-        return None
-
+def _create_query_engine(configuration: QueryConfiguration, data_source_id: int, embedding_model: BaseEmbedding, index: VectorStoreIndex, llm: LLM) -> RetrieverQueryEngine:
+    retriever = _create_retriever(configuration, embedding_model, index, data_source_id, llm)
+    response_synthesizer = get_response_synthesizer(llm=llm)
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever, response_synthesizer=response_synthesizer, node_postprocessors=[SimpleReranker(top_n=configuration.top_k)]
+    )
+    return query_engine
 
 def _build_chat_engine(configuration: QueryConfiguration, llm: LLM,
                        query_engine: RetrieverQueryEngine) -> FlexibleChatEngine:
