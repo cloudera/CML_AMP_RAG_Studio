@@ -37,9 +37,13 @@
 #
 from typing import Optional
 
+from llama_index.core.postprocessor import LLMRerank
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, QueryBundle
 from pydantic import Field
+
+from app.services import models
+from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 
 class SimpleReranker(BaseNodePostprocessor):
@@ -50,3 +54,17 @@ class SimpleReranker(BaseNodePostprocessor):
     ) -> list[NodeWithScore]:
         nodes.sort(key=lambda node: node.score or 0, reverse=True)
         return nodes[: self.top_n]
+
+
+def caii_rerank() -> BaseNodePostprocessor:
+    print('llm rerank')
+    rerank = LLMRerank(
+        llm=models.get_llm("mistral-4b-rerank-l40s"), top_n=5
+    )
+    return rerank
+
+
+def cohere_rerank() -> BaseNodePostprocessor:
+    print('cohere rerank')
+    rerank = AWSBedrockRerank(top_n=5)
+    return rerank
