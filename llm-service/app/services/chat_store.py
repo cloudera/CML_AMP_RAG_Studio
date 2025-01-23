@@ -66,6 +66,7 @@ class RagMessage(BaseModel):
     user: str
     assistant: str
 
+
 class RagStudioChatMessage(BaseModel):
     id: str
     source_nodes: list[RagPredictSourceNode]

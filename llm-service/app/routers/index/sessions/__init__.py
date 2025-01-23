@@ -81,7 +81,7 @@ class RagStudioChatRequest(BaseModel):
     configuration: RagPredictConfiguration | None = None
 
 
-@router.post("/chat", summary="Chat with your documents in the requested datasource")
+@router.post("/chat", summary="Chat with your documents in the requested datasource", openapi_extra={"x-public": True})
 @exceptions.propagates
 def chat(
         session_id: int,
