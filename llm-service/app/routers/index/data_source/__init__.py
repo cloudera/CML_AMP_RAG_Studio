@@ -218,7 +218,11 @@ class DataSourceController:
             if not indexer:
                 return SUMMARIZATION_DISABLED
             # Delete to avoid duplicates
-            indexer.delete_document(doc_id)
+            try:
+                indexer.delete_document(doc_id)
+            except Exception as e:
+                # ignore, since it might just be because the summary index doesn't exist yet
+                logger.info("Failed to delete document %s: %s", doc_id, e)
             try:
                 indexer.index_file(file_path, doc_id)
                 summary = indexer.get_summary(doc_id)
