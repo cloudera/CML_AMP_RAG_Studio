@@ -45,7 +45,8 @@ from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from . import evaluators, querier
+from . import evaluators
+from .query import querier
 from .chat_store import (
     ChatHistoryManager,
     Evaluation,
@@ -54,7 +55,7 @@ from .chat_store import (
     RagStudioChatMessage, RagMessage,
 )
 from .metadata_apis import session_metadata_api
-from .querier import QueryConfiguration
+from .query.query_configuration import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 

@@ -80,8 +80,10 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.rag_types import RagPredictConfiguration
-from app.services import models, querier
-from app.services.querier import FlexibleChatEngine, CUSTOM_PROMPT
+from app.services import models
+from app.services.query import querier
+from app.services.query.querier import CUSTOM_PROMPT
+from app.services.query.chat_engine import FlexibleChatEngine
 
 
 # usage: uv run --env-file=../.env performance_testing/performance_testing.py <data_source_id> questions_mini.csv
