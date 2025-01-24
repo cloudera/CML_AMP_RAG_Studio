@@ -88,9 +88,9 @@ def main():
                         avg_score = sum(node.score for node in nodes) / len(nodes)
                         score_sum += avg_score
                         score_count += 1
-                        #  timestamp, hyde, condensing, file_name, max_score, avg_score, two_stage, question
+                        #  timestamp, hyde, condensing, two_stage, top_k, file_name, max_score, avg_score, question
                         details.write(
-                            f'{time.time()},{hyde},{condensing},{nodes[0].metadata.get("file_name")},{top_k},{question_max},{avg_score},{os.getenv("ENABLE_TWO_STAGE_RETRIEVAL")},"{question}"\n'
+                            f'{time.time()},{hyde},{condensing},{os.getenv("ENABLE_TWO_STAGE_RETRIEVAL")},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{avg_score},"{question}"\n'
                         )
                     details.flush()
 
@@ -110,9 +110,8 @@ def main():
 def setup(
     data_source_id: int, use_question_condensing=True, use_hyde=True, top_k: int = 5
 ) -> FlexibleChatEngine:
-
     model_name = "meta.llama3-1-8b-instruct-v1:0"
-    query_configuration = QueryConfiguration(top_k=5, model_name=model_name,
+    query_configuration = QueryConfiguration(top_k=top_k, model_name=model_name,
                                              use_question_condensing=use_question_condensing, use_hyde=use_hyde, )
     llm = models.get_llm(model_name=query_configuration.model_name)
     response_synthesizer = get_response_synthesizer(llm=llm)
