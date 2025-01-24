@@ -80,6 +80,8 @@ class MdReader(BaseReader):
         for chunk in chunks_in_document:
             parsed_nodes: list[TextNode] = parser.get_nodes_from_node(chunk)
             for node in parsed_nodes:
+                if not node.text:
+                    continue
                 self._add_document_metadata(node, file_path)
                 node.metadata["chunk_format"] = "markdown"
                 node.relationships.update({NodeRelationship.SOURCE: document})
