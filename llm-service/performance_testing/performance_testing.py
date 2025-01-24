@@ -51,7 +51,6 @@ from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.query_engine import RetrieverQueryEngine
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
-from app.rag_types import RagPredictConfiguration
 from app.services import models
 from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleChatEngine
@@ -68,7 +67,7 @@ def main():
     with open(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
     ) as details:
-        for hyde in [False]:
+        for hyde in [True]:
             for condensing in [False]:
                 print(f"Running with hyde={hyde}")
                 score_sum = 0
@@ -106,14 +105,11 @@ def main():
                     f.flush()
 
 
-def setup(
-    data_source_id: int, use_question_condensing=True, use_hyde=True
-) -> FlexibleChatEngine:
-    configuration = RagPredictConfiguration(
-        use_question_condensing=use_question_condensing, use_hyde=use_hyde
-    )
+def setup(data_source_id: int, use_question_condensing=True, use_hyde=True) -> FlexibleChatEngine:
     model_name = "meta.llama3-1-8b-instruct-v1:0"
-    llm = models.get_llm(model_name=model_name)
+    query_configuration = QueryConfiguration(top_k=5, model_name=model_name,
+                                             use_question_condensing=use_question_condensing, use_hyde=use_hyde, )
+    llm = models.get_llm(model_name=query_configuration.model_name)
     response_synthesizer = get_response_synthesizer(llm=llm)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
@@ -123,12 +119,7 @@ def setup(
         embed_model=embedding_model,
     )
     retriever = FlexibleRetriever(
-        configuration=QueryConfiguration(
-            top_k=5,
-            model_name=model_name,
-            use_question_condensing=use_question_condensing,
-            use_hyde=use_hyde,
-        ),
+        configuration=query_configuration,
         index=index,
         embedding_model=embedding_model,  # is this needed, really, if it's in the index?
         data_source_id=data_source_id,
@@ -142,7 +133,7 @@ def setup(
     chat_engine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine, llm=llm, condense_question_prompt=CUSTOM_PROMPT
     )
-    chat_engine.configuration = configuration
+    chat_engine.configuration = query_configuration
     return chat_engine
 
 
