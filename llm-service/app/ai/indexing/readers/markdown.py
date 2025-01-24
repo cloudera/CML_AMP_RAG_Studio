@@ -37,10 +37,10 @@
 #
 
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from llama_index.core.node_parser import MarkdownNodeParser
-from llama_index.core.schema import TextNode, Document, BaseNode
+from llama_index.core.schema import TextNode, Document
 from llama_index.readers.file import MarkdownReader
 
 from .base_reader import BaseReader, ChunksResult
@@ -69,14 +69,18 @@ class MdReader(BaseReader):
         document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
-
+        # the process here is to do a blind sentence split on the document, then let the markdown
+        # parser break up the resulting chunks into nodes based on markdown sections.
+        # There is a chance that doing it the opposite way might lead to better results, but
+        # we don't know how to know.
+        chunks_in_document: list[TextNode] = self._chunks_in_document(document)
         parser = MarkdownNodeParser()
-        nodes: list[BaseNode] = parser.get_nodes_from_documents([document])
         results : list[TextNode] = []
-        for i, node in enumerate(nodes):
-            tn = cast(TextNode, node)
-            self._add_document_metadata(tn, file_path)
-            tn.metadata["chunk_format"] = "markdown"
-            results.append(tn)
+        for chunk in chunks_in_document:
+            parsed_nodes: list[TextNode] = parser.get_nodes_from_node(chunk)
+            for node in parsed_nodes:
+                self._add_document_metadata(node, file_path)
+                node.metadata["chunk_format"] = "markdown"
+                results.append(node)
         ret.chunks = results
         return ret

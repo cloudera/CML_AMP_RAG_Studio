@@ -45,7 +45,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
-from app.services.query.simple_reranker import cohere_rerank
 
 from llama_index.core import VectorStoreIndex
 from llama_index.core.response_synthesizers import get_response_synthesizer
@@ -57,6 +56,7 @@ from app.services import models
 from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleChatEngine
 
+
 # usage: uv run --env-file=../.env performance_testing/performance_testing.py <data_source_id> questions_mini.csv
 def main():
     data_source_id: int = int(sys.argv[1])
@@ -65,7 +65,9 @@ def main():
         df = pd.read_csv(f)
         questions: list[str] = df["Question"].tolist()
 
-    with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a") as details:
+    with open(
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
+    ) as details:
         for hyde in [False]:
             for condensing in [False]:
                 print(f"Running with hyde={hyde}")
@@ -73,8 +75,11 @@ def main():
                 score_count = 0
                 max_score = 0
                 for question in questions:
-                    chat_engine = setup(use_question_condensing=condensing, question=question, use_hyde=hyde,
-                                        data_source_id=data_source_id)
+                    chat_engine = setup(
+                        use_question_condensing=condensing,
+                        use_hyde=hyde,
+                        data_source_id=data_source_id,
+                    )
                     nodes = chat_engine.retrieve(message=question, chat_history=None)
                     if nodes:
                         max_score = max(max_score, max(node.score for node in nodes))
@@ -84,20 +89,31 @@ def main():
                         for index, node in enumerate(nodes):
                             # timestamp,hyde,score,chunk_no,question
                             details.write(
-                                f'{time.time()},{hyde},{node.score},{node.metadata.get("file_name")},{node.node_id}{index + 1},"{question}"\n')
+                                f'{time.time()},{hyde},{node.score},{node.metadata.get("file_name")},{node.node_id}{index + 1},"{question}"\n'
+                            )
                     details.flush()
 
                 average_score = score_sum / score_count
                 print(f"{chat_engine.configuration=}")
                 print(f"Average score: {average_score}")
-                with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "results.csv")), "a") as f:
+                with open(
+                    os.path.abspath(
+                        os.path.join(os.path.dirname(__file__), "results.csv")
+                    ),
+                    "a",
+                ) as f:
                     f.write(f"{hyde},{max_score},{average_score}\n")
                     f.flush()
 
 
-def setup(data_source_id: int, question: str, use_question_condensing=True, use_hyde=True) -> FlexibleChatEngine:
-    configuration = RagPredictConfiguration(use_question_condensing=use_question_condensing, use_hyde=use_hyde)
-    llm = models.get_llm(model_name="meta.llama3-1-8b-instruct-v1:0")
+def setup(
+    data_source_id: int, use_question_condensing=True, use_hyde=True
+) -> FlexibleChatEngine:
+    configuration = RagPredictConfiguration(
+        use_question_condensing=use_question_condensing, use_hyde=use_hyde
+    )
+    model_name = "meta.llama3-1-8b-instruct-v1:0"
+    llm = models.get_llm(model_name=model_name)
     response_synthesizer = get_response_synthesizer(llm=llm)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
@@ -107,18 +123,25 @@ def setup(data_source_id: int, question: str, use_question_condensing=True, use_
         embed_model=embedding_model,
     )
     retriever = FlexibleRetriever(
-        configuration=QueryConfiguration(top_k=5, model_name="meta.llama3-1-8b-instruct-v1:0",
-                                         use_question_condensing=use_question_condensing, use_hyde=use_hyde),
+        configuration=QueryConfiguration(
+            top_k=5,
+            model_name=model_name,
+            use_question_condensing=use_question_condensing,
+            use_hyde=use_hyde,
+        ),
         index=index,
         embedding_model=embedding_model,  # is this needed, really, if it's in the index?
         data_source_id=data_source_id,
         llm=llm,
     )
     query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer, node_postprocessors=[cohere_rerank()]
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        node_postprocessors=[models.get_reranking_model()],
     )
-    chat_engine = FlexibleChatEngine.from_defaults(query_engine=query_engine, llm=llm,
-                                                   condense_question_prompt=CUSTOM_PROMPT)
+    chat_engine = FlexibleChatEngine.from_defaults(
+        query_engine=query_engine, llm=llm, condense_question_prompt=CUSTOM_PROMPT
+    )
     chat_engine.configuration = configuration
     return chat_engine
 

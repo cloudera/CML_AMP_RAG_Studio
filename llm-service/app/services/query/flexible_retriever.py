@@ -90,7 +90,6 @@ class FlexibleRetriever(BaseRetriever):
                     doc_ids=doc_ids,
                 )
                 result_nodes.extend(simple_retriever.retrieve(query_bundle))
-            print(f"Retrieved {len(result_nodes)} nodes")
         return result_nodes
 
     def _filter_doc_ids_by_summary(self, query_str: str) -> list[str] | None:
