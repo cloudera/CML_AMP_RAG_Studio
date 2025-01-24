@@ -55,12 +55,12 @@ logger = logging.getLogger(__name__)
 
 class FlexibleRetriever(BaseRetriever):
     def __init__(
-            self,
-            configuration: QueryConfiguration,
-            index: VectorStoreIndex,
-            embedding_model: BaseEmbedding,
-            data_source_id: int,
-            llm: LLM,
+        self,
+        configuration: QueryConfiguration,
+        index: VectorStoreIndex,
+        embedding_model: BaseEmbedding,
+        data_source_id: int,
+        llm: LLM,
     ) -> None:
         super().__init__()
         self.index = index
@@ -70,15 +70,23 @@ class FlexibleRetriever(BaseRetriever):
         self.llm = llm
 
     def _retrieve(self, query_bundle: QueryBundle) -> list[NodeWithScore]:
+        enable_two_stage = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or None
+
+        # if we're only using one stage, we want to send the top k * 2 to the retriever and allow the rerank to filter
+        similarity_top_k = (
+            enable_two_stage
+            and self.configuration.top_k * 2
+            or self.configuration.top_k
+        )
+
         base_retriever = VectorIndexRetriever(
             index=self.index,
-            similarity_top_k=self.configuration.top_k,
+            similarity_top_k=similarity_top_k,
             embed_model=self.embedding_model,  # is this needed, really, if it's in the index?
         )
 
         result_nodes: list[NodeWithScore] = base_retriever.retrieve(query_bundle)
 
-        enable_two_stage = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or None
         if enable_two_stage:
             # add a filter to the retriever with the resulting document ids.
             doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)

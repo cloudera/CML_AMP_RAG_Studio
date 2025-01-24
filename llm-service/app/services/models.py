@@ -67,7 +67,7 @@ def get_noop_llm_model() -> LLM:
     return DummyLlm()
 
 
-def get_reranking_model() -> BaseNodePostprocessor:
+def get_reranking_model(top_n: int = 5) -> BaseNodePostprocessor:
     if is_caii_enabled():
         # base_url = "https://caii-prod-long-running.eng-ml-l.vnu8-sqze.cloudera.site/namespaces/serving-default/endpoints/mistral-4b-rerank-l40s/v1/ranking"
         #
@@ -84,9 +84,10 @@ def get_reranking_model() -> BaseNodePostprocessor:
         #     is_hosted=False
         # )
 
-        return SimpleReranker(top_n=5)
+        return SimpleReranker(top_n=top_n)
 
-    return AWSBedrockRerank(top_n=5)
+    return AWSBedrockRerank(top_n=top_n)
+
 
 def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:

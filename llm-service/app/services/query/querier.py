@@ -106,10 +106,10 @@ CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 
 
 def query(
-        data_source_id: int,
-        query_str: str,
-        configuration: QueryConfiguration,
-        chat_history: list[RagContext],
+    data_source_id: int,
+    query_str: str,
+    configuration: QueryConfiguration,
+    chat_history: list[RagContext],
 ) -> AgentChatResponse:
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
@@ -121,7 +121,9 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    query_engine = _create_query_engine(configuration, data_source_id, embedding_model, index, llm)
+    query_engine = _create_query_engine(
+        configuration, data_source_id, embedding_model, index, llm
+    )
     chat_engine = _build_chat_engine(configuration, llm, query_engine)
 
     logger.info("querying chat engine")
@@ -145,22 +147,40 @@ def query(
         ) from error
 
 
-def _create_retriever(configuration: QueryConfiguration, embedding_model: BaseEmbedding,
-                      index: VectorStoreIndex, data_source_id: int, llm: LLM) -> BaseRetriever:
+def _create_retriever(
+    configuration: QueryConfiguration,
+    embedding_model: BaseEmbedding,
+    index: VectorStoreIndex,
+    data_source_id: int,
+    llm: LLM,
+) -> BaseRetriever:
+    print("configuration:", configuration)
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
 
 
-def _create_query_engine(configuration: QueryConfiguration, data_source_id: int, embedding_model: BaseEmbedding, index: VectorStoreIndex, llm: LLM) -> RetrieverQueryEngine:
-    retriever = _create_retriever(configuration, embedding_model, index, data_source_id, llm)
+def _create_query_engine(
+    configuration: QueryConfiguration,
+    data_source_id: int,
+    embedding_model: BaseEmbedding,
+    index: VectorStoreIndex,
+    llm: LLM,
+) -> RetrieverQueryEngine:
+    retriever = _create_retriever(
+        configuration, embedding_model, index, data_source_id, llm
+    )
     response_synthesizer = get_response_synthesizer(llm=llm)
-    reranker = models.get_reranking_model()
+    reranker = models.get_reranking_model(configuration.top_k)
     query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer, node_postprocessors=[reranker]
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        node_postprocessors=[reranker],
     )
     return query_engine
 
-def _build_chat_engine(configuration: QueryConfiguration, llm: LLM,
-                       query_engine: RetrieverQueryEngine) -> FlexibleChatEngine:
+
+def _build_chat_engine(
+    configuration: QueryConfiguration, llm: LLM, query_engine: RetrieverQueryEngine
+) -> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,

@@ -74,22 +74,24 @@ def main():
                 score_count = 0
                 max_score = 0
                 for question in questions:
+                    top_k = 5
                     chat_engine = setup(
                         use_question_condensing=condensing,
                         use_hyde=hyde,
                         data_source_id=data_source_id,
+                        top_k=top_k,
                     )
                     nodes = chat_engine.retrieve(message=question, chat_history=None)
                     if nodes:
-                        max_score = max(max_score, max(node.score for node in nodes))
+                        question_max = max(node.score for node in nodes)
+                        max_score = max(max_score, question_max)
                         avg_score = sum(node.score for node in nodes) / len(nodes)
                         score_sum += avg_score
                         score_count += 1
-                        for index, node in enumerate(nodes):
-                            # timestamp,hyde,score,chunk_no,question
-                            details.write(
-                                f'{time.time()},{hyde},{node.score},{node.metadata.get("file_name")},{node.node_id}{index + 1},"{question}"\n'
-                            )
+                        #  timestamp, hyde, condensing, file_name, max_score, avg_score, two_stage, question
+                        details.write(
+                            f'{time.time()},{hyde},{condensing},{nodes[0].metadata.get("file_name")},{top_k},{question_max},{avg_score},{os.getenv("ENABLE_TWO_STAGE_RETRIEVAL")},"{question}"\n'
+                        )
                     details.flush()
 
                 average_score = score_sum / score_count
@@ -105,7 +107,10 @@ def main():
                     f.flush()
 
 
-def setup(data_source_id: int, use_question_condensing=True, use_hyde=True) -> FlexibleChatEngine:
+def setup(
+    data_source_id: int, use_question_condensing=True, use_hyde=True, top_k: int = 5
+) -> FlexibleChatEngine:
+
     model_name = "meta.llama3-1-8b-instruct-v1:0"
     query_configuration = QueryConfiguration(top_k=5, model_name=model_name,
                                              use_question_condensing=use_question_condensing, use_hyde=use_hyde, )
@@ -138,5 +143,5 @@ def setup(data_source_id: int, use_question_condensing=True, use_hyde=True) -> F
 
 
 if __name__ == "__main__":
-    for _ in range(3):
+    for _ in range(1):
         main()
