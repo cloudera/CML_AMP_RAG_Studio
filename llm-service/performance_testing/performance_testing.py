@@ -67,7 +67,7 @@ def main():
     with open(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
     ) as details:
-        for hyde in [True]:
+        for hyde in [False]:
             for condensing in [False]:
                 print(f"Running with hyde={hyde}")
                 score_sum = 0
@@ -110,9 +110,14 @@ def main():
 def setup(
     data_source_id: int, use_question_condensing=True, use_hyde=True, top_k: int = 5
 ) -> FlexibleChatEngine:
+
     model_name = "meta.llama3-1-8b-instruct-v1:0"
-    query_configuration = QueryConfiguration(top_k=top_k, model_name=model_name,
-                                             use_question_condensing=use_question_condensing, use_hyde=use_hyde, )
+    query_configuration = QueryConfiguration(
+        top_k=5,
+        model_name=model_name,
+        use_question_condensing=use_question_condensing,
+        use_hyde=use_hyde,
+    )
     llm = models.get_llm(model_name=query_configuration.model_name)
     response_synthesizer = get_response_synthesizer(llm=llm)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
