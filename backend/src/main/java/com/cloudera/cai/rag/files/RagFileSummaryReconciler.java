@@ -91,6 +91,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
         SELECT rdsd.* from rag_data_source_document rdsd
          JOIN rag_data_source rds ON rdsd.data_source_id = rds.id
          WHERE rdsd.summary_creation_timestamp IS NULL
+           AND rdsd.VECTOR_UPLOAD_TIMESTAMP IS NOT NULL
            AND (rdsd.time_created > :yesterday OR rds.time_updated > :yesterday)
            AND rds.summarization_model IS NOT NULL AND rds.summarization_model != ''
         """;

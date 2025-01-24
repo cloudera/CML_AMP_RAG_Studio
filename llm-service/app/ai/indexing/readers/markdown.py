@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Any
 
 from llama_index.core.node_parser import MarkdownNodeParser
-from llama_index.core.schema import TextNode, Document
+from llama_index.core.schema import TextNode, Document, NodeRelationship
 from llama_index.readers.file import MarkdownReader
 
 from .base_reader import BaseReader, ChunksResult
@@ -75,12 +75,14 @@ class MdReader(BaseReader):
         # we don't know how to know.
         chunks_in_document: list[TextNode] = self._chunks_in_document(document)
         parser = MarkdownNodeParser()
+        parser.get_nodes_from_documents([document])
         results : list[TextNode] = []
         for chunk in chunks_in_document:
             parsed_nodes: list[TextNode] = parser.get_nodes_from_node(chunk)
             for node in parsed_nodes:
                 self._add_document_metadata(node, file_path)
                 node.metadata["chunk_format"] = "markdown"
+                node.relationships.update({NodeRelationship.SOURCE: document})
                 results.append(node)
         ret.chunks = results
         return ret
