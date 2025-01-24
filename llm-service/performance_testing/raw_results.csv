@@ -4960,3 +4960,6 @@ timestamp,hyde,score,file_name,chunk_id,chunk_no,question
 1737667727.6506188,False,0.7613083124160767,2022 Q3 AAPL.pdf,a8914843-fceb-4abb-9d66-3444325b86dd3,"Has Apple engaged in any significant share repurchase activities in the reported quarters and what are the financial implications of these activities?"
 1737667727.65063,False,0.5224707722663879,2022 Q3 AAPL.pdf,23b99a4e-3d2e-4854-af73-128a600714a14,"Has Apple engaged in any significant share repurchase activities in the reported quarters and what are the financial implications of these activities?"
 1737667727.6506398,False,0.30922234058380127,2022 Q3 AAPL.pdf,a3a22768-b0a0-4afd-9f1f-2cd20f1b89885,"Has Apple engaged in any significant share repurchase activities in the reported quarters and what are the financial implications of these activities?"
+
+
+// using caii rerank model and doc filtering

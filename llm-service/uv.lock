@@ -1517,6 +1517,18 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-postprocessor-nvidia-rerank"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/62/5d/4a967e901a6ed611d3cdae01099fae2ccac4d17ae54ce548f02fbdbfc59a/llama_index_postprocessor_nvidia_rerank-0.4.0.tar.gz", hash = "sha256:0a17ee40137b00c39149d8ae6e81ca2cf6bbfdaa16805eca37ae0eee3fec7b9a", size = 6770 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/a8/1e6b332df40c2ae28ed2436c5bff53fc70909b9e9c5a33faed9780089000/llama_index_postprocessor_nvidia_rerank-0.4.0-py3-none-any.whl", hash = "sha256:d3c6207a8f7b267c5dcf871b596de463625093c8010b8c0974a831e84f2e9885", size = 7133 },
+]
+
+[[package]]
 name = "llama-index-readers-file"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1565,6 +1577,7 @@ dependencies = [
     { name = "llama-index-llms-mistralai" },
     { name = "llama-index-llms-openai" },
     { name = "llama-index-postprocessor-bedrock-rerank" },
+    { name = "llama-index-postprocessor-nvidia-rerank" },
     { name = "llama-index-readers-file" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
@@ -1606,6 +1619,7 @@ requires-dist = [
     { name = "llama-index-llms-mistralai", specifier = ">=0.1.20" },
     { name = "llama-index-llms-openai", specifier = ">=0.1.31" },
     { name = "llama-index-postprocessor-bedrock-rerank", specifier = ">=0.3.1" },
+    { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },

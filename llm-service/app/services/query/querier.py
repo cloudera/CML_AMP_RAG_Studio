@@ -85,7 +85,6 @@ from app.services.chat_store import RagContext
 from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
 from .flexible_retriever import FlexibleRetriever
-from .simple_reranker import cohere_rerank
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +153,9 @@ def _create_retriever(configuration: QueryConfiguration, embedding_model: BaseEm
 def _create_query_engine(configuration: QueryConfiguration, data_source_id: int, embedding_model: BaseEmbedding, index: VectorStoreIndex, llm: LLM) -> RetrieverQueryEngine:
     retriever = _create_retriever(configuration, embedding_model, index, data_source_id, llm)
     response_synthesizer = get_response_synthesizer(llm=llm)
+    reranker = models.get_reranking_model()
     query_engine = RetrieverQueryEngine(
-        retriever=retriever, response_synthesizer=response_synthesizer, node_postprocessors=[cohere_rerank()]
+        retriever=retriever, response_synthesizer=response_synthesizer, node_postprocessors=[reranker]
     )
     return query_engine
 
