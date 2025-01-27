@@ -94,7 +94,9 @@ class QdrantVectorStore(VectorStore):
         self.data_source_id = data_source_id
 
     def get_embedding_model(self) -> BaseEmbedding:
-        data_source_metadata = data_sources_metadata_api.get_metadata(self.data_source_id)
+        data_source_metadata = data_sources_metadata_api.get_metadata(
+            self.data_source_id
+        )
         return models.get_embedding_model(data_source_metadata.embedding_model)
 
     def size(self) -> Optional[int]:

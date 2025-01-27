@@ -62,6 +62,7 @@ class RagContext(BaseModel):
     role: MessageRole
     content: str
 
+
 class RagMessage(BaseModel):
     user: str
     assistant: str
@@ -110,8 +111,8 @@ class ChatHistoryManager:
                         "inference_model", None
                     ),
                     rag_message=RagMessage(
-                        user= str(user_message.content),
-                        assistant= str(assistant_message.content),
+                        user=str(user_message.content),
+                        assistant=str(assistant_message.content),
                     ),
                     evaluations=assistant_message.additional_kwargs.get(
                         "evaluations", []

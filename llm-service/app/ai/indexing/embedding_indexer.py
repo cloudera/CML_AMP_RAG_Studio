@@ -57,13 +57,13 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingIndexer(BaseTextIndexer):
     def __init__(
-            self,
-            data_source_id: int,
-            splitter: SentenceSplitter,
-            embedding_model: BaseEmbedding,
-            chunks_vector_store: VectorStore,
-            llm: Optional[LLM],
-            reader_config: Optional[ReaderConfig] = None,
+        self,
+        data_source_id: int,
+        splitter: SentenceSplitter,
+        embedding_model: BaseEmbedding,
+        chunks_vector_store: VectorStore,
+        llm: Optional[LLM],
+        reader_config: Optional[ReaderConfig] = None,
     ):
         super().__init__(data_source_id, reader_config)
         self.splitter = splitter
@@ -82,7 +82,7 @@ class EmbeddingIndexer(BaseTextIndexer):
             splitter=self.splitter,
             document_id=document_id,
             data_source_id=self.data_source_id,
-            config=self.reader_config
+            config=self.reader_config,
         )
 
         logger.debug(f"Parsing file: {file_path}")
@@ -114,7 +114,7 @@ class EmbeddingIndexer(BaseTextIndexer):
         logger.debug(f"Indexing file: {file_path} completed")
 
     def _compute_embeddings(
-            self, chunks: List[TextNode]
+        self, chunks: List[TextNode]
     ) -> Generator[List[TextNode], None, None]:
         batched_chunks = list(batch_sequence(chunks, 100))
         batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]

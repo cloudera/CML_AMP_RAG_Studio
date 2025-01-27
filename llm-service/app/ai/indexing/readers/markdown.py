@@ -76,7 +76,7 @@ class MdReader(BaseReader):
         chunks_in_document: list[TextNode] = self._chunks_in_document(document)
         parser = MarkdownNodeParser()
         parser.get_nodes_from_documents([document])
-        results : list[TextNode] = []
+        results: list[TextNode] = []
         for chunk in chunks_in_document:
             parsed_nodes: list[TextNode] = parser.get_nodes_from_node(chunk)
             for node in parsed_nodes:
@@ -84,7 +84,9 @@ class MdReader(BaseReader):
                     continue
                 self._add_document_metadata(node, file_path)
                 node.metadata["chunk_format"] = "markdown"
-                node.relationships.update({NodeRelationship.SOURCE: document.as_related_node_info()})
+                node.relationships.update(
+                    {NodeRelationship.SOURCE: document.as_related_node_info()}
+                )
                 results.append(node)
         ret.chunks = results
         return ret

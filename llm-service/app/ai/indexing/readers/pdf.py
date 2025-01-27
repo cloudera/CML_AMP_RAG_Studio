@@ -96,7 +96,7 @@ class PDFReader(BaseReader):
 
     def load_chunks(self, file_path: Path) -> ChunksResult:
         docling_enabled: bool = (
-                os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+            os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
         )
         logger.info(f"{docling_enabled=}")
         try:
@@ -105,10 +105,9 @@ class PDFReader(BaseReader):
                 chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
                 if chunks:
                     # todo: handle pii & secrets
-                    return ChunksResult(chunks = chunks)
+                    return ChunksResult(chunks=chunks)
         except DocumentParseError as e:
             logger.warning(f"Failed to parse document with docling: {e}")
-
 
         ret = ChunksResult()
 

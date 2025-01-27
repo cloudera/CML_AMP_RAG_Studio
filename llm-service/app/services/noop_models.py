@@ -38,8 +38,16 @@
 from typing import Sequence, Any
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.base.llms.types import LLMMetadata, ChatMessage, ChatResponse, CompletionResponse, \
-    ChatResponseGen, CompletionResponseGen, ChatResponseAsyncGen, CompletionResponseAsyncGen
+from llama_index.core.base.llms.types import (
+    LLMMetadata,
+    ChatMessage,
+    ChatResponse,
+    CompletionResponse,
+    ChatResponseGen,
+    CompletionResponseGen,
+    ChatResponseAsyncGen,
+    CompletionResponseAsyncGen,
+)
 from llama_index.core.llms import LLM
 from pydantic import Field
 
@@ -60,9 +68,9 @@ class DummyLlm(LLM):
     chat_response: str = Field("this is a chat response")
 
     def __init__(
-            self,
-            completion_response: str = "this is a completion response",
-            chat_response: str = "hello",
+        self,
+        completion_response: str = "this is a completion response",
+        chat_response: str = "hello",
     ):
         super().__init__()
         self.completion_response = completion_response
@@ -76,36 +84,36 @@ class DummyLlm(LLM):
         return ChatResponse(message=ChatMessage.from_str(self.chat_response))
 
     def complete(
-            self, prompt: str, formatted: bool = False, **kwargs: Any
+        self, prompt: str, formatted: bool = False, **kwargs: Any
     ) -> CompletionResponse:
         return CompletionResponse(text=self.completion_response)
 
     def stream_chat(
-            self, messages: Sequence[ChatMessage], **kwargs: Any
+        self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponseGen:
         raise NotImplementedError("Not implemented")
 
     def stream_complete(
-            self, prompt: str, formatted: bool = False, **kwargs: Any
+        self, prompt: str, formatted: bool = False, **kwargs: Any
     ) -> CompletionResponseGen:
         raise NotImplementedError("Not implemented")
 
     async def achat(
-            self, messages: Sequence[ChatMessage], **kwargs: Any
+        self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponse:
         raise NotImplementedError("Not implemented")
 
     async def acomplete(
-            self, prompt: str, formatted: bool = False, **kwargs: Any
+        self, prompt: str, formatted: bool = False, **kwargs: Any
     ) -> CompletionResponse:
         raise NotImplementedError("Not implemented")
 
     async def astream_chat(
-            self, messages: Sequence[ChatMessage], **kwargs: Any
+        self, messages: Sequence[ChatMessage], **kwargs: Any
     ) -> ChatResponseAsyncGen:
         raise NotImplementedError("Not implemented")
 
     async def astream_complete(
-            self, prompt: str, formatted: bool = False, **kwargs: Any
+        self, prompt: str, formatted: bool = False, **kwargs: Any
     ) -> CompletionResponseAsyncGen:
         raise NotImplementedError("Not implemented")

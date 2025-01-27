@@ -51,6 +51,7 @@ from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
 
+
 class FlexibleChatEngine(CondenseQuestionChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -66,7 +67,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
 
     @trace_method("chat")
     def chat(
-            self, message: str, chat_history: Optional[List[ChatMessage]] = None
+        self, message: str, chat_history: Optional[List[ChatMessage]] = None
     ) -> AgentChatResponse:
         message, query_response, tool_output = self.chat_internal(message, chat_history)
 
@@ -78,12 +79,15 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
 
         return AgentChatResponse(response=str(query_response), sources=[tool_output])
 
-    def retrieve(self, message: str, chat_history: Optional[List[ChatMessage]]) -> List[NodeWithScore]:
+    def retrieve(
+        self, message: str, chat_history: Optional[List[ChatMessage]]
+    ) -> List[NodeWithScore]:
         message, query_bundle = self._generate_query_message(message, chat_history)
         return self._query_engine.retrieve(query_bundle)
 
-    def chat_internal(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[
-        str, Response, ToolOutput]:
+    def chat_internal(
+        self, message: str, chat_history: Optional[List[ChatMessage]]
+    ) -> tuple[str, Response, ToolOutput]:
         message, query_bundle = self._generate_query_message(message, chat_history)
         query_response: Response = self._query_engine.query(query_bundle)
         tool_output: ToolOutput = self._get_tool_output_from_response(
@@ -91,8 +95,9 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
         )
         return message, query_response, tool_output
 
-    def _generate_query_message(self, message: str, chat_history: Optional[List[ChatMessage]]) -> tuple[
-        str, QueryBundle]:
+    def _generate_query_message(
+        self, message: str, chat_history: Optional[List[ChatMessage]]
+    ) -> tuple[str, QueryBundle]:
         chat_history = chat_history or self._memory.get(input=message)
         if self.configuration.use_question_condensing:
             # Generate standalone question from conversation context and last message

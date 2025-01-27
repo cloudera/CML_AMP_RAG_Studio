@@ -69,7 +69,9 @@ def get_noop_llm_model() -> LLM:
     return DummyLlm()
 
 
-def get_reranking_model(model_name: Optional[str] = None, top_n: int = 5) -> BaseNodePostprocessor:
+def get_reranking_model(
+    model_name: Optional[str] = None, top_n: int = 5
+) -> BaseNodePostprocessor:
     if model_name is None:
         return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
