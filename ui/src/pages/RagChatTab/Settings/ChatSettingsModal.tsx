@@ -130,12 +130,12 @@ const ChatSettingsModal = ({
           <Form.Item
             name="rerankModel"
             label="Reranking model"
-            initialValue={
-              activeSession.rerankModel ??
-              (rerankingModels ? rerankingModels[0].model_id : "")
-            }
+            initialValue={activeSession.rerankModel}
           >
-            <Select options={transformModelOptions(rerankingModels)} />
+            <Select
+              allowClear
+              options={transformModelOptions(rerankingModels)}
+            />
           </Form.Item>
           <RequestModels />
           <Form.Item

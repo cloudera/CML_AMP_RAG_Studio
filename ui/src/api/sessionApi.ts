@@ -65,7 +65,7 @@ export interface Session {
 
 export type CreateSessionRequest = Pick<
   Session,
-  "name" | "dataSourceIds" | "inferenceModel" | "responseChunks"
+  "name" | "dataSourceIds" | "inferenceModel" | "rerankModel" | "responseChunks"
 >;
 
 export type UpdateSessionRequest = Pick<
