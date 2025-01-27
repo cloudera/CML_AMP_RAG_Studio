@@ -42,7 +42,7 @@ from llama_index.core.llms import LLM
 
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
 from .models import get_llm
-from .querier import QueryConfiguration
+from .query.query_configuration import QueryConfiguration
 
 
 def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:

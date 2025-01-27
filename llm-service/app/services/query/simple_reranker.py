@@ -35,18 +35,20 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
-from typing import Dict
+from typing import Optional
+
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core.schema import NodeWithScore, QueryBundle
+from pydantic import Field
 
 
-def build_auth_headers() -> Dict[str, str]:
-    access_token: str = get_caii_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-    return headers
 
+class SimpleReranker(BaseNodePostprocessor):
+    top_n: int = Field(description="The number of nodes to return", gt=0)
 
-def get_caii_access_token() -> str:
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token: str = jwt_contents["access_token"]
-    return access_token
+    def _postprocess_nodes(
+        self, nodes: list[NodeWithScore], query_bundle: Optional[QueryBundle] = None
+    ) -> list[NodeWithScore]:
+        nodes.sort(key=lambda node: node.score or 0, reverse=True)
+        return nodes[: self.top_n]
+

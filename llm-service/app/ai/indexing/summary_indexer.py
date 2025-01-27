@@ -310,5 +310,5 @@ class SummaryIndexer(BaseTextIndexer):
             try:
                 global_summary_store.delete_ref_doc(str(data_source_id), delete_from_docstore=True)
                 global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
-            except KeyError:
-                pass
+            except Exception as e:
+                logger.debug(f"Error deleting data source {data_source_id}: {e}")

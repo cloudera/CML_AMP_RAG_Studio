@@ -1,4 +1,4 @@
-#
+# ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,19 +34,4 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-#
-import json
-from typing import Dict
-
-
-def build_auth_headers() -> Dict[str, str]:
-    access_token: str = get_caii_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-    return headers
-
-
-def get_caii_access_token() -> str:
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token: str = jwt_contents["access_token"]
-    return access_token
+# ##############################################################################

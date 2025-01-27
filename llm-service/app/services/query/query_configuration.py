@@ -35,18 +35,19 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
-from typing import Dict
+
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
+from app.services.models import DEFAULT_BEDROCK_LLM_MODEL
 
 
-def build_auth_headers() -> Dict[str, str]:
-    access_token: str = get_caii_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-    return headers
+class QueryConfiguration(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
 
-
-def get_caii_access_token() -> str:
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token: str = jwt_contents["access_token"]
-    return access_token
+    top_k: int = 5
+    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
+    exclude_knowledge_base: Optional[bool] = False
+    use_question_condensing: Optional[bool] = True
+    use_hyde: Optional[bool] = False
