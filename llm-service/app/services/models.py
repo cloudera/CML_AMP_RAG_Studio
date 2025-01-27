@@ -44,6 +44,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
@@ -211,6 +212,25 @@ def test_embedding_model(model_name: str) -> str:
         if model.model_id == model_name:
             if not is_caii_enabled() or model.available:
                 get_embedding_model(model_name).get_text_embedding("test")
+                return "ok"
+            else:
+                raise HTTPException(status_code=503, detail="Model not ready")
+
+    raise HTTPException(status_code=404, detail="Model not found")
+
+
+def test_reranking_model(model_name: str) -> str:
+    models = get_available_rerank_models()
+    for model in models:
+        if model.model_id == model_name:
+            if not is_caii_enabled() or model.available:
+                node = NodeWithScore(node=TextNode(content="test"), score=0.5)
+                another_test_node = NodeWithScore(
+                    node=TextNode(content="another test node"), score=0.4
+                )
+                res = get_reranking_model(model_name).postprocess_nodes(
+                    [node, another_test_node], None, "test"
+                )
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")

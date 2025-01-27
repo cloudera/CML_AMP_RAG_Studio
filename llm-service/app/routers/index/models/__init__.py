@@ -48,6 +48,8 @@ from ....services.models import (
     get_model_source,
     test_embedding_model,
     test_llm_model,
+    get_available_rerank_models,
+    test_reranking_model,
 )
 
 router = APIRouter(prefix="/models", tags=["Models"])
@@ -63,6 +65,12 @@ def get_llm_models() -> List[ModelResponse]:
 @exceptions.propagates
 def get_llm_embedding_models() -> List[ModelResponse]:
     return get_available_embedding_models()
+
+
+@router.get("/rerankers", summary="Get reranking models.")
+@exceptions.propagates
+def get_reranking_models() -> List[ModelResponse]:
+    return get_available_rerank_models()
 
 
 @router.get("/model_source", summary="Model source enabled - Bedrock or CAII")
@@ -81,3 +89,9 @@ def llm_model_test(model_name: str) -> Literal["ok"]:
 @exceptions.propagates
 def embedding_model_test(model_name: str) -> str:
     return test_embedding_model(model_name)
+
+
+@router.get("/rerankers/{model_name}/test", summary="Test Reranking model.")
+@exceptions.propagates
+def reranking_model_test(model_name: str) -> str:
+    return test_reranking_model(model_name)
