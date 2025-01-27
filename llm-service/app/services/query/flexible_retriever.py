@@ -72,16 +72,9 @@ class FlexibleRetriever(BaseRetriever):
     def _retrieve(self, query_bundle: QueryBundle) -> list[NodeWithScore]:
         enable_two_stage = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or None
 
-        # if we're only using one stage, we want to send the top k * 2 to the retriever and allow the rerank to filter
-        similarity_top_k = (
-            enable_two_stage
-            and self.configuration.top_k * 2
-            or self.configuration.top_k
-        )
-
         base_retriever = VectorIndexRetriever(
             index=self.index,
-            similarity_top_k=similarity_top_k,
+            similarity_top_k=self.configuration.top_k,
             embed_model=self.embedding_model,  # is this needed, really, if it's in the index?
         )
 

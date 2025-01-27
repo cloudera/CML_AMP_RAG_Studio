@@ -85,8 +85,9 @@ def get_reranking_model(top_n: int = 5) -> BaseNodePostprocessor:
         # )
 
         return SimpleReranker(top_n=top_n)
-
-    return AWSBedrockRerank(top_n=top_n)
+    if os.getenv("ENABLE_TWO_STAGE_RETRIEVAL") or None:
+        return AWSBedrockRerank(top_n=top_n)
+    return SimpleReranker(top_n=top_n)
 
 
 def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
