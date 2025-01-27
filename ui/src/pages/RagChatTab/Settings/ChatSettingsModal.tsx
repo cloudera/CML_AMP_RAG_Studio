@@ -38,7 +38,7 @@
 
 import { Flex, Form, Input, Modal, Select, Slider } from "antd";
 import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useContext } from "react";
@@ -59,6 +59,7 @@ const ChatSettingsModal = ({
   closeModal: () => void;
 }) => {
   const { data: llmModels } = useGetLlmModels();
+  const { data: rerankingModels } = useGetRerankingModels();
   const { activeSession } = useContext(RagChatContext);
   const [form] = Form.useForm<Omit<UpdateSessionRequest, "id">>();
   const queryClient = useQueryClient();
@@ -125,6 +126,16 @@ const ChatSettingsModal = ({
             rules={[{ required: true, message: "Please select a model" }]}
           >
             <Select options={transformModelOptions(llmModels)} />
+          </Form.Item>
+          <Form.Item
+            name="rerankModel"
+            label="Reranking model"
+            initialValue={
+              activeSession.rerankModel ??
+              (rerankingModels ? rerankingModels[0].model_id : "")
+            }
+          >
+            <Select options={transformModelOptions(rerankingModels)} />
           </Form.Item>
           <RequestModels />
           <Form.Item

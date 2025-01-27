@@ -54,6 +54,7 @@ export interface Session {
   name: string;
   dataSourceIds: number[];
   inferenceModel?: string;
+  rerankModel?: string;
   responseChunks: number;
   timeCreated: number;
   timeUpdated: number;
