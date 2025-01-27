@@ -213,6 +213,7 @@ def generate_suggested_questions(
                 exclude_knowledge_base=False,
                 use_question_condensing=False,
                 use_hyde=False,
+                use_postprocessor=False,
             ),
             [],
         )

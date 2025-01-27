@@ -71,7 +71,7 @@ def get_noop_llm_model() -> LLM:
 
 def get_reranking_model(
     model_name: Optional[str] = None, top_n: int = 5
-) -> BaseNodePostprocessor:
+) -> BaseNodePostprocessor | None:
     if model_name is None:
         return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
@@ -89,7 +89,7 @@ def get_reranking_model(
         #     top_n=5,
         #     is_hosted=False
         # )
-        return SimpleReranker(top_n=top_n)
+        return None
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
 

@@ -76,6 +76,7 @@ from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.llms import LLM
+from llama_index.core.postprocessor import LLMRerank
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
@@ -86,7 +87,6 @@ from app.services.chat_store import RagContext
 from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
 from .flexible_retriever import FlexibleRetriever
-from .simple_reranker import SimpleReranker
 from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
@@ -172,7 +172,7 @@ def _create_query_engine(
     )
     response_synthesizer = get_response_synthesizer(llm=llm)
 
-    postprocessors = _create_node_postprocessors(configuration, data_source_id)
+    postprocessors = _create_node_postprocessors(configuration, data_source_id, llm)
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
         response_synthesizer=response_synthesizer,
@@ -182,17 +182,22 @@ def _create_query_engine(
 
 
 def _create_node_postprocessors(
-    configuration: QueryConfiguration, data_source_id: int
+    configuration: QueryConfiguration, data_source_id: int, llm: LLM
 ) -> list[BaseNodePostprocessor]:
+    if not configuration.use_postprocessor:
+        return []
+
     data_source = get_metadata(data_source_id=data_source_id)
     if data_source.summarization_model is None:
-        return [SimpleReranker(top_n=configuration.top_k)]
+        return [LLMRerank(top_n=configuration.top_k, llm=llm)]
+        # return [SimpleReranker(top_n=configuration.top_k)]
 
     return [
         models.get_reranking_model(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
+        or LLMRerank(top_n=configuration.top_k, llm=llm)
     ]
 
 
