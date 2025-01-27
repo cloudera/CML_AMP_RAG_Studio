@@ -69,33 +69,26 @@ def get_noop_llm_model() -> LLM:
     return DummyLlm()
 
 
-def get_reranking_model(
-    summarization_enabled: bool,
-    model_name: Optional[str] = None,
-    top_n: int = 5,
-) -> BaseNodePostprocessor:
+def get_reranking_model(model_name: Optional[str] = None, top_n: int = 5) -> BaseNodePostprocessor:
     if model_name is None:
         return SimpleReranker(top_n=top_n)
-    if summarization_enabled:
-        if is_caii_enabled():
-            # base_url = "https://caii-prod-long-running.eng-ml-l.vnu8-sqze.cloudera.site/namespaces/serving-default/endpoints/mistral-4b-rerank-l40s/v1/ranking"
-            #
-            # NVIDIARerank._validate_url = lambda self, url: url
-            #
-            # NVIDIARerank._get_models = lambda self: []
-            #
-            # token = get_caii_access_token()
-            # print(f"Using NVIDIA Rerank with token: {token}")
-            # return NVIDIARerank(
-            #     base_url=base_url,
-            #     api_key=token,
-            #     top_n=5,
-            #     is_hosted=False
-            # )
-
-            return SimpleReranker(top_n=top_n)
-        return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
-    return SimpleReranker(top_n=top_n)
+    if is_caii_enabled():
+        # base_url = "https://caii-prod-long-running.eng-ml-l.vnu8-sqze.cloudera.site/namespaces/serving-default/endpoints/mistral-4b-rerank-l40s/v1/ranking"
+        #
+        # NVIDIARerank._validate_url = lambda self, url: url
+        #
+        # NVIDIARerank._get_models = lambda self: []
+        #
+        # token = get_caii_access_token()
+        # print(f"Using NVIDIA Rerank with token: {token}")
+        # return NVIDIARerank(
+        #     base_url=base_url,
+        #     api_key=token,
+        #     top_n=5,
+        #     is_hosted=False
+        # )
+        return SimpleReranker(top_n=top_n)
+    return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
 
 def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
@@ -229,7 +222,7 @@ def test_reranking_model(model_name: str) -> str:
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4
                 )
-                get_reranking_model(True, model_name=model_name).postprocess_nodes(
+                get_reranking_model(model_name=model_name).postprocess_nodes(
                     [node, another_test_node], None, "test"
                 )
                 return "ok"
