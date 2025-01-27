@@ -84,7 +84,7 @@ class MdReader(BaseReader):
                     continue
                 self._add_document_metadata(node, file_path)
                 node.metadata["chunk_format"] = "markdown"
-                node.relationships.update({NodeRelationship.SOURCE: Document(id_=self.document_id).as_related_node_info()})
+                node.relationships.update({NodeRelationship.SOURCE: document.as_related_node_info()})
                 results.append(node)
         ret.chunks = results
         return ret

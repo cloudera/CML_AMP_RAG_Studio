@@ -40,13 +40,13 @@ from typing import Dict
 
 
 def build_auth_headers() -> Dict[str, str]:
-    access_token = get_caii_access_token()
+    access_token: str = get_caii_access_token()
     headers = {"Authorization": f"Bearer {access_token}"}
     return headers
 
 
-def get_caii_access_token():
+def get_caii_access_token() -> str:
     with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
-    access_token = jwt_contents["access_token"]
+    access_token: str = jwt_contents["access_token"]
     return access_token
