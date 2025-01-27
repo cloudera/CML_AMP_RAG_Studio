@@ -100,6 +100,19 @@ const getEmbeddingModels = async (): Promise<Model[]> => {
   return await getRequest(`${llmServicePath}/models/embeddings`);
 };
 
+export const useGetRerankingModels = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getRerankingModels],
+    queryFn: async () => {
+      return await getRerankingModels();
+    },
+  });
+};
+
+const getRerankingModels = async (): Promise<Model[]> => {
+  return await getRequest(`${llmServicePath}/models/reranking`);
+};
+
 type ModelSource = "CAII" | "Bedrock";
 
 export const getModelSourceQueryOptions = queryOptions({
@@ -153,6 +166,31 @@ export const useTestEmbeddingModel = ({
 const testEmbeddingModel = async (model_id: string): Promise<string> => {
   return await fetch(
     `${llmServicePath}/models/embedding/${model_id}/test`,
+  ).then(async (res) => {
+    if (!res.ok) {
+      const detail = (await res.json()) as CustomError;
+      throw new ApiError(detail.message ?? detail.detail, res.status);
+    }
+
+    return (await res.json()) as Promise<string>;
+  });
+};
+
+export const useTestRerankingModel = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.testRerankingModel],
+    mutationFn: testRerankingModel,
+    onError,
+    onSuccess,
+  });
+};
+
+const testRerankingModel = async (model_id: string): Promise<string> => {
+  return await fetch(
+    `${llmServicePath}/models/reranking/${model_id}/test`,
   ).then(async (res) => {
     if (!res.ok) {
       const detail = (await res.json()) as CustomError;

@@ -38,8 +38,13 @@
 
 import { Alert, Flex, Typography } from "antd";
 import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
-import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
+import {
+  useGetEmbeddingModels,
+  useGetLlmModels,
+  useGetRerankingModels,
+} from "src/api/modelsApi.ts";
 import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
+import RerankingModelTable from "pages/Models/RerankingModelTable.tsx";
 
 const ModelPage = () => {
   const {
@@ -52,6 +57,11 @@ const ModelPage = () => {
     isLoading: areInferenceModelsLoading,
     error: inferenceError,
   } = useGetLlmModels();
+  const {
+    data: rerankingModels,
+    isLoading: areRerankingModelsLoading,
+    error: rerankingError,
+  } = useGetRerankingModels();
 
   return (
     <Flex vertical align="center">
@@ -70,6 +80,13 @@ const ModelPage = () => {
             type="error"
           />
         ) : null}
+        {rerankingError ? (
+          <Alert
+            style={{ margin: 10 }}
+            message={`Reranking model error: ${rerankingError.message}`}
+            type="error"
+          />
+        ) : null}
       </div>
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
         <Typography.Title level={3}>Embedding Models</Typography.Title>
@@ -81,6 +98,11 @@ const ModelPage = () => {
         <InferenceModelTable
           inferenceModels={inferenceModels}
           areInferenceModelsLoading={areInferenceModelsLoading}
+        />
+        <Typography.Title level={3}>Reranking Models</Typography.Title>
+        <RerankingModelTable
+          rerankingModels={rerankingModels}
+          areRerankingModelsLoading={areRerankingModelsLoading}
         />
       </Flex>
     </Flex>

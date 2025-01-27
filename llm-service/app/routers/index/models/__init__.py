@@ -67,7 +67,7 @@ def get_llm_embedding_models() -> List[ModelResponse]:
     return get_available_embedding_models()
 
 
-@router.get("/rerankers", summary="Get reranking models.")
+@router.get("/reranking", summary="Get reranking models.")
 @exceptions.propagates
 def get_reranking_models() -> List[ModelResponse]:
     return get_available_rerank_models()
@@ -91,7 +91,7 @@ def embedding_model_test(model_name: str) -> str:
     return test_embedding_model(model_name)
 
 
-@router.get("/rerankers/{model_name}/test", summary="Test Reranking model.")
+@router.get("/reranking/{model_name}/test", summary="Test Reranking model.")
 @exceptions.propagates
 def reranking_model_test(model_name: str) -> str:
     return test_reranking_model(model_name)

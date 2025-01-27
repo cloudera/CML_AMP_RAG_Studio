@@ -224,13 +224,11 @@ def test_reranking_model(model_name: str) -> str:
     for model in models:
         if model.model_id == model_name:
             if not is_caii_enabled() or model.available:
-                node = NodeWithScore(node=TextNode(content="test"), score=0.5)
+                node = NodeWithScore(node=TextNode(text="test"), score=0.5)
                 another_test_node = NodeWithScore(
-                    node=TextNode(content="another test node"), score=0.4
+                    node=TextNode(text="another test node"), score=0.4
                 )
-                res = get_reranking_model(model_name).postprocess_nodes(
-                    [node, another_test_node], None, "test"
-                )
+                get_reranking_model(model_name).postprocess_nodes([node, another_test_node], None, "test")
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")
