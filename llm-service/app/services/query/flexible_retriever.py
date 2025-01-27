@@ -36,7 +36,6 @@
 #  DATA.
 #
 import logging
-import os
 from typing import cast
 
 from llama_index.core import QueryBundle, VectorStoreIndex
