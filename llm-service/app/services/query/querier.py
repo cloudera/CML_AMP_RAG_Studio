@@ -157,7 +157,6 @@ def _create_retriever(
     data_source_id: int,
     llm: LLM,
 ) -> BaseRetriever:
-    print("configuration:", configuration)
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
 
 
