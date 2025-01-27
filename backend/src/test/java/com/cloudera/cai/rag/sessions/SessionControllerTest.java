@@ -63,6 +63,7 @@ class SessionControllerTest {
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(sessionName);
     assertThat(result.inferenceModel()).isEqualTo(input.inferenceModel());
+    assertThat(result.rerankModel()).isEqualTo(input.rerankModel());
     assertThat(result.responseChunks()).isEqualTo(input.responseChunks());
     assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
     assertThat(result.timeCreated()).isNotNull();
