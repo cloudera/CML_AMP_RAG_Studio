@@ -129,6 +129,14 @@ def get_available_llm_models() -> list[ModelResponse]:
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
 
+def get_available_rerank_models() -> List[ModelResponse]:
+    if is_caii_enabled():
+        return []
+    return [
+        ModelResponse(
+            model_id="cohere.rerank-v3-5:0", name="Cohere Rerank v3.5"
+        ),
+    ]
 
 def is_caii_enabled() -> bool:
     domain: str = os.environ.get("CAII_DOMAIN", "")
