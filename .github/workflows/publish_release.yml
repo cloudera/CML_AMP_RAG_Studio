@@ -80,6 +80,7 @@ jobs:
         with:
           draft: false
           prerelease: ${{ github.event.inputs.BRANCH != 'release/1' }}
+          make_latest: ${{ github.event.inputs.BRANCH == 'release/1' }}
           name: ${{ github.event.inputs.VERSION }}
           tag_name: ${{ github.event.inputs.VERSION }}
           files: |
