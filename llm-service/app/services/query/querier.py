@@ -85,6 +85,7 @@ from app.services.chat_store import RagContext
 from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
 from .flexible_retriever import FlexibleRetriever
+from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +170,12 @@ def _create_query_engine(
         configuration, embedding_model, index, data_source_id, llm
     )
     response_synthesizer = get_response_synthesizer(llm=llm)
+
+    summarization_model = get_metadata(
+        data_source_id=data_source_id,
+    ).summarization_model
     reranker = models.get_reranking_model(
+        summarization_enabled=bool(summarization_model is not None),
         model_name=configuration.rerank_model_name,
         top_n=configuration.top_k,
     )
