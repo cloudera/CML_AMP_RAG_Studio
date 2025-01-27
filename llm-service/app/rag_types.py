@@ -40,6 +40,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+
 class RagPredictConfiguration(BaseModel):
     exclude_knowledge_base: Optional[bool] = False
     use_question_condensing: Optional[bool] = True

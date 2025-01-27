@@ -46,6 +46,7 @@ from .base_reader import BaseReader, ChunksResult
 
 logger = logging.getLogger(__name__)
 
+
 class JSONReader(BaseReader):
     def load_chunks(self, file_path: Path) -> ChunksResult:
         with open(file_path, "r") as f:

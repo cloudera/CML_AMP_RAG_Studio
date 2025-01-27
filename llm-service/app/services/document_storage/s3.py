@@ -79,13 +79,18 @@ logger = logging.getLogger(__name__)
 
 
 class S3DocumentStorage(DocumentStorage):
-    def download(self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str) -> Path:
+    def download(
+        self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str
+    ) -> Path:
         """
         Download document from S3
         """
         return _download(temp_dir, bucket_name, document_key, original_filename)
 
-def _download(tmpdirname: str, bucket_name: str, document_key: str, original_filename: str) -> Path:
+
+def _download(
+    tmpdirname: str, bucket_name: str, document_key: str, original_filename: str
+) -> Path:
     """
     Download document from S3
     """

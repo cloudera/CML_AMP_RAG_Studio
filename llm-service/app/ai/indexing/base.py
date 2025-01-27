@@ -37,9 +37,9 @@ class NotSupportedFileExtensionError(Exception):
 
 class BaseTextIndexer:
     def __init__(
-            self,
-            data_source_id: int,
-            reader_config: Optional[ReaderConfig] = None,
+        self,
+        data_source_id: int,
+        reader_config: Optional[ReaderConfig] = None,
     ):
         self.data_source_id = data_source_id
         self.reader_config = reader_config

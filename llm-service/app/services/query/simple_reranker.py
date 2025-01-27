@@ -42,7 +42,6 @@ from llama_index.core.schema import NodeWithScore, QueryBundle
 from pydantic import Field
 
 
-
 class SimpleReranker(BaseNodePostprocessor):
     top_n: int = Field(description="The number of nodes to return", gt=0)
 
@@ -51,4 +50,3 @@ class SimpleReranker(BaseNodePostprocessor):
     ) -> list[NodeWithScore]:
         nodes.sort(key=lambda node: node.score or 0, reverse=True)
         return nodes[: self.top_n]
-

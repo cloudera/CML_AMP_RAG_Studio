@@ -53,6 +53,7 @@ P = ParamSpec("P")
 
 logger = logging.getLogger(__name__)
 
+
 class DocumentParseError(RuntimeError):
     """Exception raised when a document cannot be parsed."""
 
@@ -129,6 +130,7 @@ def propagates(f: Callable[P, T]) -> Union[Callable[P, T], Callable[P, Awaitable
             with _exception_propagation():
                 ret: T = await f(*args, **kwargs)
                 return ret
+
     else:
 
         @functools.wraps(f)

@@ -49,6 +49,7 @@ from .markdown import MdReader
 
 logger = logging.getLogger(__name__)
 
+
 def load_chunks(markdown_reader: MdReader, file_path: Path) -> list[TextNode] | None:
     directory = file_path.parent
     logger.debug(f"{directory=}")
@@ -75,4 +76,6 @@ def load_chunks(markdown_reader: MdReader, file_path: Path) -> list[TextNode] | 
         for chunk in chunks:
             chunk.metadata["file_name"] = file_path.name
         return chunks
-    raise DocumentParseError(f"docling failed to process {file_path} with return code {process.returncode}")
+    raise DocumentParseError(
+        f"docling failed to process {file_path} with return code {process.returncode}"
+    )
