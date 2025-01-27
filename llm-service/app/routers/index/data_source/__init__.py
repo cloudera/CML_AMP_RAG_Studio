@@ -35,6 +35,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
+from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from pydantic import BaseModel
 
@@ -44,7 +45,8 @@ from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services import data_sources_metadata_api, document_storage, models
+from ....services.metadata_apis import data_sources_metadata_api
+from ....services import document_storage, models
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +150,9 @@ class DataSourceController:
                 request.s3_document_key,
                 request.original_filename,
             )
-
+            llm: Optional[LLM] = None
+            if datasource.summarization_model:
+                llm = models.get_llm(datasource.summarization_model)
             indexer = EmbeddingIndexer(
                 data_source_id,
                 splitter=SentenceSplitter(
@@ -160,6 +164,7 @@ class DataSourceController:
                     ),
                 ),
                 embedding_model=models.get_embedding_model(datasource.embedding_model),
+                llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )
             # Delete to avoid duplicates
@@ -213,7 +218,12 @@ class DataSourceController:
             if not indexer:
                 return SUMMARIZATION_DISABLED
             # Delete to avoid duplicates
-            indexer.delete_document(doc_id)
+            try:
+                indexer.delete_document(doc_id)
+            except Exception as e:
+                # ignore, since it might just be because the summary index doesn't exist yet
+                logger.info("Failed to delete document %s: %s", doc_id, e)
+
             try:
                 indexer.index_file(file_path, doc_id)
                 summary = indexer.get_summary(doc_id)

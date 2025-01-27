@@ -29,4 +29,4 @@ COPY --from=server-deps /app/express/node_modules /app/express/node_modules
 
 EXPOSE 3000
 WORKDIR /app
-CMD [ "node", "express/index.js" ]
+CMD [ "node", "express/dist/index.js" ]

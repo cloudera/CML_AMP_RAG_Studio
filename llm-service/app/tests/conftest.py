@@ -53,8 +53,9 @@ from llama_index.core.llms import LLM
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
-from app.services import data_sources_metadata_api, models
-from app.services.data_sources_metadata_api import RagDataSource
+from app.services.metadata_apis import data_sources_metadata_api
+from app.services import models
+from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
 from app.services.noop_models import DummyLlm
 
 

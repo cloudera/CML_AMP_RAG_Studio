@@ -36,11 +36,13 @@
 #  DATA.
 # ##############################################################################
 import logging
-from typing import Optional, List, Any
+import os
+from typing import Optional, List, Any, cast
 
 import botocore.exceptions
 from fastapi import HTTPException
 from llama_index.core import QueryBundle, PromptTemplate, Response
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.callbacks import trace_method
 from llama_index.core.chat_engine import CondenseQuestionChatEngine
@@ -48,15 +50,18 @@ from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import ToolOutput
+from pydantic import BaseModel, ConfigDict
 
 from . import models, llm_completion
 from .chat_store import RagContext
+from .models import DEFAULT_BEDROCK_LLM_MODEL
+from ..ai.indexing.summary_indexer import SummaryIndexer
 from ..ai.vector_stores.qdrant import QdrantVectorStore
-from ..rag_types import RagPredictConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -76,18 +81,27 @@ from the conversation. Just provide the question, not any description of it.
 
 CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 
+class QueryConfiguration(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
+    top_k: int = 5
+    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
+    exclude_knowledge_base: Optional[bool] = False
+    use_question_condensing: Optional[bool] = True
+    use_hyde: Optional[bool] = False
+
 
 class FlexibleChatEngine(CondenseQuestionChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        self._configuration: RagPredictConfiguration = RagPredictConfiguration()
+        self._configuration: QueryConfiguration = QueryConfiguration()
 
     @property
-    def configuration(self) -> RagPredictConfiguration:
+    def configuration(self) -> QueryConfiguration:
         return self._configuration
 
     @configuration.setter
-    def configuration(self, value: RagPredictConfiguration) -> None:
+    def configuration(self, value: QueryConfiguration) -> None:
         self._configuration = value
 
     @trace_method("chat")
@@ -125,8 +139,6 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
             condensed_question = self._condense_question(chat_history, message)
             log_str = f"Querying with condensed question: {condensed_question}"
             logger.info(log_str)
-            if self._verbose:
-                print(log_str)
             message = condensed_question
         embedding_strings = None
         if self.configuration.use_hyde:
@@ -141,7 +153,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
 def query(
         data_source_id: int,
         query_str: str,
-        configuration: RagPredictConfiguration,
+        configuration: QueryConfiguration,
         chat_history: list[RagContext],
 ) -> AgentChatResponse:
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
@@ -152,11 +164,19 @@ def query(
         embed_model=embedding_model,
     )
     logger.info("fetched Qdrant index")
+    llm = models.get_llm(model_name=configuration.model_name)
 
+    enable_doc_id_filtering = os.environ.get('ENABLE_TWO_STAGE_RETRIEVAL') or None
+    doc_ids: list[str] | None = None
+    if enable_doc_id_filtering:
+        doc_ids = filter_doc_ids_by_summary(data_source_id, embedding_model, llm, query_str)
+
+    # add a filter to the retriever with the resulting document ids.
     retriever = VectorIndexRetriever(
         index=index,
         similarity_top_k=configuration.top_k,
         embed_model=embedding_model,  # is this needed, really, if it's in the index?
+        doc_ids=doc_ids or None,
     )
     llm = models.get_llm(model_name=configuration.model_name)
 
@@ -187,7 +207,24 @@ def query(
         ) from error
 
 
-def _build_chat_engine(configuration: RagPredictConfiguration, llm: LLM,
+def filter_doc_ids_by_summary(data_source_id: int, embedding_model: BaseEmbedding, llm: LLM, query_str: str) -> list[str] | None:
+    try:
+        # first query the summary index to get documents to filter by (assuming summarization is enabled)
+        summary_engine = SummaryIndexer(data_source_id=data_source_id, splitter=SentenceSplitter(chunk_size=2048),
+                                        embedding_model=embedding_model, llm=llm, ).as_query_engine()
+        summaries: list[NodeWithScore] = summary_engine.retrieve(QueryBundle(query_str))
+
+        def document_ids(node: NodeWithScore) -> str:
+            return cast(str, node.metadata["document_id"])
+
+        doc_ids: list[str] = list(map(document_ids, summaries))
+        return doc_ids
+    except Exception as e:
+        logger.debug(f"Failed to retrieve document ids from summary index: {e}")
+        return None
+
+
+def _build_chat_engine(configuration: QueryConfiguration, llm: LLM,
                        query_engine: RetrieverQueryEngine) -> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
         query_engine=query_engine,

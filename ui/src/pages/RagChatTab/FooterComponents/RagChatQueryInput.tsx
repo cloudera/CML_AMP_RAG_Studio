@@ -61,17 +61,12 @@ const RagChatQueryInput = () => {
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
-  const configuration = createQueryConfiguration(
-    excludeKnowledgeBase,
-    true,
-    activeSession,
-  );
+  const configuration = createQueryConfiguration(excludeKnowledgeBase, true);
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
     isFetching: sampleQuestionsIsFetching,
   } = useSuggestQuestions({
-    data_source_ids: activeSession?.dataSourceIds ?? [],
     configuration,
     session_id: sessionId ?? "",
   });
@@ -96,13 +91,8 @@ const RagChatQueryInput = () => {
       setCurrentQuestion(userInput);
       chatMutation.mutate({
         query: userInput,
-        data_source_ids: activeSession.dataSourceIds,
         session_id: sessionId,
-        configuration: createQueryConfiguration(
-          excludeKnowledgeBase,
-          false,
-          activeSession,
-        ),
+        configuration: createQueryConfiguration(excludeKnowledgeBase, false),
       });
     }
   };

@@ -58,7 +58,7 @@ class SessionControllerTest {
     request.setCookies(
         new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
     var sessionName = "test";
-    Types.Session input = TestData.createTestSessionInstance(sessionName);
+    Types.CreateSession input = TestData.createSessionInstance(sessionName);
     Types.Session result = sessionController.create(input, request);
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(sessionName);
@@ -73,13 +73,23 @@ class SessionControllerTest {
   }
 
   @Test
+  void get() {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    var input = TestData.createSessionInstance("test");
+    var createdSession = sessionController.create(input, request);
+    var result = sessionController.getSession(createdSession.id());
+    assertThat(result).isEqualTo(createdSession);
+  }
+
+  @Test
   void update() throws JsonProcessingException {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
     request.setCookies(
         new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
     var sessionName = "test";
-    Types.Session input = TestData.createTestSessionInstance(sessionName);
+    var input = TestData.createSessionInstance(sessionName);
     Types.Session insertedSession = sessionController.create(input, request);
 
     var updatedResponseChunks = 1;
@@ -117,7 +127,7 @@ class SessionControllerTest {
     SessionController sessionController = new SessionController(sessionService);
     var request = new MockHttpServletRequest();
 
-    var input = TestData.createTestSessionInstance("test");
+    var input = TestData.createSessionInstance("test");
     var createdSession = sessionController.create(input, request);
     sessionController.delete(createdSession.id());
     assertThatThrownBy(() -> sessionService.getSessionById(createdSession.id()))
@@ -128,8 +138,8 @@ class SessionControllerTest {
   void getSessions() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    var input = TestData.createTestSessionInstance("test");
-    var input2 = TestData.createTestSessionInstance("test2");
+    var input = TestData.createSessionInstance("test");
+    var input2 = TestData.createSessionInstance("test2");
     sessionController.create(input, request);
     sessionController.create(input2, request);
 

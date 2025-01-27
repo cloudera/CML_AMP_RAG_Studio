@@ -40,7 +40,6 @@ import Icon from "@ant-design/icons";
 import {
   Alert,
   Card,
-  Divider,
   Flex,
   Popover,
   Spin,
@@ -55,25 +54,14 @@ import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
-import MetaData from "pages/RagChatTab/ChatOutput/Sources/MetaData.tsx";
-import Markdown from "react-markdown";
-import Remark from "remark-gfm";
 import "./sourceCard.css";
-
-export const SourceCardTitle = ({ titleText }: { titleText: string }) => {
-  return (
-    <Typography.Title level={5} style={{ marginTop: 10 }}>
-      {titleText}
-      <Divider style={{ margin: "8px 0px" }} />
-    </Typography.Title>
-  );
-};
+import ChunkContainer from "pages/RagChatTab/ChatOutput/Sources/ChunkContainer.tsx";
 
 const CardTitle = ({ source }: { source: SourceNode }) => {
   return (
     <Flex justify="space-between">
       <Tooltip title={source.source_file_name}>
-        <Typography.Paragraph ellipsis style={{ width: "70%" }}>
+        <Typography.Paragraph ellipsis style={{ width: "100%" }}>
           {source.source_file_name}
         </Typography.Paragraph>
       </Tooltip>
@@ -113,7 +101,13 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
         <Card
           title={<CardTitle source={source} />}
           bordered={false}
-          style={{ width: 600, height: 300, overflowY: "auto" }}
+          style={{
+            width: 800,
+            height: 600,
+            overflowY: "auto",
+            maxWidth: "100%",
+            maxHeight: "100%",
+          }}
         >
           <Flex justify="center" vertical>
             {chunkContents.isError ? (
@@ -123,41 +117,12 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                 showIcon
               />
             ) : null}
-            {chunkContents.isPending ? (
-              <Flex align="center" justify="center" vertical gap={20}>
-                <Typography.Text type="secondary">
-                  Fetching source contents
-                </Typography.Text>
-                <div>
-                  <Spin />
-                </div>
-              </Flex>
-            ) : (
-              chunkContents.data && (
-                <Flex vertical>
-                  <SourceCardTitle titleText={"Extracted reference content"} />
-                  {chunkContents.data.metadata.chunk_format === "markdown" ? (
-                    <div
-                      style={{ marginBottom: 12 }}
-                      className="styled-markdown"
-                    >
-                      <Markdown skipHtml remarkPlugins={[Remark]}>
-                        {chunkContents.data.text}
-                      </Markdown>
-                    </div>
-                  ) : (
-                    <Typography.Paragraph
-                      style={{ textAlign: "left", whiteSpace: "pre-wrap" }}
-                    >
-                      {chunkContents.data.text}
-                    </Typography.Paragraph>
-                  )}
-                  <MetaData metadata={chunkContents.data.metadata} />
-                </Flex>
-              )
-            )}
-            <Flex vertical>
-              <SourceCardTitle titleText={"Generated document summary"} />
+            <ChunkContainer chunkContents={chunkContents} />
+            <Card
+              title={"Generated document summary"}
+              type="inner"
+              style={{ marginTop: 16 }}
+            >
               <Typography.Paragraph
                 ellipsis={
                   documentSummary.isLoading
@@ -178,7 +143,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
                   (documentSummary.data ?? "No summary available")
                 )}
               </Typography.Paragraph>
-            </Flex>
+            </Card>
           </Flex>
         </Card>
       }

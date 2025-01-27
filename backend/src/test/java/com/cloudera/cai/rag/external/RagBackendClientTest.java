@@ -69,7 +69,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://localhost:8000/data_sources/"
+                "http://localhost:8081/data_sources/"
                     + 1234L
                     + "/documents/"
                     + "documentId"
@@ -98,7 +98,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://localhost:8000/data_sources/"
+                "http://localhost:8081/data_sources/"
                     + 1234L
                     + "/documents/"
                     + "documentId"
@@ -127,7 +127,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://localhost:8000/data_sources/"
+                "http://localhost:8081/data_sources/"
                     + 1234L
                     + "/documents/"
                     + "documentId"
@@ -150,7 +150,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://localhost:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                "http://localhost:8081/data_sources/1234/documents/" + "documentId" + "/summary",
                 new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
   }
 
@@ -173,7 +173,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://localhost:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                "http://localhost:8081/data_sources/1234/documents/" + "documentId" + "/summary",
                 new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
   }
 
@@ -196,7 +196,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.POST,
-                "http://localhost:8000/data_sources/1234/documents/" + "documentId" + "/summary",
+                "http://localhost:8081/data_sources/1234/documents/" + "documentId" + "/summary",
                 new RagBackendClient.SummaryRequest("bucketName", "s3Path", "myfile.pdf")));
   }
 
@@ -210,7 +210,7 @@ class RagBackendClientTest {
         .hasSize(1)
         .contains(
             new TrackedHttpRequest<>(
-                HttpMethod.DELETE, "http://localhost:8000/data_sources/1234", null));
+                HttpMethod.DELETE, "http://localhost:8081/data_sources/1234", null));
   }
 
   @Test
@@ -224,7 +224,7 @@ class RagBackendClientTest {
         .contains(
             new TrackedHttpRequest<>(
                 HttpMethod.DELETE,
-                "http://localhost:8000/data_sources/1234/documents/documentId",
+                "http://localhost:8081/data_sources/1234/documents/documentId",
                 null));
   }
 
@@ -238,7 +238,7 @@ class RagBackendClientTest {
         .hasSize(1)
         .contains(
             new TrackedHttpRequest<>(
-                HttpMethod.DELETE, "http://localhost:8000/sessions/1234", null));
+                HttpMethod.DELETE, "http://localhost:8081/sessions/1234", null));
   }
 
   @Test

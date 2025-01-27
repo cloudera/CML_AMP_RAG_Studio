@@ -78,4 +78,4 @@ cd ..
 source scripts/load_nvm.sh > /dev/null
 
 cd ui
-node express/index.js
+node express/dist/index.js

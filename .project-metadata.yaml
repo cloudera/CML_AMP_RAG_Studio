@@ -42,13 +42,22 @@ runtimes:
     edition: Standard
 
 tasks:
-  - type: run_session
+  - type: create_job
     name: Download/Install Project Dependencies
+    entity_label: install_dependencies
+    arguments: none
     script: scripts/01_install_base.py
-    short_summary: Install Project Dependencies
+    short_summary: Create Job to Install Project Dependencies
     kernel: python3
     cpu: 2
     memory: 4
+    environment:
+      TASK_TYPE: CREATE/RUN_JOB
+
+  - type: run_job
+    entity_label: install_dependencies
+    short_summary: Run Job to Install Project Dependencies
+    long_summary: Run Job to Install Project Dependencies
 
   - type: create_job
     name: Update/build RAG Studio

@@ -57,7 +57,7 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:8080",
       "/llm-service": {
-        target: "http://localhost:8000",
+        target: "http://localhost:8081",
         rewrite: (path) => path.replace(/^\/llm-service/, ""),
       },
     },

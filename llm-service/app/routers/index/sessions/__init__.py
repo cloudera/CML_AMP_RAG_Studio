@@ -38,15 +38,15 @@
 import time
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from .... import exceptions
-from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....rag_types import RagPredictConfiguration
 from ....services import llm_completion
 from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagMessage
+from ....services.metadata_apis import session_metadata_api
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
@@ -77,49 +77,43 @@ def delete_chat_history(session_id: int) -> str:
 
 
 class RagStudioChatRequest(BaseModel):
-    data_source_ids: list[int]
     query: str
-    configuration: RagPredictConfiguration
+    configuration: RagPredictConfiguration | None = None
 
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
 def chat(
-    session_id: int,
-    request: RagStudioChatRequest,
+        session_id: int,
+        request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
-    if request.configuration.exclude_knowledge_base:
-        return llm_talk(session_id, request)
-    return v2_chat(
-        session_id, request.data_source_ids, request.query, request.configuration
-    )
+    configuration = request.configuration or RagPredictConfiguration()
+    if configuration.exclude_knowledge_base:
+        return llm_talk(session_id, request.query)
+    return v2_chat(session_id, request.query, configuration)
 
 
 def llm_talk(
-    session_id: int,
-    request: RagStudioChatRequest,
+        session_id: int,
+        query: str,
 ) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
     chat_response = llm_completion.completion(
-        session_id, request.query, request.configuration
+        session_id, query, session.inference_model
     )
     new_chat_message = RagStudioChatMessage(
         id=str(uuid.uuid4()),
         source_nodes=[],
-        inference_model=request.configuration.model_name,
+        inference_model=session.inference_model,
         evaluations=[],
-        rag_message={
-            "user": request.query,
-            "assistant": str(chat_response.message.content),
-        },
+        rag_message=RagMessage(
+            user=query,
+            assistant=str(chat_response.message.content),
+        ),
         timestamp=time.time(),
     )
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
-
-
-class SuggestQuestionsRequest(BaseModel):
-    data_source_ids: list[int]
-    configuration: RagPredictConfiguration = RagPredictConfiguration()
 
 
 class RagSuggestedQuestionsResponse(BaseModel):
@@ -129,28 +123,7 @@ class RagSuggestedQuestionsResponse(BaseModel):
 @router.post("/suggest-questions", summary="Suggest questions with context")
 @exceptions.propagates
 def suggest_questions(
-    session_id: int,
-    request: SuggestQuestionsRequest,
+        session_id: int,
 ) -> RagSuggestedQuestionsResponse:
-
-    if len(request.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Only one datasource is supported for question suggestion.",
-        )
-
-    total_data_sources_size: int = sum(
-        map(
-            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
-            request.data_source_ids,
-        )
-    )
-    if total_data_sources_size == 0:
-        raise HTTPException(status_code=404, detail="Knowledge base not found.")
-    suggested_questions = generate_suggested_questions(
-        request.configuration,
-        request.data_source_ids,
-        total_data_sources_size,
-        session_id,
-    )
+    suggested_questions = generate_suggested_questions(session_id)
     return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)
