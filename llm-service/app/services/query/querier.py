@@ -182,7 +182,7 @@ def _create_query_engine(
 
 
 def _create_node_postprocessors(
-    configuration, data_source_id
+    configuration: QueryConfiguration, data_source_id: int
 ) -> list[BaseNodePostprocessor]:
     data_source = get_metadata(data_source_id=data_source_id)
     if data_source.summarization_model is None:
