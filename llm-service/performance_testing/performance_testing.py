@@ -41,6 +41,8 @@ import time
 
 import pandas as pd
 
+from app.services.metadata_apis.data_sources_metadata_api import get_metadata
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.services.query.flexible_retriever import FlexibleRetriever
@@ -60,6 +62,7 @@ from app.services.query.chat_engine import FlexibleChatEngine
 def main():
     data_source_id: int = int(sys.argv[1])
     file: str = sys.argv[2]
+    summarization_model = get_metadata(data_source_id).summarization_model
     with open(os.path.abspath(os.path.join(os.path.dirname(__file__), file)), "r") as f:
         df = pd.read_csv(f)
         questions: list[str] = df["Question"].tolist()
@@ -90,7 +93,7 @@ def main():
                         score_count += 1
                         #  timestamp, hyde, condensing, two_stage, top_k, file_name, max_score, avg_score, question
                         details.write(
-                            f'{time.time()},{hyde},{condensing},{os.getenv("ENABLE_TWO_STAGE_RETRIEVAL")},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{avg_score},"{question}"\n'
+                            f'{time.time()},{hyde},{condensing},{summarization_model is not None},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{avg_score},"{question}"\n'
                         )
                     details.flush()
 

@@ -48,6 +48,7 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import NodeWithScore
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.metadata_apis.data_sources_metadata_api import get_metadata
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ class FlexibleRetriever(BaseRetriever):
         self.llm = llm
 
     def _retrieve(self, query_bundle: QueryBundle) -> list[NodeWithScore]:
-        enable_two_stage = os.environ.get("ENABLE_TWO_STAGE_RETRIEVAL") or None
+        summarization_model = get_metadata(self.data_source_id).summarization_model
 
         base_retriever = VectorIndexRetriever(
             index=self.index,
@@ -80,7 +81,7 @@ class FlexibleRetriever(BaseRetriever):
 
         result_nodes: list[NodeWithScore] = base_retriever.retrieve(query_bundle)
 
-        if enable_two_stage:
+        if summarization_model is not None:
             # add a filter to the retriever with the resulting document ids.
             doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)
             if doc_ids:

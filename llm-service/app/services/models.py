@@ -229,7 +229,7 @@ def test_reranking_model(model_name: str) -> str:
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4
                 )
-                get_reranking_model(model_name).postprocess_nodes(
+                get_reranking_model(True, model_name=model_name).postprocess_nodes(
                     [node, another_test_node], None, "test"
                 )
                 return "ok"
