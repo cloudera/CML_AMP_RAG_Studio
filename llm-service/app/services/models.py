@@ -57,6 +57,7 @@ from .noop_models import DummyEmbeddingModel, DummyLlm
 from .query.simple_reranker import SimpleReranker
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
+DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 
 def get_noop_embedding_model() -> BaseEmbedding:
@@ -67,7 +68,12 @@ def get_noop_llm_model() -> LLM:
     return DummyLlm()
 
 
-def get_reranking_model(top_n: int = 5) -> BaseNodePostprocessor:
+def get_reranking_model(
+    model_name: Optional[str] = None,
+    top_n: int = 5,
+) -> BaseNodePostprocessor:
+    if model_name is None:
+        return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
         # base_url = "https://caii-prod-long-running.eng-ml-l.vnu8-sqze.cloudera.site/namespaces/serving-default/endpoints/mistral-4b-rerank-l40s/v1/ranking"
         #
@@ -86,7 +92,7 @@ def get_reranking_model(top_n: int = 5) -> BaseNodePostprocessor:
 
         return SimpleReranker(top_n=top_n)
     if os.getenv("ENABLE_TWO_STAGE_RETRIEVAL") or None:
-        return AWSBedrockRerank(top_n=top_n)
+        return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
     return SimpleReranker(top_n=top_n)
 
 
@@ -129,14 +135,14 @@ def get_available_llm_models() -> list[ModelResponse]:
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
 
+
 def get_available_rerank_models() -> List[ModelResponse]:
     if is_caii_enabled():
         return []
     return [
-        ModelResponse(
-            model_id="cohere.rerank-v3-5:0", name="Cohere Rerank v3.5"
-        ),
+        ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
     ]
+
 
 def is_caii_enabled() -> bool:
     domain: str = os.environ.get("CAII_DOMAIN", "")

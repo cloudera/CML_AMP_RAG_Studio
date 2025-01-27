@@ -169,7 +169,10 @@ def _create_query_engine(
         configuration, embedding_model, index, data_source_id, llm
     )
     response_synthesizer = get_response_synthesizer(llm=llm)
-    reranker = models.get_reranking_model(configuration.top_k)
+    reranker = models.get_reranking_model(
+        model_name=configuration.rerank_model_name,
+        top_n=configuration.top_k,
+    )
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
         response_synthesizer=response_synthesizer,
