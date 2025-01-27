@@ -52,7 +52,8 @@ from .chat_store import (
     Evaluation,
     RagContext,
     RagPredictSourceNode,
-    RagStudioChatMessage, RagMessage,
+    RagStudioChatMessage,
+    RagMessage,
 )
 from .metadata_apis import session_metadata_api
 from .query.query_configuration import QueryConfiguration
@@ -61,14 +62,15 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-        session_id: int,
-        query: str,
-        configuration: RagPredictConfiguration,
+    session_id: int,
+    query: str,
+    configuration: RagPredictConfiguration,
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
+        rerank_model_name=session.rerank_model,
         exclude_knowledge_base=configuration.exclude_knowledge_base,
         use_question_condensing=configuration.use_question_condensing,
         use_hyde=configuration.use_hyde,
@@ -156,7 +158,9 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
     return response_source_nodes
 
 
-def generate_suggested_questions(session_id: int, ) -> List[str]:
+def generate_suggested_questions(
+    session_id: int,
+) -> List[str]:
     session = session_metadata_api.get_session(session_id)
     if len(session.data_source_ids) != 1:
         raise HTTPException(
@@ -190,22 +194,26 @@ def generate_suggested_questions(session_id: int, ) -> List[str]:
         )
         if chat_history:
             query_str = (
-                    query_str
-                    + (
-                        "I will provide a response from my last question to help with generating new questions."
-                        " Consider returning questions that are relevant to the response"
-                        " They might be follow up questions or questions that are related to the response."
-                        " Here is the last response received:\n"
-                    )
-                    + chat_history[-1].content
+                query_str
+                + (
+                    "I will provide a response from my last question to help with generating new questions."
+                    " Consider returning questions that are relevant to the response"
+                    " They might be follow up questions or questions that are related to the response."
+                    " Here is the last response received:\n"
+                )
+                + chat_history[-1].content
             )
         response = querier.query(
             data_source_id,
             query_str,
-            QueryConfiguration(top_k=session.response_chunks, model_name=session.inference_model,
-                               exclude_knowledge_base=False,
-                               use_question_condensing=False,
-                               use_hyde=False),
+            QueryConfiguration(
+                top_k=session.response_chunks,
+                model_name=session.inference_model,
+                rerank_model_name=None,
+                exclude_knowledge_base=False,
+                use_question_condensing=False,
+                use_hyde=False,
+            ),
             [],
         )
 

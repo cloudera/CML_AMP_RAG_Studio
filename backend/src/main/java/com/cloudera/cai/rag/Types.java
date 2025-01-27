@@ -115,6 +115,7 @@ public class Types {
       String updatedById,
       Instant lastInteractionTime,
       String inferenceModel,
+      String rerankModel,
       Integer responseChunks) {
 
     public static Session fromCreateRequest(CreateSession input, String username) {
@@ -128,6 +129,7 @@ public class Types {
           username,
           null,
           input.inferenceModel(),
+          input.rerankModel(),
           input.responseChunks());
     }
   }
@@ -136,5 +138,6 @@ public class Types {
       String name,
       @Singular List<Long> dataSourceIds,
       String inferenceModel,
+      String rerankModel,
       Integer responseChunks) {}
 }

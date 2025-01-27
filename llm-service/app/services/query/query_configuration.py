@@ -40,7 +40,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from app.services.models import DEFAULT_BEDROCK_LLM_MODEL
+from app.services.models import DEFAULT_BEDROCK_LLM_MODEL, DEFAULT_BEDROCK_RERANK_MODEL
 
 
 class QueryConfiguration(BaseModel):
@@ -48,6 +48,7 @@ class QueryConfiguration(BaseModel):
 
     top_k: int = 5
     model_name: str = DEFAULT_BEDROCK_LLM_MODEL
+    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
     exclude_knowledge_base: Optional[bool] = False
     use_question_condensing: Optional[bool] = True
     use_hyde: Optional[bool] = False

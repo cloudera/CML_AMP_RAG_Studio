@@ -65,8 +65,8 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, response_chunks)
-            VALUES (:name, :createdById, :updatedById, :inferenceModel, :responseChunks)
+            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks)
+            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks)
           """;
           Long id = insertSession(input, handle, sql);
           insertSessionDataSources(handle, id, input.dataSourceIds());
@@ -125,6 +125,7 @@ public class SessionRepository {
                             .name(rowView.getColumn("name", String.class))
                             .inferenceModel(rowView.getColumn("inference_model", String.class))
                             .responseChunks(rowView.getColumn("response_chunks", Integer.class))
+                            .rerankModel(rowView.getColumn("rerank_model", String.class))
                             .createdById(rowView.getColumn("created_by_id", String.class))
                             .timeCreated(rowView.getColumn("time_created", Instant.class))
                             .updatedById(rowView.getColumn("updated_by_id", String.class))
@@ -170,7 +171,8 @@ public class SessionRepository {
           var sql =
               """
             UPDATE CHAT_SESSION
-            SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel, response_chunks = :responseChunks, time_updated = :timeUpdated
+            SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel,
+                response_chunks = :responseChunks, time_updated = :timeUpdated, rerank_model = :rerankModel
             WHERE id = :id
           """;
           handle.createUpdate(sql).bindMethods(updatedInput).execute();

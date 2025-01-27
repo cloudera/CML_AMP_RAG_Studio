@@ -63,6 +63,7 @@ class SessionControllerTest {
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(sessionName);
     assertThat(result.inferenceModel()).isEqualTo(input.inferenceModel());
+    assertThat(result.rerankModel()).isEqualTo(input.rerankModel());
     assertThat(result.responseChunks()).isEqualTo(input.responseChunks());
     assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
     assertThat(result.timeCreated()).isNotNull();
@@ -95,6 +96,7 @@ class SessionControllerTest {
     var updatedResponseChunks = 1;
     var updatedInferenceModel = "new-model-name";
     var updatedName = "new-name";
+    var updatedRerankModel = "new-rerank-model";
 
     request = new MockHttpServletRequest();
     request.setCookies(
@@ -106,12 +108,14 @@ class SessionControllerTest {
             insertedSession
                 .withInferenceModel(updatedInferenceModel)
                 .withResponseChunks(updatedResponseChunks)
+                .withRerankModel(updatedRerankModel)
                 .withName(updatedName),
             request);
 
     assertThat(updatedSession.id()).isNotNull();
     assertThat(updatedSession.name()).isEqualTo(updatedName);
     assertThat(updatedSession.inferenceModel()).isEqualTo(updatedInferenceModel);
+    assertThat(updatedSession.rerankModel()).isEqualTo(updatedRerankModel);
     assertThat(updatedSession.responseChunks()).isEqualTo(updatedResponseChunks);
     assertThat(updatedSession.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
     assertThat(updatedSession.timeCreated()).isNotNull();

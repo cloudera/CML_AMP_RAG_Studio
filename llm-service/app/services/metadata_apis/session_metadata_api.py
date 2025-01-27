@@ -53,10 +53,13 @@ class Session:
     created_by_id: str
     updated_by_id: str
     inference_model: str
+    rerank_model: str
     response_chunks: int
+
 
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
+
 
 def get_session(session_id: int) -> Session:
     response = requests.get(url_template.format(session_id))
@@ -71,5 +74,6 @@ def get_session(session_id: int) -> Session:
         created_by_id=data["createdById"],
         updated_by_id=data["updatedById"],
         inference_model=data["inferenceModel"],
+        rerank_model=data["rerankModel"],
         response_chunks=data["responseChunks"],
     )

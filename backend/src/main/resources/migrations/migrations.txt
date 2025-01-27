@@ -31,3 +31,5 @@
 15_add_summarization_model.up.sql
 16_add_doc_status.down.sql
 16_add_doc_status.up.sql
+17_add_chat_rerank_model.down.sql
+17_add_chat_rerank_model.up.sql
