@@ -181,15 +181,19 @@ def _create_query_engine(
     return query_engine
 
 
-def _create_node_postprocessors(configuration, data_source_id) -> [BaseNodePostprocessor]:
+def _create_node_postprocessors(
+    configuration, data_source_id
+) -> list[BaseNodePostprocessor]:
     data_source = get_metadata(data_source_id=data_source_id)
     if data_source.summarization_model is None:
         return [SimpleReranker(top_n=configuration.top_k)]
 
-    return models.get_reranking_model(
-        model_name=configuration.rerank_model_name,
-        top_n=configuration.top_k,
-    )
+    return [
+        models.get_reranking_model(
+            model_name=configuration.rerank_model_name,
+            top_n=configuration.top_k,
+        )
+    ]
 
 
 def _build_chat_engine(
