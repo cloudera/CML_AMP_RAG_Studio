@@ -66,10 +66,11 @@
 #  DATA.
 # ##############################################################################
 import logging
+from typing import List, Optional
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import PromptTemplate
+from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
@@ -80,6 +81,7 @@ from llama_index.core.postprocessor import LLMRerank
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.schema import NodeWithScore
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models
@@ -181,6 +183,12 @@ def _create_query_engine(
     return query_engine
 
 
+class DebugNodePostProcessor(BaseNodePostprocessor):
+    def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> list[NodeWithScore]:
+        print(f"nodes: {len(nodes)}")
+        return nodes
+
+
 def _create_node_postprocessors(
     configuration: QueryConfiguration, data_source_id: int, llm: LLM
 ) -> list[BaseNodePostprocessor]:
@@ -193,11 +201,13 @@ def _create_node_postprocessors(
         # return [SimpleReranker(top_n=configuration.top_k)]
 
     return [
+        DebugNodePostProcessor(),
         models.get_reranking_model(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
-        or LLMRerank(top_n=configuration.top_k, llm=llm)
+        or LLMRerank(top_n=configuration.top_k, llm=llm),
+        DebugNodePostProcessor(),
     ]
 
 
