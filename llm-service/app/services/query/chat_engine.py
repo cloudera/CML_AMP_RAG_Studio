@@ -69,7 +69,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
     def chat(
         self, message: str, chat_history: Optional[List[ChatMessage]] = None
     ) -> AgentChatResponse:
-        message, query_response, tool_output = self.chat_internal(message, chat_history)
+        message, query_response, tool_output = self._chat_internal(message, chat_history)
 
         # Record response
         self._memory.put(ChatMessage(role=MessageRole.USER, content=message))
@@ -85,7 +85,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
         message, query_bundle = self._generate_query_message(message, chat_history)
         return self._query_engine.retrieve(query_bundle)
 
-    def chat_internal(
+    def _chat_internal(
         self, message: str, chat_history: Optional[List[ChatMessage]]
     ) -> tuple[str, Response, ToolOutput]:
         message, query_bundle = self._generate_query_message(message, chat_history)

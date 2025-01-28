@@ -95,9 +95,10 @@ def v2_chat(
             ),
             evaluations=[],
             timestamp=time.time(),
+            condensed_question=None
         )
 
-    response = querier.query(
+    response, condensed_question = querier.query(
         data_source_id,
         query,
         query_configuration,
@@ -120,6 +121,7 @@ def v2_chat(
             Evaluation(name="faithfulness", value=faithfulness),
         ],
         timestamp=time.time(),
+        condensed_question=condensed_question,
     )
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
@@ -203,7 +205,7 @@ def generate_suggested_questions(
                 )
                 + chat_history[-1].content
             )
-        response = querier.query(
+        response, _ = querier.query(
             data_source_id,
             query_str,
             QueryConfiguration(

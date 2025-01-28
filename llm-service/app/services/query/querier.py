@@ -115,7 +115,7 @@ def query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
-) -> AgentChatResponse:
+) -> tuple[AgentChatResponse, str | None]:
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
@@ -138,11 +138,11 @@ def query(
             chat_history,
         )
     )
-
+    condensed_question: str = chat_engine._condense_question(chat_messages, query_str)
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
-        return chat_response
+        return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response

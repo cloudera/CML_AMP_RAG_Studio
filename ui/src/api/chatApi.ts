@@ -202,7 +202,7 @@ export const createQueryConfiguration = (
 ): QueryConfiguration => {
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
-    use_question_condensing: !forSuggestedQuestions,
+    use_question_condensing: false,
     use_hyde: false,
   };
 };
