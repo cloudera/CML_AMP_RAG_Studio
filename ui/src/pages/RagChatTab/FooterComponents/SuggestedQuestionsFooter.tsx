@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Collapse, Flex, Skeleton, Tag, Typography } from "antd";
+import { Collapse, Flex, Skeleton, Tag, Tooltip, Typography } from "antd";
 import { useState } from "react";
 import { SendOutlined } from "@ant-design/icons";
 import { cdlBlue600 } from "src/cuix/variables.ts";
@@ -112,15 +112,17 @@ const SuggestedQuestionsFooter = ({
           {
             key: "1",
             label: (
-              <Flex gap={8}>
+              <Flex gap={8} align="center">
                 <Typography.Text
                   type="secondary"
-                  style={{ margin: 0, fontSize: 12 }}
+                  style={{ margin: 0, marginTop: 1, fontSize: 12 }}
                 >
                   Suggested Questions
                 </Typography.Text>
                 {condensedQuestion ? (
-                  <AiAssistantIcon style={{ color: "purple" }} />
+                  <Tooltip title="Suggested rewritten question available">
+                    <AiAssistantIcon style={{ color: "purple" }} />
+                  </Tooltip>
                 ) : null}
               </Flex>
             ),
