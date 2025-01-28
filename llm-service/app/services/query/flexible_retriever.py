@@ -79,7 +79,9 @@ class FlexibleRetriever(BaseRetriever):
         )
 
         result_nodes: list[NodeWithScore] = base_retriever.retrieve(query_bundle)
-        for node in result_nodes:
+        print(f"result_nodes: {len(result_nodes)}")
+
+        for node in sorted(result_nodes, key=lambda n: n.node.node_id):
             print(node.node.node_id, node.node.metadata["document_id"], node.score)
 
         if summarization_model is not None:
@@ -93,7 +95,8 @@ class FlexibleRetriever(BaseRetriever):
                     doc_ids=doc_ids,
                 )
                 result_nodes.extend(simple_retriever.retrieve(query_bundle))
-        for node in result_nodes:
+        print(f"result_nodes(2): {len(result_nodes)}")
+        for node in sorted(result_nodes, key=lambda n: n.node.node_id):
             print(node.node.node_id, node.node.metadata["document_id"], node.score)
         return result_nodes
 
