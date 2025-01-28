@@ -138,7 +138,7 @@ def query(
             chat_history,
         )
     )
-    condensed_question: str = chat_engine._condense_question(chat_messages, query_str)
+    condensed_question: str = chat_engine._condense_question(chat_messages, query_str).strip()
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")

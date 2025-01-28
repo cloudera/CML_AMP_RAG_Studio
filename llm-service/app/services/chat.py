@@ -104,6 +104,8 @@ def v2_chat(
         query_configuration,
         retrieve_chat_history(session_id),
     )
+    if condensed_question and (condensed_question.strip() == query.strip()):
+        condensed_question = None
     relevance, faithfulness = evaluators.evaluate_response(
         query, response, session.inference_model
     )

@@ -39,7 +39,7 @@
 import { Collapse, Flex, Skeleton, Tag, Tooltip, Typography } from "antd";
 import { useState } from "react";
 import { SendOutlined } from "@ant-design/icons";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlOrange500 } from "src/cuix/variables.ts";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon.ts";
 
 export const SuggestedQuestionButton = ({
@@ -121,7 +121,7 @@ const SuggestedQuestionsFooter = ({
                 </Typography.Text>
                 {condensedQuestion ? (
                   <Tooltip title="Suggested rewritten question available">
-                    <AiAssistantIcon style={{ color: "purple" }} />
+                    <AiAssistantIcon style={{ color: cdlOrange500 }} />
                   </Tooltip>
                 ) : null}
               </Flex>
