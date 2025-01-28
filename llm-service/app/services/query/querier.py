@@ -186,6 +186,9 @@ def _create_query_engine(
 class DebugNodePostProcessor(BaseNodePostprocessor):
     def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> list[NodeWithScore]:
         print(f"nodes: {len(nodes)}")
+        for node in nodes:
+            print(node.node.node_id, node.node.metadata["document_id"], node.score)
+
         return nodes
 
 
