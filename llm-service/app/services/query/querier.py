@@ -74,6 +74,7 @@ from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.llms import LLM
@@ -126,10 +127,12 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    query_engine = _create_query_engine(
-        configuration, data_source_id, embedding_model, index, llm
+    retriever = _create_retriever(
+        configuration, embedding_model, index, data_source_id, llm
     )
-    chat_engine = _build_chat_engine(configuration, llm, query_engine)
+    chat_engine = _build_chat_engine(
+        configuration, llm, retriever=retriever, data_source_id=data_source_id
+    )
 
     logger.info("querying chat engine")
     chat_messages = list(
@@ -138,7 +141,10 @@ def query(
             chat_history,
         )
     )
-    condensed_question: str = chat_engine._condense_question(chat_messages, query_str).strip()
+    chat_engine._skip_condense = False
+    condensed_question: str = chat_engine._condense_question(
+        chat_messages, query_str
+    ).strip()
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
@@ -184,10 +190,14 @@ def _create_query_engine(
 
 
 class DebugNodePostProcessor(BaseNodePostprocessor):
-    def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> list[NodeWithScore]:
+    def _postprocess_nodes(
+        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None
+    ) -> list[NodeWithScore]:
         logger.debug(f"nodes: {len(nodes)}")
         for node in sorted(nodes, key=lambda n: n.node.node_id):
-            logger.debug(node.node.node_id, node.node.metadata["document_id"], node.score)
+            logger.debug(
+                node.node.node_id, node.node.metadata["document_id"], node.score
+            )
 
         return nodes
 
@@ -209,13 +219,29 @@ def _create_node_postprocessors(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
-        or
-        LLMRerank(top_n=configuration.top_k, llm=llm),
+        or LLMRerank(top_n=configuration.top_k, llm=llm),
         DebugNodePostProcessor(),
     ]
 
 
 def _build_chat_engine(
+    configuration: QueryConfiguration,
+    llm: LLM,
+    retriever: BaseRetriever,
+    data_source_id: int,
+) -> CondensePlusContextChatEngine:
+    return CondensePlusContextChatEngine.from_defaults(
+        retriever,
+        llm,
+        condense_prompt=CUSTOM_PROMPT,
+        skip_condense=not configuration.use_question_condensing,
+        node_postprocessors=_create_node_postprocessors(
+            configuration, data_source_id, llm
+        ),
+    )
+
+
+def _build_flexible_chat_engine(
     configuration: QueryConfiguration, llm: LLM, query_engine: RetrieverQueryEngine
 ) -> FlexibleChatEngine:
     chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
