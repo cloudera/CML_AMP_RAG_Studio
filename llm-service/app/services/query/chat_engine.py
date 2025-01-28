@@ -102,8 +102,7 @@ class FlexibleChatEngine(CondenseQuestionChatEngine):
         if self.configuration.use_question_condensing:
             # Generate standalone question from conversation context and last message
             condensed_question = self._condense_question(chat_history, message)
-            log_str = f"Querying with condensed question: {condensed_question}"
-            logger.info(log_str)
+            logger.info(f"Querying with condensed question: {condensed_question}")
             message = condensed_question
         embedding_strings = None
         if self.configuration.use_hyde:

@@ -185,9 +185,9 @@ def _create_query_engine(
 
 class DebugNodePostProcessor(BaseNodePostprocessor):
     def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> list[NodeWithScore]:
-        print(f"nodes: {len(nodes)}")
+        logger.debug(f"nodes: {len(nodes)}")
         for node in sorted(nodes, key=lambda n: n.node.node_id):
-            print(node.node.node_id, node.node.metadata["document_id"], node.score)
+            logger.debug(node.node.node_id, node.node.metadata["document_id"], node.score)
 
         return nodes
 
@@ -209,7 +209,8 @@ def _create_node_postprocessors(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
-        or LLMRerank(top_n=configuration.top_k, llm=llm),
+        or
+        LLMRerank(top_n=configuration.top_k, llm=llm),
         DebugNodePostProcessor(),
     ]
 
