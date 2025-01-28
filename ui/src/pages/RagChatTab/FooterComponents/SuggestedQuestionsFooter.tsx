@@ -41,6 +41,43 @@ import { useState } from "react";
 import { SendOutlined } from "@ant-design/icons";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
+export const SuggestedQuestionButton = ({
+  question,
+  handleChat,
+}: {
+  question: string;
+  handleChat: (input: string) => void;
+}) => {
+  return (
+    <Tag
+      key={question}
+      onClick={() => {
+        handleChat(question);
+      }}
+      icon={<SendOutlined />}
+      style={{
+        width: "fit-content",
+        height: "auto",
+        alignItems: "start",
+        color: cdlBlue600,
+        borderColor: cdlBlue600,
+        cursor: "pointer",
+      }}
+    >
+      <Typography.Text
+        style={{
+          textWrap: "wrap",
+          textAlign: "left",
+          color: cdlBlue600,
+          fontWeight: 300,
+        }}
+      >
+        {question}
+      </Typography.Text>
+    </Tag>
+  );
+};
+
 const SuggestedQuestionsFooter = ({
   isLoading,
   handleChat,
@@ -82,36 +119,12 @@ const SuggestedQuestionsFooter = ({
                 {isLoading ? (
                   <Skeleton paragraph={{ rows: 2 }} active />
                 ) : (
-                  questions.map((question) => {
-                    return (
-                      <Tag
-                        key={question}
-                        onClick={() => {
-                          handleChat(question);
-                        }}
-                        icon={<SendOutlined />}
-                        style={{
-                          width: "fit-content",
-                          height: "auto",
-                          alignItems: "start",
-                          color: cdlBlue600,
-                          borderColor: cdlBlue600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Typography.Text
-                          style={{
-                            textWrap: "wrap",
-                            textAlign: "left",
-                            color: cdlBlue600,
-                            fontWeight: 300,
-                          }}
-                        >
-                          {question}
-                        </Typography.Text>
-                      </Tag>
-                    );
-                  })
+                  questions.map((question) => (
+                    <SuggestedQuestionButton
+                      question={question}
+                      handleChat={handleChat}
+                    />
+                  ))
                 )}
               </Flex>
             ),

@@ -37,13 +37,14 @@
  ******************************************************************************/
 
 import { Evaluation } from "src/api/chatApi.ts";
-import { Button, Flex, Popover } from "antd";
+import { Flex, Popover } from "antd";
 import EvaluationMetric from "pages/RagChatTab/ChatOutput/ChatMessages/EvaluationMetric.tsx";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon.ts";
+import { SuggestedQuestionButton } from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 
 export const Evaluations = (props: {
   evaluations: Evaluation[];
-  condensed_question: string;
+  condensed_question?: string;
 }) => (
   <Flex gap={16}>
     {props.evaluations.map((evaluation, index) => {
@@ -56,8 +57,12 @@ export const Evaluations = (props: {
       );
     })}
     {props.condensed_question ? (
-      <Popover>
-        <Button icon={<AiAssistantIcon />} />
+      <Popover
+        content={
+          <SuggestedQuestionButton question={props.condensed_question} />
+        }
+      >
+        <AiAssistantIcon />
       </Popover>
     ) : null}
   </Flex>
