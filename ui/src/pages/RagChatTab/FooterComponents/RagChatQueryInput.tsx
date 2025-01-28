@@ -61,7 +61,7 @@ const RagChatQueryInput = () => {
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
-  const configuration = createQueryConfiguration(excludeKnowledgeBase, true);
+  const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
@@ -92,7 +92,7 @@ const RagChatQueryInput = () => {
       chatMutation.mutate({
         query: userInput,
         session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase, false),
+        configuration: createQueryConfiguration(excludeKnowledgeBase),
       });
     }
   };

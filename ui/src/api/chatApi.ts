@@ -87,6 +87,7 @@ export interface ChatMessageType {
   rag_message: RagMessageV2;
   evaluations: Evaluation[];
   timestamp: number;
+  condensed_question?: string;
 }
 
 const placeholderChatResponseId = "placeholder";
@@ -198,7 +199,6 @@ const chatMutation = async (
 
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean,
-  forSuggestedQuestions: boolean,
 ): QueryConfiguration => {
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
