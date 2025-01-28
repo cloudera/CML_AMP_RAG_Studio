@@ -109,6 +109,9 @@ const RagChatQueryInput = () => {
             questions={sampleQuestions?.suggested_questions ?? []}
             isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
             handleChat={handleChat}
+            condensedQuestion={
+              chatHistory[chatHistory.length - 1].condensed_question
+            }
           />
         ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>

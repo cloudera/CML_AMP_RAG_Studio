@@ -40,13 +40,16 @@ import { Collapse, Flex, Skeleton, Tag, Typography } from "antd";
 import { useState } from "react";
 import { SendOutlined } from "@ant-design/icons";
 import { cdlBlue600 } from "src/cuix/variables.ts";
+import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon.ts";
 
 export const SuggestedQuestionButton = ({
   question,
   handleChat,
+  rewritten,
 }: {
   question: string;
   handleChat: (input: string) => void;
+  rewritten?: boolean;
 }) => {
   return (
     <Tag
@@ -54,7 +57,7 @@ export const SuggestedQuestionButton = ({
       onClick={() => {
         handleChat(question);
       }}
-      icon={<SendOutlined />}
+      icon={rewritten ? <AiAssistantIcon /> : <SendOutlined />}
       style={{
         width: "fit-content",
         height: "auto",
@@ -82,10 +85,12 @@ const SuggestedQuestionsFooter = ({
   isLoading,
   handleChat,
   questions,
+  condensedQuestion,
 }: {
   isLoading: boolean;
   handleChat: (input: string) => void;
   questions: string[];
+  condensedQuestion?: string;
 }) => {
   const [toggleCollapse, setToggleCollapse] = useState(false);
 
@@ -107,15 +112,27 @@ const SuggestedQuestionsFooter = ({
           {
             key: "1",
             label: (
-              <Typography.Text
-                type="secondary"
-                style={{ margin: 0, fontSize: 12 }}
-              >
-                Suggested Questions
-              </Typography.Text>
+              <Flex gap={8}>
+                <Typography.Text
+                  type="secondary"
+                  style={{ margin: 0, fontSize: 12 }}
+                >
+                  Suggested Questions
+                </Typography.Text>
+                {condensedQuestion ? (
+                  <AiAssistantIcon style={{ color: "purple" }} />
+                ) : null}
+              </Flex>
             ),
             children: (
               <Flex vertical gap={12}>
+                {condensedQuestion ? (
+                  <SuggestedQuestionButton
+                    question={condensedQuestion}
+                    handleChat={handleChat}
+                    rewritten={true}
+                  />
+                ) : null}
                 {isLoading ? (
                   <Skeleton paragraph={{ rows: 2 }} active />
                 ) : (
@@ -123,6 +140,7 @@ const SuggestedQuestionsFooter = ({
                     <SuggestedQuestionButton
                       question={question}
                       handleChat={handleChat}
+                      rewritten={false}
                     />
                   ))
                 )}

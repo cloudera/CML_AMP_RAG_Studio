@@ -99,10 +99,7 @@ const ChatMessage = ({
               >
                 {data.rag_message.assistant.trimStart()}
               </Typography.Text>
-              <Evaluations
-                evaluations={data.evaluations}
-                condensed_question={data.condensed_question}
-              />
+              <Evaluations evaluations={data.evaluations} />
             </Flex>
           </Flex>
         </div>
