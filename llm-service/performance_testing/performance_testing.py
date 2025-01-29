@@ -42,19 +42,16 @@ import time
 import pandas as pd
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from app.services.metadata_apis.data_sources_metadata_api import get_metadata
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from app.services.metadata_apis.data_sources_metadata_api import get_metadata
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 
 from llama_index.core import VectorStoreIndex
-from llama_index.core.response_synthesizers import get_response_synthesizer
-from llama_index.core.query_engine import RetrieverQueryEngine
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
-from app.services import models
+from app.services import models, evaluators
 from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleContextChatEngine
 
@@ -71,7 +68,7 @@ def main():
     with open(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
     ) as details:
-        for hyde in [False]:
+        for hyde in [True, False]:
             for condensing in [False]:
                 print(f"Running with hyde={hyde}")
                 score_sum = 0
@@ -88,6 +85,13 @@ def main():
                     chat_response: AgentChatResponse = chat_engine.chat(
                         message=question, chat_history=None
                     )
+                    # Relevance - Measures if the response and source nodes match the query. This is useful for measuring if the query was actually answered by the response.
+                    # Faithfulness - Measures if the response from a query engine matches any source nodes. This is useful for measuring if the response was hallucinated.
+                    relevance, faithfulness = evaluators.evaluate_response(
+                        query=question,
+                        chat_response=chat_response,
+                        model_name=summarization_model,
+                    )
 
                     nodes = chat_response.source_nodes
 
@@ -97,9 +101,9 @@ def main():
                         avg_score = sum(node.score for node in nodes) / len(nodes)
                         score_sum += avg_score
                         score_count += 1
-                        #  timestamp, hyde, condensing, two_stage, top_k, file_name, max_score, avg_score, question
+                        #  timestamp, hyde, condensing, two_stage, top_k, file_name_1, max_score, relevance, faithfulness, question
                         details.write(
-                            f'{time.time()},{hyde},{condensing},{summarization_model is not None},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{avg_score},"{question}"\n'
+                            f'{time.time()},{hyde},{condensing},{summarization_model is not None},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{relevance},{faithfulness},"{question}"\n'
                         )
                     details.flush()
 
@@ -128,7 +132,6 @@ def setup(
         use_hyde=use_hyde,
     )
     llm = models.get_llm(model_name=query_configuration.model_name)
-    response_synthesizer = get_response_synthesizer(llm=llm)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
@@ -143,18 +146,14 @@ def setup(
         data_source_id=data_source_id,
         llm=llm,
     )
-    query_engine = RetrieverQueryEngine(
-        retriever=retriever,
-        response_synthesizer=response_synthesizer,
-        node_postprocessors=[models.get_reranking_model()],
-    )
+
     chat_engine = FlexibleContextChatEngine.from_defaults(
-        query_engine=query_engine,
         llm=llm,
         condense_question_prompt=CUSTOM_PROMPT,
         retriever=retriever,
+        node_postprocessors=[models.get_reranking_model("cohere.rerank-v3-5:0", top_k)],
     )
-    chat_engine.configuration = query_configuration
+    chat_engine._configuration = query_configuration
     return chat_engine
 
 
