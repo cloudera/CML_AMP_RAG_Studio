@@ -77,7 +77,6 @@ from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.llms import LLM
-from llama_index.core.postprocessor import LLMRerank
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
@@ -89,6 +88,7 @@ from app.services.chat_store import RagContext
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
+from .simple_reranker import SimpleReranker
 from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
@@ -209,8 +209,7 @@ def _create_node_postprocessors(
 
     data_source = get_metadata(data_source_id=data_source_id)
     if data_source.summarization_model is None:
-        return [LLMRerank(top_n=configuration.top_k, llm=llm)]
-        # return [SimpleReranker(top_n=configuration.top_k)]
+        return [SimpleReranker(top_n=configuration.top_k)]
 
     return [
         DebugNodePostProcessor(),
@@ -218,7 +217,7 @@ def _create_node_postprocessors(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
-        or LLMRerank(top_n=configuration.top_k, llm=llm),
+        or SimpleReranker(top_n=configuration.top_k),
         DebugNodePostProcessor(),
     ]
 
