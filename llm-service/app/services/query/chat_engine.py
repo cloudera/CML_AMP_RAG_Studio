@@ -36,79 +36,71 @@
 #  DATA.
 #
 import logging
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Tuple
 
-from llama_index.core import Response, QueryBundle
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
-from llama_index.core.callbacks import trace_method
-from llama_index.core.chat_engine import CondenseQuestionChatEngine
-from llama_index.core.chat_engine.types import AgentChatResponse
+from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.chat_engine import (
+    CondensePlusContextChatEngine,
+)
+from llama_index.core.response_synthesizers import CompactAndRefine
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import ToolOutput
 
-from app.services import llm_completion
-from app.services.query.query_configuration import QueryConfiguration
+from .query_configuration import QueryConfiguration
+from .. import llm_completion
 
 logger = logging.getLogger(__name__)
 
 
-class FlexibleChatEngine(CondenseQuestionChatEngine):
+class FlexibleContextChatEngine(CondensePlusContextChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self._configuration: QueryConfiguration = QueryConfiguration()
 
-    @property
-    def configuration(self) -> QueryConfiguration:
-        return self._configuration
+    def condense_question(
+        self, chat_history: List[ChatMessage], latest_message: str
+    ) -> str:
+        return super()._condense_question(chat_history, latest_message)
 
-    @configuration.setter
-    def configuration(self, value: QueryConfiguration) -> None:
-        self._configuration = value
+    def _run_c3(
+        self,
+        message: str,
+        chat_history: Optional[List[ChatMessage]] = None,
+        streaming: bool = False,
+    ) -> Tuple[CompactAndRefine, ToolOutput, List[NodeWithScore]]:
+        if chat_history is not None:
+            self._memory.set(chat_history)
 
-    @trace_method("chat")
-    def chat(
-        self, message: str, chat_history: Optional[List[ChatMessage]] = None
-    ) -> AgentChatResponse:
-        message, query_response, tool_output = self._chat_internal(message, chat_history)
+        chat_history = self._memory.get(input=message)
 
-        # Record response
-        self._memory.put(ChatMessage(role=MessageRole.USER, content=message))
-        self._memory.put(
-            ChatMessage(role=MessageRole.ASSISTANT, content=str(query_response))
-        )
-
-        return AgentChatResponse(response=str(query_response), sources=[tool_output])
-
-    def retrieve(
-        self, message: str, chat_history: Optional[List[ChatMessage]]
-    ) -> List[NodeWithScore]:
-        message, query_bundle = self._generate_query_message(message, chat_history)
-        return self._query_engine.retrieve(query_bundle)
-
-    def _chat_internal(
-        self, message: str, chat_history: Optional[List[ChatMessage]]
-    ) -> tuple[str, Response, ToolOutput]:
-        message, query_bundle = self._generate_query_message(message, chat_history)
-        query_response: Response = self._query_engine.query(query_bundle)
-        tool_output: ToolOutput = self._get_tool_output_from_response(
-            message, query_response
-        )
-        return message, query_response, tool_output
-
-    def _generate_query_message(
-        self, message: str, chat_history: Optional[List[ChatMessage]]
-    ) -> tuple[str, QueryBundle]:
-        chat_history = chat_history or self._memory.get(input=message)
-        if self.configuration.use_question_condensing:
-            # Generate standalone question from conversation context and last message
+        # Condense conversation history and latest message to a standalone question
+        condensed_question = message
+        if self._configuration.use_question_condensing:
             condensed_question = self._condense_question(chat_history, message)
-            logger.info(f"Querying with condensed question: {condensed_question}")
-            message = condensed_question
-        embedding_strings = None
-        if self.configuration.use_hyde:
-            hypothetical = llm_completion.hypothetical(message, self.configuration)
-            logger.info(f"hypothetical document: {hypothetical}")
-            embedding_strings = [hypothetical]
-        # Query with standalone question
-        query_bundle = QueryBundle(message, custom_embedding_strs=embedding_strings)
-        return message, query_bundle
+            logger.info(f"Condensed question: {condensed_question}")
+            if self._verbose:
+                print(f"Condensed question: {condensed_question}")
+
+        # get the context nodes using the condensed question
+        if self._configuration.use_hyde:
+            condensed_question = llm_completion.hypothetical(
+                condensed_question, self._configuration
+            )
+            logger.info(f"Hypothetical document: {condensed_question}")
+            if self._verbose:
+                print(f"Hypothetical document: {condensed_question}")
+
+        context_nodes = self._get_nodes(condensed_question)
+        context_source = ToolOutput(
+            tool_name="retriever",
+            content=str(context_nodes),
+            raw_input={"message": condensed_question},
+            raw_output=context_nodes,
+        )
+
+        # build the response synthesizer
+        response_synthesizer = self._get_response_synthesizer(
+            chat_history, streaming=streaming
+        )
+
+        return response_synthesizer, context_source, context_nodes

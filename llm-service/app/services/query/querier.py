@@ -74,7 +74,6 @@ from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
-from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.llms import LLM
@@ -87,8 +86,8 @@ from llama_index.core.schema import NodeWithScore
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models
 from app.services.chat_store import RagContext
-from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
+from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from ..metadata_apis.data_sources_metadata_api import get_metadata
 
@@ -127,11 +126,11 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
+    query_engine = _create_query_engine(
+        configuration, data_source_id, embedding_model, index, llm
     )
-    chat_engine = _build_chat_engine(
-        configuration, llm, retriever=retriever, data_source_id=data_source_id
+    chat_engine = _build_flexible_chat_engine(
+        configuration, llm, query_engine, data_source_id
     )
 
     logger.info("querying chat engine")
@@ -141,8 +140,8 @@ def query(
             chat_history,
         )
     )
-    chat_engine._skip_condense = False
-    condensed_question: str = chat_engine._condense_question(
+
+    condensed_question: str = chat_engine.condense_question(
         chat_messages, query_str
     ).strip()
     try:
@@ -224,30 +223,22 @@ def _create_node_postprocessors(
     ]
 
 
-def _build_chat_engine(
+def _build_flexible_chat_engine(
     configuration: QueryConfiguration,
     llm: LLM,
-    retriever: BaseRetriever,
+    query_engine: RetrieverQueryEngine,
     data_source_id: int,
-) -> CondensePlusContextChatEngine:
-    return CondensePlusContextChatEngine.from_defaults(
-        retriever,
-        llm,
-        condense_prompt=CUSTOM_PROMPT,
-        skip_condense=not configuration.use_question_condensing,
-        node_postprocessors=_create_node_postprocessors(
-            configuration, data_source_id, llm
-        ),
+) -> FlexibleContextChatEngine:
+    postprocessors = _create_node_postprocessors(
+        configuration, data_source_id=data_source_id, llm=llm
     )
-
-
-def _build_flexible_chat_engine(
-    configuration: QueryConfiguration, llm: LLM, query_engine: RetrieverQueryEngine
-) -> FlexibleChatEngine:
-    chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
+    print(len(postprocessors))
+    chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
         condense_question_prompt=CUSTOM_PROMPT,
+        retriever=query_engine.retriever,
+        node_postprocessors=postprocessors,
     )
-    chat_engine.configuration = configuration
+    chat_engine._configuration = configuration
     return chat_engine

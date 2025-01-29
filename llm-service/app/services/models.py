@@ -138,6 +138,7 @@ def get_available_rerank_models() -> List[ModelResponse]:
         return []
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
+        ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
     ]
 
 
@@ -224,7 +225,9 @@ def test_reranking_model(model_name: str) -> str:
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4
                 )
-                reranking_model: BaseNodePostprocessor | None = get_reranking_model(model_name=model_name)
+                reranking_model: BaseNodePostprocessor | None = get_reranking_model(
+                    model_name=model_name
+                )
                 if reranking_model:
                     reranking_model.postprocess_nodes(
                         [node, another_test_node], None, "test"

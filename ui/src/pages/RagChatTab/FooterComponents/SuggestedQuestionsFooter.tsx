@@ -57,7 +57,13 @@ export const SuggestedQuestionButton = ({
       onClick={() => {
         handleChat(question);
       }}
-      icon={rewritten ? <AiAssistantIcon /> : <SendOutlined />}
+      icon={
+        rewritten ? (
+          <AiAssistantIcon style={{ marginRight: 6 }} />
+        ) : (
+          <SendOutlined />
+        )
+      }
       style={{
         width: "fit-content",
         height: "auto",
@@ -120,7 +126,7 @@ const SuggestedQuestionsFooter = ({
                   Suggested Questions
                 </Typography.Text>
                 {condensedQuestion ? (
-                  <Tooltip title="Suggested rewritten question available">
+                  <Tooltip title="Alternative question available">
                     <AiAssistantIcon style={{ color: cdlOrange500 }} />
                   </Tooltip>
                 ) : null}
