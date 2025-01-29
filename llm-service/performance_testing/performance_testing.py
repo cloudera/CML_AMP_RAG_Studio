@@ -125,11 +125,13 @@ def setup(
 ) -> FlexibleContextChatEngine:
 
     model_name = "meta.llama3-1-8b-instruct-v1:0"
+    rerank_model = "amazon.rerank-v1:0"
     query_configuration = QueryConfiguration(
         top_k=5,
         model_name=model_name,
         use_question_condensing=use_question_condensing,
         use_hyde=use_hyde,
+        rerank_model_name=rerank_model
     )
     llm = models.get_llm(model_name=query_configuration.model_name)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
@@ -151,7 +153,7 @@ def setup(
         llm=llm,
         condense_question_prompt=CUSTOM_PROMPT,
         retriever=retriever,
-        node_postprocessors=[models.get_reranking_model("cohere.rerank-v3-5:0", top_k)],
+        node_postprocessors=[models.get_reranking_model(rerank_model, top_k)],
     )
     chat_engine._configuration = query_configuration
     return chat_engine
