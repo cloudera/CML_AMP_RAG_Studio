@@ -77,7 +77,6 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         condensed_question = message
         if self._configuration.use_question_condensing:
             condensed_question = self._condense_question(chat_history, message)
-            logger.info(f"Condensed question: {condensed_question}")
             if self._verbose:
                 print(f"Condensed question: {condensed_question}")
 
@@ -86,7 +85,6 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
             condensed_question = llm_completion.hypothetical(
                 condensed_question, self._configuration
             )
-            logger.info(f"Hypothetical document: {condensed_question}")
             if self._verbose:
                 print(f"Hypothetical document: {condensed_question}")
 
