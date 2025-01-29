@@ -231,7 +231,6 @@ def _build_flexible_chat_engine(
     postprocessors = _create_node_postprocessors(
         configuration, data_source_id=data_source_id, llm=llm
     )
-    print(len(postprocessors))
     chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
