@@ -55,7 +55,7 @@ const SuggestedQuestionsCards = () => {
     isPending: suggestedQuestionsIsPending,
     isFetching: suggestedQuestionsIsFetching,
   } = useSuggestQuestions({
-    configuration: createQueryConfiguration(excludeKnowledgeBase, true),
+    configuration: createQueryConfiguration(excludeKnowledgeBase),
     session_id: sessionId ?? "",
   });
 
@@ -79,7 +79,7 @@ const SuggestedQuestionsCards = () => {
       chatMutation({
         query: suggestedQuestion,
         session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase, false),
+        configuration: createQueryConfiguration(excludeKnowledgeBase),
       });
     }
   };

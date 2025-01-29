@@ -71,7 +71,7 @@ def get_noop_llm_model() -> LLM:
 
 def get_reranking_model(
     model_name: Optional[str] = None, top_n: int = 5
-) -> BaseNodePostprocessor:
+) -> BaseNodePostprocessor | None:
     if model_name is None:
         return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
@@ -89,7 +89,7 @@ def get_reranking_model(
         #     top_n=5,
         #     is_hosted=False
         # )
-        return SimpleReranker(top_n=top_n)
+        return None
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
 
@@ -138,6 +138,7 @@ def get_available_rerank_models() -> List[ModelResponse]:
         return []
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
+        ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
     ]
 
 
@@ -224,11 +225,12 @@ def test_reranking_model(model_name: str) -> str:
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4
                 )
-                get_reranking_model(model_name=model_name).postprocess_nodes(
-                    [node, another_test_node], None, "test"
+                reranking_model: BaseNodePostprocessor | None = get_reranking_model(
+                    model_name=model_name
                 )
-                return "ok"
-            else:
-                raise HTTPException(status_code=503, detail="Model not ready")
-
+                if reranking_model:
+                    reranking_model.postprocess_nodes(
+                        [node, another_test_node], None, "test"
+                    )
+                    return "ok"
     raise HTTPException(status_code=404, detail="Model not found")

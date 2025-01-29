@@ -95,14 +95,17 @@ def v2_chat(
             ),
             evaluations=[],
             timestamp=time.time(),
+            condensed_question=None
         )
 
-    response = querier.query(
+    response, condensed_question = querier.query(
         data_source_id,
         query,
         query_configuration,
         retrieve_chat_history(session_id),
     )
+    if condensed_question and (condensed_question.strip() == query.strip()):
+        condensed_question = None
     relevance, faithfulness = evaluators.evaluate_response(
         query, response, session.inference_model
     )
@@ -120,6 +123,7 @@ def v2_chat(
             Evaluation(name="faithfulness", value=faithfulness),
         ],
         timestamp=time.time(),
+        condensed_question=condensed_question,
     )
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
@@ -203,7 +207,7 @@ def generate_suggested_questions(
                 )
                 + chat_history[-1].content
             )
-        response = querier.query(
+        response, _ = querier.query(
             data_source_id,
             query_str,
             QueryConfiguration(
@@ -213,6 +217,7 @@ def generate_suggested_questions(
                 exclude_knowledge_base=False,
                 use_question_condensing=False,
                 use_hyde=False,
+                use_postprocessor=False,
             ),
             [],
         )

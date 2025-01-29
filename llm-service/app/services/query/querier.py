@@ -66,10 +66,11 @@
 #  DATA.
 # ##############################################################################
 import logging
+from typing import List, Optional
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import PromptTemplate
+from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
@@ -79,12 +80,13 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.schema import NodeWithScore
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models
 from app.services.chat_store import RagContext
-from app.services.query.chat_engine import FlexibleChatEngine
 from app.services.query.query_configuration import QueryConfiguration
+from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
 from ..metadata_apis.data_sources_metadata_api import get_metadata
@@ -113,7 +115,7 @@ def query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
-) -> AgentChatResponse:
+) -> tuple[AgentChatResponse, str | None]:
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
@@ -127,7 +129,9 @@ def query(
     query_engine = _create_query_engine(
         configuration, data_source_id, embedding_model, index, llm
     )
-    chat_engine = _build_chat_engine(configuration, llm, query_engine)
+    chat_engine = _build_flexible_chat_engine(
+        configuration, llm, query_engine, data_source_id
+    )
 
     logger.info("querying chat engine")
     chat_messages = list(
@@ -137,10 +141,13 @@ def query(
         )
     )
 
+    condensed_question: str = chat_engine.condense_question(
+        chat_messages, query_str
+    ).strip()
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
-        return chat_response
+        return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response
@@ -172,7 +179,7 @@ def _create_query_engine(
     )
     response_synthesizer = get_response_synthesizer(llm=llm)
 
-    postprocessors = _create_node_postprocessors(configuration, data_source_id)
+    postprocessors = _create_node_postprocessors(configuration, data_source_id, llm)
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
         response_synthesizer=response_synthesizer,
@@ -181,28 +188,55 @@ def _create_query_engine(
     return query_engine
 
 
+class DebugNodePostProcessor(BaseNodePostprocessor):
+    def _postprocess_nodes(
+        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None
+    ) -> list[NodeWithScore]:
+        logger.debug(f"nodes: {len(nodes)}")
+        for node in sorted(nodes, key=lambda n: n.node.node_id):
+            logger.debug(
+                node.node.node_id, node.node.metadata["document_id"], node.score
+            )
+
+        return nodes
+
+
 def _create_node_postprocessors(
-    configuration: QueryConfiguration, data_source_id: int
+    configuration: QueryConfiguration, data_source_id: int, llm: LLM
 ) -> list[BaseNodePostprocessor]:
+    if not configuration.use_postprocessor:
+        return []
+
     data_source = get_metadata(data_source_id=data_source_id)
     if data_source.summarization_model is None:
         return [SimpleReranker(top_n=configuration.top_k)]
 
     return [
+        DebugNodePostProcessor(),
         models.get_reranking_model(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
+        or SimpleReranker(top_n=configuration.top_k),
+        DebugNodePostProcessor(),
     ]
 
 
-def _build_chat_engine(
-    configuration: QueryConfiguration, llm: LLM, query_engine: RetrieverQueryEngine
-) -> FlexibleChatEngine:
-    chat_engine: FlexibleChatEngine = FlexibleChatEngine.from_defaults(
+def _build_flexible_chat_engine(
+    configuration: QueryConfiguration,
+    llm: LLM,
+    query_engine: RetrieverQueryEngine,
+    data_source_id: int,
+) -> FlexibleContextChatEngine:
+    postprocessors = _create_node_postprocessors(
+        configuration, data_source_id=data_source_id, llm=llm
+    )
+    chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         query_engine=query_engine,
         llm=llm,
         condense_question_prompt=CUSTOM_PROMPT,
+        retriever=query_engine.retriever,
+        node_postprocessors=postprocessors,
     )
-    chat_engine.configuration = configuration
+    chat_engine._configuration = configuration
     return chat_engine

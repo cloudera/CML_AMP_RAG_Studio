@@ -108,7 +108,9 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       <Form.Item
         name="rerankModel"
         label="Reranking model"
-        initialValue={rerankingModels ? rerankingModels[0].model_id : ""}
+        initialValue={
+          rerankingModels?.length ? rerankingModels[0].model_id : ""
+        }
       >
         <Select allowClear options={transformModelOptions(rerankingModels)} />
       </Form.Item>

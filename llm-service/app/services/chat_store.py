@@ -75,6 +75,7 @@ class RagStudioChatMessage(BaseModel):
     rag_message: RagMessage
     evaluations: list[Evaluation]
     timestamp: float
+    condensed_question: Optional[str]
 
 
 class ChatHistoryManager:
@@ -118,6 +119,7 @@ class ChatHistoryManager:
                         "evaluations", []
                     ),
                     timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
+                    condensed_question=None
                 )
             )
             i += 2

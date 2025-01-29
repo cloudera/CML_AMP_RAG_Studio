@@ -40,6 +40,7 @@ import sys
 import time
 
 import pandas as pd
+from llama_index.core.chat_engine.types import AgentChatResponse
 
 from app.services.metadata_apis.data_sources_metadata_api import get_metadata
 
@@ -55,7 +56,7 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models
 from app.services.query.querier import CUSTOM_PROMPT
-from app.services.query.chat_engine import FlexibleChatEngine
+from app.services.query.chat_engine import FlexibleContextChatEngine
 
 
 # usage: uv run --env-file=../.env performance_testing/performance_testing.py <data_source_id> questions_mini.csv
@@ -84,7 +85,12 @@ def main():
                         data_source_id=data_source_id,
                         top_k=top_k,
                     )
-                    nodes = chat_engine.retrieve(message=question, chat_history=None)
+                    chat_response: AgentChatResponse = chat_engine.chat(
+                        message=question, chat_history=None
+                    )
+
+                    nodes = chat_response.source_nodes
+
                     if nodes:
                         question_max = max(node.score for node in nodes)
                         max_score = max(max_score, question_max)
@@ -98,7 +104,7 @@ def main():
                     details.flush()
 
                 average_score = score_sum / score_count
-                print(f"{chat_engine.configuration=}")
+                print(f"{chat_engine._configuration=}")
                 print(f"Average score: {average_score}")
                 with open(
                     os.path.abspath(
@@ -112,7 +118,7 @@ def main():
 
 def setup(
     data_source_id: int, use_question_condensing=True, use_hyde=True, top_k: int = 5
-) -> FlexibleChatEngine:
+) -> FlexibleContextChatEngine:
 
     model_name = "meta.llama3-1-8b-instruct-v1:0"
     query_configuration = QueryConfiguration(
@@ -142,8 +148,11 @@ def setup(
         response_synthesizer=response_synthesizer,
         node_postprocessors=[models.get_reranking_model()],
     )
-    chat_engine = FlexibleChatEngine.from_defaults(
-        query_engine=query_engine, llm=llm, condense_question_prompt=CUSTOM_PROMPT
+    chat_engine = FlexibleContextChatEngine.from_defaults(
+        query_engine=query_engine,
+        llm=llm,
+        condense_question_prompt=CUSTOM_PROMPT,
+        retriever=retriever,
     )
     chat_engine.configuration = query_configuration
     return chat_engine

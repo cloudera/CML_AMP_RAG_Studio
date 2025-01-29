@@ -111,6 +111,7 @@ def llm_talk(
             assistant=str(chat_response.message.content),
         ),
         timestamp=time.time(),
+        condensed_question=None
     )
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
