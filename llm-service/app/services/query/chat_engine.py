@@ -74,25 +74,25 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         chat_history = self._memory.get(input=message)
 
         # Condense conversation history and latest message to a standalone question
-        condensed_question = message
+        vector_match_input = message
         if self._configuration.use_question_condensing:
-            condensed_question = self._condense_question(chat_history, message)
+            vector_match_input = self._condense_question(chat_history, message)
             if self._verbose:
-                print(f"Condensed question: {condensed_question}")
+                logger.info(f"Condensed question: {vector_match_input}")
 
         # get the context nodes using the condensed question
         if self._configuration.use_hyde:
-            condensed_question = llm_completion.hypothetical(
-                condensed_question, self._configuration
+            vector_match_input = llm_completion.hypothetical(
+                vector_match_input, self._configuration
             )
             if self._verbose:
-                print(f"Hypothetical document: {condensed_question}")
+                logger.info(f"Hypothetical document: {vector_match_input}")
 
-        context_nodes = self._get_nodes(condensed_question)
+        context_nodes = self._get_nodes(vector_match_input)
         context_source = ToolOutput(
             tool_name="retriever",
             content=str(context_nodes),
-            raw_input={"message": condensed_question},
+            raw_input={"message": vector_match_input},
             raw_output=context_nodes,
         )
 

@@ -78,8 +78,6 @@ from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.response_synthesizers import get_response_synthesizer
 from llama_index.core.schema import NodeWithScore
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
@@ -126,11 +124,11 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.get_llm(model_name=configuration.model_name)
 
-    query_engine = _create_query_engine(
-        configuration, data_source_id, embedding_model, index, llm
+    retriever = _create_retriever(
+        configuration, embedding_model, index, data_source_id, llm
     )
     chat_engine = _build_flexible_chat_engine(
-        configuration, llm, query_engine, data_source_id
+        configuration, llm, retriever, data_source_id
     )
 
     logger.info("querying chat engine")
@@ -165,27 +163,6 @@ def _create_retriever(
     llm: LLM,
 ) -> BaseRetriever:
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
-
-
-def _create_query_engine(
-    configuration: QueryConfiguration,
-    data_source_id: int,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    llm: LLM,
-) -> RetrieverQueryEngine:
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
-    )
-    response_synthesizer = get_response_synthesizer(llm=llm)
-
-    postprocessors = _create_node_postprocessors(configuration, data_source_id, llm)
-    query_engine = RetrieverQueryEngine(
-        retriever=retriever,
-        response_synthesizer=response_synthesizer,
-        node_postprocessors=postprocessors,
-    )
-    return query_engine
 
 
 class DebugNodePostProcessor(BaseNodePostprocessor):
@@ -225,17 +202,16 @@ def _create_node_postprocessors(
 def _build_flexible_chat_engine(
     configuration: QueryConfiguration,
     llm: LLM,
-    query_engine: RetrieverQueryEngine,
+    retriever: BaseRetriever,
     data_source_id: int,
 ) -> FlexibleContextChatEngine:
     postprocessors = _create_node_postprocessors(
         configuration, data_source_id=data_source_id, llm=llm
     )
     chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
-        query_engine=query_engine,
         llm=llm,
         condense_question_prompt=CUSTOM_PROMPT,
-        retriever=query_engine.retriever,
+        retriever=retriever,
         node_postprocessors=postprocessors,
     )
     chat_engine._configuration = configuration
