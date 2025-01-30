@@ -69,15 +69,8 @@ from pydantic import BaseModel, ConfigDict
 #
 
 
-class EndpointMetadata(BaseModel):
-    model_config = ConfigDict(protected_namespaces=(), extra='ignore')
-    # current_model: Optional[RegistrySource]
-    # previous_model: Optional[RegistrySource]
-    model_name: str
-
-
 class Endpoint(BaseModel):
-    model_config = ConfigDict(extra='ignore')
+    model_config = ConfigDict(protected_namespaces=(), extra='ignore')
     namespace: str
     name: str
     url: str
@@ -92,7 +85,7 @@ class Endpoint(BaseModel):
     resources: Dict[str, str]
     # source: Dict[str, RegistrySource]
     autoscaling: Dict[str, Any]
-    endpointmetadata: EndpointMetadata
+    model_name: str
     traffic: Dict[str, str]
     api_standard: str
     has_chat_template: bool

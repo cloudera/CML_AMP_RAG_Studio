@@ -66,7 +66,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return self._get_embedding(query, "query")
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
-        model = self.endpoint.endpointmetadata.model_name
+        model = self.endpoint.model_name
         body = json.dumps(
             {
                 "input": query,
@@ -99,7 +99,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         if len(texts) == 1:
             return [self._get_text_embedding(texts[0])]
 
-        model = self.endpoint.endpointmetadata.model_name
+        model = self.endpoint.model_name
         body = json.dumps(
             {
                 "input": texts,

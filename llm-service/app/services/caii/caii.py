@@ -95,7 +95,7 @@ def get_llm(
     api_base = endpoint.url.removesuffix("/chat/completions")
     headers = build_auth_headers()
 
-    model = endpoint.endpointmetadata.model_name
+    model = endpoint.model_name
     if "mistral" in endpoint_name.lower():
         llm = CaiiModelMistral(
             model=model,
