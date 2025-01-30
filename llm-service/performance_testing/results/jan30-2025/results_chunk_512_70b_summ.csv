@@ -1,0 +1,10 @@
+chunk_size,summarization_model,reranking_model,synthesis_model,hyde,top_k,average_max_score,min_max_score,relevance_average,faithfulness_average
+
+512,meta.llama3-1-70b-instruct-v1:0,cohere.rerank-v3-5:0,meta.llama3-1-8b-instruct-v1:0,True,5,0.9023143398134332,0.8051580786705017,0.9473684210526315,0.42105263157894735
+512,meta.llama3-1-70b-instruct-v1:0,cohere.rerank-v3-5:0,meta.llama3-1-8b-instruct-v1:0,False,5,0.9106933380428114,0.825266420841217,0.9473684210526315,0.2631578947368421
+512,meta.llama3-1-70b-instruct-v1:0,cohere.rerank-v3-5:0,meta.llama3-1-8b-instruct-v1:0,True,10,0.9146114587783813,0.8051580786705017,0.8947368421052632,0.2631578947368421
+512,meta.llama3-1-70b-instruct-v1:0,cohere.rerank-v3-5:0,meta.llama3-1-8b-instruct-v1:0,False,10,0.9106933380428114,0.825266420841217,0.7894736842105263,0.3157894736842105
+512,meta.llama3-1-70b-instruct-v1:0,amazon.rerank-v1:0,meta.llama3-1-8b-instruct-v1:0,True,5,0.8880649773698104,0.5431662201881409,0.9473684210526315,0.631578947368421
+512,meta.llama3-1-70b-instruct-v1:0,amazon.rerank-v1:0,meta.llama3-1-8b-instruct-v1:0,False,5,0.518154436428296,0.037256766110658646,0.9473684210526315,0.2631578947368421
+512,meta.llama3-1-70b-instruct-v1:0,amazon.rerank-v1:0,meta.llama3-1-8b-instruct-v1:0,True,10,0.867343472807031,0.7325918078422546,0.9473684210526315,0.3157894736842105
+512,meta.llama3-1-70b-instruct-v1:0,amazon.rerank-v1:0,meta.llama3-1-8b-instruct-v1:0,False,10,0.518154436428296,0.037256766110658646,0.8421052631578947,0.21052631578947367
