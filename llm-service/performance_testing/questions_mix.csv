@@ -1,0 +1,20 @@
+Question,Source Docs,Question Type,Source Chunk Type
+How has Apple's total net sales changed over time?,*AAPL*,Multi-Doc RAG,Table
+What are the major factors contributing to the change in Apple's gross margin in the most recent 10-Q compared to the previous quarters?,*AAPL*,Multi-Doc RAG,Text
+"Has there been any significant change in Apple's operating expenses over the reported quarters? If so, what are the key drivers for this change?",*AAPL*,Multi-Doc RAG,Table
+How has Apple's revenue from iPhone sales fluctuated across quarters?,*AAPL*,Multi-Doc RAG,Table
+Can any trends be identified in Apple�s Services segment revenue over the reported periods?,*AAPL*,Multi-Doc RAG,Table
+What is the impact of foreign exchange rates on Apple's financial performance? List this out separately for each reported period.,*AAPL*,Multi-Doc RAG,Table
+Are there any notable changes in Apple's liquidity position or cash flows as reported in these 10-Qs?,*AAPL*,Multi-Doc RAG,Table
+How does Apple's R&D expenditure in the most recent quarter compare to previous quarters and what implications might this have?,*AAPL*,Multi-Doc RAG,Table
+What legal proceedings or contingencies are disclosed in these 10-Qs and how might they potentially impact Apple?,*AAPL*,Multi-Doc RAG,Text
+Has Apple engaged in any significant share repurchase activities in the reported quarters and what are the financial implications of these activities?,*AAPL*,Multi-Doc RAG,Table
+What modulates the spontaneous eye blink rate in horses?,Spontaneous eye blink rate in horses is modulated by attention and reward anticipation.,s41598-024-70141-y.pdf
+Which factors affect animal survival in conservation efforts?,Survival depends on predator control and bold personality traits (Western ringtail possums) or habitat quality and reduced competition (Black-tailed gulls).,"s41598-024-67726-y.pdf, s41598-024-70330-9.pdf"
+How does fish domestication influence aggression in zebrafish?,The influence of domestication on aggression in zebrafish varies and lacks a consistent trend.,s41598-024-71451-x.pdf
+What are the acoustic behaviors of baleen whales near sub-Antarctic islands?,"Acoustic behaviors include species-specific songs, with Antarctic blue and fin whales detected year-round, while other species are seasonal.",s41598-024-72696-2.pdf
+What factors improve fattening efficiency in commercial pig herds?,"Factors include farm facilities, feed quality, and disease management during the nursery and finishing stages.",s41598-024-70900-x.pdf
+What factors contribute to the survival rates of reintroduced Western ringtail possums?,"Survival is influenced by bold personality traits, prior habituation to local food, juvenile age at release, and effective predator control methods like shooting over baiting. Environmental factors like the type of dreys also play a role​","s41598-024-67726-y.pdf,"
+How does foraging behavior differ among Black-tailed gulls from various breeding colonies?,"Black-tailed gulls from colonies with high competition pressures tend to forage further distances. Colonies in the East Sea show longer foraging distances with higher flight efficiency compared to colonies in the Yellow or South Sea, reflecting differences in resource availability and competition",s41598-024-70330-9.pdf
+Can zebrafish domestication be linked to changes in stress response and aggression?,"Early domestication reduces stress-related traits and activity levels while increasing aggression in some strains like TU compared to AB. These behavioral shifts can vary significantly across domestication levels and genetic strains, with no clear evolutionary trend​",s41598-024-71451-x.pdf
+How does food availability at release sites affect reintroduction success for endangered species?,"Successful reintroduction depends on prior habituation to local food sources, as shown in Western ringtail possums. Without acclimation, changes in diet can disrupt gut microbiota, reduce food digestion efficiency, and lead to increased mortality","s41598-024-67726-y.pdf,"
