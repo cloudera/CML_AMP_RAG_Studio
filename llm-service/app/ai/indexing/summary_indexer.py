@@ -60,6 +60,8 @@ from llama_index.core.schema import (
     TextNode,
 )
 from qdrant_client.http.exceptions import UnexpectedResponse
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
 from app.services.models import get_noop_llm_model, get_noop_embedding_model
 from .base import BaseTextIndexer
@@ -188,6 +190,35 @@ class SummaryIndexer(BaseTextIndexer):
 
         chunks: ChunksResult = reader.load_chunks(file_path)
         nodes: List[TextNode] = chunks.chunks
+        docs = [node.text for node in nodes]
+        no_features = 1000
+
+        # NMF is able to use tf-idf
+        tfidf_vectorizer = TfidfVectorizer(
+            max_df=0.95, min_df=2, max_features=no_features, stop_words="english"
+        )
+        tfidf = tfidf_vectorizer.fit_transform(docs)
+        tfidf_feature_names = tfidf_vectorizer.get_feature_names_out()
+
+        # LDA can only use raw term counts for LDA because it is a probabilistic graphical model
+        tf_vectorizer = CountVectorizer(
+            max_df=0.95, min_df=2, max_features=no_features, stop_words="english"
+        )
+        tf = tf_vectorizer.fit_transform(docs)
+        tf_feature_names = tf_vectorizer.get_feature_names_out()
+        print(tf_feature_names)
+
+        no_topics = 20
+
+        lda = LatentDirichletAllocation(
+            n_components=no_topics,
+            max_iter=5,
+            learning_method="online",
+            learning_offset=50.0,
+            random_state=0,
+        ).fit(tf)
+
+        display_topics(lda, tf_feature_names, no_top_words)
 
         if not nodes:
             logger.warning(f"No chunks found for file {file_path}")
