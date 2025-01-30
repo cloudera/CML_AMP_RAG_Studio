@@ -95,7 +95,6 @@ class Endpoint(BaseModel):
     traffic: Dict[str, str]
     api_standard: str
     has_chat_template: bool
-    metricFormat: str
     task: str
     instance_type: str
 
@@ -111,7 +110,6 @@ class ListEndpointEntry:
     replica_metadata: List[Any]
     api_standard: str
     has_chat_template: bool
-    metricFormat: str
 
 
 @dataclass
