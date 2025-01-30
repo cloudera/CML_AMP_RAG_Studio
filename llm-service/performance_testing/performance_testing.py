@@ -129,9 +129,9 @@ def main():
                     score_sum += avg_score
                     max_score_sum += max_score
                     min_max_score = min(max_score, min_max_score)
-                    #  timestamp, hyde, summarization_model, top_k, file_name_1, max_score, relevance, faithfulness, question
+                    #  timestamp,chunk_size, hyde, summarization_model,reranking_model,top_k, file_name_1, max_score, relevance, faithfulness, question
                     details.write(
-                        f'{time.time()},{hyde},{summarization_model},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{relevance},{faithfulness},"{question}"\n'
+                        f'{time.time()},{chunk_size},{hyde},{summarization_model},{reranking_model},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{relevance},{faithfulness},"{question}"\n'
                     )
                 details.flush()
 
