@@ -97,6 +97,7 @@ class Endpoint(BaseModel):
     has_chat_template: bool
     task: str
     instance_type: str
+    metric_format: str
 
 
 @dataclass
@@ -110,6 +111,7 @@ class ListEndpointEntry:
     replica_metadata: List[Any]
     api_standard: str
     has_chat_template: bool
+    metric_format: str
 
 
 @dataclass
