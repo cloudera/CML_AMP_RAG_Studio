@@ -70,13 +70,14 @@ from pydantic import BaseModel, ConfigDict
 
 
 class EndpointMetadata(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=(), extra='ignore')
     # current_model: Optional[RegistrySource]
     # previous_model: Optional[RegistrySource]
     model_name: str
 
 
 class Endpoint(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     namespace: str
     name: str
     url: str
@@ -100,15 +101,13 @@ class Endpoint(BaseModel):
     metric_format: str
 
 
-@dataclass
-class ListEndpointEntry:
+class ListEndpointEntry(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     namespace: str
     name: str
     url: str
     state: str
     created_by: str
-    replica_count: int
-    replica_metadata: List[Any]
     api_standard: str
     has_chat_template: bool
     metric_format: str
