@@ -36,7 +36,7 @@
 #  DATA.
 #
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 
 from pydantic import BaseModel, ConfigDict
 
