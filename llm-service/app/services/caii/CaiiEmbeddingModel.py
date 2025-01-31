@@ -66,7 +66,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return self._get_embedding(query, "query")
 
     def _get_embedding(self, query: str, input_type: str) -> Embedding:
-        model = self.endpoint.endpointmetadata.model_name
+        model = self.endpoint.model_name
         body = json.dumps(
             {
                 "input": query,
@@ -95,12 +95,11 @@ class CaiiEmbeddingModel(BaseEmbedding):
         structured_response = json.loads(json_response)
         return structured_response
 
-
     def _get_text_embeddings(self, texts: List[str]) -> List[Embedding]:
         if len(texts) == 1:
             return [self._get_text_embedding(texts[0])]
 
-        model = self.endpoint.endpointmetadata.model_name
+        model = self.endpoint.model_name
         body = json.dumps(
             {
                 "input": texts,
@@ -111,7 +110,9 @@ class CaiiEmbeddingModel(BaseEmbedding):
         )
         structured_response = self.make_embedding_request(body)
 
-        embeddings = list(map(lambda data: data["embedding"], structured_response["data"]))
+        embeddings = list(
+            map(lambda data: data["embedding"], structured_response["data"])
+        )
         assert isinstance(embeddings, list)
         assert all(isinstance(x, list) for x in embeddings)
         assert all(all(isinstance(y, float) for y in x) for x in embeddings)

@@ -69,11 +69,12 @@
 from abc import abstractmethod, ABC
 from pathlib import Path
 
+
 class DocumentStorage(ABC):
     @abstractmethod
-    def download(self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str) -> Path:
+    def download(
+        self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str
+    ) -> Path:
         """
         Copy file from storage into the temp directory
         """
-
-

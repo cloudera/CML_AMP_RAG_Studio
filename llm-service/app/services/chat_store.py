@@ -62,6 +62,7 @@ class RagContext(BaseModel):
     role: MessageRole
     content: str
 
+
 class RagMessage(BaseModel):
     user: str
     assistant: str
@@ -74,6 +75,7 @@ class RagStudioChatMessage(BaseModel):
     rag_message: RagMessage
     evaluations: list[Evaluation]
     timestamp: float
+    condensed_question: Optional[str]
 
 
 class ChatHistoryManager:
@@ -110,13 +112,14 @@ class ChatHistoryManager:
                         "inference_model", None
                     ),
                     rag_message=RagMessage(
-                        user= str(user_message.content),
-                        assistant= str(assistant_message.content),
+                        user=str(user_message.content),
+                        assistant=str(assistant_message.content),
                     ),
                     evaluations=assistant_message.additional_kwargs.get(
                         "evaluations", []
                     ),
                     timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
+                    condensed_question=None
                 )
             )
             i += 2

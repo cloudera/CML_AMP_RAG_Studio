@@ -41,7 +41,7 @@ import { DataSourceType } from "src/api/dataSourceApi.ts";
 import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
@@ -55,6 +55,7 @@ const layout = {
 
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
   const { data } = useGetLlmModels();
+  const { data: rerankingModels } = useGetRerankingModels();
 
   const formatDataSource = (value: DataSourceType) => {
     return {
@@ -103,6 +104,15 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         rules={[{ required: true }]}
       >
         <Select options={transformModelOptions(data)} />
+      </Form.Item>
+      <Form.Item
+        name="rerankModel"
+        label="Reranking model"
+        initialValue={
+          rerankingModels?.length ? rerankingModels[0].model_id : ""
+        }
+      >
+        <Select allowClear options={transformModelOptions(rerankingModels)} />
       </Form.Item>
       <Form.Item<CreateSessionType>
         name="responseChunks"

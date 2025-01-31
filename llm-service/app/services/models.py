@@ -43,8 +43,11 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
+from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 from .caii.caii import get_caii_embedding_models, get_caii_llm_models
 from .caii.caii import get_embedding_model as caii_embedding
@@ -52,8 +55,10 @@ from .caii.caii import get_llm as caii_llm
 from .caii.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
 from .noop_models import DummyEmbeddingModel, DummyLlm
+from .query.simple_reranker import SimpleReranker
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
+DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 
 def get_noop_embedding_model() -> BaseEmbedding:
@@ -62,6 +67,30 @@ def get_noop_embedding_model() -> BaseEmbedding:
 
 def get_noop_llm_model() -> LLM:
     return DummyLlm()
+
+
+def get_reranking_model(
+    model_name: Optional[str] = None, top_n: int = 5
+) -> BaseNodePostprocessor | None:
+    if model_name is None:
+        return SimpleReranker(top_n=top_n)
+    if is_caii_enabled():
+        # base_url = "https://caii-prod-long-running.eng-ml-l.vnu8-sqze.cloudera.site/namespaces/serving-default/endpoints/mistral-4b-rerank-l40s/v1/ranking"
+        #
+        # NVIDIARerank._validate_url = lambda self, url: url
+        #
+        # NVIDIARerank._get_models = lambda self: []
+        #
+        # token = get_caii_access_token()
+        # print(f"Using NVIDIA Rerank with token: {token}")
+        # return NVIDIARerank(
+        #     base_url=base_url,
+        #     api_key=token,
+        #     top_n=5,
+        #     is_hosted=False
+        # )
+        return None
+    return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
 
 def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
@@ -102,6 +131,15 @@ def get_available_llm_models() -> list[ModelResponse]:
     if is_caii_enabled():
         return get_caii_llm_models()
     return _get_bedrock_llm_models()
+
+
+def get_available_rerank_models() -> List[ModelResponse]:
+    if is_caii_enabled():
+        return []
+    return [
+        ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
+        ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
+    ]
 
 
 def is_caii_enabled() -> bool:
@@ -175,4 +213,24 @@ def test_embedding_model(model_name: str) -> str:
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")
 
+    raise HTTPException(status_code=404, detail="Model not found")
+
+
+def test_reranking_model(model_name: str) -> str:
+    models = get_available_rerank_models()
+    for model in models:
+        if model.model_id == model_name:
+            if not is_caii_enabled() or model.available:
+                node = NodeWithScore(node=TextNode(text="test"), score=0.5)
+                another_test_node = NodeWithScore(
+                    node=TextNode(text="another test node"), score=0.4
+                )
+                reranking_model: BaseNodePostprocessor | None = get_reranking_model(
+                    model_name=model_name
+                )
+                if reranking_model:
+                    reranking_model.postprocess_nodes(
+                        [node, another_test_node], None, "test"
+                    )
+                    return "ok"
     raise HTTPException(status_code=404, detail="Model not found")

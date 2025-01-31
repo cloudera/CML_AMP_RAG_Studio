@@ -50,6 +50,7 @@ from .base_reader import BaseReader, ChunksResult
 
 logger = logging.getLogger(__name__)
 
+
 class _CsvSplitter(MetadataAwareTextSplitter):
     def split_text_metadata_aware(self, text: str, metadata_str: str) -> List[str]:
         return self.split_text(text)
@@ -100,7 +101,7 @@ class CSVReader(BaseReader):
             row.metadata["data_source_id"] = document.metadata["data_source_id"]
             row.metadata["chunk_number"] = i
             row.metadata["row_number"] = i + 1
-            row.metadata['chunk_format'] = 'json'
+            row.metadata["chunk_format"] = "json"
 
         converted_rows: List[TextNode] = []
         for row in rows:

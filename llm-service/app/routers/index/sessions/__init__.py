@@ -84,8 +84,8 @@ class RagStudioChatRequest(BaseModel):
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
 def chat(
-        session_id: int,
-        request: RagStudioChatRequest,
+    session_id: int,
+    request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:
@@ -94,8 +94,8 @@ def chat(
 
 
 def llm_talk(
-        session_id: int,
-        query: str,
+    session_id: int,
+    query: str,
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     chat_response = llm_completion.completion(
@@ -111,6 +111,7 @@ def llm_talk(
             assistant=str(chat_response.message.content),
         ),
         timestamp=time.time(),
+        condensed_question=None
     )
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
@@ -123,7 +124,7 @@ class RagSuggestedQuestionsResponse(BaseModel):
 @router.post("/suggest-questions", summary="Suggest questions with context")
 @exceptions.propagates
 def suggest_questions(
-        session_id: int,
+    session_id: int,
 ) -> RagSuggestedQuestionsResponse:
     suggested_questions = generate_suggested_questions(session_id)
     return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)

@@ -69,6 +69,7 @@ export enum MutationKeys {
   "testEmbeddingModel" = "testEmbeddingModel",
   "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
   "updateSession" = "updateSession",
+  "testRerankingModel" = "testRerankingModel",
 }
 
 export enum QueryKeys {
@@ -80,14 +81,15 @@ export enum QueryKeys {
   "getSessions" = "getSessions",
   "getDocumentSummary" = "getDocumentSummary",
   "getAmpUpdateStatus" = "getAmpUpdateStatus",
-  "getDataSourceSummary" = "getDataSourceSummary",
+  "getAmpIsComposable" = "getAmpIsComposable",
   "getAmpUpdateJobStatus" = "getAmpUpdateJobStatus",
+  "getDataSourceSummary" = "getDataSourceSummary",
   "getLlmModels" = "getLlmModels",
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
   "getVisualizeDataSource" = "getVisualizeDataSource",
   "getModelById" = "getModelById",
-  "getAmpIsComposable" = "getAmpIsComposable",
+  "getRerankingModels" = "getRerankingModels",
 }
 
 export const commonHeaders = {

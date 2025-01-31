@@ -53,6 +53,7 @@ export interface CreateSessionType {
   name: string;
   dataSourceId: number;
   inferenceModel: string;
+  rerankModel?: string;
   responseChunks: number;
 }
 
@@ -100,6 +101,7 @@ const CreateSessionModal = ({
           name: values.name,
           dataSourceIds: [values.dataSourceId],
           inferenceModel: values.inferenceModel,
+          rerankModel: values.rerankModel,
           responseChunks: values.responseChunks,
         };
         createSessionMutation(responseBody);

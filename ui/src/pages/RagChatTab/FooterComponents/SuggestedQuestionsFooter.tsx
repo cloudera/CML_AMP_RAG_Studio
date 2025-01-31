@@ -36,19 +36,67 @@
  * DATA.
  ******************************************************************************/
 
-import { Collapse, Flex, Skeleton, Tag, Typography } from "antd";
+import { Collapse, Flex, Skeleton, Tag, Tooltip, Typography } from "antd";
 import { useState } from "react";
 import { SendOutlined } from "@ant-design/icons";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlOrange500 } from "src/cuix/variables.ts";
+import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon.ts";
+
+export const SuggestedQuestionButton = ({
+  question,
+  handleChat,
+  rewritten,
+}: {
+  question: string;
+  handleChat: (input: string) => void;
+  rewritten?: boolean;
+}) => {
+  return (
+    <Tag
+      key={question}
+      onClick={() => {
+        handleChat(question);
+      }}
+      icon={
+        rewritten ? (
+          <AiAssistantIcon style={{ marginRight: 6 }} />
+        ) : (
+          <SendOutlined />
+        )
+      }
+      style={{
+        width: "fit-content",
+        height: "auto",
+        alignItems: "start",
+        color: cdlBlue600,
+        borderColor: cdlBlue600,
+        cursor: "pointer",
+      }}
+    >
+      <Typography.Text
+        style={{
+          textWrap: "wrap",
+          textAlign: "left",
+          color: cdlBlue600,
+          fontWeight: 300,
+        }}
+      >
+        {question}
+      </Typography.Text>
+    </Tag>
+  );
+};
 
 const SuggestedQuestionsFooter = ({
   isLoading,
   handleChat,
   questions,
+  condensedQuestion,
 }: {
   isLoading: boolean;
   handleChat: (input: string) => void;
   questions: string[];
+  condensedQuestion?: string;
 }) => {
   const [toggleCollapse, setToggleCollapse] = useState(false);
 
@@ -70,48 +118,39 @@ const SuggestedQuestionsFooter = ({
           {
             key: "1",
             label: (
-              <Typography.Text
-                type="secondary"
-                style={{ margin: 0, fontSize: 12 }}
-              >
-                Suggested Questions
-              </Typography.Text>
+              <Flex gap={8} align="center">
+                <Typography.Text
+                  type="secondary"
+                  style={{ margin: 0, marginTop: 1, fontSize: 12 }}
+                >
+                  Suggested Questions
+                </Typography.Text>
+                {condensedQuestion ? (
+                  <Tooltip title="Alternative question available">
+                    <AiAssistantIcon style={{ color: cdlOrange500 }} />
+                  </Tooltip>
+                ) : null}
+              </Flex>
             ),
             children: (
               <Flex vertical gap={12}>
+                {condensedQuestion ? (
+                  <SuggestedQuestionButton
+                    question={condensedQuestion}
+                    handleChat={handleChat}
+                    rewritten={true}
+                  />
+                ) : null}
                 {isLoading ? (
                   <Skeleton paragraph={{ rows: 2 }} active />
                 ) : (
-                  questions.map((question) => {
-                    return (
-                      <Tag
-                        key={question}
-                        onClick={() => {
-                          handleChat(question);
-                        }}
-                        icon={<SendOutlined />}
-                        style={{
-                          width: "fit-content",
-                          height: "auto",
-                          alignItems: "start",
-                          color: cdlBlue600,
-                          borderColor: cdlBlue600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Typography.Text
-                          style={{
-                            textWrap: "wrap",
-                            textAlign: "left",
-                            color: cdlBlue600,
-                            fontWeight: 300,
-                          }}
-                        >
-                          {question}
-                        </Typography.Text>
-                      </Tag>
-                    );
-                  })
+                  questions.map((question) => (
+                    <SuggestedQuestionButton
+                      question={question}
+                      handleChat={handleChat}
+                      rewritten={false}
+                    />
+                  ))
                 )}
               </Flex>
             ),

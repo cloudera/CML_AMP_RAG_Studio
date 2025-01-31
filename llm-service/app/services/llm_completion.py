@@ -42,7 +42,7 @@ from llama_index.core.llms import LLM
 
 from .chat_store import ChatHistoryManager, RagStudioChatMessage
 from .models import get_llm
-from .querier import QueryConfiguration
+from .query.query_configuration import QueryConfiguration
 
 
 def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
@@ -51,9 +51,7 @@ def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
     return [user, assistant]
 
 
-def completion(
-        session_id: int, question: str, model_name: str
-) -> ChatResponse:
+def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
     model = get_llm(model_name)
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
     messages = list(
@@ -67,6 +65,8 @@ def completion(
 
 def hypothetical(question: str, configuration: QueryConfiguration) -> str:
     model: LLM = get_llm(configuration.model_name)
-    prompt: str = (f"You are an expert. You are asked: {question}. "
-                   "Produce a brief document that would hypothetically answer this question.")
+    prompt: str = (
+        f"You are an expert. You are asked: {question}. "
+        "Produce a brief document that would hypothetically answer this question."
+    )
     return model.complete(prompt).text

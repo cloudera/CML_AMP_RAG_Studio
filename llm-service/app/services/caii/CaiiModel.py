@@ -38,9 +38,9 @@
 from typing import Callable, Dict, Sequence
 
 from llama_index.core.base.llms.types import ChatMessage, LLMMetadata
-from llama_index.core.bridge.pydantic import Field
 from llama_index.llms.mistralai.base import MistralAI
 from llama_index.llms.openai import OpenAI
+from pydantic import Field
 
 
 class CaiiModel(OpenAI):

@@ -30,7 +30,10 @@ class ChunksResult:
 
 class BaseReader(ABC):
     def __init__(
-        self, splitter: SentenceSplitter, document_id: str, data_source_id: int,
+        self,
+        splitter: SentenceSplitter,
+        document_id: str,
+        data_source_id: int,
         config: Optional[ReaderConfig] = None,
     ):
         self.splitter = splitter
@@ -99,7 +102,7 @@ class BaseReader(ABC):
         # TODO: support other languages
         results = analyzer.analyze(text=text, entities=None, language="en")
 
-        anonymizer = AnonymizerEngine() # type: ignore[no-untyped-call]
+        anonymizer = AnonymizerEngine()  # type: ignore[no-untyped-call]
 
         anonymized_text = anonymizer.anonymize(text=text, analyzer_results=results)  # type: ignore[arg-type]
         if anonymized_text.text == text:

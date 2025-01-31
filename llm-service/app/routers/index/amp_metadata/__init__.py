@@ -46,7 +46,10 @@ from ....services.amp_update import does_amp_need_updating
 
 router = APIRouter(prefix="/amp-update", tags=["AMP Update"])
 
-root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+root_dir = (
+    "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+)
+
 
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
@@ -83,7 +86,10 @@ def get_amp_status() -> str:
     stdout = process.stdout.decode("utf-8")
     return stdout.strip()
 
-@router.get("/is-composable", summary="Returns a boolean for whether AMP is composable.")
+
+@router.get(
+    "/is-composable", summary="Returns a boolean for whether AMP is composable."
+)
 @exceptions.propagates
 def amp_is_composed() -> bool:
     return os.getenv("IS_COMPOSABLE", "") != "" or False

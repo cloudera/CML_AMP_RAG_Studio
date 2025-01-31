@@ -56,7 +56,8 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.response_synthesizers import ResponseMode
 from llama_index.core.schema import (
     Document,
-    NodeRelationship, TextNode,
+    NodeRelationship,
+    TextNode,
 )
 from qdrant_client.http.exceptions import UnexpectedResponse
 
@@ -68,7 +69,7 @@ from ...config import Settings
 
 logger = logging.getLogger(__name__)
 
-SUMMARY_PROMPT = 'Summarize the contents into less than 100 words.'
+SUMMARY_PROMPT = "Summarize the contents into less than 100 words."
 
 # Since we don't use anything fancy to store the summaries, it's possible that two threads
 # try to do a write operation at the same time and we end up with a race condition.
@@ -79,12 +80,12 @@ _write_lock = Lock()
 
 class SummaryIndexer(BaseTextIndexer):
     def __init__(
-            self,
-            data_source_id: int,
-            splitter: SentenceSplitter,
-            llm: LLM,
-            embedding_model: BaseEmbedding,
-            reader_config: Optional[ReaderConfig] = None,
+        self,
+        data_source_id: int,
+        splitter: SentenceSplitter,
+        llm: LLM,
+        embedding_model: BaseEmbedding,
+        reader_config: Optional[ReaderConfig] = None,
     ):
         super().__init__(data_source_id, reader_config=reader_config)
         self.splitter = splitter
@@ -93,7 +94,9 @@ class SummaryIndexer(BaseTextIndexer):
 
     @staticmethod
     def __database_dir(data_source_id: int) -> str:
-        return os.path.join(Settings().rag_databases_dir, f"doc_summary_index_{data_source_id}")
+        return os.path.join(
+            Settings().rag_databases_dir, f"doc_summary_index_{data_source_id}"
+        )
 
     def __persist_dir(self) -> str:
         return SummaryIndexer.__database_dir(self.data_source_id)
@@ -103,10 +106,17 @@ class SummaryIndexer(BaseTextIndexer):
         return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
 
     def __index_kwargs(self, embed_summaries: bool = True) -> Dict[str, Any]:
-        return SummaryIndexer.__index_configuration(self.llm, self.embedding_model, self.data_source_id, embed_summaries)
+        return SummaryIndexer.__index_configuration(
+            self.llm, self.embedding_model, self.data_source_id, embed_summaries
+        )
 
     @staticmethod
-    def __index_configuration(llm: LLM, embedding_model: BaseEmbedding, data_source_id: int, embed_summaries: bool = True) -> Dict[str, Any]:
+    def __index_configuration(
+        llm: LLM,
+        embedding_model: BaseEmbedding,
+        data_source_id: int,
+        embed_summaries: bool = True,
+    ) -> Dict[str, Any]:
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
@@ -130,7 +140,9 @@ class SummaryIndexer(BaseTextIndexer):
         doc_summary_index.storage_context.persist(persist_dir=persist_dir)
         return doc_summary_index
 
-    def __summary_indexer(self, persist_dir: str, embed_summaries: bool = True) -> DocumentSummaryIndex:
+    def __summary_indexer(
+        self, persist_dir: str, embed_summaries: bool = True
+    ) -> DocumentSummaryIndex:
         try:
             return SummaryIndexer.__summary_indexer_with_config(
                 persist_dir=persist_dir,
@@ -141,11 +153,15 @@ class SummaryIndexer(BaseTextIndexer):
             return doc_summary_index
 
     @staticmethod
-    def __summary_indexer_with_config(persist_dir: str, index_configuration: Dict[str, Any]) -> DocumentSummaryIndex:
+    def __summary_indexer_with_config(
+        persist_dir: str, index_configuration: Dict[str, Any]
+    ) -> DocumentSummaryIndex:
         data_source_id: int = index_configuration.get("data_source_id")
         storage_context = StorageContext.from_defaults(
             persist_dir=persist_dir,
-            vector_store=QdrantVectorStore.for_summaries(data_source_id).llama_vector_store()
+            vector_store=QdrantVectorStore.for_summaries(
+                data_source_id
+            ).llama_vector_store(),
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
@@ -188,16 +204,18 @@ class SummaryIndexer(BaseTextIndexer):
         logger.debug(f"Summary for file {file_path} created")
 
     def __update_global_summary_store(
-            self,
-            summary_store: DocumentSummaryIndex,
-            added_node_id: Optional[str] = None,
-            deleted_node_id: Optional[str] = None,
+        self,
+        summary_store: DocumentSummaryIndex,
+        added_node_id: Optional[str] = None,
+        deleted_node_id: Optional[str] = None,
     ) -> None:
         # Llama index doesn't seem to support updating the summary when we add more documents.
         # So what we do instead is re-load all the summaries for the documents already associated with the data source
         # and re-index it with the addition/removal.
         global_persist_dir = self.__persist_root_dir()
-        global_summary_store = self.__summary_indexer(global_persist_dir, embed_summaries=False)
+        global_summary_store = self.__summary_indexer(
+            global_persist_dir, embed_summaries=False
+        )
         data_source_node = Document(doc_id=str(self.data_source_id))
 
         summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
@@ -243,7 +261,9 @@ class SummaryIndexer(BaseTextIndexer):
 
         # Delete first so that we don't accumulate trash in the summary store.
         try:
-            global_summary_store.delete_ref_doc(str(self.data_source_id), delete_from_docstore=True)
+            global_summary_store.delete_ref_doc(
+                str(self.data_source_id), delete_from_docstore=True
+            )
         except (KeyError, UnexpectedResponse):
             # UnexpectedResponse is raised when the collection doesn't exist, which is fine, since it might be a new index.
             pass
@@ -264,7 +284,8 @@ class SummaryIndexer(BaseTextIndexer):
             global_summary_store = self.__summary_indexer(global_persist_dir)
             document_id = str(self.data_source_id)
             if (
-                    document_id not in global_summary_store.index_struct.doc_id_to_summary_id
+                document_id
+                not in global_summary_store.index_struct.doc_id_to_summary_id
             ):
                 return None
             return global_summary_store.get_document_summary(document_id)
@@ -296,19 +317,29 @@ class SummaryIndexer(BaseTextIndexer):
             vector_store = QdrantVectorStore.for_summaries(data_source_id)
             vector_store.delete()
             # TODO: figure out a less explosive way to do this.
-            shutil.rmtree(SummaryIndexer.__database_dir(data_source_id), ignore_errors=True)
+            shutil.rmtree(
+                SummaryIndexer.__database_dir(data_source_id), ignore_errors=True
+            )
             global_persist_dir: str = SummaryIndexer.__persist_root_dir()
             try:
-                configuration: Dict[str, Any] = SummaryIndexer.__index_configuration(get_noop_llm_model(),
-                                                                                     get_noop_embedding_model(),
-                                                                                     data_source_id=data_source_id,
-                                                                                     embed_summaries=False)
-                global_summary_store = SummaryIndexer.__summary_indexer_with_config(global_persist_dir, configuration)
+                configuration: Dict[str, Any] = SummaryIndexer.__index_configuration(
+                    get_noop_llm_model(),
+                    get_noop_embedding_model(),
+                    data_source_id=data_source_id,
+                    embed_summaries=False,
+                )
+                global_summary_store = SummaryIndexer.__summary_indexer_with_config(
+                    global_persist_dir, configuration
+                )
             except FileNotFoundError:
                 ## global summary store doesn't exist, nothing to do
                 return
             try:
-                global_summary_store.delete_ref_doc(str(data_source_id), delete_from_docstore=True)
-                global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
-            except KeyError:
-                pass
+                global_summary_store.delete_ref_doc(
+                    str(data_source_id), delete_from_docstore=True
+                )
+                global_summary_store.storage_context.persist(
+                    persist_dir=global_persist_dir
+                )
+            except Exception as e:
+                logger.debug(f"Error deleting data source {data_source_id}: {e}")

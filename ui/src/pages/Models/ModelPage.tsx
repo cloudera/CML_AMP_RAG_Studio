@@ -38,8 +38,32 @@
 
 import { Alert, Flex, Typography } from "antd";
 import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
-import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
+import {
+  useGetEmbeddingModels,
+  useGetLlmModels,
+  useGetRerankingModels,
+} from "src/api/modelsApi.ts";
 import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
+import RerankingModelTable from "pages/Models/RerankingModelTable.tsx";
+
+const ModelPageAlert = ({
+  error,
+  type,
+}: {
+  error: Error | null;
+  type: string;
+}) => {
+  if (!error) {
+    return null;
+  }
+  return (
+    <Alert
+      style={{ margin: 10 }}
+      message={`${type} model error: ${error.message}`}
+      type="error"
+    />
+  );
+};
 
 const ModelPage = () => {
   const {
@@ -52,24 +76,18 @@ const ModelPage = () => {
     isLoading: areInferenceModelsLoading,
     error: inferenceError,
   } = useGetLlmModels();
+  const {
+    data: rerankingModels,
+    isLoading: areRerankingModelsLoading,
+    error: rerankingError,
+  } = useGetRerankingModels();
 
   return (
     <Flex vertical align="center">
       <div style={{ maxWidth: 800 }}>
-        {inferenceError ? (
-          <Alert
-            style={{ margin: 10 }}
-            message={`Inference model error: ${inferenceError.message}`}
-            type="error"
-          />
-        ) : null}
-        {embeddingError ? (
-          <Alert
-            style={{ margin: 10 }}
-            message={`Embedding model error: ${embeddingError.message}`}
-            type="error"
-          />
-        ) : null}
+        <ModelPageAlert error={inferenceError} type="Inference" />
+        <ModelPageAlert error={embeddingError} type="Embedding" />
+        <ModelPageAlert error={rerankingError} type="Reranking" />
       </div>
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
         <Typography.Title level={3}>Embedding Models</Typography.Title>
@@ -81,6 +99,11 @@ const ModelPage = () => {
         <InferenceModelTable
           inferenceModels={inferenceModels}
           areInferenceModelsLoading={areInferenceModelsLoading}
+        />
+        <Typography.Title level={3}>Reranking Models</Typography.Title>
+        <RerankingModelTable
+          rerankingModels={rerankingModels}
+          areRerankingModelsLoading={areRerankingModelsLoading}
         />
       </Flex>
     </Flex>
