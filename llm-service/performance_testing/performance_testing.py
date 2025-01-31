@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import itertools
 import os
 import sys
 import time
@@ -55,14 +56,20 @@ from app.services import models, evaluators
 from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleContextChatEngine
 
+test_runtime_config = {
+    "reranking_model": [
+        model.model_id for model in models.get_available_rerank_models()
+    ],
+    "synthesis_model": ["meta.llama3-1-8b-instruct-v1:0"],
+    "top_k": [5, 10],
+    "hyde": [True, False],
+}
+
 
 # usage: uv run --env-file=../.env performance_testing/performance_testing.py <data_source_id> questions_mini.csv
 def main():
-    data_source_id: int = int(sys.argv[1])
     file: str = sys.argv[2]
-    metadata = get_metadata(data_source_id)
-    summarization_model = metadata.summarization_model
-    chunk_size = metadata.chunk_size
+    data_source_id = int(sys.argv[1])
     with open(os.path.abspath(os.path.join(os.path.dirname(__file__), file)), "r") as f:
         df = pd.read_csv(f)
         questions: list[str] = df["Question"].tolist()
@@ -70,83 +77,96 @@ def main():
     with open(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
     ) as details:
-        for synthesis_model in ["meta.llama3-1-8b-instruct-v1:0", "meta.llama3-1-70b-instruct-v1:0"]:
-            for reranking_model in models.get_available_rerank_models():
-                for top_k in [5, 10]:
-                    for hyde in [True, False]:
-                        print(f"Running with hyde={hyde}")
-                        score_sum = 0
-                        question_count = 0
-                        max_score = 0
-                        max_score_sum = 0
-                        min_max_score = 10000000
-                        relevance_sum = 0
-                        faithfulness_sum = 0
-                        for question in questions:
-                            chat_engine = setup(
-                                use_hyde=hyde,
-                                data_source_id=data_source_id,
-                                top_k=top_k,
-                                reranking_model=reranking_model.model_id,
-                                synthesis_model=synthesis_model
-                            )
-                            chat_response: AgentChatResponse = chat_engine.chat(
-                                message=question, chat_history=None
-                            )
-                            # Relevance - Measures if the response and source nodes match the query. This is useful for measuring if the query was actually answered by the response.
-                            # Faithfulness - Measures if the response from a query engine matches any source nodes. This is useful for measuring if the response was hallucinated.
-                            relevance, faithfulness = evaluators.evaluate_response(
-                                query=question,
-                                chat_response=chat_response,
-                                model_name=summarization_model,
-                            )
-                            relevance_sum += relevance
-                            faithfulness_sum += faithfulness
+        for config in [
+            dict(zip(test_runtime_config.keys(), values))
+            for values in itertools.product(*test_runtime_config.values())
+        ]:
+            print(f"Config: {config}")
+            top_k = config["top_k"]
+            hyde = config["hyde"]
+            reranking_model = config["reranking_model"]
+            synthesis_model = config["synthesis_model"]
 
-                            nodes = chat_response.source_nodes
+            metadata = get_metadata(data_source_id)
+            summarization_model = metadata.summarization_model
+            chunk_size = metadata.chunk_size
 
-                            if nodes:
-                                question_count += 1
-                                question_max = max(node.score for node in nodes)
-                                max_score = max(max_score, question_max)
-                                avg_score = sum(node.score for node in nodes) / len(nodes)
-                                score_sum += avg_score
-                                max_score_sum += max_score
-                                min_max_score = min(max_score, min_max_score)
-                                #  timestamp, hyde, summarization_model, top_k, file_name_1, max_score, relevance, faithfulness, question
-                                details.write(
-                                    f'{time.time()},{hyde},{summarization_model},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{relevance},{faithfulness},"{question}"\n'
-                                )
-                            details.flush()
+            score_sum = 0
+            question_count = 0
+            max_score = 0
+            max_score_sum = 0
+            min_max_score = 10000000
+            relevance_sum = 0
+            faithfulness_sum = 0
+            for question in questions:
+                chat_engine = setup(
+                    data_source_id=data_source_id,
+                    hyde=hyde,
+                    top_k=top_k,
+                    synthesis_model=synthesis_model,
+                    reranking_model=reranking_model,
+                )
+                chat_response: AgentChatResponse = chat_engine.chat(
+                    message=question, chat_history=None
+                )
+                # Relevance - Measures if the response and source nodes match the query. This is useful for measuring if the query was actually answered by the response.
+                # Faithfulness - Measures if the response from a query engine matches any source nodes. This is useful for measuring if the response was hallucinated.
+                relevance, faithfulness = evaluators.evaluate_response(
+                    query=question,
+                    chat_response=chat_response,
+                    model_name=summarization_model,
+                )
+                relevance_sum += relevance
+                faithfulness_sum += faithfulness
 
-                        average_average_score = score_sum / question_count
-                        average_max_score = max_score_sum / question_count
-                        relevance_average = relevance_sum / question_count
-                        faithfulness_average = faithfulness_sum / question_count
-                        print(f"{chat_engine._configuration=}")
-                        # print(f"Average score: {average_average_score}")
-                        with open(
-                            os.path.abspath(
-                                os.path.join(os.path.dirname(__file__), "results.csv")
-                            ),
-                            "a",
-                        ) as f:
-                            # chunk_size,summarization_model,reranking_model,synthesis_model,hyde,top_k,average_max_score,min_max_score,relevance_average,faithfulness_average
-                            f.write(f"{chunk_size},{summarization_model},{reranking_model.model_id},{synthesis_model},{hyde},{top_k},{average_max_score},{min_max_score},{relevance_average},{faithfulness_average}\n")
-                            f.flush()
+                nodes = chat_response.source_nodes
+
+                if nodes:
+                    question_count += 1
+                    question_max = max(node.score for node in nodes)
+                    max_score = max(max_score, question_max)
+                    avg_score = sum(node.score for node in nodes) / len(nodes)
+                    score_sum += avg_score
+                    max_score_sum += max_score
+                    min_max_score = min(max_score, min_max_score)
+                    #  timestamp,chunk_size, hyde, summarization_model,reranking_model,top_k, file_name_1, max_score, relevance, faithfulness, question
+                    details.write(
+                        f'{time.time()},{chunk_size},{hyde},{summarization_model},{reranking_model},{top_k},{nodes[0].metadata.get("file_name")},{question_max},{relevance},{faithfulness},"{question}"\n'
+                    )
+                details.flush()
+
+            average_average_score = score_sum / question_count
+            average_max_score = max_score_sum / question_count
+            relevance_average = relevance_sum / question_count
+            faithfulness_average = faithfulness_sum / question_count
+            print(f"{chat_engine._configuration=}")
+            # print(f"Average score: {average_average_score}")
+            with open(
+                os.path.abspath(os.path.join(os.path.dirname(__file__), "results.csv")),
+                "a",
+            ) as f:
+                # chunk_size,summarization_model,reranking_model,synthesis_model,hyde,top_k,average_max_score,min_max_score,relevance_average,faithfulness_average
+                f.write(
+                    f"{chunk_size},{summarization_model},{reranking_model},{synthesis_model},{hyde},{top_k},{average_max_score},{min_max_score},{relevance_average},{faithfulness_average}\n"
+                )
+                f.flush()
 
 
 def setup(
-    data_source_id: int, use_hyde=True, top_k: int = 5,
-        synthesis_model="meta.llama3-1-8b-instruct-v1:0", reranking_model="amazon.rerank-v1:0") -> FlexibleContextChatEngine:
+    data_source_id: int,
+    hyde=True,
+    top_k: int = 5,
+    synthesis_model="meta.llama3-1-8b-instruct-v1:0",
+    reranking_model="amazon.rerank-v1:0",
+) -> FlexibleContextChatEngine:
     model_name = synthesis_model
     rerank_model = reranking_model
     query_configuration = QueryConfiguration(
         top_k=5,
         model_name=model_name,
         use_question_condensing=True,
-        use_hyde=use_hyde,
-        rerank_model_name=rerank_model
+        use_hyde=hyde,
+        rerank_model_name=rerank_model,
     )
     llm = models.get_llm(model_name=query_configuration.model_name)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)

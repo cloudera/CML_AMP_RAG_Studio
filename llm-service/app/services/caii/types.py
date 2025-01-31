@@ -36,7 +36,7 @@
 #  DATA.
 #
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -69,14 +69,8 @@ from pydantic import BaseModel, ConfigDict
 #
 
 
-class EndpointMetadata(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
-    # current_model: Optional[RegistrySource]
-    # previous_model: Optional[RegistrySource]
-    model_name: str
-
-
 class Endpoint(BaseModel):
+    model_config = ConfigDict(protected_namespaces=(), extra='ignore')
     namespace: str
     name: str
     url: str
@@ -91,27 +85,25 @@ class Endpoint(BaseModel):
     resources: Dict[str, str]
     # source: Dict[str, RegistrySource]
     autoscaling: Dict[str, Any]
-    endpointmetadata: EndpointMetadata
+    model_name: str
     traffic: Dict[str, str]
     api_standard: str
     has_chat_template: bool
-    metricFormat: str
     task: str
     instance_type: str
+    metric_format: str
 
 
-@dataclass
-class ListEndpointEntry:
+class ListEndpointEntry(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     namespace: str
     name: str
     url: str
     state: str
     created_by: str
-    replica_count: int
-    replica_metadata: List[Any]
     api_standard: str
     has_chat_template: bool
-    metricFormat: str
+    metric_format: str
 
 
 @dataclass
