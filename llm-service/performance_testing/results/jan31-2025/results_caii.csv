@@ -1,0 +1,5 @@
+chunk_size,summarization_model,reranking_model,synthesis_model,hyde,top_k,average_max_score,min_max_score,relevance_average,faithfulness_average
+512,llama-31-8b-instruct-2xa10g,mistral-4b-rerank-l4,llama-31-8b-instruct-2xa10g,False,5,22.271998355263158,6.52734375,1.0,1.0
+512,llama-31-8b-instruct-2xa10g,mistral-4b-rerank-l4,llama-31-8b-instruct-2xa10g,True,5,36.19161184210526,31.328125,1.0,1.0
+512,llama-31-8b-instruct-2xa10g,mistral-4b-rerank-l4,llama-31-8b-instruct-2xa10g,False,10,22.271998355263158,6.52734375,1.0,1.0
+512,llama-31-8b-instruct-2xa10g,mistral-4b-rerank-l4,llama-31-8b-instruct-2xa10g,True,10,36.19161184210526,31.328125,0.9473684210526315,1.0
