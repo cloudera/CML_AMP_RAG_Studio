@@ -57,12 +57,10 @@ from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleContextChatEngine
 
 test_runtime_config = {
-    "reranking_model": [
-        model.model_id for model in models.get_available_rerank_models()
-    ],
+    "reranking_model": ["amazon.rerank-v1:0"],
     "synthesis_model": ["meta.llama3-1-8b-instruct-v1:0"],
-    "top_k": [5, 10],
-    "hyde": [True, False],
+    "top_k": [10],
+    "hyde": [True],
 }
 
 

@@ -48,8 +48,9 @@ from llama_index.core.llms import LLM
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral
+from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
-from .utils import build_auth_headers
+from .utils import build_auth_headers, get_caii_access_token
 
 DEFAULT_NAMESPACE = "serving-default"
 
@@ -84,6 +85,17 @@ def list_endpoints() -> list[ListEndpointEntry]:
             status_code=421,
             detail=f"Unable to connect to host {domain}. Please check your CAII_DOMAIN env variable.",
         )
+
+
+def get_reranking_model(model_name, top_n):
+    endpoint = describe_endpoint(endpoint_name=model_name)
+    token = get_caii_access_token()
+    return CaiiRerankingModel(
+        model=endpoint.model_name,
+        base_url=endpoint.url.removesuffix("/ranking"),
+        api_key=token,
+        top_n=top_n,
+    )
 
 
 def get_llm(
@@ -139,6 +151,8 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 def get_caii_llm_models() -> List[ModelResponse]:
     return get_models_with_task("TEXT_GENERATION")
 
+def get_caii_reranking_models() -> List[ModelResponse]:
+    return get_models_with_task("RANK")
 
 def get_caii_embedding_models() -> List[ModelResponse]:
     return get_models_with_task("EMBED")

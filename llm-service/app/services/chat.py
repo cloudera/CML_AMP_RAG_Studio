@@ -39,7 +39,7 @@
 import time
 import uuid
 from collections.abc import Iterator
-from typing import List
+from typing import List, Iterable
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -229,8 +229,10 @@ def generate_suggested_questions(
 def process_response(response: str | None) -> list[str]:
     if response is None:
         return []
-
-    sentences: Iterator[str] = response.splitlines()
+    # remove deepseek's think tags.
+    response: str = response.split("</think>")[-1]
+    print(f"{response=}")
+    sentences: Iterable[str] = response.splitlines()
     sentences = map(lambda x: x.strip(), sentences)
     sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
     sentences = map(lambda x: x.removeprefix("-").strip(), sentences)
