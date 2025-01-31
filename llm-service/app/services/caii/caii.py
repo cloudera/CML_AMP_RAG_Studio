@@ -47,7 +47,7 @@ from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
-from .CaiiModel import CaiiModel, CaiiModelMistral
+from .CaiiModel import CaiiModel, CaiiModelMistral, DeepseekModel
 from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
 from .utils import build_auth_headers, get_caii_access_token
@@ -108,8 +108,18 @@ def get_llm(
     headers = build_auth_headers()
 
     model = endpoint.model_name
+    if "deepseek" in endpoint_name.lower():
+        return DeepseekModel(
+            model=model,
+            context=128000,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            api_base=api_base,
+            default_headers=headers,
+        )
+
     if "mistral" in endpoint_name.lower():
-        llm = CaiiModelMistral(
+        return CaiiModelMistral(
             model=model,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
@@ -119,7 +129,7 @@ def get_llm(
         )
 
     else:
-        llm = CaiiModel(
+        return CaiiModel(
             model=model,
             context=128000,
             messages_to_prompt=messages_to_prompt,
@@ -127,8 +137,6 @@ def get_llm(
             api_base=api_base,
             default_headers=headers,
         )
-
-    return llm
 
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
