@@ -203,6 +203,6 @@ export const createQueryConfiguration = (
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: false,
-    use_hyde: true,
+    use_hyde: false,
   };
 };
