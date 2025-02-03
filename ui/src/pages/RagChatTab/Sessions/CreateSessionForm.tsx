@@ -82,7 +82,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       children: (
         <>
           <Form.Item<CreateSessionType>
-            name="enableHyde"
+            name={["queryConfiguration", "enableHyde"]}
             initialValue={false}
             valuePropName="checked"
             label={
