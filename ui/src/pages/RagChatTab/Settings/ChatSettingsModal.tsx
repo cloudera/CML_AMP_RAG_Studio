@@ -97,9 +97,6 @@ const ChatSettingsModal = ({
       .then((values) => {
         const request: UpdateSessionRequest = {
           ...values,
-          queryConfiguration: {
-            enableHyde: values.enableHyde,
-          },
           id: activeSession.id,
         };
         updateSession.mutate(request);
@@ -159,7 +156,7 @@ const ChatSettingsModal = ({
             <Slider marks={ResponseChunksRange} min={1} max={10} />
           </Form.Item>
           <Form.Item
-            name="enableHyde"
+            name={["queryConfiguration", "enableHyde"]}
             initialValue={activeSession.queryConfiguration.enableHyde}
             valuePropName="checked"
             label={
