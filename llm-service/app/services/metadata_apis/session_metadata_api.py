@@ -44,6 +44,11 @@ import requests
 
 
 @dataclass
+class SessionQueryConfiguration:
+    enable_hyde: bool
+
+
+@dataclass
 class Session:
     id: int
     name: str
@@ -55,6 +60,7 @@ class Session:
     inference_model: str
     rerank_model: str
     response_chunks: int
+    query_configuration: SessionQueryConfiguration
 
 
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
@@ -76,4 +82,7 @@ def get_session(session_id: int) -> Session:
         inference_model=data["inferenceModel"],
         rerank_model=data["rerankModel"],
         response_chunks=data["responseChunks"],
+        query_configuration=SessionQueryConfiguration(  # TODO: automatically parse a dict into the dataclass?
+            enable_hyde=data["queryConfiguration"]["enableHyde"]
+        ),
     )

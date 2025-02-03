@@ -72,7 +72,7 @@ def v2_chat(
         rerank_model_name=session.rerank_model,
         exclude_knowledge_base=configuration.exclude_knowledge_base,
         use_question_condensing=configuration.use_question_condensing,
-        use_hyde=configuration.use_hyde,
+        use_hyde=session.query_configuration.enable_hyde,
     )
 
     response_id = str(uuid.uuid4())

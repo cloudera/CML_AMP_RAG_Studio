@@ -67,7 +67,6 @@ export interface RagMessageV2 {
 export interface QueryConfiguration {
   exclude_knowledge_base: boolean;
   use_question_condensing: boolean;
-  use_hyde: boolean;
 }
 
 export interface ChatMutationRequest {
@@ -203,6 +202,5 @@ export const createQueryConfiguration = (
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: false,
-    use_hyde: false,
   };
 };
