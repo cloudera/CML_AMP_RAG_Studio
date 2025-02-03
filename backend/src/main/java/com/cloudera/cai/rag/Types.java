@@ -103,7 +103,7 @@ public class Types {
       @Nullable Integer documentCount,
       @Nullable Long totalDocSize) {}
 
-  public record QueryConfiguration(boolean enableHyde) {}
+  public record QueryConfiguration(boolean enableHyde, boolean enableSummaryFilter) {}
 
   @With
   @Builder

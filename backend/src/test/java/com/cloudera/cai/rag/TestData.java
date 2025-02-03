@@ -57,7 +57,7 @@ public class TestData {
         "test-model",
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false));
+        new Types.QueryConfiguration(false, true));
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
@@ -67,7 +67,7 @@ public class TestData {
         "test-model",
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false));
+        new Types.QueryConfiguration(false, true));
   }
 
   public static Types.RagDataSource createTestDataSourceInstance(

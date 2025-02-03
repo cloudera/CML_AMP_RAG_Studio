@@ -73,6 +73,7 @@ def v2_chat(
         exclude_knowledge_base=configuration.exclude_knowledge_base,
         use_question_condensing=configuration.use_question_condensing,
         use_hyde=session.query_configuration.enable_hyde,
+        use_summary_filter=session.query_configuration.enable_summary_filter,
     )
 
     response_id = str(uuid.uuid4())

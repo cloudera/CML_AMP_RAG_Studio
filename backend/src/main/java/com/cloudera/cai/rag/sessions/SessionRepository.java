@@ -57,7 +57,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionRepository {
   public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
-      new Types.QueryConfiguration(false);
+      new Types.QueryConfiguration(false, true);
   private final Jdbi jdbi;
   private final ObjectMapper objectMapper = new ObjectMapper();
 

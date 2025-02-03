@@ -46,6 +46,7 @@ import requests
 @dataclass
 class SessionQueryConfiguration:
     enable_hyde: bool
+    enable_summary_filter: bool
 
 
 @dataclass
@@ -83,6 +84,7 @@ def get_session(session_id: int) -> Session:
         rerank_model=data["rerankModel"],
         response_chunks=data["responseChunks"],
         query_configuration=SessionQueryConfiguration(  # TODO: automatically parse a dict into the dataclass?
-            enable_hyde=data["queryConfiguration"]["enableHyde"]
+            enable_hyde=data["queryConfiguration"]["enableHyde"],
+            enable_summary_filter=data["queryConfiguration"]["enableSummaryFilter"],
         ),
     )
