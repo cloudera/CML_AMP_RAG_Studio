@@ -1,0 +1,5 @@
+chunk_size,summarization_model,reranking_model,synthesis_model,hyde,top_k,average_max_score,min_max_score,relevance_average,faithfulness_average
+512,deepseek-r1-distill-llama-8b,mistral-4b-rerank-l4,deepseek-r1-distill-llama-8b,False,5,22.351151315789473,8.5078125,0.9473684210526315,1.0
+512,deepseek-r1-distill-llama-8b,mistral-4b-rerank-l4,deepseek-r1-distill-llama-8b,True,5,34.09950657894737,21.234375,1.0,1.0
+512,deepseek-r1-distill-llama-8b,mistral-4b-rerank-l4,deepseek-r1-distill-llama-8b,False,10,22.351151315789473,8.5078125,1.0,1.0
+512,deepseek-r1-distill-llama-8b,mistral-4b-rerank-l4,deepseek-r1-distill-llama-8b,True,10,31.314967105263158,17.640625,0.9473684210526315,0.8947368421052632

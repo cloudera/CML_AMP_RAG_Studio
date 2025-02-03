@@ -35,9 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Callable, Dict, Sequence
+from typing import Callable, Dict, Sequence, Any
 
-from llama_index.core.base.llms.types import ChatMessage, LLMMetadata
+from llama_index.core.base.llms.types import ChatMessage, LLMMetadata, ChatResponse, CompletionResponse
 from llama_index.llms.mistralai.base import MistralAI
 from llama_index.llms.openai import OpenAI
 from pydantic import Field
@@ -78,6 +78,36 @@ class CaiiModel(OpenAI):
             is_function_calling_model=True,
             model_name=self.model,
         )
+
+class DeepseekModel(CaiiModel):
+    def __init__(
+            self,
+            model: str,
+            context: int,
+            api_base: str,
+            messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
+            completion_to_prompt: Callable[[str], str],
+            default_headers: Dict[str, str],
+    ):
+        super().__init__(
+            model=model,
+            api_base=api_base,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            default_headers=default_headers,
+            context=context,
+        )
+
+    def complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
+        completion: CompletionResponse = super().complete(prompt, formatted, **kwargs)
+        completion.text = completion.text.split("</think>")[-1]
+        return completion
+
+    def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
+        raw_response: ChatResponse = super().chat(messages, **kwargs)
+        content: str = raw_response.message.content or ""
+        raw_response.message.content = content.split("</think>")[-1]
+        return raw_response
 
 
 class CaiiModelMistral(MistralAI):

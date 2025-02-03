@@ -57,12 +57,10 @@ from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleContextChatEngine
 
 test_runtime_config = {
-    "reranking_model": [
-        model.model_id for model in models.get_available_rerank_models()
-    ],
-    "synthesis_model": ["meta.llama3-1-8b-instruct-v1:0"],
+    "reranking_model": ["mistral-4b-rerank-l4"],
+    "synthesis_model": ["llama-31-8b-instruct-2xa10g"],
     "top_k": [5, 10],
-    "hyde": [True, False],
+    "hyde": [False, True],
 }
 
 
@@ -77,6 +75,7 @@ def main():
     with open(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
     ) as details:
+        details.write("timestamp,chunk_size,hyde,summarization_model,reranking_model,top_k,file_name_1,max_score,relevance,faithfulness,question\n")
         for config in [
             dict(zip(test_runtime_config.keys(), values))
             for values in itertools.product(*test_runtime_config.values())

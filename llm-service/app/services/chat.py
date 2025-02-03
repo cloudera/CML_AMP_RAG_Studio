@@ -38,8 +38,7 @@
 
 import time
 import uuid
-from collections.abc import Iterator
-from typing import List
+from typing import List, Iterable
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -95,7 +94,7 @@ def v2_chat(
             ),
             evaluations=[],
             timestamp=time.time(),
-            condensed_question=None
+            condensed_question=None,
         )
 
     response, condensed_question = querier.query(
@@ -230,7 +229,7 @@ def process_response(response: str | None) -> list[str]:
     if response is None:
         return []
 
-    sentences: Iterator[str] = response.splitlines()
+    sentences: Iterable[str] = response.splitlines()
     sentences = map(lambda x: x.strip(), sentences)
     sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
     sentences = map(lambda x: x.removeprefix("-").strip(), sentences)
