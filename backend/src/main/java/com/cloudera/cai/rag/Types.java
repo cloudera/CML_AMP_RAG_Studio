@@ -138,6 +138,7 @@ public class Types {
     }
   }
 
+  @With
   public record CreateSession(
       String name,
       @Singular List<Long> dataSourceIds,

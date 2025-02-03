@@ -129,16 +129,23 @@ public class SessionRepository {
                     rowView.getColumn("id", Long.class),
                     sessionId -> {
                       try {
+                        String queryConfigurationJson =
+                            rowView.getColumn("query_configuration", String.class);
+                        Types.QueryConfiguration queryConfiguration;
+                        if (queryConfigurationJson == null) {
+                          queryConfiguration = new Types.QueryConfiguration(false);
+                        } else {
+                          queryConfiguration =
+                              objectMapper.readValue(
+                                  queryConfigurationJson, Types.QueryConfiguration.class);
+                        }
                         return Types.Session.builder()
                             .id(sessionId)
                             .name(rowView.getColumn("name", String.class))
                             .inferenceModel(rowView.getColumn("inference_model", String.class))
                             .responseChunks(rowView.getColumn("response_chunks", Integer.class))
                             .rerankModel(rowView.getColumn("rerank_model", String.class))
-                            .queryConfiguration(
-                                objectMapper.readValue(
-                                    rowView.getColumn("query_configuration", String.class),
-                                    Types.QueryConfiguration.class))
+                            .queryConfiguration(queryConfiguration)
                             .createdById(rowView.getColumn("created_by_id", String.class))
                             .timeCreated(rowView.getColumn("time_created", Instant.class))
                             .updatedById(rowView.getColumn("updated_by_id", String.class))

@@ -129,6 +129,19 @@ class SessionControllerTest {
   }
 
   @Test
+  void noQueryConfiguration_create() throws JsonProcessingException {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    request.setCookies(
+        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    var sessionName = "test";
+    Types.CreateSession input =
+        TestData.createSessionInstance(sessionName).withQueryConfiguration(null);
+    assertThatThrownBy(() -> sessionController.create(input, request))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
   void delete() {
     SessionService sessionService = SessionService.createNull();
     SessionController sessionController = new SessionController(sessionService);
