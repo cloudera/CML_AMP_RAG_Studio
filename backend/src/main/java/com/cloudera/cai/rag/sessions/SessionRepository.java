@@ -56,6 +56,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SessionRepository {
+  public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
+      new Types.QueryConfiguration(false);
   private final Jdbi jdbi;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -129,16 +131,7 @@ public class SessionRepository {
                     rowView.getColumn("id", Long.class),
                     sessionId -> {
                       try {
-                        String queryConfigurationJson =
-                            rowView.getColumn("query_configuration", String.class);
-                        Types.QueryConfiguration queryConfiguration;
-                        if (queryConfigurationJson == null) {
-                          queryConfiguration = new Types.QueryConfiguration(false);
-                        } else {
-                          queryConfiguration =
-                              objectMapper.readValue(
-                                  queryConfigurationJson, Types.QueryConfiguration.class);
-                        }
+                        var queryConfiguration = extractQueryConfiguration(rowView);
                         return Types.Session.builder()
                             .id(sessionId)
                             .name(rowView.getColumn("name", String.class))
@@ -161,6 +154,20 @@ public class SessionRepository {
             }
           });
     }
+  }
+
+  private Types.QueryConfiguration extractQueryConfiguration(RowView rowView)
+      throws JsonProcessingException {
+    String queryConfigurationJson = rowView.getColumn("query_configuration", String.class);
+    if (queryConfigurationJson == null) {
+      return DEFAULT_QUERY_CONFIGURATION;
+    }
+    Types.QueryConfiguration queryConfiguration =
+        objectMapper.readValue(queryConfigurationJson, Types.QueryConfiguration.class);
+    if (queryConfiguration == null) {
+      return DEFAULT_QUERY_CONFIGURATION;
+    }
+    return queryConfiguration;
   }
 
   public List<Types.Session> getSessions() {

@@ -137,8 +137,9 @@ class SessionControllerTest {
     var sessionName = "test";
     Types.CreateSession input =
         TestData.createSessionInstance(sessionName).withQueryConfiguration(null);
-    assertThatThrownBy(() -> sessionController.create(input, request))
-        .isInstanceOf(IllegalArgumentException.class);
+    var createdSession = sessionController.create(input, request);
+    assertThat(createdSession.queryConfiguration()).isNotNull();
+    assertThat(createdSession.queryConfiguration().enableHyde()).isFalse();
   }
 
   @Test
