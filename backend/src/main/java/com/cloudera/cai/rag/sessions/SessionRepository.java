@@ -45,6 +45,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
@@ -55,6 +57,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionRepository {
   private final Jdbi jdbi;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public SessionRepository(Jdbi jdbi) {
     this.jdbi = jdbi;

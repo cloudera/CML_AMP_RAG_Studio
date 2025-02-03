@@ -71,6 +71,7 @@ class SessionControllerTest {
     assertThat(result.createdById()).isEqualTo("test-user");
     assertThat(result.updatedById()).isEqualTo("test-user");
     assertThat(result.lastInteractionTime()).isNull();
+    assertThat(result.queryConfiguration()).isNotNull();
   }
 
   @Test

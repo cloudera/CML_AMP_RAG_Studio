@@ -33,3 +33,5 @@
 16_add_doc_status.up.sql
 17_add_chat_rerank_model.down.sql
 17_add_chat_rerank_model.up.sql
+18_add_chat_query_config.down.sql
+18_add_chat_query_config.up.sql
