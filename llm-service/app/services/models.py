@@ -49,7 +49,11 @@ from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from .caii.caii import get_caii_embedding_models, get_caii_llm_models, get_caii_reranking_models
+from .caii.caii import (
+    get_caii_embedding_models,
+    get_caii_llm_models,
+    get_caii_reranking_models,
+)
 from .caii.caii import get_embedding_model as caii_embedding
 from .caii.caii import get_reranking_model as caii_reranking
 from .caii.caii import get_llm as caii_llm
@@ -77,7 +81,6 @@ def get_reranking_model(
         return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
         return caii_reranking(model_name, top_n)
-        # return None
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
 
@@ -208,7 +211,6 @@ def test_reranking_model(model_name: str) -> str:
     models = get_available_rerank_models()
     for model in models:
         if model.model_id == model_name:
-            print(f"{model=}")
             if not is_caii_enabled() or model.available:
                 node = NodeWithScore(node=TextNode(text="test"), score=0.5)
                 another_test_node = NodeWithScore(

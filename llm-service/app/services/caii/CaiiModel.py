@@ -99,13 +99,14 @@ class DeepseekModel(CaiiModel):
         )
 
     def complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
-        completion = super().complete(prompt, formatted, **kwargs)
+        completion: CompletionResponse = super().complete(prompt, formatted, **kwargs)
         completion.text = completion.text.split("</think>")[-1]
         return completion
 
     def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
-        raw_response = super().chat(messages, **kwargs)
-        raw_response.message.content = raw_response.message.content.split("</think>")[-1]
+        raw_response: ChatResponse = super().chat(messages, **kwargs)
+        content: str = raw_response.message.content or ""
+        raw_response.message.content = content.split("</think>")[-1]
         return raw_response
 
 

@@ -45,6 +45,7 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import CaiiModel, CaiiModelMistral, DeepseekModel
@@ -87,7 +88,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         )
 
 
-def get_reranking_model(model_name, top_n):
+def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
     endpoint = describe_endpoint(endpoint_name=model_name)
     token = get_caii_access_token()
     return CaiiRerankingModel(

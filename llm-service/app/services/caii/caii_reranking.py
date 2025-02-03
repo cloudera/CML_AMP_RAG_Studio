@@ -74,8 +74,8 @@ class CaiiRerankingModel(NVIDIARerank):
                  base_url: Optional[str] = None, **kwargs: Any):
         super().__init__(model, nvidia_api_key, api_key, base_url, truncate="END", **kwargs)
 
-    def _validate_url(self, base_url):
+    def _validate_url(self, base_url: str) -> str:
         return base_url
 
-    def _validate_model(self, model):
+    def _validate_model(self, model_name: str) -> None:
         pass

@@ -38,7 +38,6 @@
 
 import time
 import uuid
-from collections.abc import Iterator
 from typing import List, Iterable
 
 from fastapi import HTTPException
@@ -95,7 +94,7 @@ def v2_chat(
             ),
             evaluations=[],
             timestamp=time.time(),
-            condensed_question=None
+            condensed_question=None,
         )
 
     response, condensed_question = querier.query(
@@ -229,9 +228,7 @@ def generate_suggested_questions(
 def process_response(response: str | None) -> list[str]:
     if response is None:
         return []
-    # remove deepseek's think tags.
-    response: str = response.split("</think>")[-1]
-    print(f"{response=}")
+
     sentences: Iterable[str] = response.splitlines()
     sentences = map(lambda x: x.strip(), sentences)
     sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
