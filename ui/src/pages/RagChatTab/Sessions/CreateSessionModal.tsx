@@ -55,6 +55,7 @@ export interface CreateSessionType {
   inferenceModel: string;
   rerankModel?: string;
   responseChunks: number;
+  enableHyde: boolean;
 }
 
 const CreateSessionModal = ({
@@ -103,6 +104,9 @@ const CreateSessionModal = ({
           inferenceModel: values.inferenceModel,
           rerankModel: values.rerankModel,
           responseChunks: values.responseChunks,
+          queryConfiguration: {
+            enableHyde: values.enableHyde,
+          },
         };
         createSessionMutation(responseBody);
       })

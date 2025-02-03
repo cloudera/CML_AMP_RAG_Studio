@@ -49,6 +49,10 @@ import {
   UseMutationType,
 } from "src/api/utils.ts";
 
+interface SessionQueryConfiguration {
+  enableHyde: boolean;
+}
+
 export interface Session {
   id: number;
   name: string;
@@ -61,11 +65,17 @@ export interface Session {
   createdById: string;
   updatedById: string;
   lastInteractionTime: number;
+  queryConfiguration: SessionQueryConfiguration;
 }
 
 export type CreateSessionRequest = Pick<
   Session,
-  "name" | "dataSourceIds" | "inferenceModel" | "rerankModel" | "responseChunks"
+  | "name"
+  | "dataSourceIds"
+  | "inferenceModel"
+  | "rerankModel"
+  | "responseChunks"
+  | "queryConfiguration"
 >;
 
 export type UpdateSessionRequest = Pick<
