@@ -98,7 +98,6 @@ const CreateSessionModal = ({
     form
       .validateFields()
       .then((values) => {
-        console.log(values);
         const responseBody: CreateSessionRequest = {
           name: values.name,
           dataSourceIds: [values.dataSourceId],
