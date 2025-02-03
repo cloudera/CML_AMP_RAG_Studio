@@ -38,6 +38,7 @@
 
 import {
   Checkbox,
+  Collapse,
   Form,
   FormInstance,
   Input,
@@ -73,6 +74,39 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       value: value.id,
     };
   };
+
+  const advancedOptions = () => [
+    {
+      key: "1",
+      label: "Advanced Options",
+      children: (
+        <>
+          <Form.Item<CreateSessionType>
+            name="enableHyde"
+            initialValue={false}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="HyDE (Hypothetical Document Embeddings)"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    HyDE is a technique that can improve the quality of the
+                    chunk retrieval by generating a hypothetical response to a
+                    query. This hypothetical response is then used to retrieve
+                    the most relevant chunks.
+                  </Typography>
+                }
+              >
+                Enable HyDE
+              </Popover>
+            }
+          >
+            <Checkbox />
+          </Form.Item>
+        </>
+      ),
+    },
+  ];
 
   return (
     <Form
@@ -130,28 +164,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       >
         <Slider marks={ResponseChunksRange} min={1} max={10} />
       </Form.Item>
-      <Form.Item<CreateSessionType>
-        name="enableHyde"
-        initialValue={false}
-        valuePropName="checked"
-        label={
-          <Popover
-            title="HyDE (Hypothetical Document Embeddings)"
-            content={
-              <Typography style={{ width: 300 }}>
-                HyDE is a technique that can improve the quality of the chunk
-                retrieval by generating a hypothetical response to a query. This
-                hypothetical response is then used to retrieve the most relevant
-                chunks.
-              </Typography>
-            }
-          >
-            Enable HyDE
-          </Popover>
-        }
-      >
-        <Checkbox />
-      </Form.Item>
+      <Collapse items={advancedOptions()} />
     </Form>
   );
 };
