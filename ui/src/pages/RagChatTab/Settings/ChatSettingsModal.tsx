@@ -36,7 +36,17 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Form, Input, Modal, Select, Slider } from "antd";
+import {
+  Checkbox,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Popover,
+  Select,
+  Slider,
+  Typography,
+} from "antd";
 import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
@@ -87,6 +97,9 @@ const ChatSettingsModal = ({
       .then((values) => {
         const request: UpdateSessionRequest = {
           ...values,
+          queryConfiguration: {
+            enableHyde: values.enableHyde,
+          },
           id: activeSession.id,
         };
         updateSession.mutate(request);
@@ -144,6 +157,28 @@ const ChatSettingsModal = ({
             label="Maximum number of documents"
           >
             <Slider marks={ResponseChunksRange} min={1} max={10} />
+          </Form.Item>
+          <Form.Item
+            name="enableHyde"
+            initialValue={activeSession.queryConfiguration.enableHyde}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="HyDE (Hypothetical Document Embeddings)"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    HyDE is a technique that can improve the quality of the
+                    chunk retrieval by generating a hypothetical response to a
+                    query. This hypothetical response is then used to retrieve
+                    the most relevant chunks.
+                  </Typography>
+                }
+              >
+                Enable HyDE
+              </Popover>
+            }
+          >
+            <Checkbox />
           </Form.Item>
         </Form>
       </Flex>

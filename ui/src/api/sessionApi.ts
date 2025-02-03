@@ -80,7 +80,7 @@ export type CreateSessionRequest = Pick<
 
 export type UpdateSessionRequest = Pick<
   Session,
-  "responseChunks" | "inferenceModel" | "name" | "id"
+  "queryConfiguration" | "responseChunks" | "inferenceModel" | "name" | "id"
 >;
 
 export const getSessionsQueryOptions = queryOptions({

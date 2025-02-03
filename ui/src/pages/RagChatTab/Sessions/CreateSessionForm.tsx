@@ -44,7 +44,6 @@ import {
   Popover,
   Select,
   Slider,
-  Tooltip,
   Typography,
 } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
@@ -134,6 +133,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       <Form.Item<CreateSessionType>
         name="enableHyde"
         initialValue={false}
+        valuePropName="checked"
         label={
           <Popover
             title="HyDE (Hypothetical Document Embeddings)"
