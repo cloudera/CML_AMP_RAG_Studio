@@ -110,7 +110,8 @@ class SessionControllerTest {
                 .withInferenceModel(updatedInferenceModel)
                 .withResponseChunks(updatedResponseChunks)
                 .withRerankModel(updatedRerankModel)
-                .withName(updatedName),
+                .withName(updatedName)
+                .withQueryConfiguration(new Types.QueryConfiguration(true)),
             request);
 
     assertThat(updatedSession.id()).isNotNull();
@@ -124,6 +125,7 @@ class SessionControllerTest {
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
     assertThat(updatedSession.updatedById()).isEqualTo("update-test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
+    assertThat(updatedSession.queryConfiguration().enableHyde()).isTrue();
   }
 
   @Test

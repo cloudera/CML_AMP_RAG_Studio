@@ -41,12 +41,12 @@ package com.cloudera.cai.rag.sessions;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
@@ -68,8 +68,8 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks)
-            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks)
+            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration)
+            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration)
           """;
           Long id = insertSession(input, handle, sql);
           insertSessionDataSources(handle, id, input.dataSourceIds());
@@ -93,8 +93,13 @@ public class SessionRepository {
 
   private Long insertSession(Types.Session input, Handle handle, String sql) {
     try (var update = handle.createUpdate(sql)) {
+      Types.QueryConfiguration queryConfiguration = input.queryConfiguration();
+      String json = objectMapper.writeValueAsString(queryConfiguration);
+      update.bind("queryConfiguration", json);
       update.bindMethods(input);
       return update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -122,19 +127,28 @@ public class SessionRepository {
             Types.Session.SessionBuilder sessionBuilder =
                 map.computeIfAbsent(
                     rowView.getColumn("id", Long.class),
-                    sessionId ->
-                        Types.Session.builder()
+                    sessionId -> {
+                      try {
+                        return Types.Session.builder()
                             .id(sessionId)
                             .name(rowView.getColumn("name", String.class))
                             .inferenceModel(rowView.getColumn("inference_model", String.class))
                             .responseChunks(rowView.getColumn("response_chunks", Integer.class))
                             .rerankModel(rowView.getColumn("rerank_model", String.class))
+                            .queryConfiguration(
+                                objectMapper.readValue(
+                                    rowView.getColumn("query_configuration", String.class),
+                                    Types.QueryConfiguration.class))
                             .createdById(rowView.getColumn("created_by_id", String.class))
                             .timeCreated(rowView.getColumn("time_created", Instant.class))
                             .updatedById(rowView.getColumn("updated_by_id", String.class))
                             .timeUpdated(rowView.getColumn("time_updated", Instant.class))
                             .lastInteractionTime(
-                                rowView.getColumn("last_interaction_time", Instant.class)));
+                                rowView.getColumn("last_interaction_time", Instant.class));
+                      } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                      }
+                    });
             if (rowView.getColumn("data_source_id", Long.class) != null) {
               sessionBuilder.dataSourceId(rowView.getColumn("data_source_id", Long.class));
             }
@@ -169,16 +183,29 @@ public class SessionRepository {
 
   public void update(Types.Session input) {
     var updatedInput = input.withTimeUpdated(Instant.now());
+    String json = serializeQueryConfiguration(input);
     jdbi.useHandle(
         handle -> {
           var sql =
               """
-            UPDATE CHAT_SESSION
-            SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel,
-                response_chunks = :responseChunks, time_updated = :timeUpdated, rerank_model = :rerankModel
-            WHERE id = :id
-          """;
-          handle.createUpdate(sql).bindMethods(updatedInput).execute();
+                  UPDATE CHAT_SESSION
+                  SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel, query_configuration = :queryConfiguration,
+                      response_chunks = :responseChunks, time_updated = :timeUpdated, rerank_model = :rerankModel
+                  WHERE id = :id
+                """;
+          handle
+              .createUpdate(sql)
+              .bind("queryConfiguration", json)
+              .bindMethods(updatedInput)
+              .execute();
         });
+  }
+
+  private String serializeQueryConfiguration(Types.Session input) {
+    try {
+      return objectMapper.writeValueAsString(input.queryConfiguration());
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
