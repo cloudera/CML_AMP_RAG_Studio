@@ -37,7 +37,7 @@
 #
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.core.schema import TextNode, Document, NodeRelationship
@@ -73,7 +73,8 @@ class MdReader(BaseReader):
         nodes = parser.get_nodes_from_documents([document])
         results: list[TextNode] = []
         for node in nodes:
-            if not node.text:
+            node = cast(TextNode, node)
+            if node.text is None:
                 continue
             texts_nodes: list[TextNode] = self._chunks_in_document(Document(text=node.text, metadata=node.metadata))
             for text_node in texts_nodes:
