@@ -35,7 +35,7 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Breadcrumb, Card, Typography } from "antd";
+import { Breadcrumb, Card, Flex, Typography } from "antd";
 import { ChunkContentsResponse } from "src/api/ragQueryApi.ts";
 
 const MetaDataItem = ({
@@ -55,12 +55,19 @@ const MetaDataItem = ({
 );
 
 const HeaderPathMetaData = ({ headerPath }: { headerPath?: string }) => {
-  return headerPath ? (
-    <Breadcrumb
-      separator=">"
-      items={headerPath.split("/").map((path) => ({ title: path }))}
-    />
-  ) : null;
+  if (!headerPath) {
+    return null;
+  }
+  const items = headerPath
+    .split("/")
+    .filter((value) => value.length > 0)
+    .map((path) => ({ title: path.trim() }));
+  return (
+    <Flex vertical gap={4}>
+      <Typography.Text>Document location:</Typography.Text>
+      <Breadcrumb style={{ marginLeft: 20 }} separator=">" items={items} />
+    </Flex>
+  );
 };
 
 const MetaData = ({
