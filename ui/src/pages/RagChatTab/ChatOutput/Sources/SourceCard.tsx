@@ -66,7 +66,7 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
         </Typography.Paragraph>
       </Tooltip>
       <Typography.Text style={{ color: cdlGray600 }}>
-        Score: {source.score}
+        Score: {source.score.toFixed(2)}
       </Typography.Text>
     </Flex>
   );
