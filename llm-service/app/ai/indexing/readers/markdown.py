@@ -77,12 +77,11 @@ class MdReader(BaseReader):
                 continue
             texts_nodes: list[TextNode] = self._chunks_in_document(Document(text=node.text, metadata=node.metadata))
             for text_node in texts_nodes:
-                self._add_document_metadata(node, file_path)
-                node.metadata["chunk_format"] = "markdown"
-                node.relationships.update(
+                self._add_document_metadata(text_node, file_path)
+                text_node.metadata["chunk_format"] = "markdown"
+                text_node.relationships.update(
                     {NodeRelationship.SOURCE: document.as_related_node_info()}
                 )
                 results.append(text_node)
         ret.chunks = results
-        print(ret.chunks)
         return ret
