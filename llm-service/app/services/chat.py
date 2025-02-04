@@ -39,6 +39,7 @@
 import time
 import uuid
 from typing import List, Iterable
+import mlflow
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -75,56 +76,98 @@ def v2_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
-
     response_id = str(uuid.uuid4())
-
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400, detail="Only one datasource is supported for chat."
+    mlflow.llama_index.autolog()
+    experiment = mlflow.set_experiment(experiment_name=f"{session.name}_{session.id}")
+    with mlflow.start_run(
+        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+    ):
+        mlflow.log_params(
+            {
+                "top_k": query_configuration.top_k,
+                "model_name": query_configuration.model_name,
+                "rerank_model_name": query_configuration.rerank_model_name,
+                "exclude_knowledge_base": query_configuration.exclude_knowledge_base,
+                "use_question_condensing": query_configuration.use_question_condensing,
+                "use_hyde": query_configuration.use_hyde,
+                "use_summary_filter": query_configuration.use_summary_filter,
+                "session_id": session_id,
+                "data_source_ids": session.data_source_ids,
+            }
         )
 
-    data_source_id: int = session.data_source_ids[0]
-    if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
-        return RagStudioChatMessage(
+        if len(session.data_source_ids) != 1:
+            raise HTTPException(
+                status_code=400, detail="Only one datasource is supported for chat."
+            )
+
+        data_source_id: int = session.data_source_ids[0]
+        if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
+            return RagStudioChatMessage(
+                id=response_id,
+                source_nodes=[],
+                inference_model=None,
+                rag_message=RagMessage(
+                    user=query,
+                    assistant="I don't have any documents to answer your question.",
+                ),
+                evaluations=[],
+                timestamp=time.time(),
+                condensed_question=None,
+            )
+
+        response, condensed_question = querier.query(
+            data_source_id,
+            query,
+            query_configuration,
+            retrieve_chat_history(session_id),
+        )
+        if condensed_question and (condensed_question.strip() == query.strip()):
+            condensed_question = None
+        relevance, faithfulness = evaluators.evaluate_response(
+            query, response, session.inference_model
+        )
+        response_source_nodes = format_source_nodes(response)
+        new_chat_message = RagStudioChatMessage(
             id=response_id,
-            source_nodes=[],
-            inference_model=None,
+            source_nodes=response_source_nodes,
+            inference_model=session.inference_model,
             rag_message=RagMessage(
                 user=query,
-                assistant="I don't have any documents to answer your question.",
+                assistant=response.response,
             ),
-            evaluations=[],
+            evaluations=[
+                Evaluation(name="relevance", value=relevance),
+                Evaluation(name="faithfulness", value=faithfulness),
+            ],
             timestamp=time.time(),
-            condensed_question=None,
+            condensed_question=condensed_question,
+        )
+        mlflow.log_metrics(
+            {
+                "relevance": relevance,
+                "faithfulness": faithfulness,
+                "source_nodes_count": len(response_source_nodes),
+                "max_score": (
+                    response_source_nodes[0].score if response_source_nodes else 0.0
+                ),
+            }
+        )
+        mlflow.log_table(
+            {
+                "response_id": response_id,
+                "source_nodes": response_source_nodes,
+                "query": query,
+                "response": response.response,
+                "condensed_question": condensed_question,
+            },
+            artifact_file=f"session_id_{session.id}.json",
         )
 
-    response, condensed_question = querier.query(
-        data_source_id,
-        query,
-        query_configuration,
-        retrieve_chat_history(session_id),
+    name = mlflow.search_runs(
+        experiment_names=[experiment.name], filter_string=f"run_name='{response_id}'"
     )
-    if condensed_question and (condensed_question.strip() == query.strip()):
-        condensed_question = None
-    relevance, faithfulness = evaluators.evaluate_response(
-        query, response, session.inference_model
-    )
-    response_source_nodes = format_source_nodes(response)
-    new_chat_message = RagStudioChatMessage(
-        id=response_id,
-        source_nodes=response_source_nodes,
-        inference_model=session.inference_model,
-        rag_message=RagMessage(
-            user=query,
-            assistant=response.response,
-        ),
-        evaluations=[
-            Evaluation(name="relevance", value=relevance),
-            Evaluation(name="faithfulness", value=faithfulness),
-        ],
-        timestamp=time.time(),
-        condensed_question=condensed_question,
-    )
+    print(name)
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
