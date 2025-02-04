@@ -146,10 +146,11 @@ def mistralv2_messages_to_prompt(messages: Sequence[ChatMessage]) -> str:
             raise Exception(
                 "HFI Conversation roles must alternate user/assistant/user/assistant/..."
             )
+        message_content: str = message.content
         if index == 0 and system_message is not None:
-            content = "<<SYS>>\n" + system_message + "\n<</SYS>>\n\n" + message.content
+            content = "<<SYS>>\n" + system_message + "\n<</SYS>>\n\n" + message_content
         else:
-            content = message.content
+            content = message_content
         if message.role == MessageRole.USER:
             conversation += bos_token + "[INST] " + content.strip() + " [/INST]"
         elif message.role == MessageRole.ASSISTANT:

@@ -1,5 +1,5 @@
-import tempfile
 import os
+import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -8,7 +8,7 @@ from typing import List, Optional, Set
 from detect_secrets.core.secrets_collection import SecretsCollection
 from detect_secrets.settings import default_settings
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import Document, TextNode
+from llama_index.core.schema import Document, TextNode, BaseNode
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 
@@ -45,7 +45,7 @@ class BaseReader(ABC):
     def load_chunks(self, file_path: Path) -> ChunksResult:
         pass
 
-    def _add_document_metadata(self, node: TextNode, file_path: Path) -> None:
+    def _add_document_metadata(self, node: BaseNode, file_path: Path) -> None:
         node.metadata["file_name"] = file_path.name
         node.metadata["document_id"] = self.document_id
         node.metadata["data_source_id"] = self.data_source_id
