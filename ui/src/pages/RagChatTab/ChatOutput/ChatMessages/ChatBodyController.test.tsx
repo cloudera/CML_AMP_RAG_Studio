@@ -70,6 +70,7 @@ const testSession: Session = {
   inferenceModel: "",
   queryConfiguration: {
     enableHyde: false,
+    enableSummaryFilter: false,
   },
 };
 
@@ -124,6 +125,7 @@ describe("ChatBodyController", () => {
         inferenceModel: "",
         queryConfiguration: {
           enableHyde: false,
+          enableSummaryFilter: false,
         },
       },
     };

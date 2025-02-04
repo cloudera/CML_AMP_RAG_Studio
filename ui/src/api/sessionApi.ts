@@ -51,6 +51,7 @@ import {
 
 interface SessionQueryConfiguration {
   enableHyde: boolean;
+  enableSummaryFilter: boolean;
 }
 
 export interface Session {

@@ -57,6 +57,7 @@ export interface CreateSessionType {
   responseChunks: number;
   queryConfiguration: {
     enableHyde: boolean;
+    enableSummaryFilter: boolean;
   };
 }
 
@@ -108,6 +109,7 @@ const CreateSessionModal = ({
           responseChunks: values.responseChunks,
           queryConfiguration: {
             enableHyde: values.queryConfiguration.enableHyde,
+            enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
           },
         };
         createSessionMutation(requestBody);

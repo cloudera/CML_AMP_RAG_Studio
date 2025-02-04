@@ -104,6 +104,29 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
           >
             <Checkbox />
           </Form.Item>
+          <Form.Item<CreateSessionType>
+            name={["queryConfiguration", "enableSummaryFilter"]}
+            initialValue={true}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Enable Summary-Based Filtering"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    This option will provide two-stage retrieval, using the
+                    document summary to provide an additional way to get access
+                    to the appropriate chunks of the document. In order for this
+                    to work, a summarization model must be assigned to the
+                    knowledge base.
+                  </Typography>
+                }
+              >
+                Enable Summary Filtering
+              </Popover>
+            }
+          >
+            <Checkbox />
+          </Form.Item>
         </>
       ),
     },
