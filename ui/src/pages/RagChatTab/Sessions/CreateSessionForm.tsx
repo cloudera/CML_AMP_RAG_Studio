@@ -78,6 +78,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
   const advancedOptions = () => [
     {
       key: "1",
+      forceRender: true,
       label: "Advanced Options",
       children: (
         <>
