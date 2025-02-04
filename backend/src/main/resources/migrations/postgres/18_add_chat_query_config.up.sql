@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+ * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,65 +34,11 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
-import { Breadcrumb, Card, Flex, Typography } from "antd";
-import { ChunkContentsResponse } from "src/api/ragQueryApi.ts";
+ */
 
-const MetaDataItem = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number | undefined;
-}) => (
-  <>
-    {value && (
-      <Typography.Text>
-        {label}: {value}
-      </Typography.Text>
-    )}
-  </>
-);
+BEGIN;
 
-const HeaderPathMetaData = ({ headerPath }: { headerPath?: string }) => {
-  if (!headerPath) {
-    return null;
-  }
-  const items = headerPath
-    .split("/")
-    .filter((value) => value.length > 0)
-    .map((path) => ({ title: path.trim() }));
-  return (
-    <Flex vertical gap={4}>
-      <Typography.Text>Document location:</Typography.Text>
-      <Breadcrumb style={{ marginLeft: 20 }} separator=">" items={items} />
-    </Flex>
-  );
-};
+ALTER TABLE CHAT_SESSION ADD COLUMN query_configuration TEXT;
 
-const MetaData = ({
-  metadata,
-}: {
-  metadata: ChunkContentsResponse["metadata"];
-}) => {
-  const hasMetadata =
-    Boolean(metadata.row_number) ||
-    Boolean(metadata.page_number) ||
-    Boolean(metadata.header_path && metadata.header_path.length > 1);
 
-  return (
-    <Card title="Metadata" type="inner">
-      {hasMetadata ? (
-        <>
-          <MetaDataItem label="Row number" value={metadata.row_number} />
-          <MetaDataItem label="Page number" value={metadata.page_number} />
-          <HeaderPathMetaData headerPath={metadata.header_path} />
-        </>
-      ) : (
-        <Typography.Text type={"secondary"}>N/A</Typography.Text>
-      )}
-    </Card>
-  );
-};
-
-export default MetaData;
+COMMIT;

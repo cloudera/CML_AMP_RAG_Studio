@@ -103,6 +103,8 @@ public class Types {
       @Nullable Integer documentCount,
       @Nullable Long totalDocSize) {}
 
+  public record QueryConfiguration(boolean enableHyde, boolean enableSummaryFilter) {}
+
   @With
   @Builder
   public record Session(
@@ -116,7 +118,8 @@ public class Types {
       Instant lastInteractionTime,
       String inferenceModel,
       String rerankModel,
-      Integer responseChunks) {
+      Integer responseChunks,
+      QueryConfiguration queryConfiguration) {
 
     public static Session fromCreateRequest(CreateSession input, String username) {
       return new Session(
@@ -130,14 +133,17 @@ public class Types {
           null,
           input.inferenceModel(),
           input.rerankModel(),
-          input.responseChunks());
+          input.responseChunks(),
+          input.queryConfiguration());
     }
   }
 
+  @With
   public record CreateSession(
       String name,
       @Singular List<Long> dataSourceIds,
       String inferenceModel,
       String rerankModel,
-      Integer responseChunks) {}
+      Integer responseChunks,
+      QueryConfiguration queryConfiguration) {}
 }

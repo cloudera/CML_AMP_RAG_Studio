@@ -82,9 +82,11 @@ class FlexibleRetriever(BaseRetriever):
         logger.debug(f"result_nodes: {len(result_nodes)}")
 
         for node in sorted(result_nodes, key=lambda n: n.node.node_id):
-            logger.debug(node.node.node_id, node.node.metadata["document_id"], node.score)
+            logger.debug(
+                node.node.node_id, node.node.metadata["document_id"], node.score
+            )
 
-        if summarization_model is not None:
+        if summarization_model is not None and self.configuration.use_summary_filter:
             # add a filter to the retriever with the resulting document ids.
             doc_ids = self._filter_doc_ids_by_summary(query_bundle.query_str)
             if doc_ids:
@@ -97,7 +99,9 @@ class FlexibleRetriever(BaseRetriever):
                 result_nodes.extend(simple_retriever.retrieve(query_bundle))
         logger.debug(f"result_nodes(2): {len(result_nodes)}")
         for node in sorted(result_nodes, key=lambda n: n.node.node_id):
-            logger.debug(node.node.node_id, node.node.metadata["document_id"], node.score)
+            logger.debug(
+                node.node.node_id, node.node.metadata["document_id"], node.score
+            )
         return result_nodes
 
     def _filter_doc_ids_by_summary(self, query_str: str) -> list[str] | None:

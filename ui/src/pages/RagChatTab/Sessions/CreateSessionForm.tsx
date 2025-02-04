@@ -36,7 +36,17 @@
  * DATA.
  ******************************************************************************/
 
-import { Form, FormInstance, Input, Select, Slider } from "antd";
+import {
+  Checkbox,
+  Collapse,
+  Form,
+  FormInstance,
+  Input,
+  Popover,
+  Select,
+  Slider,
+  Typography,
+} from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
@@ -64,6 +74,63 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       value: value.id,
     };
   };
+
+  const advancedOptions = () => [
+    {
+      key: "1",
+      forceRender: true,
+      label: "Advanced Options",
+      children: (
+        <>
+          <Form.Item<CreateSessionType>
+            name={["queryConfiguration", "enableHyde"]}
+            initialValue={false}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="HyDE (Hypothetical Document Embeddings)"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    HyDE is a technique that can improve the quality of the
+                    chunk retrieval by generating a hypothetical response to a
+                    query. This hypothetical response is then used to retrieve
+                    the most relevant chunks.
+                  </Typography>
+                }
+              >
+                Enable HyDE
+              </Popover>
+            }
+          >
+            <Checkbox />
+          </Form.Item>
+          <Form.Item<CreateSessionType>
+            name={["queryConfiguration", "enableSummaryFilter"]}
+            initialValue={true}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Enable Summary-Based Filtering"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    This option will provide two-stage retrieval, using the
+                    document summary to provide an additional way to get access
+                    to the appropriate chunks of the document. In order for this
+                    to work, a summarization model must be assigned to the
+                    knowledge base.
+                  </Typography>
+                }
+              >
+                Enable Summary Filtering
+              </Popover>
+            }
+          >
+            <Checkbox />
+          </Form.Item>
+        </>
+      ),
+    },
+  ];
 
   return (
     <Form
@@ -121,6 +188,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       >
         <Slider marks={ResponseChunksRange} min={1} max={10} />
       </Form.Item>
+      <Collapse items={advancedOptions()} />
     </Form>
   );
 };

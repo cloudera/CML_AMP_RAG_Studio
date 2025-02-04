@@ -37,7 +37,7 @@
 #
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.core.schema import TextNode, Document, NodeRelationship
@@ -69,24 +69,20 @@ class MdReader(BaseReader):
         document = Document(text=content)
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
-        # the process here is to do a blind sentence split on the document, then let the markdown
-        # parser break up the resulting chunks into nodes based on markdown sections.
-        # There is a chance that doing it the opposite way might lead to better results, but
-        # we don't know how to know.
-        chunks_in_document: list[TextNode] = self._chunks_in_document(document)
         parser = MarkdownNodeParser()
-        parser.get_nodes_from_documents([document])
+        nodes = parser.get_nodes_from_documents([document])
         results: list[TextNode] = []
-        for chunk in chunks_in_document:
-            parsed_nodes: list[TextNode] = parser.get_nodes_from_node(chunk)
-            for node in parsed_nodes:
-                if not node.text:
-                    continue
-                self._add_document_metadata(node, file_path)
-                node.metadata["chunk_format"] = "markdown"
-                node.relationships.update(
+        for node in nodes:
+            node = cast(TextNode, node)
+            if node.text is None:
+                continue
+            texts_nodes: list[TextNode] = self._chunks_in_document(Document(text=node.text, metadata=node.metadata))
+            for text_node in texts_nodes:
+                self._add_document_metadata(text_node, file_path)
+                text_node.metadata["chunk_format"] = "markdown"
+                text_node.relationships.update(
                     {NodeRelationship.SOURCE: document.as_related_node_info()}
                 )
-                results.append(node)
+                results.append(text_node)
         ret.chunks = results
         return ret

@@ -39,6 +39,7 @@
 from pathlib import Path
 from typing import Any
 
+from llama_index.core import Document
 from llama_index.readers.file import PptxReader as LlamaIndexPptxReader
 
 from .base_reader import BaseReader, ChunksResult
@@ -53,7 +54,7 @@ class PptxReader(BaseReader):
 
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
-        document = documents[0]
+        document: Document = documents[0]
         document.id_ = self.document_id
 
         document_text = document.text
@@ -69,7 +70,7 @@ class PptxReader(BaseReader):
             ret.pii_found = True
             document_text = anonymized_text
 
-        document.text = document_text
+        document.set_content(document_text)
 
         self._add_document_metadata(document, file_path)
         ret.chunks = self._chunks_in_document(document)

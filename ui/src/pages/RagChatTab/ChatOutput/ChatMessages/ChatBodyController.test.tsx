@@ -44,6 +44,7 @@ import {
 } from "pages/RagChatTab/State/RagChatContext";
 import ChatBodyController from "./ChatBodyController";
 import { ConnectionType } from "src/api/dataSourceApi.ts";
+import { Session } from "src/api/sessionApi.ts";
 
 const testDataSource = {
   id: 1,
@@ -56,7 +57,7 @@ const testDataSource = {
   chunkOverlapPercent: 0,
 };
 
-const testSession = {
+const testSession: Session = {
   dataSourceIds: [1],
   id: 1,
   name: "session name",
@@ -67,6 +68,10 @@ const testSession = {
   lastInteractionTime: 123,
   responseChunks: 5,
   inferenceModel: "",
+  queryConfiguration: {
+    enableHyde: false,
+    enableSummaryFilter: false,
+  },
 };
 
 describe("ChatBodyController", () => {
@@ -118,6 +123,10 @@ describe("ChatBodyController", () => {
         lastInteractionTime: 0,
         responseChunks: 5,
         inferenceModel: "",
+        queryConfiguration: {
+          enableHyde: false,
+          enableSummaryFilter: false,
+        },
       },
     };
 
