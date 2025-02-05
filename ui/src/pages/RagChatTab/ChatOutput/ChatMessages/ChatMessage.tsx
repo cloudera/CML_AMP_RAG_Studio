@@ -45,6 +45,10 @@ import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import Images from "src/components/images/Images.ts";
 import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
+import Remark from "remark-gfm";
+import Markdown from "react-markdown";
+
+import "../tableMarkdown.css";
 
 const ChatMessage = ({
   data,
@@ -95,10 +99,14 @@ const ChatMessage = ({
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
               <SourceNodes data={data} />
-              <Typography.Text
-                style={{ fontSize: 16, whiteSpace: "pre-wrap", marginTop: 8 }}
-              >
-                {data.rag_message.assistant.trimStart()}
+              <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+                <Markdown
+                  skipHtml
+                  remarkPlugins={[Remark]}
+                  className="styled-markdown"
+                >
+                  {data.rag_message.assistant.trimStart()}
+                </Markdown>
               </Typography.Text>
               <Flex gap={16}>
                 <Evaluations evaluations={data.evaluations} />
