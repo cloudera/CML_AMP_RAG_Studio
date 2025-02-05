@@ -102,7 +102,7 @@ const ChatMessage = ({
               </Typography.Text>
               <Flex gap={16}>
                 <Evaluations evaluations={data.evaluations} />
-                <Feedback />
+                <Feedback responseId={data.id} />
               </Flex>
             </Flex>
           </Flex>

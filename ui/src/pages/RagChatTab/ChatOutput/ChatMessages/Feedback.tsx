@@ -37,15 +37,46 @@
  ******************************************************************************/
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
+import { useEvaluationMutation } from "src/api/chatApi.ts";
+import { useContext } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
-const Feedback = () => {
+const Feedback = ({ responseId }: { responseId: string }) => {
+  const session = useContext(RagChatContext).activeSession;
+  const { mutate } = useEvaluationMutation({
+    onSuccess: () => {
+      console.log("Feedback submitted");
+    },
+  });
+
+  const handleFeedback = (isGood: boolean) => {
+    if (!session) {
+      return;
+    }
+    mutate({ sessionId: session.id.toString(), responseId, rating: isGood });
+  };
+
   return (
     <div>
       <Tooltip title="Good response">
-        <Button icon={<LikeOutlined />} type="text" size="small" />
+        <Button
+          icon={<LikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(true);
+          }}
+        />
       </Tooltip>
       <Tooltip title="Bad response">
-        <Button icon={<DislikeOutlined />} type="text" size="small" />
+        <Button
+          icon={<DislikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(false);
+          }}
+        />
       </Tooltip>
     </div>
   );
