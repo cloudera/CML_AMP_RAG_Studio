@@ -164,10 +164,6 @@ def v2_chat(
             artifact_file=f"session_id_{session.id}.json",
         )
 
-    name = mlflow.search_runs(
-        experiment_names=[experiment.name], filter_string=f"run_name='{response_id}'"
-    )
-    print(name)
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
