@@ -49,6 +49,7 @@ from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services import document_storage, models
+from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -150,10 +151,12 @@ class DataSourceController:
         with mlflow.start_run(
             experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
         ):
-            self._download_and_index(data_source_id, datasource, doc_id, request)
+            self._download_and_index(datasource, doc_id, request)
 
     @mlflow.trace(name="download_and_index")
-    def _download_and_index(self, data_source_id, datasource, doc_id, request):
+    def _download_and_index(
+        self, datasource: RagDataSource, doc_id: str, request: RagIndexDocumentRequest
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             doc_storage = document_storage.from_environment()
@@ -167,7 +170,7 @@ class DataSourceController:
             if datasource.summarization_model:
                 llm = models.get_llm(datasource.summarization_model)
             indexer = EmbeddingIndexer(
-                data_source_id,
+                datasource.id,
                 splitter=SentenceSplitter(
                     chunk_size=request.configuration.chunk_size,
                     chunk_overlap=int(
@@ -189,7 +192,7 @@ class DataSourceController:
 
             mlflow.log_params(
                 {
-                    "data_source_id": data_source_id,
+                    "data_source_id": datasource.id,
                     "embedding_model": datasource.embedding_model,
                     "summarization_model": datasource.summarization_model,
                     "chunk_size": request.configuration.chunk_size,

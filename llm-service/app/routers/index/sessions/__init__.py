@@ -87,7 +87,7 @@ class ChatResponseEvaluation(BaseModel):
 )
 @exceptions.propagates
 def evaluate(
-    session_id: int, response_id, evaluation: ChatResponseEvaluation
+    session_id: int, response_id: str, evaluation: ChatResponseEvaluation
 ) -> ChatResponseEvaluation:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
