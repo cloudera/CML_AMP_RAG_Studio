@@ -89,7 +89,7 @@ export interface ChatMessageType {
   condensed_question?: string;
 }
 
-export interface ChatResponseEvaluation {
+export interface ChatResponseFeedback {
   rating: boolean;
 }
 
@@ -209,19 +209,19 @@ export const createQueryConfiguration = (
   };
 };
 
-export const useEvaluationMutation = ({
+export const useFeedbackMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<ChatResponseEvaluation>) => {
+}: UseMutationType<ChatResponseFeedback>) => {
   return useMutation({
     mutationKey: [MutationKeys.evalMutation],
-    mutationFn: evaluationMutation,
+    mutationFn: feedbackMutation,
     onSuccess: onSuccess,
     onError: (error: Error) => onError?.(error),
   });
 };
 
-const evaluationMutation = async ({
+const feedbackMutation = async ({
   sessionId,
   responseId,
   rating,
@@ -229,9 +229,9 @@ const evaluationMutation = async ({
   sessionId: string;
   responseId: string;
   rating: boolean;
-}): Promise<ChatResponseEvaluation> => {
+}): Promise<ChatResponseFeedback> => {
   return await postRequest(
-    `${llmServicePath}/sessions/${sessionId}/evaluate/responses/${responseId}`,
+    `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/feedback`,
     { rating },
   );
 };

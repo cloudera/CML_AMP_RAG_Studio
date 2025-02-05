@@ -42,7 +42,7 @@ import {
   LikeTwoTone,
 } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
-import { useEvaluationMutation } from "src/api/chatApi.ts";
+import { useFeedbackMutation } from "src/api/chatApi.ts";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -50,7 +50,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 const Feedback = ({ responseId }: { responseId: string }) => {
   const [isGood, setIsGood] = useState<boolean | null>(null);
   const session = useContext(RagChatContext).activeSession;
-  const { mutate } = useEvaluationMutation({
+  const { mutate } = useFeedbackMutation({
     onSuccess: (data) => {
       setIsGood(data.rating);
     },

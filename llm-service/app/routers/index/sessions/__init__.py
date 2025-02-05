@@ -78,17 +78,17 @@ def delete_chat_history(session_id: int) -> str:
     return "Chat history deleted."
 
 
-class ChatResponseEvaluation(BaseModel):
+class ChatResponseFeedback(BaseModel):
     rating: bool
 
 
 @router.post(
-    "/evaluate/responses/{response_id}", summary="Provide feedback on a chat response."
+    "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
 )
 @exceptions.propagates
 def evaluate(
-    session_id: int, response_id: str, evaluation: ChatResponseEvaluation
-) -> ChatResponseEvaluation:
+    session_id: int, response_id: str, feedback: ChatResponseFeedback
+) -> ChatResponseFeedback:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
@@ -99,9 +99,9 @@ def evaluate(
         output_format="list",
     )
     for run in runs:
-        mlflow.log_metric("rating", evaluation.rating, run_id=run.info.run_id)
-    return ChatResponseEvaluation(
-        rating=evaluation.rating,
+        mlflow.log_metric("rating", feedback.rating, run_id=run.info.run_id)
+    return ChatResponseFeedback(
+        rating=feedback.rating,
     )
 
 
