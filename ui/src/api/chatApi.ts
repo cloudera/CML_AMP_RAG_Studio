@@ -211,11 +211,13 @@ export const createQueryConfiguration = (
 
 export const useEvaluationMutation = ({
   onSuccess,
+  onError,
 }: UseMutationType<ChatResponseEvaluation>) => {
   return useMutation({
     mutationKey: [MutationKeys.evalMutation],
     mutationFn: evaluationMutation,
     onSuccess: onSuccess,
+    onError: (error: Error) => onError?.(error),
   });
 };
 

@@ -36,15 +36,16 @@
  * DATA.
  ******************************************************************************/
 import {
-  DislikeFilled,
   DislikeOutlined,
-  LikeFilled,
+  DislikeTwoTone,
   LikeOutlined,
+  LikeTwoTone,
 } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import { useEvaluationMutation } from "src/api/chatApi.ts";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const Feedback = ({ responseId }: { responseId: string }) => {
   const [isGood, setIsGood] = useState<boolean | null>(null);
@@ -52,6 +53,10 @@ const Feedback = ({ responseId }: { responseId: string }) => {
   const { mutate } = useEvaluationMutation({
     onSuccess: (data) => {
       setIsGood(data.rating);
+    },
+    onError: () => {
+      setIsGood(null);
+      messageQueue.error("Failed submit chat response feedback");
     },
   });
 
@@ -66,7 +71,7 @@ const Feedback = ({ responseId }: { responseId: string }) => {
     <div>
       <Tooltip title="Good response">
         <Button
-          icon={isGood === true ? <LikeFilled /> : <LikeOutlined />}
+          icon={isGood === true ? <LikeTwoTone /> : <LikeOutlined />}
           type="text"
           size="small"
           onClick={() => {
@@ -76,7 +81,7 @@ const Feedback = ({ responseId }: { responseId: string }) => {
       </Tooltip>
       <Tooltip title="Bad response">
         <Button
-          icon={isGood === false ? <DislikeFilled /> : <DislikeOutlined />}
+          icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
           type="text"
           size="small"
           onClick={() => {
