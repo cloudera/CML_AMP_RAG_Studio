@@ -163,3 +163,7 @@ cython_debug/
 
 ./performance_testing/raw_results.csv
 ./performance_testing/results.csv
+
+# Mlflow
+
+mlruns/

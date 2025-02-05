@@ -35,21 +35,62 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import {
+  DislikeOutlined,
+  DislikeTwoTone,
+  LikeOutlined,
+  LikeTwoTone,
+} from "@ant-design/icons";
+import { Button, Tooltip } from "antd";
+import { useFeedbackMutation } from "src/api/chatApi.ts";
+import { useContext, useState } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import messageQueue from "src/utils/messageQueue.ts";
 
-import { Evaluation } from "src/api/chatApi.ts";
-import EvaluationMetric from "pages/RagChatTab/ChatOutput/ChatMessages/EvaluationMetric.tsx";
-import { Flex } from "antd";
+const Feedback = ({ responseId }: { responseId: string }) => {
+  const [isGood, setIsGood] = useState<boolean | null>(null);
+  const session = useContext(RagChatContext).activeSession;
+  const { mutate } = useFeedbackMutation({
+    onSuccess: (data) => {
+      setIsGood(data.rating);
+    },
+    onError: () => {
+      setIsGood(null);
+      messageQueue.error("Failed submit chat response feedback");
+    },
+  });
 
-export const Evaluations = (props: { evaluations: Evaluation[] }) => (
-  <Flex gap={4}>
-    {props.evaluations.map((evaluation, index) => {
-      return (
-        <EvaluationMetric
-          key={evaluation.name}
-          evaluation={evaluation}
-          isLast={index === props.evaluations.length - 1}
+  const handleFeedback = (isGood: boolean) => {
+    if (!session) {
+      return;
+    }
+    mutate({ sessionId: session.id.toString(), responseId, rating: isGood });
+  };
+
+  return (
+    <div>
+      <Tooltip title="Good response">
+        <Button
+          icon={isGood === true ? <LikeTwoTone /> : <LikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(true);
+          }}
         />
-      );
-    })}
-  </Flex>
-);
+      </Tooltip>
+      <Tooltip title="Bad response">
+        <Button
+          icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(false);
+          }}
+        />
+      </Tooltip>
+    </div>
+  );
+};
+
+export default Feedback;

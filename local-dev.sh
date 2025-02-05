@@ -71,6 +71,8 @@ fi
 uv sync
 uv run pytest -sxvvra app
 
+uv run mlflow ui &
+
 uv run fastapi dev --port=8081 &
 
 # wait for the python backend to be ready

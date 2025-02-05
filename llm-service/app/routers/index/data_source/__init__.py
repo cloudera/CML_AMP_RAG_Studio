@@ -33,10 +33,12 @@ import tempfile
 from http import HTTPStatus
 from typing import Any, Dict, Optional
 
+import mlflow
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
+from mlflow.entities import Experiment
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -47,6 +49,7 @@ from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services import document_storage, models
+from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +144,19 @@ class DataSourceController:
         request: RagIndexDocumentRequest,
     ) -> None:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
+        mlflow.llama_index.autolog()
+        experiment: Experiment = mlflow.set_experiment(
+            experiment_name=f"datasource_{datasource.name}_{data_source_id}"
+        )
+        with mlflow.start_run(
+            experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
+        ):
+            self._download_and_index(datasource, doc_id, request)
+
+    @mlflow.trace(name="download_and_index")
+    def _download_and_index(
+        self, datasource: RagDataSource, doc_id: str, request: RagIndexDocumentRequest
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             doc_storage = document_storage.from_environment()
@@ -154,7 +170,7 @@ class DataSourceController:
             if datasource.summarization_model:
                 llm = models.get_llm(datasource.summarization_model)
             indexer = EmbeddingIndexer(
-                data_source_id,
+                datasource.id,
                 splitter=SentenceSplitter(
                     chunk_size=request.configuration.chunk_size,
                     chunk_overlap=int(
@@ -167,6 +183,25 @@ class DataSourceController:
                 llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )
+
+            mlflow.log_metrics(
+                {
+                    "file_size_bytes": file_path.stat().st_size,
+                }
+            )
+
+            mlflow.log_params(
+                {
+                    "data_source_id": datasource.id,
+                    "embedding_model": datasource.embedding_model,
+                    "summarization_model": datasource.summarization_model,
+                    "chunk_size": request.configuration.chunk_size,
+                    "chunk_overlap": request.configuration.chunk_overlap,
+                    "file_name": request.original_filename,
+                    "file_size_bytes": file_path.stat().st_size,
+                }
+            )
+
             # Delete to avoid duplicates
             self.chunks_vector_store.delete_document(doc_id)
             try:

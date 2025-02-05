@@ -54,7 +54,7 @@ import { useGetChunkContents } from "src/api/ragQueryApi.ts";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
-import "./sourceCard.css";
+import "../tableMarkdown.css";
 import ChunkContainer from "pages/RagChatTab/ChatOutput/Sources/ChunkContainer.tsx";
 
 const CardTitle = ({ source }: { source: SourceNode }) => {

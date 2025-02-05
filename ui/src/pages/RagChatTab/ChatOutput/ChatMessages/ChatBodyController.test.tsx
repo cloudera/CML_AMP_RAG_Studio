@@ -101,6 +101,16 @@ describe("ChatBodyController", () => {
     })),
   }));
 
+  vi.mock("src/api/chatApi.ts", () => ({
+    useFeedbackMutation: vi.fn(() => ({
+      data: {
+        rating: 0,
+      },
+      isLoading: false,
+    })),
+    isPlaceholder: vi.fn(() => false),
+  }));
+
   afterEach(() => {
     cleanup();
   });
@@ -182,6 +192,7 @@ describe("ChatBodyController", () => {
           },
         ],
       },
+      activeSession: testSession,
     });
 
     expect(screen.getByTestId("chat-message")).toBeTruthy();
