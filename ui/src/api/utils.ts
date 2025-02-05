@@ -70,6 +70,7 @@ export enum MutationKeys {
   "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
   "updateSession" = "updateSession",
   "testRerankingModel" = "testRerankingModel",
+  "evalMutation" = "evalMutation",
 }
 
 export enum QueryKeys {

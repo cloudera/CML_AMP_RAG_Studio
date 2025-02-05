@@ -89,6 +89,10 @@ export interface ChatMessageType {
   condensed_question?: string;
 }
 
+export interface ChatResponseEvaluation {
+  rating: boolean;
+}
+
 const placeholderChatResponseId = "placeholder";
 
 export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
@@ -203,4 +207,29 @@ export const createQueryConfiguration = (
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: false,
   };
+};
+
+export const useEvaluationMutation = ({
+  onSuccess,
+}: UseMutationType<string>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.evalMutation],
+    mutationFn: evaluationMutation,
+    onSuccess: onSuccess,
+  });
+};
+
+const evaluationMutation = async ({
+  sessionId,
+  responseId,
+  rating,
+}: {
+  sessionId: string;
+  responseId: string;
+  rating: boolean;
+}): Promise<string> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/evaluate/responses/${responseId}`,
+    { rating },
+  );
 };
