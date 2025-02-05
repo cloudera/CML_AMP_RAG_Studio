@@ -46,7 +46,7 @@ from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 from mlflow.entities import Experiment
 
-from . import evaluators
+from . import evaluators, llm_completion
 from .chat_store import (
     ChatHistoryManager,
     Evaluation,
@@ -56,6 +56,7 @@ from .chat_store import (
     RagMessage,
 )
 from .metadata_apis import session_metadata_api
+from .metadata_apis.data_sources_metadata_api import get_metadata
 from .metadata_apis.session_metadata_api import Session
 from .query import querier
 from .query.query_configuration import QueryConfiguration
@@ -79,17 +80,28 @@ def v2_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
     response_id = str(uuid.uuid4())
-    experiment: Experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    record_experiment_tags(session)
     with mlflow.start_run(
-            experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
-        new_chat_message: RagStudioChatMessage = _run_chat(session, response_id, query, query_configuration)
+        new_chat_message: RagStudioChatMessage = _run_chat(
+            session, response_id, query, query_configuration
+        )
 
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
+
 @mlflow.trace(name="v2_chat")
-def _run_chat(session: Session, response_id: str, query: str, query_configuration: QueryConfiguration) -> RagStudioChatMessage:
+def _run_chat(
+    session: Session,
+    response_id: str,
+    query: str,
+    query_configuration: QueryConfiguration,
+) -> RagStudioChatMessage:
     log_ml_flow_params(session, query_configuration)
     mlflow.set_tag("response_id", response_id)
 
@@ -151,9 +163,7 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
     mlflow.log_metrics(
         {
             "source_nodes_count": len(source_nodes),
-            "max_score": (
-                source_nodes[0].score if source_nodes else 0.0
-            ),
+            "max_score": (source_nodes[0].score if source_nodes else 0.0),
         }
     )
     mlflow.log_table(
@@ -168,7 +178,9 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
     )
 
 
-def log_ml_flow_params(session: Session, query_configuration: QueryConfiguration) -> None:
+def log_ml_flow_params(
+    session: Session, query_configuration: QueryConfiguration
+) -> None:
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
@@ -294,3 +306,52 @@ def process_response(response: str | None) -> list[str]:
     sentences = filter(lambda x: x != "Empty Response", sentences)
     sentences = filter(lambda x: x != "", sentences)
     return list(sentences)[:5]
+
+
+def direct_llm_chat(
+    session_id: int,
+    query: str,
+) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
+    experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    record_experiment_tags(session)
+    response_id = str(uuid.uuid4())
+    with mlflow.start_run(
+        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+    ):
+        mlflow.set_tag("response_id", response_id)
+
+        chat_response = llm_completion.completion(
+            session_id, query, session.inference_model
+        )
+        new_chat_message = RagStudioChatMessage(
+            id=response_id,
+            source_nodes=[],
+            inference_model=session.inference_model,
+            evaluations=[],
+            rag_message=RagMessage(
+                user=query,
+                assistant=str(chat_response.message.content),
+            ),
+            timestamp=time.time(),
+            condensed_question=None,
+        )
+        ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+        return new_chat_message
+
+
+def record_experiment_tags(session):
+    data_source = get_metadata(session.data_source_ids[0])
+    mlflow.set_experiment_tags(
+        {
+            "data_source_id": session.data_source_ids[0],
+            "data_source_name": data_source.name,
+            "document_count": data_source.document_count,
+            "chunk_size": data_source.chunk_size,
+            "chunk_overlap_percent": data_source.chunk_overlap_percent,
+            "embedding_model": data_source.embedding_model,
+            "summarization_model": data_source.summarization_model,
+        }
+    )

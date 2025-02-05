@@ -35,8 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-import time
-import uuid
 
 import mlflow
 from fastapi import APIRouter
@@ -45,9 +43,8 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services import llm_completion
-from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagMessage
+from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
 
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
@@ -120,41 +117,8 @@ def chat(
 
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:
-        return llm_talk(session_id, request.query)
+        return direct_llm_chat(session_id, request.query)
     return v2_chat(session_id, request.query, configuration)
-
-
-def llm_talk(
-    session_id: int,
-    query: str,
-) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
-    experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
-    )
-    response_id = str(uuid.uuid4())
-    with mlflow.start_run(
-        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
-    ):
-        mlflow.set_tag("response_id", response_id)
-
-        chat_response = llm_completion.completion(
-            session_id, query, session.inference_model
-        )
-        new_chat_message = RagStudioChatMessage(
-            id=response_id,
-            source_nodes=[],
-            inference_model=session.inference_model,
-            evaluations=[],
-            rag_message=RagMessage(
-                user=query,
-                assistant=str(chat_response.message.content),
-            ),
-            timestamp=time.time(),
-            condensed_question=None,
-        )
-        ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-        return new_chat_message
 
 
 class RagSuggestedQuestionsResponse(BaseModel):
