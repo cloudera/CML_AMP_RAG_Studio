@@ -91,6 +91,7 @@ def v2_chat(
 @mlflow.trace(name="v2_chat")
 def _run_chat(session: Session, response_id: str, query: str, query_configuration: QueryConfiguration) -> RagStudioChatMessage:
     log_ml_flow_params(session, query_configuration)
+    mlflow.set_tag("response_id", response_id)
 
     if len(session.data_source_ids) != 1:
         raise HTTPException(

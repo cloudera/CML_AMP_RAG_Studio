@@ -40,6 +40,7 @@ import uuid
 
 import mlflow
 from fastapi import APIRouter
+from mlflow.entities import Experiment, Run
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -77,10 +78,24 @@ def delete_chat_history(session_id: int) -> str:
     return "Chat history deleted."
 
 
+class ChatResponseEvaluation(BaseModel):
+    rating: bool
+
+
+@router.post("/evaluate/responses/{id}", summary="Provide feedback on a chat response.")
+@exceptions.propagates
+def evaluate(session_id: int, response_id, evaluation: ChatResponseEvaluation) -> str:
+    session = session_metadata_api.get_session(session_id)
+    experiment: Experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
+    runs: list[Run] = mlflow.search_runs([experiment.experiment_id], filter_string=f"tags.response_id='{response_id}'", output_format='list')
+    for run in runs:
+        mlflow.log_metric("rating", evaluation.rating, run_id=run.info.run_id)
+    return "OK"
+
+
 class RagStudioChatRequest(BaseModel):
     query: str
     configuration: RagPredictConfiguration | None = None
-
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
@@ -106,6 +121,8 @@ def llm_talk(
     with mlflow.start_run(
             experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
+        mlflow.set_tag("response_id", response_id)
+
         chat_response = llm_completion.completion(session_id, query, session.inference_model)
         new_chat_message = RagStudioChatMessage(
             id=response_id,
