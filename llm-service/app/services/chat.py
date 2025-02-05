@@ -44,6 +44,7 @@ import mlflow
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
+from mlflow.entities import Experiment
 
 from . import evaluators
 from .chat_store import (
@@ -55,6 +56,7 @@ from .chat_store import (
     RagMessage,
 )
 from .metadata_apis import session_metadata_api
+from .metadata_apis.session_metadata_api import Session
 from .query import querier
 from .query.query_configuration import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
@@ -77,19 +79,18 @@ def v2_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
     response_id = str(uuid.uuid4())
-    mlflow.llama_index.autolog()
-    experiment = mlflow.set_experiment(experiment_name=f"{session.name}_{session.id}")
+    experiment: Experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
     with mlflow.start_run(
             experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
-        new_chat_message = _run_chat(query, query_configuration, response_id, session, session_id)
+        new_chat_message: RagStudioChatMessage = _run_chat(session, response_id, query, query_configuration)
 
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
 @mlflow.trace(name="v2_chat")
-def _run_chat(query, query_configuration, response_id, session, session_id):
-    log_ml_flow_params(query_configuration, session, session_id)
+def _run_chat(session: Session, response_id: str, query: str, query_configuration: QueryConfiguration) -> RagStudioChatMessage:
+    log_ml_flow_params(session, query_configuration)
 
     if len(session.data_source_ids) != 1:
         raise HTTPException(
@@ -114,7 +115,7 @@ def _run_chat(query, query_configuration, response_id, session, session_id):
         data_source_id,
         query,
         query_configuration,
-        retrieve_chat_history(session_id),
+        retrieve_chat_history(session.id),
     )
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
@@ -137,36 +138,36 @@ def _run_chat(query, query_configuration, response_id, session, session_id):
         timestamp=time.time(),
         condensed_question=condensed_question,
     )
-    log_ml_flow_metrics(condensed_question, faithfulness, query, relevance, response, response_id,
-                        response_source_nodes, session)
+    log_ml_flow_metrics(session, new_chat_message)
     return new_chat_message
 
 
-def log_ml_flow_metrics(condensed_question, faithfulness, query, relevance, response, response_id,
-                        response_source_nodes, session):
+def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None:
+    source_nodes = message.source_nodes
+    for evaluation in message.evaluations:
+        mlflow.log_metric(evaluation.name, evaluation.value)
+
     mlflow.log_metrics(
         {
-            "relevance": relevance,
-            "faithfulness": faithfulness,
-            "source_nodes_count": len(response_source_nodes),
+            "source_nodes_count": len(source_nodes),
             "max_score": (
-                response_source_nodes[0].score if response_source_nodes else 0.0
+                source_nodes[0].score if source_nodes else 0.0
             ),
         }
     )
     mlflow.log_table(
         {
-            "response_id": response_id,
-            "source_nodes": response_source_nodes,
-            "query": query,
-            "response": response.response,
-            "condensed_question": condensed_question,
+            "response_id": message.id,
+            "source_nodes": source_nodes,
+            "query": message.rag_message.user,
+            "response": message.rag_message.assistant,
+            "condensed_question": message.condensed_question,
         },
         artifact_file=f"session_id_{session.id}.json",
     )
 
 
-def log_ml_flow_params(query_configuration, session, session_id):
+def log_ml_flow_params(session: Session, query_configuration: QueryConfiguration) -> None:
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
@@ -176,7 +177,7 @@ def log_ml_flow_params(query_configuration, session, session_id):
             "use_question_condensing": query_configuration.use_question_condensing,
             "use_hyde": query_configuration.use_hyde,
             "use_summary_filter": query_configuration.use_summary_filter,
-            "session_id": session_id,
+            "session_id": session.id,
             "data_source_ids": session.data_source_ids,
         }
     )

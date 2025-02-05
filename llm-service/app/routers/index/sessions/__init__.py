@@ -38,6 +38,7 @@
 import time
 import uuid
 
+import mlflow
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -87,6 +88,8 @@ def chat(
     session_id: int,
     request: RagStudioChatRequest,
 ) -> RagStudioChatMessage:
+    mlflow.llama_index.autolog()
+
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:
         return llm_talk(session_id, request.query)
@@ -98,23 +101,26 @@ def llm_talk(
     query: str,
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
-    chat_response = llm_completion.completion(
-        session_id, query, session.inference_model
-    )
-    new_chat_message = RagStudioChatMessage(
-        id=str(uuid.uuid4()),
-        source_nodes=[],
-        inference_model=session.inference_model,
-        evaluations=[],
-        rag_message=RagMessage(
-            user=query,
-            assistant=str(chat_response.message.content),
-        ),
-        timestamp=time.time(),
-        condensed_question=None
-    )
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-    return new_chat_message
+    experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
+    response_id = str(uuid.uuid4())
+    with mlflow.start_run(
+            experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+    ):
+        chat_response = llm_completion.completion(session_id, query, session.inference_model)
+        new_chat_message = RagStudioChatMessage(
+            id=response_id,
+            source_nodes=[],
+            inference_model=session.inference_model,
+            evaluations=[],
+            rag_message=RagMessage(
+                user=query,
+                assistant=str(chat_response.message.content),
+            ),
+            timestamp=time.time(),
+            condensed_question=None
+        )
+        ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+        return new_chat_message
 
 
 class RagSuggestedQuestionsResponse(BaseModel):
