@@ -211,7 +211,7 @@ export const createQueryConfiguration = (
 
 export const useEvaluationMutation = ({
   onSuccess,
-}: UseMutationType<string>) => {
+}: UseMutationType<ChatResponseEvaluation>) => {
   return useMutation({
     mutationKey: [MutationKeys.evalMutation],
     mutationFn: evaluationMutation,
@@ -227,7 +227,7 @@ const evaluationMutation = async ({
   sessionId: string;
   responseId: string;
   rating: boolean;
-}): Promise<string> => {
+}): Promise<ChatResponseEvaluation> => {
   return await postRequest(
     `${llmServicePath}/sessions/${sessionId}/evaluate/responses/${responseId}`,
     { rating },

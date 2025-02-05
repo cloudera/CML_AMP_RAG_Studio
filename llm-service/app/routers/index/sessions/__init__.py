@@ -82,20 +82,33 @@ class ChatResponseEvaluation(BaseModel):
     rating: bool
 
 
-@router.post("/evaluate/responses/{id}", summary="Provide feedback on a chat response.")
+@router.post(
+    "/evaluate/responses/{response_id}", summary="Provide feedback on a chat response."
+)
 @exceptions.propagates
-def evaluate(session_id: int, response_id, evaluation: ChatResponseEvaluation) -> str:
+def evaluate(
+    session_id: int, response_id, evaluation: ChatResponseEvaluation
+) -> ChatResponseEvaluation:
     session = session_metadata_api.get_session(session_id)
-    experiment: Experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
-    runs: list[Run] = mlflow.search_runs([experiment.experiment_id], filter_string=f"tags.response_id='{response_id}'", output_format='list')
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    runs: list[Run] = mlflow.search_runs(
+        [experiment.experiment_id],
+        filter_string=f"tags.response_id='{response_id}'",
+        output_format="list",
+    )
     for run in runs:
         mlflow.log_metric("rating", evaluation.rating, run_id=run.info.run_id)
-    return "OK"
+    return ChatResponseEvaluation(
+        rating=evaluation.rating,
+    )
 
 
 class RagStudioChatRequest(BaseModel):
     query: str
     configuration: RagPredictConfiguration | None = None
+
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
@@ -116,14 +129,18 @@ def llm_talk(
     query: str,
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
-    experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
+    experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
     response_id = str(uuid.uuid4())
     with mlflow.start_run(
-            experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
         mlflow.set_tag("response_id", response_id)
 
-        chat_response = llm_completion.completion(session_id, query, session.inference_model)
+        chat_response = llm_completion.completion(
+            session_id, query, session.inference_model
+        )
         new_chat_message = RagStudioChatMessage(
             id=response_id,
             source_nodes=[],
@@ -134,7 +151,7 @@ def llm_talk(
                 assistant=str(chat_response.message.content),
             ),
             timestamp=time.time(),
-            condensed_question=None
+            condensed_question=None,
         )
         ChatHistoryManager().append_to_history(session_id, [new_chat_message])
         return new_chat_message

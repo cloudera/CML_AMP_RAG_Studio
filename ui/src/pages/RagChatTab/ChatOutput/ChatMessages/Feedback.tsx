@@ -35,17 +35,23 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
+import {
+  DislikeFilled,
+  DislikeOutlined,
+  LikeFilled,
+  LikeOutlined,
+} from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import { useEvaluationMutation } from "src/api/chatApi.ts";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const Feedback = ({ responseId }: { responseId: string }) => {
+  const [isGood, setIsGood] = useState<boolean | null>(null);
   const session = useContext(RagChatContext).activeSession;
   const { mutate } = useEvaluationMutation({
-    onSuccess: () => {
-      console.log("Feedback submitted");
+    onSuccess: (data) => {
+      setIsGood(data.rating);
     },
   });
 
@@ -60,7 +66,7 @@ const Feedback = ({ responseId }: { responseId: string }) => {
     <div>
       <Tooltip title="Good response">
         <Button
-          icon={<LikeOutlined />}
+          icon={isGood === true ? <LikeFilled /> : <LikeOutlined />}
           type="text"
           size="small"
           onClick={() => {
@@ -70,7 +76,7 @@ const Feedback = ({ responseId }: { responseId: string }) => {
       </Tooltip>
       <Tooltip title="Bad response">
         <Button
-          icon={<DislikeOutlined />}
+          icon={isGood === false ? <DislikeFilled /> : <DislikeOutlined />}
           type="text"
           size="small"
           onClick={() => {
