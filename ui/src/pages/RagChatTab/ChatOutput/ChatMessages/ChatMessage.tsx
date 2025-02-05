@@ -44,6 +44,7 @@ import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import Images from "src/components/images/Images.ts";
+import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
 
 const ChatMessage = ({
   data,
@@ -99,7 +100,10 @@ const ChatMessage = ({
               >
                 {data.rag_message.assistant.trimStart()}
               </Typography.Text>
-              <Evaluations evaluations={data.evaluations} />
+              <Flex gap={16}>
+                <Evaluations evaluations={data.evaluations} />
+                <Feedback />
+              </Flex>
             </Flex>
           </Flex>
         </div>

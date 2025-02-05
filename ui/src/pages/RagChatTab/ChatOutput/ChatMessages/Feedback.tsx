@@ -35,21 +35,20 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
+import { Button, Tooltip } from "antd";
 
-import { Evaluation } from "src/api/chatApi.ts";
-import EvaluationMetric from "pages/RagChatTab/ChatOutput/ChatMessages/EvaluationMetric.tsx";
-import { Flex } from "antd";
+const Feedback = () => {
+  return (
+    <div>
+      <Tooltip title="Good response">
+        <Button icon={<LikeOutlined />} type="text" size="small" />
+      </Tooltip>
+      <Tooltip title="Bad response">
+        <Button icon={<DislikeOutlined />} type="text" size="small" />
+      </Tooltip>
+    </div>
+  );
+};
 
-export const Evaluations = (props: { evaluations: Evaluation[] }) => (
-  <Flex gap={4}>
-    {props.evaluations.map((evaluation, index) => {
-      return (
-        <EvaluationMetric
-          key={evaluation.name}
-          evaluation={evaluation}
-          isLast={index === props.evaluations.length - 1}
-        />
-      );
-    })}
-  </Flex>
-);
+export default Feedback;
