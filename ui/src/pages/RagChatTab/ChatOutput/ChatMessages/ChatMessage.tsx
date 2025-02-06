@@ -108,7 +108,7 @@ const ChatMessage = ({
                   {data.rag_message.assistant.trimStart()}
                 </Markdown>
               </Typography.Text>
-              <Flex gap={16}>
+              <Flex gap={16} align="center">
                 <Evaluations evaluations={data.evaluations} />
                 <Feedback responseId={data.id} />
               </Flex>

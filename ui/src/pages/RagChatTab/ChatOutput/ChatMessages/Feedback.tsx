@@ -36,12 +36,13 @@
  * DATA.
  ******************************************************************************/
 import {
+  ArrowLeftOutlined,
   DislikeOutlined,
   DislikeTwoTone,
   LikeOutlined,
   LikeTwoTone,
 } from "@ant-design/icons";
-import { Button, Tooltip } from "antd";
+import { Button, Flex, Input, Select, Tooltip } from "antd";
 import { useFeedbackMutation } from "src/api/chatApi.ts";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -49,10 +50,13 @@ import messageQueue from "src/utils/messageQueue.ts";
 
 const Feedback = ({ responseId }: { responseId: string }) => {
   const [isGood, setIsGood] = useState<boolean | null>(null);
+  const [showFeedbackInput, setShowFeedbackInput] = useState(false);
+  const [customFeedbackInput, setCustomFeedbackInput] = useState(false);
   const session = useContext(RagChatContext).activeSession;
   const { mutate } = useFeedbackMutation({
     onSuccess: (data) => {
       setIsGood(data.rating);
+      setShowFeedbackInput(true);
     },
     onError: () => {
       setIsGood(null);
@@ -67,8 +71,26 @@ const Feedback = ({ responseId }: { responseId: string }) => {
     mutate({ sessionId: session.id.toString(), responseId, rating: isGood });
   };
 
+  const handleSubmitFeedbackInput = (value: string) => {
+    if (value === "Other") {
+      setShowFeedbackInput(false);
+      setCustomFeedbackInput(true);
+    }
+    setShowFeedbackInput(false);
+  };
+
+  const handleSubmitCustomFeedbackInput = (value: string) => {
+    console.log(value);
+    setCustomFeedbackInput(false);
+  };
+
+  const handleClickBackOnCustomFeedbackInput = () => {
+    setShowFeedbackInput(true);
+    setCustomFeedbackInput(false);
+  };
+
   return (
-    <div>
+    <Flex align="center" style={{ height: 32 }}>
       <Tooltip title="Good response">
         <Button
           icon={isGood === true ? <LikeTwoTone /> : <LikeOutlined />}
@@ -89,7 +111,42 @@ const Feedback = ({ responseId }: { responseId: string }) => {
           }}
         />
       </Tooltip>
-    </div>
+      <Flex style={{ marginLeft: 16 }} align="center" gap={8}>
+        {customFeedbackInput ? (
+          <Button
+            icon={<ArrowLeftOutlined />}
+            type="text"
+            size="small"
+            onClick={handleClickBackOnCustomFeedbackInput}
+          />
+        ) : (
+          <div style={{ width: 24 }} />
+        )}
+        {showFeedbackInput ? (
+          <Select
+            placeholder="What can be improved (optional)?"
+            onChange={handleSubmitFeedbackInput}
+            options={[
+              { value: "Inaccurate", label: "Inaccurate" },
+              { value: "Not helpful", label: "Not helpful" },
+              { value: "Out of date", label: "Out of date" },
+              { value: "Too short", label: "Too short" },
+              { value: "Too long", label: "Too long" },
+              { value: "Other", label: "Other" },
+            ]}
+          />
+        ) : null}
+        {customFeedbackInput ? (
+          <Input
+            placeholder="Please provide feedback"
+            style={{ width: 400 }}
+            onPressEnter={(e) => {
+              handleSubmitCustomFeedbackInput(e.currentTarget.value);
+            }}
+          />
+        ) : null}
+      </Flex>
+    </Flex>
   );
 };
 
