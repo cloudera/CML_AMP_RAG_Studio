@@ -56,7 +56,6 @@ from .chat_store import (
     RagMessage,
 )
 from .metadata_apis import session_metadata_api
-from .metadata_apis.data_sources_metadata_api import get_metadata
 from .metadata_apis.session_metadata_api import Session
 from .query import querier
 from .query.query_configuration import QueryConfiguration
@@ -83,7 +82,6 @@ def v2_chat(
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
-    record_experiment_tags(session)
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
@@ -316,7 +314,6 @@ def direct_llm_chat(
     experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
-    record_experiment_tags(session)
     response_id = str(uuid.uuid4())
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
@@ -340,18 +337,3 @@ def direct_llm_chat(
         )
         ChatHistoryManager().append_to_history(session_id, [new_chat_message])
         return new_chat_message
-
-
-def record_experiment_tags(session: Session) -> None:
-    data_source = get_metadata(session.data_source_ids[0])
-    mlflow.set_experiment_tags(
-        {
-            "data_source_id": session.data_source_ids[0],
-            "data_source_name": data_source.name,
-            "document_count": data_source.document_count,
-            "chunk_size": data_source.chunk_size,
-            "chunk_overlap_percent": data_source.chunk_overlap_percent,
-            "embedding_model": data_source.embedding_model,
-            "summarization_model": data_source.summarization_model,
-        }
-    )
