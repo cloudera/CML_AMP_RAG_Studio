@@ -342,7 +342,7 @@ def direct_llm_chat(
         return new_chat_message
 
 
-def record_experiment_tags(session):
+def record_experiment_tags(session: Session) -> None:
     data_source = get_metadata(session.data_source_ids[0])
     mlflow.set_experiment_tags(
         {
