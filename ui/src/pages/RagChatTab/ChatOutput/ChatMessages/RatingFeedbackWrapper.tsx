@@ -36,13 +36,12 @@
  * DATA.
  ******************************************************************************/
 import {
-  ArrowLeftOutlined,
   DislikeOutlined,
   DislikeTwoTone,
   LikeOutlined,
   LikeTwoTone,
 } from "@ant-design/icons";
-import { Button, Flex, Input, Select, Tooltip } from "antd";
+import { Button, Flex, Tooltip } from "antd";
 import { useFeedbackMutation, useRatingMutation } from "src/api/chatApi.ts";
 import { useContext, useEffect, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -51,7 +50,7 @@ import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
 
 const RatingFeedbackWrapper = ({ responseId }: { responseId: string }) => {
   const [isGood, setIsGood] = useState<boolean | null>(null);
-  const [customFeedbackInput, setCustomFeedbackInput] = useState(false);
+  const [showCustomFeedbackInput, setShowCustomFeedbackInput] = useState(false);
   const [showFeedbackInput, setShowFeedbackInput] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const session = useContext(RagChatContext).activeSession;
@@ -68,7 +67,7 @@ const RatingFeedbackWrapper = ({ responseId }: { responseId: string }) => {
   const { mutate: feedbackMutate } = useFeedbackMutation({
     onSuccess: () => {
       setShowFeedbackInput(false);
-      setCustomFeedbackInput(false);
+      setShowCustomFeedbackInput(false);
       setFeedbackSubmitted(true);
     },
     onError: () => {
@@ -126,6 +125,9 @@ const RatingFeedbackWrapper = ({ responseId }: { responseId: string }) => {
         feedbackMutate={feedbackMutate}
         showFeedbackInput={showFeedbackInput}
         setShowFeedbackInput={setShowFeedbackInput}
+        setCustomFeedbackInput={setShowCustomFeedbackInput}
+        showCustomFeedbackInput={showCustomFeedbackInput}
+        feedbackSubmitted={feedbackSubmitted}
       />
     </Flex>
   );

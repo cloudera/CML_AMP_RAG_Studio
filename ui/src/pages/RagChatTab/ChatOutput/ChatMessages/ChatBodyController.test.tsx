@@ -102,9 +102,15 @@ describe("ChatBodyController", () => {
   }));
 
   vi.mock("src/api/chatApi.ts", () => ({
-    useFeedbackMutation: vi.fn(() => ({
+    useRatingMutation: vi.fn(() => ({
       data: {
         rating: 0,
+      },
+      isLoading: false,
+    })),
+    useFeedbackMutation: vi.fn(() => ({
+      data: {
+        feedback: "hello",
       },
       isLoading: false,
     })),

@@ -37,8 +37,8 @@
  ******************************************************************************/
 import { Button, Flex, Input, Select } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { ChatResponseFeedback, useFeedbackMutation } from "src/api/chatApi.ts";
-import { useContext, useState } from "react";
+import { ChatResponseFeedback } from "src/api/chatApi.ts";
+import { Dispatch, SetStateAction, useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { UseMutateFunction } from "@tanstack/react-query";
 
@@ -47,6 +47,9 @@ const Feedback = ({
   feedbackMutate,
   showFeedbackInput,
   setShowFeedbackInput,
+  setCustomFeedbackInput,
+  showCustomFeedbackInput,
+  feedbackSubmitted,
 }: {
   responseId: string;
   feedbackMutate: UseMutateFunction<
@@ -55,7 +58,10 @@ const Feedback = ({
     { sessionId: string; responseId: string; feedback: string }
   >;
   showFeedbackInput: boolean;
-  setShowFeedbackInput: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
+  setCustomFeedbackInput: Dispatch<SetStateAction<boolean>>;
+  showCustomFeedbackInput: boolean;
+  feedbackSubmitted: boolean;
 }) => {
   const session = useContext(RagChatContext).activeSession;
 
@@ -95,7 +101,7 @@ const Feedback = ({
 
   return (
     <Flex style={{ marginLeft: 16 }} align="center" gap={8}>
-      {customFeedbackInput ? (
+      {showCustomFeedbackInput ? (
         <Button
           icon={<ArrowLeftOutlined />}
           type="text"
@@ -119,7 +125,7 @@ const Feedback = ({
           ]}
         />
       ) : null}
-      {customFeedbackInput ? (
+      {showCustomFeedbackInput ? (
         <Input
           placeholder="Please provide feedback"
           style={{ width: 400 }}

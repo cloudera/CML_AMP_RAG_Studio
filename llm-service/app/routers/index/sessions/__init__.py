@@ -115,7 +115,7 @@ def feedback(
     session_id: int,
     response_id: str,
     request: ChatResponseFeedback,
-):
+) -> ChatResponseFeedback:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
