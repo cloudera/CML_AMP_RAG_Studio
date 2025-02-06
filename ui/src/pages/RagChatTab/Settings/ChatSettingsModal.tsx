@@ -37,7 +37,6 @@
  ******************************************************************************/
 
 import {
-  Checkbox,
   Collapse,
   Flex,
   Form,
@@ -46,6 +45,7 @@ import {
   Popover,
   Select,
   Slider,
+  Switch,
   Typography,
 } from "antd";
 import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
@@ -135,7 +135,7 @@ const ChatSettingsModal = ({
               </Popover>
             }
           >
-            <Checkbox />
+            <Switch />
           </Form.Item>
           <Form.Item<CreateSessionType>
             name={["queryConfiguration", "enableSummaryFilter"]}
@@ -158,7 +158,7 @@ const ChatSettingsModal = ({
               </Popover>
             }
           >
-            <Checkbox />
+            <Switch />
           </Form.Item>
         </>
       ),
