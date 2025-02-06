@@ -98,7 +98,8 @@ def rating(
         output_format="list",
     )
     for run in runs:
-        mlflow.log_metric("rating", request.rating, run_id=run.info.run_id)
+        value: int = 1 if request.rating else -1
+        mlflow.log_metric("rating", value, run_id=run.info.run_id)
     return ChatResponseRating(rating=request.rating)
 
 

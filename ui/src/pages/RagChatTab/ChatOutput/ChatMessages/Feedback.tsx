@@ -44,7 +44,7 @@ import {
 } from "@ant-design/icons";
 import { Button, Flex, Input, Select, Tooltip } from "antd";
 import { useFeedbackMutation, useRatingMutation } from "src/api/chatApi.ts";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 
@@ -52,6 +52,7 @@ const Feedback = ({ responseId }: { responseId: string }) => {
   const [isGood, setIsGood] = useState<boolean | null>(null);
   const [showFeedbackInput, setShowFeedbackInput] = useState(false);
   const [customFeedbackInput, setCustomFeedbackInput] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const session = useContext(RagChatContext).activeSession;
   const { mutate: ratingMutate } = useRatingMutation({
     onSuccess: (data) => {
@@ -60,20 +61,32 @@ const Feedback = ({ responseId }: { responseId: string }) => {
     },
     onError: () => {
       setIsGood(null);
-      messageQueue.error("Failed submit chat response feedback");
+      messageQueue.error("Failed submit rating");
     },
   });
 
   const { mutate: feedbackMutate } = useFeedbackMutation({
-    onSuccess: (data) => {
-      setIsGood(data.rating);
-      setShowFeedbackInput(true);
+    onSuccess: () => {
+      setShowFeedbackInput(false);
+      setCustomFeedbackInput(false);
+      setFeedbackSubmitted(true);
     },
     onError: () => {
       setIsGood(null);
-      messageQueue.error("Failed submit chat response feedback");
+      messageQueue.error("Failed submit feedback");
     },
   });
+
+  useEffect(() => {
+    if (feedbackSubmitted) {
+      const timer = setTimeout(() => {
+        setFeedbackSubmitted(false);
+      }, 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [feedbackSubmitted, setFeedbackSubmitted]);
 
   const handleFeedback = (isGood: boolean) => {
     if (!session) {
@@ -175,6 +188,11 @@ const Feedback = ({ responseId }: { responseId: string }) => {
               handleSubmitCustomFeedbackInput(e.currentTarget.value);
             }}
           />
+        ) : null}
+        {feedbackSubmitted ? (
+          <span style={{ fontSize: 12, color: "green" }}>
+            Feedback submitted
+          </span>
         ) : null}
       </Flex>
     </Flex>
