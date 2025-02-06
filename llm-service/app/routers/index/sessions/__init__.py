@@ -75,17 +75,19 @@ def delete_chat_history(session_id: int) -> str:
     return "Chat history deleted."
 
 
-class ChatResponseFeedback(BaseModel):
+class ChatResponseRating(BaseModel):
     rating: bool
 
 
 @router.post(
-    "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
+    "/responses/{response_id}/rating", summary="Provide a rating on a chat response."
 )
 @exceptions.propagates
-def evaluate(
-    session_id: int, response_id: str, feedback: ChatResponseFeedback
-) -> ChatResponseFeedback:
+def rating(
+    session_id: int,
+    response_id: str,
+    request: ChatResponseRating,
+) -> ChatResponseRating:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
@@ -96,10 +98,39 @@ def evaluate(
         output_format="list",
     )
     for run in runs:
-        mlflow.log_metric("rating", feedback.rating, run_id=run.info.run_id)
-    return ChatResponseFeedback(
-        rating=feedback.rating,
+        mlflow.log_metric("rating", request.rating, run_id=run.info.run_id)
+    return ChatResponseRating(rating=request.rating)
+
+
+class ChatResponseFeedback(BaseModel):
+    feedback: str
+
+
+@router.post(
+    "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
+)
+@exceptions.propagates
+def feedback(
+    session_id: int,
+    response_id: str,
+    request: ChatResponseFeedback,
+):
+    session = session_metadata_api.get_session(session_id)
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
     )
+    runs: list[Run] = mlflow.search_runs(
+        [experiment.experiment_id],
+        filter_string=f"tags.response_id='{response_id}'",
+        output_format="list",
+    )
+    for run in runs:
+        mlflow.log_table(
+            data={"feedback": request.feedback},
+            artifact_file="feedback.json",
+            run_id=run.info.run_id,
+        )
+    return ChatResponseFeedback(feedback=request.feedback)
 
 
 class RagStudioChatRequest(BaseModel):
