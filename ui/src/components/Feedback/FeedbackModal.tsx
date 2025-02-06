@@ -46,7 +46,7 @@ const FeedbackModal = ({
   handleCancel: () => void;
 }) => (
   <Modal
-    title="Leave Feedback"
+    title="Leave RatingFeedbackWrapper"
     open={isModalOpen}
     onCancel={handleCancel}
     width={700}

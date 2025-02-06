@@ -35,104 +35,100 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, Input, Select } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
-import { ChatResponseFeedback, useFeedbackMutation } from "src/api/chatApi.ts";
-import { useContext, useState } from "react";
+import {
+  ArrowLeftOutlined,
+  DislikeOutlined,
+  DislikeTwoTone,
+  LikeOutlined,
+  LikeTwoTone,
+} from "@ant-design/icons";
+import { Button, Flex, Input, Select, Tooltip } from "antd";
+import { useFeedbackMutation, useRatingMutation } from "src/api/chatApi.ts";
+import { useContext, useEffect, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { UseMutateFunction } from "@tanstack/react-query";
+import messageQueue from "src/utils/messageQueue.ts";
+import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
 
-const Feedback = ({
-  responseId,
-  feedbackMutate,
-  showFeedbackInput,
-  setShowFeedbackInput,
-}: {
-  responseId: string;
-  feedbackMutate: UseMutateFunction<
-    ChatResponseFeedback,
-    Error,
-    { sessionId: string; responseId: string; feedback: string }
-  >;
-  showFeedbackInput: boolean;
-  setShowFeedbackInput: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const RatingFeedbackWrapper = ({ responseId }: { responseId: string }) => {
+  const [isGood, setIsGood] = useState<boolean | null>(null);
+  const [customFeedbackInput, setCustomFeedbackInput] = useState(false);
+  const [showFeedbackInput, setShowFeedbackInput] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const session = useContext(RagChatContext).activeSession;
+  const { mutate: ratingMutate } = useRatingMutation({
+    onSuccess: (data) => {
+      setIsGood(data.rating);
+      setShowFeedbackInput(true);
+    },
+    onError: () => {
+      setIsGood(null);
+      messageQueue.error("Failed submit rating");
+    },
+  });
+  const { mutate: feedbackMutate } = useFeedbackMutation({
+    onSuccess: () => {
+      setShowFeedbackInput(false);
+      setCustomFeedbackInput(false);
+      setFeedbackSubmitted(true);
+    },
+    onError: () => {
+      setIsGood(null);
+      messageQueue.error("Failed submit feedback");
+    },
+  });
 
-  const handleSubmitFeedbackInput = (value: string) => {
+  useEffect(() => {
+    if (feedbackSubmitted) {
+      const timer = setTimeout(() => {
+        setFeedbackSubmitted(false);
+      }, 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [feedbackSubmitted, setFeedbackSubmitted]);
+
+  const handleFeedback = (isGood: boolean) => {
     if (!session) {
       return;
     }
-    if (value === "Other") {
-      setShowFeedbackInput(false);
-      setCustomFeedbackInput(true);
-    } else {
-      feedbackMutate({
-        sessionId: session.id.toString(),
-        responseId,
-        feedback: value,
-      });
-      setShowFeedbackInput(false);
-    }
-  };
-
-  const handleSubmitCustomFeedbackInput = (value: string) => {
-    if (!session) {
-      return;
-    }
-    feedbackMutate({
+    ratingMutate({
       sessionId: session.id.toString(),
       responseId,
-      feedback: value,
+      rating: isGood,
     });
-    setCustomFeedbackInput(false);
-  };
-
-  const handleClickBackOnCustomFeedbackInput = () => {
-    setShowFeedbackInput(true);
-    setCustomFeedbackInput(false);
   };
 
   return (
-    <Flex style={{ marginLeft: 16 }} align="center" gap={8}>
-      {customFeedbackInput ? (
+    <Flex align="center" style={{ height: 32 }}>
+      <Tooltip title="Good response">
         <Button
-          icon={<ArrowLeftOutlined />}
+          icon={isGood === true ? <LikeTwoTone /> : <LikeOutlined />}
           type="text"
           size="small"
-          onClick={handleClickBackOnCustomFeedbackInput}
-        />
-      ) : (
-        <div style={{ width: 24 }} />
-      )}
-      {showFeedbackInput ? (
-        <Select
-          placeholder="What can be improved (optional)?"
-          onChange={handleSubmitFeedbackInput}
-          options={[
-            { value: "Inaccurate", label: "Inaccurate" },
-            { value: "Not helpful", label: "Not helpful" },
-            { value: "Out of date", label: "Out of date" },
-            { value: "Too short", label: "Too short" },
-            { value: "Too long", label: "Too long" },
-            { value: "Other", label: "Other" },
-          ]}
-        />
-      ) : null}
-      {customFeedbackInput ? (
-        <Input
-          placeholder="Please provide feedback"
-          style={{ width: 400 }}
-          onPressEnter={(e) => {
-            handleSubmitCustomFeedbackInput(e.currentTarget.value);
+          onClick={() => {
+            handleFeedback(true);
           }}
         />
-      ) : null}
-      {feedbackSubmitted ? (
-        <span style={{ fontSize: 12, color: "green" }}>Feedback submitted</span>
-      ) : null}
+      </Tooltip>
+      <Tooltip title="Bad response">
+        <Button
+          icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(false);
+          }}
+        />
+      </Tooltip>
+      <Feedback
+        responseId={responseId}
+        feedbackMutate={feedbackMutate}
+        showFeedbackInput={showFeedbackInput}
+        setShowFeedbackInput={setShowFeedbackInput}
+      />
     </Flex>
   );
 };
 
-export default Feedback;
+export default RatingFeedbackWrapper;
