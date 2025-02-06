@@ -43,7 +43,7 @@ import {
   LikeTwoTone,
 } from "@ant-design/icons";
 import { Button, Flex, Input, Select, Tooltip } from "antd";
-import { useFeedbackMutation } from "src/api/chatApi.ts";
+import { useFeedbackMutation, useRatingMutation } from "src/api/chatApi.ts";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -53,7 +53,18 @@ const Feedback = ({ responseId }: { responseId: string }) => {
   const [showFeedbackInput, setShowFeedbackInput] = useState(false);
   const [customFeedbackInput, setCustomFeedbackInput] = useState(false);
   const session = useContext(RagChatContext).activeSession;
-  const { mutate } = useFeedbackMutation({
+  const { mutate: ratingMutate } = useRatingMutation({
+    onSuccess: (data) => {
+      setIsGood(data.rating);
+      setShowFeedbackInput(true);
+    },
+    onError: () => {
+      setIsGood(null);
+      messageQueue.error("Failed submit chat response feedback");
+    },
+  });
+
+  const { mutate: feedbackMutate } = useFeedbackMutation({
     onSuccess: (data) => {
       setIsGood(data.rating);
       setShowFeedbackInput(true);
@@ -68,19 +79,39 @@ const Feedback = ({ responseId }: { responseId: string }) => {
     if (!session) {
       return;
     }
-    mutate({ sessionId: session.id.toString(), responseId, rating: isGood });
+    ratingMutate({
+      sessionId: session.id.toString(),
+      responseId,
+      rating: isGood,
+    });
   };
 
   const handleSubmitFeedbackInput = (value: string) => {
+    if (!session) {
+      return;
+    }
     if (value === "Other") {
       setShowFeedbackInput(false);
       setCustomFeedbackInput(true);
+    } else {
+      feedbackMutate({
+        sessionId: session.id.toString(),
+        responseId,
+        feedback: value,
+      });
+      setShowFeedbackInput(false);
     }
-    setShowFeedbackInput(false);
   };
 
   const handleSubmitCustomFeedbackInput = (value: string) => {
-    console.log(value);
+    if (!session) {
+      return;
+    }
+    feedbackMutate({
+      sessionId: session.id.toString(),
+      responseId,
+      feedback: value,
+    });
     setCustomFeedbackInput(false);
   };
 
