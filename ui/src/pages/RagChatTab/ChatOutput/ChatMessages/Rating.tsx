@@ -35,27 +35,75 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex } from "antd";
-import { useState } from "react";
-import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
-import Rating from "pages/RagChatTab/ChatOutput/ChatMessages/Rating.tsx";
 
-const RatingFeedbackWrapper = ({ responseId }: { responseId: string }) => {
-  const [showFeedbackInput, setShowFeedbackInput] = useState(false);
+import { Button, Tooltip } from "antd";
+import {
+  DislikeOutlined,
+  DislikeTwoTone,
+  LikeOutlined,
+  LikeTwoTone,
+} from "@ant-design/icons";
+import { useRatingMutation } from "src/api/chatApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { Dispatch, SetStateAction, useContext, useState } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+
+const Rating = ({
+  responseId,
+  setShowFeedbackInput,
+}: {
+  responseId: string;
+  setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const session = useContext(RagChatContext).activeSession;
+  const [isGood, setIsGood] = useState<boolean | null>(null);
+
+  const { mutate: ratingMutate } = useRatingMutation({
+    onSuccess: (data) => {
+      setIsGood(data.rating);
+      setShowFeedbackInput(true);
+    },
+    onError: () => {
+      setIsGood(null);
+      messageQueue.error("Failed submit rating");
+    },
+  });
+
+  const handleFeedback = (isGood: boolean) => {
+    if (!session) {
+      return;
+    }
+    ratingMutate({
+      sessionId: session.id.toString(),
+      responseId,
+      rating: isGood,
+    });
+  };
 
   return (
-    <Flex align="center" style={{ height: 32 }}>
-      <Rating
-        responseId={responseId}
-        setShowFeedbackInput={setShowFeedbackInput}
-      />
-      <Feedback
-        responseId={responseId}
-        showFeedbackInput={showFeedbackInput}
-        setShowFeedbackInput={setShowFeedbackInput}
-      />
-    </Flex>
+    <>
+      <Tooltip title="Good response">
+        <Button
+          icon={isGood ? <LikeTwoTone /> : <LikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(true);
+          }}
+        />
+      </Tooltip>
+      <Tooltip title="Bad response">
+        <Button
+          icon={!isGood ? <DislikeTwoTone /> : <DislikeOutlined />}
+          type="text"
+          size="small"
+          onClick={() => {
+            handleFeedback(false);
+          }}
+        />
+      </Tooltip>
+    </>
   );
 };
 
-export default RatingFeedbackWrapper;
+export default Rating;

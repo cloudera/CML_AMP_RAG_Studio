@@ -35,35 +35,54 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, Input, Select } from "antd";
+import { Button, Flex, Input, Select, Typography } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { ChatResponseFeedback } from "src/api/chatApi.ts";
-import { Dispatch, SetStateAction, useContext } from "react";
+import { useFeedbackMutation } from "src/api/chatApi.ts";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { UseMutateFunction } from "@tanstack/react-query";
+import messageQueue from "src/utils/messageQueue.ts";
+import { cdlGreen700 } from "src/cuix/variables.ts";
 
 const Feedback = ({
   responseId,
-  feedbackMutate,
   showFeedbackInput,
   setShowFeedbackInput,
-  setCustomFeedbackInput,
-  showCustomFeedbackInput,
-  feedbackSubmitted,
 }: {
   responseId: string;
-  feedbackMutate: UseMutateFunction<
-    ChatResponseFeedback,
-    Error,
-    { sessionId: string; responseId: string; feedback: string }
-  >;
   showFeedbackInput: boolean;
   setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
-  setCustomFeedbackInput: Dispatch<SetStateAction<boolean>>;
-  showCustomFeedbackInput: boolean;
-  feedbackSubmitted: boolean;
 }) => {
   const session = useContext(RagChatContext).activeSession;
+  const [showCustomFeedbackInput, setShowCustomFeedbackInput] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  const { mutate: feedbackMutate } = useFeedbackMutation({
+    onSuccess: () => {
+      setShowFeedbackInput(false);
+      setShowCustomFeedbackInput(false);
+      setFeedbackSubmitted(true);
+    },
+    onError: () => {
+      messageQueue.error("Failed submit feedback");
+    },
+  });
+
+  useEffect(() => {
+    if (feedbackSubmitted) {
+      const timer = setTimeout(() => {
+        setFeedbackSubmitted(false);
+      }, 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [feedbackSubmitted, setFeedbackSubmitted]);
 
   const handleSubmitFeedbackInput = (value: string) => {
     if (!session) {
@@ -71,7 +90,7 @@ const Feedback = ({
     }
     if (value === "Other") {
       setShowFeedbackInput(false);
-      setCustomFeedbackInput(true);
+      setShowCustomFeedbackInput(true);
     } else {
       feedbackMutate({
         sessionId: session.id.toString(),
@@ -91,12 +110,12 @@ const Feedback = ({
       responseId,
       feedback: value,
     });
-    setCustomFeedbackInput(false);
+    setShowCustomFeedbackInput(false);
   };
 
   const handleClickBackOnCustomFeedbackInput = () => {
     setShowFeedbackInput(true);
-    setCustomFeedbackInput(false);
+    setShowCustomFeedbackInput(false);
   };
 
   return (
@@ -135,7 +154,9 @@ const Feedback = ({
         />
       ) : null}
       {feedbackSubmitted ? (
-        <span style={{ fontSize: 12, color: "green" }}>Feedback submitted</span>
+        <Typography.Text style={{ fontSize: 12, color: cdlGreen700 }}>
+          Feedback submitted
+        </Typography.Text>
       ) : null}
     </Flex>
   );
