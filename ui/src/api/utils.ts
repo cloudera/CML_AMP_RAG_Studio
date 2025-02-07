@@ -89,6 +89,7 @@ export enum QueryKeys {
   "getLlmModels" = "getLlmModels",
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
+  "getMetricsByDataSource" = "getMetricsByDataSource",
   "getVisualizeDataSource" = "getVisualizeDataSource",
   "getModelById" = "getModelById",
   "getRerankingModels" = "getRerankingModels",

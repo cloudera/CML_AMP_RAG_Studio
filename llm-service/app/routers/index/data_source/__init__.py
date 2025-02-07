@@ -92,6 +92,19 @@ class ChunkContentsResponse(BaseModel):
     metadata: Dict[str, Any]
 
 
+class Metrics(BaseModel):
+    positive_ratings: int
+    negative_ratings: int
+    no_ratings: int
+    count_of_interactions: int
+    count_of_direct_interactions: int
+    aggregated_feedback: dict[str, int]
+    unique_users: int
+    max_score_over_time: list[tuple[int, int]]
+    input_word_count_over_time: list[tuple[int, int]]
+    output_word_count_over_time: list[tuple[int, int]]
+
+
 @cbv(router)
 class DataSourceController:
     chunks_vector_store: VectorStore = Depends(
@@ -321,7 +334,7 @@ class DataSourceController:
 
     @router.get("/metrics")
     @exceptions.propagates
-    def metrics(self, data_source_id: int) -> dict[str, Any]:
+    def metrics(self, data_source_id: int) -> Metrics:
         runs: list[Run] = mlflow.search_runs(
             output_format="list", search_all_experiments=True
         )
@@ -388,18 +401,18 @@ class DataSourceController:
                 feedback_entries,
             )
         )
-        return {
-            "positive_ratings": positive_ratings,
-            "negative_ratings": negative_ratings,
-            "no_ratings": no_ratings,
-            "count_of_interactions": len(relevant_runs),
-            "count_of_direct_interactions": count_of_direct_interactions,
-            "aggregated_feedback": (dict(Counter(cleaned_feedback))),
-            "unique_users": unique_users,
-            "max_score_over_time": max_score_over_time,
-            "input_word_count_over_time": input_word_count_over_time,
-            "output_word_count_over_time": output_word_count_over_time,
-        }
+        return Metrics(
+            positive_ratings=positive_ratings,
+            negative_ratings=negative_ratings,
+            no_ratings=no_ratings,
+            count_of_interactions=len(relevant_runs),
+            count_of_direct_interactions=count_of_direct_interactions,
+            aggregated_feedback=(dict(Counter(cleaned_feedback))),
+            unique_users=unique_users,
+            max_score_over_time=max_score_over_time,
+            input_word_count_over_time=input_word_count_over_time,
+            output_word_count_over_time=output_word_count_over_time,
+        )
 
     def load_dataframe_from_artifact(self, uri: str, name: str) -> pd.DataFrame:
         artifact_loc = uri + "/" + name
