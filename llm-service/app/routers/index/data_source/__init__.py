@@ -54,7 +54,13 @@ from ....services import document_storage, models
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
 
-STANDARD_FEEDBACK = ['Inaccurate', 'Not Helpful', 'Out of date', 'Too short', 'Too long']
+STANDARD_FEEDBACK = [
+    "Inaccurate",
+    "Not Helpful",
+    "Out of date",
+    "Too short",
+    "Too long",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -340,11 +346,18 @@ class DataSourceController:
         run: Run
         scores: list[float] = list()
         feedback_entries: list[str] = list()
-        unique_users = len(set(map(lambda r: r.data.params.get("user_name", "unknown"), runs)))
+        unique_users = len(
+            set(map(lambda r: r.data.params.get("user_name", "unknown"), runs))
+        )
         count_of_direct_interactions = 0
+        max_score_over_time: list[tuple[int, int]] = []
+        input_word_count_over_time: list[tuple[int, int]] = []
+        output_word_count_over_time: list[tuple[int, int]] = []
         for run in relevant_runs:
             base_artifact_uri: str = run.info.artifact_uri
-            artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(base_artifact_uri)
+            artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(
+                base_artifact_uri
+            )
             if run.data.tags.get("direct_llm") == "True":
                 count_of_direct_interactions += 1
 
@@ -360,7 +373,21 @@ class DataSourceController:
                     df = self.load_dataframe_from_artifact(base_artifact_uri, name)
                     if "feedback" in df.columns:
                         feedback_entries.extend(df["feedback"].to_list())
-        cleaned_feedback = list(map(lambda feedback: feedback if feedback in STANDARD_FEEDBACK else "Other", feedback_entries))
+                max_score_over_time.append(
+                    (run.info.start_time, run.data.metrics.get("max_score", 0))
+                )
+                input_word_count_over_time.append(
+                    (run.info.start_time, run.data.metrics.get("input_word_count", 0))
+                )
+                output_word_count_over_time.append(
+                    (run.info.start_time, run.data.metrics.get("output_word_count", 0))
+                )
+        cleaned_feedback = list(
+            map(
+                lambda feedback: feedback if feedback in STANDARD_FEEDBACK else "Other",
+                feedback_entries,
+            )
+        )
         return {
             "positive_ratings": positive_ratings,
             "negative_ratings": negative_ratings,
@@ -369,12 +396,16 @@ class DataSourceController:
             "count_of_direct_interactions": count_of_direct_interactions,
             "aggregated_feedback": (dict(Counter(cleaned_feedback))),
             "unique_users": unique_users,
+            "max_score_over_time": max_score_over_time,
+            "input_word_count_over_time": input_word_count_over_time,
+            "output_word_count_over_time": output_word_count_over_time,
         }
 
     def load_dataframe_from_artifact(self, uri: str, name: str) -> pd.DataFrame:
         artifact_loc = uri + "/" + name
         data = mlflow.artifacts.load_text(artifact_loc)
         return pd.read_json(data, orient="split")
+
 
 #     for a single data source, return:
 #     count of interactions (how many total queries) √
