@@ -35,9 +35,20 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import {useGetMetricsByDataSource} from "src/api/dataSourceApi.ts";
+import {useContext} from "react";
+import {DataSourceContext} from "pages/DataSources/Layout.tsx";
+import {Spin} from "antd";
 
 const Metrics = () => {
-  return <div>Metrics</div>;
+  const { dataSourceId } = useContext(DataSourceContext);
+  const { data, isLoading } = useGetMetricsByDataSource(dataSourceId);
+  console.log(data, isLoading)
+  return (
+    <div>
+      {isLoading && <Spin />}
+    </div>
+  )
 };
 
 export default Metrics;

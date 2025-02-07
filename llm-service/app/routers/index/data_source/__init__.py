@@ -100,7 +100,7 @@ class Metrics(BaseModel):
     count_of_direct_interactions: int
     aggregated_feedback: dict[str, int]
     unique_users: int
-    max_score_over_time: list[tuple[int, int]]
+    max_score_over_time: list[tuple[int, float]]
     input_word_count_over_time: list[tuple[int, int]]
     output_word_count_over_time: list[tuple[int, int]]
 

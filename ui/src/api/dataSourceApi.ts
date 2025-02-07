@@ -174,11 +174,10 @@ const getDataSourceByIdQuery = async (
   return await getRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
 };
 
-export const getMetricsByDataSource = (dataSourceId: string) => {
+export const useGetMetricsByDataSource = (dataSourceId: string) => {
   return useQuery({
     queryKey: [QueryKeys.getMetricsByDataSource, { dataSourceId }],
     queryFn: () => getMetricsByDataSourceQuery(dataSourceId),
-    staleTime: 1000 * 5 * 60,
   });
 };
 
