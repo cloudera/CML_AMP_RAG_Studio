@@ -82,6 +82,7 @@ def v2_chat(
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
+    mlflow.set_experiment_tag("session_id", session.id)
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
@@ -175,7 +176,9 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
             "response_id": message.id,
             "node_id": map(lambda x: x.get("node_id"), flattened_nodes),
             "doc_id": map(lambda x: x.get("doc_id"), flattened_nodes),
-            "source_file_name": map(lambda x: x.get("source_file_name"), flattened_nodes),
+            "source_file_name": map(
+                lambda x: x.get("source_file_name"), flattened_nodes
+            ),
             "score": map(lambda x: x.get("score"), flattened_nodes),
             "query": query,
             "response": response,
