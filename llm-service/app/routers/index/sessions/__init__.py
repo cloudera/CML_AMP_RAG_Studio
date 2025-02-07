@@ -142,7 +142,7 @@ class RagStudioChatRequest(BaseModel):
     configuration: RagPredictConfiguration | None = None
 
 
-def parse_jwt_cookie(jwt_cookie: str) -> str:
+def parse_jwt_cookie(jwt_cookie: str | None) -> str:
     if jwt_cookie is None:
         return "unknown"
     try:
@@ -152,7 +152,7 @@ def parse_jwt_cookie(jwt_cookie: str) -> str:
         base_64_user_info = cookie_crumbs[1]
         user_info_json = base64.b64decode(base_64_user_info)
         user_info = json.loads(user_info_json)
-        return user_info["username"]
+        return str(user_info["username"])
     except Exception:
         return "unknown"
 

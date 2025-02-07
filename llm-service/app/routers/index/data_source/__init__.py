@@ -70,7 +70,6 @@ class SummarizeDocumentRequest(BaseModel):
 
 
 class RagIndexDocumentConfiguration(BaseModel):
-    # TODO: Add more params
     chunk_size: int = 512  # this is llama-index's default
     chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
 
@@ -341,7 +340,7 @@ class DataSourceController:
         run: Run
         scores: list[float] = list()
         feedback_entries: list[str] = list()
-        unique_users = len(set(list(map(lambda r: r.data.params.get("user_name", "unknown"), runs))))
+        unique_users = len(set(map(lambda r: r.data.params.get("user_name", "unknown"), runs)))
         count_of_direct_interactions = 0
         for run in relevant_runs:
             base_artifact_uri: str = run.info.artifact_uri
@@ -372,7 +371,7 @@ class DataSourceController:
             "unique_users": unique_users,
         }
 
-    def load_dataframe_from_artifact(self, uri, name) -> pd.DataFrame:
+    def load_dataframe_from_artifact(self, uri: str, name: str) -> pd.DataFrame:
         artifact_loc = uri + "/" + name
         data = mlflow.artifacts.load_text(artifact_loc)
         return pd.read_json(data, orient="split")
