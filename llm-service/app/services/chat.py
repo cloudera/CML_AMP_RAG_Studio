@@ -78,7 +78,7 @@ def v2_chat(session_id: int, query: str, configuration: RagPredictConfiguration,
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
-    mlflow.set_experiment_tag("session_id", session.id)
+    # mlflow.set_experiment_tag("session_id", session.id)
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
