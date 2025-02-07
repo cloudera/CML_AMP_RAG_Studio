@@ -94,7 +94,7 @@ const Rating = ({
       </Tooltip>
       <Tooltip title="Bad response">
         <Button
-          icon={!isGood ? <DislikeTwoTone /> : <DislikeOutlined />}
+          icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
           type="text"
           size="small"
           onClick={() => {

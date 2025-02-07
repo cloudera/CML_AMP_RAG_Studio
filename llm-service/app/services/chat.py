@@ -154,7 +154,8 @@ def _run_chat(
 
 
 def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None:
-    source_nodes = message.source_nodes
+    source_nodes: list[RagPredictSourceNode] = message.source_nodes
+
     for evaluation in message.evaluations:
         mlflow.log_metric(evaluation.name, evaluation.value)
 
@@ -167,7 +168,7 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
     mlflow.log_table(
         {
             "response_id": message.id,
-            "source_nodes": source_nodes,
+            "source_nodes": [node.model_dump() for node in source_nodes],
             "query": message.rag_message.user,
             "response": message.rag_message.assistant,
             "condensed_question": message.condensed_question,

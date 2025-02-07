@@ -27,7 +27,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import json
 import logging
 import tempfile
 from http import HTTPStatus
@@ -38,7 +38,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
-from mlflow.entities import Experiment
+from mlflow import MlflowClient
+from mlflow.entities import Experiment, Run
+from pandas import DataFrame
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -308,3 +310,13 @@ class DataSourceController:
         self, request: VisualizationRequest
     ) -> list[tuple[tuple[float, float], str]]:
         return self.chunks_vector_store.visualize(request.user_query)
+
+    @router.get("/metrics")
+    @exceptions.propagates
+    def metrics(self, data_source_id: int) -> dict:
+        runs: list[Run] = mlflow.search_runs(output_format='list', search_all_experiments=True)
+        relevant_runs = list(filter(lambda r: data_source_id in json.loads(r.data.params.get('data_source_ids', '[]')) or [], runs))
+        positive_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) > 0, relevant_runs)))
+        negative_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) < 0, relevant_runs)))
+        return { "positive_ratings": positive_ratings, "negative_ratings": negative_ratings }
+
