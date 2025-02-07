@@ -29,6 +29,7 @@
 # ##############################################################################
 import json
 import logging
+import pathlib
 import tempfile
 from http import HTTPStatus
 from typing import Any, Dict, Optional
@@ -39,7 +40,7 @@ from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from mlflow import MlflowClient
-from mlflow.entities import Experiment, Run
+from mlflow.entities import Experiment, Run, FileInfo
 from pandas import DataFrame
 from pydantic import BaseModel
 
@@ -315,8 +316,31 @@ class DataSourceController:
     @exceptions.propagates
     def metrics(self, data_source_id: int) -> dict[str, Any]:
         runs: list[Run] = mlflow.search_runs(output_format='list', search_all_experiments=True)
-        relevant_runs = list(filter(lambda r: data_source_id in json.loads(r.data.params.get('data_source_ids', '[]')) or [], runs))
+        relevant_runs: list[Run] = list(filter(lambda r: data_source_id in json.loads(r.data.params.get('data_source_ids', '[]')) or [], runs))
         positive_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) > 0, relevant_runs)))
         negative_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) < 0, relevant_runs)))
-        return { "positive_ratings": positive_ratings, "negative_ratings": negative_ratings }
+        no_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) == 0, relevant_runs)))
+
+        run: Run
+        scores: list[float] = list()
+        #todo: can we dataframe this?
+        for run in relevant_runs:
+            uri: str = run.info.artifact_uri
+            artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(uri)
+            artifact: FileInfo
+            for artifact in artifacts:
+                ## get the last segment of the path
+                name = pathlib.Path(artifact.path).name
+                if name.startswith("session_id") and name.endswith(".json"):
+                    data = mlflow.artifacts.load_dict(uri + "/" + name)
+                    columns: list[str] = data.get("columns")
+                    for i, column in enumerate(columns):
+                        if column == 'score':
+                            raw_data: list = data.get("data")
+                            for d in raw_data:
+                                scores.append(d[i])
+        print(f"{scores=}")
+
+
+        return { "positive_ratings": positive_ratings, "negative_ratings": negative_ratings, "no_ratings": no_ratings }
 

@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import re
 import time
 import uuid
 from typing import List, Iterable
@@ -155,7 +155,8 @@ def _run_chat(
 
 def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None:
     source_nodes: list[RagPredictSourceNode] = message.source_nodes
-
+    query = message.rag_message.user
+    response = message.rag_message.assistant
     for evaluation in message.evaluations:
         mlflow.log_metric(evaluation.name, evaluation.value)
 
@@ -163,14 +164,21 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
         {
             "source_nodes_count": len(source_nodes),
             "max_score": (source_nodes[0].score if source_nodes else 0.0),
+            "input_word_count": len(re.findall(r"\w+", query)),
+            "output_word_count": len(re.findall(r"\w+", response)),
         }
     )
+
+    flattened_nodes = [node.model_dump() for node in source_nodes]
     mlflow.log_table(
         {
             "response_id": message.id,
-            "source_nodes": [node.model_dump() for node in source_nodes],
-            "query": message.rag_message.user,
-            "response": message.rag_message.assistant,
+            "node_id": map(lambda x: x.get("node_id"), flattened_nodes),
+            "doc_id": map(lambda x: x.get("doc_id"), flattened_nodes),
+            "source_file_name": map(lambda x: x.get("source_file_name"), flattened_nodes),
+            "score": map(lambda x: x.get("score"), flattened_nodes),
+            "query": query,
+            "response": response,
             "condensed_question": message.condensed_question,
         },
         artifact_file=f"session_id_{session.id}.json",
