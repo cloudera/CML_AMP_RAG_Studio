@@ -313,7 +313,7 @@ class DataSourceController:
 
     @router.get("/metrics")
     @exceptions.propagates
-    def metrics(self, data_source_id: int) -> dict:
+    def metrics(self, data_source_id: int) -> dict[str, Any]:
         runs: list[Run] = mlflow.search_runs(output_format='list', search_all_experiments=True)
         relevant_runs = list(filter(lambda r: data_source_id in json.loads(r.data.params.get('data_source_ids', '[]')) or [], runs))
         positive_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) > 0, relevant_runs)))
