@@ -37,6 +37,7 @@
 # ##############################################################################
 import base64
 import json
+import logging
 from typing import Annotated
 
 import mlflow
@@ -50,6 +51,7 @@ from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
 
@@ -150,11 +152,13 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
         if len(cookie_crumbs) != 3:
             return "unknown"
         base_64_user_info = cookie_crumbs[1]
-        user_info_json = base64.b64decode(base_64_user_info)
+        user_info_json = base64.b64decode(base_64_user_info + "===")
         user_info = json.loads(user_info_json)
         return str(user_info["username"])
     except Exception:
+        logger.exception("Failed to parse JWT cookie")
         return "unknown"
+
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
