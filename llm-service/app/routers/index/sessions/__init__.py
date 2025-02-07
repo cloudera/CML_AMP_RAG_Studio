@@ -35,9 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import base64
+import json
+from typing import Annotated
 
 import mlflow
-from fastapi import APIRouter
+from fastapi import APIRouter, Cookie
 from mlflow.entities import Experiment, Run
 from pydantic import BaseModel
 
@@ -139,18 +142,34 @@ class RagStudioChatRequest(BaseModel):
     configuration: RagPredictConfiguration | None = None
 
 
+def parse_jwt_cookie(jwt_cookie: str) -> str:
+    if jwt_cookie is None:
+        return "unknown"
+    try:
+        cookie_crumbs = jwt_cookie.strip().split(".")
+        if len(cookie_crumbs) != 3:
+            return "unknown"
+        base_64_user_info = cookie_crumbs[1]
+        user_info_json = base64.b64decode(base_64_user_info)
+        user_info = json.loads(user_info_json)
+        return user_info["username"]
+    except Exception:
+        return "unknown"
+
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
+    _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
+    user_name = parse_jwt_cookie(_basusertoken)
     mlflow.llama_index.autolog()
 
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:
-        return direct_llm_chat(session_id, request.query)
-    return v2_chat(session_id, request.query, configuration)
+        return direct_llm_chat(session_id, request.query, user_name)
+    return v2_chat(session_id, request.query, configuration, user_name)
 
 
 class RagSuggestedQuestionsResponse(BaseModel):

@@ -63,11 +63,7 @@ from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
 
-def v2_chat(
-    session_id: int,
-    query: str,
-    configuration: RagPredictConfiguration,
-) -> RagStudioChatMessage:
+def v2_chat(session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -87,7 +83,7 @@ def v2_chat(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
         new_chat_message: RagStudioChatMessage = _run_chat(
-            session, response_id, query, query_configuration
+            session, response_id, query, query_configuration, user_name
         )
 
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
@@ -100,8 +96,9 @@ def _run_chat(
     response_id: str,
     query: str,
     query_configuration: QueryConfiguration,
+    user_name: str,
 ) -> RagStudioChatMessage:
-    log_ml_flow_params(session, query_configuration)
+    log_ml_flow_params(session, query_configuration, user_name)
     mlflow.set_tag("response_id", response_id)
 
     if len(session.data_source_ids) != 1:
@@ -188,9 +185,7 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
     )
 
 
-def log_ml_flow_params(
-    session: Session, query_configuration: QueryConfiguration
-) -> None:
+def log_ml_flow_params(session: Session, query_configuration: QueryConfiguration, user_name: str) -> None:
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
@@ -202,6 +197,7 @@ def log_ml_flow_params(
             "use_summary_filter": query_configuration.use_summary_filter,
             "session_id": session.id,
             "data_source_ids": session.data_source_ids,
+            "user_name": user_name,
         }
     )
 
@@ -318,10 +314,7 @@ def process_response(response: str | None) -> list[str]:
     return list(sentences)[:5]
 
 
-def direct_llm_chat(
-    session_id: int,
-    query: str,
-) -> RagStudioChatMessage:
+def direct_llm_chat(session_id: int, query: str, user_name: str) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
@@ -338,6 +331,7 @@ def direct_llm_chat(
                 "exclude_knowledge_base": True,
                 "session_id": session.id,
                 "data_source_ids": session.data_source_ids,
+                "user_name": user_name,
             }
         )
 

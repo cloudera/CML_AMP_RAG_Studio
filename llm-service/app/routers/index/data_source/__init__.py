@@ -31,17 +31,18 @@ import json
 import logging
 import pathlib
 import tempfile
+from collections import Counter
 from http import HTTPStatus
 from typing import Any, Dict, Optional
 
 import mlflow
+import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
 from mlflow.entities import Experiment, Run, FileInfo
 from pydantic import BaseModel
-import pandas as pd
 
 from .... import exceptions
 from ....ai.indexing.base import NotSupportedFileExtensionError
@@ -49,9 +50,11 @@ from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services.metadata_apis import data_sources_metadata_api
 from ....services import document_storage, models
+from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
+
+STANDARD_FEEDBACK = ['Inaccurate', 'Not Helpful', 'Out of date', 'Too short', 'Too long']
 
 logger = logging.getLogger(__name__)
 
@@ -337,11 +340,12 @@ class DataSourceController:
 
         run: Run
         scores: list[float] = list()
+        feedback_entries: list[str] = list()
+        unique_users = len(set(list(map(lambda r: r.data.params.get("user_name", "unknown"), runs))))
         count_of_direct_interactions = 0
         for run in relevant_runs:
-            uri: str = run.info.artifact_uri
-            artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(uri)
-            print(f"{run.data.tags=}")
+            base_artifact_uri: str = run.info.artifact_uri
+            artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(base_artifact_uri)
             if run.data.tags.get("direct_llm") == "True":
                 count_of_direct_interactions += 1
 
@@ -350,30 +354,37 @@ class DataSourceController:
                 ## get the last segment of the path
                 name = pathlib.Path(artifact.path).name
                 if name == "response_details.json":
-                    artifact_loc = uri + "/" + name
-                    data = mlflow.artifacts.load_text(artifact_loc)
-                    df = pd.read_json(data, orient="split")
+                    df = self.load_dataframe_from_artifact(base_artifact_uri, name)
                     if "score" in df.columns:
                         scores.extend(df["score"].to_list())
-        print(f"{scores=}")
-
+                if name == "feedback.json":
+                    df = self.load_dataframe_from_artifact(base_artifact_uri, name)
+                    if "feedback" in df.columns:
+                        feedback_entries.extend(df["feedback"].to_list())
+        cleaned_feedback = list(map(lambda feedback: feedback if feedback in STANDARD_FEEDBACK else "Other", feedback_entries))
         return {
             "positive_ratings": positive_ratings,
             "negative_ratings": negative_ratings,
             "no_ratings": no_ratings,
             "count_of_interactions": len(relevant_runs),
             "count_of_direct_interactions": count_of_direct_interactions,
+            "aggregated_feedback": (dict(Counter(cleaned_feedback))),
+            "unique_users": unique_users,
         }
 
+    def load_dataframe_from_artifact(self, uri, name) -> pd.DataFrame:
+        artifact_loc = uri + "/" + name
+        data = mlflow.artifacts.load_text(artifact_loc)
+        return pd.read_json(data, orient="split")
 
 #     for a single data source, return:
-#     count of interactions (how many total queries)
-#     count of direct interactions with llm (get off tag)
-#     count of positive ratings
-#     count of negative ratings
-#     count of no ratings
-#     user provided feedback (table view)
-#     count of unique users (will need to get cookie parsing in python)
+#     count of interactions (how many total queries) √
+#     count of direct interactions with llm (get off tag) √
+#     count of positive ratings √
+#     count of negative ratings √
+#     count of no ratings √
+#     user provided feedback (table view) √
+#     count of unique users (will need to get cookie parsing in python) √
 #     max_score by interaction
 #     input length by interaction
 #     output length by interaction
