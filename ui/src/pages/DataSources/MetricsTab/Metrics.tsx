@@ -35,20 +35,63 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import {useGetMetricsByDataSource} from "src/api/dataSourceApi.ts";
-import {useContext} from "react";
-import {DataSourceContext} from "pages/DataSources/Layout.tsx";
-import {Spin} from "antd";
+import { useGetMetricsByDataSource } from "src/api/dataSourceApi.ts";
+import { useContext } from "react";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { Col, Row, Spin, Statistic } from "antd";
+import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 
 const Metrics = () => {
   const { dataSourceId } = useContext(DataSourceContext);
   const { data, isLoading } = useGetMetricsByDataSource(dataSourceId);
-  console.log(data, isLoading)
+  console.log(data, isLoading);
   return (
     <div>
       {isLoading && <Spin />}
+      {data ? (
+        <>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Statistic
+                title="Positive Rating"
+                value={data.positive_ratings}
+                prefix={<LikeOutlined />}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                title="Negative Rating"
+                value={data.negative_ratings}
+                prefix={<DislikeOutlined />}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic title="No Rating" value={data.no_ratings} />
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Statistic
+                title="Count of Interactions"
+                value={data.count_of_interactions}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                title="Count of Direct Interactions"
+                value={data.count_of_direct_interactions}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic title="Unique Users" value={data.unique_users} />
+            </Col>
+          </Row>
+          {/*TODO: visualize aggregated_feedback, table or chart?*/}
+          {/*TODO: visualize max score, input count, and output counts over time?*/}
+        </>
+      ) : null}
     </div>
-  )
+  );
 };
 
 export default Metrics;
