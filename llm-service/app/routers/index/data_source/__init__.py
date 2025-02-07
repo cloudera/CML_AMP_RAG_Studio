@@ -314,28 +314,66 @@ class DataSourceController:
     @router.get("/metrics")
     @exceptions.propagates
     def metrics(self, data_source_id: int) -> dict[str, Any]:
-        runs: list[Run] = mlflow.search_runs(output_format='list', search_all_experiments=True)
-        relevant_runs: list[Run] = list(filter(lambda r: data_source_id in json.loads(r.data.params.get('data_source_ids', '[]')) or [], runs))
-        positive_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) > 0, relevant_runs)))
-        negative_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) < 0, relevant_runs)))
-        no_ratings = len(list(filter(lambda r: r.data.metrics.get('rating', 0) == 0, relevant_runs)))
+        runs: list[Run] = mlflow.search_runs(
+            output_format="list", search_all_experiments=True
+        )
+        relevant_runs: list[Run] = list(
+            filter(
+                lambda r: data_source_id
+                in json.loads(r.data.params.get("data_source_ids", "[]"))
+                or [],
+                runs,
+            )
+        )
+        positive_ratings = len(
+            list(filter(lambda r: r.data.metrics.get("rating", 0) > 0, relevant_runs))
+        )
+        negative_ratings = len(
+            list(filter(lambda r: r.data.metrics.get("rating", 0) < 0, relevant_runs))
+        )
+        no_ratings = len(
+            list(filter(lambda r: r.data.metrics.get("rating", 0) == 0, relevant_runs))
+        )
 
         run: Run
         scores: list[float] = list()
+        count_of_direct_interactions = 0
         for run in relevant_runs:
             uri: str = run.info.artifact_uri
             artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(uri)
+            print(f"{run.data.tags=}")
+            if run.data.tags.get("direct_llm") == "True":
+                count_of_direct_interactions += 1
+
             artifact: FileInfo
             for artifact in artifacts:
                 ## get the last segment of the path
                 name = pathlib.Path(artifact.path).name
-                if name.startswith("session_id") and name.endswith(".json"):
-                    data = mlflow.artifacts.load_text(uri + "/" + name)
+                if name == "response_details.json":
+                    artifact_loc = uri + "/" + name
+                    data = mlflow.artifacts.load_text(artifact_loc)
                     df = pd.read_json(data, orient="split")
                     if "score" in df.columns:
                         scores.extend(df["score"].to_list())
         print(f"{scores=}")
 
+        return {
+            "positive_ratings": positive_ratings,
+            "negative_ratings": negative_ratings,
+            "no_ratings": no_ratings,
+            "count_of_interactions": len(relevant_runs),
+            "count_of_direct_interactions": count_of_direct_interactions,
+        }
 
-        return { "positive_ratings": positive_ratings, "negative_ratings": negative_ratings, "no_ratings": no_ratings, "scores": scores }
 
+#     for a single data source, return:
+#     count of interactions (how many total queries)
+#     count of direct interactions with llm (get off tag)
+#     count of positive ratings
+#     count of negative ratings
+#     count of no ratings
+#     user provided feedback (table view)
+#     count of unique users (will need to get cookie parsing in python)
+#     max_score by interaction
+#     input length by interaction
+#     output length by interaction

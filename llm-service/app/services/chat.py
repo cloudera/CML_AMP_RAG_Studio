@@ -184,7 +184,7 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
             "response": response,
             "condensed_question": message.condensed_question,
         },
-        artifact_file=f"session_id_{session.id}.json",
+        artifact_file=f"response_details.json",
     )
 
 
@@ -331,6 +331,15 @@ def direct_llm_chat(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
         mlflow.set_tag("response_id", response_id)
+        mlflow.set_tag("direct_llm", True)
+        mlflow.log_params(
+            {
+                "model_name": session.inference_model,
+                "exclude_knowledge_base": True,
+                "session_id": session.id,
+                "data_source_ids": session.data_source_ids,
+            }
+        )
 
         chat_response = llm_completion.completion(
             session_id, query, session.inference_model
