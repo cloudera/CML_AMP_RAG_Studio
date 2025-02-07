@@ -39,10 +39,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
-from mlflow import MlflowClient
 from mlflow.entities import Experiment, Run, FileInfo
-from pandas import DataFrame
 from pydantic import BaseModel
+import pandas as pd
 
 from .... import exceptions
 from ....ai.indexing.base import NotSupportedFileExtensionError
@@ -323,7 +322,6 @@ class DataSourceController:
 
         run: Run
         scores: list[float] = list()
-        #todo: can we dataframe this?
         for run in relevant_runs:
             uri: str = run.info.artifact_uri
             artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(uri)
@@ -332,15 +330,12 @@ class DataSourceController:
                 ## get the last segment of the path
                 name = pathlib.Path(artifact.path).name
                 if name.startswith("session_id") and name.endswith(".json"):
-                    data = mlflow.artifacts.load_dict(uri + "/" + name)
-                    columns: list[str] = data.get("columns")
-                    for i, column in enumerate(columns):
-                        if column == 'score':
-                            raw_data: list = data.get("data")
-                            for d in raw_data:
-                                scores.append(d[i])
+                    data = mlflow.artifacts.load_text(uri + "/" + name)
+                    df = pd.read_json(data, orient="split")
+                    if "score" in df.columns:
+                        scores.extend(df["score"].to_list())
         print(f"{scores=}")
 
 
-        return { "positive_ratings": positive_ratings, "negative_ratings": negative_ratings, "no_ratings": no_ratings }
+        return { "positive_ratings": positive_ratings, "negative_ratings": negative_ratings, "no_ratings": no_ratings, "scores": scores }
 
