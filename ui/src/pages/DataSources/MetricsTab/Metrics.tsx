@@ -38,59 +38,135 @@
 import { useGetMetricsByDataSource } from "src/api/dataSourceApi.ts";
 import { useContext } from "react";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-import { Col, Row, Spin, Statistic } from "antd";
+import { Col, Flex, Row, Statistic, Typography } from "antd";
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
+import { Chart } from "react-chartjs-2";
+import { format } from "date-fns";
+
+const labels = [
+  "Inaccurate",
+  "Not Helpful",
+  "Out of date",
+  "Too short",
+  "Too long",
+  "Other",
+];
 
 const Metrics = () => {
   const { dataSourceId } = useContext(DataSourceContext);
   const { data, isLoading } = useGetMetricsByDataSource(dataSourceId);
-  console.log(data, isLoading);
+  console.log(data?.aggregated_feedback);
+
+  const maxScoreData =
+    data?.max_score_over_time
+      .map((entry) => {
+        return {
+          x: format(new Date(entry[0]), "yyyy-MM-dd-HH:mm"),
+          y: entry[1],
+        };
+      })
+      .reverse() ?? [];
+
   return (
-    <div>
-      {isLoading && <Spin />}
-      {data ? (
-        <>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Statistic
-                title="Positive Rating"
-                value={data.positive_ratings}
-                prefix={<LikeOutlined />}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic
-                title="Negative Rating"
-                value={data.negative_ratings}
-                prefix={<DislikeOutlined />}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic title="No Rating" value={data.no_ratings} />
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Statistic
-                title="Count of Interactions"
-                value={data.count_of_interactions}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic
-                title="Count of Direct Interactions"
-                value={data.count_of_direct_interactions}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic title="Unique Users" value={data.unique_users} />
-            </Col>
-          </Row>
-          {/*TODO: visualize aggregated_feedback, table or chart?*/}
-          {/*TODO: visualize max score, input count, and output counts over time?*/}
-        </>
-      ) : null}
-    </div>
+    <Flex vertical gap={24}>
+      <Typography.Title level={4}>Knowledge base metrics</Typography.Title>
+      <Row gutter={16}>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Rag Inference Count"
+            loading={isLoading}
+            value={data?.count_of_interactions}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Non-RAG Inference Count"
+            loading={isLoading}
+            value={data?.count_of_direct_interactions}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Unique Users"
+            loading={isLoading}
+            value={data?.unique_users}
+          />
+        </Col>
+      </Row>
+      <Typography.Title level={4}>Feedback metrics</Typography.Title>
+      <Row gutter={16}>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Positive Rating"
+            loading={isLoading}
+            value={data?.positive_ratings}
+            prefix={<LikeOutlined />}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Negative Rating"
+            loading={isLoading}
+            value={data?.negative_ratings}
+            prefix={<DislikeOutlined />}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="No Rating"
+            loading={isLoading}
+            value={data?.no_ratings}
+          />
+        </Col>
+      </Row>
+      <Typography.Title level={4}>
+        Aggregated feedback categories
+      </Typography.Title>
+      <Row gutter={16}>
+        <Col span={24}>
+          <div style={{ width: "50%" }}>
+            <Chart
+              type="bar"
+              options={{
+                indexAxis: "y",
+              }}
+              data={{
+                labels: labels,
+                datasets: [
+                  {
+                    label: "Feedback",
+                    data: labels.map(
+                      (label) => data?.aggregated_feedback[label],
+                    ),
+                  },
+                ],
+              }}
+            />
+          </div>
+        </Col>
+      </Row>
+      <Typography.Title level={4}>
+        Max score of chunk over time
+      </Typography.Title>
+      <Row>
+        <Col span={24}>
+          <div style={{ width: "50%" }}>
+            <Chart
+              type="line"
+              // options={{
+              //   scales: {
+              //     x: {
+              //       type: "timeseries",
+              //     },
+              //   },
+              // }}
+              data={{ datasets: [{ data: maxScoreData, label: "Max score" }] }}
+            />
+          </div>
+        </Col>
+      </Row>
+      {/*TODO: visualize max score, input count, and output counts over time?*/}
+    </Flex>
   );
 };
 
