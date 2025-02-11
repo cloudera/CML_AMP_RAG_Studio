@@ -43,6 +43,7 @@ import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { Chart } from "react-chartjs-2";
 import { format } from "date-fns";
 import { BarChart } from "@mui/x-charts/BarChart";
+import { LineChart } from "@mui/x-charts";
 
 const labels = [
   "Inaccurate",
@@ -62,7 +63,7 @@ const Metrics = () => {
     data?.max_score_over_time
       .map((entry) => {
         return {
-          x: format(new Date(entry[0]), "yyyy-MM-dd-HH:mm"),
+          x: entry[0],
           y: entry[1],
         };
       })
@@ -156,6 +157,28 @@ const Metrics = () => {
       <Row>
         <Col span={24}>
           <div style={{ width: "50%" }}>
+            <LineChart
+              xAxis={[
+                {
+                  id: "Years",
+                  dataKey: "x",
+                  scaleType: "time",
+                  // valueFormatter: (date) => date.getFullYear().toString(),
+                },
+              ]}
+              series={[
+                {
+                  dataKey: "y",
+                  // data: data?.max_score_over_time
+                  //   ? data.max_score_over_time.map((score) => score[1])
+                  //   : [],
+                },
+              ]}
+              dataset={maxScoreData}
+              width={500}
+              height={300}
+            />
+
             <Chart
               type="line"
               // options={{
