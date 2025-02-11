@@ -70,7 +70,6 @@ const Metrics = () => {
 
   const barchartData = [
     {
-      // label: "Aggregated Feedback Categories",
       data: labels.map((label) => {
         return data?.aggregated_feedback[label] ?? 0;
       }),
@@ -199,7 +198,6 @@ const Metrics = () => {
             ]}
             disableVoronoi={true}
             dataset={maxScoreData}
-            // width={500}
             height={300}
           />
         </Row>
