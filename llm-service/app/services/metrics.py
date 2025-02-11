@@ -72,6 +72,7 @@ class MetricFilter(BaseModel):
     inference_model: Optional[str]
     rerank_model: Optional[str]
 
+
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     runs: list[Run] = mlflow.search_runs(
         output_format="list", search_all_experiments=True
@@ -87,10 +88,14 @@ def get_relevant_runs(metric_filter, runs):
             ):
                 return False
         if metric_filter.inference_model:
-            if not metric_filter.inference_model == r.data.params.get("inference_model"):
+            if not metric_filter.inference_model == r.data.params.get(
+                "inference_model"
+            ):
                 return False
-        else:
-            return True
+        if metric_filter.rerank_model:
+            if not metric_filter.rerank_model == r.data.params.get("rerank_model_name"):
+                return False
+        return True
 
     return list(
         filter(

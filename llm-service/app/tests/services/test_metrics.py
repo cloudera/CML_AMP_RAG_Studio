@@ -82,7 +82,9 @@ def runs(
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
     inference_models = st.sampled_from(["model1", "model2", "model3"])
-    reranking_models = st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3", None])
+    reranking_models = st.sampled_from(
+        ["rerank_model1", "rerank_model2", "rerank_model3", None]
+    )
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -95,14 +97,18 @@ def runs(
     for data_source_id in data_source_ids:
         generated_runs.append(
             make_test_run(
-                data_source_ids=[data_source_id], inference_model=draw(inference_models), rerank_model=draw(reranking_models)
+                data_source_ids=[data_source_id],
+                inference_model=draw(inference_models),
+                rerank_model=draw(reranking_models),
             )
         )
     for _ in range(len(data_source_ids), num_runs):
         data_source_id = draw(st.sampled_from(data_source_ids))
         generated_runs.append(
             make_test_run(
-                data_source_ids=[data_source_id], inference_model=draw(inference_models), rerank_model=draw(reranking_models)
+                data_source_ids=[data_source_id],
+                inference_model=draw(inference_models),
+                rerank_model=draw(reranking_models),
             )
         )
     random.shuffle(generated_runs)
@@ -118,12 +124,14 @@ def runs(
             st.integers(min_value=1, max_value=6),
         ),
         inference_model=st.sampled_from(["model1", "model2", "model3", None]),
-        rerank_model=st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3", None]),
+        rerank_model=st.sampled_from(
+            ["rerank_model1", "rerank_model2", "rerank_model3", None]
+        ),
     ),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
     results = get_relevant_runs(metric_filter, runs)
-    if metric_filter.data_source_id is None and metric_filter.inference_model is None:
+    if all(filtered is None for filtered in metric_filter):
         assert results == runs
     for run in results:
         if metric_filter.data_source_id is not None:
