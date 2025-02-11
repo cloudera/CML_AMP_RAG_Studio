@@ -52,6 +52,7 @@ STANDARD_FEEDBACK = [
     "Too long",
 ]
 
+
 class Metrics(BaseModel):
     positive_ratings: int
     negative_ratings: int
@@ -64,22 +65,28 @@ class Metrics(BaseModel):
     input_word_count_over_time: list[tuple[int, int]]
     output_word_count_over_time: list[tuple[int, int]]
 
+
 class MetricFilter(BaseModel):
     data_source_id: int
 
-def generate_metrics(metric_filter: MetricFilter) -> Metrics:
+
+def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     runs: list[Run] = mlflow.search_runs(
         output_format="list", search_all_experiments=True
     )
-
     relevant_runs: list[Run] = list(
         filter(
             lambda r: metric_filter.data_source_id
-                      in json.loads(r.data.params.get("data_source_ids", "[]"))
-                      or [],
+            in json.loads(r.data.params.get("data_source_ids", "[]"))
+            or [],
             runs,
         )
     )
+    return relevant_runs
+
+
+def generate_metrics(metric_filter: MetricFilter) -> Metrics:
+    relevant_runs = filter_runs(metric_filter)
     positive_ratings = len(
         list(filter(lambda r: r.data.metrics.get("rating", 0) > 0, relevant_runs))
     )
@@ -93,7 +100,7 @@ def generate_metrics(metric_filter: MetricFilter) -> Metrics:
     scores: list[float] = list()
     feedback_entries: list[str] = list()
     unique_users = len(
-        set(map(lambda r: r.data.params.get("user_name", "unknown"), runs))
+        set(map(lambda r: r.data.params.get("user_name", "unknown"), relevant_runs))
     )
     count_of_direct_interactions = 0
     max_score_over_time: list[tuple[int, float]] = []
@@ -101,9 +108,7 @@ def generate_metrics(metric_filter: MetricFilter) -> Metrics:
     output_word_count_over_time: list[tuple[int, int]] = []
     for run in relevant_runs:
         base_artifact_uri: str = run.info.artifact_uri
-        artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(
-            base_artifact_uri
-        )
+        artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(base_artifact_uri)
         if run.data.tags.get("direct_llm") == "True":
             count_of_direct_interactions += 1
 
@@ -146,6 +151,7 @@ def generate_metrics(metric_filter: MetricFilter) -> Metrics:
         input_word_count_over_time=input_word_count_over_time,
         output_word_count_over_time=output_word_count_over_time,
     )
+
 
 def load_dataframe_from_artifact(uri: str, name: str) -> pd.DataFrame:
     artifact_loc = uri + "/" + name
