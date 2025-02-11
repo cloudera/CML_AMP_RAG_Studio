@@ -418,16 +418,3 @@ class DataSourceController:
         artifact_loc = uri + "/" + name
         data = mlflow.artifacts.load_text(artifact_loc)
         return pd.read_json(data, orient="split")
-
-
-#     for a single data source, return:
-#     count of interactions (how many total queries) √
-#     count of direct interactions with llm (get off tag) √
-#     count of positive ratings √
-#     count of negative ratings √
-#     count of no ratings √
-#     user provided feedback (table view) √
-#     count of unique users (will need to get cookie parsing in python) √
-#     max_score by interaction
-#     input length by interaction
-#     output length by interaction
