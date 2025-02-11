@@ -42,13 +42,12 @@ from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
-from app.tests.conftest import data_source_id
 
 
 def make_test_run(**kwargs) -> Run:
-    model_name = kwargs.pop("model_name")
+    inference_model = kwargs.pop("inference_model")
     data_source_ids = json.dumps(kwargs.pop("data_source_ids"))
-
+    rerank_model = kwargs.pop("rerank_model")
     return Run(
         run_info=RunInfo(
             run_uuid="",
@@ -61,8 +60,9 @@ def make_test_run(**kwargs) -> Run:
         ),
         run_data=RunData(
             params=[
-                Param(key="model_name", value=model_name),
+                Param(key="inference_model", value=inference_model),
                 Param(key="data_source_ids", value=data_source_ids),
+                Param(key="rerank_model_name", value=data_source_ids),
             ],
         ),
     )
@@ -82,6 +82,7 @@ def runs(
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
     inference_models = st.sampled_from(["model1", "model2", "model3"])
+    reranking_models = st.sampled_from([["rerank_model1", "rerank_model2", "rerank_model3", None]])
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -94,14 +95,14 @@ def runs(
     for data_source_id in data_source_ids:
         generated_runs.append(
             make_test_run(
-                data_source_ids=[data_source_id], model_name=draw(inference_models)
+                data_source_ids=[data_source_id], inference_model=draw(inference_models), rerank_model=draw(reranking_models)
             )
         )
     for _ in range(len(data_source_ids), num_runs):
         data_source_id = draw(st.sampled_from(data_source_ids))
         generated_runs.append(
             make_test_run(
-                data_source_ids=[data_source_id], model_name=draw(inference_models)
+                data_source_ids=[data_source_id], inference_model=draw(inference_models), rerank_model=draw(reranking_models)
             )
         )
     random.shuffle(generated_runs)
@@ -117,10 +118,10 @@ def runs(
             st.integers(min_value=1, max_value=6),
         ),
         inference_model=st.sampled_from(["model1", "model2", "model3", None]),
+        rerank_model=st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3", None]),
     ),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
-    print(f"{runs=}")
     results = get_relevant_runs(metric_filter, runs)
     if metric_filter.data_source_id is None and metric_filter.inference_model is None:
         assert results == runs
@@ -130,4 +131,6 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
                 run.data.params["data_source_ids"]
             )
         if metric_filter.inference_model is not None:
-            assert run.data.params["model_name"] == metric_filter.inference_model
+            assert run.data.params["inference_model"] == metric_filter.inference_model
+        if metric_filter.rerank_model is not None:
+            assert run.data.params["rerank_model_name"] == metric_filter.rerank_model

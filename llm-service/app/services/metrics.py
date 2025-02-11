@@ -70,7 +70,7 @@ class Metrics(BaseModel):
 class MetricFilter(BaseModel):
     data_source_id: Optional[int]
     inference_model: Optional[str]
-
+    rerank_model: Optional[str]
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     runs: list[Run] = mlflow.search_runs(
@@ -82,9 +82,13 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
 def get_relevant_runs(metric_filter, runs):
     def filter_by_parameters(r: Run) -> bool:
         if metric_filter.data_source_id:
-            return metric_filter.data_source_id in json.loads(
+            if not metric_filter.data_source_id in json.loads(
                 r.data.params.get("data_source_ids", "[]")
-            )
+            ):
+                return False
+        if metric_filter.inference_model:
+            if not metric_filter.inference_model == r.data.params.get("inference_model"):
+                return False
         else:
             return True
 

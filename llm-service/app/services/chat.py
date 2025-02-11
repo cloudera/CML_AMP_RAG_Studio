@@ -193,7 +193,7 @@ def log_ml_flow_params(
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
-            "model_name": query_configuration.model_name,
+            "inference_model": query_configuration.model_name,
             "rerank_model_name": query_configuration.rerank_model_name,
             "exclude_knowledge_base": query_configuration.exclude_knowledge_base,
             "use_question_condensing": query_configuration.use_question_condensing,
@@ -333,7 +333,7 @@ def direct_llm_chat(
         mlflow.set_tag("direct_llm", True)
         mlflow.log_params(
             {
-                "model_name": session.inference_model,
+                "inference_model": session.inference_model,
                 "exclude_knowledge_base": True,
                 "session_id": session.id,
                 "data_source_ids": session.data_source_ids,
