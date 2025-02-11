@@ -156,17 +156,27 @@ const Metrics = () => {
       <Col span={16}>
         <Row>
           <ScatterChart
-            margin={{ top: 10, bottom: 100, left: 130 }}
+            margin={{ top: 10, bottom: 100, left: 95 }}
             xAxis={[
               {
                 label: "Time of interaction",
                 id: "time",
                 dataKey: "x",
                 scaleType: "time",
+                tickLabelStyle: {
+                  angle: 45,
+                  textAnchor: "start",
+                },
+                labelStyle: {
+                  transform: "translateY(30px)",
+                },
               },
             ]}
             yAxis={[
               {
+                min: 0,
+                max: 1,
+                tickInterval: [0, 0.2, 0.4, 0.6, 0.8, 1.0],
                 label: "Max Score",
               },
             ]}
