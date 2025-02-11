@@ -62,7 +62,7 @@ def make_test_run(**kwargs) -> Run:
             params=[
                 Param(key="inference_model", value=inference_model),
                 Param(key="data_source_ids", value=data_source_ids),
-                Param(key="rerank_model_name", value=data_source_ids),
+                Param(key="rerank_model_name", value=rerank_model),
             ],
         ),
     )
@@ -82,7 +82,7 @@ def runs(
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
     inference_models = st.sampled_from(["model1", "model2", "model3"])
-    reranking_models = st.sampled_from([["rerank_model1", "rerank_model2", "rerank_model3", None]])
+    reranking_models = st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3", None])
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
