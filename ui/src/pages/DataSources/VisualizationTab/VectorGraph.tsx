@@ -108,6 +108,7 @@ const VectorGraph = ({
           hidden: true,
         },
       }}
+      disableVoronoi={true}
     />
   );
 };
