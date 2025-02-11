@@ -63,7 +63,9 @@ from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
 
-def v2_chat(session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str) -> RagStudioChatMessage:
+def v2_chat(
+    session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str
+) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -181,11 +183,13 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
             "response": response,
             "condensed_question": message.condensed_question,
         },
-        artifact_file=f"response_details.json",
+        artifact_file="response_details.json",
     )
 
 
-def log_ml_flow_params(session: Session, query_configuration: QueryConfiguration, user_name: str) -> None:
+def log_ml_flow_params(
+    session: Session, query_configuration: QueryConfiguration, user_name: str
+) -> None:
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
@@ -314,7 +318,9 @@ def process_response(response: str | None) -> list[str]:
     return list(sentences)[:5]
 
 
-def direct_llm_chat(session_id: int, query: str, user_name: str) -> RagStudioChatMessage:
+def direct_llm_chat(
+    session_id: int, query: str, user_name: str
+) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
