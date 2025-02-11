@@ -36,9 +36,31 @@
 #  DATA.
 #
 
-from mlflow.entities import Run, RunInfo
-from app.services.metrics import Metrics, generate_metrics, MetricFilter
+from hypothesis import strategies as st
+from mlflow.entities import RunInfo, Run, RunData, Param
 
 
-def test_generate_metrics(data_source_id: int):
-    mocked_run = Run(run_info=RunInfo(run_id=""), run_data=None)
+@st.composite
+def make_test_run(draw: st.DrawFn,
+                  min_runs: int = 0,
+                  max_runs: int = 20,
+                  ) -> list[Run]:
+    num_runs: int = draw(st.integers(min_runs, max_runs))
+    res: list[Run] = []
+    for _ in range(num_runs):
+        data_source_id = draw(st.integers(min_value=1, max_value=100))
+        mocked_run = Run(
+            run_info=RunInfo(
+                run_uuid="",
+                experiment_id="",
+                user_id="",
+                status="RUNNING",
+                start_time=1234,
+                end_time=5432,
+                lifecycle_stage="hello",
+            ),
+            run_data=RunData(params=[Param("data_source_ids", [data_source_id])]),
+        )
+        res.append(mocked_run)
+    return res
+
