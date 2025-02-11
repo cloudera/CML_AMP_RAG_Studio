@@ -69,6 +69,7 @@ class Metrics(BaseModel):
 
 class MetricFilter(BaseModel):
     data_source_id: Optional[int]
+    inference_model: Optional[str]
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:

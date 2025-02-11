@@ -77,6 +77,7 @@ def runs(
         raise ValueError("max_data_source_ids must be less than or equal to max_runs")
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
+    inference_models = st.sampled_from(["model1", "model2", "model3"])
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -87,10 +88,10 @@ def runs(
 
     generated_runs: list[Run] = []
     for data_source_id in data_source_ids:
-        generated_runs.append(make_test_run(data_source_ids=[data_source_id]))
+        generated_runs.append(make_test_run(data_source_ids=[data_source_id], model_name = draw(inference_models)))
     for _ in range(len(data_source_ids), num_runs):
         data_source_id = draw(st.sampled_from(data_source_ids))
-        generated_runs.append(make_test_run(data_source_ids=[data_source_id]))
+        generated_runs.append(make_test_run(data_source_ids=[data_source_id], model_name = draw(inference_models)))
     random.shuffle(generated_runs)
     return generated_runs
 
@@ -103,9 +104,11 @@ def runs(
             st.none(),
             st.integers(min_value=1, max_value=6),
         ),
+        inference_model=st.sampled_from(["model1", "model2", "model3", None]),
     ),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
+    print(f"{metric_filter=}")
     results = get_relevant_runs(metric_filter, runs)
     if metric_filter.data_source_id is None:
         assert results == runs
