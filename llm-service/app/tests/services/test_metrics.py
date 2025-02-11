@@ -48,6 +48,13 @@ def make_test_run(**kwargs) -> Run:
     inference_model = kwargs.pop("inference_model")
     data_source_ids = json.dumps(kwargs.pop("data_source_ids"))
     rerank_model = kwargs.pop("rerank_model")
+    top_k = kwargs.pop("top_k")
+    session_id = kwargs.pop("session_id")
+    use_summary_filter = kwargs.pop("use_summary_filter")
+    use_hyde = kwargs.pop("use_hyde")
+    use_question_condensing = kwargs.pop("use_question_condensing")
+    exclude_knowledge_base = kwargs.pop("exclude_knowledge_base")
+
     return Run(
         run_info=RunInfo(
             run_uuid="",
@@ -63,16 +70,24 @@ def make_test_run(**kwargs) -> Run:
                 Param(key="inference_model", value=inference_model),
                 Param(key="data_source_ids", value=data_source_ids),
                 Param(key="rerank_model_name", value=rerank_model),
+                Param(key="top_k", value=str(top_k)),
+                Param(key="session_id", value=str(session_id)),
+                Param(key="use_summary_filter", value=str(use_summary_filter)),
+                Param(key="use_hyde", value=str(use_hyde)),
+                Param(
+                    key="use_question_condensing", value=str(use_question_condensing)
+                ),
+                Param(key="exclude_knowledge_base", value=str(exclude_knowledge_base)),
             ],
         ),
     )
 
 
 @st.composite
-def runs(
+def make_runs(
     draw: st.DrawFn,
     min_runs: int = 0,
-    max_runs: int = 100,
+    max_runs: int = 500,
     max_data_source_ids: int = 5,
 ) -> list[Run]:
     if min_runs > max_runs:
@@ -92,6 +107,12 @@ def runs(
             max_size=max_data_source_ids,
         )
     )
+    top_k: int = draw(st.integers(min_value=1, max_value=20))
+    session_id: int = draw(st.integers(min_value=1, max_value=20))
+    use_summary_filter: bool = draw(st.booleans())
+    use_hyde: bool = draw(st.booleans())
+    use_question_condensing: bool = draw(st.booleans())
+    exclude_knowledge_base: bool = draw(st.booleans())
 
     generated_runs: list[Run] = []
     for data_source_id in data_source_ids:
@@ -100,6 +121,12 @@ def runs(
                 data_source_ids=[data_source_id],
                 inference_model=draw(inference_models),
                 rerank_model=draw(reranking_models),
+                top_k=top_k,
+                session_id=session_id,
+                use_summary_filter=use_summary_filter,
+                use_hyde=use_hyde,
+                use_question_condensing=use_question_condensing,
+                exclude_knowledge_base=exclude_knowledge_base,
             )
         )
     for _ in range(len(data_source_ids), num_runs):
@@ -109,6 +136,12 @@ def runs(
                 data_source_ids=[data_source_id],
                 inference_model=draw(inference_models),
                 rerank_model=draw(reranking_models),
+                top_k=top_k,
+                session_id=session_id,
+                use_summary_filter=use_summary_filter,
+                use_hyde=use_hyde,
+                use_question_condensing=use_question_condensing,
+                exclude_knowledge_base=exclude_knowledge_base,
             )
         )
     random.shuffle(generated_runs)
@@ -116,7 +149,7 @@ def runs(
 
 
 @given(
-    runs=runs(),
+    runs=make_runs(),
     metric_filter=st.builds(
         MetricFilter,
         data_source_id=st.one_of(
@@ -127,12 +160,20 @@ def runs(
         rerank_model=st.sampled_from(
             ["rerank_model1", "rerank_model2", "rerank_model3", None]
         ),
+        top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
+        session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
+        use_summary_filter=st.one_of(st.none(), st.booleans()),
+        use_hyde=st.one_of(st.none(), st.booleans()),
+        use_question_condensing=st.one_of(st.none(), st.booleans()),
+        exclude_knowledge_base=st.one_of(st.none(), st.booleans()),
     ),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
     results = get_relevant_runs(metric_filter, runs)
+    # print(results)
     if all(filtered is None for filtered in metric_filter):
         assert results == runs
+        return
     for run in results:
         if metric_filter.data_source_id is not None:
             assert [metric_filter.data_source_id] == json.loads(
@@ -142,3 +183,21 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
             assert run.data.params["inference_model"] == metric_filter.inference_model
         if metric_filter.rerank_model is not None:
             assert run.data.params["rerank_model_name"] == metric_filter.rerank_model
+        if metric_filter.top_k is not None:
+            assert run.data.metrics["top_k"] == metric_filter.top_k
+        if metric_filter.session_id is not None:
+            assert run.data.params["session_id"] == metric_filter.session_id
+        if metric_filter.use_summary_filter is not None:
+            assert run.data.params["use_summary_filter"] == str(
+                metric_filter.use_summary_filter
+            )
+        if metric_filter.use_hyde is not None:
+            assert run.data.params["use_hyde"] == str(metric_filter.use_hyde)
+        if metric_filter.use_question_condensing is not None:
+            assert run.data.params["use_question_condensing"] == str(
+                metric_filter.use_question_condensing
+            )
+        if metric_filter.exclude_knowledge_base is not None:
+            assert run.data.params["exclude_knowledge_base"] == str(
+                metric_filter.exclude_knowledge_base
+            )

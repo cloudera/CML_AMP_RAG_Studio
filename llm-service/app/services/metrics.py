@@ -71,6 +71,12 @@ class MetricFilter(BaseModel):
     data_source_id: Optional[int]
     inference_model: Optional[str]
     rerank_model: Optional[str]
+    top_k: Optional[int]
+    session_id: Optional[int]
+    use_summary_filter: Optional[bool]
+    use_hyde: Optional[bool]
+    use_question_condensing: Optional[bool]
+    exclude_knowledge_base: Optional[bool]
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
@@ -94,6 +100,30 @@ def get_relevant_runs(metric_filter, runs):
                 return False
         if metric_filter.rerank_model:
             if not metric_filter.rerank_model == r.data.params.get("rerank_model_name"):
+                return False
+        if metric_filter.top_k is not None:
+            if not metric_filter.top_k == r.data.params.get("top_k"):
+                return False
+        if metric_filter.session_id:
+            if not metric_filter.session_id == r.data.params.get("session_id"):
+                return False
+        if metric_filter.use_summary_filter is not None:
+            if not str(metric_filter.use_summary_filter) == r.data.params.get(
+                "use_summary_filter"
+            ):
+                return False
+        if metric_filter.use_hyde is not None:
+            if not str(metric_filter.use_hyde) == r.data.params.get("use_hyde"):
+                return False
+        if metric_filter.use_question_condensing is not None:
+            if not str(metric_filter.use_question_condensing) == r.data.params.get(
+                "use_question_condensing"
+            ):
+                return False
+        if metric_filter.exclude_knowledge_base is not None:
+            if not str(metric_filter.exclude_knowledge_base) == r.data.params.get(
+                "exclude_knowledge_base"
+            ):
                 return False
         return True
 
