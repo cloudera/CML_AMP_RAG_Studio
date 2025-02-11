@@ -42,9 +42,13 @@ from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
+from app.tests.conftest import data_source_id
 
 
 def make_test_run(**kwargs) -> Run:
+    model_name = kwargs.pop("model_name")
+    data_source_ids = json.dumps(kwargs.pop("data_source_ids"))
+
     return Run(
         run_info=RunInfo(
             run_uuid="",
@@ -57,8 +61,8 @@ def make_test_run(**kwargs) -> Run:
         ),
         run_data=RunData(
             params=[
-                Param(key=name, value=json.dumps(value))
-                for name, value in kwargs.items()
+                Param(key="model_name", value=model_name),
+                Param(key="data_source_ids", value=data_source_ids),
             ],
         ),
     )
@@ -88,10 +92,18 @@ def runs(
 
     generated_runs: list[Run] = []
     for data_source_id in data_source_ids:
-        generated_runs.append(make_test_run(data_source_ids=[data_source_id], model_name = draw(inference_models)))
+        generated_runs.append(
+            make_test_run(
+                data_source_ids=[data_source_id], model_name=draw(inference_models)
+            )
+        )
     for _ in range(len(data_source_ids), num_runs):
         data_source_id = draw(st.sampled_from(data_source_ids))
-        generated_runs.append(make_test_run(data_source_ids=[data_source_id], model_name = draw(inference_models)))
+        generated_runs.append(
+            make_test_run(
+                data_source_ids=[data_source_id], model_name=draw(inference_models)
+            )
+        )
     random.shuffle(generated_runs)
     return generated_runs
 
@@ -108,14 +120,14 @@ def runs(
     ),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
-    print(f"{metric_filter=}")
+    print(f"{runs=}")
     results = get_relevant_runs(metric_filter, runs)
-    if metric_filter.data_source_id is None:
+    if metric_filter.data_source_id is None and metric_filter.inference_model is None:
         assert results == runs
     for run in results:
         if metric_filter.data_source_id is not None:
             assert [metric_filter.data_source_id] == json.loads(
                 run.data.params["data_source_ids"]
             )
-        else:
-            pass  # TODO: Add tests for other filters
+        if metric_filter.inference_model is not None:
+            assert run.data.params["model_name"] == metric_filter.inference_model
