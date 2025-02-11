@@ -92,5 +92,6 @@ def runs(
 
 
 @given(runs=runs(), metric_filter=st.builds(MetricFilter))
-def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
+def test_filter_runs(runs: tuple[list[Run], list[int]], metric_filter: MetricFilter):
+    runs, data_source_ids = runs
     raise NotImplementedError
