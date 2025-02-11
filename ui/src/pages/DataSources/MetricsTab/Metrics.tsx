@@ -40,8 +40,6 @@ import { useContext } from "react";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import { Col, Flex, Row, Statistic, Typography } from "antd";
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
-import { Chart } from "react-chartjs-2";
-import { format } from "date-fns";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts";
 
@@ -158,37 +156,22 @@ const Metrics = () => {
         <Col span={24}>
           <div style={{ width: "50%" }}>
             <LineChart
+              margin={{ top: 10, bottom: 100, left: 50, right: 0 }}
               xAxis={[
                 {
                   id: "Years",
                   dataKey: "x",
                   scaleType: "time",
-                  // valueFormatter: (date) => date.getFullYear().toString(),
                 },
               ]}
               series={[
                 {
                   dataKey: "y",
-                  // data: data?.max_score_over_time
-                  //   ? data.max_score_over_time.map((score) => score[1])
-                  //   : [],
                 },
               ]}
               dataset={maxScoreData}
               width={500}
               height={300}
-            />
-
-            <Chart
-              type="line"
-              // options={{
-              //   scales: {
-              //     x: {
-              //       type: "timeseries",
-              //     },
-              //   },
-              // }}
-              data={{ datasets: [{ data: maxScoreData, label: "Max score" }] }}
             />
           </div>
         </Col>
