@@ -134,11 +134,13 @@ const Metrics = () => {
       <Col span={16}>
         <Row>
           <BarChart
-            margin={{ top: 0, bottom: 0, left: 50, right: 0 }}
-            title={"Aggregated feedback categories"}
+            margin={{ top: 0, bottom: 50, left: 50, right: 0 }}
             height={250}
             width={500}
             series={barchartData}
+            bottomAxis={{
+              label: "Feedback Category",
+            }}
             yAxis={[
               {
                 disableTicks: true,
