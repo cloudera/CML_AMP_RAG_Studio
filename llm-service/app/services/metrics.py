@@ -75,20 +75,24 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     runs: list[Run] = mlflow.search_runs(
         output_format="list", search_all_experiments=True
     )
-    relevant_runs = get_relevant_runs(metric_filter, runs)
-    return relevant_runs
+    return get_relevant_runs(metric_filter, runs)
 
 
 def get_relevant_runs(metric_filter, runs):
-    relevant_runs: list[Run] = list(
+    def filter_by_parameters(r: Run) -> bool:
+        if metric_filter.data_source_id:
+            return metric_filter.data_source_id in json.loads(
+                r.data.params.get("data_source_ids", "[]")
+            )
+        else:
+            return True
+
+    return list(
         filter(
-            lambda r: metric_filter.data_source_id
-            in json.loads(r.data.params.get("data_source_ids", "[]"))
-            or [],
+            filter_by_parameters,
             runs,
         )
     )
-    return relevant_runs
 
 
 def generate_metrics(metric_filter: MetricFilter) -> Metrics:
