@@ -42,6 +42,7 @@ import { Col, Flex, Row, Statistic, Typography } from "antd";
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { Chart } from "react-chartjs-2";
 import { format } from "date-fns";
+import { BarChart } from "@mui/x-charts/BarChart";
 
 const labels = [
   "Inaccurate",
@@ -67,6 +68,14 @@ const Metrics = () => {
       })
       .reverse() ?? [];
 
+  const barchartData = [
+    {
+      // label: "Aggregated Feedback Categories",
+      data: labels.map((label) => {
+        return data?.aggregated_feedback[label] ?? 0;
+      }),
+    },
+  ];
   return (
     <Flex vertical gap={24}>
       <Typography.Title level={4}>Knowledge base metrics</Typography.Title>
@@ -122,29 +131,25 @@ const Metrics = () => {
       <Typography.Title level={4}>
         Aggregated feedback categories
       </Typography.Title>
-      <Row gutter={16}>
-        <Col span={24}>
-          <div style={{ width: "50%" }}>
-            <Chart
-              type="bar"
-              options={{
-                indexAxis: "y",
-              }}
-              data={{
-                labels: labels,
-                datasets: [
-                  {
-                    label: "Feedback",
-                    data: labels.map(
-                      (label) => data?.aggregated_feedback[label],
-                    ),
-                  },
-                ],
-              }}
-            />
-          </div>
-        </Col>
-      </Row>
+      <Col span={16}>
+        <Row>
+          <BarChart
+            margin={{ top: 0, bottom: 0, left: 50, right: 0 }}
+            title={"Aggregated feedback categories"}
+            height={250}
+            width={500}
+            series={barchartData}
+            yAxis={[
+              {
+                disableTicks: true,
+                scaleType: "band",
+                data: labels,
+              },
+            ]}
+            layout={"horizontal"}
+          />
+        </Row>
+      </Col>
       <Typography.Title level={4}>
         Max score of chunk over time
       </Typography.Title>
