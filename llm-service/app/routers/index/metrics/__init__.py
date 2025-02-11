@@ -45,8 +45,8 @@ from app.services.metrics import Metrics, generate_metrics, MetricFilter
 router = APIRouter(prefix="/app-metrics", tags=["App Metrics"])
 
 
-@router.get("", summary="Get metrics for the app.")
+@router.post("", summary="Get metrics for the app.")
 @exceptions.propagates
-def app_metrics(data_source_id: Optional[int] = None) -> Metrics:
-    metrics = generate_metrics(MetricFilter(data_source_id=data_source_id))
+def app_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
+    metrics = generate_metrics(metric_filter)
     return metrics

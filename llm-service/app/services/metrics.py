@@ -68,15 +68,15 @@ class Metrics(BaseModel):
 
 
 class MetricFilter(BaseModel):
-    data_source_id: Optional[int]
-    inference_model: Optional[str]
-    rerank_model: Optional[str]
-    top_k: Optional[int]
-    session_id: Optional[int]
-    use_summary_filter: Optional[bool]
-    use_hyde: Optional[bool]
-    use_question_condensing: Optional[bool]
-    exclude_knowledge_base: Optional[bool]
+    data_source_id: Optional[int] = None
+    inference_model: Optional[str] = None
+    rerank_model: Optional[str] = None
+    top_k: Optional[int] = None
+    session_id: Optional[int] = None
+    use_summary_filter: Optional[bool] = None
+    use_hyde: Optional[bool] = None
+    use_question_condensing: Optional[bool] = None
+    exclude_knowledge_base: Optional[bool] = None
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
@@ -135,7 +135,7 @@ def get_relevant_runs(metric_filter, runs):
     )
 
 
-def generate_metrics(metric_filter: MetricFilter) -> Metrics:
+def generate_metrics(metric_filter: Optional[MetricFilter] = MetricFilter()) -> Metrics:
     relevant_runs = filter_runs(metric_filter)
     positive_ratings = len(
         list(filter(lambda r: r.data.metrics.get("rating", 0) > 0, relevant_runs))

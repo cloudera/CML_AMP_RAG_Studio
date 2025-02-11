@@ -44,6 +44,7 @@ from . import data_source
 from . import sessions
 from . import amp_metadata
 from . import models
+from . import metrics
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +56,4 @@ router.include_router(amp_metadata.router)
 # include this for legacy UI calls
 router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
 router.include_router(models.router)
+router.include_router(metrics.router)
