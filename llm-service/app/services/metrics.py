@@ -38,6 +38,7 @@
 import json
 import pathlib
 from collections import Counter
+from typing import Optional
 
 import mlflow
 import pandas as pd
@@ -67,13 +68,18 @@ class Metrics(BaseModel):
 
 
 class MetricFilter(BaseModel):
-    data_source_id: int
+    data_source_id: Optional[int]
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     runs: list[Run] = mlflow.search_runs(
         output_format="list", search_all_experiments=True
     )
+    relevant_runs = get_relevant_runs(metric_filter, runs)
+    return relevant_runs
+
+
+def get_relevant_runs(metric_filter, runs):
     relevant_runs: list[Run] = list(
         filter(
             lambda r: metric_filter.data_source_id
