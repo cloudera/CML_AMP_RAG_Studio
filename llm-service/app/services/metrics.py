@@ -88,14 +88,19 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
 
 def get_relevant_runs(metric_filter, runs):
     def filter_by_parameters(r: Run) -> bool:
+        data_source_ids = r.data.params.get("data_source_ids", "[]")
+        # no data_source_ids means it is probably a run from indexing, rather than chat.
+        if data_source_ids == '[]':
+            return False
+
         if metric_filter.data_source_id:
             if not metric_filter.data_source_id in json.loads(
-                r.data.params.get("data_source_ids", "[]")
+                    data_source_ids
             ):
                 return False
         if metric_filter.inference_model:
             if not metric_filter.inference_model == r.data.params.get(
-                "inference_model"
+                    "inference_model"
             ):
                 return False
         if metric_filter.rerank_model:
@@ -109,7 +114,7 @@ def get_relevant_runs(metric_filter, runs):
                 return False
         if metric_filter.use_summary_filter is not None:
             if not str(metric_filter.use_summary_filter) == r.data.params.get(
-                "use_summary_filter"
+                    "use_summary_filter"
             ):
                 return False
         if metric_filter.use_hyde is not None:
@@ -117,12 +122,12 @@ def get_relevant_runs(metric_filter, runs):
                 return False
         if metric_filter.use_question_condensing is not None:
             if not str(metric_filter.use_question_condensing) == r.data.params.get(
-                "use_question_condensing"
+                    "use_question_condensing"
             ):
                 return False
         if metric_filter.exclude_knowledge_base is not None:
             if not str(metric_filter.exclude_knowledge_base) == r.data.params.get(
-                "exclude_knowledge_base"
+                    "exclude_knowledge_base"
             ):
                 return False
         return True

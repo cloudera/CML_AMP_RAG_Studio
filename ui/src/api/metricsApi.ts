@@ -39,17 +39,27 @@ import { useQuery } from "@tanstack/react-query";
 import { llmServicePath, postRequest, QueryKeys } from "src/api/utils.ts";
 import { DataSourceMetrics } from "src/api/dataSourceApi.ts";
 
-export const useGetMetricsByDataSource = (dataSourceId: string) => {
+export interface MetricFilter {
+  data_source_id?: number;
+  inference_model?: string;
+  rerank_model?: string;
+  top_k?: number;
+  session_id?: number;
+  use_summary_filter?: boolean;
+  use_hyde?: boolean;
+  use_question_condensing?: boolean;
+  exclude_knowledge_base?: boolean;
+}
+
+export const useGetMetricsByDataSource = (metricFilter: MetricFilter) => {
   return useQuery({
-    queryKey: [QueryKeys.getMetricsByDataSource, { dataSourceId }],
-    queryFn: () => getMetricsByDataSourceQuery(dataSourceId),
+    queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
+    queryFn: () => getMetricsByDataSourceQuery(metricFilter),
   });
 };
 
 const getMetricsByDataSourceQuery = async (
-  dataSourceId: string,
+  metricFilter: MetricFilter,
 ): Promise<DataSourceMetrics> => {
-  return await postRequest(`${llmServicePath}/app-metrics`, {
-    data_source_id: dataSourceId,
-  });
+  return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);
 };

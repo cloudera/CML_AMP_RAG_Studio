@@ -55,7 +55,9 @@ const labels = [
 
 const Metrics = () => {
   const { dataSourceId } = useContext(DataSourceContext);
-  const { data, isLoading } = useGetMetricsByDataSource(dataSourceId);
+  const { data, isLoading } = useGetMetricsByDataSource({
+    data_source_id: Number(dataSourceId),
+  });
 
   const maxScoreData =
     data?.max_score_over_time

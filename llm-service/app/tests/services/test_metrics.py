@@ -35,8 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import random
 import json
+import random
 
 from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
@@ -97,9 +97,9 @@ def make_runs(
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
     inference_models = st.sampled_from(["model1", "model2", "model3"])
-    reranking_models = st.sampled_from(
-        ["rerank_model1", "rerank_model2", "rerank_model3", None]
-    )
+    reranking_models = st.one_of(st.none(), st.sampled_from(
+        ["rerank_model1", "rerank_model2", "rerank_model3"]
+    ))
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -156,10 +156,10 @@ def make_runs(
             st.none(),
             st.integers(min_value=1, max_value=6),
         ),
-        inference_model=st.sampled_from(["model1", "model2", "model3", None]),
-        rerank_model=st.sampled_from(
-            ["rerank_model1", "rerank_model2", "rerank_model3", None]
-        ),
+        inference_model=st.one_of(st.none(), st.sampled_from(["model1", "model2", "model3"])),
+        rerank_model=st.one_of(st.none(), st.sampled_from(
+            ["rerank_model1", "rerank_model2", "rerank_model3"]
+        )),
         top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         use_summary_filter=st.one_of(st.none(), st.booleans()),
@@ -170,7 +170,6 @@ def make_runs(
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
     results = get_relevant_runs(metric_filter, runs)
-    # print(results)
     if all(filtered is None for filtered in metric_filter):
         assert results == runs
         return
