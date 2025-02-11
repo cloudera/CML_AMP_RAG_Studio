@@ -36,11 +36,12 @@
 #  DATA.
 #
 import random
+import json
 
 from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
 
-from app.services.metrics import MetricFilter
+from app.services.metrics import MetricFilter, get_relevant_runs
 
 
 def make_test_run(**kwargs) -> Run:
@@ -55,7 +56,10 @@ def make_test_run(**kwargs) -> Run:
             lifecycle_stage="hello",
         ),
         run_data=RunData(
-            params=[Param(key=name, value=value) for name, value in kwargs.items()],
+            params=[
+                Param(key=name, value=json.dumps(value))
+                for name, value in kwargs.items()
+            ],
         ),
     )
 
@@ -64,9 +68,9 @@ def make_test_run(**kwargs) -> Run:
 def runs(
     draw: st.DrawFn,
     min_runs: int = 0,
-    max_runs: int = 20,
+    max_runs: int = 100,
     max_data_source_ids: int = 5,
-) -> tuple[list[Run], list[int]]:  # runs and data_source_ids
+) -> list[Run]:
     if min_runs > max_runs:
         raise ValueError("min_runs must be less than or equal to max_runs")
     if max_data_source_ids > max_runs:
@@ -75,7 +79,7 @@ def runs(
     num_runs: int = draw(st.integers(min_runs, max_runs))
     data_source_ids: list[int] = draw(
         st.lists(
-            st.integers(),
+            st.integers(min_value=1, max_value=6),
             min_size=max(min_runs, 1),
             max_size=max_data_source_ids,
         )
@@ -88,10 +92,27 @@ def runs(
         data_source_id = draw(st.sampled_from(data_source_ids))
         generated_runs.append(make_test_run(data_source_ids=[data_source_id]))
     random.shuffle(generated_runs)
-    return generated_runs, data_source_ids
+    return generated_runs
 
 
-@given(runs=runs(), metric_filter=st.builds(MetricFilter))
-def test_filter_runs(runs: tuple[list[Run], list[int]], metric_filter: MetricFilter):
-    runs, data_source_ids = runs
-    raise NotImplementedError
+@given(
+    runs=runs(),
+    metric_filter=st.builds(
+        MetricFilter,
+        data_source_id=st.one_of(
+            st.none(),
+            st.integers(min_value=1, max_value=6),
+        ),
+    ),
+)
+def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
+    results = get_relevant_runs(metric_filter, runs)
+    if metric_filter.data_source_id is None:
+        assert results == runs
+    for run in results:
+        if metric_filter.data_source_id is not None:
+            assert [metric_filter.data_source_id] == json.loads(
+                run.data.params["data_source_ids"]
+            )
+        else:
+            pass  # TODO: Add tests for other filters
