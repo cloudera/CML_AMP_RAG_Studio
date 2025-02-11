@@ -35,32 +35,62 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import random
 
-from hypothesis import strategies as st
+from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
+
+from app.services.metrics import MetricFilter
+
+
+def make_test_run(**kwargs) -> Run:
+    return Run(
+        run_info=RunInfo(
+            run_uuid="",
+            experiment_id="",
+            user_id="",
+            status="RUNNING",
+            start_time=1234,
+            end_time=5432,
+            lifecycle_stage="hello",
+        ),
+        run_data=RunData(
+            params=[Param(key=name, value=value) for name, value in kwargs.items()],
+        ),
+    )
 
 
 @st.composite
-def make_test_run(draw: st.DrawFn,
-                  min_runs: int = 0,
-                  max_runs: int = 20,
-                  ) -> list[Run]:
-    num_runs: int = draw(st.integers(min_runs, max_runs))
-    res: list[Run] = []
-    for _ in range(num_runs):
-        data_source_id = draw(st.integers(min_value=1, max_value=100))
-        mocked_run = Run(
-            run_info=RunInfo(
-                run_uuid="",
-                experiment_id="",
-                user_id="",
-                status="RUNNING",
-                start_time=1234,
-                end_time=5432,
-                lifecycle_stage="hello",
-            ),
-            run_data=RunData(params=[Param("data_source_ids", [data_source_id])]),
-        )
-        res.append(mocked_run)
-    return res
+def runs(
+    draw: st.DrawFn,
+    min_runs: int = 0,
+    max_runs: int = 20,
+    max_data_source_ids: int = 5,
+) -> tuple[list[Run], list[int]]:  # runs and data_source_ids
+    if min_runs > max_runs:
+        raise ValueError("min_runs must be less than or equal to max_runs")
+    if max_data_source_ids > max_runs:
+        raise ValueError("max_data_source_ids must be less than or equal to max_runs")
 
+    num_runs: int = draw(st.integers(min_runs, max_runs))
+    data_source_ids: list[int] = draw(
+        st.lists(
+            st.integers(),
+            min_size=max(min_runs, 1),
+            max_size=max_data_source_ids,
+        )
+    )
+
+    generated_runs: list[Run] = []
+    for data_source_id in data_source_ids:
+        generated_runs.append(make_test_run(data_source_ids=[data_source_id]))
+    for _ in range(len(data_source_ids), num_runs):
+        data_source_id = draw(st.sampled_from(data_source_ids))
+        generated_runs.append(make_test_run(data_source_ids=[data_source_id]))
+    random.shuffle(generated_runs)
+    return generated_runs, data_source_ids
+
+
+@given(runs=runs(), metric_filter=st.builds(MetricFilter))
+def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
+    raise NotImplementedError
