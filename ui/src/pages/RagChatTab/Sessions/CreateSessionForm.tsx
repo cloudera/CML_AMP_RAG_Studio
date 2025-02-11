@@ -37,7 +37,6 @@
  ******************************************************************************/
 
 import {
-  Checkbox,
   Collapse,
   Form,
   FormInstance,
@@ -45,6 +44,7 @@ import {
   Popover,
   Select,
   Slider,
+  Switch,
   Typography,
 } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
@@ -102,7 +102,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
               </Popover>
             }
           >
-            <Checkbox />
+            <Switch />
           </Form.Item>
           <Form.Item<CreateSessionType>
             name={["queryConfiguration", "enableSummaryFilter"]}
@@ -125,7 +125,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
               </Popover>
             }
           >
-            <Checkbox />
+            <Switch />
           </Form.Item>
         </>
       ),

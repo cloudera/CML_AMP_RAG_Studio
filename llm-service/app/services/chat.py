@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import re
 import time
 import uuid
 from typing import List, Iterable
@@ -46,7 +46,7 @@ from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 from mlflow.entities import Experiment
 
-from . import evaluators
+from . import evaluators, llm_completion
 from .chat_store import (
     ChatHistoryManager,
     Evaluation,
@@ -64,9 +64,7 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session_id: int,
-    query: str,
-    configuration: RagPredictConfiguration,
+    session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
@@ -79,18 +77,30 @@ def v2_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
     response_id = str(uuid.uuid4())
-    experiment: Experiment = mlflow.set_experiment(experiment_name=f"session_{session.name}_{session.id}")
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    # mlflow.set_experiment_tag("session_id", session.id)
     with mlflow.start_run(
-            experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     ):
-        new_chat_message: RagStudioChatMessage = _run_chat(session, response_id, query, query_configuration)
+        new_chat_message: RagStudioChatMessage = _run_chat(
+            session, response_id, query, query_configuration, user_name
+        )
 
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
+
 @mlflow.trace(name="v2_chat")
-def _run_chat(session: Session, response_id: str, query: str, query_configuration: QueryConfiguration) -> RagStudioChatMessage:
-    log_ml_flow_params(session, query_configuration)
+def _run_chat(
+    session: Session,
+    response_id: str,
+    query: str,
+    query_configuration: QueryConfiguration,
+    user_name: str,
+) -> RagStudioChatMessage:
+    log_ml_flow_params(session, query_configuration, user_name)
     mlflow.set_tag("response_id", response_id)
 
     if len(session.data_source_ids) != 1:
@@ -144,31 +154,42 @@ def _run_chat(session: Session, response_id: str, query: str, query_configuratio
 
 
 def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None:
-    source_nodes = message.source_nodes
+    source_nodes: list[RagPredictSourceNode] = message.source_nodes
+    query = message.rag_message.user
+    response = message.rag_message.assistant
     for evaluation in message.evaluations:
         mlflow.log_metric(evaluation.name, evaluation.value)
 
     mlflow.log_metrics(
         {
             "source_nodes_count": len(source_nodes),
-            "max_score": (
-                source_nodes[0].score if source_nodes else 0.0
-            ),
+            "max_score": (source_nodes[0].score if source_nodes else 0.0),
+            "input_word_count": len(re.findall(r"\w+", query)),
+            "output_word_count": len(re.findall(r"\w+", response)),
         }
     )
+
+    flattened_nodes = [node.model_dump() for node in source_nodes]
     mlflow.log_table(
         {
             "response_id": message.id,
-            "source_nodes": source_nodes,
-            "query": message.rag_message.user,
-            "response": message.rag_message.assistant,
+            "node_id": map(lambda x: x.get("node_id"), flattened_nodes),
+            "doc_id": map(lambda x: x.get("doc_id"), flattened_nodes),
+            "source_file_name": map(
+                lambda x: x.get("source_file_name"), flattened_nodes
+            ),
+            "score": map(lambda x: x.get("score"), flattened_nodes),
+            "query": query,
+            "response": response,
             "condensed_question": message.condensed_question,
         },
-        artifact_file=f"session_id_{session.id}.json",
+        artifact_file="response_details.json",
     )
 
 
-def log_ml_flow_params(session: Session, query_configuration: QueryConfiguration) -> None:
+def log_ml_flow_params(
+    session: Session, query_configuration: QueryConfiguration, user_name: str
+) -> None:
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
@@ -180,6 +201,7 @@ def log_ml_flow_params(session: Session, query_configuration: QueryConfiguration
             "use_summary_filter": query_configuration.use_summary_filter,
             "session_id": session.id,
             "data_source_ids": session.data_source_ids,
+            "user_name": user_name,
         }
     )
 
@@ -294,3 +316,45 @@ def process_response(response: str | None) -> list[str]:
     sentences = filter(lambda x: x != "Empty Response", sentences)
     sentences = filter(lambda x: x != "", sentences)
     return list(sentences)[:5]
+
+
+def direct_llm_chat(
+    session_id: int, query: str, user_name: str
+) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
+    experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    response_id = str(uuid.uuid4())
+    with mlflow.start_run(
+        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
+    ):
+        mlflow.set_tag("response_id", response_id)
+        mlflow.set_tag("direct_llm", True)
+        mlflow.log_params(
+            {
+                "model_name": session.inference_model,
+                "exclude_knowledge_base": True,
+                "session_id": session.id,
+                "data_source_ids": session.data_source_ids,
+                "user_name": user_name,
+            }
+        )
+
+        chat_response = llm_completion.completion(
+            session_id, query, session.inference_model
+        )
+        new_chat_message = RagStudioChatMessage(
+            id=response_id,
+            source_nodes=[],
+            inference_model=session.inference_model,
+            evaluations=[],
+            rag_message=RagMessage(
+                user=query,
+                assistant=str(chat_response.message.content),
+            ),
+            timestamp=time.time(),
+            condensed_question=None,
+        )
+        ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+        return new_chat_message

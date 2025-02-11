@@ -70,7 +70,8 @@ export enum MutationKeys {
   "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
   "updateSession" = "updateSession",
   "testRerankingModel" = "testRerankingModel",
-  "evalMutation" = "evalMutation",
+  "ratingMutation" = "ratingMutation",
+  "feedbackMutation" = "feedbackMutation",
 }
 
 export enum QueryKeys {
@@ -88,6 +89,7 @@ export enum QueryKeys {
   "getLlmModels" = "getLlmModels",
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
+  "getMetricsByDataSource" = "getMetricsByDataSource",
   "getVisualizeDataSource" = "getVisualizeDataSource",
   "getModelById" = "getModelById",
   "getRerankingModels" = "getRerankingModels",

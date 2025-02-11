@@ -44,7 +44,7 @@ import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import Images from "src/components/images/Images.ts";
-import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
+import RatingFeedbackWrapper from "pages/RagChatTab/ChatOutput/ChatMessages/RatingFeedbackWrapper.tsx";
 import Remark from "remark-gfm";
 import Markdown from "react-markdown";
 
@@ -108,9 +108,9 @@ const ChatMessage = ({
                   {data.rag_message.assistant.trimStart()}
                 </Markdown>
               </Typography.Text>
-              <Flex gap={16}>
+              <Flex gap={16} align="center">
                 <Evaluations evaluations={data.evaluations} />
-                <Feedback responseId={data.id} />
+                <RatingFeedbackWrapper responseId={data.id} />
               </Flex>
             </Flex>
           </Flex>

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -76,5 +76,5 @@ public class UserTokenCookieDecoder {
     return "unknown";
   }
 
-  public record JwtCookie(String username) {}
+  record JwtCookie(String username) {}
 }

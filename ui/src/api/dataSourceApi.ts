@@ -78,6 +78,19 @@ export type DataSourceType = DataSourceBaseType & {
   documentCount: number;
 };
 
+export interface DataSourceMetrics {
+  positive_ratings: number;
+  negative_ratings: number;
+  no_ratings: number;
+  count_of_interactions: number;
+  count_of_direct_interactions: number;
+  aggregated_feedback: Record<string, number>;
+  unique_users: number;
+  max_score_over_time: [number, number][];
+  input_word_count_over_time: [number, number][];
+  output_word_count_over_time: [number, number][];
+}
+
 export type Point2d = [[number, number], string];
 
 export const useCreateDataSourceMutation = ({
@@ -159,6 +172,21 @@ const getDataSourceByIdQuery = async (
   dataSourceId: string,
 ): Promise<DataSourceType> => {
   return await getRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
+};
+
+export const useGetMetricsByDataSource = (dataSourceId: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.getMetricsByDataSource, { dataSourceId }],
+    queryFn: () => getMetricsByDataSourceQuery(dataSourceId),
+  });
+};
+
+const getMetricsByDataSourceQuery = async (
+  dataSourceId: string,
+): Promise<DataSourceMetrics> => {
+  return await getRequest(
+    `${llmServicePath}/data_sources/${dataSourceId}/metrics`,
+  );
 };
 
 export const getVisualizeDataSource = (dataSourceId: string) => {

@@ -35,21 +35,23 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-import time
-import uuid
+import base64
+import json
+import logging
+from typing import Annotated
 
 import mlflow
-from fastapi import APIRouter
+from fastapi import APIRouter, Cookie
 from mlflow.entities import Experiment, Run
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services import llm_completion
-from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagMessage
+from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
 
@@ -78,16 +80,46 @@ def delete_chat_history(session_id: int) -> str:
     return "Chat history deleted."
 
 
-class ChatResponseFeedback(BaseModel):
+class ChatResponseRating(BaseModel):
     rating: bool
+
+
+@router.post(
+    "/responses/{response_id}/rating", summary="Provide a rating on a chat response."
+)
+@exceptions.propagates
+def rating(
+    session_id: int,
+    response_id: str,
+    request: ChatResponseRating,
+) -> ChatResponseRating:
+    session = session_metadata_api.get_session(session_id)
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    runs: list[Run] = mlflow.search_runs(
+        [experiment.experiment_id],
+        filter_string=f"tags.response_id='{response_id}'",
+        output_format="list",
+    )
+    for run in runs:
+        value: int = 1 if request.rating else -1
+        mlflow.log_metric("rating", value, run_id=run.info.run_id)
+    return ChatResponseRating(rating=request.rating)
+
+
+class ChatResponseFeedback(BaseModel):
+    feedback: str
 
 
 @router.post(
     "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
 )
 @exceptions.propagates
-def evaluate(
-    session_id: int, response_id: str, feedback: ChatResponseFeedback
+def feedback(
+    session_id: int,
+    response_id: str,
+    request: ChatResponseFeedback,
 ) -> ChatResponseFeedback:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
@@ -99,10 +131,12 @@ def evaluate(
         output_format="list",
     )
     for run in runs:
-        mlflow.log_metric("rating", feedback.rating, run_id=run.info.run_id)
-    return ChatResponseFeedback(
-        rating=feedback.rating,
-    )
+        mlflow.log_table(
+            data={"feedback": request.feedback},
+            artifact_file="feedback.json",
+            run_id=run.info.run_id,
+        )
+    return ChatResponseFeedback(feedback=request.feedback)
 
 
 class RagStudioChatRequest(BaseModel):
@@ -110,51 +144,36 @@ class RagStudioChatRequest(BaseModel):
     configuration: RagPredictConfiguration | None = None
 
 
+def parse_jwt_cookie(jwt_cookie: str | None) -> str:
+    if jwt_cookie is None:
+        return "unknown"
+    try:
+        cookie_crumbs = jwt_cookie.strip().split(".")
+        if len(cookie_crumbs) != 3:
+            return "unknown"
+        base_64_user_info = cookie_crumbs[1]
+        user_info_json = base64.b64decode(base_64_user_info + "===")
+        user_info = json.loads(user_info_json)
+        return str(user_info["username"])
+    except Exception:
+        logger.exception("Failed to parse JWT cookie")
+        return "unknown"
+
+
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
 @exceptions.propagates
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
+    _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
+    user_name = parse_jwt_cookie(_basusertoken)
     mlflow.llama_index.autolog()
 
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:
-        return llm_talk(session_id, request.query)
-    return v2_chat(session_id, request.query, configuration)
-
-
-def llm_talk(
-    session_id: int,
-    query: str,
-) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
-    experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
-    )
-    response_id = str(uuid.uuid4())
-    with mlflow.start_run(
-        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
-    ):
-        mlflow.set_tag("response_id", response_id)
-
-        chat_response = llm_completion.completion(
-            session_id, query, session.inference_model
-        )
-        new_chat_message = RagStudioChatMessage(
-            id=response_id,
-            source_nodes=[],
-            inference_model=session.inference_model,
-            evaluations=[],
-            rag_message=RagMessage(
-                user=query,
-                assistant=str(chat_response.message.content),
-            ),
-            timestamp=time.time(),
-            condensed_question=None,
-        )
-        ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-        return new_chat_message
+        return direct_llm_chat(session_id, request.query, user_name)
+    return v2_chat(session_id, request.query, configuration, user_name)
 
 
 class RagSuggestedQuestionsResponse(BaseModel):

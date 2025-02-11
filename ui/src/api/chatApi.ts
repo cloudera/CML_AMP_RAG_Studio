@@ -209,19 +209,19 @@ export const createQueryConfiguration = (
   };
 };
 
-export const useFeedbackMutation = ({
+export const useRatingMutation = ({
   onSuccess,
   onError,
 }: UseMutationType<ChatResponseFeedback>) => {
   return useMutation({
-    mutationKey: [MutationKeys.evalMutation],
-    mutationFn: feedbackMutation,
+    mutationKey: [MutationKeys.ratingMutation],
+    mutationFn: ratingMutation,
     onSuccess: onSuccess,
     onError: (error: Error) => onError?.(error),
   });
 };
 
-const feedbackMutation = async ({
+const ratingMutation = async ({
   sessionId,
   responseId,
   rating,
@@ -231,7 +231,34 @@ const feedbackMutation = async ({
   rating: boolean;
 }): Promise<ChatResponseFeedback> => {
   return await postRequest(
-    `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/feedback`,
+    `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/rating`,
     { rating },
+  );
+};
+
+export const useFeedbackMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ChatResponseFeedback>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.feedbackMutation],
+    mutationFn: feedbackMutation,
+    onSuccess: onSuccess,
+    onError: (error: Error) => onError?.(error),
+  });
+};
+
+const feedbackMutation = async ({
+  sessionId,
+  responseId,
+  feedback,
+}: {
+  sessionId: string;
+  responseId: string;
+  feedback: string;
+}): Promise<ChatResponseFeedback> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/feedback`,
+    { feedback },
   );
 };

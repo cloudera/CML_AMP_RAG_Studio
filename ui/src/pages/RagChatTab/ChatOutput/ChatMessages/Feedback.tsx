@@ -35,61 +35,130 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import {
-  DislikeOutlined,
-  DislikeTwoTone,
-  LikeOutlined,
-  LikeTwoTone,
-} from "@ant-design/icons";
-import { Button, Tooltip } from "antd";
+import { Button, Flex, Input, Select, Typography } from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useFeedbackMutation } from "src/api/chatApi.ts";
-import { useContext, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
+import { cdlGreen700 } from "src/cuix/variables.ts";
 
-const Feedback = ({ responseId }: { responseId: string }) => {
-  const [isGood, setIsGood] = useState<boolean | null>(null);
+const Feedback = ({
+  responseId,
+  showFeedbackInput,
+  setShowFeedbackInput,
+}: {
+  responseId: string;
+  showFeedbackInput: boolean;
+  setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
+}) => {
   const session = useContext(RagChatContext).activeSession;
-  const { mutate } = useFeedbackMutation({
-    onSuccess: (data) => {
-      setIsGood(data.rating);
+  const [showCustomFeedbackInput, setShowCustomFeedbackInput] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  const { mutate: feedbackMutate } = useFeedbackMutation({
+    onSuccess: () => {
+      setShowFeedbackInput(false);
+      setShowCustomFeedbackInput(false);
+      setFeedbackSubmitted(true);
     },
     onError: () => {
-      setIsGood(null);
-      messageQueue.error("Failed submit chat response feedback");
+      messageQueue.error("Failed submit feedback");
     },
   });
 
-  const handleFeedback = (isGood: boolean) => {
+  useEffect(() => {
+    if (feedbackSubmitted) {
+      const timer = setTimeout(() => {
+        setFeedbackSubmitted(false);
+      }, 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [feedbackSubmitted, setFeedbackSubmitted]);
+
+  const handleSubmitFeedbackInput = (value: string) => {
     if (!session) {
       return;
     }
-    mutate({ sessionId: session.id.toString(), responseId, rating: isGood });
+    if (value === "Other") {
+      setShowFeedbackInput(false);
+      setShowCustomFeedbackInput(true);
+    } else {
+      feedbackMutate({
+        sessionId: session.id.toString(),
+        responseId,
+        feedback: value,
+      });
+      setShowFeedbackInput(false);
+    }
+  };
+
+  const handleSubmitCustomFeedbackInput = (value: string) => {
+    if (!session) {
+      return;
+    }
+    feedbackMutate({
+      sessionId: session.id.toString(),
+      responseId,
+      feedback: value,
+    });
+    setShowCustomFeedbackInput(false);
+  };
+
+  const handleClickBackOnCustomFeedbackInput = () => {
+    setShowFeedbackInput(true);
+    setShowCustomFeedbackInput(false);
   };
 
   return (
-    <div>
-      <Tooltip title="Good response">
+    <Flex style={{ marginLeft: 16 }} align="center" gap={8}>
+      {showCustomFeedbackInput ? (
         <Button
-          icon={isGood === true ? <LikeTwoTone /> : <LikeOutlined />}
+          icon={<ArrowLeftOutlined />}
           type="text"
           size="small"
-          onClick={() => {
-            handleFeedback(true);
+          onClick={handleClickBackOnCustomFeedbackInput}
+        />
+      ) : (
+        <div style={{ width: 24 }} />
+      )}
+      {showFeedbackInput ? (
+        <Select
+          placeholder="What can be improved (optional)?"
+          onChange={handleSubmitFeedbackInput}
+          options={[
+            { value: "Inaccurate", label: "Inaccurate" },
+            { value: "Not helpful", label: "Not helpful" },
+            { value: "Out of date", label: "Out of date" },
+            { value: "Too short", label: "Too short" },
+            { value: "Too long", label: "Too long" },
+            { value: "Other", label: "Other" },
+          ]}
+        />
+      ) : null}
+      {showCustomFeedbackInput ? (
+        <Input
+          placeholder="Please provide feedback"
+          style={{ width: 400 }}
+          onPressEnter={(e) => {
+            handleSubmitCustomFeedbackInput(e.currentTarget.value);
           }}
         />
-      </Tooltip>
-      <Tooltip title="Bad response">
-        <Button
-          icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
-          type="text"
-          size="small"
-          onClick={() => {
-            handleFeedback(false);
-          }}
-        />
-      </Tooltip>
-    </div>
+      ) : null}
+      {feedbackSubmitted ? (
+        <Typography.Text style={{ fontSize: 12, color: cdlGreen700 }}>
+          Feedback submitted
+        </Typography.Text>
+      ) : null}
+    </Flex>
   );
 };
 
