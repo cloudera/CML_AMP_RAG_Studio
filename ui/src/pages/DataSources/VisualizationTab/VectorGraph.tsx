@@ -44,7 +44,24 @@ import { v4 as uuidv4 } from "uuid";
 import { cdlOrange500 } from "src/cuix/variables.ts";
 import { useMemo } from "react";
 
-type PointsType = Record<string, [{ x: number; y: number; id: string }]>;
+interface PointsTypeValue {
+  x: number;
+  y: number;
+  id: string;
+}
+type PointsType = Record<string, [PointsTypeValue]>;
+
+const sharedSeriesProps: Pick<
+  ScatterSeriesType,
+  "type" | "valueFormatter" | "highlightScope"
+> = {
+  type: "scatter",
+  valueFormatter: () => null,
+  highlightScope: {
+    highlight: "series",
+    fade: "global",
+  },
+};
 
 const prepareData = (
   rawData: Point2d[],
@@ -60,24 +77,24 @@ const prepareData = (
     }
   });
 
-  return Object.entries(points).map(([fileName, points]): ScatterSeriesType => {
+  const formatSeries = ([fileName, points]: [
+    keyof PointsType,
+    PointsTypeValue[],
+  ]): ScatterSeriesType => {
     const id = uuidv4();
     const overrideColor =
       fileName === "USER_QUERY" ? { color: cdlOrange500 } : {};
     return {
-      ...overrideColor,
-      type: "scatter",
       label: fileName === "USER_QUERY" ? `Query: ${userInput}` : fileName,
       id,
       data: points,
       markerSize: fileName === "USER_QUERY" ? 9 : 3,
-      valueFormatter: () => null,
-      highlightScope: {
-        highlight: "series",
-        fade: "global",
-      },
+      ...overrideColor,
+      ...sharedSeriesProps,
     };
-  });
+  };
+
+  return Object.entries(points).map(formatSeries);
 };
 
 const VectorGraph = ({
