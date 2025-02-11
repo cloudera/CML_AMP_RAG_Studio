@@ -41,7 +41,8 @@ import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import { Col, Flex, Row, Statistic, Typography } from "antd";
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { LineChart } from "@mui/x-charts";
+import { axisClasses } from "@mui/x-charts";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
 
 const labels = [
   "Inaccurate",
@@ -152,30 +153,45 @@ const Metrics = () => {
       <Typography.Title level={4}>
         Max score of chunk over time
       </Typography.Title>
-      <Row>
-        <Col span={24}>
-          <div style={{ width: "50%" }}>
-            <LineChart
-              margin={{ top: 10, bottom: 100, left: 50, right: 0 }}
-              xAxis={[
-                {
-                  id: "Years",
-                  dataKey: "x",
-                  scaleType: "time",
+      <Col span={16}>
+        <Row>
+          <ScatterChart
+            margin={{ top: 10, bottom: 100, left: 130 }}
+            xAxis={[
+              {
+                label: "Time of interaction",
+                id: "time",
+                dataKey: "x",
+                scaleType: "time",
+              },
+            ]}
+            yAxis={[
+              {
+                label: "Max Score",
+              },
+            ]}
+            sx={{
+              [`.${axisClasses.left} .${axisClasses.label}`]: {
+                transform: "translate(-20px, 0)",
+              },
+            }}
+            series={[
+              {
+                datasetKeys: {
+                  id: "y",
+                  x: "x",
+                  y: "y",
                 },
-              ]}
-              series={[
-                {
-                  dataKey: "y",
-                },
-              ]}
-              dataset={maxScoreData}
-              width={500}
-              height={300}
-            />
-          </div>
-        </Col>
-      </Row>
+                valueFormatter: (value) => value.y.toString(),
+              },
+            ]}
+            disableVoronoi={true}
+            dataset={maxScoreData}
+            // width={500}
+            height={300}
+          />
+        </Row>
+      </Col>
       {/*TODO: visualize max score, input count, and output counts over time?*/}
     </Flex>
   );
