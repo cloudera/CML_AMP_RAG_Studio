@@ -35,59 +35,14 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { useContext } from "react";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import Metrics from "pages/DataSources/MetricsTab/Metrics.tsx";
-import { Card, Flex, Form, FormInstance, Select } from "antd";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
-import { MetricFilter } from "src/api/metricsApi.ts";
-import { useEffect } from "react";
 
-const MetricFilterOptions = ({
-  metricFilterForm,
-}: {
-  metricFilterForm: FormInstance<MetricFilter>;
-}) => {
-  const { data: llmModels } = useGetLlmModels();
+const MetricsTab = () => {
+  const { dataSourceId } = useContext(DataSourceContext);
 
-  return (
-    <Form autoCorrect="off" form={metricFilterForm} clearOnDestroy={true}>
-      <Card style={{ margin: 16 }} title="Filters">
-        <Flex vertical>
-          <Flex gap={8}>
-            <Form.Item
-              name="inference_model"
-              label="Response synthesizer model"
-            >
-              <Select
-                options={transformModelOptions(llmModels)}
-                style={{ width: 250 }}
-                allowClear
-              />
-            </Form.Item>
-          </Flex>
-        </Flex>
-      </Card>
-    </Form>
-  );
+  return <Metrics metricFilter={{ data_source_id: Number(dataSourceId) }} />;
 };
 
-const AnalyticsPage = () => {
-  const [form] = Form.useForm<MetricFilter>();
-
-  const formValues = form.getFieldsValue();
-  console.log(formValues);
-  useEffect(() => {
-    console.log(formValues);
-  }, [formValues]);
-
-  return (
-    <Flex vertical align="center">
-      <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-        <MetricFilterOptions metricFilterForm={form} />
-        <Metrics metricFilter={form.getFieldsValue()} />;
-      </Flex>
-    </Flex>
-  );
-};
-
-export default AnalyticsPage;
+export default MetricsTab;

@@ -35,14 +35,12 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useContext } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import { Col, Flex, Row, Statistic, Typography } from "antd";
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { axisClasses } from "@mui/x-charts";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useGetMetricsByDataSource } from "src/api/metricsApi.ts";
+import { MetricFilter, useGetMetricsByDataSource } from "src/api/metricsApi.ts";
 
 const labels = [
   "Inaccurate",
@@ -53,18 +51,17 @@ const labels = [
   "Other",
 ];
 
-const Metrics = () => {
-  const { dataSourceId } = useContext(DataSourceContext);
-  const { data, isLoading } = useGetMetricsByDataSource({
-    data_source_id: Number(dataSourceId),
-  });
+const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
+  console.log(metricFilter);
+  const { data, isLoading } = useGetMetricsByDataSource(metricFilter);
 
   const maxScoreData =
     data?.max_score_over_time
-      .map((entry) => {
+      .map((entry, index) => {
         return {
-          x: entry[0],
-          y: entry[1],
+          timestamp: entry[0],
+          maxScore: entry[1],
+          key: index,
         };
       })
       .reverse() ?? [];
@@ -163,7 +160,7 @@ const Metrics = () => {
               {
                 label: "Time of interaction",
                 id: "time",
-                dataKey: "x",
+                dataKey: "timestamp",
                 scaleType: "time",
                 tickLabelStyle: {
                   angle: 45,
@@ -190,9 +187,9 @@ const Metrics = () => {
             series={[
               {
                 datasetKeys: {
-                  id: "y",
-                  x: "x",
-                  y: "y",
+                  id: "key",
+                  x: "timestamp",
+                  y: "maxScore",
                 },
                 valueFormatter: (value) => value.y.toString(),
               },
