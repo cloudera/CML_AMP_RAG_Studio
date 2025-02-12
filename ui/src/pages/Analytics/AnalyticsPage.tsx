@@ -50,66 +50,80 @@ const MetricFilterOptions = ({
   const { data: rerankingModels } = useGetRerankingModels();
 
   return (
-    <Form autoCorrect="off" form={metricFilterForm} clearOnDestroy={true}>
-      <Collapse style={{ margin: 16 }} title="Filters">
-        <Flex vertical>
-          <Flex vertical gap={8}>
-            <Form.Item
-              name="inference_model"
-              label="Response synthesizer model"
-            >
-              <Select
-                options={transformModelOptions(llmModels)}
-                style={{ width: 250 }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item name="rerank_model" label="Reranking model">
-              <Select
-                options={[
-                  ...transformModelOptions(rerankingModels),
-                  { value: "none", label: "None" },
-                ]}
-                style={{ width: 250 }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item name="use_summary_filter" label="Summary filter used">
-              <Select
-                options={[
-                  { value: true, label: "True" },
-                  { value: false, label: "False" },
-                ]}
-                style={{ width: 250 }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item name="use_hyde" label="HyDE expansion enabled">
-              <Select
-                options={[
-                  { value: true, label: "True" },
-                  { value: false, label: "False" },
-                ]}
-                style={{ width: 250 }}
-                allowClear
-              />
-            </Form.Item>
-            <Form.Item
-              name="exclude_knowledge_base"
-              label="Knowledge base not used"
-            >
-              <Select
-                options={[
-                  { value: true, label: "True" },
-                  { value: false, label: "False" },
-                ]}
-                style={{ width: 250 }}
-                allowClear
-              />
-            </Form.Item>
-          </Flex>
-        </Flex>
-      </Collapse>
+    <Form
+      autoCorrect="off"
+      form={metricFilterForm}
+      clearOnDestroy={true}
+      layout="inline"
+      style={{ maxWidth: "none" }}
+    >
+      <Form.Item
+        name="inference_model"
+        label="Response synthesizer model"
+        style={{ marginTop: 8 }}
+      >
+        <Select
+          options={transformModelOptions(llmModels)}
+          allowClear
+          style={{ width: 250 }}
+        />
+      </Form.Item>
+      <Form.Item
+        name="rerank_model"
+        label="Reranking model"
+        style={{ marginTop: 8 }}
+      >
+        <Select
+          options={[
+            ...transformModelOptions(rerankingModels),
+            { value: "none", label: "None" },
+          ]}
+          allowClear
+          style={{ width: 250 }}
+        />
+      </Form.Item>
+      <Form.Item
+        name="use_summary_filter"
+        label="Summary filter used"
+        style={{ marginTop: 8 }}
+      >
+        <Select
+          options={[
+            { value: true, label: "True" },
+            { value: false, label: "False" },
+          ]}
+          style={{ width: 100 }}
+          allowClear
+        />
+      </Form.Item>
+      <Form.Item
+        name="use_hyde"
+        label="HyDE expansion enabled"
+        style={{ marginTop: 8 }}
+      >
+        <Select
+          options={[
+            { value: true, label: "True" },
+            { value: false, label: "False" },
+          ]}
+          style={{ width: 100 }}
+          allowClear
+        />
+      </Form.Item>
+      <Form.Item
+        name="exclude_knowledge_base"
+        label="Knowledge base not used"
+        style={{ marginTop: 8 }}
+      >
+        <Select
+          options={[
+            { value: true, label: "True" },
+            { value: false, label: "False" },
+          ]}
+          style={{ width: 100 }}
+          allowClear
+        />
+      </Form.Item>
     </Form>
   );
 };
@@ -132,7 +146,16 @@ const AnalyticsPage = () => {
   return (
     <Flex vertical align="center">
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-        <MetricFilterOptions metricFilterForm={form} />
+        <Collapse
+          style={{ marginTop: 20 }}
+          items={[
+            {
+              key: "form",
+              label: "Filter",
+              children: <MetricFilterOptions metricFilterForm={form} />,
+            },
+          ]}
+        />
         <Metrics metricFilter={transFormValues()} />;
       </Flex>
     </Flex>
