@@ -38,7 +38,7 @@
 import Metrics from "pages/DataSources/MetricsTab/Metrics.tsx";
 import { Card, Flex, Form, FormInstance, Select } from "antd";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
 import { useEffect } from "react";
 
@@ -48,6 +48,7 @@ const MetricFilterOptions = ({
   metricFilterForm: FormInstance<MetricFilter>;
 }) => {
   const { data: llmModels } = useGetLlmModels();
+  const { data: rerankingModels } = useGetRerankingModels();
 
   return (
     <Form autoCorrect="off" form={metricFilterForm} clearOnDestroy={true}>
@@ -64,6 +65,13 @@ const MetricFilterOptions = ({
                 allowClear
               />
             </Form.Item>
+            <Form.Item name="rerank_model" label="Reranking model">
+              <Select
+                options={transformModelOptions(rerankingModels)}
+                style={{ width: 250 }}
+                allowClear
+              />
+            </Form.Item>
           </Flex>
         </Flex>
       </Card>
@@ -73,12 +81,8 @@ const MetricFilterOptions = ({
 
 const AnalyticsPage = () => {
   const [form] = Form.useForm<MetricFilter>();
-
-  const formValues = form.getFieldsValue();
-  console.log(formValues);
-  useEffect(() => {
-    console.log(formValues);
-  }, [formValues]);
+  Form.useWatch("rerank_model", form);
+  Form.useWatch("inference_model", form);
 
   return (
     <Flex vertical align="center">
