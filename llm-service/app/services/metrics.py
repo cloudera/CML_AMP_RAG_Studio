@@ -83,16 +83,13 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     experiments = mlflow.search_experiments()
     runs: list[Run] = []
     for experiment in experiments:
-        print(f"{experiment=}")
-
+        # skip the experiments from indexing jobs
+        if experiment.name.startswith("datasource"):
+            continue
         experiment_runs = mlflow.search_runs(experiment_ids=[experiment.experiment_id], output_format="list")
         for run in experiment_runs:
             runs.append(run)
-            print(f"from experiment: {run.data.params=}")
 
-    print(f"{len(runs)=}")
-    for run in runs:
-        print(f"{run.data.params=}")
     return get_relevant_runs(metric_filter, runs)
 
 
