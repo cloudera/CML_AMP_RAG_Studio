@@ -84,6 +84,8 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
         output_format="list", search_all_experiments=True
     )
     print(f"{len(runs)=}")
+    for run in runs:
+        print(f"{run.data.params=}")
     return get_relevant_runs(metric_filter, runs)
 
 
