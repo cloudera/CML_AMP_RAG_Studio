@@ -62,9 +62,9 @@ class Metrics(BaseModel):
     count_of_direct_interactions: int
     aggregated_feedback: dict[str, int]
     unique_users: int
-    max_score_over_time: list[tuple[int, float]]
-    input_word_count_over_time: list[tuple[int, int]]
-    output_word_count_over_time: list[tuple[int, int]]
+    max_score_over_time: list[tuple[float, float]]
+    input_word_count_over_time: list[tuple[float, int]]
+    output_word_count_over_time: list[tuple[float, int]]
 
 
 class MetricFilter(BaseModel):
@@ -158,9 +158,9 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
         set(map(lambda r: r.data.params.get("user_name", "unknown"), relevant_runs))
     )
     count_of_direct_interactions = 0
-    max_score_over_time: list[tuple[int, float]] = []
-    input_word_count_over_time: list[tuple[int, int]] = []
-    output_word_count_over_time: list[tuple[int, int]] = []
+    max_score_over_time: list[tuple[float, float]] = []
+    input_word_count_over_time: list[tuple[float, int]] = []
+    output_word_count_over_time: list[tuple[float, int]] = []
     for run in relevant_runs:
         base_artifact_uri: str = run.info.artifact_uri
         artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(base_artifact_uri)
