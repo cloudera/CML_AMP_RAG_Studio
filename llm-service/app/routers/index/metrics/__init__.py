@@ -1,4 +1,4 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,26 +34,19 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
-
-import logging
+#
+from typing import Optional
 
 from fastapi import APIRouter
 
-from . import data_source
-from . import sessions
-from . import amp_metadata
-from . import models
-from . import metrics
+from app import exceptions
+from app.services.metrics import Metrics, generate_metrics, MetricFilter
 
-logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/app-metrics", tags=["App Metrics"])
 
 
-router = APIRouter()
-router.include_router(data_source.router)
-router.include_router(sessions.router)
-router.include_router(amp_metadata.router)
-# include this for legacy UI calls
-router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
-router.include_router(models.router)
-router.include_router(metrics.router)
+@router.post("", summary="Get metrics for the app.")
+@exceptions.propagates
+def app_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
+    metrics = generate_metrics(metric_filter)
+    return metrics

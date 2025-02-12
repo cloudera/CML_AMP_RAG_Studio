@@ -174,21 +174,6 @@ const getDataSourceByIdQuery = async (
   return await getRequest(`${ragPath}/${paths.dataSources}/${dataSourceId}`);
 };
 
-export const useGetMetricsByDataSource = (dataSourceId: string) => {
-  return useQuery({
-    queryKey: [QueryKeys.getMetricsByDataSource, { dataSourceId }],
-    queryFn: () => getMetricsByDataSourceQuery(dataSourceId),
-  });
-};
-
-const getMetricsByDataSourceQuery = async (
-  dataSourceId: string,
-): Promise<DataSourceMetrics> => {
-  return await getRequest(
-    `${llmServicePath}/data_sources/${dataSourceId}/metrics`,
-  );
-};
-
 export const getVisualizeDataSource = (dataSourceId: string) => {
   return useQuery({
     queryKey: [QueryKeys.getVisualizeDataSource, { dataSourceId }],

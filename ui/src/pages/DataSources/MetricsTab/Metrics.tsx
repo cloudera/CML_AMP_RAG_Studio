@@ -35,7 +35,6 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useGetMetricsByDataSource } from "src/api/dataSourceApi.ts";
 import { useContext } from "react";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import { Col, Flex, Row, Statistic, Typography } from "antd";
@@ -43,10 +42,11 @@ import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { axisClasses } from "@mui/x-charts";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { useGetMetricsByDataSource } from "src/api/metricsApi.ts";
 
 const labels = [
   "Inaccurate",
-  "Not Helpful",
+  "Not helpful",
   "Out of date",
   "Too short",
   "Too long",
@@ -55,8 +55,9 @@ const labels = [
 
 const Metrics = () => {
   const { dataSourceId } = useContext(DataSourceContext);
-  const { data, isLoading } = useGetMetricsByDataSource(dataSourceId);
-  console.log(data?.aggregated_feedback);
+  const { data, isLoading } = useGetMetricsByDataSource({
+    data_source_id: Number(dataSourceId),
+  });
 
   const maxScoreData =
     data?.max_score_over_time
