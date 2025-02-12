@@ -173,6 +173,8 @@ def make_runs(
         exclude_knowledge_base=st.one_of(st.none(), st.booleans()),
     ),
 )
+
+
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
     if all(filtered is None for filtered in metric_filter):
@@ -205,3 +207,8 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
             assert run.data.params["exclude_knowledge_base"] == str(
                 metric_filter.exclude_knowledge_base
             )
+        if metric_filter.has_rerank_model is not None:
+            if metric_filter.has_rerank_model:
+                assert run.data.params.get("rerank_model") is not None
+            if not metric_filter.has_rerank_model:
+                assert run.data.params.get("rerank_model") is None
