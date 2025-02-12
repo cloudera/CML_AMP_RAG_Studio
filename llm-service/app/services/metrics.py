@@ -81,15 +81,15 @@ class MetricFilter(BaseModel):
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     experiments = mlflow.search_experiments()
+    runs: list[Run] = []
     for experiment in experiments:
-        print(f"{experiment.name=}")
+        print(f"{experiment=}")
+
         experiment_runs = mlflow.search_runs(experiment_ids=[experiment.experiment_id], output_format="list")
         for run in experiment_runs:
+            runs.append(run)
             print(f"from experiment: {run.data.params=}")
 
-    runs: list[Run] = mlflow.search_runs(
-        output_format="list", search_all_experiments=True
-    )
     print(f"{len(runs)=}")
     for run in runs:
         print(f"{run.data.params=}")
