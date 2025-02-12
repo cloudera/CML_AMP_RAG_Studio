@@ -83,30 +83,9 @@ def make_test_run(**kwargs: Any) -> Run:
         end_time=5432,
         lifecycle_stage="hello",
     )
-
-    inference_model = kwargs.pop("inference_model")
-    data_source_ids = json.dumps(kwargs.pop("data_source_ids"))
-    rerank_model = kwargs.pop("rerank_model")
-    top_k = kwargs.pop("top_k")
-    session_id = kwargs.pop("session_id")
-    use_summary_filter = kwargs.pop("use_summary_filter")
-    use_hyde = kwargs.pop("use_hyde")
-    use_question_condensing = kwargs.pop("use_question_condensing")
-    exclude_knowledge_base = kwargs.pop("exclude_knowledge_base")
     run_data: RunData = RunData(
-        params=[
-            Param(key="inference_model", value=inference_model),
-            Param(key="data_source_ids", value=data_source_ids),
-            Param(key="rerank_model_name", value=rerank_model),
-            Param(key="top_k", value=str(top_k)),
-            Param(key="session_id", value=str(session_id)),
-            Param(key="use_summary_filter", value=str(use_summary_filter)),
-            Param(key="use_hyde", value=str(use_hyde)),
-            Param(key="use_question_condensing", value=str(use_question_condensing)),
-            Param(key="exclude_knowledge_base", value=str(exclude_knowledge_base)),
-        ],
+        params=[Param(key=key, value=str(value)) for key, value in kwargs.items()],
     )
-
     return Run(run_info=run_info, run_data=run_data)
 
 
