@@ -41,6 +41,7 @@ import {
   CloudOutlined,
   DatabaseFilled,
   DesktopOutlined,
+  LineChartOutlined,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -70,6 +71,12 @@ const TopNav: React.FC = () => {
       .then(() => null)
       .catch(() => null);
     return;
+  };
+
+  const navToAnalytics = () => {
+    navigate({ to: "/analytics" })
+      .then(() => null)
+      .catch(() => null);
   };
 
   const navToModels = () => {
@@ -135,20 +142,27 @@ const TopNav: React.FC = () => {
   ];
 
   const models = getItem(
-    <span data-testid="data-management-nav">Models</span>,
+    <span data-testid="models-nav">Models</span>,
     "models",
     navToModels,
     <CloudOutlined />,
   );
 
+  const analyticsItem = getItem(
+    <span data-testid="analytics-nav">Analytics</span>,
+    "analytics",
+    navToAnalytics,
+    <LineChartOutlined />,
+  );
+
   const feedbackItem = getItem(
-    <span data-testid="data-management-nav">Leave Feedback</span>,
+    <span data-testid="feedback-nav">Leave Feedback</span>,
     "leave-feedback",
     popupFeedback,
     <ThumbUpIcon />,
   );
 
-  const items = [...baseItems, models, feedbackItem];
+  const items = [...baseItems, models, analyticsItem, feedbackItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
