@@ -46,7 +46,7 @@ import { useGetMetricsByDataSource } from "src/api/metricsApi.ts";
 
 const labels = [
   "Inaccurate",
-  "Not Helpful",
+  "Not helpful",
   "Out of date",
   "Too short",
   "Too long",
