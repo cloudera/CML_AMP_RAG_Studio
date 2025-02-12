@@ -73,6 +73,14 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
       }),
     },
   ];
+  const yValues = data?.max_score_over_time.map((value) => value[1]);
+  const yAxisMinValue = yValues ? Math.min(...yValues, 0) : 0;
+  const xAxisMinValue = yValues ? Math.max(...yValues, 1) : 1;
+  const interval = (xAxisMinValue - yAxisMinValue) / 5.0;
+  const ticks: number[] = [];
+  for (let i = 0; i <= xAxisMinValue; i += interval) {
+    ticks.push(i);
+  }
   return (
     <Flex vertical gap={24}>
       <Typography.Title level={4}>Inference Metrics</Typography.Title>
@@ -125,13 +133,10 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
           />
         </Col>
       </Row>
-      <Typography.Title level={4}>
-        Aggregated feedback categories
-      </Typography.Title>
       <Col span={16}>
         <Row>
           <BarChart
-            margin={{ top: 0, bottom: 50, left: 50, right: 0 }}
+            margin={{ top: 0, bottom: 50, left: 10, right: 0 }}
             height={250}
             width={500}
             series={barchartData}
@@ -149,9 +154,7 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
           />
         </Row>
       </Col>
-      <Typography.Title level={4}>
-        Max score of chunk over time
-      </Typography.Title>
+      <Typography.Title level={4}>Chunk relevance over time</Typography.Title>
       <Col span={16}>
         <Row>
           <ScatterChart
@@ -173,9 +176,9 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
             ]}
             yAxis={[
               {
-                min: 0,
-                max: 1,
-                tickInterval: [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                min: yAxisMinValue,
+                max: xAxisMinValue,
+                tickInterval: ticks,
                 label: "Max Score",
               },
             ]}
