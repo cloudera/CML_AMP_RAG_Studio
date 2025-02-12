@@ -35,9 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+
 import json
 import random
-import typing
 from typing import Any
 
 from hypothesis import strategies as st, given
@@ -46,7 +46,33 @@ from mlflow.entities import RunInfo, Run, RunData, Param
 from app.services.metrics import MetricFilter, get_relevant_runs
 
 
-@typing.no_type_check
+# mypy: disable-error-code="no-untyped-call"
+
+
+def st_inference_model() -> st.SearchStrategy[str]:
+    return st.sampled_from(["model1", "model2", "model3"])
+
+
+def st_rerank_model() -> st.SearchStrategy[str]:
+    return st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"])
+
+
+def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
+    return st.builds(
+        MetricFilter,
+        data_source_id=st.one_of(st.none(), st.integers(min_value=1, max_value=6)),
+        inference_model=st.one_of(st.none(), st_inference_model()),
+        rerank_model=st.one_of(st.none(), st_rerank_model()),
+        has_rerank_model=...,
+        top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
+        session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
+        use_summary_filter=...,
+        use_hyde=...,
+        use_question_condensing=...,
+        exclude_knowledge_base=...,
+    )
+
+
 def make_test_run(**kwargs: Any) -> Run:
     run_info: RunInfo = RunInfo(
         run_uuid="",
@@ -57,35 +83,14 @@ def make_test_run(**kwargs: Any) -> Run:
         end_time=5432,
         lifecycle_stage="hello",
     )
-
-    inference_model = kwargs.pop("inference_model")
-    data_source_ids = json.dumps(kwargs.pop("data_source_ids"))
-    rerank_model = kwargs.pop("rerank_model")
-    top_k = kwargs.pop("top_k")
-    session_id = kwargs.pop("session_id")
-    use_summary_filter = kwargs.pop("use_summary_filter")
-    use_hyde = kwargs.pop("use_hyde")
-    use_question_condensing = kwargs.pop("use_question_condensing")
-    exclude_knowledge_base = kwargs.pop("exclude_knowledge_base")
     run_data: RunData = RunData(
-        params=[
-            Param(key="inference_model", value=inference_model),
-            Param(key="data_source_ids", value=data_source_ids),
-            Param(key="rerank_model_name", value=rerank_model),
-            Param(key="top_k", value=str(top_k)),
-            Param(key="session_id", value=str(session_id)),
-            Param(key="use_summary_filter", value=str(use_summary_filter)),
-            Param(key="use_hyde", value=str(use_hyde)),
-            Param(key="use_question_condensing", value=str(use_question_condensing)),
-            Param(key="exclude_knowledge_base", value=str(exclude_knowledge_base)),
-        ],
+        params=[Param(key=key, value=str(value)) for key, value in kwargs.items()],
     )
-
     return Run(run_info=run_info, run_data=run_data)
 
 
 @st.composite
-def make_runs(
+def st_runs(
     draw: st.DrawFn,
     min_runs: int = 0,
     max_runs: int = 500,
@@ -97,10 +102,8 @@ def make_runs(
         raise ValueError("max_data_source_ids must be less than or equal to max_runs")
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
-    inference_models = st.sampled_from(["model1", "model2", "model3"])
-    reranking_models = st.one_of(
-        st.none(), st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"])
-    )
+    inference_models = st_inference_model()
+    reranking_models = st.one_of(st.none(), st_rerank_model())
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -150,28 +153,8 @@ def make_runs(
 
 
 @given(
-    runs=make_runs(),
-    metric_filter=st.builds(
-        MetricFilter,
-        data_source_id=st.one_of(
-            st.none(),
-            st.integers(min_value=1, max_value=6),
-        ),
-        inference_model=st.one_of(
-            st.none(), st.sampled_from(["model1", "model2", "model3"])
-        ),
-        rerank_model=st.one_of(
-            st.none(),
-            st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"]),
-        ),
-        has_rerank_model=st.one_of(st.none(), st.booleans()),
-        top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
-        session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
-        use_summary_filter=st.one_of(st.none(), st.booleans()),
-        use_hyde=st.one_of(st.none(), st.booleans()),
-        use_question_condensing=st.one_of(st.none(), st.booleans()),
-        exclude_knowledge_base=st.one_of(st.none(), st.booleans()),
-    ),
+    runs=st_runs(),
+    metric_filter=st_metric_filter(),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
