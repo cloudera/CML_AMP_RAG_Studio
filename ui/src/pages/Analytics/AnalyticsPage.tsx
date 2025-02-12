@@ -53,7 +53,7 @@ const MetricFilterOptions = ({
     <Form autoCorrect="off" form={metricFilterForm} clearOnDestroy={true}>
       <Card style={{ margin: 16 }} title="Filters">
         <Flex vertical>
-          <Flex gap={8}>
+          <Flex vertical gap={8}>
             <Form.Item
               name="inference_model"
               label="Response synthesizer model"
@@ -66,7 +66,10 @@ const MetricFilterOptions = ({
             </Form.Item>
             <Form.Item name="rerank_model" label="Reranking model">
               <Select
-                options={transformModelOptions(rerankingModels)}
+                options={[
+                  ...transformModelOptions(rerankingModels),
+                  { value: "none", label: "None" },
+                ]}
                 style={{ width: 250 }}
                 allowClear
               />
@@ -84,11 +87,20 @@ const AnalyticsPage = () => {
     return values;
   }, form);
 
+  function transFormValues() {
+    const values = form.getFieldsValue();
+    if (values.rerank_model === "none") {
+      values.has_rerank_model = false;
+      values.rerank_model = undefined;
+    }
+    return values;
+  }
+
   return (
     <Flex vertical align="center">
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
         <MetricFilterOptions metricFilterForm={form} />
-        <Metrics metricFilter={form.getFieldsValue()} />;
+        <Metrics metricFilter={transFormValues()} />;
       </Flex>
     </Flex>
   );

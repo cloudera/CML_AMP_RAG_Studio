@@ -43,6 +43,7 @@ export interface MetricFilter {
   data_source_id?: number;
   inference_model?: string;
   rerank_model?: string;
+  has_rerank_model?: boolean;
   top_k?: number;
   session_id?: number;
   use_summary_filter?: boolean;
