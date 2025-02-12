@@ -91,6 +91,7 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
             experiment_ids=[experiment.experiment_id], output_format="list"
         )
         for run in experiment_runs:
+            print(f"{run.data.params.get('use_summary_filter')=}")
             runs.append(run)
 
     return get_relevant_runs(metric_filter, runs)
@@ -144,7 +145,6 @@ def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]
                     return False
             else:
                 if r.data.params.get("rerank_model_name") is not None:
-
                     return False
         return True
 

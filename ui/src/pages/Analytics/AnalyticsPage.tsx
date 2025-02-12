@@ -74,6 +74,26 @@ const MetricFilterOptions = ({
                 allowClear
               />
             </Form.Item>
+            <Form.Item name="use_summary_filter" label="Summary Filter Used">
+              <Select
+                options={[
+                  { value: true, label: "True" },
+                  { value: false, label: "False" },
+                ]}
+                style={{ width: 250 }}
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item name="use_hyde" label="HyDE Expansion Enabled">
+              <Select
+                options={[
+                  { value: true, label: "True" },
+                  { value: false, label: "False" },
+                ]}
+                style={{ width: 250 }}
+                allowClear
+              />
+            </Form.Item>
           </Flex>
         </Flex>
       </Card>
