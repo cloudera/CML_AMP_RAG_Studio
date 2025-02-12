@@ -49,25 +49,28 @@ from app.services.metrics import MetricFilter, get_relevant_runs
 # mypy: disable-error-code="no-untyped-call"
 
 
-st_inference_model = lambda: st.sampled_from(
-    ["model1", "model2", "model3"],
-)
-st_rerank_model = lambda: st.sampled_from(
-    ["rerank_model1", "rerank_model2", "rerank_model3"],
-)
-make_metric_filter = lambda: st.builds(
-    MetricFilter,
-    data_source_id=st.one_of(st.none(), st.integers(min_value=1, max_value=6)),
-    inference_model=st.one_of(st.none(), st_inference_model()),
-    rerank_model=st.one_of(st.none(), st_rerank_model()),
-    has_rerank_model=...,
-    top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
-    session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
-    use_summary_filter=...,
-    use_hyde=...,
-    use_question_condensing=...,
-    exclude_knowledge_base=...,
-)
+def st_inference_model() -> st.SearchStrategy[str]:
+    return st.sampled_from(["model1", "model2", "model3"])
+
+
+def st_rerank_model() -> st.SearchStrategy[str]:
+    return st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"])
+
+
+def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
+    return st.builds(
+        MetricFilter,
+        data_source_id=st.one_of(st.none(), st.integers(min_value=1, max_value=6)),
+        inference_model=st.one_of(st.none(), st_inference_model()),
+        rerank_model=st.one_of(st.none(), st_rerank_model()),
+        has_rerank_model=...,
+        top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
+        session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
+        use_summary_filter=...,
+        use_hyde=...,
+        use_question_condensing=...,
+        exclude_knowledge_base=...,
+    )
 
 
 def make_test_run(**kwargs: Any) -> Run:
@@ -108,7 +111,7 @@ def make_test_run(**kwargs: Any) -> Run:
 
 
 @st.composite
-def make_runs(
+def st_runs(
     draw: st.DrawFn,
     min_runs: int = 0,
     max_runs: int = 500,
@@ -171,8 +174,8 @@ def make_runs(
 
 
 @given(
-    runs=make_runs(),
-    metric_filter=make_metric_filter(),
+    runs=st_runs(),
+    metric_filter=st_metric_filter(),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
