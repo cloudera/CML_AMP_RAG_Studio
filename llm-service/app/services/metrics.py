@@ -140,10 +140,11 @@ def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]
                 return False
         if metric_filter.has_rerank_model is not None:
             if metric_filter.has_rerank_model:
-                if r.data.params.get("rerank_model") is None:
+                if r.data.params.get("rerank_model_name") is None:
                     return False
             else:
-                if r.data.params.get("rerank_model") is not None:
+                if r.data.params.get("rerank_model_name") is not None:
+
                     return False
         return True
 
