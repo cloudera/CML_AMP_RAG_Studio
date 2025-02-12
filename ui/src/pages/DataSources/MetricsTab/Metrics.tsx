@@ -75,7 +75,7 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
   ];
   return (
     <Flex vertical gap={24}>
-      <Typography.Title level={4}>Knowledge base metrics</Typography.Title>
+      <Typography.Title level={4}>Inference Metrics</Typography.Title>
       <Row gutter={16}>
         <Col span={8} style={{ textAlign: "center" }}>
           <Statistic
