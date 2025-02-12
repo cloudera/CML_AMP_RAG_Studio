@@ -36,17 +36,17 @@
 #  DATA.
 #
 
-# mypy: disable-error-code="no-untyped-call"
-
 import json
 import random
-import typing
 from typing import Any
 
 from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
+
+
+# mypy: disable-error-code="no-untyped-call"
 
 
 st_inference_model = lambda: st.sampled_from(
