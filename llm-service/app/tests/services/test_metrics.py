@@ -37,6 +37,8 @@
 #
 import json
 import random
+import typing
+from typing import Any
 
 from hypothesis import strategies as st, given
 from mlflow.entities import RunInfo, Run, RunData, Param
@@ -44,7 +46,18 @@ from mlflow.entities import RunInfo, Run, RunData, Param
 from app.services.metrics import MetricFilter, get_relevant_runs
 
 
-def make_test_run(**kwargs) -> Run:
+@typing.no_type_check
+def make_test_run(**kwargs: Any) -> Run:
+    run_info: RunInfo = RunInfo(
+        run_uuid="",
+        experiment_id="",
+        user_id="",
+        status="RUNNING",
+        start_time=1234,
+        end_time=5432,
+        lifecycle_stage="hello",
+    )
+
     inference_model = kwargs.pop("inference_model")
     data_source_ids = json.dumps(kwargs.pop("data_source_ids"))
     rerank_model = kwargs.pop("rerank_model")
@@ -54,33 +67,21 @@ def make_test_run(**kwargs) -> Run:
     use_hyde = kwargs.pop("use_hyde")
     use_question_condensing = kwargs.pop("use_question_condensing")
     exclude_knowledge_base = kwargs.pop("exclude_knowledge_base")
-
-    return Run(
-        run_info=RunInfo(
-            run_uuid="",
-            experiment_id="",
-            user_id="",
-            status="RUNNING",
-            start_time=1234,
-            end_time=5432,
-            lifecycle_stage="hello",
-        ),
-        run_data=RunData(
-            params=[
-                Param(key="inference_model", value=inference_model),
-                Param(key="data_source_ids", value=data_source_ids),
-                Param(key="rerank_model_name", value=rerank_model),
-                Param(key="top_k", value=str(top_k)),
-                Param(key="session_id", value=str(session_id)),
-                Param(key="use_summary_filter", value=str(use_summary_filter)),
-                Param(key="use_hyde", value=str(use_hyde)),
-                Param(
-                    key="use_question_condensing", value=str(use_question_condensing)
-                ),
-                Param(key="exclude_knowledge_base", value=str(exclude_knowledge_base)),
-            ],
-        ),
+    run_data: RunData = RunData(
+        params=[
+            Param(key="inference_model", value=inference_model),
+            Param(key="data_source_ids", value=data_source_ids),
+            Param(key="rerank_model_name", value=rerank_model),
+            Param(key="top_k", value=str(top_k)),
+            Param(key="session_id", value=str(session_id)),
+            Param(key="use_summary_filter", value=str(use_summary_filter)),
+            Param(key="use_hyde", value=str(use_hyde)),
+            Param(key="use_question_condensing", value=str(use_question_condensing)),
+            Param(key="exclude_knowledge_base", value=str(exclude_knowledge_base)),
+        ],
     )
+
+    return Run(run_info=run_info, run_data=run_data)
 
 
 @st.composite
@@ -97,9 +98,9 @@ def make_runs(
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
     inference_models = st.sampled_from(["model1", "model2", "model3"])
-    reranking_models = st.one_of(st.none(), st.sampled_from(
-        ["rerank_model1", "rerank_model2", "rerank_model3"]
-    ))
+    reranking_models = st.one_of(
+        st.none(), st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"])
+    )
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -156,10 +157,13 @@ def make_runs(
             st.none(),
             st.integers(min_value=1, max_value=6),
         ),
-        inference_model=st.one_of(st.none(), st.sampled_from(["model1", "model2", "model3"])),
-        rerank_model=st.one_of(st.none(), st.sampled_from(
-            ["rerank_model1", "rerank_model2", "rerank_model3"]
-        )),
+        inference_model=st.one_of(
+            st.none(), st.sampled_from(["model1", "model2", "model3"])
+        ),
+        rerank_model=st.one_of(
+            st.none(),
+            st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"]),
+        ),
         top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         use_summary_filter=st.one_of(st.none(), st.booleans()),
@@ -168,7 +172,7 @@ def make_runs(
         exclude_knowledge_base=st.one_of(st.none(), st.booleans()),
     ),
 )
-def test_filter_runs(runs: list[Run], metric_filter: MetricFilter):
+def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
     if all(filtered is None for filtered in metric_filter):
         assert results == runs

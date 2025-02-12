@@ -86,7 +86,7 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
     return get_relevant_runs(metric_filter, runs)
 
 
-def get_relevant_runs(metric_filter, runs):
+def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]:
     def filter_by_parameters(r: Run) -> bool:
         data_source_ids = r.data.params.get("data_source_ids", "[]")
         # no data_source_ids means it is probably a run from indexing, rather than chat.
@@ -138,7 +138,9 @@ def get_relevant_runs(metric_filter, runs):
     )
 
 
-def generate_metrics(metric_filter: Optional[MetricFilter] = MetricFilter()) -> Metrics:
+def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
+    if metric_filter is None:
+        metric_filter = MetricFilter()
     relevant_runs = filter_runs(metric_filter)
     positive_ratings = len(
         list(filter(lambda r: r.data.metrics.get("rating", 0) > 0, relevant_runs))
