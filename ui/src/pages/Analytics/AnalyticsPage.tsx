@@ -41,6 +41,37 @@ import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
 
+function BooleanFilterOption({ name, label }: { name: string; label: string }) {
+  return (
+    <Form.Item name={name} label={label} style={{ marginTop: 8 }}>
+      <Select
+        options={[
+          { value: true, label: "True" },
+          { value: false, label: "False" },
+        ]}
+        style={{ width: 100 }}
+        allowClear
+      />
+    </Form.Item>
+  );
+}
+
+function SelectFilterOption({
+  name,
+  label,
+  options,
+}: {
+  name: string;
+  label: string;
+  options: { value: string; label: string | undefined }[];
+}) {
+  return (
+    <Form.Item name={name} label={label} style={{ marginTop: 8 }}>
+      <Select options={options} allowClear style={{ width: 250 }} />
+    </Form.Item>
+  );
+}
+
 const MetricFilterOptions = ({
   metricFilterForm,
 }: {
@@ -57,73 +88,28 @@ const MetricFilterOptions = ({
       layout="inline"
       style={{ maxWidth: "none" }}
     >
-      <Form.Item
+      <SelectFilterOption
         name="inference_model"
         label="Response synthesizer model"
-        style={{ marginTop: 8 }}
-      >
-        <Select
-          options={transformModelOptions(llmModels)}
-          allowClear
-          style={{ width: 250 }}
-        />
-      </Form.Item>
-      <Form.Item
+        options={transformModelOptions(llmModels)}
+      />
+      <SelectFilterOption
         name="rerank_model"
         label="Reranking model"
-        style={{ marginTop: 8 }}
-      >
-        <Select
-          options={[
-            ...transformModelOptions(rerankingModels),
-            { value: "none", label: "None" },
-          ]}
-          allowClear
-          style={{ width: 250 }}
-        />
-      </Form.Item>
-      <Form.Item
+        options={[
+          ...transformModelOptions(rerankingModels),
+          { value: "none", label: "None" },
+        ]}
+      />
+      <BooleanFilterOption
         name="use_summary_filter"
         label="Summary filter used"
-        style={{ marginTop: 8 }}
-      >
-        <Select
-          options={[
-            { value: true, label: "True" },
-            { value: false, label: "False" },
-          ]}
-          style={{ width: 100 }}
-          allowClear
-        />
-      </Form.Item>
-      <Form.Item
-        name="use_hyde"
-        label="HyDE expansion enabled"
-        style={{ marginTop: 8 }}
-      >
-        <Select
-          options={[
-            { value: true, label: "True" },
-            { value: false, label: "False" },
-          ]}
-          style={{ width: 100 }}
-          allowClear
-        />
-      </Form.Item>
-      <Form.Item
+      />
+      <BooleanFilterOption name="use_hyde" label="HyDE expansion enabled" />
+      <BooleanFilterOption
         name="exclude_knowledge_base"
         label="Knowledge base not used"
-        style={{ marginTop: 8 }}
-      >
-        <Select
-          options={[
-            { value: true, label: "True" },
-            { value: false, label: "False" },
-          ]}
-          style={{ width: 100 }}
-          allowClear
-        />
-      </Form.Item>
+      />
     </Form>
   );
 };
