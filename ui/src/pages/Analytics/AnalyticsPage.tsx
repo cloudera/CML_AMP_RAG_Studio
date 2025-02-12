@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 import Metrics from "pages/DataSources/MetricsTab/Metrics.tsx";
-import { Card, Flex, Form, FormInstance, Select } from "antd";
+import { Collapse, Flex, Form, FormInstance, Select } from "antd";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
@@ -51,7 +51,7 @@ const MetricFilterOptions = ({
 
   return (
     <Form autoCorrect="off" form={metricFilterForm} clearOnDestroy={true}>
-      <Card style={{ margin: 16 }} title="Filters">
+      <Collapse style={{ margin: 16 }} title="Filters">
         <Flex vertical>
           <Flex vertical gap={8}>
             <Form.Item
@@ -74,7 +74,7 @@ const MetricFilterOptions = ({
                 allowClear
               />
             </Form.Item>
-            <Form.Item name="use_summary_filter" label="Summary Filter Used">
+            <Form.Item name="use_summary_filter" label="Summary filter used">
               <Select
                 options={[
                   { value: true, label: "True" },
@@ -84,7 +84,20 @@ const MetricFilterOptions = ({
                 allowClear
               />
             </Form.Item>
-            <Form.Item name="use_hyde" label="HyDE Expansion Enabled">
+            <Form.Item name="use_hyde" label="HyDE expansion enabled">
+              <Select
+                options={[
+                  { value: true, label: "True" },
+                  { value: false, label: "False" },
+                ]}
+                style={{ width: 250 }}
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item
+              name="exclude_knowledge_base"
+              label="Knowledge base not used"
+            >
               <Select
                 options={[
                   { value: true, label: "True" },
@@ -96,7 +109,7 @@ const MetricFilterOptions = ({
             </Form.Item>
           </Flex>
         </Flex>
-      </Card>
+      </Collapse>
     </Form>
   );
 };
