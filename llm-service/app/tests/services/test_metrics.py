@@ -164,6 +164,7 @@ def make_runs(
             st.none(),
             st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"]),
         ),
+        has_rerank_model=st.one_of(st.none(), st.booleans()),
         top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         use_summary_filter=st.one_of(st.none(), st.booleans()),

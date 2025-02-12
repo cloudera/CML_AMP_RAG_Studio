@@ -40,7 +40,6 @@ import { Card, Flex, Form, FormInstance, Select } from "antd";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
-import { useEffect } from "react";
 
 const MetricFilterOptions = ({
   metricFilterForm,
@@ -81,8 +80,9 @@ const MetricFilterOptions = ({
 
 const AnalyticsPage = () => {
   const [form] = Form.useForm<MetricFilter>();
-  Form.useWatch("rerank_model", form);
-  Form.useWatch("inference_model", form);
+  Form.useWatch((values) => {
+    return values;
+  }, form);
 
   return (
     <Flex vertical align="center">

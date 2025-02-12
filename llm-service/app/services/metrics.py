@@ -71,6 +71,7 @@ class MetricFilter(BaseModel):
     data_source_id: Optional[int] = None
     inference_model: Optional[str] = None
     rerank_model: Optional[str] = None
+    has_rerank_model: Optional[bool] = None
     top_k: Optional[int] = None
     session_id: Optional[int] = None
     use_summary_filter: Optional[bool] = None
@@ -86,7 +87,9 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
         # skip the experiments from indexing jobs
         if experiment.name.startswith("datasource"):
             continue
-        experiment_runs = mlflow.search_runs(experiment_ids=[experiment.experiment_id], output_format="list")
+        experiment_runs = mlflow.search_runs(
+            experiment_ids=[experiment.experiment_id], output_format="list"
+        )
         for run in experiment_runs:
             runs.append(run)
 
