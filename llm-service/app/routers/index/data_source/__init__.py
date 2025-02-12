@@ -307,10 +307,3 @@ class DataSourceController:
         self, request: VisualizationRequest
     ) -> list[tuple[tuple[float, float], str]]:
         return self.chunks_vector_store.visualize(request.user_query)
-
-    @router.get("/metrics")
-    @exceptions.propagates
-    def metrics(self, data_source_id: int) -> Metrics:
-        return generate_metrics(MetricFilter(data_source_id=data_source_id))
-
-
