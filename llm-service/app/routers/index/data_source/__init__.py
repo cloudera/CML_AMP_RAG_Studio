@@ -37,7 +37,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
-from mlflow.entities import Experiment, Run
+from mlflow.entities import Experiment
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -49,7 +49,6 @@ from ....ai.vector_stores.vector_store import VectorStore
 from ....services import document_storage, models
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
-from ....services.metrics import generate_metrics, MetricFilter, Metrics
 
 logger = logging.getLogger(__name__)
 
