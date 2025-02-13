@@ -150,6 +150,8 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                     assert run.data.params.get("rerank_model_name") is not None
                 else:
                     assert run.data.params.get("rerank_model_name") is None
+            elif key == "data_source_id":
+                assert run.data.params["data_source_ids"] == str(filter_value)
             elif key in {"top_k"}:
                 assert run.data.metrics[key] == str(filter_value)
             else:
