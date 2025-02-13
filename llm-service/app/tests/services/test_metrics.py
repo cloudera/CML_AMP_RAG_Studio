@@ -39,7 +39,8 @@ import functools
 import random
 from typing import Any
 
-from hypothesis import strategies as st, given
+from hypothesis import given, example
+from hypothesis import strategies as st
 from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
@@ -135,7 +136,14 @@ def st_runs(
     return generated_runs
 
 
-@given(runs=st_runs(), metric_filter=st_metric_filter())
+@given(
+    runs=st_runs(),
+    metric_filter=st_metric_filter(),
+)
+@example(
+    runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(data_source_id=1),
+)
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
@@ -151,7 +159,7 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                 else:
                     assert run.data.params.get("rerank_model_name") is None
             elif key == "data_source_id":
-                assert run.data.params["data_source_ids"] == str(filter_value)
+                assert run.data.params["data_source_ids"] == str([filter_value])
             elif key in {"top_k"}:
                 assert run.data.metrics[key] == str(filter_value)
             else:
