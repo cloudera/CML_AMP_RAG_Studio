@@ -79,7 +79,6 @@ class MetricFilter(BaseModel):
     use_hyde: Optional[bool] = None
     use_question_condensing: Optional[bool] = None
     exclude_knowledge_base: Optional[bool] = None
-    include_direct_llm_queries: Optional[bool] = None
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
