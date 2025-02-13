@@ -230,8 +230,8 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
         input_word_count_over_time=input_word_count_over_time,
         output_word_count_over_time=output_word_count_over_time,
         evaluation_averages={
-            "faithfulness": faithfulness_total / len(relevant_runs),
-            "relevance": relevance_total / len(relevant_runs),
+            "faithfulness": faithfulness_total / len(relevant_runs) if len(relevant_runs) else 0,
+            "relevance": relevance_total / len(relevant_runs) if len(relevant_runs) else 0,
         },
     )
 
