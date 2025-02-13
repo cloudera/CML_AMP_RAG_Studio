@@ -37,10 +37,11 @@
 #
 import functools
 import random
-from typing import Any
+from typing import Any, TypeVar, Optional
 
 from hypothesis import given, example
 from hypothesis import strategies as st
+from hypothesis.strategies import SearchStrategy
 from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
@@ -55,6 +56,34 @@ def st_inference_model() -> st.SearchStrategy[str]:
 
 def st_rerank_model() -> st.SearchStrategy[str]:
     return st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"])
+
+
+T = TypeVar("T")
+
+
+def st_filter_value(
+    strategy: st.SearchStrategy[T],
+    additional_value: Optional[T] = None,
+) -> st.SearchStrategy[T | None]:
+    """
+    Returns either ``None``, a value from `strategy`, or `additional_value`.
+
+    The idea is that if `strategy` returns possible values for ``Run``s, then this strategy returns values for
+    ``MetricFilter``:
+
+    * ``None``, expecting that the filter should not be applied.
+    * A value from `strategy`, expecting that the filter should find ``Run``s with that value.
+    * `additional_value`, expecting that the filter should not find any ``Run``s.
+
+    """
+    strategies: list[st.SearchStrategy[T | None]] = [st.none()]
+    if additional_value is not None:
+        # additional_value goes second rather than last
+        # so that Hypothesis shrinks towards it when searching for failure cases
+        strategies.append(st.just(additional_value))
+    strategies.append(strategy)
+
+    return st.one_of(*strategies)
 
 
 def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
