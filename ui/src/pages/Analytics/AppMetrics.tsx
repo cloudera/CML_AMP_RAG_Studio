@@ -35,14 +35,34 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Divider, Flex, Typography } from "antd";
+import { Col, Flex, Row, Statistic } from "antd";
 
 const AppMetrics = () => {
   return (
     <Flex vertical>
-      <Typography.Title level={3}>App Metrics</Typography.Title>
-
-      <Divider />
+      <Row gutter={16}>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Total Knowledge Bases"
+            // loading={isLoading}
+            value={10}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Total Documents Indexed"
+            // loading={isLoading}
+            value={100}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Total Sessions"
+            // loading={isLoading}
+            value={65}
+          />
+        </Col>
+      </Row>
     </Flex>
   );
 };
