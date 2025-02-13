@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.rag.metrics;
 
+import com.cloudera.cai.rag.Types;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,4 +46,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 @RequestMapping("/api/v1/rag/metrics")
-public class MetricsController {}
+public class MetricsController {
+  private final MetricsService metricsService;
+
+  public MetricsController(MetricsService metricsService) {
+    this.metricsService = metricsService;
+  }
+
+  public Types.MetadataMetrics getMetrics() {
+    return metricsService.getMetrics();
+  }
+}

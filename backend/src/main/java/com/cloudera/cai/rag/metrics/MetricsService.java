@@ -38,43 +38,16 @@
 
 package com.cloudera.cai.rag.metrics;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
-import com.cloudera.cai.rag.files.RagFileRepository;
-import com.cloudera.cai.rag.sessions.SessionRepository;
-import org.junit.jupiter.api.Test;
+import org.springframework.stereotype.Component;
 
-class MetricsControllerTest {
-  @Test
-  void metrics() {
-    var seshRepo = SessionRepository.createNull();
-    seshRepo.create(TestData.createTestSessionInstance("test-session-1"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-2"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-3"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-4"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-5"));
+@Component
+public class MetricsService {
+  public static MetricsService createNull() {
+    return new MetricsService();
+  }
 
-    var dataSourceRepo = RagDataSourceRepository.createNull();
-    var id1 = TestData.createTestDataSource(dataSourceRepo);
-    var id2 = TestData.createTestDataSource(dataSourceRepo);
-    var id3 = TestData.createTestDataSource(dataSourceRepo);
-    TestData.createTestDataSource(dataSourceRepo);
-    TestData.createTestDataSource(dataSourceRepo);
-
-    RagFileRepository ragFileRepo = RagFileRepository.createNull();
-    TestData.createTestDocument(id1, "doc-1", ragFileRepo);
-    TestData.createTestDocument(id2, "doc-2", ragFileRepo);
-    TestData.createTestDocument(id3, "doc-3", ragFileRepo);
-
-    var metricsController = new MetricsController(MetricsService.createNull());
-    Types.MetadataMetrics metrics = metricsController.getMetrics();
-
-    assertThat(metrics.numberOfDocuments()).isGreaterThanOrEqualTo(3);
-    assertThat(metrics.numberOfSessions()).isGreaterThanOrEqualTo(5);
-    assertThat(metrics.numberOfKnowledgeBases()).isGreaterThanOrEqualTo(3);
+  public Types.MetadataMetrics getMetrics() {
+    return null;
   }
 }
