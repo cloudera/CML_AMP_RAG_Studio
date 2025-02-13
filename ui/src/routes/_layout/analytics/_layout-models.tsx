@@ -35,45 +35,32 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useQuery } from "@tanstack/react-query";
-import { llmServicePath, postRequest, QueryKeys } from "src/api/utils.ts";
 
-export interface MetricFilter {
-  data_source_id?: number;
-  inference_model?: string;
-  rerank_model?: string;
-  has_rerank_model?: boolean;
-  top_k?: number;
-  session_id?: number;
-  use_summary_filter?: boolean;
-  use_hyde?: boolean;
-  use_question_condensing?: boolean;
-  exclude_knowledge_base?: boolean;
-}
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Flex, Layout, Typography } from "antd";
+import { cdlGray300 } from "src/cuix/variables.ts";
 
-export interface AppMetrics {
-  positive_ratings: number;
-  negative_ratings: number;
-  no_ratings: number;
-  count_of_interactions: number;
-  count_of_direct_interactions: number;
-  aggregated_feedback: Record<string, number>;
-  unique_users: number;
-  max_score_over_time: [number, number][];
-  input_word_count_over_time: [number, number][];
-  output_word_count_over_time: [number, number][];
-  evaluation_averages: Record<string, number>;
-}
+const { Content, Header } = Layout;
 
-export const useGetMetricsByDataSource = (metricFilter: MetricFilter) => {
-  return useQuery({
-    queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
-    queryFn: () => getMetricsByDataSourceQuery(metricFilter),
-  });
-};
-
-const getMetricsByDataSourceQuery = async (
-  metricFilter: MetricFilter,
-): Promise<AppMetrics> => {
-  return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);
-};
+export const Route = createFileRoute("/_layout/analytics/_layout-models")({
+  component: () => (
+    <Layout
+      style={{
+        minHeight: "100%",
+        width: "100%",
+        margin: 0,
+      }}
+    >
+      <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
+        <Flex align="center" style={{ height: "100%" }}>
+          <Typography.Title level={4} style={{ margin: 0 }}>
+            Analytics
+          </Typography.Title>
+        </Flex>
+      </Header>
+      <Content style={{ margin: "0", overflowY: "auto" }}>
+        <Outlet />
+      </Content>
+    </Layout>
+  ),
+});

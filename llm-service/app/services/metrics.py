@@ -65,12 +65,14 @@ class Metrics(BaseModel):
     max_score_over_time: list[tuple[float, float]]
     input_word_count_over_time: list[tuple[float, int]]
     output_word_count_over_time: list[tuple[float, int]]
+    evaluation_averages: dict[str, float]
 
 
 class MetricFilter(BaseModel):
     data_source_id: Optional[int] = None
     inference_model: Optional[str] = None
     rerank_model: Optional[str] = None
+    has_rerank_model: Optional[bool] = None
     top_k: Optional[int] = None
     session_id: Optional[int] = None
     use_summary_filter: Optional[bool] = None
@@ -80,10 +82,18 @@ class MetricFilter(BaseModel):
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
-    runs: list[Run] = mlflow.search_runs(
-        output_format="list", search_all_experiments=True
-    )
-    print(f"{len(runs)=}")
+    experiments = mlflow.search_experiments()
+    runs: list[Run] = []
+    for experiment in experiments:
+        # skip the experiments from indexing jobs
+        if experiment.name.startswith("datasource"):
+            continue
+        experiment_runs = mlflow.search_runs(
+            experiment_ids=[experiment.experiment_id], output_format="list"
+        )
+        for run in experiment_runs:
+            runs.append(run)
+
     return get_relevant_runs(metric_filter, runs)
 
 
@@ -129,6 +139,13 @@ def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]
                 "exclude_knowledge_base"
             ):
                 return False
+        if metric_filter.has_rerank_model is not None:
+            if metric_filter.has_rerank_model:
+                if r.data.params.get("rerank_model_name") is None:
+                    return False
+            else:
+                if r.data.params.get("rerank_model_name") is not None:
+                    return False
         return True
 
     return list(
@@ -143,7 +160,6 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
     if metric_filter is None:
         metric_filter = MetricFilter()
     relevant_runs = filter_runs(metric_filter)
-    print(f"{len(relevant_runs)=}")
     positive_ratings = len(
         list(filter(lambda r: r.data.metrics.get("rating", 0) > 0, relevant_runs))
     )
@@ -163,11 +179,25 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
     max_score_over_time: list[tuple[float, float]] = []
     input_word_count_over_time: list[tuple[float, int]] = []
     output_word_count_over_time: list[tuple[float, int]] = []
+    faithfulness_total = 0
+    relevance_total = 0
     for run in relevant_runs:
         base_artifact_uri: str = run.info.artifact_uri
         artifacts: list[FileInfo] = mlflow.artifacts.list_artifacts(base_artifact_uri)
         if run.data.tags.get("direct_llm") == "True":
             count_of_direct_interactions += 1
+
+        max_score_over_time.append(
+            (run.info.start_time, run.data.metrics.get("max_score", 0))
+        )
+        input_word_count_over_time.append(
+            (run.info.start_time, run.data.metrics.get("input_word_count", 0))
+        )
+        output_word_count_over_time.append(
+            (run.info.start_time, run.data.metrics.get("output_word_count", 0))
+        )
+        faithfulness_total += run.data.metrics.get("faithfulness", 0)
+        relevance_total += run.data.metrics.get("relevance", 0)
 
         artifact: FileInfo
         for artifact in artifacts:
@@ -181,15 +211,7 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
                 df = load_dataframe_from_artifact(base_artifact_uri, name)
                 if "feedback" in df.columns:
                     feedback_entries.extend(df["feedback"].to_list())
-            max_score_over_time.append(
-                (run.info.start_time, run.data.metrics.get("max_score", 0))
-            )
-            input_word_count_over_time.append(
-                (run.info.start_time, run.data.metrics.get("input_word_count", 0))
-            )
-            output_word_count_over_time.append(
-                (run.info.start_time, run.data.metrics.get("output_word_count", 0))
-            )
+
     cleaned_feedback = list(
         map(
             lambda feedback: feedback if feedback in STANDARD_FEEDBACK else "Other",
@@ -207,6 +229,10 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
         max_score_over_time=max_score_over_time,
         input_word_count_over_time=input_word_count_over_time,
         output_word_count_over_time=output_word_count_over_time,
+        evaluation_averages={
+            "faithfulness": faithfulness_total / len(relevant_runs) if len(relevant_runs) else 0,
+            "relevance": relevance_total / len(relevant_runs) if len(relevant_runs) else 0,
+        },
     )
 
 

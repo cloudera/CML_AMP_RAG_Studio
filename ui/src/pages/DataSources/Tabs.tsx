@@ -43,7 +43,7 @@ import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/Da
 import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import Metrics from "pages/DataSources/MetricsTab/Metrics.tsx";
+import MetricsTab from "pages/DataSources/MetricsTab/MetricsTab.tsx";
 
 export const tabItems: TabsProps["items"] = [
   {
@@ -64,7 +64,7 @@ export const tabItems: TabsProps["items"] = [
   {
     key: "metrics",
     label: "Metrics",
-    children: <Metrics />,
+    children: <MetricsTab />,
   },
   {
     key: "visualize",

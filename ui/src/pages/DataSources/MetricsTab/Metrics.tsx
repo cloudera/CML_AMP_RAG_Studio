@@ -35,14 +35,12 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useContext } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import { Col, Flex, Row, Statistic, Typography } from "antd";
 import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { axisClasses } from "@mui/x-charts";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { useGetMetricsByDataSource } from "src/api/metricsApi.ts";
+import { MetricFilter, useGetMetricsByDataSource } from "src/api/metricsApi.ts";
 
 const labels = [
   "Inaccurate",
@@ -53,18 +51,16 @@ const labels = [
   "Other",
 ];
 
-const Metrics = () => {
-  const { dataSourceId } = useContext(DataSourceContext);
-  const { data, isLoading } = useGetMetricsByDataSource({
-    data_source_id: Number(dataSourceId),
-  });
+const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
+  const { data, isLoading } = useGetMetricsByDataSource(metricFilter);
 
   const maxScoreData =
     data?.max_score_over_time
-      .map((entry) => {
+      .map((entry, index) => {
         return {
-          x: entry[0],
-          y: entry[1],
+          timestamp: entry[0],
+          maxScore: entry[1],
+          key: index,
         };
       })
       .reverse() ?? [];
@@ -76,9 +72,17 @@ const Metrics = () => {
       }),
     },
   ];
+  const yValues = data?.max_score_over_time.map((value) => value[1]);
+  const yAxisMinValue = yValues ? Math.min(...yValues, 0) : 0;
+  const xAxisMinValue = yValues ? Math.max(...yValues, 1) : 1;
+  const interval = (xAxisMinValue - yAxisMinValue) / 5.0;
+  const ticks: number[] = [];
+  for (let i = 0; i <= xAxisMinValue; i += interval) {
+    ticks.push(i);
+  }
   return (
     <Flex vertical gap={24}>
-      <Typography.Title level={4}>Knowledge base metrics</Typography.Title>
+      <Typography.Title level={4}>Inference Metrics</Typography.Title>
       <Row gutter={16}>
         <Col span={8} style={{ textAlign: "center" }}>
           <Statistic
@@ -128,13 +132,10 @@ const Metrics = () => {
           />
         </Col>
       </Row>
-      <Typography.Title level={4}>
-        Aggregated feedback categories
-      </Typography.Title>
       <Col span={16}>
         <Row>
           <BarChart
-            margin={{ top: 0, bottom: 50, left: 50, right: 0 }}
+            margin={{ top: 0, bottom: 50, left: 10, right: 0 }}
             height={250}
             width={500}
             series={barchartData}
@@ -153,8 +154,24 @@ const Metrics = () => {
         </Row>
       </Col>
       <Typography.Title level={4}>
-        Max score of chunk over time
+        Auto evaluation metric averages
       </Typography.Title>
+      <Row gutter={16}>
+        {data?.evaluation_averages
+          ? Object.entries(data.evaluation_averages).map(([key, value]) => {
+              return (
+                <Col span={8} style={{ textAlign: "center" }}>
+                  <Statistic
+                    title={key}
+                    loading={isLoading}
+                    value={value.toFixed(2)}
+                  />
+                </Col>
+              );
+            })
+          : null}
+      </Row>
+      <Typography.Title level={4}>Chunk relevance over time</Typography.Title>
       <Col span={16}>
         <Row>
           <ScatterChart
@@ -163,7 +180,7 @@ const Metrics = () => {
               {
                 label: "Time of interaction",
                 id: "time",
-                dataKey: "x",
+                dataKey: "timestamp",
                 scaleType: "time",
                 tickLabelStyle: {
                   angle: 45,
@@ -176,9 +193,9 @@ const Metrics = () => {
             ]}
             yAxis={[
               {
-                min: 0,
-                max: 1,
-                tickInterval: [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                min: yAxisMinValue,
+                max: xAxisMinValue,
+                tickInterval: ticks,
                 label: "Max Score",
               },
             ]}
@@ -190,9 +207,9 @@ const Metrics = () => {
             series={[
               {
                 datasetKeys: {
-                  id: "y",
-                  x: "x",
-                  y: "y",
+                  id: "key",
+                  x: "timestamp",
+                  y: "maxScore",
                 },
                 valueFormatter: (value) => value.y.toString(),
               },
