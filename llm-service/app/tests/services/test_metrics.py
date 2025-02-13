@@ -41,7 +41,7 @@ from typing import Any, TypeVar, Optional
 
 from hypothesis import given, example
 from hypothesis import strategies as st
-from mlflow.entities import RunInfo, Run, RunData, Param, Metric
+from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
 
@@ -59,7 +59,7 @@ class RunDataStrategies:
 
     data_source_id = lambda: st.integers(min_value=1, max_value=3)
     inference_model = lambda: st.sampled_from(
-        ["infernce_model_1", "infernce_model_2", "infernce_model_3"],
+        ["inference_model_1", "inference_model_2", "inference_model_3"],
     )
     rerank_model = lambda: st.one_of(
         st.none(),
@@ -145,7 +145,6 @@ def make_test_run(**kwargs: Any) -> Run:
         lifecycle_stage="hello",
     )
     run_data: RunData = RunData(
-        # TODO: `top_k` should be a metric rather than a param; this test should be failing 🤔
         params=[Param(key=key, value=str(value)) for key, value in kwargs.items()],
     )
     return Run(run_info=run_info, run_data=run_data)
@@ -203,14 +202,19 @@ def st_runs(
     metric_filter=st_metric_filter(),
 )
 @example(
-    runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
-    metric_filter=MetricFilter(data_source_id=1),
+    runs=[make_test_run(top_k=i) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(top_k=1),
 )
+# @example(
+#     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
+#     metric_filter=MetricFilter(data_source_id=1),
+# )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
         assert results == runs
         return
+    raise ValueError(results)
     for run in results:
         for key, filter_value in metric_filter:
             if filter_value is None:
@@ -222,7 +226,5 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                     assert run.data.params.get("rerank_model_name") is None
             elif key == "data_source_id":
                 assert run.data.params["data_source_ids"] == str([filter_value])
-            elif key in {"top_k"}:
-                assert run.data.metrics[key] == str(filter_value)
             else:
                 assert run.data.params[key] == str(filter_value)
