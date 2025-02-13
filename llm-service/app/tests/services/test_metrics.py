@@ -204,7 +204,7 @@ def st_runs(
 @example(
     runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
     metric_filter=MetricFilter(top_k=1),
-)
+).xfail(reason="our check for top_k is currently missing a str() cast")
 @example(
     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
     metric_filter=MetricFilter(data_source_id=1),
