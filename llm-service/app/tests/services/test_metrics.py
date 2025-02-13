@@ -202,19 +202,18 @@ def st_runs(
     metric_filter=st_metric_filter(),
 )
 @example(
-    runs=[make_test_run(top_k=i) for i in [1, 2, 3]],
+    runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
     metric_filter=MetricFilter(top_k=1),
 )
-# @example(
-#     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
-#     metric_filter=MetricFilter(data_source_id=1),
-# )
+@example(
+    runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(data_source_id=1),
+)
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
         assert results == runs
         return
-    raise ValueError(results)
     for run in results:
         for key, filter_value in metric_filter:
             if filter_value is None:
