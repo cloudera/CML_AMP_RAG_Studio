@@ -52,9 +52,9 @@ export interface MetricFilter {
 }
 
 export interface MetadataMetrics {
-  count_of_data_sources: number;
-  count_of_sessions: number;
-  count_of_documents: number;
+  number_of_data_sources: number;
+  number_of_sessions: number;
+  number_of_documents: number;
 }
 
 export interface AppMetrics {
@@ -69,17 +69,17 @@ export interface AppMetrics {
   input_word_count_over_time: [number, number][];
   output_word_count_over_time: [number, number][];
   evaluation_averages: Record<string, number>;
-  app_metrics: MetadataMetrics;
+  metadata_metrics: MetadataMetrics;
 }
 
-export const useGetMetricsByDataSource = (metricFilter: MetricFilter) => {
+export const useGetMetrics = (metricFilter: MetricFilter) => {
   return useQuery({
     queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
-    queryFn: () => getMetricsByDataSourceQuery(metricFilter),
+    queryFn: () => getMetricsQuery(metricFilter),
   });
 };
 
-const getMetricsByDataSourceQuery = async (
+const getMetricsQuery = async (
   metricFilter: MetricFilter,
 ): Promise<AppMetrics> => {
   return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);

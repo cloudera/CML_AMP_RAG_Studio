@@ -36,30 +36,33 @@
  * DATA.
  ******************************************************************************/
 import { Col, Flex, Row, Statistic } from "antd";
+import { useGetMetrics } from "src/api/metricsApi.ts";
 
 const AppMetrics = () => {
+  const { data, isLoading } = useGetMetrics({});
+
   return (
     <Flex vertical>
       <Row gutter={16}>
         <Col span={8} style={{ textAlign: "center" }}>
           <Statistic
             title="Total Knowledge Bases"
-            // loading={isLoading}
-            value={10}
+            loading={isLoading}
+            value={data?.metadata_metrics.number_of_data_sources}
           />
         </Col>
         <Col span={8} style={{ textAlign: "center" }}>
           <Statistic
             title="Total Documents Indexed"
-            // loading={isLoading}
-            value={100}
+            loading={isLoading}
+            value={data?.metadata_metrics.number_of_documents}
           />
         </Col>
         <Col span={8} style={{ textAlign: "center" }}>
           <Statistic
             title="Total Sessions"
-            // loading={isLoading}
-            value={65}
+            loading={isLoading}
+            value={data?.metadata_metrics.number_of_sessions}
           />
         </Col>
       </Row>

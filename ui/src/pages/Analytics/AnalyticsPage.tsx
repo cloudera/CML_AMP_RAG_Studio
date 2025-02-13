@@ -48,7 +48,7 @@ import {
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
-import AppMetrics from "pages/Analytics/AppMetrics.tsx";
+import MetadataMetrics from "pages/Analytics/AppMetrics.tsx";
 
 const BooleanFilterOption = ({
   name,
@@ -147,7 +147,7 @@ const AnalyticsPage = () => {
     <Flex vertical align="center">
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
         <Typography.Title level={3}>App Metrics</Typography.Title>
-        <AppMetrics />
+        <MetadataMetrics />
         <Divider style={{ margin: 0 }} />
         <Typography.Title level={3} style={{ marginTop: 12 }}>
           Session Metrics

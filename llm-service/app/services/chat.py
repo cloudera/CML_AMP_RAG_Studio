@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import asyncio
 import re
 import time
 import uuid
@@ -55,7 +56,7 @@ from .chat_store import (
     RagStudioChatMessage,
     RagMessage,
 )
-from .metadata_apis import session_metadata_api
+from .metadata_apis import session_metadata_api, data_sources_metadata_api
 from .metadata_apis.session_metadata_api import Session
 from .query import querier
 from .query.query_configuration import QueryConfiguration
@@ -100,7 +101,7 @@ def _run_chat(
     query_configuration: QueryConfiguration,
     user_name: str,
 ) -> RagStudioChatMessage:
-    log_ml_flow_params(session, query_configuration, user_name)
+    asyncio.run(log_ml_flow_params(session, query_configuration, user_name))
     mlflow.set_tag("response_id", response_id)
 
     if len(session.data_source_ids) != 1:
@@ -187,9 +188,10 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
     )
 
 
-def log_ml_flow_params(
+async def log_ml_flow_params(
     session: Session, query_configuration: QueryConfiguration, user_name: str
 ) -> None:
+    data_source_metadata = data_sources_metadata_api.get_metadata(session.data_source_ids[0])
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,
@@ -202,6 +204,10 @@ def log_ml_flow_params(
             "session_id": session.id,
             "data_source_ids": session.data_source_ids,
             "user_name": user_name,
+            "embedding_model": data_source_metadata.embedding_model,
+            "chunk_size": data_source_metadata.chunk_size,
+            "summarization_model": data_source_metadata.summarization_model,
+            "chunk_overlap_percent": data_source_metadata.chunk_overlap_percent,
         }
     )
 

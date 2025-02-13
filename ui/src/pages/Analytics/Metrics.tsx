@@ -40,7 +40,7 @@ import { DislikeOutlined, LikeOutlined } from "@ant-design/icons";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { axisClasses } from "@mui/x-charts";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
-import { MetricFilter, useGetMetricsByDataSource } from "src/api/metricsApi.ts";
+import { MetricFilter, useGetMetrics } from "src/api/metricsApi.ts";
 
 const labels = [
   "Inaccurate",
@@ -52,7 +52,7 @@ const labels = [
 ];
 
 const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
-  const { data, isLoading } = useGetMetricsByDataSource(metricFilter);
+  const { data, isLoading } = useGetMetrics(metricFilter);
 
   const maxScoreData =
     data?.max_score_over_time

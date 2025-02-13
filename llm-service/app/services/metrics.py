@@ -46,7 +46,7 @@ from mlflow.entities import Run, FileInfo
 from pydantic import BaseModel
 
 from app.services.metadata_apis import app_metrics_api
-from app.services.metadata_apis.app_metrics_api import AppMetrics
+from app.services.metadata_apis.app_metrics_api import MetadataMetrics
 
 STANDARD_FEEDBACK = [
     "Inaccurate",
@@ -69,7 +69,7 @@ class Metrics(BaseModel):
     input_word_count_over_time: list[tuple[float, int]]
     output_word_count_over_time: list[tuple[float, int]]
     evaluation_averages: dict[str, float]
-    app_metrics: AppMetrics
+    metadata_metrics: MetadataMetrics
 
 
 class MetricFilter(BaseModel):
@@ -164,7 +164,7 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
     if metric_filter is None:
         metric_filter = MetricFilter()
 
-    app_metrics = app_metrics_api.get_app_metrics()
+    metadata_metrics = app_metrics_api.get_metadata_metrics()
 
     relevant_runs = filter_runs(metric_filter)
     positive_ratings = len(
@@ -253,7 +253,7 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
             "faithfulness": faithfulness,
             "relevance": relevance,
         },
-        app_metrics=app_metrics,
+        metadata_metrics=metadata_metrics,
     )
 
 

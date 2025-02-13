@@ -44,17 +44,17 @@ BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 metrics_url = BACKEND_BASE_URL + "/api/v1/rag/metrics"
 
 
-class AppMetrics(BaseModel):
+class MetadataMetrics(BaseModel):
     number_of_data_sources: int
     number_of_documents: int
     number_of_sessions: int
 
 
-def get_app_metrics() -> AppMetrics:
+def get_metadata_metrics() -> MetadataMetrics:
     response = requests.get(metrics_url)
     response.raise_for_status()
     data = response.json()
-    return AppMetrics(
+    return MetadataMetrics(
         number_of_data_sources=data["numberOfDataSources"],
         number_of_documents=data["numberOfDocuments"],
         number_of_sessions=data["numberOfSessions"],
