@@ -41,7 +41,6 @@ from typing import Any, TypeVar, Optional
 
 from hypothesis import given, example
 from hypothesis import strategies as st
-from hypothesis.strategies import SearchStrategy
 from mlflow.entities import RunInfo, Run, RunData, Param
 
 from app.services.metrics import MetricFilter, get_relevant_runs
@@ -50,12 +49,20 @@ from app.services.metrics import MetricFilter, get_relevant_runs
 # mypy: disable-error-code="no-untyped-call"
 
 
-def st_inference_model() -> st.SearchStrategy[str]:
-    return st.sampled_from(["model1", "model2", "model3"])
+class RunDataStrategies:
+    top_k = lambda: st.integers(min_value=1, max_value=3)
+    session_id = lambda: st.integers(min_value=1, max_value=3)
+    use_summary_filter = lambda: st.booleans()
+    use_hyde = lambda: st.booleans()
+    use_question_condensing = lambda: st.booleans()
+    exclude_knowledge_base = lambda: st.booleans()
 
-
-def st_rerank_model() -> st.SearchStrategy[str]:
-    return st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"])
+    data_source_id = lambda: st.integers(min_value=1, max_value=3)
+    inference_model = lambda: st.sampled_from(["model1", "model2", "model3"])
+    rerank_model = lambda: st.one_of(
+        st.none(),
+        st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"]),
+    )
 
 
 T = TypeVar("T")
@@ -90,8 +97,8 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
     return st.builds(
         MetricFilter,
         data_source_id=st.one_of(st.none(), st.integers(min_value=1, max_value=6)),
-        inference_model=st.one_of(st.none(), st_inference_model()),
-        rerank_model=st.one_of(st.none(), st_rerank_model()),
+        inference_model=st.one_of(st.none(), RunDataStrategies.inference_model()),
+        rerank_model=st.one_of(st.none(), RunDataStrategies.rerank_model()),
         has_rerank_model=...,
         top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
         session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
@@ -113,6 +120,7 @@ def make_test_run(**kwargs: Any) -> Run:
         lifecycle_stage="hello",
     )
     run_data: RunData = RunData(
+        # TODO: `top_k` should be a metric rather than a param; this test should be failing 🤔
         params=[Param(key=key, value=str(value)) for key, value in kwargs.items()],
     )
     return Run(run_info=run_info, run_data=run_data)
@@ -157,8 +165,8 @@ def st_runs(
         generated_runs.append(
             really_make_test_run(
                 data_source_ids=[data_source_id],
-                inference_model=draw(st_inference_model()),
-                rerank_model=draw(st.one_of(st.none(), st_rerank_model())),
+                inference_model=draw(RunDataStrategies.inference_model()),
+                rerank_model=draw(RunDataStrategies.rerank_model()),
             )
         )
     random.shuffle(generated_runs)
