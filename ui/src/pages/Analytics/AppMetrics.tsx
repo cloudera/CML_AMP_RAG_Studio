@@ -35,14 +35,39 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useContext } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-import Metrics from "pages/Analytics/Metrics.tsx";
+import { Col, Flex, Row, Statistic } from "antd";
+import { useGetMetrics } from "src/api/metricsApi.ts";
 
-const MetricsTab = () => {
-  const { dataSourceId } = useContext(DataSourceContext);
+const AppMetrics = () => {
+  const { data, isLoading } = useGetMetrics({});
 
-  return <Metrics metricFilter={{ data_source_id: Number(dataSourceId) }} />;
+  return (
+    <Flex vertical>
+      <Row gutter={16}>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Total Knowledge Bases"
+            loading={isLoading}
+            value={data?.metadata_metrics.number_of_data_sources}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Total Documents Indexed"
+            loading={isLoading}
+            value={data?.metadata_metrics.number_of_documents}
+          />
+        </Col>
+        <Col span={8} style={{ textAlign: "center" }}>
+          <Statistic
+            title="Total Sessions"
+            loading={isLoading}
+            value={data?.metadata_metrics.number_of_sessions}
+          />
+        </Col>
+      </Row>
+    </Flex>
+  );
 };
 
-export default MetricsTab;
+export default AppMetrics;

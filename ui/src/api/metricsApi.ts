@@ -51,6 +51,12 @@ export interface MetricFilter {
   exclude_knowledge_base?: boolean;
 }
 
+export interface MetadataMetrics {
+  number_of_data_sources: number;
+  number_of_sessions: number;
+  number_of_documents: number;
+}
+
 export interface AppMetrics {
   positive_ratings: number;
   negative_ratings: number;
@@ -63,16 +69,17 @@ export interface AppMetrics {
   input_word_count_over_time: [number, number][];
   output_word_count_over_time: [number, number][];
   evaluation_averages: Record<string, number>;
+  metadata_metrics: MetadataMetrics;
 }
 
-export const useGetMetricsByDataSource = (metricFilter: MetricFilter) => {
+export const useGetMetrics = (metricFilter: MetricFilter) => {
   return useQuery({
     queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
-    queryFn: () => getMetricsByDataSourceQuery(metricFilter),
+    queryFn: () => getMetricsQuery(metricFilter),
   });
 };
 
-const getMetricsByDataSourceQuery = async (
+const getMetricsQuery = async (
   metricFilter: MetricFilter,
 ): Promise<AppMetrics> => {
   return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);

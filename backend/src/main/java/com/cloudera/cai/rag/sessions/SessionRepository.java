@@ -186,10 +186,6 @@ public class SessionRepository {
         });
   }
 
-  public static SessionRepository createNull() {
-    return new SessionRepository(JdbiConfiguration.createNull());
-  }
-
   public void delete(Long id) {
     jdbi.useHandle(
         handle -> handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE ID = ?", true, id));
@@ -221,5 +217,18 @@ public class SessionRepository {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public int getNumberOfSessions() {
+    return jdbi.withHandle(
+        handle -> {
+          try (var query = handle.createQuery("SELECT count(*) FROM CHAT_SESSION")) {
+            return query.mapTo(Integer.class).one();
+          }
+        });
+  }
+
+  public static SessionRepository createNull() {
+    return new SessionRepository(JdbiConfiguration.createNull());
   }
 }

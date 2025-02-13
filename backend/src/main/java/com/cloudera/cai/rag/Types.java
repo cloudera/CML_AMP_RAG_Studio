@@ -146,4 +146,7 @@ public class Types {
       String rerankModel,
       Integer responseChunks,
       QueryConfiguration queryConfiguration) {}
+
+  public record MetadataMetrics(
+      int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}
 }

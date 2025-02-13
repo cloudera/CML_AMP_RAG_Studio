@@ -45,6 +45,9 @@ import pandas as pd
 from mlflow.entities import Run, FileInfo
 from pydantic import BaseModel
 
+from app.services.metadata_apis import app_metrics_api
+from app.services.metadata_apis.app_metrics_api import MetadataMetrics
+
 STANDARD_FEEDBACK = [
     "Inaccurate",
     "Not helpful",
@@ -66,6 +69,7 @@ class Metrics(BaseModel):
     input_word_count_over_time: list[tuple[float, int]]
     output_word_count_over_time: list[tuple[float, int]]
     evaluation_averages: dict[str, float]
+    metadata_metrics: MetadataMetrics
 
 
 class MetricFilter(BaseModel):
@@ -159,6 +163,9 @@ def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]
 def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
     if metric_filter is None:
         metric_filter = MetricFilter()
+
+    metadata_metrics = app_metrics_api.get_metadata_metrics()
+
     relevant_runs = filter_runs(metric_filter)
     positive_ratings = len(
         list(filter(lambda r: r.data.metrics.get("rating", 0) > 0, relevant_runs))
@@ -218,11 +225,24 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
             feedback_entries,
         )
     )
+    count_of_interactions = len(relevant_runs) if len(relevant_runs) else 0
+    count_of_rag_interactions = count_of_interactions - count_of_direct_interactions
+    faithfulness = (
+        (faithfulness_total / count_of_rag_interactions)
+        if count_of_rag_interactions
+        else 0
+    )
+    relevance = (
+        (relevance_total / count_of_rag_interactions)
+        if count_of_rag_interactions
+        else 0
+    )
+
     return Metrics(
         positive_ratings=positive_ratings,
         negative_ratings=negative_ratings,
         no_ratings=no_ratings,
-        count_of_interactions=len(relevant_runs),
+        count_of_interactions=count_of_interactions,
         count_of_direct_interactions=count_of_direct_interactions,
         aggregated_feedback=(dict(Counter(cleaned_feedback))),
         unique_users=unique_users,
@@ -230,9 +250,10 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
         input_word_count_over_time=input_word_count_over_time,
         output_word_count_over_time=output_word_count_over_time,
         evaluation_averages={
-            "faithfulness": faithfulness_total / len(relevant_runs) if len(relevant_runs) else 0,
-            "relevance": relevance_total / len(relevant_runs) if len(relevant_runs) else 0,
+            "faithfulness": faithfulness,
+            "relevance": relevance,
         },
+        metadata_metrics=metadata_metrics,
     )
 
 

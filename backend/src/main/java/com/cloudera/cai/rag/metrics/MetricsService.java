@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -34,15 +34,42 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
-import { useContext } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-import Metrics from "pages/Analytics/Metrics.tsx";
+ */
 
-const MetricsTab = () => {
-  const { dataSourceId } = useContext(DataSourceContext);
+package com.cloudera.cai.rag.metrics;
 
-  return <Metrics metricFilter={{ data_source_id: Number(dataSourceId) }} />;
-};
+import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.rag.files.RagFileRepository;
+import com.cloudera.cai.rag.sessions.SessionRepository;
+import org.springframework.stereotype.Component;
 
-export default MetricsTab;
+@Component
+public class MetricsService {
+  private final RagDataSourceRepository ragDataSourceRepository;
+  private final SessionRepository sessionRepository;
+  private final RagFileRepository ragFileRepository;
+
+  public MetricsService(
+      RagDataSourceRepository ragDataSourceRepository,
+      SessionRepository sessionRepository,
+      RagFileRepository ragFileRepository) {
+    this.ragDataSourceRepository = ragDataSourceRepository;
+    this.sessionRepository = sessionRepository;
+    this.ragFileRepository = ragFileRepository;
+  }
+
+  public Types.MetadataMetrics getMetrics() {
+    var numberOfDataSources = ragDataSourceRepository.getNumberOfDataSources();
+    var numberOfSessions = sessionRepository.getNumberOfSessions();
+    var numberOfDocuments = ragFileRepository.getNumberOfRagDocuments();
+    return new Types.MetadataMetrics(numberOfDataSources, numberOfSessions, numberOfDocuments);
+  }
+
+  public static MetricsService createNull() {
+    return new MetricsService(
+        RagDataSourceRepository.createNull(),
+        SessionRepository.createNull(),
+        RagFileRepository.createNull());
+  }
+}

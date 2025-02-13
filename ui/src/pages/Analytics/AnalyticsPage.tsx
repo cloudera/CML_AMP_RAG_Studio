@@ -35,11 +35,20 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import Metrics from "pages/DataSources/MetricsTab/Metrics.tsx";
-import { Collapse, Flex, Form, FormInstance, Select } from "antd";
+import Metrics from "pages/Analytics/Metrics.tsx";
+import {
+  Collapse,
+  Divider,
+  Flex,
+  Form,
+  FormInstance,
+  Select,
+  Typography,
+} from "antd";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
+import MetadataMetrics from "pages/Analytics/AppMetrics.tsx";
 
 const BooleanFilterOption = ({
   name,
@@ -137,8 +146,13 @@ const AnalyticsPage = () => {
   return (
     <Flex vertical align="center">
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
+        <Typography.Title level={3}>App Metrics</Typography.Title>
+        <MetadataMetrics />
+        <Divider style={{ margin: 0 }} />
+        <Typography.Title level={3} style={{ marginTop: 12 }}>
+          Session Metrics
+        </Typography.Title>
         <Collapse
-          style={{ marginTop: 20 }}
           items={[
             {
               key: "form",

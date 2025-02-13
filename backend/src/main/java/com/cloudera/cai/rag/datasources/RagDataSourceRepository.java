@@ -152,6 +152,15 @@ public class RagDataSourceRepository {
         handle -> handle.execute("UPDATE RAG_DATA_SOURCE SET DELETED = ? where ID = ?", true, id));
   }
 
+  public int getNumberOfDataSources() {
+    return jdbi.withHandle(
+        handle -> {
+          try (var query = handle.createQuery("SELECT count(*) FROM RAG_DATA_SOURCE")) {
+            return query.mapTo(Integer.class).one();
+          }
+        });
+  }
+
   // Nullables stuff below here.
 
   public static RagDataSourceRepository createNull() {

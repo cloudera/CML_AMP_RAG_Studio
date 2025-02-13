@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -34,15 +34,28 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
-import { useContext } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-import Metrics from "pages/Analytics/Metrics.tsx";
+ */
 
-const MetricsTab = () => {
-  const { dataSourceId } = useContext(DataSourceContext);
+package com.cloudera.cai.rag.metrics;
 
-  return <Metrics metricFilter={{ data_source_id: Number(dataSourceId) }} />;
-};
+import com.cloudera.cai.rag.Types;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-export default MetricsTab;
+@RestController
+@Slf4j
+@RequestMapping("/api/v1/rag/metrics")
+public class MetricsController {
+  private final MetricsService metricsService;
+
+  public MetricsController(MetricsService metricsService) {
+    this.metricsService = metricsService;
+  }
+
+  @GetMapping(produces = "application/json")
+  public Types.MetadataMetrics getMetrics() {
+    return metricsService.getMetrics();
+  }
+}
