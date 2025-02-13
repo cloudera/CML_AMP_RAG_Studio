@@ -73,8 +73,8 @@ class MetricsControllerTest {
     var metricsController = new MetricsController(MetricsService.createNull());
     Types.MetadataMetrics metrics = metricsController.getMetrics();
 
+    assertThat(metrics.numberOfSessions()).isGreaterThanOrEqualTo(5);
     assertThat(metrics.numberOfKnowledgeBases()).isGreaterThanOrEqualTo(3);
     assertThat(metrics.numberOfDocuments()).isGreaterThanOrEqualTo(3);
-    assertThat(metrics.numberOfSessions()).isGreaterThanOrEqualTo(5);
   }
 }

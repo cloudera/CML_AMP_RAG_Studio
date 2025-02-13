@@ -40,22 +40,36 @@ package com.cloudera.cai.rag.metrics;
 
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.rag.files.RagFileRepository;
+import com.cloudera.cai.rag.sessions.SessionRepository;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MetricsService {
   private final RagDataSourceRepository ragDataSourceRepository;
+  private final SessionRepository sessionRepository;
+  private final RagFileRepository ragFileRepository;
 
-  public MetricsService(RagDataSourceRepository ragDataSourceRepository) {
+  public MetricsService(
+      RagDataSourceRepository ragDataSourceRepository,
+      SessionRepository sessionRepository,
+      RagFileRepository ragFileRepository) {
     this.ragDataSourceRepository = ragDataSourceRepository;
+    this.sessionRepository = sessionRepository;
+    this.ragFileRepository = ragFileRepository;
   }
 
   public Types.MetadataMetrics getMetrics() {
     var numberOfDataSources = ragDataSourceRepository.getNumberOfDataSources();
-    return new Types.MetadataMetrics(numberOfDataSources, 0, 0);
+    var numberOfSessions = sessionRepository.getNumberOfSessions();
+    var numberOfDocuments = ragFileRepository.getNumberOfRagDocuments();
+    return new Types.MetadataMetrics(numberOfDataSources, numberOfSessions, numberOfDocuments);
   }
 
   public static MetricsService createNull() {
-    return new MetricsService(RagDataSourceRepository.createNull());
+    return new MetricsService(
+        RagDataSourceRepository.createNull(),
+        SessionRepository.createNull(),
+        RagFileRepository.createNull());
   }
 }
