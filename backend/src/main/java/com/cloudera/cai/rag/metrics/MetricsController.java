@@ -40,6 +40,7 @@ package com.cloudera.cai.rag.metrics;
 
 import com.cloudera.cai.rag.Types;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,6 +54,7 @@ public class MetricsController {
     this.metricsService = metricsService;
   }
 
+  @GetMapping(produces = "application/json")
   public Types.MetadataMetrics getMetrics() {
     return metricsService.getMetrics();
   }
