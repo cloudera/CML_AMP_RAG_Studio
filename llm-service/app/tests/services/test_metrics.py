@@ -41,7 +41,7 @@ from typing import Any, TypeVar, Optional
 
 from hypothesis import given, example
 from hypothesis import strategies as st
-from mlflow.entities import RunInfo, Run, RunData, Param
+from mlflow.entities import RunInfo, Run, RunData, Param, Metric
 
 from app.services.metrics import MetricFilter, get_relevant_runs
 
@@ -58,10 +58,12 @@ class RunDataStrategies:
     exclude_knowledge_base = lambda: st.booleans()
 
     data_source_id = lambda: st.integers(min_value=1, max_value=3)
-    inference_model = lambda: st.sampled_from(["model1", "model2", "model3"])
+    inference_model = lambda: st.sampled_from(
+        ["infernce_model_1", "infernce_model_2", "infernce_model_3"],
+    )
     rerank_model = lambda: st.one_of(
         st.none(),
-        st.sampled_from(["rerank_model1", "rerank_model2", "rerank_model3"]),
+        st.sampled_from(["rerank_model_1", "rerank_model_2", "rerank_model_3"]),
     )
 
 
@@ -96,16 +98,39 @@ def st_filter_value(
 def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
     return st.builds(
         MetricFilter,
-        data_source_id=st.one_of(st.none(), st.integers(min_value=1, max_value=6)),
-        inference_model=st.one_of(st.none(), RunDataStrategies.inference_model()),
-        rerank_model=st.one_of(st.none(), RunDataStrategies.rerank_model()),
-        has_rerank_model=...,
-        top_k=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
-        session_id=st.one_of(st.none(), st.integers(min_value=1, max_value=20)),
-        use_summary_filter=...,
-        use_hyde=...,
-        use_question_condensing=...,
-        exclude_knowledge_base=...,
+        data_source_id=st_filter_value(
+            RunDataStrategies.data_source_id(),
+            5,
+        ),
+        inference_model=st_filter_value(
+            RunDataStrategies.inference_model(),
+            "unused_inference_model",
+        ),
+        rerank_model=st_filter_value(
+            RunDataStrategies.rerank_model(),
+            "unused_rerank_model",
+        ),
+        has_rerank_model=...,  # TODO: this clashes with rerank_model
+        top_k=st_filter_value(
+            RunDataStrategies.top_k(),
+            5,
+        ),
+        session_id=st_filter_value(
+            RunDataStrategies.session_id(),
+            5,
+        ),
+        use_summary_filter=st_filter_value(
+            RunDataStrategies.use_summary_filter(),
+        ),
+        use_hyde=st_filter_value(
+            RunDataStrategies.use_hyde(),
+        ),
+        use_question_condensing=st_filter_value(
+            RunDataStrategies.use_question_condensing(),
+        ),
+        exclude_knowledge_base=st_filter_value(
+            RunDataStrategies.exclude_knowledge_base(),
+        ),
     )
 
 
@@ -131,7 +156,7 @@ def st_runs(
     draw: st.DrawFn,
     min_runs: int = 0,
     max_runs: int = 500,
-    max_data_source_ids: int = 5,
+    max_data_source_ids: int = 5,  # TODO: this may not be meaningful since we have a fixed list of IDs we draw from
 ) -> list[Run]:
     if min_runs > max_runs:
         raise ValueError("min_runs must be less than or equal to max_runs")
@@ -141,7 +166,7 @@ def st_runs(
     num_runs: int = draw(st.integers(min_runs, max_runs))
     data_source_ids: list[int] = draw(
         st.lists(
-            st.integers(min_value=1, max_value=6),
+            RunDataStrategies.data_source_id(),
             min_size=max(min_runs, 1),
             max_size=max_data_source_ids,
         )
@@ -152,12 +177,12 @@ def st_runs(
     ]
     really_make_test_run = functools.partial(
         make_test_run,
-        top_k=draw(st.integers(min_value=1, max_value=20)),
-        session_id=draw(st.integers(min_value=1, max_value=20)),
-        use_summary_filter=draw(st.booleans()),
-        use_hyde=draw(st.booleans()),
-        use_question_condensing=draw(st.booleans()),
-        exclude_knowledge_base=draw(st.booleans()),
+        top_k=draw(RunDataStrategies.top_k()),
+        session_id=draw(RunDataStrategies.session_id()),
+        use_summary_filter=draw(RunDataStrategies.use_summary_filter()),
+        use_hyde=draw(RunDataStrategies.use_hyde()),
+        use_question_condensing=draw(RunDataStrategies.use_question_condensing()),
+        exclude_knowledge_base=draw(RunDataStrategies.exclude_knowledge_base()),
     )
 
     generated_runs: list[Run] = []
