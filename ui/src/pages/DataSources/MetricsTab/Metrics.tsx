@@ -211,7 +211,7 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
                   x: "timestamp",
                   y: "maxScore",
                 },
-                valueFormatter: (value) => value.y.toString(),
+                valueFormatter: (value) => value.y.toFixed(2).toString(),
               },
             ]}
             disableVoronoi={true}
