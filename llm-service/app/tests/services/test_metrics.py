@@ -138,7 +138,7 @@ def st_runs(
 @given(runs=st_runs(), metric_filter=st_metric_filter())
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
-    if all(filtered is None for filtered in metric_filter):
+    if all(filter_value is None for _, filter_value in metric_filter):
         assert results == runs
         return
     for run in results:
