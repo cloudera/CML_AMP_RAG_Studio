@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import functools
 import json
 import random
 from typing import Any
@@ -102,8 +102,6 @@ def st_runs(
         raise ValueError("max_data_source_ids must be less than or equal to max_runs")
 
     num_runs: int = draw(st.integers(min_runs, max_runs))
-    inference_models = st_inference_model()
-    reranking_models = st.one_of(st.none(), st_rerank_model())
     data_source_ids: list[int] = draw(
         st.lists(
             st.integers(min_value=1, max_value=6),
@@ -111,85 +109,49 @@ def st_runs(
             max_size=max_data_source_ids,
         )
     )
-    top_k: int = draw(st.integers(min_value=1, max_value=20))
-    session_id: int = draw(st.integers(min_value=1, max_value=20))
-    use_summary_filter: bool = draw(st.booleans())
-    use_hyde: bool = draw(st.booleans())
-    use_question_condensing: bool = draw(st.booleans())
-    exclude_knowledge_base: bool = draw(st.booleans())
+    data_source_ids += [
+        draw(st.sampled_from(data_source_ids))
+        for _ in range(num_runs - len(data_source_ids))
+    ]
+    really_make_test_run = functools.partial(
+        make_test_run,
+        top_k=draw(st.integers(min_value=1, max_value=20)),
+        session_id=draw(st.integers(min_value=1, max_value=20)),
+        use_summary_filter=draw(st.booleans()),
+        use_hyde=draw(st.booleans()),
+        use_question_condensing=draw(st.booleans()),
+        exclude_knowledge_base=draw(st.booleans()),
+    )
 
     generated_runs: list[Run] = []
     for data_source_id in data_source_ids:
         generated_runs.append(
-            make_test_run(
+            really_make_test_run(
                 data_source_ids=[data_source_id],
-                inference_model=draw(inference_models),
-                rerank_model=draw(reranking_models),
-                top_k=top_k,
-                session_id=session_id,
-                use_summary_filter=use_summary_filter,
-                use_hyde=use_hyde,
-                use_question_condensing=use_question_condensing,
-                exclude_knowledge_base=exclude_knowledge_base,
-            )
-        )
-    for _ in range(len(data_source_ids), num_runs):
-        data_source_id = draw(st.sampled_from(data_source_ids))
-        generated_runs.append(
-            make_test_run(
-                data_source_ids=[data_source_id],
-                inference_model=draw(inference_models),
-                rerank_model=draw(reranking_models),
-                top_k=top_k,
-                session_id=session_id,
-                use_summary_filter=use_summary_filter,
-                use_hyde=use_hyde,
-                use_question_condensing=use_question_condensing,
-                exclude_knowledge_base=exclude_knowledge_base,
+                inference_model=draw(st_inference_model()),
+                rerank_model=draw(st.one_of(st.none(), st_rerank_model())),
             )
         )
     random.shuffle(generated_runs)
     return generated_runs
 
 
-@given(
-    runs=st_runs(),
-    metric_filter=st_metric_filter(),
-)
+@given(runs=st_runs(), metric_filter=st_metric_filter())
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     results = get_relevant_runs(metric_filter, runs)
     if all(filtered is None for filtered in metric_filter):
         assert results == runs
         return
     for run in results:
-        if metric_filter.data_source_id is not None:
-            assert [metric_filter.data_source_id] == json.loads(
-                run.data.params["data_source_ids"]
-            )
-        if metric_filter.inference_model is not None:
-            assert run.data.params["inference_model"] == metric_filter.inference_model
-        if metric_filter.rerank_model is not None:
-            assert run.data.params["rerank_model_name"] == metric_filter.rerank_model
-        if metric_filter.top_k is not None:
-            assert run.data.metrics["top_k"] == metric_filter.top_k
-        if metric_filter.session_id is not None:
-            assert run.data.params["session_id"] == metric_filter.session_id
-        if metric_filter.use_summary_filter is not None:
-            assert run.data.params["use_summary_filter"] == str(
-                metric_filter.use_summary_filter
-            )
-        if metric_filter.use_hyde is not None:
-            assert run.data.params["use_hyde"] == str(metric_filter.use_hyde)
-        if metric_filter.use_question_condensing is not None:
-            assert run.data.params["use_question_condensing"] == str(
-                metric_filter.use_question_condensing
-            )
-        if metric_filter.exclude_knowledge_base is not None:
-            assert run.data.params["exclude_knowledge_base"] == str(
-                metric_filter.exclude_knowledge_base
-            )
-        if metric_filter.has_rerank_model is not None:
-            if metric_filter.has_rerank_model:
-                assert run.data.params.get("rerank_model_name") is not None
-            if not metric_filter.has_rerank_model:
-                assert run.data.params.get("rerank_model_name") is None
+        for param, filter_value in metric_filter:
+            if filter_value is None:
+                continue
+            if param == "has_rerank_model":
+                if filter_value is True:
+                    assert run.data.params.get("rerank_model_name") is not None
+                else:
+                    assert run.data.params.get("rerank_model_name") is None
+            elif param in {"top_k"}:
+                assert run.data.metrics[param] == str(filter_value)
+            else:
+                assert run.data.params[param] == str(filter_value)
