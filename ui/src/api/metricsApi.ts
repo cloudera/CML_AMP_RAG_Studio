@@ -37,7 +37,6 @@
  ******************************************************************************/
 import { useQuery } from "@tanstack/react-query";
 import { llmServicePath, postRequest, QueryKeys } from "src/api/utils.ts";
-import { DataSourceMetrics } from "src/api/dataSourceApi.ts";
 
 export interface MetricFilter {
   data_source_id?: number;
@@ -52,6 +51,20 @@ export interface MetricFilter {
   exclude_knowledge_base?: boolean;
 }
 
+export interface AppMetrics {
+  positive_ratings: number;
+  negative_ratings: number;
+  no_ratings: number;
+  count_of_interactions: number;
+  count_of_direct_interactions: number;
+  aggregated_feedback: Record<string, number>;
+  unique_users: number;
+  max_score_over_time: [number, number][];
+  input_word_count_over_time: [number, number][];
+  output_word_count_over_time: [number, number][];
+  evaluation_averages: Record<string, number>;
+}
+
 export const useGetMetricsByDataSource = (metricFilter: MetricFilter) => {
   return useQuery({
     queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
@@ -61,6 +74,6 @@ export const useGetMetricsByDataSource = (metricFilter: MetricFilter) => {
 
 const getMetricsByDataSourceQuery = async (
   metricFilter: MetricFilter,
-): Promise<DataSourceMetrics> => {
+): Promise<AppMetrics> => {
   return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);
 };

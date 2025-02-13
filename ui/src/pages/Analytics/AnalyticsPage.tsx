@@ -41,7 +41,13 @@ import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
 
-function BooleanFilterOption({ name, label }: { name: string; label: string }) {
+const BooleanFilterOption = ({
+  name,
+  label,
+}: {
+  name: string;
+  label: string;
+}) => {
   return (
     <Form.Item name={name} label={label} style={{ marginTop: 8 }}>
       <Select
@@ -54,9 +60,9 @@ function BooleanFilterOption({ name, label }: { name: string; label: string }) {
       />
     </Form.Item>
   );
-}
+};
 
-function SelectFilterOption({
+const SelectFilterOption = ({
   name,
   label,
   options,
@@ -64,13 +70,13 @@ function SelectFilterOption({
   name: string;
   label: string;
   options: { value: string; label: string | undefined }[];
-}) {
+}) => {
   return (
     <Form.Item name={name} label={label} style={{ marginTop: 8 }}>
       <Select options={options} allowClear style={{ width: 250 }} />
     </Form.Item>
   );
-}
+};
 
 const MetricFilterOptions = ({
   metricFilterForm,
@@ -86,7 +92,6 @@ const MetricFilterOptions = ({
       form={metricFilterForm}
       clearOnDestroy={true}
       layout="inline"
-      style={{ maxWidth: "none" }}
     >
       <SelectFilterOption
         name="inference_model"

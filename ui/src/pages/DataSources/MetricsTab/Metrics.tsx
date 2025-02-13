@@ -52,7 +52,6 @@ const labels = [
 ];
 
 const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
-  console.log(metricFilter);
   const { data, isLoading } = useGetMetricsByDataSource(metricFilter);
 
   const maxScoreData =
@@ -154,6 +153,24 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
           />
         </Row>
       </Col>
+      <Typography.Title level={4}>
+        Auto evaluation metric averages
+      </Typography.Title>
+      <Row gutter={16}>
+        {data?.evaluation_averages
+          ? Object.entries(data.evaluation_averages).map(([key, value]) => {
+              return (
+                <Col span={8} style={{ textAlign: "center" }}>
+                  <Statistic
+                    title={key}
+                    loading={isLoading}
+                    value={value.toFixed(2)}
+                  />
+                </Col>
+              );
+            })
+          : null}
+      </Row>
       <Typography.Title level={4}>Chunk relevance over time</Typography.Title>
       <Col span={16}>
         <Row>
