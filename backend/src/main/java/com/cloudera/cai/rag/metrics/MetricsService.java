@@ -39,15 +39,23 @@
 package com.cloudera.cai.rag.metrics;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MetricsService {
-  public static MetricsService createNull() {
-    return new MetricsService();
+  private final RagDataSourceRepository ragDataSourceRepository;
+
+  public MetricsService(RagDataSourceRepository ragDataSourceRepository) {
+    this.ragDataSourceRepository = ragDataSourceRepository;
   }
 
   public Types.MetadataMetrics getMetrics() {
-    return null;
+    var numberOfDataSources = ragDataSourceRepository.getNumberOfDataSources();
+    return new Types.MetadataMetrics(numberOfDataSources, 0, 0);
+  }
+
+  public static MetricsService createNull() {
+    return new MetricsService(RagDataSourceRepository.createNull());
   }
 }
