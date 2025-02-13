@@ -148,5 +148,5 @@ public class Types {
       QueryConfiguration queryConfiguration) {}
 
   public record MetadataMetrics(
-      int numberOfKnowledgeBases, int numberOfSessions, int numberOfDocuments) {}
+      int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}
 }

@@ -35,14 +35,16 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useContext } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
-import Metrics from "pages/Analytics/Metrics.tsx";
+import { Divider, Flex, Typography } from "antd";
 
-const MetricsTab = () => {
-  const { dataSourceId } = useContext(DataSourceContext);
+const AppMetrics = () => {
+  return (
+    <Flex vertical>
+      <Typography.Title level={3}>App Metrics</Typography.Title>
 
-  return <Metrics metricFilter={{ data_source_id: Number(dataSourceId) }} />;
+      <Divider />
+    </Flex>
+  );
 };
 
-export default MetricsTab;
+export default AppMetrics;

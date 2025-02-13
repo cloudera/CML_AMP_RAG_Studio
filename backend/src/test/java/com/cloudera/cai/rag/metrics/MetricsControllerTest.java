@@ -39,7 +39,6 @@
 package com.cloudera.cai.rag.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
@@ -51,6 +50,9 @@ import org.junit.jupiter.api.Test;
 class MetricsControllerTest {
   @Test
   void metrics() {
+    var metricsController = new MetricsController(MetricsService.createNull());
+    var beginningMetrics = metricsController.getMetrics();
+
     var seshRepo = SessionRepository.createNull();
     seshRepo.create(TestData.createTestSessionInstance("test-session-1"));
     seshRepo.create(TestData.createTestSessionInstance("test-session-2"));
@@ -62,19 +64,17 @@ class MetricsControllerTest {
     var id1 = TestData.createTestDataSource(dataSourceRepo);
     var id2 = TestData.createTestDataSource(dataSourceRepo);
     var id3 = TestData.createTestDataSource(dataSourceRepo);
-    TestData.createTestDataSource(dataSourceRepo);
-    TestData.createTestDataSource(dataSourceRepo);
 
     RagFileRepository ragFileRepo = RagFileRepository.createNull();
     TestData.createTestDocument(id1, "doc-1", ragFileRepo);
     TestData.createTestDocument(id2, "doc-2", ragFileRepo);
     TestData.createTestDocument(id3, "doc-3", ragFileRepo);
+    TestData.createTestDocument(id3, "doc-4", ragFileRepo);
 
-    var metricsController = new MetricsController(MetricsService.createNull());
     Types.MetadataMetrics metrics = metricsController.getMetrics();
 
-    assertThat(metrics.numberOfSessions()).isGreaterThanOrEqualTo(5);
-    assertThat(metrics.numberOfKnowledgeBases()).isGreaterThanOrEqualTo(3);
-    assertThat(metrics.numberOfDocuments()).isGreaterThanOrEqualTo(3);
+    assertThat(metrics.numberOfSessions()).isEqualTo(5 + beginningMetrics.numberOfSessions());
+    assertThat(metrics.numberOfDataSources()).isEqualTo(3 + beginningMetrics.numberOfDataSources());
+    assertThat(metrics.numberOfDocuments()).isEqualTo(4 + beginningMetrics.numberOfDocuments());
   }
 }
