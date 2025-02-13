@@ -79,6 +79,7 @@ class MetricFilter(BaseModel):
     use_hyde: Optional[bool] = None
     use_question_condensing: Optional[bool] = None
     exclude_knowledge_base: Optional[bool] = None
+    include_direct_llm_queries: Optional[bool] = None
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
@@ -218,11 +219,16 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
             feedback_entries,
         )
     )
+    count_of_interactions = len(relevant_runs) if len(relevant_runs) else 0
+    count_of_rag_interactions = count_of_interactions - count_of_direct_interactions
+    faithfulness = faithfulness_total / count_of_rag_interactions
+    relevance = relevance_total / count_of_rag_interactions
+
     return Metrics(
         positive_ratings=positive_ratings,
         negative_ratings=negative_ratings,
         no_ratings=no_ratings,
-        count_of_interactions=len(relevant_runs),
+        count_of_interactions=count_of_interactions,
         count_of_direct_interactions=count_of_direct_interactions,
         aggregated_feedback=(dict(Counter(cleaned_feedback))),
         unique_users=unique_users,
@@ -230,8 +236,8 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
         input_word_count_over_time=input_word_count_over_time,
         output_word_count_over_time=output_word_count_over_time,
         evaluation_averages={
-            "faithfulness": faithfulness_total / len(relevant_runs) if len(relevant_runs) else 0,
-            "relevance": relevance_total / len(relevant_runs) if len(relevant_runs) else 0,
+            "faithfulness": faithfulness,
+            "relevance": relevance,
         },
     )
 
