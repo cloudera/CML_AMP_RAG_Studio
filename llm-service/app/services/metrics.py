@@ -227,8 +227,16 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
     )
     count_of_interactions = len(relevant_runs) if len(relevant_runs) else 0
     count_of_rag_interactions = count_of_interactions - count_of_direct_interactions
-    faithfulness = faithfulness_total / count_of_rag_interactions
-    relevance = relevance_total / count_of_rag_interactions
+    faithfulness = (
+        (faithfulness_total / count_of_rag_interactions)
+        if count_of_rag_interactions
+        else 0
+    )
+    relevance = (
+        (relevance_total / count_of_rag_interactions)
+        if count_of_rag_interactions
+        else 0
+    )
 
     return Metrics(
         positive_ratings=positive_ratings,
