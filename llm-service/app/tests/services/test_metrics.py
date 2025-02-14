@@ -49,7 +49,7 @@ from app.services.metrics import MetricFilter, get_relevant_runs
 # mypy: disable-error-code="no-untyped-call"
 
 
-class RunDataStrategies:
+class RunMetricsStrategies:
     top_k = lambda: st.integers(min_value=1, max_value=3)
     session_id = lambda: st.integers(min_value=1, max_value=3)
     use_summary_filter = lambda: st.booleans()
@@ -99,37 +99,37 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
     return st.builds(
         MetricFilter,
         data_source_id=st_filter_value(
-            RunDataStrategies.data_source_id(),
+            RunMetricsStrategies.data_source_id(),
             5,
         ),
         inference_model=st_filter_value(
-            RunDataStrategies.inference_model(),
+            RunMetricsStrategies.inference_model(),
             "unused_inference_model",
         ),
         rerank_model=st_filter_value(
-            RunDataStrategies.rerank_model(),
+            RunMetricsStrategies.rerank_model(),
             "unused_rerank_model",
         ),
         has_rerank_model=...,  # TODO: this clashes with rerank_model
         top_k=st_filter_value(
-            RunDataStrategies.top_k(),
+            RunMetricsStrategies.top_k(),
             5,
         ),
         session_id=st_filter_value(
-            RunDataStrategies.session_id(),
+            RunMetricsStrategies.session_id(),
             5,
         ),
         use_summary_filter=st_filter_value(
-            RunDataStrategies.use_summary_filter(),
+            RunMetricsStrategies.use_summary_filter(),
         ),
         use_hyde=st_filter_value(
-            RunDataStrategies.use_hyde(),
+            RunMetricsStrategies.use_hyde(),
         ),
         use_question_condensing=st_filter_value(
-            RunDataStrategies.use_question_condensing(),
+            RunMetricsStrategies.use_question_condensing(),
         ),
         exclude_knowledge_base=st_filter_value(
-            RunDataStrategies.exclude_knowledge_base(),
+            RunMetricsStrategies.exclude_knowledge_base(),
         ),
     )
 
@@ -165,7 +165,7 @@ def st_runs(
     num_runs: int = draw(st.integers(min_runs, max_runs))
     data_source_ids: list[int] = draw(
         st.lists(
-            RunDataStrategies.data_source_id(),
+            RunMetricsStrategies.data_source_id(),
             min_size=max(min_runs, 1),
             max_size=max_data_source_ids,
         )
@@ -176,12 +176,12 @@ def st_runs(
     ]
     really_make_test_run = functools.partial(
         make_test_run,
-        top_k=draw(RunDataStrategies.top_k()),
-        session_id=draw(RunDataStrategies.session_id()),
-        use_summary_filter=draw(RunDataStrategies.use_summary_filter()),
-        use_hyde=draw(RunDataStrategies.use_hyde()),
-        use_question_condensing=draw(RunDataStrategies.use_question_condensing()),
-        exclude_knowledge_base=draw(RunDataStrategies.exclude_knowledge_base()),
+        top_k=draw(RunMetricsStrategies.top_k()),
+        session_id=draw(RunMetricsStrategies.session_id()),
+        use_summary_filter=draw(RunMetricsStrategies.use_summary_filter()),
+        use_hyde=draw(RunMetricsStrategies.use_hyde()),
+        use_question_condensing=draw(RunMetricsStrategies.use_question_condensing()),
+        exclude_knowledge_base=draw(RunMetricsStrategies.exclude_knowledge_base()),
     )
 
     generated_runs: list[Run] = []
@@ -189,8 +189,8 @@ def st_runs(
         generated_runs.append(
             really_make_test_run(
                 data_source_ids=[data_source_id],
-                inference_model=draw(RunDataStrategies.inference_model()),
-                rerank_model=draw(RunDataStrategies.rerank_model()),
+                inference_model=draw(RunMetricsStrategies.inference_model()),
+                rerank_model=draw(RunMetricsStrategies.rerank_model()),
             )
         )
     random.shuffle(generated_runs)
