@@ -116,14 +116,15 @@ def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]
                 "inference_model"
             ):
                 return False
+        # TODO: what if has_rerank_model=False but rerank_model has a value?
         if metric_filter.rerank_model:
             if not metric_filter.rerank_model == r.data.params.get("rerank_model_name"):
                 return False
         if metric_filter.top_k is not None:
-            if not metric_filter.top_k == r.data.params.get("top_k"):
+            if not str(metric_filter.top_k) == r.data.params.get("top_k"):
                 return False
         if metric_filter.session_id:
-            if not metric_filter.session_id == r.data.params.get("session_id"):
+            if not str(metric_filter.session_id) == r.data.params.get("session_id"):
                 return False
         if metric_filter.use_summary_filter is not None:
             if not str(metric_filter.use_summary_filter) == r.data.params.get(
