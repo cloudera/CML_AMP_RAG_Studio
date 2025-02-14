@@ -50,21 +50,46 @@ from app.services.metrics import MetricFilter, get_relevant_runs
 
 
 class RunMetricsStrategies:
-    top_k = lambda: st.integers(min_value=1, max_value=3)
-    session_id = lambda: st.integers(min_value=1, max_value=3)
-    use_summary_filter = lambda: st.booleans()
-    use_hyde = lambda: st.booleans()
-    use_question_condensing = lambda: st.booleans()
-    exclude_knowledge_base = lambda: st.booleans()
+    @staticmethod
+    def data_source_id() -> st.SearchStrategy[int]:
+        return st.integers(min_value=1, max_value=3)
 
-    data_source_id = lambda: st.integers(min_value=1, max_value=3)
-    inference_model = lambda: st.sampled_from(
-        ["inference_model_1", "inference_model_2", "inference_model_3"],
-    )
-    rerank_model = lambda: st.one_of(
-        st.none(),
-        st.sampled_from(["rerank_model_1", "rerank_model_2", "rerank_model_3"]),
-    )
+    @staticmethod
+    def inference_model() -> st.SearchStrategy[str]:
+        return st.sampled_from(
+            ["inference_model_1", "inference_model_2", "inference_model_3"]
+        )
+
+    @staticmethod
+    def rerank_model() -> st.SearchStrategy[str | None]:
+        return st.one_of(
+            st.none(),
+            st.sampled_from(["rerank_model_1", "rerank_model_2", "rerank_model_3"]),
+        )
+
+    @staticmethod
+    def top_k() -> st.SearchStrategy[int]:
+        return st.integers(min_value=1, max_value=3)
+
+    @staticmethod
+    def session_id() -> st.SearchStrategy[int]:
+        return st.integers(min_value=1, max_value=3)
+
+    @staticmethod
+    def use_summary_filter() -> st.SearchStrategy[bool]:
+        return st.booleans()
+
+    @staticmethod
+    def use_hyde() -> st.SearchStrategy[bool]:
+        return st.booleans()
+
+    @staticmethod
+    def use_question_condensing() -> st.SearchStrategy[bool]:
+        return st.booleans()
+
+    @staticmethod
+    def exclude_knowledge_base() -> st.SearchStrategy[bool]:
+        return st.booleans()
 
 
 T = TypeVar("T")
