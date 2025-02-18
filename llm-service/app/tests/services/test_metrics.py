@@ -37,6 +37,7 @@
 #
 import functools
 import random
+import uuid
 from typing import Any, TypeVar, Optional
 
 from hypothesis import given, example
@@ -161,7 +162,7 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
 
 def make_test_run(**kwargs: Any) -> Run:
     run_info: RunInfo = RunInfo(
-        run_uuid="",
+        run_uuid=str(uuid.uuid4()),
         experiment_id="",
         user_id="",
         status="RUNNING",
@@ -219,15 +220,21 @@ def st_runs(
     metric_filter=st_metric_filter(),
 )
 @example(
+    runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(top_k=1),
+)
+@example(
     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
     metric_filter=MetricFilter(data_source_id=1),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
-    results = get_relevant_runs(metric_filter, runs)
+    relevant_runs = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
-        assert results == runs
+        assert relevant_runs == runs
         return
-    for run in results:
+
+    # make sure there are no false positives
+    for run in relevant_runs:
         for key, filter_value in metric_filter:
             if filter_value is None:
                 continue
@@ -240,3 +247,5 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                 assert run.data.params["data_source_ids"] == str([filter_value])
             else:
                 assert run.data.params[key] == str(filter_value)
+
+    # TODO: make sure there are no false negatives, i.e. we didn't miss any relevant runs
