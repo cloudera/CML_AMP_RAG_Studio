@@ -180,25 +180,17 @@ def st_runs(
     draw: st.DrawFn,
     min_runs: int = 0,
     max_runs: int = 500,
-    max_data_source_ids: int = 5,  # TODO: this may not be meaningful since we have a fixed list of IDs we draw from
 ) -> list[Run]:
     if min_runs > max_runs:
         raise ValueError("min_runs must be less than or equal to max_runs")
-    if max_data_source_ids > max_runs:
-        raise ValueError("max_data_source_ids must be less than or equal to max_runs")
 
-    num_runs: int = draw(st.integers(min_runs, max_runs))
     data_source_ids: list[int] = draw(
         st.lists(
             RunMetricsStrategies.data_source_id(),
-            min_size=max(min_runs, 1),
-            max_size=max_data_source_ids,
+            min_size=min_runs,
+            max_size=max_runs,
         )
     )
-    data_source_ids += [
-        draw(st.sampled_from(data_source_ids))
-        for _ in range(num_runs - len(data_source_ids))
-    ]
     really_make_test_run = functools.partial(
         make_test_run,
         top_k=draw(RunMetricsStrategies.top_k()),
