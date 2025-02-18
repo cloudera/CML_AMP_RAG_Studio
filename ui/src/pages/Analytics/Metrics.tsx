@@ -160,7 +160,7 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
         {data?.evaluation_averages
           ? Object.entries(data.evaluation_averages).map(([key, value]) => {
               return (
-                <Col span={8} style={{ textAlign: "center" }}>
+                <Col span={8} style={{ textAlign: "center" }} key={key}>
                   <Statistic
                     title={key}
                     loading={isLoading}

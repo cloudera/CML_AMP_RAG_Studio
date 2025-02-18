@@ -53,7 +53,6 @@ export const SuggestedQuestionButton = ({
 }) => {
   return (
     <Tag
-      key={question}
       onClick={() => {
         handleChat(question);
       }}
@@ -139,6 +138,7 @@ const SuggestedQuestionsFooter = ({
                     question={condensedQuestion}
                     handleChat={handleChat}
                     rewritten={true}
+                    key={condensedQuestion}
                   />
                 ) : null}
                 {isLoading ? (
@@ -149,6 +149,7 @@ const SuggestedQuestionsFooter = ({
                       question={question}
                       handleChat={handleChat}
                       rewritten={false}
+                      key={question}
                     />
                   ))
                 )}
