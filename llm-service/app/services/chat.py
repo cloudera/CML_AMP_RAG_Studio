@@ -93,7 +93,7 @@ def v2_chat(
     return new_chat_message
 
 
-@mlflow.trace(name="v2_chat")
+# @mlflow.trace(name="v2_chat")
 def _run_chat(
     session: Session,
     response_id: str,
@@ -191,7 +191,9 @@ def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None
 async def log_ml_flow_params(
     session: Session, query_configuration: QueryConfiguration, user_name: str
 ) -> None:
-    data_source_metadata = data_sources_metadata_api.get_metadata(session.data_source_ids[0])
+    data_source_metadata = data_sources_metadata_api.get_metadata(
+        session.data_source_ids[0]
+    )
     mlflow.log_params(
         {
             "top_k": query_configuration.top_k,

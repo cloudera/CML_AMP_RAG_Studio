@@ -151,7 +151,7 @@ class DataSourceController:
         ):
             self._download_and_index(datasource, doc_id, request)
 
-    @mlflow.trace(name="download_and_index")
+    # @mlflow.trace(name="download_and_index")
     def _download_and_index(
         self, datasource: RagDataSource, doc_id: str, request: RagIndexDocumentRequest
     ) -> None:
