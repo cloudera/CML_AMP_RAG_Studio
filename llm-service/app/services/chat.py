@@ -36,6 +36,7 @@
 #  DATA.
 # ##############################################################################
 import asyncio
+import logging
 import re
 import time
 import uuid
@@ -45,7 +46,7 @@ import mlflow
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
-from mlflow.entities import Experiment
+from mlflow.entities import Experiment, ViewType
 
 from . import evaluators, llm_completion
 from .chat_store import (
@@ -62,6 +63,8 @@ from .query import querier
 from .query.query_configuration import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
+
+logger = logging.getLogger(__name__)
 
 
 def v2_chat(
@@ -81,6 +84,9 @@ def v2_chat(
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
+    logger.info(f"Experiment: {experiment.experiment_id}")
+    exs = mlflow.search_experiments(view_type=ViewType.ALL)
+    logger.info(f"Experiments: {exs}")
     # mlflow.set_experiment_tag("session_id", session.id)
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
