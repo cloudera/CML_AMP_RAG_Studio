@@ -35,17 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-import asyncio
-import re
 import time
 import uuid
 from typing import List, Iterable
 
-import mlflow
+# import mlflow
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
-from mlflow.entities import Experiment
 
 from . import evaluators, llm_completion
 from .chat_store import (
@@ -56,8 +53,9 @@ from .chat_store import (
     RagStudioChatMessage,
     RagMessage,
 )
-from .metadata_apis import session_metadata_api, data_sources_metadata_api
+from .metadata_apis import session_metadata_api
 from .metadata_apis.session_metadata_api import Session
+from .mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
 from .query import querier
 from .query.query_configuration import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
@@ -78,22 +76,16 @@ def v2_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
     response_id = str(uuid.uuid4())
-    experiment: Experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
+
+    new_chat_message: RagStudioChatMessage = _run_chat(
+        session, response_id, query, query_configuration, user_name
     )
-    # mlflow.set_experiment_tag("session_id", session.id)
-    with mlflow.start_run(
-        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
-    ):
-        new_chat_message: RagStudioChatMessage = _run_chat(
-            session, response_id, query, query_configuration, user_name
-        )
 
     ChatHistoryManager().append_to_history(session_id, [new_chat_message])
     return new_chat_message
 
 
-@mlflow.trace(name="v2_chat")
+# @mlflow.trace(name="v2_chat")
 def _run_chat(
     session: Session,
     response_id: str,
@@ -101,9 +93,6 @@ def _run_chat(
     query_configuration: QueryConfiguration,
     user_name: str,
 ) -> RagStudioChatMessage:
-    asyncio.run(log_ml_flow_params(session, query_configuration, user_name))
-    mlflow.set_tag("response_id", response_id)
-
     if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400, detail="Only one datasource is supported for chat."
@@ -150,66 +139,11 @@ def _run_chat(
         timestamp=time.time(),
         condensed_question=condensed_question,
     )
-    log_ml_flow_metrics(session, new_chat_message)
+
+    record_rag_mlflow_run(
+        new_chat_message, query_configuration, response_id, session, user_name
+    )
     return new_chat_message
-
-
-def log_ml_flow_metrics(session: Session, message: RagStudioChatMessage) -> None:
-    source_nodes: list[RagPredictSourceNode] = message.source_nodes
-    query = message.rag_message.user
-    response = message.rag_message.assistant
-    for evaluation in message.evaluations:
-        mlflow.log_metric(evaluation.name, evaluation.value)
-
-    mlflow.log_metrics(
-        {
-            "source_nodes_count": len(source_nodes),
-            "max_score": (source_nodes[0].score if source_nodes else 0.0),
-            "input_word_count": len(re.findall(r"\w+", query)),
-            "output_word_count": len(re.findall(r"\w+", response)),
-        }
-    )
-
-    flattened_nodes = [node.model_dump() for node in source_nodes]
-    mlflow.log_table(
-        {
-            "response_id": message.id,
-            "node_id": map(lambda x: x.get("node_id"), flattened_nodes),
-            "doc_id": map(lambda x: x.get("doc_id"), flattened_nodes),
-            "source_file_name": map(
-                lambda x: x.get("source_file_name"), flattened_nodes
-            ),
-            "score": map(lambda x: x.get("score"), flattened_nodes),
-            "query": query,
-            "response": response,
-            "condensed_question": message.condensed_question,
-        },
-        artifact_file="response_details.json",
-    )
-
-
-async def log_ml_flow_params(
-    session: Session, query_configuration: QueryConfiguration, user_name: str
-) -> None:
-    data_source_metadata = data_sources_metadata_api.get_metadata(session.data_source_ids[0])
-    mlflow.log_params(
-        {
-            "top_k": query_configuration.top_k,
-            "inference_model": query_configuration.model_name,
-            "rerank_model_name": query_configuration.rerank_model_name,
-            "exclude_knowledge_base": query_configuration.exclude_knowledge_base,
-            "use_question_condensing": query_configuration.use_question_condensing,
-            "use_hyde": query_configuration.use_hyde,
-            "use_summary_filter": query_configuration.use_summary_filter,
-            "session_id": session.id,
-            "data_source_ids": session.data_source_ids,
-            "user_name": user_name,
-            "embedding_model": data_source_metadata.embedding_model,
-            "chunk_size": data_source_metadata.chunk_size,
-            "summarization_model": data_source_metadata.summarization_model,
-            "chunk_overlap_percent": data_source_metadata.chunk_overlap_percent,
-        }
-    )
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
@@ -328,39 +262,23 @@ def direct_llm_chat(
     session_id: int, query: str, user_name: str
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
-    experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
-    )
     response_id = str(uuid.uuid4())
-    with mlflow.start_run(
-        experiment_id=experiment.experiment_id, run_name=f"{response_id}"
-    ):
-        mlflow.set_tag("response_id", response_id)
-        mlflow.set_tag("direct_llm", True)
-        mlflow.log_params(
-            {
-                "inference_model": session.inference_model,
-                "exclude_knowledge_base": True,
-                "session_id": session.id,
-                "data_source_ids": session.data_source_ids,
-                "user_name": user_name,
-            }
-        )
+    record_direct_llm_mlflow_run(response_id, session, user_name)
 
-        chat_response = llm_completion.completion(
-            session_id, query, session.inference_model
-        )
-        new_chat_message = RagStudioChatMessage(
-            id=response_id,
-            source_nodes=[],
-            inference_model=session.inference_model,
-            evaluations=[],
-            rag_message=RagMessage(
-                user=query,
-                assistant=str(chat_response.message.content),
-            ),
-            timestamp=time.time(),
-            condensed_question=None,
-        )
-        ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-        return new_chat_message
+    chat_response = llm_completion.completion(
+        session_id, query, session.inference_model
+    )
+    new_chat_message = RagStudioChatMessage(
+        id=response_id,
+        source_nodes=[],
+        inference_model=session.inference_model,
+        evaluations=[],
+        rag_message=RagMessage(
+            user=query,
+            assistant=str(chat_response.message.content),
+        ),
+        timestamp=time.time(),
+        condensed_question=None,
+    )
+    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    return new_chat_message
