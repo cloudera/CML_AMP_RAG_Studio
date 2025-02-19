@@ -37,7 +37,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
-from mlflow.entities import Experiment
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -49,6 +48,7 @@ from ....ai.vector_stores.vector_store import VectorStore
 from ....services import document_storage, models
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
+from ....services.mlflow import data_source_record_run
 
 logger = logging.getLogger(__name__)
 
@@ -143,15 +143,9 @@ class DataSourceController:
     ) -> None:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
         mlflow.llama_index.autolog()
-        experiment: Experiment = mlflow.set_experiment(
-            experiment_name=f"datasource_{datasource.name}_{data_source_id}"
-        )
-        with mlflow.start_run(
-            experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
-        ):
-            self._download_and_index(datasource, doc_id, request)
+        self._download_and_index(datasource, doc_id, request)
 
-    @mlflow.trace(name="download_and_index")
+    # @mlflow.trace(name="download_and_index")
     def _download_and_index(
         self, datasource: RagDataSource, doc_id: str, request: RagIndexDocumentRequest
     ) -> None:
@@ -181,24 +175,7 @@ class DataSourceController:
                 llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )
-
-            mlflow.log_metrics(
-                {
-                    "file_size_bytes": file_path.stat().st_size,
-                }
-            )
-
-            mlflow.log_params(
-                {
-                    "data_source_id": datasource.id,
-                    "embedding_model": datasource.embedding_model,
-                    "summarization_model": datasource.summarization_model,
-                    "chunk_size": request.configuration.chunk_size,
-                    "chunk_overlap": request.configuration.chunk_overlap,
-                    "file_name": request.original_filename,
-                    "file_size_bytes": file_path.stat().st_size,
-                }
-            )
+            data_source_record_run(datasource, doc_id, file_path, request)
 
             # Delete to avoid duplicates
             self.chunks_vector_store.delete_document(doc_id)

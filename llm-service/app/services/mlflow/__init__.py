@@ -37,14 +37,17 @@
 #
 
 import re
+from pathlib import Path
 from typing import Any
 
 import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Experiment
 
+from app.routers.index.data_source import RagIndexDocumentRequest
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
 from app.services.metadata_apis import data_sources_metadata_api
+from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.query.query_configuration import QueryConfiguration
 
@@ -100,8 +103,12 @@ def chat_log_ml_flow_params(
 
 
 def record_rag_mlflow_run(
-    new_chat_message, query_configuration, response_id, session, user_name
-):
+    new_chat_message: RagStudioChatMessage,
+    query_configuration: QueryConfiguration,
+    response_id: str,
+    session: Session,
+    user_name: str,
+) -> None:
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
@@ -130,7 +137,9 @@ def record_rag_mlflow_run(
     chat_log_ml_flow_table(new_chat_message)
 
 
-def record_direct_llm_mlflow_run(response_id, session, user_name):
+def record_direct_llm_mlflow_run(
+    response_id: str, session: Session, user_name: str
+) -> None:
     experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
@@ -149,3 +158,31 @@ def record_direct_llm_mlflow_run(response_id, session, user_name):
             "user_name": user_name,
         },
     )
+
+
+def data_source_record_run(
+    datasource: RagDataSource,
+    doc_id: str,
+    file_path: Path,
+    request: RagIndexDocumentRequest,
+) -> None:
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"datasource_{datasource.name}_{datasource.id}"
+    )
+    run = mlflow.start_run(
+        experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
+    )
+    metrics = {
+        "file_size_bytes": file_path.stat().st_size,
+    }
+    params = {
+        "data_source_id": datasource.id,
+        "embedding_model": datasource.embedding_model,
+        "summarization_model": datasource.summarization_model,
+        "chunk_size": request.configuration.chunk_size,
+        "chunk_overlap": request.configuration.chunk_overlap,
+        "file_name": request.original_filename,
+        "file_size_bytes": file_path.stat().st_size,
+    }
+    client = MlflowClient()
+    client.log_batch(run_id=run.info.run_id, params=params, metrics=metrics)
