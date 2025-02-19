@@ -37,7 +37,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
 from llama_index.core.node_parser import SentenceSplitter
-from mlflow.entities import Experiment
+from mlflow.entities import Experiment, ViewType
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -146,6 +146,11 @@ class DataSourceController:
         experiment: Experiment = mlflow.set_experiment(
             experiment_name=f"datasource_{datasource.name}_{data_source_id}"
         )
+        logger.debug(f"Experiment ID: {experiment.experiment_id}")
+        print(f"Experiment ID: {experiment.experiment_id}")
+        exs = mlflow.search_experiments(view_type=ViewType.ALL)
+        logger.debug(f"Experiments: {exs}")
+        print(f"Experiments: {exs}")
         with mlflow.start_run(
             experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
         ):
