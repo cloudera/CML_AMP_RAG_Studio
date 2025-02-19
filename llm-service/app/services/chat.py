@@ -85,8 +85,10 @@ def v2_chat(
         experiment_name=f"session_{session.name}_{session.id}"
     )
     logger.debug(f"Experiment ID: {experiment.experiment_id}")
+    print(f"Experiment ID: {experiment.experiment_id}")
     exs = mlflow.search_experiments(view_type=ViewType.ALL)
     logger.debug(f"Experiments: {exs}")
+    print(f"Experiments: {exs}")
     # mlflow.set_experiment_tag("session_id", session.id)
     with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
