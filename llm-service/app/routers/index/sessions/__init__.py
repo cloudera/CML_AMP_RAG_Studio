@@ -40,7 +40,6 @@ import json
 import logging
 from typing import Annotated
 
-import mlflow
 from fastapi import APIRouter, Cookie
 from pydantic import BaseModel
 
@@ -142,7 +141,7 @@ def chat(
     _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
     user_name = parse_jwt_cookie(_basusertoken)
-    mlflow.llama_index.autolog()
+    # mlflow.llama_index.autolog()
 
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:

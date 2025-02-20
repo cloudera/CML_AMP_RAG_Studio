@@ -32,7 +32,6 @@ import tempfile
 from http import HTTPStatus
 from typing import Any, Dict, Optional
 
-import mlflow
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.cbv import cbv
 from llama_index.core.llms import LLM
@@ -130,7 +129,7 @@ class DataSourceController:
         request: RagIndexDocumentRequest,
     ) -> None:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
-        mlflow.llama_index.autolog()
+        # mlflow.llama_index.autolog()
         self._download_and_index(datasource, doc_id, request)
 
     # @mlflow.trace(name="download_and_index")

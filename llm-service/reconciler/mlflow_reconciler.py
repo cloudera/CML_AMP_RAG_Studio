@@ -49,40 +49,56 @@ import threading
 from pathlib import Path
 import argparse
 import asyncio
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import mlflow
 from mlflow.entities import Experiment
 from pydantic import BaseModel
-from uvicorn.logging import DefaultFormatter
 
-# Configure logging
 logger = logging.getLogger(__name__)
-formatter = DefaultFormatter("%(levelprefix)s %(message)s")
 
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(formatter)
 
-logger.addHandler(handler)
+def configure_logger():
+    """Configure logger formatting and verbosity."""
+    # match Java backend's formatting
+    formatter = logging.Formatter(
+        fmt=" ".join(
+            [
+                "%(asctime)s",
+                "%(levelname)5s",
+                "%(name)30s",
+                "%(message)s",
+            ]
+        )
+    )
+    # https://docs.python.org/3/library/logging.html#logging.Formatter.formatTime
+    formatter.converter = time.gmtime
+    formatter.default_time_format = "%H:%M:%S"
+    formatter.default_msec_format = "%s.%03d"
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.WARNING)
+    handler.setFormatter(formatter)
+
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(handler)
 
 
 class MlflowTable(BaseModel):
     data: dict[str, Any]
     artifact_file: str
-    run_id: str
 
 
 class MlflowRunData(BaseModel):
     experiment_name: str
     run_name: str
-    tags: dict[str, Any]
-    metrics: dict[str, int]
-    params: dict[str, Any]
-    table: MlflowTable
+    tags: Optional[dict[str, Any]]
+    metrics: Optional[dict[str, int]]
+    params: Optional[dict[str, Any]]
+    table: Optional[MlflowTable]
 
 
-def evaluate_json_data(data: MlflowRunData) -> Literal["success", "failed", None]:
-
+async def evaluate_json_data(data: MlflowRunData) -> Literal["success", "failed", None]:
     if data["status"] == "success":
         return None
 
@@ -90,13 +106,18 @@ def evaluate_json_data(data: MlflowRunData) -> Literal["success", "failed", None
         experiment: Experiment = mlflow.set_experiment(
             experiment_name=data["experiment_name"]
         )
+        print(data)
         with mlflow.start_run(
             experiment_id=experiment.experiment_id, run_name=data["run_name"]
         ):
-            mlflow.log_params(data["params"])
-            mlflow.log_metrics(data["metrics"])
-            mlflow.set_tags(data["tags"])
-            mlflow.log_table(data["table"].data, data["table"].artifact_file)
+            if "tags" in data:
+                mlflow.set_tags(data["tags"])
+            if "params" in data:
+                mlflow.log_params(data["params"])
+            if "metrics" in data:
+                mlflow.log_metrics(data["metrics"])
+            if "table" in data:
+                mlflow.log_table(data["table"].data, data["table"].artifact_file)
             return "success"
 
     return "failed"
@@ -109,16 +130,23 @@ async def process_io_pair(file_path, processing_function):
     # Process io pair
     status = await processing_function(data)
     # save the response
+    if status == "success":
+        logger.info("Successfully processed i/o pair: %s", file_path)
+        os.remove(file_path)
+        return
+
     if status is not None:
         data["status"] = status
         with open(file_path, "w") as f:
             json.dump(data, f, indent=2)
+
     if status == "pending":
         logger.info(
             "MLFlow experiment and run IDs set for i/o pair: %s. Queued for evaluation.",
             file_path,
         )
         return
+
     if status == "failed":
         logger.error("Failed to process i/o pair: %s. Will retry.", file_path)
         return
@@ -143,8 +171,8 @@ def background_worker(directory, processing_function):
                         file_path=file_path, processing_function=processing_function
                     )
                 )
-            except Exception as e:
-                logger.error("Error processing file %s: %s", file_path, e)
+            except Exception:
+                logger.error("Error processing file %s", file_path, exc_info=True)
         time.sleep(15)
 
 
@@ -160,6 +188,7 @@ def start_background_worker(directory, processing_function):
 
 
 if __name__ == "__main__":
+    configure_logger()
     # Directory to save JSON files
     # Argument parsing to get the data directory
     parser = argparse.ArgumentParser(
@@ -168,7 +197,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data-dir",
         type=str,
-        default=os.path.join("data", "responses"),
+        default=os.path.join(os.path.dirname(__file__), "data"),
         help="Directory to save JSON files",
     )
     args = parser.parse_args()
@@ -178,7 +207,7 @@ if __name__ == "__main__":
     start_background_worker(data_dir, evaluate_json_data)
     try:
         while True:
-            logger.info("Reconciler looking for i/o pairs in %s...", data_dir)
+            logger.debug("Reconciler looking for i/o pairs in %s...", data_dir)
             time.sleep(1)
     except KeyboardInterrupt:
-        logger.info("Shutting down...")
+        logger.debug("Shutting down...")
