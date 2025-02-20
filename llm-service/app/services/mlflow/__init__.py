@@ -42,7 +42,7 @@ from typing import Any, Sequence
 
 import mlflow
 from mlflow import MlflowClient
-from mlflow.entities import Experiment, Param, Metric
+from mlflow.entities import Experiment, Param, Metric, RunTag
 from pydantic import BaseModel
 
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
@@ -50,6 +50,8 @@ from app.services.metadata_apis import data_sources_metadata_api
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.query.query_configuration import QueryConfiguration
+
+# mypy: disable-error-code="no-untyped-call"
 
 
 def chat_log_ml_flow_table(message: RagStudioChatMessage) -> None:
@@ -114,28 +116,35 @@ def record_rag_mlflow_run(
     )
 
     # mlflow.set_experiment_tag("session_id", session.id)
-    run = mlflow.start_run(
+    with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
-    )
-    client = MlflowClient()
-    params = chat_log_ml_flow_params(session, query_configuration, user_name)
-    source_nodes: list[RagPredictSourceNode] = new_chat_message.source_nodes
-    metrics = {
-        "source_nodes_count": len(source_nodes),
-        "max_score": (source_nodes[0].score if source_nodes else 0.0),
-        **{
-            evaluation.name: evaluation.value
-            for evaluation in new_chat_message.evaluations
-        },
-    }
-    client.log_batch(
-        run.info.run_id,
-        tags={"response_id": response_id},
-        params=params,
-        metrics=metrics,
-    )
-    chat_log_ml_flow_table(new_chat_message)
-    mlflow.end_run()
+    ) as run:
+        client = MlflowClient()
+        params = chat_log_ml_flow_params(session, query_configuration, user_name)
+        source_nodes: list[RagPredictSourceNode] = new_chat_message.source_nodes
+        metrics: dict[str, Any] = {
+            "source_nodes_count": len(source_nodes),
+            "max_score": (source_nodes[0].score if source_nodes else 0.0),
+            **{
+                evaluation.name: evaluation.value
+                for evaluation in new_chat_message.evaluations
+            },
+        }
+        client.log_batch(
+            run.info.run_id,
+            tags=[RunTag("response_id", response_id)],
+            params=[Param(key=key, value=value) for key, value in params.items()],
+            metrics=[
+                Metric(
+                    key=key,
+                    value=value,
+                    timestamp=int(new_chat_message.timestamp),
+                    step=0,
+                )
+                for key, value in metrics.items()
+            ],
+        )
+        chat_log_ml_flow_table(new_chat_message)
 
 
 def record_direct_llm_mlflow_run(
@@ -144,23 +153,22 @@ def record_direct_llm_mlflow_run(
     experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
-    run = mlflow.start_run(
+    with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
-    )
-    params: Sequence[Param] = [
-        Param("inference_model", session.inference_model),
-        Param("exclude_knowledge_base", True),
-        Param("session_id", session.id),
-        Param("data_source_ids", session.data_source_ids),
-        Param("user_name", user_name),
-    ]
-    client = MlflowClient()
-    client.log_batch(
-        run.info.run_id,
-        tags={"response_id": response_id, "direct_llm": True},
-        params=params,
-    )
-    mlflow.end_run()
+    ) as run:
+        params: Sequence[Param] = [
+            Param("inference_model", session.inference_model),
+            Param("exclude_knowledge_base", True),
+            Param("session_id", session.id),
+            Param("data_source_ids", session.data_source_ids),
+            Param("user_name", user_name),
+        ]
+        client = MlflowClient()
+        client.log_batch(
+            run.info.run_id,
+            tags=[RunTag("response_id", response_id), RunTag("direct_llm", True)],
+            params=params,
+        )
 
 
 class RagIndexDocumentConfiguration(BaseModel):
@@ -184,23 +192,19 @@ def data_source_record_run(
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"datasource_{datasource.name}_{datasource.id}"
     )
-    run = mlflow.start_run(
+    with mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
-    )
-    #  Todo: Figure out if we care about the timestamp or step but they're required
-    metrics = [
-        Metric("file_size_bytes", file_path.stat().st_size, timestamp=0, step=0),
-    ]
-    params: Sequence[Param] = [
-        Param("data_source_id", value=str(datasource.id)),
-        Param("embedding_model", value=datasource.embedding_model),
-        Param("summarization_model", value=datasource.summarization_model),
-        Param("chunk_size", value=str(request.configuration.chunk_size)),
-        Param("chunk_overlap", value=str(request.configuration.chunk_overlap)),
-        Param("file_name", value=request.original_filename),
-        Param("file_size_bytes", value=str(file_path.stat().st_size)),
-    ]
+    ) as run:
 
-    client = MlflowClient()
-    client.log_batch(run_id=run.info.run_id, metrics=metrics, params=params)
-    mlflow.end_run()
+        params: Sequence[Param] = [
+            Param("data_source_id", value=str(datasource.id)),
+            Param("embedding_model", value=datasource.embedding_model),
+            Param("summarization_model", value=datasource.summarization_model),
+            Param("chunk_size", value=str(request.configuration.chunk_size)),
+            Param("chunk_overlap", value=str(request.configuration.chunk_overlap)),
+            Param("file_name", value=request.original_filename),
+            Param("file_size_bytes", value=str(file_path.stat().st_size)),
+        ]
+
+        client = MlflowClient()
+        client.log_batch(run_id=run.info.run_id, params=params)
