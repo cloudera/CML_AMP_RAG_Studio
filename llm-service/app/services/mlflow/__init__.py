@@ -38,11 +38,11 @@
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import mlflow
 from mlflow import MlflowClient
-from mlflow.entities import Experiment
+from mlflow.entities import Experiment, Param, Metric
 from pydantic import BaseModel
 
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
@@ -135,6 +135,7 @@ def record_rag_mlflow_run(
         metrics=metrics,
     )
     chat_log_ml_flow_table(new_chat_message)
+    mlflow.end_run()
 
 
 def record_direct_llm_mlflow_run(
@@ -146,18 +147,20 @@ def record_direct_llm_mlflow_run(
     run = mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"{response_id}"
     )
+    params: Sequence[Param] = [
+        Param("inference_model", session.inference_model),
+        Param("exclude_knowledge_base", True),
+        Param("session_id", session.id),
+        Param("data_source_ids", session.data_source_ids),
+        Param("user_name", user_name),
+    ]
     client = MlflowClient()
     client.log_batch(
         run.info.run_id,
         tags={"response_id": response_id, "direct_llm": True},
-        params={
-            "inference_model": session.inference_model,
-            "exclude_knowledge_base": True,
-            "session_id": session.id,
-            "data_source_ids": session.data_source_ids,
-            "user_name": user_name,
-        },
+        params=params,
     )
+    mlflow.end_run()
 
 
 class RagIndexDocumentConfiguration(BaseModel):
@@ -184,17 +187,20 @@ def data_source_record_run(
     run = mlflow.start_run(
         experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
     )
-    metrics = {
-        "file_size_bytes": file_path.stat().st_size,
-    }
-    params = {
-        "data_source_id": datasource.id,
-        "embedding_model": datasource.embedding_model,
-        "summarization_model": datasource.summarization_model,
-        "chunk_size": request.configuration.chunk_size,
-        "chunk_overlap": request.configuration.chunk_overlap,
-        "file_name": request.original_filename,
-        "file_size_bytes": file_path.stat().st_size,
-    }
+    #  Todo: Figure out if we care about the timestamp or step but they're required
+    metrics = [
+        Metric("file_size_bytes", file_path.stat().st_size, timestamp=0, step=0),
+    ]
+    params: Sequence[Param] = [
+        Param("data_source_id", value=str(datasource.id)),
+        Param("embedding_model", value=datasource.embedding_model),
+        Param("summarization_model", value=datasource.summarization_model),
+        Param("chunk_size", value=str(request.configuration.chunk_size)),
+        Param("chunk_overlap", value=str(request.configuration.chunk_overlap)),
+        Param("file_name", value=request.original_filename),
+        Param("file_size_bytes", value=str(file_path.stat().st_size)),
+    ]
+
     client = MlflowClient()
-    client.log_batch(run_id=run.info.run_id, params=params, metrics=metrics)
+    client.log_batch(run_id=run.info.run_id, metrics=metrics, params=params)
+    mlflow.end_run()
