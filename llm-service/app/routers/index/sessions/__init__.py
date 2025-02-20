@@ -42,14 +42,13 @@ from typing import Annotated
 
 import mlflow
 from fastapi import APIRouter, Cookie
-from mlflow.entities import Experiment, Run
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
-from ....services.metadata_apis import session_metadata_api
+from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
@@ -93,18 +92,7 @@ def rating(
     response_id: str,
     request: ChatResponseRating,
 ) -> ChatResponseRating:
-    session = session_metadata_api.get_session(session_id)
-    experiment: Experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
-    )
-    runs: list[Run] = mlflow.search_runs(
-        [experiment.experiment_id],
-        filter_string=f"tags.response_id='{response_id}'",
-        output_format="list",
-    )
-    for run in runs:
-        value: int = 1 if request.rating else -1
-        mlflow.log_metric("rating", value, run_id=run.info.run_id)
+    rating_mlflow_log_metric(request, response_id, session_id)
     return ChatResponseRating(rating=request.rating)
 
 
@@ -121,21 +109,7 @@ def feedback(
     response_id: str,
     request: ChatResponseFeedback,
 ) -> ChatResponseFeedback:
-    session = session_metadata_api.get_session(session_id)
-    experiment: Experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
-    )
-    runs: list[Run] = mlflow.search_runs(
-        [experiment.experiment_id],
-        filter_string=f"tags.response_id='{response_id}'",
-        output_format="list",
-    )
-    for run in runs:
-        mlflow.log_table(
-            data={"feedback": request.feedback},
-            artifact_file="feedback.json",
-            run_id=run.info.run_id,
-        )
+    feedback_mlflow_log_table(request, response_id, session_id)
     return ChatResponseFeedback(feedback=request.feedback)
 
 

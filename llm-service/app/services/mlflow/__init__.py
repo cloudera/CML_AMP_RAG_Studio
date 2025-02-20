@@ -35,18 +35,18 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import json
 import re
 from pathlib import Path
 from typing import Any, Sequence
 
 import mlflow
 from mlflow import MlflowClient
-from mlflow.entities import Experiment, Param, Metric, RunTag
+from mlflow.entities import Experiment, Param, Metric, RunTag, Run
 from pydantic import BaseModel
 
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
-from app.services.metadata_apis import data_sources_metadata_api
+from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.query.query_configuration import QueryConfiguration
@@ -183,28 +183,70 @@ class RagIndexDocumentRequest(BaseModel):
     configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
+def write_mlflow_run_json(experiment_name: str, run_name: str, data: dict[str, Any]):
+    contents = {
+        "experiment_name": experiment_name,
+        "run_name": run_name,
+        "data": data,
+        "status": "pending",
+    }
+    with open(f"{experiment_name}-{run_name}.json", "w") as f:
+        json.dump(contents, f)
+
+
 def data_source_record_run(
     datasource: RagDataSource,
     doc_id: str,
     file_path: Path,
     request: RagIndexDocumentRequest,
 ) -> None:
-    experiment: Experiment = mlflow.set_experiment(
-        experiment_name=f"datasource_{datasource.name}_{datasource.id}"
+
+    write_mlflow_run_json(
+        f"datasource_{datasource.name}_{datasource.id}",
+        f"doc_{doc_id}",
+        {
+            "params": {
+                "data_source_id": str(datasource.id),
+                "embedding_model": datasource.embedding_model,
+                "summarization_model": datasource.summarization_model,
+                "chunk_size": str(request.configuration.chunk_size),
+                "chunk_overlap": str(request.configuration.chunk_overlap),
+                "file_name": request.original_filename,
+                "file_size_bytes": str(file_path.stat().st_size),
+            }
+        },
     )
-    with mlflow.start_run(
-        experiment_id=experiment.experiment_id, run_name=f"doc_{doc_id}"
-    ) as run:
 
-        params: Sequence[Param] = [
-            Param("data_source_id", value=str(datasource.id)),
-            Param("embedding_model", value=datasource.embedding_model),
-            Param("summarization_model", value=datasource.summarization_model),
-            Param("chunk_size", value=str(request.configuration.chunk_size)),
-            Param("chunk_overlap", value=str(request.configuration.chunk_overlap)),
-            Param("file_name", value=request.original_filename),
-            Param("file_size_bytes", value=str(file_path.stat().st_size)),
-        ]
 
-        client = MlflowClient()
-        client.log_batch(run_id=run.info.run_id, params=params)
+def rating_mlflow_log_metric(request, response_id, session_id):
+    session = session_metadata_api.get_session(session_id)
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    runs: list[Run] = mlflow.search_runs(
+        [experiment.experiment_id],
+        filter_string=f"tags.response_id='{response_id}'",
+        output_format="list",
+    )
+
+    for run in runs:
+        value: int = 1 if request.rating else -1
+        mlflow.log_metric("rating", value, run_id=run.info.run_id)
+
+
+def feedback_mlflow_log_table(request, response_id, session_id):
+    session = session_metadata_api.get_session(session_id)
+    experiment: Experiment = mlflow.set_experiment(
+        experiment_name=f"session_{session.name}_{session.id}"
+    )
+    runs: list[Run] = mlflow.search_runs(
+        [experiment.experiment_id],
+        filter_string=f"tags.response_id='{response_id}'",
+        output_format="list",
+    )
+    for run in runs:
+        mlflow.log_table(
+            data={"feedback": request.feedback},
+            artifact_file="feedback.json",
+            run_id=run.info.run_id,
+        )
