@@ -43,8 +43,8 @@ from typing import Any
 import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Experiment
+from pydantic import BaseModel
 
-from app.routers.index.data_source import RagIndexDocumentRequest
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
@@ -158,6 +158,18 @@ def record_direct_llm_mlflow_run(
             "user_name": user_name,
         },
     )
+
+
+class RagIndexDocumentConfiguration(BaseModel):
+    chunk_size: int = 512  # this is llama-index's default
+    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
+
+
+class RagIndexDocumentRequest(BaseModel):
+    s3_bucket_name: str
+    s3_document_key: str
+    original_filename: str
+    configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
 def data_source_record_run(

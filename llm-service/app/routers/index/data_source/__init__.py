@@ -48,7 +48,7 @@ from ....ai.vector_stores.vector_store import VectorStore
 from ....services import document_storage, models
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
-from ....services.mlflow import data_source_record_run
+from ....services.mlflow import data_source_record_run, RagIndexDocumentRequest
 
 logger = logging.getLogger(__name__)
 
@@ -61,18 +61,6 @@ class SummarizeDocumentRequest(BaseModel):
     s3_bucket_name: str
     s3_document_key: str
     original_filename: str
-
-
-class RagIndexDocumentConfiguration(BaseModel):
-    chunk_size: int = 512  # this is llama-index's default
-    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
-
-
-class RagIndexDocumentRequest(BaseModel):
-    s3_bucket_name: str
-    s3_document_key: str
-    original_filename: str
-    configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
 class ChunkContentsResponse(BaseModel):
