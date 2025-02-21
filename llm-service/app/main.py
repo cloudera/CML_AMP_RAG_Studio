@@ -38,8 +38,6 @@
 
 import functools
 import logging
-import os
-import pwd
 import sys
 import time
 from collections.abc import Awaitable, Callable
