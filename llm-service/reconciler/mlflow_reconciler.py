@@ -96,7 +96,7 @@ class MlflowRunData(BaseModel):
     experiment_name: str
     run_name: str
     tags: Optional[dict[str, Any]] = None
-    metrics: Optional[dict[str, int]] = None
+    metrics: Optional[dict[str, float]] = None
     params: Optional[dict[str, Any]] = None
     table: Optional[MlflowTable] = None
     status: MlflowRunStatus
@@ -121,7 +121,9 @@ async def evaluate_json_data(data: MlflowRunData) -> Optional[MlflowRunStatus]:
             if data.metrics:
                 mlflow.log_metrics(data.metrics)
             if data.table:
-                mlflow.log_table(**data.table)
+                mlflow.log_table(
+                    data=data.table.data, artifact_file=data.table.artifact_file
+                )
             return "success"
 
     return "failed"

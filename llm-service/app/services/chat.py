@@ -39,7 +39,6 @@ import time
 import uuid
 from typing import List, Iterable
 
-import mlflow
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
@@ -85,7 +84,6 @@ def v2_chat(
     return new_chat_message
 
 
-@mlflow.trace(name="v2_chat")
 def _run_chat(
     session: Session,
     response_id: str,
