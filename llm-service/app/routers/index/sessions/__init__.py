@@ -91,7 +91,7 @@ def rating(
     response_id: str,
     request: ChatResponseRating,
 ) -> ChatResponseRating:
-    rating_mlflow_log_metric(request, response_id, session_id)
+    rating_mlflow_log_metric(request.rating, response_id, session_id)
     return ChatResponseRating(rating=request.rating)
 
 
@@ -108,7 +108,7 @@ def feedback(
     response_id: str,
     request: ChatResponseFeedback,
 ) -> ChatResponseFeedback:
-    feedback_mlflow_log_table(request, response_id, session_id)
+    feedback_mlflow_log_table(request.feedback, response_id, session_id)
     return ChatResponseFeedback(feedback=request.feedback)
 
 

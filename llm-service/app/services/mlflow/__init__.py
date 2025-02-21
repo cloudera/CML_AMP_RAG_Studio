@@ -46,7 +46,6 @@ import mlflow
 from mlflow.entities import Experiment, Run
 from pydantic import BaseModel
 
-from app.routers.index.sessions import ChatResponseRating, ChatResponseFeedback
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
@@ -213,9 +212,7 @@ def data_source_record_run(
     )
 
 
-def rating_mlflow_log_metric(
-    request: ChatResponseRating, response_id: str, session_id: int
-) -> None:
+def rating_mlflow_log_metric(rating: bool, response_id: str, session_id: int) -> None:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
@@ -227,13 +224,11 @@ def rating_mlflow_log_metric(
     )
 
     for run in runs:
-        value: int = 1 if request.rating else -1
+        value: int = 1 if rating else -1
         mlflow.log_metric("rating", value, run_id=run.info.run_id)
 
 
-def feedback_mlflow_log_table(
-    request: ChatResponseFeedback, response_id: str, session_id: int
-) -> None:
+def feedback_mlflow_log_table(feedback: str, response_id: str, session_id: int) -> None:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
@@ -245,7 +240,7 @@ def feedback_mlflow_log_table(
     )
     for run in runs:
         mlflow.log_table(
-            data={"feedback": request.feedback},
+            data={"feedback": feedback},
             artifact_file="feedback.json",
             run_id=run.info.run_id,
         )
