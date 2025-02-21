@@ -109,13 +109,13 @@ async def evaluate_json_data(data: MlflowRunData) -> Literal["success", "failed"
         with mlflow.start_run(
             experiment_id=experiment.experiment_id, run_name=data["run_name"]
         ):
-            if "tags" in data and data["tags"] is not None:
+            if "tags" in data:
                 mlflow.set_tags(data["tags"])
-            if "params" in data and data["params"] is not None:
+            if "params" in data:
                 mlflow.log_params(data["params"])
-            if "metrics" in data and data["metrics"] is not None:
+            if "metrics" in data:
                 mlflow.log_metrics(data["metrics"])
-            if "table" in data and data["table"] is not None:
+            if "table" in data:
                 mlflow.log_table(**data["table"])
             return "success"
 
