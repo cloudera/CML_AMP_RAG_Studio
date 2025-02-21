@@ -84,6 +84,9 @@ def configure_logger():
     logger.addHandler(handler)
 
 
+MlflowRunStatus = Literal["pending", "success", "failed"]
+
+
 class MlflowTable(BaseModel):
     data: dict[str, Any]
     artifact_file: str
@@ -92,31 +95,33 @@ class MlflowTable(BaseModel):
 class MlflowRunData(BaseModel):
     experiment_name: str
     run_name: str
-    tags: Optional[dict[str, Any]]
-    metrics: Optional[dict[str, int]]
-    params: Optional[dict[str, Any]]
-    table: Optional[MlflowTable]
+    tags: Optional[dict[str, Any]] = None
+    metrics: Optional[dict[str, int]] = None
+    params: Optional[dict[str, Any]] = None
+    table: Optional[MlflowTable] = None
+    status: MlflowRunStatus
 
 
-async def evaluate_json_data(data: MlflowRunData) -> Literal["success", "failed", None]:
-    if data["status"] == "success":
+async def evaluate_json_data(data: MlflowRunData) -> Optional[MlflowRunStatus]:
+    if data.status == "success":
         return None
 
-    if data["status"] == "pending":
+    if data.status == "pending":
         experiment: Experiment = mlflow.set_experiment(
-            experiment_name=data["experiment_name"]
+            experiment_name=data.experiment_name,
         )
         with mlflow.start_run(
-            experiment_id=experiment.experiment_id, run_name=data["run_name"]
+            experiment_id=experiment.experiment_id,
+            run_name=data.run_name,
         ):
-            if "tags" in data:
-                mlflow.set_tags(data["tags"])
-            if "params" in data:
-                mlflow.log_params(data["params"])
-            if "metrics" in data:
-                mlflow.log_metrics(data["metrics"])
-            if "table" in data:
-                mlflow.log_table(**data["table"])
+            if data.tags:
+                mlflow.set_tags(data.tags)
+            if data.params:
+                mlflow.log_params(data.params)
+            if data.metrics:
+                mlflow.log_metrics(data.metrics)
+            if data.table:
+                mlflow.log_table(**data.table)
             return "success"
 
     return "failed"
@@ -125,19 +130,20 @@ async def evaluate_json_data(data: MlflowRunData) -> Literal["success", "failed"
 async def process_io_pair(file_path, processing_function):
     """Callback function to process a io saved in a file."""
     with open(file_path, "r") as f:
-        data = json.load(f)
+        data = MlflowRunData(**json.load(f))
+
     # Process io pair
     status = await processing_function(data)
-    # save the response
     if status == "success":
         logger.info("Successfully processed i/o pair: %s", file_path)
         os.remove(file_path)
         return
 
+    # save the response
     if status is not None:
-        data["status"] = status
+        data.status = status
         with open(file_path, "w") as f:
-            json.dump(data, f, indent=2)
+            json.dump(data.model_dump(), f, indent=2)
 
     if status == "pending":
         logger.info(
