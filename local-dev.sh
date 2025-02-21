@@ -70,12 +70,11 @@ if [ -z "$USE_SYSTEM_UV" ]; then
   python -m pip install uv
 fi
 uv sync
-
-mkdir -p $MLFLOW_RECONCILER_DATA_PATH
 uv run pytest -sxvvra app
 
 uv run mlflow ui &
 
+mkdir -p $MLFLOW_RECONCILER_DATA_PATH
 uv run fastapi dev --port=8081 &
 
 # wait for the python backend to be ready
