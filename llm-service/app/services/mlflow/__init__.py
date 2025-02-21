@@ -46,6 +46,7 @@ import mlflow
 from mlflow.entities import Experiment, Run
 from pydantic import BaseModel
 
+from app.routers.index.sessions import ChatResponseRating, ChatResponseFeedback
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
@@ -171,7 +172,9 @@ class RagIndexDocumentRequest(BaseModel):
     configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
-def write_mlflow_run_json(experiment_name: str, run_name: str, data: dict[str, Any]):
+def write_mlflow_run_json(
+    experiment_name: str, run_name: str, data: dict[str, Any]
+) -> None:
     contents = {
         "experiment_name": experiment_name,
         "run_name": run_name,
@@ -210,7 +213,9 @@ def data_source_record_run(
     )
 
 
-def rating_mlflow_log_metric(request, response_id, session_id):
+def rating_mlflow_log_metric(
+    request: ChatResponseRating, response_id: str, session_id: int
+) -> None:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
@@ -226,7 +231,9 @@ def rating_mlflow_log_metric(request, response_id, session_id):
         mlflow.log_metric("rating", value, run_id=run.info.run_id)
 
 
-def feedback_mlflow_log_table(request, response_id, session_id):
+def feedback_mlflow_log_table(
+    request: ChatResponseFeedback, response_id: str, session_id: int
+) -> None:
     session = session_metadata_api.get_session(session_id)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
