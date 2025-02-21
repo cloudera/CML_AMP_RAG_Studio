@@ -90,6 +90,7 @@ export interface ChunkMetadata {
   row_number?: number;
   page_number?: string;
   chunk_format?: string;
+  header_path?: string;
 }
 
 export interface ChunkContentsResponse {

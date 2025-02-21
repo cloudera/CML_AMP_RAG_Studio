@@ -41,6 +41,7 @@ import {
   CloudOutlined,
   DatabaseFilled,
   DesktopOutlined,
+  LineChartOutlined,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -101,6 +102,12 @@ const Sidebar: React.FC = () => {
       .then(() => null)
       .catch(() => null);
     return;
+  };
+
+  const navToAnalytics = () => {
+    navigate({ to: "/analytics" })
+      .then(() => null)
+      .catch(() => null);
   };
 
   const navToModels = () => {
@@ -178,20 +185,27 @@ const Sidebar: React.FC = () => {
   ];
 
   const models = getItem(
-    <div data-testid="data-management-nav">Models</div>,
+    <div data-testid="models-nav">Models</div>,
     "models",
     navToModels,
     <CloudOutlined />,
   );
 
+  const analyticsItem = getItem(
+    <div data-testid="analytics-nav">Analytics</div>,
+    "analytics",
+    navToAnalytics,
+    <LineChartOutlined />,
+  );
+
   const feedbackItem = getItem(
-    <div data-testid="data-management-nav">Leave Feedback</div>,
+    <div data-testid="feedback-nav">Leave Feedback</div>,
     "leave-feedback",
     popupFeedback,
     <ThumbUpIcon />,
   );
 
-  const items = [...baseItems, models, feedbackItem];
+  const items = [...baseItems, models, analyticsItem, feedbackItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -200,6 +214,8 @@ const Sidebar: React.FC = () => {
       return ["chat"];
     } else if (matchRoute({ to: "/models", fuzzy: true })) {
       return ["models"];
+    } else if (matchRoute({ to: "/analytics", fuzzy: true })) {
+      return ["analytics"];
     } else {
       return ["chat"];
     }

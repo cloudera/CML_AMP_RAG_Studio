@@ -49,8 +49,13 @@ from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from .caii.caii import get_caii_embedding_models, get_caii_llm_models
+from .caii.caii import (
+    get_caii_embedding_models,
+    get_caii_llm_models,
+    get_caii_reranking_models,
+)
 from .caii.caii import get_embedding_model as caii_embedding
+from .caii.caii import get_reranking_model as caii_reranking
 from .caii.caii import get_llm as caii_llm
 from .caii.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
@@ -75,21 +80,7 @@ def get_reranking_model(
     if model_name is None:
         return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
-        # base_url = "https://caii-prod-long-running.eng-ml-l.vnu8-sqze.cloudera.site/namespaces/serving-default/endpoints/mistral-4b-rerank-l40s/v1/ranking"
-        #
-        # NVIDIARerank._validate_url = lambda self, url: url
-        #
-        # NVIDIARerank._get_models = lambda self: []
-        #
-        # token = get_caii_access_token()
-        # print(f"Using NVIDIA Rerank with token: {token}")
-        # return NVIDIARerank(
-        #     base_url=base_url,
-        #     api_key=token,
-        #     top_n=5,
-        #     is_hosted=False
-        # )
-        return None
+        return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
 
@@ -135,7 +126,7 @@ def get_available_llm_models() -> list[ModelResponse]:
 
 def get_available_rerank_models() -> List[ModelResponse]:
     if is_caii_enabled():
-        return []
+        return get_caii_reranking_models()
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
         ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),

@@ -27,7 +27,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
 import logging
 import tempfile
 from http import HTTPStatus
@@ -45,8 +44,10 @@ from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
 from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
-from ....services.metadata_apis import data_sources_metadata_api
 from ....services import document_storage, models
+from ....services.metadata_apis import data_sources_metadata_api
+from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
+from ....services.mlflow import write_mlflow_run_json
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,6 @@ class SummarizeDocumentRequest(BaseModel):
 
 
 class RagIndexDocumentConfiguration(BaseModel):
-    # TODO: Add more params
     chunk_size: int = 512  # this is llama-index's default
     chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
 
@@ -141,6 +141,11 @@ class DataSourceController:
         request: RagIndexDocumentRequest,
     ) -> None:
         datasource = data_sources_metadata_api.get_metadata(data_source_id)
+        self._download_and_index(datasource, doc_id, request)
+
+    def _download_and_index(
+        self, datasource: RagDataSource, doc_id: str, request: RagIndexDocumentRequest
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdirname:
             logger.debug("created temporary directory %s", tmpdirname)
             doc_storage = document_storage.from_environment()
@@ -154,7 +159,7 @@ class DataSourceController:
             if datasource.summarization_model:
                 llm = models.get_llm(datasource.summarization_model)
             indexer = EmbeddingIndexer(
-                data_source_id,
+                datasource.id,
                 splitter=SentenceSplitter(
                     chunk_size=request.configuration.chunk_size,
                     chunk_overlap=int(
@@ -167,6 +172,22 @@ class DataSourceController:
                 llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )
+            write_mlflow_run_json(
+                f"datasource_{datasource.name}_{datasource.id}",
+                f"doc_{doc_id}",
+                {
+                    "params": {
+                        "data_source_id": str(datasource.id),
+                        "embedding_model": datasource.embedding_model,
+                        "summarization_model": datasource.summarization_model,
+                        "chunk_size": str(request.configuration.chunk_size),
+                        "chunk_overlap": str(request.configuration.chunk_overlap),
+                        "file_name": request.original_filename,
+                        "file_size_bytes": str(file_path.stat().st_size),
+                    }
+                },
+            )
+
             # Delete to avoid duplicates
             self.chunks_vector_store.delete_document(doc_id)
             try:

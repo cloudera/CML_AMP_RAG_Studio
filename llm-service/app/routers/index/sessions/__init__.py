@@ -35,19 +35,21 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-import time
-import uuid
+import base64
+import json
+import logging
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Cookie
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services import llm_completion
-from ....services.chat import generate_suggested_questions, v2_chat
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage, RagMessage
-from ....services.metadata_apis import session_metadata_api
+from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
+from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
 
@@ -76,9 +78,59 @@ def delete_chat_history(session_id: int) -> str:
     return "Chat history deleted."
 
 
+class ChatResponseRating(BaseModel):
+    rating: bool
+
+
+@router.post(
+    "/responses/{response_id}/rating", summary="Provide a rating on a chat response."
+)
+@exceptions.propagates
+def rating(
+    session_id: int,
+    response_id: str,
+    request: ChatResponseRating,
+) -> ChatResponseRating:
+    rating_mlflow_log_metric(request.rating, response_id, session_id)
+    return ChatResponseRating(rating=request.rating)
+
+
+class ChatResponseFeedback(BaseModel):
+    feedback: str
+
+
+@router.post(
+    "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
+)
+@exceptions.propagates
+def feedback(
+    session_id: int,
+    response_id: str,
+    request: ChatResponseFeedback,
+) -> ChatResponseFeedback:
+    feedback_mlflow_log_table(request.feedback, response_id, session_id)
+    return ChatResponseFeedback(feedback=request.feedback)
+
+
 class RagStudioChatRequest(BaseModel):
     query: str
     configuration: RagPredictConfiguration | None = None
+
+
+def parse_jwt_cookie(jwt_cookie: str | None) -> str:
+    if jwt_cookie is None:
+        return "unknown"
+    try:
+        cookie_crumbs = jwt_cookie.strip().split(".")
+        if len(cookie_crumbs) != 3:
+            return "unknown"
+        base_64_user_info = cookie_crumbs[1]
+        user_info_json = base64.b64decode(base_64_user_info + "===")
+        user_info = json.loads(user_info_json)
+        return str(user_info["username"])
+    except Exception:
+        logger.exception("Failed to parse JWT cookie")
+        return "unknown"
 
 
 @router.post("/chat", summary="Chat with your documents in the requested datasource")
@@ -86,35 +138,14 @@ class RagStudioChatRequest(BaseModel):
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
+    _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
+    user_name = parse_jwt_cookie(_basusertoken)
+
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base:
-        return llm_talk(session_id, request.query)
-    return v2_chat(session_id, request.query, configuration)
-
-
-def llm_talk(
-    session_id: int,
-    query: str,
-) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
-    chat_response = llm_completion.completion(
-        session_id, query, session.inference_model
-    )
-    new_chat_message = RagStudioChatMessage(
-        id=str(uuid.uuid4()),
-        source_nodes=[],
-        inference_model=session.inference_model,
-        evaluations=[],
-        rag_message=RagMessage(
-            user=query,
-            assistant=str(chat_response.message.content),
-        ),
-        timestamp=time.time(),
-        condensed_question=None
-    )
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
-    return new_chat_message
+        return direct_llm_chat(session_id, request.query, user_name)
+    return v2_chat(session_id, request.query, configuration, user_name)
 
 
 class RagSuggestedQuestionsResponse(BaseModel):

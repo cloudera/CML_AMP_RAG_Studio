@@ -40,10 +40,10 @@ import { Flex, Tabs, TabsProps } from "antd";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx";
 import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
-import "chart.js/auto";
 import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import MetricsTab from "pages/DataSources/MetricsTab/MetricsTab.tsx";
 
 export const tabItems: TabsProps["items"] = [
   {
@@ -60,6 +60,11 @@ export const tabItems: TabsProps["items"] = [
     key: "connections",
     label: "Connections",
     children: <DataSourceConnections />,
+  },
+  {
+    key: "metrics",
+    label: "Metrics",
+    children: <MetricsTab />,
   },
   {
     key: "visualize",

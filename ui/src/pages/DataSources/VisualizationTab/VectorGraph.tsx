@@ -37,42 +37,64 @@
  ******************************************************************************/
 
 import { Point2d } from "src/api/dataSourceApi.ts";
-import { Scatter } from "react-chartjs-2";
-import { ChartDataset, Point } from "chart.js";
 import { Skeleton } from "antd";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
+import { ScatterSeriesType } from "@mui/x-charts";
+import { v4 as uuidv4 } from "uuid";
+import { cdlOrange500 } from "src/cuix/variables.ts";
+import { useMemo } from "react";
 
-type DataSets = ChartDataset<"scatter", (number | Point | null)[]>[];
+interface PointsTypeValue {
+  x: number;
+  y: number;
+  id: string;
+}
+type PointsType = Record<string, [PointsTypeValue]>;
 
-const colors = [
-  "rgba(255, 99, 132)",
-  "rgba(54, 162, 235)",
-  "rgba(255, 206, 86)",
-  "rgba(75, 192, 192)",
-  "rgba(153, 102, 255)",
-  "rgba(255, 159, 64)",
-  "rgba(199, 199, 199)",
-  "rgba(83, 102, 255)",
-  "rgba(255, 99, 255)",
-  "rgba(99, 255, 132)",
-  "rgba(255, 99, 71)",
-  "rgba(60, 179, 113)",
-  "rgba(123, 104, 238)",
-  "rgba(255, 215, 0)",
-  "rgba(0, 191, 255)",
-  "rgba(255, 69, 0)",
-  "rgba(138, 43, 226)",
-  "rgba(0, 255, 127)",
-  "rgba(70, 130, 180)",
-  "rgba(255, 20, 147)",
-];
+const sharedSeriesProps: Pick<
+  ScatterSeriesType,
+  "type" | "valueFormatter" | "highlightScope"
+> = {
+  type: "scatter",
+  valueFormatter: () => null,
+  highlightScope: {
+    highlight: "series",
+    fade: "global",
+  },
+};
 
-const hashStringToIndex = (str: string): number => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
-  }
-  return Math.abs(hash % colors.length);
+const prepareData = (
+  rawData: Point2d[],
+  userInput: string,
+): ScatterSeriesType[] => {
+  const points: PointsType = {};
+
+  rawData.forEach((d: Point2d, index) => {
+    if (d[1] in points) {
+      points[d[1]].push({ x: d[0][0], y: d[0][1], id: index.toString() });
+    } else {
+      points[d[1]] = [{ x: d[0][0], y: d[0][1], id: index.toString() }];
+    }
+  });
+
+  const formatSeries = ([fileName, points]: [
+    keyof PointsType,
+    PointsTypeValue[],
+  ]): ScatterSeriesType => {
+    const id = uuidv4();
+    const overrideColor =
+      fileName === "USER_QUERY" ? { color: cdlOrange500 } : {};
+    return {
+      label: fileName === "USER_QUERY" ? `Query: ${userInput}` : fileName,
+      id,
+      data: points,
+      markerSize: fileName === "USER_QUERY" ? 9 : 3,
+      ...overrideColor,
+      ...sharedSeriesProps,
+    };
+  };
+
+  return Object.entries(points).map(formatSeries);
 };
 
 const VectorGraph = ({
@@ -84,34 +106,9 @@ const VectorGraph = ({
   userInput: string;
   loading: boolean;
 }) => {
-  const points: Record<string, [{ x: number; y: number }]> = {};
-
-  rawData.forEach((d: Point2d) => {
-    if (d[1] in points) {
-      points[d[1]].push({ x: d[0][0], y: d[0][1] });
-    } else {
-      points[d[1]] = [{ x: d[0][0], y: d[0][1] }];
-    }
-  });
-
-  const pickColor = (label: string) => colors[hashStringToIndex(label)];
-
-  const vizDatasets: DataSets = Object.entries(points).map(
-    ([label, points]) => {
-      const userQuery = label === "USER_QUERY";
-      const color = pickColor(label);
-      return {
-        label: userQuery ? `Query: ${userInput}` : label,
-        data: points,
-        backgroundColor: userQuery ? "lightgray" : color,
-        borderColor: userQuery ? "black" : color,
-        borderWidth: 1,
-        pointStyle: userQuery ? "circle" : "circle",
-        pointRadius: userQuery ? 15 : 3,
-        pointHoverRadius: userQuery ? 15 : 8,
-        pointHoverBackgroundColor: "black",
-      };
-    },
+  const series = useMemo(
+    () => prepareData(rawData, userInput),
+    [rawData, userInput],
   );
 
   if (loading) {
@@ -119,29 +116,16 @@ const VectorGraph = ({
   }
 
   return (
-    <Scatter
-      data={{
-        datasets: vizDatasets,
-      }}
-      style={{ width: 700 }}
-      options={{
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            enabled: true,
-            position: "nearest",
-            callbacks: {
-              title: function (context) {
-                return context[0].dataset.label;
-              },
-              label: () => "",
-            },
-          },
+    <ScatterChart
+      width={700}
+      height={400}
+      series={series}
+      slotProps={{
+        legend: {
+          hidden: true,
         },
-        interaction: { mode: "dataset" },
       }}
+      disableVoronoi={true}
     />
   );
 };

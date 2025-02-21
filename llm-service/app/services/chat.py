@@ -35,18 +35,15 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
 import time
 import uuid
-from collections.abc import Iterator
-from typing import List
+from typing import List, Iterable
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from . import evaluators
-from .query import querier
+from . import evaluators, llm_completion
 from .chat_store import (
     ChatHistoryManager,
     Evaluation,
@@ -56,15 +53,16 @@ from .chat_store import (
     RagMessage,
 )
 from .metadata_apis import session_metadata_api
+from .metadata_apis.session_metadata_api import Session
+from .mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
+from .query import querier
 from .query.query_configuration import QueryConfiguration
 from ..ai.vector_stores.qdrant import QdrantVectorStore
 from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session_id: int,
-    query: str,
-    configuration: RagPredictConfiguration,
+    session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str
 ) -> RagStudioChatMessage:
     session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
@@ -73,11 +71,26 @@ def v2_chat(
         rerank_model_name=session.rerank_model,
         exclude_knowledge_base=configuration.exclude_knowledge_base,
         use_question_condensing=configuration.use_question_condensing,
-        use_hyde=configuration.use_hyde,
+        use_hyde=session.query_configuration.enable_hyde,
+        use_summary_filter=session.query_configuration.enable_summary_filter,
     )
-
     response_id = str(uuid.uuid4())
 
+    new_chat_message: RagStudioChatMessage = _run_chat(
+        session, response_id, query, query_configuration, user_name
+    )
+
+    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    return new_chat_message
+
+
+def _run_chat(
+    session: Session,
+    response_id: str,
+    query: str,
+    query_configuration: QueryConfiguration,
+    user_name: str,
+) -> RagStudioChatMessage:
     if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400, detail="Only one datasource is supported for chat."
@@ -95,14 +108,13 @@ def v2_chat(
             ),
             evaluations=[],
             timestamp=time.time(),
-            condensed_question=None
+            condensed_question=None,
         )
-
     response, condensed_question = querier.query(
         data_source_id,
         query,
         query_configuration,
-        retrieve_chat_history(session_id),
+        retrieve_chat_history(session.id),
     )
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
@@ -125,7 +137,10 @@ def v2_chat(
         timestamp=time.time(),
         condensed_question=condensed_question,
     )
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+
+    record_rag_mlflow_run(
+        new_chat_message, query_configuration, response_id, session, user_name
+    )
     return new_chat_message
 
 
@@ -230,7 +245,7 @@ def process_response(response: str | None) -> list[str]:
     if response is None:
         return []
 
-    sentences: Iterator[str] = response.splitlines()
+    sentences: Iterable[str] = response.splitlines()
     sentences = map(lambda x: x.strip(), sentences)
     sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
     sentences = map(lambda x: x.removeprefix("-").strip(), sentences)
@@ -239,3 +254,29 @@ def process_response(response: str | None) -> list[str]:
     sentences = filter(lambda x: x != "Empty Response", sentences)
     sentences = filter(lambda x: x != "", sentences)
     return list(sentences)[:5]
+
+
+def direct_llm_chat(
+    session_id: int, query: str, user_name: str
+) -> RagStudioChatMessage:
+    session = session_metadata_api.get_session(session_id)
+    response_id = str(uuid.uuid4())
+    record_direct_llm_mlflow_run(response_id, session, user_name)
+
+    chat_response = llm_completion.completion(
+        session_id, query, session.inference_model
+    )
+    new_chat_message = RagStudioChatMessage(
+        id=response_id,
+        source_nodes=[],
+        inference_model=session.inference_model,
+        evaluations=[],
+        rag_message=RagMessage(
+            user=query,
+            assistant=str(chat_response.message.content),
+        ),
+        timestamp=time.time(),
+        condensed_question=None,
+    )
+    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    return new_chat_message

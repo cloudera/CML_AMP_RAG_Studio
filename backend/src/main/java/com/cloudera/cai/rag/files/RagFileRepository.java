@@ -146,4 +146,13 @@ public class RagFileRepository {
           }
         });
   }
+
+  public int getNumberOfRagDocuments() {
+    return jdbi.withHandle(
+        handle -> {
+          try (var query = handle.createQuery("SELECT count(*) FROM rag_data_source_document")) {
+            return query.mapTo(Integer.class).one();
+          }
+        });
+  }
 }

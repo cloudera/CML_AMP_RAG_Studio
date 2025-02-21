@@ -36,7 +36,18 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Form, Input, Modal, Select, Slider } from "antd";
+import {
+  Collapse,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Popover,
+  Select,
+  Slider,
+  Switch,
+  Typography,
+} from "antd";
 import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
@@ -50,6 +61,7 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
+import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
 
 const ChatSettingsModal = ({
   open,
@@ -95,6 +107,63 @@ const ChatSettingsModal = ({
         messageQueue.error("Please fill all the required fields.");
       });
   };
+
+  const advancedOptions = () => [
+    {
+      key: "1",
+      forceRender: true,
+      label: "Advanced Options",
+      children: (
+        <>
+          <Form.Item
+            name={["queryConfiguration", "enableHyde"]}
+            initialValue={activeSession.queryConfiguration.enableHyde}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="HyDE (Hypothetical Document Embeddings)"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    HyDE is a technique that can improve the quality of the
+                    chunk retrieval by generating a hypothetical response to a
+                    query. This hypothetical response is then used to retrieve
+                    the most relevant chunks.
+                  </Typography>
+                }
+              >
+                Enable HyDE
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item<CreateSessionType>
+            name={["queryConfiguration", "enableSummaryFilter"]}
+            initialValue={activeSession.queryConfiguration.enableSummaryFilter}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Enable Summary-Based Filtering"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    This option will provide two-stage retrieval, using the
+                    document summary to provide an additional way to get access
+                    to the appropriate chunks of the document. In order for this
+                    to work, a summarization model must be assigned to the
+                    knowledge base.
+                  </Typography>
+                }
+              >
+                Enable Summary Filtering
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
+        </>
+      ),
+    },
+  ];
 
   return (
     <Modal
@@ -145,6 +214,7 @@ const ChatSettingsModal = ({
           >
             <Slider marks={ResponseChunksRange} min={1} max={10} />
           </Form.Item>
+          <Collapse items={advancedOptions()} />
         </Form>
       </Flex>
     </Modal>

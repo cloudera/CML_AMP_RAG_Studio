@@ -37,11 +37,11 @@
  ******************************************************************************/
 
 import { Evaluation } from "src/api/chatApi.ts";
-import { Flex } from "antd";
 import EvaluationMetric from "pages/RagChatTab/ChatOutput/ChatMessages/EvaluationMetric.tsx";
+import { Flex } from "antd";
 
 export const Evaluations = (props: { evaluations: Evaluation[] }) => (
-  <Flex gap={16}>
+  <Flex gap={4}>
     {props.evaluations.map((evaluation, index) => {
       return (
         <EvaluationMetric

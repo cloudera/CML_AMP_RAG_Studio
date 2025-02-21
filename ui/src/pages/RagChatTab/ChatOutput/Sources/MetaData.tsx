@@ -35,31 +35,50 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Card, Typography } from "antd";
+import { Breadcrumb, Card, Flex, Typography } from "antd";
 import { ChunkContentsResponse } from "src/api/ragQueryApi.ts";
+
+const MetaDataItem = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | undefined;
+}) => (
+  <>
+    {value && (
+      <Typography.Text>
+        {label}: {value}
+      </Typography.Text>
+    )}
+  </>
+);
+
+const HeaderPathMetaData = ({ headerPath }: { headerPath?: string }) => {
+  if (!headerPath) {
+    return null;
+  }
+  const items = headerPath
+    .split("/")
+    .filter((value) => value.length > 0)
+    .map((path) => ({ title: path.trim() }));
+  return (
+    <Flex vertical gap={4}>
+      <Typography.Text>Document location:</Typography.Text>
+      <Breadcrumb style={{ marginLeft: 20 }} separator=">" items={items} />
+    </Flex>
+  );
+};
 
 const MetaData = ({
   metadata,
 }: {
   metadata: ChunkContentsResponse["metadata"];
 }) => {
-  const MetaDataItem = ({
-    label,
-    value,
-  }: {
-    label: string;
-    value: string | number | undefined;
-  }) => (
-    <>
-      {value && (
-        <Typography.Text>
-          {label}: {value}
-        </Typography.Text>
-      )}
-    </>
-  );
-
-  const hasMetadata = metadata.row_number ?? metadata.page_number;
+  const hasMetadata =
+    Boolean(metadata.row_number) ||
+    Boolean(metadata.page_number) ||
+    Boolean(metadata.header_path && metadata.header_path.length > 1);
 
   return (
     <Card title="Metadata" type="inner">
@@ -67,6 +86,7 @@ const MetaData = ({
         <>
           <MetaDataItem label="Row number" value={metadata.row_number} />
           <MetaDataItem label="Page number" value={metadata.page_number} />
+          <HeaderPathMetaData headerPath={metadata.header_path} />
         </>
       ) : (
         <Typography.Text type={"secondary"}>N/A</Typography.Text>

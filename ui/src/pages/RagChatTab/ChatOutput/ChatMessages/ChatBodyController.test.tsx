@@ -44,6 +44,7 @@ import {
 } from "pages/RagChatTab/State/RagChatContext";
 import ChatBodyController from "./ChatBodyController";
 import { ConnectionType } from "src/api/dataSourceApi.ts";
+import { Session } from "src/api/sessionApi.ts";
 
 const testDataSource = {
   id: 1,
@@ -56,7 +57,7 @@ const testDataSource = {
   chunkOverlapPercent: 0,
 };
 
-const testSession = {
+const testSession: Session = {
   dataSourceIds: [1],
   id: 1,
   name: "session name",
@@ -67,6 +68,10 @@ const testSession = {
   lastInteractionTime: 123,
   responseChunks: 5,
   inferenceModel: "",
+  queryConfiguration: {
+    enableHyde: false,
+    enableSummaryFilter: false,
+  },
 };
 
 describe("ChatBodyController", () => {
@@ -96,6 +101,22 @@ describe("ChatBodyController", () => {
     })),
   }));
 
+  vi.mock("src/api/chatApi.ts", () => ({
+    useRatingMutation: vi.fn(() => ({
+      data: {
+        rating: 0,
+      },
+      isLoading: false,
+    })),
+    useFeedbackMutation: vi.fn(() => ({
+      data: {
+        feedback: "hello",
+      },
+      isLoading: false,
+    })),
+    isPlaceholder: vi.fn(() => false),
+  }));
+
   afterEach(() => {
     cleanup();
   });
@@ -118,6 +139,10 @@ describe("ChatBodyController", () => {
         lastInteractionTime: 0,
         responseChunks: 5,
         inferenceModel: "",
+        queryConfiguration: {
+          enableHyde: false,
+          enableSummaryFilter: false,
+        },
       },
     };
 
@@ -173,6 +198,7 @@ describe("ChatBodyController", () => {
           },
         ],
       },
+      activeSession: testSession,
     });
 
     expect(screen.getByTestId("chat-message")).toBeTruthy();

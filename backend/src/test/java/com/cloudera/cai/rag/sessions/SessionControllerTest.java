@@ -71,6 +71,7 @@ class SessionControllerTest {
     assertThat(result.createdById()).isEqualTo("test-user");
     assertThat(result.updatedById()).isEqualTo("test-user");
     assertThat(result.lastInteractionTime()).isNull();
+    assertThat(result.queryConfiguration()).isNotNull();
   }
 
   @Test
@@ -109,7 +110,8 @@ class SessionControllerTest {
                 .withInferenceModel(updatedInferenceModel)
                 .withResponseChunks(updatedResponseChunks)
                 .withRerankModel(updatedRerankModel)
-                .withName(updatedName),
+                .withName(updatedName)
+                .withQueryConfiguration(new Types.QueryConfiguration(true, false)),
             request);
 
     assertThat(updatedSession.id()).isNotNull();
@@ -123,6 +125,22 @@ class SessionControllerTest {
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
     assertThat(updatedSession.updatedById()).isEqualTo("update-test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
+    assertThat(updatedSession.queryConfiguration().enableHyde()).isTrue();
+    assertThat(updatedSession.queryConfiguration().enableSummaryFilter()).isFalse();
+  }
+
+  @Test
+  void noQueryConfiguration_create() throws JsonProcessingException {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    request.setCookies(
+        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    var sessionName = "test";
+    Types.CreateSession input =
+        TestData.createSessionInstance(sessionName).withQueryConfiguration(null);
+    var createdSession = sessionController.create(input, request);
+    assertThat(createdSession.queryConfiguration()).isNotNull();
+    assertThat(createdSession.queryConfiguration().enableHyde()).isFalse();
   }
 
   @Test

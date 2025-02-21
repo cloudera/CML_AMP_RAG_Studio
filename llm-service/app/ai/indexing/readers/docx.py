@@ -66,9 +66,9 @@ class DocxReader(BaseReader):
         anonymized_text = self._anonymize_pii(document_text)
         if anonymized_text is not None:
             ret.pii_found = True
-            document.text = anonymized_text
+            document.set_content(anonymized_text)
 
-        document.text = document_text
+        document.set_content(document_text)
 
         self._add_document_metadata(document, file_path)
         ret.chunks = self._chunks_in_document(document)

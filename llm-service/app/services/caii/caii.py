@@ -45,11 +45,13 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
-from .CaiiModel import CaiiModel, CaiiModelMistral
+from .CaiiModel import CaiiModel, CaiiModelMistral, DeepseekModel
+from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
-from .utils import build_auth_headers
+from .utils import build_auth_headers, get_caii_access_token
 
 DEFAULT_NAMESPACE = "serving-default"
 
@@ -86,6 +88,17 @@ def list_endpoints() -> list[ListEndpointEntry]:
         )
 
 
+def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
+    endpoint = describe_endpoint(endpoint_name=model_name)
+    token = get_caii_access_token()
+    return CaiiRerankingModel(
+        model=endpoint.model_name,
+        base_url=endpoint.url.removesuffix("/ranking"),
+        api_key=token,
+        top_n=top_n,
+    )
+
+
 def get_llm(
     endpoint_name: str,
     messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
@@ -96,8 +109,18 @@ def get_llm(
     headers = build_auth_headers()
 
     model = endpoint.model_name
+    if "deepseek" in endpoint_name.lower():
+        return DeepseekModel(
+            model=model,
+            context=128000,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            api_base=api_base,
+            default_headers=headers,
+        )
+
     if "mistral" in endpoint_name.lower():
-        llm = CaiiModelMistral(
+        return CaiiModelMistral(
             model=model,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
@@ -107,7 +130,7 @@ def get_llm(
         )
 
     else:
-        llm = CaiiModel(
+        return CaiiModel(
             model=model,
             context=128000,
             messages_to_prompt=messages_to_prompt,
@@ -115,8 +138,6 @@ def get_llm(
             api_base=api_base,
             default_headers=headers,
         )
-
-    return llm
 
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
@@ -139,6 +160,8 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 def get_caii_llm_models() -> List[ModelResponse]:
     return get_models_with_task("TEXT_GENERATION")
 
+def get_caii_reranking_models() -> List[ModelResponse]:
+    return get_models_with_task("RANK")
 
 def get_caii_embedding_models() -> List[ModelResponse]:
     return get_models_with_task("EMBED")

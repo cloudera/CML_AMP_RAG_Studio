@@ -51,17 +51,23 @@ public class TestData {
         List.of(1L, 2L, 3L),
         null,
         null,
-        null,
-        null,
+        "fake-user",
+        "fake-user",
         null,
         "test-model",
         "test-rerank-model",
-        3);
+        3,
+        new Types.QueryConfiguration(false, true));
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
     return new Types.CreateSession(
-        sessionName, List.of(1L, 2L, 3L), "test-model", "test-rerank-model", 3);
+        sessionName,
+        List.of(1L, 2L, 3L),
+        "test-model",
+        "test-rerank-model",
+        3,
+        new Types.QueryConfiguration(false, true));
   }
 
   public static Types.RagDataSource createTestDataSourceInstance(

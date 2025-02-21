@@ -83,6 +83,15 @@ def use_local_storage(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("S3_RAG_DOCUMENT_BUCKET", "")
 
 
+@pytest.fixture(autouse=True)
+def use_mlflow_reconciler_data_path(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    mlflow_dir = tmp_path / "mlflow-run-data"
+    mlflow_dir.mkdir()
+    monkeypatch.setenv("MLFLOW_RECONCILER_DATA_PATH", str(mlflow_dir))
+
+
 @pytest.fixture
 def document_id(index_document_request_body: dict[str, Any]) -> str:
     return cast(str, index_document_request_body["s3_document_key"].split("/")[-1])

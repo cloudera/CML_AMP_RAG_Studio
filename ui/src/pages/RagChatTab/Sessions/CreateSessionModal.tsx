@@ -55,6 +55,10 @@ export interface CreateSessionType {
   inferenceModel: string;
   rerankModel?: string;
   responseChunks: number;
+  queryConfiguration: {
+    enableHyde: boolean;
+    enableSummaryFilter: boolean;
+  };
 }
 
 const CreateSessionModal = ({
@@ -97,14 +101,18 @@ const CreateSessionModal = ({
     form
       .validateFields()
       .then((values) => {
-        const responseBody: CreateSessionRequest = {
+        const requestBody: CreateSessionRequest = {
           name: values.name,
           dataSourceIds: [values.dataSourceId],
           inferenceModel: values.inferenceModel,
           rerankModel: values.rerankModel,
           responseChunks: values.responseChunks,
+          queryConfiguration: {
+            enableHyde: values.queryConfiguration.enableHyde,
+            enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+          },
         };
-        createSessionMutation(responseBody);
+        createSessionMutation(requestBody);
       })
       .catch(() => {
         messageQueue.error("Please fill all the required fields.");

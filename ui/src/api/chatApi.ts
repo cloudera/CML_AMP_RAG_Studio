@@ -67,7 +67,6 @@ export interface RagMessageV2 {
 export interface QueryConfiguration {
   exclude_knowledge_base: boolean;
   use_question_condensing: boolean;
-  use_hyde: boolean;
 }
 
 export interface ChatMutationRequest {
@@ -88,6 +87,10 @@ export interface ChatMessageType {
   evaluations: Evaluation[];
   timestamp: number;
   condensed_question?: string;
+}
+
+export interface ChatResponseFeedback {
+  rating: boolean;
 }
 
 const placeholderChatResponseId = "placeholder";
@@ -203,6 +206,59 @@ export const createQueryConfiguration = (
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: false,
-    use_hyde: false,
   };
+};
+
+export const useRatingMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ChatResponseFeedback>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.ratingMutation],
+    mutationFn: ratingMutation,
+    onSuccess: onSuccess,
+    onError: (error: Error) => onError?.(error),
+  });
+};
+
+const ratingMutation = async ({
+  sessionId,
+  responseId,
+  rating,
+}: {
+  sessionId: string;
+  responseId: string;
+  rating: boolean;
+}): Promise<ChatResponseFeedback> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/rating`,
+    { rating },
+  );
+};
+
+export const useFeedbackMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ChatResponseFeedback>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.feedbackMutation],
+    mutationFn: feedbackMutation,
+    onSuccess: onSuccess,
+    onError: (error: Error) => onError?.(error),
+  });
+};
+
+const feedbackMutation = async ({
+  sessionId,
+  responseId,
+  feedback,
+}: {
+  sessionId: string;
+  responseId: string;
+  feedback: string;
+}): Promise<ChatResponseFeedback> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/feedback`,
+    { feedback },
+  );
 };
