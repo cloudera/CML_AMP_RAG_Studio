@@ -159,18 +159,6 @@ def record_direct_llm_mlflow_run(
     )
 
 
-class RagIndexDocumentConfiguration(BaseModel):
-    chunk_size: int = 512  # this is llama-index's default
-    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
-
-
-class RagIndexDocumentRequest(BaseModel):
-    s3_bucket_name: str
-    s3_document_key: str
-    original_filename: str
-    configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
-
-
 def write_mlflow_run_json(
     experiment_name: str, run_name: str, data: dict[str, Any]
 ) -> None:
@@ -186,30 +174,6 @@ def write_mlflow_run_json(
         "w",
     ) as f:
         json.dump(contents, f)
-
-
-def data_source_record_run(
-    datasource: RagDataSource,
-    doc_id: str,
-    file_path: Path,
-    request: RagIndexDocumentRequest,
-) -> None:
-
-    write_mlflow_run_json(
-        f"datasource_{datasource.name}_{datasource.id}",
-        f"doc_{doc_id}",
-        {
-            "params": {
-                "data_source_id": str(datasource.id),
-                "embedding_model": datasource.embedding_model,
-                "summarization_model": datasource.summarization_model,
-                "chunk_size": str(request.configuration.chunk_size),
-                "chunk_overlap": str(request.configuration.chunk_overlap),
-                "file_name": request.original_filename,
-                "file_size_bytes": str(file_path.stat().st_size),
-            }
-        },
-    )
 
 
 def rating_mlflow_log_metric(rating: bool, response_id: str, session_id: int) -> None:

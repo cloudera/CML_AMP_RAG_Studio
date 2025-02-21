@@ -48,7 +48,7 @@ from ....ai.vector_stores.vector_store import VectorStore
 from ....services import document_storage, models
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
-from ....services.mlflow import data_source_record_run, RagIndexDocumentRequest
+from ....services.mlflow import write_mlflow_run_json
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,18 @@ class SummarizeDocumentRequest(BaseModel):
     s3_bucket_name: str
     s3_document_key: str
     original_filename: str
+
+
+class RagIndexDocumentConfiguration(BaseModel):
+    chunk_size: int = 512  # this is llama-index's default
+    chunk_overlap: int = 10  # percentage of tokens in a chunk (chunk_size)
+
+
+class RagIndexDocumentRequest(BaseModel):
+    s3_bucket_name: str
+    s3_document_key: str
+    original_filename: str
+    configuration: RagIndexDocumentConfiguration = RagIndexDocumentConfiguration()
 
 
 class ChunkContentsResponse(BaseModel):
@@ -163,7 +175,21 @@ class DataSourceController:
                 llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )
-            data_source_record_run(datasource, doc_id, file_path, request)
+            write_mlflow_run_json(
+                f"datasource_{datasource.name}_{datasource.id}",
+                f"doc_{doc_id}",
+                {
+                    "params": {
+                        "data_source_id": str(datasource.id),
+                        "embedding_model": datasource.embedding_model,
+                        "summarization_model": datasource.summarization_model,
+                        "chunk_size": str(request.configuration.chunk_size),
+                        "chunk_overlap": str(request.configuration.chunk_overlap),
+                        "file_name": request.original_filename,
+                        "file_size_bytes": str(file_path.stat().st_size),
+                    }
+                },
+            )
 
             # Delete to avoid duplicates
             self.chunks_vector_store.delete_document(doc_id)
