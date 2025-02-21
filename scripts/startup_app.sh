@@ -65,6 +65,7 @@ scripts/startup_java.sh & 2>&1
 
 # start Python backend
 cd llm-service
+mkdir -p $MLFLOW_RECONCILER_DATA_PATH
 uv run fastapi run --reload --host 127.0.0.1 --port 8081 & 2>&1
 
 # wait for the python backend to be ready
