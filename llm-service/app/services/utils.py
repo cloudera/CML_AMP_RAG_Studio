@@ -106,9 +106,9 @@ def flatten_sequence(
             yield item
 
 
-def body_to_json(response: requests.Response) -> dict[str, Any]:
+def body_to_json(response: requests.Response) -> Any:
     """
-    Returns the JSON-encoded contents of `response`, raising a detailed error on failure.
+    Returns the JSON-decoded contents of `response`, raising a detailed error on failure.
 
     Parameters
     ----------
@@ -118,7 +118,7 @@ def body_to_json(response: requests.Response) -> dict[str, Any]:
     Returns
     -------
     contents : dict
-        JSON-encoded contents of `response`.
+        JSON-decoded contents of `response`.
 
     Raises
     ------
