@@ -36,6 +36,7 @@
 #  DATA.
 #
 import json
+import os
 from typing import Dict
 
 
@@ -46,6 +47,9 @@ def build_auth_headers() -> Dict[str, str]:
 
 
 def get_caii_access_token() -> str:
+    if os.environ.get("CDP_TOKEN_OVERRIDE"):
+        return os.environ.get("CDP_TOKEN_OVERRIDE")
+
     with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
     access_token: str = jwt_contents["access_token"]
