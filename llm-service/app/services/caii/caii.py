@@ -36,7 +36,6 @@
 #  DATA.
 #
 
-import json
 import os
 from typing import Callable, List, Sequence
 
