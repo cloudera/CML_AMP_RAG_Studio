@@ -42,6 +42,8 @@ from typing import Optional
 
 import requests
 
+from app.services.utils import raise_for_http_error, body_to_json
+
 
 @dataclass
 class RagDataSource:
@@ -66,8 +68,8 @@ url_template = BACKEND_BASE_URL + "/api/v1/rag/dataSources/{}"
 
 def get_metadata(data_source_id: int) -> RagDataSource:
     response = requests.get(url_template.format(data_source_id))
-    response.raise_for_status()
-    data = response.json()
+    raise_for_http_error(response)
+    data = body_to_json(response)
     return RagDataSource(
         id=data["id"],
         name=data["name"],

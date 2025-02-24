@@ -40,6 +40,8 @@ import os
 import requests
 from pydantic import BaseModel
 
+from app.services.utils import raise_for_http_error, body_to_json
+
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 metrics_url = BACKEND_BASE_URL + "/api/v1/rag/metrics"
 
@@ -52,8 +54,8 @@ class MetadataMetrics(BaseModel):
 
 def get_metadata_metrics() -> MetadataMetrics:
     response = requests.get(metrics_url)
-    response.raise_for_status()
-    data = response.json()
+    raise_for_http_error(response)
+    data = body_to_json(response)
     return MetadataMetrics(
         number_of_data_sources=data["numberOfDataSources"],
         number_of_documents=data["numberOfDocuments"],
