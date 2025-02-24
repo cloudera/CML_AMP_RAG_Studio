@@ -42,6 +42,8 @@ from typing import List
 
 import requests
 
+from app.services.utils import raise_for_http_error, body_to_json
+
 
 @dataclass
 class SessionQueryConfiguration:
@@ -70,8 +72,8 @@ url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
 
 def get_session(session_id: int) -> Session:
     response = requests.get(url_template.format(session_id))
-    response.raise_for_status()
-    data = response.json()
+    raise_for_http_error(response)
+    data = body_to_json(response)
     return Session(
         id=data["id"],
         name=data["name"],

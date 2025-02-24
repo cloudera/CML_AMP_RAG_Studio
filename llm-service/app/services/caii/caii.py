@@ -52,6 +52,7 @@ from .CaiiModel import CaiiModel, CaiiModelMistral, DeepseekModel
 from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
 from .utils import build_auth_headers, get_caii_access_token
+from ..utils import raise_for_http_error, body_to_json
 
 DEFAULT_NAMESPACE = "serving-default"
 
@@ -62,13 +63,9 @@ def describe_endpoint(endpoint_name: str) -> Endpoint:
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
     desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
 
-    desc = requests.post(describe_url, headers=headers, json=desc_json)
-    if desc.status_code == 404:
-        raise HTTPException(
-            status_code=404, detail=f"Endpoint '{endpoint_name}' not found"
-        )
-    json_content = json.loads(desc.content)
-    return Endpoint(**json_content)
+    response = requests.post(describe_url, headers=headers, json=desc_json)
+    raise_for_http_error(response)
+    return Endpoint(**body_to_json(response))
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
@@ -78,8 +75,9 @@ def list_endpoints() -> list[ListEndpointEntry]:
         describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
         desc_json = {"namespace": DEFAULT_NAMESPACE}
 
-        desc = requests.post(describe_url, headers=headers, json=desc_json)
-        endpoints = json.loads(desc.content)["endpoints"]
+        response = requests.post(describe_url, headers=headers, json=desc_json)
+        raise_for_http_error(response)
+        endpoints = body_to_json(response)["endpoints"]
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
     except requests.exceptions.ConnectionError:
         raise HTTPException(

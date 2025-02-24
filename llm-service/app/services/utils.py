@@ -37,7 +37,7 @@
 # ##############################################################################
 
 import re
-from typing import Generator, List, Sequence, Tuple, TypeVar, Union
+from typing import Generator, List, Sequence, Tuple, TypeVar, Union, Any
 
 import requests
 
@@ -106,7 +106,7 @@ def flatten_sequence(
             yield item
 
 
-def body_to_json(response: requests.Response):
+def body_to_json(response: requests.Response) -> dict[str, Any]:
     """
     Returns the JSON-encoded contents of `response`, raising a detailed error on failure.
 
@@ -131,14 +131,14 @@ def body_to_json(response: requests.Response):
     except ValueError:  # not JSON response
         msg = "\n".join(
             [
-                "expected JSON response from {}, but instead got:".format(response.url),
+                f"expected JSON response from {response.url}, but instead got:",
                 response.text or "<empty response>",
             ]
         )
         raise ValueError(msg)
 
 
-def raise_for_http_error(response: requests.Response):
+def raise_for_http_error(response: requests.Response) -> None:
     """
     Raises a potential HTTP error with a back end message if provided, or a default error message otherwise.
 
