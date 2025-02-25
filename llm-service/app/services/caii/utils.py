@@ -47,8 +47,8 @@ def build_auth_headers() -> Dict[str, str]:
 
 
 def get_caii_access_token() -> str:
-    if os.environ["CDP_TOKEN_OVERRIDE"]:
-        return os.environ["CDP_TOKEN_OVERRIDE"]
+    if token_override := os.environ.get("CDP_TOKEN_OVERRIDE"):
+        return token_override
 
     with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
