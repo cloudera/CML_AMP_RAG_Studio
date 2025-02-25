@@ -34,6 +34,10 @@ environment_variables:
         default: ""
         description: "The domain of the CAII service. Setting this will enable CAII as the sole source for both inference and embedding models."
         required: false
+    CDP_TOKEN_OVERRIDE:
+      default: ""
+      description: "Providing this will override the default project CDP_TOKEN."
+      required: false
 
 
 runtimes:
