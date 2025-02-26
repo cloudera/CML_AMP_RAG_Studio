@@ -38,6 +38,7 @@
 import json
 import os
 import re
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -167,7 +168,7 @@ def write_mlflow_run_json(
         **data,
     }
     with open(
-        f"{os.environ['MLFLOW_RECONCILER_DATA_PATH']}/{experiment_name}-{run_name}.json",
+        f"{os.environ['MLFLOW_RECONCILER_DATA_PATH']}/{str(uuid.uuid4())}.json",
         "w",
     ) as f:
         json.dump(contents, f)
