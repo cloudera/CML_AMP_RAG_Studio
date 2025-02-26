@@ -37,7 +37,10 @@
 # ##############################################################################
 
 import re
-from typing import Generator, List, Sequence, Tuple, TypeVar, Union
+from typing import Generator, List, Sequence, Tuple, TypeVar, Union, Any
+
+import requests
+
 
 # TODO delete this if it's not being used
 
@@ -101,3 +104,79 @@ def flatten_sequence(
     for sublist in sequence:
         for item in sublist:
             yield item
+
+
+def body_to_json(response: requests.Response) -> Any:
+    """
+    Returns the JSON-decoded contents of `response`, raising a detailed error on failure.
+
+    Parameters
+    ----------
+    response : :class:`requests.Response`
+        HTTP response.
+
+    Returns
+    -------
+    contents : dict
+        JSON-decoded contents of `response`.
+
+    Raises
+    ------
+    ValueError
+        If `response`'s contents are not JSON-encoded.
+
+    """
+    try:
+        return response.json()
+    except ValueError:  # not JSON response
+        msg = "\n".join(
+            [
+                f"expected JSON response from {response.url}, but instead got:",
+                response.text or "<empty response>",
+            ]
+        )
+        raise ValueError(msg)
+
+
+def raise_for_http_error(response: requests.Response) -> None:
+    """
+    Raises a potential HTTP error with a back end message if provided, or a default error message otherwise.
+
+    Parameters
+    ----------
+    response : :class:`requests.Response`
+        Response object returned from a `requests`-module HTTP request.
+
+    Raises
+    ------
+    :class:`requests.HTTPError`
+        If an HTTP error occurred.
+
+    """
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        try:
+            reason = body_to_json(response)
+        except ValueError:
+            reason = response.text.strip()  # response is not json
+
+        if isinstance(reason, dict):
+            if "message" in reason:
+                reason = reason["message"]
+            else:
+                # fall back to entire text
+                reason = response.text.strip()
+
+        if not reason:
+            raise e
+        else:
+            # replicate https://github.com/psf/requests/blob/428f7a/requests/models.py#L954
+            if 400 <= response.status_code < 500:
+                cause = "Client"
+            elif 500 <= response.status_code < 600:
+                cause = "Server"
+            else:  # should be impossible here, but sure okay
+                cause = "Unexpected"
+            message = f"{response.status_code} {cause} Error: {reason} for url: {response.url}"
+            raise requests.HTTPError(message, response=response)
