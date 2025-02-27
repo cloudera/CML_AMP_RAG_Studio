@@ -39,6 +39,6 @@
 import os
 
 
-def is_caii_enabled() -> bool:
+def is_enabled() -> bool:
     domain: str = os.environ.get("CAII_DOMAIN", "")
     return len(domain) > 0

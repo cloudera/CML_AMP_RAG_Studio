@@ -39,7 +39,7 @@
 import os
 
 
-def is_azure_enabled() -> bool:
+def is_enabled() -> bool:
     if all(
         [
             os.environ.get("AZURE_OPENAI_API_KEY"),

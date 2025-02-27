@@ -51,8 +51,7 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from .azure import is_azure_enabled
-from .caii import is_caii_enabled
+from . import _azure, _caii
 
 from ..caii.caii import (
     get_caii_embedding_models,
@@ -64,7 +63,7 @@ from ..caii.caii import get_reranking_model as caii_reranking
 from ..caii.caii import get_llm as caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt
-from .noop import DummyEmbeddingModel, DummyLlm
+from ._noop import DummyEmbeddingModel, DummyLlm
 from ..query.simple_reranker import SimpleReranker
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
@@ -84,9 +83,9 @@ def get_reranking_model(
 ) -> BaseNodePostprocessor | None:
     if model_name is None:
         return SimpleReranker(top_n=top_n)
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return SimpleReranker(top_n=top_n)
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
@@ -95,7 +94,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:
         model_name = get_available_embedding_models()[0].model_id
 
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return AzureOpenAIEmbedding(
             model_name=model_name,
             deployment_name=model_name,
@@ -104,7 +103,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
             ],  # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
         )
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return caii_embedding(model_name=model_name)
 
     return BedrockEmbedding(model_name=model_name)
@@ -114,7 +113,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     if not model_name:
         model_name = get_available_llm_models()[0].model_id
 
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return AzureOpenAI(
             model=model_name,
             engine=model_name,
@@ -122,7 +121,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
             completion_to_prompt=completion_to_prompt,
         )
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return caii_llm(
             endpoint_name=model_name,
             messages_to_prompt=messages_to_prompt,
@@ -137,29 +136,29 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
 
 
 def get_available_embedding_models() -> List[ModelResponse]:
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return get_azure_embedding_models()
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
 def get_available_llm_models() -> list[ModelResponse]:
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return _get_azure_llm_models()
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return get_caii_llm_models()
 
     return _get_bedrock_llm_models()
 
 
 def get_available_rerank_models() -> List[ModelResponse]:
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return []
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return get_caii_reranking_models()
 
     return [
@@ -213,9 +212,9 @@ class ModelSource(str, Enum):
 
 
 def get_model_source() -> ModelSource:
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return ModelSource.CAII
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return ModelSource.AZURE
     return ModelSource.BEDROCK
 
@@ -224,7 +223,7 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
     models = get_available_llm_models()
     for model in models:
         if model.model_id == model_name:
-            if not is_caii_enabled() or model.available:
+            if not _caii.is_enabled() or model.available:
                 get_llm(model_name).chat(
                     messages=[
                         ChatMessage(
@@ -244,7 +243,7 @@ def test_embedding_model(model_name: str) -> str:
     models = get_available_embedding_models()
     for model in models:
         if model.model_id == model_name:
-            if not is_caii_enabled() or model.available:
+            if not _caii.is_enabled() or model.available:
                 get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:
@@ -257,7 +256,7 @@ def test_reranking_model(model_name: str) -> str:
     models = get_available_rerank_models()
     for model in models:
         if model.model_id == model_name:
-            if not is_caii_enabled() or model.available:
+            if not _caii.is_enabled() or model.available:
                 node = NodeWithScore(node=TextNode(text="test"), score=0.5)
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4
