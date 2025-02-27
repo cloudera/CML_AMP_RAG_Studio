@@ -166,8 +166,15 @@ def get_available_rerank_models() -> List[ModelResponse]:
 
 
 def is_azure_enabled() -> bool:
-    # todo: implement
-    return True
+    if all(
+        [
+            os.environ.get("AZURE_OPENAI_API_KEY"),
+            os.environ.get("AZURE_OPENAI_ENDPOINT"),
+            os.environ.get("OPENAI_API_VERSION"),
+        ]
+    ):
+        return True
+    return False
 
 
 def is_caii_enabled() -> bool:
@@ -216,11 +223,14 @@ def _get_bedrock_embedding_models() -> List[ModelResponse]:
 class ModelSource(str, Enum):
     BEDROCK = "Bedrock"
     CAII = "CAII"
+    AZURE = "Azure"
 
 
 def get_model_source() -> ModelSource:
     if is_caii_enabled():
         return ModelSource.CAII
+    if is_azure_enabled():
+        return ModelSource.AZURE
     return ModelSource.BEDROCK
 
 
