@@ -1839,6 +1839,20 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-embeddings-azure-openai"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+    { name = "llama-index-embeddings-openai" },
+    { name = "llama-index-llms-azure-openai" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/48/db/a35c34ff7863315ac133b4ff0386913cbe9986988e7f1c076e1745dbe015/llama_index_embeddings_azure_openai-0.3.0.tar.gz", hash = "sha256:80b0cf977d8b967a08536d65b8e2d0c6c966eeaf1b8fff084e97f3081fd70c34", size = 3111 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b5/78/eb22765325d03008dae55f98c77053231b9344d2bef6304f3d93121f3468/llama_index_embeddings_azure_openai-0.3.0-py3-none-any.whl", hash = "sha256:2ca61d6b75468d1230cfc1151a878d892b237130b8af09b4434f8c0466d44dfe", size = 3425 },
+]
+
+[[package]]
 name = "llama-index-embeddings-bedrock"
 version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2014,6 +2028,7 @@ dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-utils" },
     { name = "llama-index-core" },
+    { name = "llama-index-embeddings-azure-openai" },
     { name = "llama-index-embeddings-bedrock" },
     { name = "llama-index-embeddings-openai" },
     { name = "llama-index-llms-azure-openai" },
@@ -2058,6 +2073,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.111.0" },
     { name = "fastapi-utils", specifier = ">=0.8.0" },
     { name = "llama-index-core", specifier = ">=0.10.68" },
+    { name = "llama-index-embeddings-azure-openai", specifier = ">=0.3.0" },
     { name = "llama-index-embeddings-bedrock", specifier = ">=0.2.1" },
     { name = "llama-index-embeddings-openai", specifier = ">=0.1.11" },
     { name = "llama-index-llms-azure-openai", specifier = ">=0.3.0" },

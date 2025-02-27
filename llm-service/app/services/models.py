@@ -39,7 +39,6 @@ import os
 from enum import Enum
 from typing import List, Literal, Optional
 
-import requests
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
@@ -47,6 +46,7 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.embeddings.bedrock import BedrockEmbedding
+from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
@@ -63,7 +63,6 @@ from .caii.types import ModelResponse
 from .llama_utils import completion_to_prompt, messages_to_prompt
 from .noop_models import DummyEmbeddingModel, DummyLlm
 from .query.simple_reranker import SimpleReranker
-from .utils import raise_for_http_error, body_to_json
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
@@ -91,6 +90,9 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:
         model_name = get_available_embedding_models()[0].model_id
 
+    if is_azure_enabled():
+        return AzureOpenAIEmbedding()
+
     if is_caii_enabled():
         return caii_embedding(model_name=model_name)
 
@@ -104,6 +106,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     if is_azure_enabled():
         return AzureOpenAI(
             model=model_name,
+            engine=model_name,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
         )
@@ -123,18 +126,21 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
 
 
 def get_available_embedding_models() -> List[ModelResponse]:
+    if is_azure_enabled():
+        return get_azure_embedding_models()
+
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
 def get_available_llm_models() -> list[ModelResponse]:
-    # todo: actually provide an env var for this
     if is_azure_enabled():
         return _get_azure_llm_models()
 
     if is_caii_enabled():
         return get_caii_llm_models()
+
     return _get_bedrock_llm_models()
 
 
@@ -148,6 +154,7 @@ def get_available_rerank_models() -> List[ModelResponse]:
 
 
 def is_azure_enabled() -> bool:
+    # todo: implement
     return True
 
 
@@ -171,26 +178,16 @@ def _get_bedrock_llm_models() -> List[ModelResponse]:
 
 
 def _get_azure_llm_models() -> List[ModelResponse]:
-    subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
-    resource_group_name = os.environ.get("AZURE_RESOURCE_GROUP_NAME")
-    account_name = os.environ.get("AZURE_ACCOUNT_NAME")
-    api_version = os.environ.get("OPENAI_API_VERSION")
-    res = requests.get(
-        f"https://management.azure.com/subscriptions/{subscription_id}/resourceGroups/{resource_group_name}/providers/Microsoft.CognitiveServices/accounts/{account_name}/deployments",
-        params={"api-version": api_version},
-        headers={
-            # "api-key": os.environ.get("AZURE_OPENAI_API_KEY"),
-            "Authorization": f"Bearer {os.environ.get('AZURE_OPENAI_API_KEY')}",
-            "Content-Type": "application/json",
-        },
-    )
-    raise_for_http_error(res)
-    deployments = body_to_json(res)
-    print(deployments)
-    # return [ModelResponse(model_id=deployment["name"], name=deployment["name"]) for deployment in deployments]
-
     return [
         ModelResponse(model_id="gpt-35-turbo-16k", name="OpenAI GPT-3.5 Turbo 16k"),
+        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+    ]
+
+
+def get_azure_embedding_models():
+    return [
+        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
+        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
     ]
 
 
