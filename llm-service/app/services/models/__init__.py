@@ -51,18 +51,21 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from .caii.caii import (
+from .azure import is_azure_enabled
+from .caii import is_caii_enabled
+
+from ..caii.caii import (
     get_caii_embedding_models,
     get_caii_llm_models,
     get_caii_reranking_models,
 )
-from .caii.caii import get_embedding_model as caii_embedding
-from .caii.caii import get_reranking_model as caii_reranking
-from .caii.caii import get_llm as caii_llm
-from .caii.types import ModelResponse
-from .llama_utils import completion_to_prompt, messages_to_prompt
-from .noop_models import DummyEmbeddingModel, DummyLlm
-from .query.simple_reranker import SimpleReranker
+from ..caii.caii import get_embedding_model as caii_embedding
+from ..caii.caii import get_reranking_model as caii_reranking
+from ..caii.caii import get_llm as caii_llm
+from ..caii.types import ModelResponse
+from ..llama_utils import completion_to_prompt, messages_to_prompt
+from .noop import DummyEmbeddingModel, DummyLlm
+from ..query.simple_reranker import SimpleReranker
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
@@ -163,23 +166,6 @@ def get_available_rerank_models() -> List[ModelResponse]:
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
         ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
     ]
-
-
-def is_azure_enabled() -> bool:
-    if all(
-        [
-            os.environ.get("AZURE_OPENAI_API_KEY"),
-            os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            os.environ.get("OPENAI_API_VERSION"),
-        ]
-    ):
-        return True
-    return False
-
-
-def is_caii_enabled() -> bool:
-    domain: str = os.environ.get("CAII_DOMAIN", "")
-    return len(domain) > 0
 
 
 def _get_bedrock_llm_models() -> List[ModelResponse]:

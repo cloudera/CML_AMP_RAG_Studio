@@ -56,7 +56,7 @@ from app.main import app
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
-from app.services.noop_models import DummyLlm
+from app.services.models.noop import DummyLlm
 
 
 @dataclass
