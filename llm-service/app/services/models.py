@@ -202,7 +202,7 @@ def _get_azure_llm_models() -> List[ModelResponse]:
     ]
 
 
-def get_azure_embedding_models():
+def get_azure_embedding_models() -> List[ModelResponse]:
     return [
         ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
         ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
