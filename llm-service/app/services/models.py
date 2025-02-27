@@ -81,6 +81,8 @@ def get_reranking_model(
 ) -> BaseNodePostprocessor | None:
     if model_name is None:
         return SimpleReranker(top_n=top_n)
+    if is_azure_enabled():
+        SimpleReranker(top_n=top_n)
     if is_caii_enabled():
         return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
@@ -91,7 +93,13 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
         model_name = get_available_embedding_models()[0].model_id
 
     if is_azure_enabled():
-        return AzureOpenAIEmbedding()
+        return AzureOpenAIEmbedding(
+            model_name=model_name,
+            deployment_name=model_name,
+            api_key=os.environ[
+                "AZURE_OPENAI_API_KEY"
+            ],  # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
+        )
 
     if is_caii_enabled():
         return caii_embedding(model_name=model_name)
@@ -145,8 +153,12 @@ def get_available_llm_models() -> list[ModelResponse]:
 
 
 def get_available_rerank_models() -> List[ModelResponse]:
+    if is_azure_enabled():
+        return []
+
     if is_caii_enabled():
         return get_caii_reranking_models()
+
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
         ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
