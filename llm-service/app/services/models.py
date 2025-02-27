@@ -82,7 +82,7 @@ def get_reranking_model(
     if model_name is None:
         return SimpleReranker(top_n=top_n)
     if is_azure_enabled():
-        SimpleReranker(top_n=top_n)
+        return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
         return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
@@ -191,7 +191,6 @@ def _get_bedrock_llm_models() -> List[ModelResponse]:
 
 def _get_azure_llm_models() -> List[ModelResponse]:
     return [
-        ModelResponse(model_id="gpt-35-turbo-16k", name="OpenAI GPT-3.5 Turbo 16k"),
         ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
     ]
 
