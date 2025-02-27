@@ -51,7 +51,7 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from . import _azure, _caii
+from . import _azure, _bedrock, _caii
 
 from ..caii.caii import (
     get_caii_embedding_models,
@@ -137,21 +137,22 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
 
 def get_available_embedding_models() -> List[ModelResponse]:
     if _azure.is_enabled():
-        return get_azure_embedding_models()
+        return _azure.get_embedding_models()
 
     if _caii.is_enabled():
         return get_caii_embedding_models()
-    return _get_bedrock_embedding_models()
+
+    return _bedrock.get_embedding_models()
 
 
 def get_available_llm_models() -> list[ModelResponse]:
     if _azure.is_enabled():
-        return _get_azure_llm_models()
+        return _azure.get_llm_models()
 
     if _caii.is_enabled():
         return get_caii_llm_models()
 
-    return _get_bedrock_llm_models()
+    return _bedrock.get_llm_models()
 
 
 def get_available_rerank_models() -> List[ModelResponse]:
@@ -164,44 +165,6 @@ def get_available_rerank_models() -> List[ModelResponse]:
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
         ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
-    ]
-
-
-def _get_bedrock_llm_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(
-            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
-        ),
-        ModelResponse(
-            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
-        ),
-        ModelResponse(
-            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
-        ),
-    ]
-
-
-def _get_azure_llm_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
-    ]
-
-
-def get_azure_embedding_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
-        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
-    ]
-
-
-def _get_bedrock_embedding_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(
-            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
-        ),
-        ModelResponse(
-            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
-        ),
     ]
 
 

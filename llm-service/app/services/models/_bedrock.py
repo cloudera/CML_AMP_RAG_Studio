@@ -36,32 +36,32 @@
 #  DATA.
 #
 
-import os
 from typing import List
 
 from app.services.caii.types import ModelResponse
-
-
-def is_enabled() -> bool:
-    if all(
-        [
-            os.environ.get("AZURE_OPENAI_API_KEY"),
-            os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            os.environ.get("OPENAI_API_VERSION"),
-        ]
-    ):
-        return True
-    return False
+from app.services.models import DEFAULT_BEDROCK_LLM_MODEL
 
 
 def get_llm_models() -> List[ModelResponse]:
     return [
-        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+        ModelResponse(
+            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
+        ),
     ]
 
 
 def get_embedding_models() -> List[ModelResponse]:
     return [
-        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
-        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
+        ModelResponse(
+            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
+        ),
+        ModelResponse(
+            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
+        ),
     ]
