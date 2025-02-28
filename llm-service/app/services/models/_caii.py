@@ -39,6 +39,8 @@
 import os
 
 
+ENV_VARS = {"CAII_DOMAIN"}
+
+
 def is_enabled() -> bool:
-    domain: str = os.environ.get("CAII_DOMAIN", "")
-    return len(domain) > 0
+    return all(map(os.environ.get, ENV_VARS))

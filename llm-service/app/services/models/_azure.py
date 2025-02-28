@@ -42,16 +42,11 @@ from typing import List
 from app.services.caii.types import ModelResponse
 
 
+ENV_VARS = {"AZURE_OPENAI_API_KEY" "AZURE_OPENAI_ENDPOINT" "OPENAI_API_VERSION"}
+
+
 def is_enabled() -> bool:
-    if all(
-        [
-            os.environ.get("AZURE_OPENAI_API_KEY"),
-            os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            os.environ.get("OPENAI_API_VERSION"),
-        ]
-    ):
-        return True
-    return False
+    return all(map(os.environ.get, ENV_VARS))
 
 
 def get_llm_models() -> List[ModelResponse]:
