@@ -46,11 +46,12 @@ DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 
 class BedrockModelProvider(ModelProvider):
-    @property
-    def env_vars(self) -> set[str]:
+    @staticmethod
+    def get_env_var_names() -> set[str]:
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
 
-    def get_llm_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
         return [
             ModelResponse(
                 model_id=DEFAULT_BEDROCK_LLM_MODEL,
@@ -66,7 +67,8 @@ class BedrockModelProvider(ModelProvider):
             ),
         ]
 
-    def get_embedding_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
         return [
             ModelResponse(
                 model_id="cohere.embed-english-v3",
@@ -78,7 +80,8 @@ class BedrockModelProvider(ModelProvider):
             ),
         ]
 
-    def get_reranking_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
         return [
             ModelResponse(
                 model_id=DEFAULT_BEDROCK_RERANK_MODEL,

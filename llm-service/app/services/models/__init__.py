@@ -51,14 +51,12 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from . import _azure_model_provider, _bedrock, _caii, _noop
-from ._bedrock import DEFAULT_BEDROCK_RERANK_MODEL
 
-from ..caii.caii import (
-    get_caii_embedding_models,
-    get_caii_llm_models,
-    get_caii_reranking_models,
-)
+from ._azure_model_provider import AzureModelProvider
+from ._bedrock_model_provider import DEFAULT_BEDROCK_RERANK_MODEL, BedrockModelProvider
+from ._caii_model_provider import CAIIModelProvider
+from . import _noop
+
 from ..caii.caii import get_embedding_model as caii_embedding
 from ..caii.caii import get_reranking_model as caii_reranking
 from ..caii.caii import get_llm as caii_llm
@@ -80,9 +78,9 @@ def get_reranking_model(
 ) -> BaseNodePostprocessor | None:
     if not model_name:
         return SimpleReranker(top_n=top_n)
-    if _azure.is_enabled():
+    if AzureModelProvider.is_enabled():
         return SimpleReranker(top_n=top_n)
-    if _caii.is_enabled():
+    if CAIIModelProvider.is_enabled():
         return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
@@ -91,7 +89,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:
         model_name = get_available_embedding_models()[0].model_id
 
-    if _azure.is_enabled():
+    if AzureModelProvider().is_enabled():
         return AzureOpenAIEmbedding(
             model_name=model_name,
             deployment_name=model_name,
@@ -100,7 +98,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
             ],  # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
         )
 
-    if _caii.is_enabled():
+    if CAIIModelProvider.is_enabled():
         return caii_embedding(model_name=model_name)
 
     return BedrockEmbedding(model_name=model_name)
@@ -110,7 +108,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     if not model_name:
         model_name = get_available_llm_models()[0].model_id
 
-    if _azure.is_enabled():
+    if AzureModelProvider.is_enabled():
         return AzureOpenAI(
             model=model_name,
             engine=model_name,
@@ -118,7 +116,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
             completion_to_prompt=completion_to_prompt,
         )
 
-    if _caii.is_enabled():
+    if CAIIModelProvider.is_enabled():
         return caii_llm(
             endpoint_name=model_name,
             messages_to_prompt=messages_to_prompt,
@@ -133,36 +131,33 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
 
 
 def get_available_embedding_models() -> List[ModelResponse]:
-    if _azure.is_enabled():
-        return _azure.get_embedding_models()
+    if AzureModelProvider.is_enabled():
+        return AzureModelProvider.get_embedding_models()
 
-    if _caii.is_enabled():
-        return get_caii_embedding_models()
+    if CAIIModelProvider.is_enabled():
+        return CAIIModelProvider.get_embedding_models()
 
-    return _bedrock.get_embedding_models()
+    return BedrockModelProvider.get_embedding_models()
 
 
 def get_available_llm_models() -> list[ModelResponse]:
-    if _azure.is_enabled():
-        return _azure.get_llm_models()
+    if AzureModelProvider.is_enabled():
+        return AzureModelProvider.get_llm_models()
 
-    if _caii.is_enabled():
-        return get_caii_llm_models()
+    if CAIIModelProvider.is_enabled():
+        return CAIIModelProvider.get_llm_models()
 
-    return _bedrock.get_llm_models()
+    return BedrockModelProvider.get_llm_models()
 
 
 def get_available_rerank_models() -> List[ModelResponse]:
-    if _azure.is_enabled():
-        return []
+    if AzureModelProvider.is_enabled():
+        return AzureModelProvider.get_reranking_models()
 
-    if _caii.is_enabled():
-        return get_caii_reranking_models()
+    if CAIIModelProvider.is_enabled():
+        return CAIIModelProvider.get_reranking_models()
 
-    return [
-        ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
-        ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
-    ]
+    return BedrockModelProvider.get_reranking_models()
 
 
 class ModelSource(str, Enum):
@@ -172,9 +167,9 @@ class ModelSource(str, Enum):
 
 
 def get_model_source() -> ModelSource:
-    if _caii.is_enabled():
+    if CAIIModelProvider.is_enabled():
         return ModelSource.CAII
-    if _azure.is_enabled():
+    if AzureModelProvider.is_enabled():
         return ModelSource.AZURE
     return ModelSource.BEDROCK
 
@@ -183,7 +178,7 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
     models = get_available_llm_models()
     for model in models:
         if model.model_id == model_name:
-            if not _caii.is_enabled() or model.available:
+            if not CAIIModelProvider.is_enabled() or model.available:
                 get_llm(model_name).chat(
                     messages=[
                         ChatMessage(
@@ -203,7 +198,7 @@ def test_embedding_model(model_name: str) -> str:
     models = get_available_embedding_models()
     for model in models:
         if model.model_id == model_name:
-            if not _caii.is_enabled() or model.available:
+            if not CAIIModelProvider.is_enabled() or model.available:
                 get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:
@@ -216,7 +211,7 @@ def test_reranking_model(model_name: str) -> str:
     models = get_available_rerank_models()
     for model in models:
         if model.model_id == model_name:
-            if not _caii.is_enabled() or model.available:
+            if not CAIIModelProvider.is_enabled() or model.available:
                 node = NodeWithScore(node=TextNode(text="test"), score=0.5)
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4

@@ -44,11 +44,12 @@ from ._model_provider import ModelProvider
 
 
 class AzureModelProvider(ModelProvider):
-    @property
-    def env_vars(self) -> set[str]:
+    @staticmethod
+    def get_env_var_names() -> set[str]:
         return {"AZURE_OPENAI_API_KEY" "AZURE_OPENAI_ENDPOINT" "OPENAI_API_VERSION"}
 
-    def get_llm_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
         return [
             ModelResponse(
                 model_id="gpt-4o",
@@ -60,7 +61,8 @@ class AzureModelProvider(ModelProvider):
             ),
         ]
 
-    def get_embedding_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
         return [
             ModelResponse(
                 model_id="text-embedding-ada-002",
@@ -72,5 +74,6 @@ class AzureModelProvider(ModelProvider):
             ),
         ]
 
-    def get_reranking_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
         return []

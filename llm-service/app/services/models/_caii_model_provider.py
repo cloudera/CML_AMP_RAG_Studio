@@ -49,15 +49,18 @@ from ..caii.types import ModelResponse
 
 
 class CAIIModelProvider(ModelProvider):
-    @property
-    def env_vars(self) -> set[str]:
+    @staticmethod
+    def get_env_var_names() -> set[str]:
         return {"CAII_DOMAIN"}
 
-    def get_llm_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
         return get_caii_llm_models()
 
-    def get_embedding_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
         return get_caii_embedding_models()
 
-    def get_reranking_models(self) -> List[ModelResponse]:
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
         return get_caii_reranking_models()
