@@ -52,6 +52,7 @@ from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 from . import _azure, _bedrock, _caii, _noop
+from ._bedrock import DEFAULT_BEDROCK_RERANK_MODEL
 
 from ..caii.caii import (
     get_caii_embedding_models,
@@ -64,9 +65,6 @@ from ..caii.caii import get_llm as caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..query.simple_reranker import SimpleReranker
-
-DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
-DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 
 def get_noop_embedding_model() -> BaseEmbedding:

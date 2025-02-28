@@ -40,7 +40,10 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from app.services.models import DEFAULT_BEDROCK_LLM_MODEL, DEFAULT_BEDROCK_RERANK_MODEL
+from app.services.models._bedrock import (
+    DEFAULT_BEDROCK_LLM_MODEL,
+    DEFAULT_BEDROCK_RERANK_MODEL,
+)
 
 
 class QueryConfiguration(BaseModel):

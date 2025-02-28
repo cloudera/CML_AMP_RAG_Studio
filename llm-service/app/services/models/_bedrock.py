@@ -39,7 +39,10 @@
 from typing import List
 
 from app.services.caii.types import ModelResponse
-from app.services.models import DEFAULT_BEDROCK_LLM_MODEL
+
+
+DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
+DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 
 def get_llm_models() -> List[ModelResponse]:
