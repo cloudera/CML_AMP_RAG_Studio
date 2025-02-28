@@ -35,31 +35,27 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import abc
 import os
 from typing import List
 
 from app.services.caii.types import ModelResponse
-from ._model_provider import ModelProvider
 
 
-class AzureModelProvider(ModelProvider):
+class ModelProvider(abc.ABC):
     @property
+    def is_enabled(self) -> bool:
+        return all(map(os.environ.get, self.env_vars))
+
+    @property
+    @abc.abstractmethod
     def env_vars(self) -> set[str]:
-        return {"AZURE_OPENAI_API_KEY" "AZURE_OPENAI_ENDPOINT" "OPENAI_API_VERSION"}
+        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_llm_models(self) -> List[ModelResponse]:
-        return [
-            ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
-            ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
-        ]
+        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_embedding_models(self) -> List[ModelResponse]:
-        return [
-            ModelResponse(
-                model_id="text-embedding-ada-002", name="Text Embedding Ada 002"
-            ),
-            ModelResponse(
-                model_id="text-embedding-3-small", name="Text Embedding 3 Small"
-            ),
-        ]
+        raise NotImplementedError
