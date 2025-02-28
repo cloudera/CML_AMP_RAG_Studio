@@ -48,7 +48,6 @@ import {
   Switch,
   Typography,
 } from "antd";
-import RequestModels from "pages/RagChatTab/Settings/RequestModels.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
@@ -206,7 +205,6 @@ const ChatSettingsModal = ({
               options={transformModelOptions(rerankingModels)}
             />
           </Form.Item>
-          <RequestModels />
           <Form.Item
             name="responseChunks"
             initialValue={activeSession.responseChunks}

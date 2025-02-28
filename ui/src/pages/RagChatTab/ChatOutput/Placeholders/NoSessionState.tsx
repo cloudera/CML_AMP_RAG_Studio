@@ -41,13 +41,11 @@ import CreateSessionModal from "pages/RagChatTab/Sessions/CreateSessionModal.tsx
 import useModal from "src/utils/useModal.ts";
 import { PlusCircleOutlined } from "@ant-design/icons";
 import Images from "src/components/images/Images.ts";
-import FeedbackAlert from "src/components/Feedback/FeedbackAlert.tsx";
 
 const NoSessionState = () => {
   const { isModalOpen, setIsModalOpen, showModal, handleCancel } = useModal();
   return (
     <Flex style={{ height: "100%" }} vertical>
-      <FeedbackAlert />
       <Flex
         vertical
         align="center"
