@@ -45,24 +45,29 @@ from app.services.caii.types import ModelResponse
 class ModelProvider(abc.ABC):
     @classmethod
     def is_enabled(cls) -> bool:
+        """Return whether this model provider is enabled, based on the presence of required env vars."""
         return all(map(os.environ.get, cls.get_env_var_names()))
 
     @staticmethod
     @abc.abstractmethod
     def get_env_var_names() -> set[str]:
+        """Return the env vars required by this model provider."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
     def get_llm_models() -> List[ModelResponse]:
+        """Return available LLM models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
     def get_embedding_models() -> List[ModelResponse]:
+        """Return available embedding models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
     def get_reranking_models() -> List[ModelResponse]:
+        """Return available reranking models."""
         raise NotImplementedError
