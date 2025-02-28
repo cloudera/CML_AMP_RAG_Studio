@@ -77,3 +77,15 @@ class BedrockModelProvider(ModelProvider):
                 name="Cohere Embed Multilingual v3",
             ),
         ]
+
+    def get_reranking_models(self) -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id=DEFAULT_BEDROCK_RERANK_MODEL,
+                name="Cohere Rerank v3.5",
+            ),
+            ModelResponse(
+                model_id="amazon.rerank-v1:0",
+                name="Amazon Rerank v1",
+            ),
+        ]
