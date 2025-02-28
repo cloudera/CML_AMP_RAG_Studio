@@ -51,7 +51,7 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from . import _azure, _bedrock, _caii, _noop
+from . import _azure_model_provider, _bedrock, _caii, _noop
 from ._bedrock import DEFAULT_BEDROCK_RERANK_MODEL
 
 from ..caii.caii import (
