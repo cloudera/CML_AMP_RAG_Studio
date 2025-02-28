@@ -57,9 +57,6 @@ import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import Images from "src/components/images/Images.ts";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
-import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
-import useModal from "src/utils/useModal.ts";
-import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
 import "./style.css";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
@@ -88,7 +85,6 @@ const Sidebar: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
-  const feedbackModal = useModal();
 
   const navToRagApp = () => {
     navigate({ to: "/sessions" })
@@ -114,10 +110,6 @@ const Sidebar: React.FC = () => {
     navigate({ to: "/models" })
       .then(() => null)
       .catch(() => null);
-  };
-
-  const popupFeedback = () => {
-    feedbackModal.setIsModalOpen(true);
   };
 
   const baseItems: MenuItem[] = [
@@ -198,14 +190,7 @@ const Sidebar: React.FC = () => {
     <LineChartOutlined />,
   );
 
-  const feedbackItem = getItem(
-    <div data-testid="feedback-nav">Leave Feedback</div>,
-    "leave-feedback",
-    popupFeedback,
-    <ThumbUpIcon />,
-  );
-
-  const items = [...baseItems, models, analyticsItem, feedbackItem];
+  const items = [...baseItems, models, analyticsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -256,12 +241,6 @@ const Sidebar: React.FC = () => {
         <Menu selectedKeys={chooseRoute()} mode="inline" items={items} />
         <AmpUpdateBanner isCollapsed={collapsed} />
       </Flex>
-      <FeedbackModal
-        handleCancel={() => {
-          feedbackModal.setIsModalOpen(false);
-        }}
-        isModalOpen={feedbackModal.isModalOpen}
-      />
     </Sider>
   );
 };
