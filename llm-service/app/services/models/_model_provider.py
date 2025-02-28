@@ -43,23 +43,26 @@ from app.services.caii.types import ModelResponse
 
 
 class ModelProvider(abc.ABC):
-    @property
-    def is_enabled(self) -> bool:
-        return all(map(os.environ.get, self.env_vars))
+    @classmethod
+    def is_enabled(cls) -> bool:
+        return all(map(os.environ.get, cls.get_env_var_names()))
 
-    @property
+    @staticmethod
     @abc.abstractmethod
-    def env_vars(self) -> set[str]:
+    def get_env_var_names() -> set[str]:
         raise NotImplementedError
 
+    @staticmethod
     @abc.abstractmethod
-    def get_llm_models(self) -> List[ModelResponse]:
+    def get_llm_models() -> List[ModelResponse]:
         raise NotImplementedError
 
+    @staticmethod
     @abc.abstractmethod
-    def get_embedding_models(self) -> List[ModelResponse]:
+    def get_embedding_models() -> List[ModelResponse]:
         raise NotImplementedError
 
+    @staticmethod
     @abc.abstractmethod
-    def get_reranking_models(self) -> List[ModelResponse]:
+    def get_reranking_models() -> List[ModelResponse]:
         raise NotImplementedError
