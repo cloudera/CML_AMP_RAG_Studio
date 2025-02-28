@@ -40,7 +40,11 @@ import os
 from typing import List
 
 from ._model_provider import ModelProvider
-from ..caii.caii import get_caii_llm_models, get_caii_embedding_models
+from ..caii.caii import (
+    get_caii_llm_models,
+    get_caii_embedding_models,
+    get_caii_reranking_models,
+)
 from ..caii.types import ModelResponse
 
 
@@ -54,3 +58,6 @@ class CAIIModelProvider(ModelProvider):
 
     def get_embedding_models(self) -> List[ModelResponse]:
         return get_caii_embedding_models()
+
+    def get_reranking_models(self) -> List[ModelResponse]:
+        return get_caii_reranking_models()

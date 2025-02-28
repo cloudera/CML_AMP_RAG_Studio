@@ -67,3 +67,6 @@ class AzureModelProvider(ModelProvider):
                 name="Text Embedding 3 Small",
             ),
         ]
+
+    def get_reranking_models(self) -> List[ModelResponse]:
+        return []

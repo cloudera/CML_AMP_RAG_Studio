@@ -59,3 +59,7 @@ class ModelProvider(abc.ABC):
     @abc.abstractmethod
     def get_embedding_models(self) -> List[ModelResponse]:
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_reranking_models(self) -> List[ModelResponse]:
+        raise NotImplementedError
