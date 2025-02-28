@@ -37,10 +37,20 @@
 #
 
 import os
+from typing import List
+
+from ._model_provider import ModelProvider
+from ..caii.caii import get_caii_llm_models, get_caii_embedding_models
+from ..caii.types import ModelResponse
 
 
-ENV_VARS = {"CAII_DOMAIN"}
+class CAIIModelProvider(ModelProvider):
+    @property
+    def env_vars(self) -> set[str]:
+        return {"CAII_DOMAIN"}
 
+    def get_llm_models(self) -> List[ModelResponse]:
+        return get_caii_llm_models()
 
-def is_enabled() -> bool:
-    return all(map(os.environ.get, ENV_VARS))
+    def get_embedding_models(self) -> List[ModelResponse]:
+        return get_caii_embedding_models()
