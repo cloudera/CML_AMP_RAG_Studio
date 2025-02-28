@@ -40,7 +40,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from app.services.models._bedrock import (
+from app.services.models._bedrock_model_provider import (
     DEFAULT_BEDROCK_LLM_MODEL,
     DEFAULT_BEDROCK_RERANK_MODEL,
 )
