@@ -40,7 +40,6 @@ import itertools
 import pytest
 
 from app.services import models
-from app.services.models._azure_model_provider import AzureModelProvider
 from app.services.models._model_provider import ModelProvider
 
 
