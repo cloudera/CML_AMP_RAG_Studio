@@ -52,25 +52,59 @@ def get_all_env_var_names() -> set[str]:
     )
 
 
-class TestAzure:
-    @pytest.fixture(autouse=True)
-    def set_env(self, monkeypatch: pytest.MonkeyPatch):
-        for name in AzureModelProvider.get_env_var_names():
+class TestGetAvailableModels:
+    @pytest.fixture()
+    def EnabledModelProvider(
+        self,
+        request: pytest.FixtureRequest,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> type[ModelProvider]:
+        ModelProviderSubcls: type[ModelProvider] = request.param
+
+        for name in ModelProviderSubcls.get_env_var_names():
             monkeypatch.setenv(name, "test")
-        for name in get_all_env_var_names() - AzureModelProvider.get_env_var_names():
+        for name in get_all_env_var_names() - ModelProviderSubcls.get_env_var_names():
             monkeypatch.delenv(name, raising=False)
 
-    def test_get_available_embedding_models(self):
+        return ModelProviderSubcls
+
+    @pytest.mark.parametrize(
+        "EnabledModelProvider",
+        ModelProvider.__subclasses__(),
+        indirect=True,
+    )
+    def test_get_available_embedding_models(
+        self,
+        EnabledModelProvider: type[ModelProvider],
+    ) -> None:
         assert (
             models.get_available_embedding_models()
-            == AzureModelProvider.get_embedding_models()
+            == EnabledModelProvider.get_embedding_models()
         )
 
-    def test_get_available_llm_models(self):
-        assert models.get_available_llm_models() == AzureModelProvider.get_llm_models()
+    @pytest.mark.parametrize(
+        "EnabledModelProvider",
+        ModelProvider.__subclasses__(),
+        indirect=True,
+    )
+    def test_get_available_llm_models(
+        self,
+        EnabledModelProvider: type[ModelProvider],
+    ) -> None:
+        assert (
+            models.get_available_llm_models() == EnabledModelProvider.get_llm_models()
+        )
 
-    def test_get_available_rerank_models(self):
+    @pytest.mark.parametrize(
+        "EnabledModelProvider",
+        ModelProvider.__subclasses__(),
+        indirect=True,
+    )
+    def test_get_available_rerank_models(
+        self,
+        EnabledModelProvider: type[ModelProvider],
+    ) -> None:
         assert (
             models.get_available_rerank_models()
-            == AzureModelProvider.get_reranking_models()
+            == EnabledModelProvider.get_reranking_models()
         )
