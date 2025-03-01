@@ -35,25 +35,43 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import os
+from typing import List
 
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models._bedrock import (
-    DEFAULT_BEDROCK_LLM_MODEL,
-    DEFAULT_BEDROCK_RERANK_MODEL,
-)
+from app.services.caii.types import ModelResponse
 
 
-class QueryConfiguration(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
+DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
-    top_k: int = 5
-    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
-    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
-    use_summary_filter: Optional[bool] = True
-    use_postprocessor: Optional[bool] = True
+
+ENV_VARS = {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
+
+
+def is_enabled() -> bool:
+    return all(map(os.environ.get, ENV_VARS))
+
+
+def get_llm_models() -> List[ModelResponse]:
+    return [
+        ModelResponse(
+            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
+        ),
+        ModelResponse(
+            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
+        ),
+    ]
+
+
+def get_embedding_models() -> List[ModelResponse]:
+    return [
+        ModelResponse(
+            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
+        ),
+        ModelResponse(
+            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
+        ),
+    ]
