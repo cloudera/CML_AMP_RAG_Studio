@@ -89,7 +89,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:
         model_name = get_available_embedding_models()[0].model_id
 
-    if AzureModelProvider().is_enabled():
+    if AzureModelProvider.is_enabled():
         return AzureOpenAIEmbedding(
             model_name=model_name,
             deployment_name=model_name,
