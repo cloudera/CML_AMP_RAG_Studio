@@ -35,43 +35,39 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import abc
 import os
 from typing import List
 
 from app.services.caii.types import ModelResponse
 
 
-DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
-DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
+class ModelProvider(abc.ABC):
+    @classmethod
+    def is_enabled(cls) -> bool:
+        """Return whether this model provider is enabled, based on the presence of required env vars."""
+        return all(map(os.environ.get, cls.get_env_var_names()))
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_env_var_names() -> set[str]:
+        """Return the env vars required by this model provider."""
+        raise NotImplementedError
 
-ENV_VARS = {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
+    @staticmethod
+    @abc.abstractmethod
+    def get_llm_models() -> List[ModelResponse]:
+        """Return available LLM models."""
+        raise NotImplementedError
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        """Return available embedding models."""
+        raise NotImplementedError
 
-def is_enabled() -> bool:
-    return all(map(os.environ.get, ENV_VARS))
-
-
-def get_llm_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(
-            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
-        ),
-        ModelResponse(
-            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
-        ),
-        ModelResponse(
-            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
-        ),
-    ]
-
-
-def get_embedding_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(
-            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
-        ),
-        ModelResponse(
-            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
-        ),
-    ]
+    @staticmethod
+    @abc.abstractmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        """Return available reranking models."""
+        raise NotImplementedError

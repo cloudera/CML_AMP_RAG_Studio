@@ -35,25 +35,59 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import List
 
-from typing import Optional
+from app.services.caii.types import ModelResponse
+from ._model_provider import ModelProvider
 
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models._bedrock_model_provider import (
-    DEFAULT_BEDROCK_LLM_MODEL,
-    DEFAULT_BEDROCK_RERANK_MODEL,
-)
+DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
+DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 
-class QueryConfiguration(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+class BedrockModelProvider(ModelProvider):
+    @staticmethod
+    def get_env_var_names() -> set[str]:
+        return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
 
-    top_k: int = 5
-    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
-    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
-    use_summary_filter: Optional[bool] = True
-    use_postprocessor: Optional[bool] = True
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id=DEFAULT_BEDROCK_LLM_MODEL,
+                name="Llama3.1 8B Instruct v1",
+            ),
+            ModelResponse(
+                model_id="meta.llama3-1-70b-instruct-v1:0",
+                name="Llama3.1 70B Instruct v1",
+            ),
+            ModelResponse(
+                model_id="cohere.command-r-plus-v1:0",
+                name="Cohere Command R Plus v1",
+            ),
+        ]
+
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id="cohere.embed-english-v3",
+                name="Cohere Embed English v3",
+            ),
+            ModelResponse(
+                model_id="cohere.embed-multilingual-v3",
+                name="Cohere Embed Multilingual v3",
+            ),
+        ]
+
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id=DEFAULT_BEDROCK_RERANK_MODEL,
+                name="Cohere Rerank v3.5",
+            ),
+            ModelResponse(
+                model_id="amazon.rerank-v1:0",
+                name="Amazon Rerank v1",
+            ),
+        ]
