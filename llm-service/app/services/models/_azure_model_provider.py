@@ -36,7 +36,6 @@
 #  DATA.
 #
 
-import os
 from typing import List
 
 from app.services.caii.types import ModelResponse

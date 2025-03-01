@@ -53,7 +53,7 @@ from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 
 from ._azure_model_provider import AzureModelProvider
-from ._bedrock_model_provider import DEFAULT_BEDROCK_RERANK_MODEL, BedrockModelProvider
+from ._bedrock_model_provider import BedrockModelProvider
 from ._caii_model_provider import CAIIModelProvider
 from . import _noop
 
