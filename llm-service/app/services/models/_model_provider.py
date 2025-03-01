@@ -51,7 +51,7 @@ class ModelProvider(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def get_env_var_names() -> set[str]:
-        """Return the env vars required by this model provider."""
+        """Return the names of the env vars required by this model provider."""
         raise NotImplementedError
 
     @staticmethod
