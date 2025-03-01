@@ -56,7 +56,6 @@ from app.main import app
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
-from app.services.models import get_noop_llm_model
 
 
 @dataclass
@@ -193,7 +192,7 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 
 @pytest.fixture(autouse=True)
 def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
-    model = get_noop_llm_model()
+    model = models.get_noop_llm_model()
 
     def get_llm(model_name: str = "dummy_value") -> LLM:
         return model
