@@ -40,6 +40,8 @@ import itertools
 import pytest
 
 from app.services import models
+from app.services.caii import caii
+from app.services.caii.types import ListEndpointEntry
 from app.services.models._model_provider import ModelProvider
 
 
@@ -76,6 +78,27 @@ parametrize_model_provider = pytest.mark.parametrize(
 
 
 class TestGetAvailableModels:
+    @pytest.fixture(autouse=True)
+    def caii_get_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Monkey patch fetching models from CAII."""
+        endpoints: list[ListEndpointEntry] = []
+        for namespace in ["namespace1, namespace2"]:
+            for name in ["model1", "model2"]:
+                endpoints.append(
+                    ListEndpointEntry(
+                        namespace=namespace,
+                        name=name,
+                        url=f"https://caii.cloudera.test/namespaces/{namespace}/endpoints/{name}/v1/test",
+                        state="Loaded",
+                        created_by="caii",
+                        api_standard="openai",
+                        has_chat_template=False,
+                        metric_format="triton",
+                    )
+                )
+
+        monkeypatch.setattr(caii, "get_models_with_task", lambda task_type: endpoints)
+
     @parametrize_model_provider
     def test_get_available_embedding_models(
         self,
