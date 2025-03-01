@@ -44,6 +44,7 @@ from app.services.models._model_provider import ModelProvider
 
 
 def get_all_env_var_names() -> set[str]:
+    """Return the names of all the env vars required by all model providers."""
     return set(
         itertools.chain.from_iterable(
             subcls.get_env_var_names() for subcls in ModelProvider.__subclasses__()
@@ -58,6 +59,7 @@ class TestGetAvailableModels:
         request: pytest.FixtureRequest,
         monkeypatch: pytest.MonkeyPatch,
     ) -> type[ModelProvider]:
+        """Sets and unsets environment variables for the given model provider."""
         ModelProviderSubcls: type[ModelProvider] = request.param
 
         for name in ModelProviderSubcls.get_env_var_names():
@@ -76,6 +78,7 @@ class TestGetAvailableModels:
         self,
         EnabledModelProvider: type[ModelProvider],
     ) -> None:
+        """Verify models.get_available_embedding_models() only returns models from the enabled model provider."""
         assert (
             models.get_available_embedding_models()
             == EnabledModelProvider.get_embedding_models()
@@ -90,6 +93,7 @@ class TestGetAvailableModels:
         self,
         EnabledModelProvider: type[ModelProvider],
     ) -> None:
+        """Verify models.get_available_llm_models() only returns models from the enabled model provider."""
         assert (
             models.get_available_llm_models() == EnabledModelProvider.get_llm_models()
         )
@@ -103,6 +107,7 @@ class TestGetAvailableModels:
         self,
         EnabledModelProvider: type[ModelProvider],
     ) -> None:
+        """Verify models.get_available_rerank_models() only returns models from the enabled model provider."""
         assert (
             models.get_available_rerank_models()
             == EnabledModelProvider.get_reranking_models()
