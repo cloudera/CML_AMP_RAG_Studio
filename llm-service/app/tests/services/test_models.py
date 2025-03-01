@@ -52,28 +52,31 @@ def get_all_env_var_names() -> set[str]:
     )
 
 
+@pytest.fixture()
+def EnabledModelProvider(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> type[ModelProvider]:
+    """Sets and unsets environment variables for the given model provider."""
+    ModelProviderSubcls: type[ModelProvider] = request.param
+
+    for name in ModelProviderSubcls.get_env_var_names():
+        monkeypatch.setenv(name, "test")
+    for name in get_all_env_var_names() - ModelProviderSubcls.get_env_var_names():
+        monkeypatch.delenv(name, raising=False)
+
+    return ModelProviderSubcls
+
+
+parametrize_model_provider = pytest.mark.parametrize(
+    "EnabledModelProvider",
+    ModelProvider.__subclasses__(),
+    indirect=True,
+)
+
+
 class TestGetAvailableModels:
-    @pytest.fixture()
-    def EnabledModelProvider(
-        self,
-        request: pytest.FixtureRequest,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> type[ModelProvider]:
-        """Sets and unsets environment variables for the given model provider."""
-        ModelProviderSubcls: type[ModelProvider] = request.param
-
-        for name in ModelProviderSubcls.get_env_var_names():
-            monkeypatch.setenv(name, "test")
-        for name in get_all_env_var_names() - ModelProviderSubcls.get_env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
-        return ModelProviderSubcls
-
-    @pytest.mark.parametrize(
-        "EnabledModelProvider",
-        ModelProvider.__subclasses__(),
-        indirect=True,
-    )
+    @parametrize_model_provider
     def test_get_available_embedding_models(
         self,
         EnabledModelProvider: type[ModelProvider],
@@ -84,11 +87,7 @@ class TestGetAvailableModels:
             == EnabledModelProvider.get_embedding_models()
         )
 
-    @pytest.mark.parametrize(
-        "EnabledModelProvider",
-        ModelProvider.__subclasses__(),
-        indirect=True,
-    )
+    @parametrize_model_provider
     def test_get_available_llm_models(
         self,
         EnabledModelProvider: type[ModelProvider],
@@ -98,11 +97,7 @@ class TestGetAvailableModels:
             models.get_available_llm_models() == EnabledModelProvider.get_llm_models()
         )
 
-    @pytest.mark.parametrize(
-        "EnabledModelProvider",
-        ModelProvider.__subclasses__(),
-        indirect=True,
-    )
+    @parametrize_model_provider
     def test_get_available_rerank_models(
         self,
         EnabledModelProvider: type[ModelProvider],
