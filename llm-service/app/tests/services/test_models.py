@@ -83,15 +83,15 @@ class TestGetAvailableModels:
     def caii_get_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Monkey patch fetching models from CAII."""
         endpoints: list[ListEndpointEntry] = []
-        for namespace in ["namespace1, namespace2"]:
-            for name in ["model1", "model2"]:
+        for namespace in ["test-namespace-1, test-namespace-2"]:
+            for name in ["test-model-1", "test-model-2"]:
                 endpoints.append(
                     ListEndpointEntry(
                         namespace=namespace,
                         name=name,
                         url=f"https://this.is.test/namespaces/{namespace}/endpoints/{name}/v1/test",
                         state="Loaded",
-                        created_by="caii",
+                        created_by="rag-studio-tests",
                         api_standard="openai",
                         has_chat_template=False,
                         metric_format="triton",
