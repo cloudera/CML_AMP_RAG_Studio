@@ -41,15 +41,7 @@ from fastapi import APIRouter
 
 from .... import exceptions
 from ....services.caii.types import ModelResponse
-from ....services.models import (
-    ModelSource,
-    Embedding,
-    get_available_llm_models,
-    get_model_source,
-    test_llm_model,
-    get_available_rerank_models,
-    test_reranking_model,
-)
+from ....services import models
 
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -57,40 +49,40 @@ router = APIRouter(prefix="/models", tags=["Models"])
 @router.get("/llm", summary="Get LLM Inference models.")
 @exceptions.propagates
 def get_llm_models() -> List[ModelResponse]:
-    return get_available_llm_models()
+    return models.LLM.list_available()
 
 
 @router.get("/embeddings", summary="Get LLM Embedding models.")
 @exceptions.propagates
 def get_llm_embedding_models() -> List[ModelResponse]:
-    return Embedding.list_available()
+    return models.Embedding.list_available()
 
 
 @router.get("/reranking", summary="Get reranking models.")
 @exceptions.propagates
 def get_reranking_models() -> List[ModelResponse]:
-    return get_available_rerank_models()
+    return models.Reranking.list_available()
 
 
 @router.get("/model_source", summary="Model source enabled - Bedrock, CAII, or Azure")
 @exceptions.propagates
-def get_model() -> ModelSource:
-    return get_model_source()
+def get_model() -> models.ModelSource:
+    return models.get_model_source()
 
 
 @router.get("/llm/{model_name}/test", summary="Test LLM Inference model.")
 @exceptions.propagates
 def llm_model_test(model_name: str) -> Literal["ok"]:
-    return test_llm_model(model_name)
+    return models.LLM.test(model_name)
 
 
 @router.get("/embedding/{model_name}/test", summary="Test Embedding model.")
 @exceptions.propagates
 def embedding_model_test(model_name: str) -> str:
-    return Embedding.test(model_name)
+    return models.Embedding.test(model_name)
 
 
 @router.get("/reranking/{model_name}/test", summary="Test Reranking model.")
 @exceptions.propagates
 def reranking_model_test(model_name: str) -> str:
-    return test_reranking_model(model_name)
+    return models.Reranking.test(model_name)

@@ -43,7 +43,7 @@ from typing import Literal, Optional, TypeVar, Generic
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
-from llama_index.core.llms import LLM
+from llama_index.core import llms
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode, BaseComponent
 from llama_index.embeddings.bedrock import BedrockEmbedding
@@ -64,48 +64,6 @@ from ..caii.caii import get_llm as caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..query.simple_reranker import SimpleReranker
-
-
-def get_noop_llm_model() -> LLM:
-    return _noop.DummyLlm()
-
-
-def get_reranking_model(
-    model_name: Optional[str] = None, top_n: int = 5
-) -> BaseNodePostprocessor:
-    if not model_name:
-        return SimpleReranker(top_n=top_n)
-    if AzureModelProvider.is_enabled():
-        return SimpleReranker(top_n=top_n)
-    if CAIIModelProvider.is_enabled():
-        return caii_reranking(model_name, top_n)
-    return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
-
-
-def get_llm(model_name: Optional[str] = None) -> LLM:
-    if not model_name:
-        model_name = get_available_llm_models()[0].model_id
-
-    if AzureModelProvider.is_enabled():
-        return AzureOpenAI(
-            model=model_name,
-            engine=model_name,
-            messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt,
-        )
-
-    if CAIIModelProvider.is_enabled():
-        return caii_llm(
-            endpoint_name=model_name,
-            messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt,
-        )
-
-    return BedrockConverse(
-        model=model_name,
-        messages_to_prompt=messages_to_prompt,
-        completion_to_prompt=completion_to_prompt,
-    )
 
 
 T = TypeVar("T", bound=BaseComponent)
@@ -180,24 +138,116 @@ class Embedding(ModelType[BaseEmbedding]):
         raise HTTPException(status_code=404, detail="Model not found")
 
 
-def get_available_llm_models() -> list[ModelResponse]:
-    if AzureModelProvider.is_enabled():
-        return AzureModelProvider.get_llm_models()
+class LLM(ModelType[llms.LLM]):
+    @classmethod
+    def get(cls, model_name: Optional[str] = None) -> llms.LLM:
+        if not model_name:
+            model_name = cls.list_available()[0].model_id
 
-    if CAIIModelProvider.is_enabled():
-        return CAIIModelProvider.get_llm_models()
+        if AzureModelProvider.is_enabled():
+            return AzureOpenAI(
+                model=model_name,
+                engine=model_name,
+                messages_to_prompt=messages_to_prompt,
+                completion_to_prompt=completion_to_prompt,
+            )
 
-    return BedrockModelProvider.get_llm_models()
+        if CAIIModelProvider.is_enabled():
+            return caii_llm(
+                endpoint_name=model_name,
+                messages_to_prompt=messages_to_prompt,
+                completion_to_prompt=completion_to_prompt,
+            )
+
+        return BedrockConverse(
+            model=model_name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+        )
+
+    @staticmethod
+    def get_noop() -> llms.LLM:
+        return _noop.DummyLlm()
+
+    @staticmethod
+    def list_available() -> list[ModelResponse]:
+        if AzureModelProvider.is_enabled():
+            return AzureModelProvider.get_llm_models()
+
+        if CAIIModelProvider.is_enabled():
+            return CAIIModelProvider.get_llm_models()
+
+        return BedrockModelProvider.get_llm_models()
+
+    @classmethod
+    def test(cls, model_name: str) -> Literal["ok"]:
+        models = cls.list_available()
+        for model in models:
+            if model.model_id == model_name:
+                if not CAIIModelProvider.is_enabled() or model.available:
+                    cls.get(model_name).chat(
+                        messages=[
+                            ChatMessage(
+                                role=MessageRole.USER,
+                                content="Are you available to answer questions?",
+                            )
+                        ]
+                    )
+                    return "ok"
+                else:
+                    raise HTTPException(status_code=503, detail="Model not ready")
+
+        raise HTTPException(status_code=404, detail="Model not found")
 
 
-def get_available_rerank_models() -> list[ModelResponse]:
-    if AzureModelProvider.is_enabled():
-        return AzureModelProvider.get_reranking_models()
+class Reranking(ModelType[BaseNodePostprocessor]):
+    @classmethod
+    def get(
+        cls,
+        model_name: Optional[str] = None,
+        top_n: int = 5,
+    ) -> BaseNodePostprocessor:
+        if not model_name:
+            return SimpleReranker(top_n=top_n)
+        if AzureModelProvider.is_enabled():
+            return SimpleReranker(top_n=top_n)
+        if CAIIModelProvider.is_enabled():
+            return caii_reranking(model_name, top_n)
+        return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
-    if CAIIModelProvider.is_enabled():
-        return CAIIModelProvider.get_reranking_models()
+    @staticmethod
+    def get_noop() -> BaseNodePostprocessor:
+        raise NotImplementedError
 
-    return BedrockModelProvider.get_reranking_models()
+    @staticmethod
+    def list_available() -> list[ModelResponse]:
+        if AzureModelProvider.is_enabled():
+            return AzureModelProvider.get_reranking_models()
+
+        if CAIIModelProvider.is_enabled():
+            return CAIIModelProvider.get_reranking_models()
+
+        return BedrockModelProvider.get_reranking_models()
+
+    @classmethod
+    def test(cls, model_name: str) -> str:
+        models = cls.list_available()
+        for model in models:
+            if model.model_id == model_name:
+                if not CAIIModelProvider.is_enabled() or model.available:
+                    node = NodeWithScore(node=TextNode(text="test"), score=0.5)
+                    another_test_node = NodeWithScore(
+                        node=TextNode(text="another test node"), score=0.4
+                    )
+                    reranking_model: BaseNodePostprocessor | None = cls.get(
+                        model_name=model_name
+                    )
+                    if reranking_model:
+                        reranking_model.postprocess_nodes(
+                            [node, another_test_node], None, "test"
+                        )
+                        return "ok"
+        raise HTTPException(status_code=404, detail="Model not found")
 
 
 class ModelSource(str, Enum):
@@ -212,43 +262,3 @@ def get_model_source() -> ModelSource:
     if AzureModelProvider.is_enabled():
         return ModelSource.AZURE
     return ModelSource.BEDROCK
-
-
-def test_llm_model(model_name: str) -> Literal["ok"]:
-    models = get_available_llm_models()
-    for model in models:
-        if model.model_id == model_name:
-            if not CAIIModelProvider.is_enabled() or model.available:
-                get_llm(model_name).chat(
-                    messages=[
-                        ChatMessage(
-                            role=MessageRole.USER,
-                            content="Are you available to answer questions?",
-                        )
-                    ]
-                )
-                return "ok"
-            else:
-                raise HTTPException(status_code=503, detail="Model not ready")
-
-    raise HTTPException(status_code=404, detail="Model not found")
-
-
-def test_reranking_model(model_name: str) -> str:
-    models = get_available_rerank_models()
-    for model in models:
-        if model.model_id == model_name:
-            if not CAIIModelProvider.is_enabled() or model.available:
-                node = NodeWithScore(node=TextNode(text="test"), score=0.5)
-                another_test_node = NodeWithScore(
-                    node=TextNode(text="another test node"), score=0.4
-                )
-                reranking_model: BaseNodePostprocessor | None = get_reranking_model(
-                    model_name=model_name
-                )
-                if reranking_model:
-                    reranking_model.postprocess_nodes(
-                        [node, another_test_node], None, "test"
-                    )
-                    return "ok"
-    raise HTTPException(status_code=404, detail="Model not found")

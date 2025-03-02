@@ -192,7 +192,7 @@ def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
 
 @pytest.fixture(autouse=True)
 def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
-    model = models.get_noop_llm_model()
+    model = models.LLM.get_noop()
 
     def get_llm(model_name: str = "dummy_value") -> LLM:
         return model

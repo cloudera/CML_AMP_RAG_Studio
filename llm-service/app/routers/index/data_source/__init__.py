@@ -94,7 +94,7 @@ class DataSourceController:
             data_source_id=data_source_id,
             splitter=SentenceSplitter(chunk_size=2048),
             embedding_model=models.Embedding.get(datasource.embedding_model),
-            llm=models.get_llm(datasource.summarization_model),
+            llm=models.LLM.get(datasource.summarization_model),
         )
 
     @router.delete(
@@ -157,7 +157,7 @@ class DataSourceController:
             )
             llm: Optional[LLM] = None
             if datasource.summarization_model:
-                llm = models.get_llm(datasource.summarization_model)
+                llm = models.LLM.get(datasource.summarization_model)
             indexer = EmbeddingIndexer(
                 datasource.id,
                 splitter=SentenceSplitter(

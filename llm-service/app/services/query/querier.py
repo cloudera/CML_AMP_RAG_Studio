@@ -122,7 +122,7 @@ def query(
         embed_model=embedding_model,
     )
     logger.info("fetched Qdrant index")
-    llm = models.get_llm(model_name=configuration.model_name)
+    llm = models.LLM.get(model_name=configuration.model_name)
 
     retriever = _create_retriever(
         configuration, embedding_model, index, data_source_id, llm
@@ -190,7 +190,7 @@ def _create_node_postprocessors(
 
     return [
         DebugNodePostProcessor(),
-        models.get_reranking_model(
+        models.Reranking.get(
             model_name=configuration.rerank_model_name,
             top_n=configuration.top_k,
         )
