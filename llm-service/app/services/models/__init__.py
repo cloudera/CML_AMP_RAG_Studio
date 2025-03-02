@@ -65,10 +65,6 @@ from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..query.simple_reranker import SimpleReranker
 
 
-def get_noop_embedding_model() -> BaseEmbedding:
-    return _noop.DummyEmbeddingModel()
-
-
 def get_noop_llm_model() -> LLM:
     return _noop.DummyLlm()
 
@@ -83,25 +79,6 @@ def get_reranking_model(
     if CAIIModelProvider.is_enabled():
         return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
-
-
-def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
-    if model_name is None:
-        model_name = get_available_embedding_models()[0].model_id
-
-    if AzureModelProvider.is_enabled():
-        return AzureOpenAIEmbedding(
-            model_name=model_name,
-            deployment_name=model_name,
-            api_key=os.environ[
-                "AZURE_OPENAI_API_KEY"
-            ],  # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
-        )
-
-    if CAIIModelProvider.is_enabled():
-        return caii_embedding(model_name=model_name)
-
-    return BedrockEmbedding(model_name=model_name)
 
 
 def get_llm(model_name: Optional[str] = None) -> LLM:
@@ -130,14 +107,51 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     )
 
 
-def get_available_embedding_models() -> list[ModelResponse]:
-    if AzureModelProvider.is_enabled():
-        return AzureModelProvider.get_embedding_models()
+class Embedding:
+    @classmethod
+    def get(cls, model_name: Optional[str] = None) -> BaseEmbedding:
+        if model_name is None:
+            model_name = cls.list_available()[0].model_id
 
-    if CAIIModelProvider.is_enabled():
-        return CAIIModelProvider.get_embedding_models()
+        if AzureModelProvider.is_enabled():
+            return AzureOpenAIEmbedding(
+                model_name=model_name,
+                deployment_name=model_name,
+                # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
+                api_key=os.environ["AZURE_OPENAI_API_KEY"],
+            )
 
-    return BedrockModelProvider.get_embedding_models()
+        if CAIIModelProvider.is_enabled():
+            return caii_embedding(model_name=model_name)
+
+        return BedrockEmbedding(model_name=model_name)
+
+    @staticmethod
+    def get_noop() -> BaseEmbedding:
+        return _noop.DummyEmbeddingModel()
+
+    @staticmethod
+    def list_available() -> list[ModelResponse]:
+        if AzureModelProvider.is_enabled():
+            return AzureModelProvider.get_embedding_models()
+
+        if CAIIModelProvider.is_enabled():
+            return CAIIModelProvider.get_embedding_models()
+
+        return BedrockModelProvider.get_embedding_models()
+
+    @classmethod
+    def test(cls, model_name: str) -> str:
+        models = cls.list_available()
+        for model in models:
+            if model.model_id == model_name:
+                if not CAIIModelProvider.is_enabled() or model.available:
+                    cls.get(model_name).get_text_embedding("test")
+                    return "ok"
+                else:
+                    raise HTTPException(status_code=503, detail="Model not ready")
+
+        raise HTTPException(status_code=404, detail="Model not found")
 
 
 def get_available_llm_models() -> list[ModelResponse]:
@@ -187,19 +201,6 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
                         )
                     ]
                 )
-                return "ok"
-            else:
-                raise HTTPException(status_code=503, detail="Model not ready")
-
-    raise HTTPException(status_code=404, detail="Model not found")
-
-
-def test_embedding_model(model_name: str) -> str:
-    models = get_available_embedding_models()
-    for model in models:
-        if model.model_id == model_name:
-            if not CAIIModelProvider.is_enabled() or model.available:
-                get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:
                 raise HTTPException(status_code=503, detail="Model not ready")
