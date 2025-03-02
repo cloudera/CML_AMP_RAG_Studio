@@ -37,7 +37,7 @@
 #
 import os
 from enum import Enum
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -52,9 +52,9 @@ from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 
-from ._azure_model_provider import AzureModelProvider
-from ._bedrock_model_provider import BedrockModelProvider
-from ._caii_model_provider import CAIIModelProvider
+from ._azure import AzureModelProvider
+from ._bedrock import BedrockModelProvider
+from ._caii import CAIIModelProvider
 from . import _noop
 
 from ..caii.caii import get_embedding_model as caii_embedding
@@ -75,7 +75,7 @@ def get_noop_llm_model() -> LLM:
 
 def get_reranking_model(
     model_name: Optional[str] = None, top_n: int = 5
-) -> BaseNodePostprocessor | None:
+) -> BaseNodePostprocessor:
     if not model_name:
         return SimpleReranker(top_n=top_n)
     if AzureModelProvider.is_enabled():
@@ -130,7 +130,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     )
 
 
-def get_available_embedding_models() -> List[ModelResponse]:
+def get_available_embedding_models() -> list[ModelResponse]:
     if AzureModelProvider.is_enabled():
         return AzureModelProvider.get_embedding_models()
 
@@ -150,7 +150,7 @@ def get_available_llm_models() -> list[ModelResponse]:
     return BedrockModelProvider.get_llm_models()
 
 
-def get_available_rerank_models() -> List[ModelResponse]:
+def get_available_rerank_models() -> list[ModelResponse]:
     if AzureModelProvider.is_enabled():
         return AzureModelProvider.get_reranking_models()
 
