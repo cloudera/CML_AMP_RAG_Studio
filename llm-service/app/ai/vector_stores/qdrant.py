@@ -97,7 +97,7 @@ class QdrantVectorStore(VectorStore):
         data_source_metadata = data_sources_metadata_api.get_metadata(
             self.data_source_id
         )
-        return models.get_embedding_model(data_source_metadata.embedding_model)
+        return models.Embedding.get(data_source_metadata.embedding_model)
 
     def size(self) -> Optional[int]:
         """If the collection does not exist, return None."""
@@ -114,7 +114,7 @@ class QdrantVectorStore(VectorStore):
         if self.exists():
             index = VectorStoreIndex.from_vector_store(
                 vector_store=self.llama_vector_store(),
-                embed_model=models.get_noop_embedding_model(),
+                embed_model=models.Embedding.get_noop(),
             )
             index.delete_ref_doc(document_id)
 

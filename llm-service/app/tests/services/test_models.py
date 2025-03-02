@@ -103,7 +103,7 @@ class TestGetAvailableModels:
     ) -> None:
         """Verify models.get_available_embedding_models() only returns models from the enabled model provider."""
         assert (
-            models.get_available_embedding_models()
+            models.Embedding.list_available()
             == EnabledModelProvider.get_embedding_models()
         )
 

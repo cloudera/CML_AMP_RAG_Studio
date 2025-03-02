@@ -43,10 +43,9 @@ from .... import exceptions
 from ....services.caii.types import ModelResponse
 from ....services.models import (
     ModelSource,
-    get_available_embedding_models,
+    Embedding,
     get_available_llm_models,
     get_model_source,
-    test_embedding_model,
     test_llm_model,
     get_available_rerank_models,
     test_reranking_model,
@@ -64,7 +63,7 @@ def get_llm_models() -> List[ModelResponse]:
 @router.get("/embeddings", summary="Get LLM Embedding models.")
 @exceptions.propagates
 def get_llm_embedding_models() -> List[ModelResponse]:
-    return get_available_embedding_models()
+    return Embedding.list_available()
 
 
 @router.get("/reranking", summary="Get reranking models.")
@@ -88,7 +87,7 @@ def llm_model_test(model_name: str) -> Literal["ok"]:
 @router.get("/embedding/{model_name}/test", summary="Test Embedding model.")
 @exceptions.propagates
 def embedding_model_test(model_name: str) -> str:
-    return test_embedding_model(model_name)
+    return Embedding.test(model_name)
 
 
 @router.get("/reranking/{model_name}/test", summary="Test Reranking model.")
