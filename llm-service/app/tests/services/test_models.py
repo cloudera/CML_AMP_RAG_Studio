@@ -89,7 +89,7 @@ class TestGetAvailableModels:
                     ListEndpointEntry(
                         namespace=namespace,
                         name=name,
-                        url=f"https://caii.cloudera.test/namespaces/{namespace}/endpoints/{name}/v1/test",
+                        url=f"https://this.is.test/namespaces/{namespace}/endpoints/{name}/v1/test",
                         state="Loaded",
                         created_by="caii",
                         api_standard="openai",
