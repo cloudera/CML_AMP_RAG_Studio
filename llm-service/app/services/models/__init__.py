@@ -35,16 +35,17 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import abc
 import os
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal, Optional, TypeVar, Generic
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore, TextNode
+from llama_index.core.schema import NodeWithScore, TextNode, BaseComponent
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.llms.azure_openai import AzureOpenAI
@@ -107,7 +108,32 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     )
 
 
-class Embedding:
+T = TypeVar("T", bound=BaseComponent)
+
+
+class ModelType(abc.ABC, Generic[T]):
+    @classmethod
+    @abc.abstractmethod
+    def get(cls, model_name: Optional[str] = None) -> T:
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_noop() -> T:
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def list_available() -> list[ModelResponse]:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def test(cls, model_name: str) -> str:
+        raise NotImplementedError
+
+
+class Embedding(ModelType[BaseEmbedding]):
     @classmethod
     def get(cls, model_name: Optional[str] = None) -> BaseEmbedding:
         if model_name is None:
