@@ -70,6 +70,7 @@ def EnabledModelProvider(
     return ModelProviderSubcls
 
 
+# function decorator to parametrize a test with all model providers
 parametrize_model_provider = pytest.mark.parametrize(
     "EnabledModelProvider",
     ModelProvider.__subclasses__(),
