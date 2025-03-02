@@ -323,7 +323,7 @@ class SummaryIndexer(BaseTextIndexer):
             global_persist_dir: str = SummaryIndexer.__persist_root_dir()
             try:
                 configuration: Dict[str, Any] = SummaryIndexer.__index_configuration(
-                    models.get_noop_llm_model(),
+                    models.LLM.get_noop(),
                     models.Embedding.get_noop(),
                     data_source_id=data_source_id,
                     embed_summaries=False,

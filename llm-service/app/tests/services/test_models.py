@@ -117,9 +117,7 @@ class TestGetAvailableModels:
         EnabledModelProvider: type[ModelProvider],
     ) -> None:
         """Verify models.get_available_llm_models() only returns models from the enabled model provider."""
-        assert (
-            models.get_available_llm_models() == EnabledModelProvider.get_llm_models()
-        )
+        assert models.LLM.list_available() == EnabledModelProvider.get_llm_models()
 
     @parametrize_model_provider
     def test_get_available_rerank_models(
@@ -128,6 +126,6 @@ class TestGetAvailableModels:
     ) -> None:
         """Verify models.get_available_rerank_models() only returns models from the enabled model provider."""
         assert (
-            models.get_available_rerank_models()
+            models.Reranking.list_available()
             == EnabledModelProvider.get_reranking_models()
         )
