@@ -42,7 +42,7 @@ import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, cast
+from typing import Any, Dict, cast, Optional
 
 import lipsum
 import pytest
@@ -177,29 +177,15 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
-def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
+def embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
     model = DummyEmbeddingModel()
-
-    # this is the method signature of the original, even we're not using the model name
-    def get_embedding_model(model_name: str = "dummy_value") -> BaseEmbedding:
-        return model
-
-    # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_embedding_model", get_embedding_model)
-    monkeypatch.setattr(models, "get_noop_embedding_model", get_embedding_model)
-    return model
+    monkeypatch.setattr(models.Embedding, "get", lambda cls, model_name=None: model)
 
 
 @pytest.fixture(autouse=True)
-def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
+def llm(monkeypatch: pytest.MonkeyPatch) -> None:
     model = models.LLM.get_noop()
-
-    def get_llm(model_name: str = "dummy_value") -> LLM:
-        return model
-
-    # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_llm", get_llm)
-    return model
+    monkeypatch.setattr(models.LLM, "get", lambda cls, model_name=None: model)
 
 
 @pytest.fixture
