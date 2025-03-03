@@ -52,6 +52,7 @@ def is_enabled() -> bool:
 def get_llm_models() -> List[ModelResponse]:
     return [
         ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
     ]
 
 
