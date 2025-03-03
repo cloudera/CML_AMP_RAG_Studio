@@ -38,33 +38,43 @@
 
 from llama_index.core.base.response.schema import Response
 from llama_index.core.chat_engine.types import AgentChatResponse
-from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator
+from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator, EvaluationResult
+from llama_index.core.llms import LLM
 
 from ..services import models
 
 
-def evaluate_response(
+async def evaluate_response(
     query: str, chat_response: AgentChatResponse, model_name: str
 ) -> tuple[float, float]:
     # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
     evaluator_llm = models.LLM.get(model_name)
 
-    relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
-    relevance = relevancy_evaluator.evaluate_response(
-        query=query,
-        response=Response(
-            response=chat_response.response,
-            source_nodes=chat_response.source_nodes,
-            metadata=chat_response.metadata,
-        ),
-    )
-    faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
-    faithfulness = faithfulness_evaluator.evaluate_response(
-        query=query,
-        response=Response(
-            response=chat_response.response,
-            source_nodes=chat_response.source_nodes,
-            metadata=chat_response.metadata,
-        ),
-    )
+    relevance = await evaluate_relevancy(chat_response, evaluator_llm, query)
+    faithfulness = await evaluate_faithfulness(chat_response, evaluator_llm, query)
+
     return relevance.score or 0, faithfulness.score or 0
+
+
+async def evaluate_faithfulness(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
+    faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
+    return await faithfulness_evaluator.aevaluate_response(
+        query=query,
+        response=Response(
+            response=chat_response.response,
+            source_nodes=chat_response.source_nodes,
+            metadata=chat_response.metadata,
+        ),
+    )
+
+
+async def evaluate_relevancy(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
+    relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
+    return await relevancy_evaluator.aevaluate_response(
+        query=query,
+        response=Response(
+            response=chat_response.response,
+            source_nodes=chat_response.source_nodes,
+            metadata=chat_response.metadata,
+        ),
+    )

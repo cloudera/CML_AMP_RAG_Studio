@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import asyncio
 import time
 import uuid
 from typing import List, Iterable
@@ -118,9 +119,9 @@ def _run_chat(
     )
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
-    relevance, faithfulness = evaluators.evaluate_response(
+    relevance, faithfulness = asyncio.run(evaluators.evaluate_response(
         query, response, session.inference_model
-    )
+    ))
     response_source_nodes = format_source_nodes(response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
