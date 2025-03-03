@@ -70,14 +70,11 @@ def EnabledModelProvider(
     return ModelProviderSubcls
 
 
-# function decorator to parametrize a test with all model providers
-parametrize_model_provider = pytest.mark.parametrize(
+@pytest.mark.parametrize(
     "EnabledModelProvider",
     ModelProvider.__subclasses__(),
     indirect=True,
 )
-
-
 class TestGetAvailableModels:
     @pytest.fixture(autouse=True)
     def caii_get_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,7 +97,6 @@ class TestGetAvailableModels:
 
         monkeypatch.setattr(caii, "get_models_with_task", lambda task_type: endpoints)
 
-    @parametrize_model_provider
     def test_get_available_embedding_models(
         self,
         EnabledModelProvider: type[ModelProvider],
@@ -111,7 +107,6 @@ class TestGetAvailableModels:
             == EnabledModelProvider.get_embedding_models()
         )
 
-    @parametrize_model_provider
     def test_get_available_llm_models(
         self,
         EnabledModelProvider: type[ModelProvider],
@@ -121,7 +116,6 @@ class TestGetAvailableModels:
             models.get_available_llm_models() == EnabledModelProvider.get_llm_models()
         )
 
-    @parametrize_model_provider
     def test_get_available_rerank_models(
         self,
         EnabledModelProvider: type[ModelProvider],
