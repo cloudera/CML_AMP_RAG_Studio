@@ -199,6 +199,7 @@ def _get_bedrock_llm_models() -> List[ModelResponse]:
 def _get_azure_llm_models() -> List[ModelResponse]:
     return [
         ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
     ]
 
 
