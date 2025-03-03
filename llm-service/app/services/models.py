@@ -79,7 +79,7 @@ def get_noop_llm_model() -> LLM:
 def get_reranking_model(
     model_name: Optional[str] = None, top_n: int = 5
 ) -> BaseNodePostprocessor | None:
-    if model_name is None:
+    if not model_name:
         return SimpleReranker(top_n=top_n)
     if is_azure_enabled():
         return SimpleReranker(top_n=top_n)
@@ -199,6 +199,7 @@ def _get_bedrock_llm_models() -> List[ModelResponse]:
 def _get_azure_llm_models() -> List[ModelResponse]:
     return [
         ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
     ]
 
 

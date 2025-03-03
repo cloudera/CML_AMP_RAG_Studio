@@ -18,7 +18,7 @@ If you do not want to use the catalog-entry, then you should specify the release
 
 ### LLM Model Options
 
-RAG Studio can be used with both Cloudera Inference (CAII) or AWS Bedrock for selecting LLM and embedding models. 
+RAG Studio can be used with Cloudera Inference (CAII), AWS Bedrock, or Azure OpenAI for selecting LLM and embedding models. 
 
 #### Cloudera Inference (CAII) Setup:
 
@@ -33,6 +33,14 @@ To use AWS Bedrock, you must provide the following environment variables:
 - `AWS_DEFAULT_REGION` - defaults to `us-west-2`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
+
+#### Azure OpenAI Setup:
+
+To use Azure OpenAI, you must provide the following environment variables:
+
+- `AZURE_OPENAI_API_KEY` - Your Azure OpenAI API key
+- `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI service endpoint URL
+- `OPENAI_API_VERSION` - The Azure OpenAI API version to use
 
 ### Document Storage Options:
 

@@ -52,13 +52,20 @@ public class SessionService {
   }
 
   public Types.Session create(Types.Session input) {
-    var id = sessionRepository.create(input);
+    var id = sessionRepository.create(cleanInputs(input));
     return sessionRepository.getSessionById(id);
   }
 
   public Types.Session update(Types.Session input) {
-    sessionRepository.update(input);
+    sessionRepository.update(cleanInputs(input));
     return sessionRepository.getSessionById(input.id());
+  }
+
+  private Types.Session cleanInputs(Types.Session input) {
+    if (input.rerankModel() != null && input.rerankModel().isEmpty()) {
+      input = input.withRerankModel(null);
+    }
+    return input;
   }
 
   public List<Types.Session> getSessions() {

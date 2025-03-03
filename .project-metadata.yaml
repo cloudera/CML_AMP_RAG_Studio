@@ -35,9 +35,21 @@ environment_variables:
         description: "The domain of the CAII service. Setting this will enable CAII as the sole source for both inference and embedding models."
         required: false
     CDP_TOKEN_OVERRIDE:
-      default: ""
-      description: "Providing this will override the default project CDP_TOKEN."
-      required: false
+        default: ""
+        description: "Providing this will override the default project CDP_TOKEN."
+        required: false
+    AZURE_OPENAI_API_KEY:
+        default: ""
+        description: "Azure OpenAI API Key. Required if Azure OpenAI is used."
+        required: false
+    AZURE_OPENAI_ENDPOINT:
+        default: ""
+        description: "Azure OpenAI Endpoint URL. Required if Azure OpenAI is used."
+        required: false
+    OPENAI_API_VERSION:
+        default: ""
+        description: "Azure OpenAI API version. Required if Azure OpenAI is used."
+        required: false
 
 
 runtimes:
