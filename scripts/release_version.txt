@@ -1,1 +1,1 @@
-export RELEASE_TAG=1.9.2
+export RELEASE_TAG=1.10.0
