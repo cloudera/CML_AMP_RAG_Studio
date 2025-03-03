@@ -130,6 +130,12 @@ class CaiiModelMistral(MistralAI):
             completion_to_prompt=completion_to_prompt,
         )
 
+    def _get_all_kwargs(self, **kwargs: Any) -> Dict[str, Any]:
+        all_kwargs = super()._get_all_kwargs(**kwargs)
+        # apparently, this key is no longer acceptable to the API that is implemented by the Nvidia NIMs for mistral.
+        all_kwargs.pop('random_seed', None)
+        return all_kwargs
+
     @property
     def metadata(self) -> LLMMetadata:
         ## todo: pull this info from somewhere
