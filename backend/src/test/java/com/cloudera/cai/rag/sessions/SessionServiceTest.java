@@ -57,6 +57,32 @@ class SessionServiceTest {
   }
 
   @Test
+  void create_cleanData() {
+    SessionService sessionService = new SessionService(SessionRepository.createNull());
+    Types.Session result =
+        sessionService.create(
+            TestData.createTestSessionInstance("test")
+                .withRerankModel("")
+                .withCreatedById("abc")
+                .withUpdatedById("abc"));
+    assertThat(result.rerankModel()).isNull();
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void update() {
+    SessionService sessionService = new SessionService(SessionRepository.createNull());
+    Types.Session result =
+        sessionService.create(
+            TestData.createTestSessionInstance("test")
+                .withCreatedById("abc")
+                .withUpdatedById("abc"));
+    var updated = result.withRerankModel("");
+    var updatedResult = sessionService.update(updated);
+    assertThat(updatedResult.rerankModel()).isNull();
+  }
+
+  @Test
   void delete() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
     var input =
