@@ -49,7 +49,6 @@ import pytest
 import qdrant_client as q_client
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.llms import LLM
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
@@ -177,29 +176,15 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
-def embedding_model(monkeypatch: pytest.MonkeyPatch) -> BaseEmbedding:
+def embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
     model = DummyEmbeddingModel()
-
-    # this is the method signature of the original, even we're not using the model name
-    def get_embedding_model(model_name: str = "dummy_value") -> BaseEmbedding:
-        return model
-
-    # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_embedding_model", get_embedding_model)
-    monkeypatch.setattr(models, "get_noop_embedding_model", get_embedding_model)
-    return model
+    monkeypatch.setattr(models.Embedding, "get", lambda cls, model_name=None: model)
 
 
 @pytest.fixture(autouse=True)
-def llm(monkeypatch: pytest.MonkeyPatch) -> LLM:
-    model = models.get_noop_llm_model()
-
-    def get_llm(model_name: str = "dummy_value") -> LLM:
-        return model
-
-    # Requires that the app usages import the file and not the function directly as python creates a copy when importing the function
-    monkeypatch.setattr(models, "get_llm", get_llm)
-    return model
+def llm(monkeypatch: pytest.MonkeyPatch) -> None:
+    model = models.LLM.get_noop()
+    monkeypatch.setattr(models.LLM, "get", lambda cls, model_name=None: model)
 
 
 @pytest.fixture
