@@ -46,6 +46,8 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.embeddings.bedrock import BedrockEmbedding
+from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
+from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
@@ -77,7 +79,9 @@ def get_noop_llm_model() -> LLM:
 def get_reranking_model(
     model_name: Optional[str] = None, top_n: int = 5
 ) -> BaseNodePostprocessor | None:
-    if model_name is None:
+    if not model_name:
+        return SimpleReranker(top_n=top_n)
+    if is_azure_enabled():
         return SimpleReranker(top_n=top_n)
     if is_caii_enabled():
         return caii_reranking(model_name, top_n)
@@ -88,6 +92,15 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:
         model_name = get_available_embedding_models()[0].model_id
 
+    if is_azure_enabled():
+        return AzureOpenAIEmbedding(
+            model_name=model_name,
+            deployment_name=model_name,
+            api_key=os.environ[
+                "AZURE_OPENAI_API_KEY"
+            ],  # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
+        )
+
     if is_caii_enabled():
         return caii_embedding(model_name=model_name)
 
@@ -97,6 +110,14 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
 def get_llm(model_name: Optional[str] = None) -> LLM:
     if not model_name:
         model_name = get_available_llm_models()[0].model_id
+
+    if is_azure_enabled():
+        return AzureOpenAI(
+            model=model_name,
+            engine=model_name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+        )
 
     if is_caii_enabled():
         return caii_llm(
@@ -113,24 +134,47 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
 
 
 def get_available_embedding_models() -> List[ModelResponse]:
+    if is_azure_enabled():
+        return get_azure_embedding_models()
+
     if is_caii_enabled():
         return get_caii_embedding_models()
     return _get_bedrock_embedding_models()
 
 
 def get_available_llm_models() -> list[ModelResponse]:
+    if is_azure_enabled():
+        return _get_azure_llm_models()
+
     if is_caii_enabled():
         return get_caii_llm_models()
+
     return _get_bedrock_llm_models()
 
 
 def get_available_rerank_models() -> List[ModelResponse]:
+    if is_azure_enabled():
+        return []
+
     if is_caii_enabled():
         return get_caii_reranking_models()
+
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
         ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
     ]
+
+
+def is_azure_enabled() -> bool:
+    if all(
+        [
+            os.environ.get("AZURE_OPENAI_API_KEY"),
+            os.environ.get("AZURE_OPENAI_ENDPOINT"),
+            os.environ.get("OPENAI_API_VERSION"),
+        ]
+    ):
+        return True
+    return False
 
 
 def is_caii_enabled() -> bool:
@@ -152,6 +196,20 @@ def _get_bedrock_llm_models() -> List[ModelResponse]:
     ]
 
 
+def _get_azure_llm_models() -> List[ModelResponse]:
+    return [
+        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
+    ]
+
+
+def get_azure_embedding_models() -> List[ModelResponse]:
+    return [
+        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
+        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
+    ]
+
+
 def _get_bedrock_embedding_models() -> List[ModelResponse]:
     return [
         ModelResponse(
@@ -166,11 +224,14 @@ def _get_bedrock_embedding_models() -> List[ModelResponse]:
 class ModelSource(str, Enum):
     BEDROCK = "Bedrock"
     CAII = "CAII"
+    AZURE = "Azure"
 
 
 def get_model_source() -> ModelSource:
     if is_caii_enabled():
         return ModelSource.CAII
+    if is_azure_enabled():
+        return ModelSource.AZURE
     return ModelSource.BEDROCK
 
 

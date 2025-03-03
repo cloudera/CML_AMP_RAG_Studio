@@ -47,9 +47,6 @@ import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
-import ThumbUpIcon from "src/cuix/icons/ThumbUpIcon";
-import useModal from "src/utils/useModal.ts";
-import FeedbackModal from "src/components/Feedback/FeedbackModal.tsx";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
@@ -57,7 +54,6 @@ import "./style.css";
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
-  const feedbackModal = useModal();
 
   const navToRagApp = () => {
     navigate({ to: "/sessions" })
@@ -83,10 +79,6 @@ const TopNav: React.FC = () => {
     navigate({ to: "/models" })
       .then(() => null)
       .catch(() => null);
-  };
-
-  const popupFeedback = () => {
-    feedbackModal.setIsModalOpen(true);
   };
 
   const TechPreviewItem = () => {
@@ -155,14 +147,7 @@ const TopNav: React.FC = () => {
     <LineChartOutlined />,
   );
 
-  const feedbackItem = getItem(
-    <span data-testid="feedback-nav">Leave Feedback</span>,
-    "leave-feedback",
-    popupFeedback,
-    <ThumbUpIcon />,
-  );
-
-  const items = [...baseItems, models, analyticsItem, feedbackItem];
+  const items = [...baseItems, models, analyticsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -188,12 +173,6 @@ const TopNav: React.FC = () => {
       />
       <AmpUpdateBanner />
       <TechPreviewItem />
-      <FeedbackModal
-        handleCancel={() => {
-          feedbackModal.setIsModalOpen(false);
-        }}
-        isModalOpen={feedbackModal.isModalOpen}
-      />
     </Flex>
   );
 };

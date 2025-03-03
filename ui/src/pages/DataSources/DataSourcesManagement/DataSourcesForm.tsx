@@ -47,7 +47,6 @@ import {
   Typography,
 } from "antd";
 import { ConnectionType, DataSourceBaseType } from "src/api/dataSourceApi";
-import RequestConfigureOptions from "pages/DataSources/DataSourcesManagement/RequestConfigureOptions.tsx";
 import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import { useEffect } from "react";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
@@ -228,7 +227,6 @@ const DataSourcesForm = ({
         />
       </Form.Item>
       <Collapse items={advancedOptions(updateMode, initialValues)} />
-      <RequestConfigureOptions />
     </Form>
   );
 };

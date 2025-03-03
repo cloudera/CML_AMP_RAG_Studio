@@ -73,7 +73,7 @@ def get_reranking_models() -> List[ModelResponse]:
     return get_available_rerank_models()
 
 
-@router.get("/model_source", summary="Model source enabled - Bedrock or CAII")
+@router.get("/model_source", summary="Model source enabled - Bedrock, CAII, or Azure")
 @exceptions.propagates
 def get_model() -> ModelSource:
     return get_model_source()
