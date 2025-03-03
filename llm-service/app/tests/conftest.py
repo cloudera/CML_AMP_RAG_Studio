@@ -42,14 +42,13 @@ import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, cast, Optional
+from typing import Any, Dict, cast
 
 import lipsum
 import pytest
 import qdrant_client as q_client
 from fastapi.testclient import TestClient
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
-from llama_index.core.llms import LLM
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
