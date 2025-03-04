@@ -93,8 +93,8 @@ class DataSourceController:
         return SummaryIndexer(
             data_source_id=data_source_id,
             splitter=SentenceSplitter(chunk_size=2048),
-            embedding_model=models.get_embedding_model(datasource.embedding_model),
-            llm=models.get_llm(datasource.summarization_model),
+            embedding_model=models.Embedding.get(datasource.embedding_model),
+            llm=models.LLM.get(datasource.summarization_model),
         )
 
     @router.delete(
@@ -157,7 +157,7 @@ class DataSourceController:
             )
             llm: Optional[LLM] = None
             if datasource.summarization_model:
-                llm = models.get_llm(datasource.summarization_model)
+                llm = models.LLM.get(datasource.summarization_model)
             indexer = EmbeddingIndexer(
                 datasource.id,
                 splitter=SentenceSplitter(
@@ -168,7 +168,7 @@ class DataSourceController:
                         * request.configuration.chunk_size
                     ),
                 ),
-                embedding_model=models.get_embedding_model(datasource.embedding_model),
+                embedding_model=models.Embedding.get(datasource.embedding_model),
                 llm=llm,
                 chunks_vector_store=self.chunks_vector_store,
             )

@@ -61,7 +61,7 @@ from llama_index.core.schema import (
 )
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from app.services.models import get_noop_llm_model, get_noop_embedding_model
+from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
@@ -323,8 +323,8 @@ class SummaryIndexer(BaseTextIndexer):
             global_persist_dir: str = SummaryIndexer.__persist_root_dir()
             try:
                 configuration: Dict[str, Any] = SummaryIndexer.__index_configuration(
-                    get_noop_llm_model(),
-                    get_noop_embedding_model(),
+                    models.LLM.get_noop(),
+                    models.Embedding.get_noop(),
                     data_source_id=data_source_id,
                     embed_summaries=False,
                 )
