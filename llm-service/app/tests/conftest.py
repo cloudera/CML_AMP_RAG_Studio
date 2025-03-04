@@ -56,7 +56,7 @@ from app.services.caii.types import ModelResponse
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
-from app.services.models import BedrockModelProvider
+from app.services.models._bedrock import BedrockModelProvider
 
 
 @dataclass
