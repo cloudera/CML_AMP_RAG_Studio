@@ -36,28 +36,30 @@
 #  DATA.
 #
 
-import os
 from typing import List
 
-from app.services.caii.types import ModelResponse
+from ._model_provider import ModelProvider
+from ..caii.caii import (
+    get_caii_llm_models,
+    get_caii_embedding_models,
+    get_caii_reranking_models,
+)
+from ..caii.types import ModelResponse
 
 
-ENV_VARS = {"AZURE_OPENAI_API_KEY" "AZURE_OPENAI_ENDPOINT" "OPENAI_API_VERSION"}
+class CAIIModelProvider(ModelProvider):
+    @staticmethod
+    def get_env_var_names() -> set[str]:
+        return {"CAII_DOMAIN"}
 
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
+        return get_caii_llm_models()
 
-def is_enabled() -> bool:
-    return all(map(os.environ.get, ENV_VARS))
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        return get_caii_embedding_models()
 
-
-def get_llm_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
-        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
-    ]
-
-
-def get_embedding_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
-        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
-    ]
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        return get_caii_reranking_models()
