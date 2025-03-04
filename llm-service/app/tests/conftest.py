@@ -52,9 +52,11 @@ from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
+from app.services.caii.types import ModelResponse
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
+from app.services.models import BedrockModelProvider
 
 
 @dataclass
@@ -215,3 +217,12 @@ def client() -> Iterator[TestClient]:
     """
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture(autouse=True)
+def _get_model_arn_by_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        BedrockModelProvider,
+        "_get_model_arn_by_suffix",
+        lambda name: ModelResponse(model_id=f"us.{name}", name=name),
+    )
