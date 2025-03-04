@@ -35,7 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import List
+import os
+from typing import List, Optional
+
+import boto3
 
 from app.services.caii.types import ModelResponse
 from ._model_provider import ModelProvider
@@ -51,20 +54,43 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def get_llm_models() -> List[ModelResponse]:
-        return [
+        models = [
             ModelResponse(
-                model_id=DEFAULT_BEDROCK_LLM_MODEL,
-                name="Llama3.1 8B Instruct v1",
+                model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
             ),
             ModelResponse(
                 model_id="meta.llama3-1-70b-instruct-v1:0",
                 name="Llama3.1 70B Instruct v1",
             ),
             ModelResponse(
-                model_id="cohere.command-r-plus-v1:0",
-                name="Cohere Command R Plus v1",
+                model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
             ),
         ]
+        llama323b = BedrockModelProvider._get_model_arn_by_suffix(
+            "meta.llama3-2-3b-instruct-v1:0"
+        )
+        if llama323b:
+            models.append(llama323b)
+        llama321b = BedrockModelProvider._get_model_arn_by_suffix(
+            "meta.llama3-2-1b-instruct-v1:0"
+        )
+        if llama321b:
+            models.append(llama321b)
+
+        return models
+
+    @staticmethod
+    def _get_model_arn_by_suffix(suffix: str) -> Optional[ModelResponse]:
+        default_region = os.environ.get("AWS_DEFAULT_REGION") or None
+        bedrock_client = boto3.client("bedrock", region_name=default_region)
+        profiles = bedrock_client.list_inference_profiles()["inferenceProfileSummaries"]
+        for profile in profiles:
+            if profile["inferenceProfileId"].endswith(suffix):
+                return ModelResponse(
+                    model_id=profile["inferenceProfileId"],
+                    name=profile["inferenceProfileName"],
+                )
+        return None
 
     @staticmethod
     def get_embedding_models() -> List[ModelResponse]:
