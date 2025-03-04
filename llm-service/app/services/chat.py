@@ -236,7 +236,6 @@ def generate_suggested_questions(
             ),
             [],
         )
-        print(response.response)
         suggested_questions = process_response(response.response)
     return suggested_questions
 
