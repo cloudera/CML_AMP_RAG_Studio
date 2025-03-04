@@ -36,24 +36,11 @@
 #  DATA.
 #
 
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models._bedrock import (
-    DEFAULT_BEDROCK_LLM_MODEL,
-    DEFAULT_BEDROCK_RERANK_MODEL,
-)
+import os
 
 
-class QueryConfiguration(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+ENV_VARS = {"CAII_DOMAIN"}
 
-    top_k: int = 5
-    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
-    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
-    use_summary_filter: Optional[bool] = True
-    use_postprocessor: Optional[bool] = True
+
+def is_enabled() -> bool:
+    return all(map(os.environ.get, ENV_VARS))

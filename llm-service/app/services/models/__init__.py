@@ -51,29 +51,28 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-from .caii.caii import (
+from . import _azure, _bedrock, _caii, _noop
+from ._bedrock import DEFAULT_BEDROCK_RERANK_MODEL
+
+from ..caii.caii import (
     get_caii_embedding_models,
     get_caii_llm_models,
     get_caii_reranking_models,
 )
-from .caii.caii import get_embedding_model as caii_embedding
-from .caii.caii import get_reranking_model as caii_reranking
-from .caii.caii import get_llm as caii_llm
-from .caii.types import ModelResponse
-from .llama_utils import completion_to_prompt, messages_to_prompt
-from .noop_models import DummyEmbeddingModel, DummyLlm
-from .query.simple_reranker import SimpleReranker
-
-DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
-DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
+from ..caii.caii import get_embedding_model as caii_embedding
+from ..caii.caii import get_reranking_model as caii_reranking
+from ..caii.caii import get_llm as caii_llm
+from ..caii.types import ModelResponse
+from ..llama_utils import completion_to_prompt, messages_to_prompt
+from ..query.simple_reranker import SimpleReranker
 
 
 def get_noop_embedding_model() -> BaseEmbedding:
-    return DummyEmbeddingModel()
+    return _noop.DummyEmbeddingModel()
 
 
 def get_noop_llm_model() -> LLM:
-    return DummyLlm()
+    return _noop.DummyLlm()
 
 
 def get_reranking_model(
@@ -81,9 +80,9 @@ def get_reranking_model(
 ) -> BaseNodePostprocessor | None:
     if not model_name:
         return SimpleReranker(top_n=top_n)
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return SimpleReranker(top_n=top_n)
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return caii_reranking(model_name, top_n)
     return AWSBedrockRerank(rerank_model_name=model_name, top_n=top_n)
 
@@ -92,7 +91,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
     if model_name is None:
         model_name = get_available_embedding_models()[0].model_id
 
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return AzureOpenAIEmbedding(
             model_name=model_name,
             deployment_name=model_name,
@@ -101,7 +100,7 @@ def get_embedding_model(model_name: Optional[str] = None) -> BaseEmbedding:
             ],  # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
         )
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return caii_embedding(model_name=model_name)
 
     return BedrockEmbedding(model_name=model_name)
@@ -111,7 +110,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
     if not model_name:
         model_name = get_available_llm_models()[0].model_id
 
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return AzureOpenAI(
             model=model_name,
             engine=model_name,
@@ -119,7 +118,7 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
             completion_to_prompt=completion_to_prompt,
         )
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return caii_llm(
             endpoint_name=model_name,
             messages_to_prompt=messages_to_prompt,
@@ -134,90 +133,35 @@ def get_llm(model_name: Optional[str] = None) -> LLM:
 
 
 def get_available_embedding_models() -> List[ModelResponse]:
-    if is_azure_enabled():
-        return get_azure_embedding_models()
+    if _azure.is_enabled():
+        return _azure.get_embedding_models()
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return get_caii_embedding_models()
-    return _get_bedrock_embedding_models()
+
+    return _bedrock.get_embedding_models()
 
 
 def get_available_llm_models() -> list[ModelResponse]:
-    if is_azure_enabled():
-        return _get_azure_llm_models()
+    if _azure.is_enabled():
+        return _azure.get_llm_models()
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return get_caii_llm_models()
 
-    return _get_bedrock_llm_models()
+    return _bedrock.get_llm_models()
 
 
 def get_available_rerank_models() -> List[ModelResponse]:
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return []
 
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return get_caii_reranking_models()
 
     return [
         ModelResponse(model_id=DEFAULT_BEDROCK_RERANK_MODEL, name="Cohere Rerank v3.5"),
         ModelResponse(model_id="amazon.rerank-v1:0", name="Amazon Rerank v1"),
-    ]
-
-
-def is_azure_enabled() -> bool:
-    if all(
-        [
-            os.environ.get("AZURE_OPENAI_API_KEY"),
-            os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            os.environ.get("OPENAI_API_VERSION"),
-        ]
-    ):
-        return True
-    return False
-
-
-def is_caii_enabled() -> bool:
-    domain: str = os.environ.get("CAII_DOMAIN", "")
-    return len(domain) > 0
-
-
-def _get_bedrock_llm_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(
-            model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
-        ),
-        ModelResponse(
-            model_id="meta.llama3-1-70b-instruct-v1:0", name="Llama3.1 70B Instruct v1"
-        ),
-        ModelResponse(
-            model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
-        ),
-    ]
-
-
-def _get_azure_llm_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
-        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
-    ]
-
-
-def get_azure_embedding_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
-        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
-    ]
-
-
-def _get_bedrock_embedding_models() -> List[ModelResponse]:
-    return [
-        ModelResponse(
-            model_id="cohere.embed-english-v3", name="Cohere Embed English v3"
-        ),
-        ModelResponse(
-            model_id="cohere.embed-multilingual-v3", name="Cohere Embed Multilingual v3"
-        ),
     ]
 
 
@@ -228,9 +172,9 @@ class ModelSource(str, Enum):
 
 
 def get_model_source() -> ModelSource:
-    if is_caii_enabled():
+    if _caii.is_enabled():
         return ModelSource.CAII
-    if is_azure_enabled():
+    if _azure.is_enabled():
         return ModelSource.AZURE
     return ModelSource.BEDROCK
 
@@ -239,7 +183,7 @@ def test_llm_model(model_name: str) -> Literal["ok"]:
     models = get_available_llm_models()
     for model in models:
         if model.model_id == model_name:
-            if not is_caii_enabled() or model.available:
+            if not _caii.is_enabled() or model.available:
                 get_llm(model_name).chat(
                     messages=[
                         ChatMessage(
@@ -259,7 +203,7 @@ def test_embedding_model(model_name: str) -> str:
     models = get_available_embedding_models()
     for model in models:
         if model.model_id == model_name:
-            if not is_caii_enabled() or model.available:
+            if not _caii.is_enabled() or model.available:
                 get_embedding_model(model_name).get_text_embedding("test")
                 return "ok"
             else:
@@ -272,7 +216,7 @@ def test_reranking_model(model_name: str) -> str:
     models = get_available_rerank_models()
     for model in models:
         if model.model_id == model_name:
-            if not is_caii_enabled() or model.available:
+            if not _caii.is_enabled() or model.available:
                 node = NodeWithScore(node=TextNode(text="test"), score=0.5)
                 another_test_node = NodeWithScore(
                     node=TextNode(text="another test node"), score=0.4

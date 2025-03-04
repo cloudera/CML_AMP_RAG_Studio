@@ -36,24 +36,28 @@
 #  DATA.
 #
 
-from typing import Optional
+import os
+from typing import List
 
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models._bedrock import (
-    DEFAULT_BEDROCK_LLM_MODEL,
-    DEFAULT_BEDROCK_RERANK_MODEL,
-)
+from app.services.caii.types import ModelResponse
 
 
-class QueryConfiguration(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+ENV_VARS = {"AZURE_OPENAI_API_KEY" "AZURE_OPENAI_ENDPOINT" "OPENAI_API_VERSION"}
 
-    top_k: int = 5
-    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
-    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
-    use_summary_filter: Optional[bool] = True
-    use_postprocessor: Optional[bool] = True
+
+def is_enabled() -> bool:
+    return all(map(os.environ.get, ENV_VARS))
+
+
+def get_llm_models() -> List[ModelResponse]:
+    return [
+        ModelResponse(model_id="gpt-4o", name="OpenAI GPT-4o"),
+        ModelResponse(model_id="gpt-4o-mini", name="OpenAI GPT-4o-mini"),
+    ]
+
+
+def get_embedding_models() -> List[ModelResponse]:
+    return [
+        ModelResponse(model_id="text-embedding-ada-002", name="Text Embedding Ada 002"),
+        ModelResponse(model_id="text-embedding-3-small", name="Text Embedding 3 Small"),
+    ]
