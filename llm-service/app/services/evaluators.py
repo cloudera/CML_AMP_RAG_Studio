@@ -35,28 +35,35 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import asyncio
 
 from llama_index.core.base.response.schema import Response
 from llama_index.core.chat_engine.types import AgentChatResponse
-from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator, EvaluationResult
+from llama_index.core.evaluation import (
+    FaithfulnessEvaluator,
+    RelevancyEvaluator,
+    EvaluationResult,
+)
 from llama_index.core.llms import LLM
 
 from ..services import models
 
 
-async def evaluate_response(
-    query: str, chat_response: AgentChatResponse, model_name: str
+def evaluate_response(
+        query: str, chat_response: AgentChatResponse, model_name: str
 ) -> tuple[float, float]:
     # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
     evaluator_llm = models.LLM.get(model_name)
+    return asyncio.run(_async_evaluate_response(query, chat_response, evaluator_llm))
 
-    relevance = await evaluate_relevancy(chat_response, evaluator_llm, query)
-    faithfulness = await evaluate_faithfulness(chat_response, evaluator_llm, query)
 
+async def _async_evaluate_response(query: str, chat_response: AgentChatResponse, evaluator_llm: LLM) -> tuple[float, float] :
+    relevance = await _evaluate_relevancy(chat_response, evaluator_llm, query)
+    faithfulness = await _evaluate_faithfulness(chat_response, evaluator_llm, query)
     return relevance.score or 0, faithfulness.score or 0
 
 
-async def evaluate_faithfulness(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
+async def _evaluate_faithfulness(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
     faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
     return await faithfulness_evaluator.aevaluate_response(
         query=query,
@@ -68,7 +75,7 @@ async def evaluate_faithfulness(chat_response: AgentChatResponse, evaluator_llm:
     )
 
 
-async def evaluate_relevancy(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
+async def _evaluate_relevancy(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
     relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
     return await relevancy_evaluator.aevaluate_response(
         query=query,
