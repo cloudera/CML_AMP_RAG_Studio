@@ -35,38 +35,31 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import itertools
 
-from llama_index.core.base.llms.types import ChatMessage, ChatResponse
-from llama_index.core.llms import LLM
+from typing import List
 
-from .chat_store import ChatHistoryManager, RagStudioChatMessage
-from . import models
-from .query.query_configuration import QueryConfiguration
-
-
-def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
-    user = ChatMessage.from_str(x.rag_message.user, role="user")
-    assistant = ChatMessage.from_str(x.rag_message.assistant, role="assistant")
-    return [user, assistant]
+from ._model_provider import ModelProvider
+from ..caii.caii import (
+    get_caii_llm_models,
+    get_caii_embedding_models,
+    get_caii_reranking_models,
+)
+from ..caii.types import ModelResponse
 
 
-def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
-    model = models.LLM.get(model_name)
-    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
-    messages = list(
-        itertools.chain.from_iterable(
-            map(lambda x: make_chat_messages(x), chat_history)
-        )
-    )
-    messages.append(ChatMessage.from_str(question, role="user"))
-    return model.chat(messages)
+class CAIIModelProvider(ModelProvider):
+    @staticmethod
+    def get_env_var_names() -> set[str]:
+        return {"CAII_DOMAIN"}
 
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
+        return get_caii_llm_models()
 
-def hypothetical(question: str, configuration: QueryConfiguration) -> str:
-    model: LLM = models.LLM.get(configuration.model_name)
-    prompt: str = (
-        f"You are an expert. You are asked: {question}. "
-        "Produce a brief document that would hypothetically answer this question."
-    )
-    return model.complete(prompt).text
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        return get_caii_embedding_models()
+
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        return get_caii_reranking_models()

@@ -236,7 +236,6 @@ def generate_suggested_questions(
             ),
             [],
         )
-
         suggested_questions = process_response(response.response)
     return suggested_questions
 
@@ -250,7 +249,7 @@ def process_response(response: str | None) -> list[str]:
     sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
     sentences = map(lambda x: x.removeprefix("-").strip(), sentences)
     sentences = map(lambda x: x.strip("*"), sentences)
-    sentences = filter(lambda x: len(x.split()) <= 15, sentences)
+    sentences = filter(lambda x: len(x.split()) <= 60, sentences)
     sentences = filter(lambda x: x != "Empty Response", sentences)
     sentences = filter(lambda x: x != "", sentences)
     return list(sentences)[:5]

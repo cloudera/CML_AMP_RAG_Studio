@@ -35,38 +35,39 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import itertools
+import abc
+import os
+from typing import List
 
-from llama_index.core.base.llms.types import ChatMessage, ChatResponse
-from llama_index.core.llms import LLM
-
-from .chat_store import ChatHistoryManager, RagStudioChatMessage
-from . import models
-from .query.query_configuration import QueryConfiguration
+from app.services.caii.types import ModelResponse
 
 
-def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
-    user = ChatMessage.from_str(x.rag_message.user, role="user")
-    assistant = ChatMessage.from_str(x.rag_message.assistant, role="assistant")
-    return [user, assistant]
+class ModelProvider(abc.ABC):
+    @classmethod
+    def is_enabled(cls) -> bool:
+        """Return whether this model provider is enabled, based on the presence of required env vars."""
+        return all(map(os.environ.get, cls.get_env_var_names()))
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_env_var_names() -> set[str]:
+        """Return the names of the env vars required by this model provider."""
+        raise NotImplementedError
 
-def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
-    model = models.LLM.get(model_name)
-    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
-    messages = list(
-        itertools.chain.from_iterable(
-            map(lambda x: make_chat_messages(x), chat_history)
-        )
-    )
-    messages.append(ChatMessage.from_str(question, role="user"))
-    return model.chat(messages)
+    @staticmethod
+    @abc.abstractmethod
+    def get_llm_models() -> List[ModelResponse]:
+        """Return available LLM models."""
+        raise NotImplementedError
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        """Return available embedding models."""
+        raise NotImplementedError
 
-def hypothetical(question: str, configuration: QueryConfiguration) -> str:
-    model: LLM = models.LLM.get(configuration.model_name)
-    prompt: str = (
-        f"You are an expert. You are asked: {question}. "
-        "Produce a brief document that would hypothetically answer this question."
-    )
-    return model.complete(prompt).text
+    @staticmethod
+    @abc.abstractmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        """Return available reranking models."""
+        raise NotImplementedError
