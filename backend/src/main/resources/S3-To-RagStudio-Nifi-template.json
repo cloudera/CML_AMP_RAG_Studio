@@ -860,7 +860,7 @@
           "custom-signer-module-location": null,
           "SSL Context Service": null,
           "Signer Override": "Default Signature",
-          "Bucket": "${S3 Bucket}",
+          "Bucket": "#{S3 Bucket}",
           "Version": null,
           "Communications Timeout": "30 secs",
           "Region": "us-west-2",
