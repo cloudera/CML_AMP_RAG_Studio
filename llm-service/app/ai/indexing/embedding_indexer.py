@@ -43,7 +43,7 @@ from typing import Generator, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
-from llama_index.core.node_parser import SentenceSplitter, TextSplitter
+from llama_index.core.node_parser import MetadataAwareTextSplitter
 from llama_index.core.schema import BaseNode, TextNode
 from typing_extensions import Optional
 
@@ -59,7 +59,7 @@ class EmbeddingIndexer(BaseTextIndexer):
     def __init__(
         self,
         data_source_id: int,
-        splitter: TextSplitter,
+        splitter: MetadataAwareTextSplitter,
         embedding_model: BaseEmbedding,
         chunks_vector_store: VectorStore,
         llm: Optional[LLM],
