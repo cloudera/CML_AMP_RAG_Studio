@@ -978,15 +978,6 @@ wheels = [
 ]
 
 [[package]]
-name = "eval-type-backport"
-version = "0.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/30/ea/8b0ac4469d4c347c6a385ff09dc3c048c2d021696664e26c7ee6791631b5/eval_type_backport-0.2.2.tar.gz", hash = "sha256:f0576b4cf01ebb5bd358d02314d31846af5e07678387486e2c798af0e7d849c1", size = 9079 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/31/55cd413eaccd39125368be33c46de24a1f639f2e12349b0361b4678f3915/eval_type_backport-0.2.2-py3-none-any.whl", hash = "sha256:cb6ad7c393517f476f96d456d0412ea80f0a8cf96f6892834cd9340149111b0a", size = 5830 },
-]
-
-[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1651,15 +1642,6 @@ wheels = [
 ]
 
 [[package]]
-name = "jsonpath-python"
-version = "1.0.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b5/49/e582e50b0c54c1b47e714241c4a4767bf28758bf90212248aea8e1ce8516/jsonpath-python-1.0.6.tar.gz", hash = "sha256:dd5be4a72d8a2995c3f583cf82bf3cd1a9544cfdabf2d22595b67aff07349666", size = 18121 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/8a/d63959f4eff03893a00e6e63592e3a9f15b9266ed8e0275ab77f8c7dbc94/jsonpath_python-1.0.6-py3-none-any.whl", hash = "sha256:1e3b78df579f5efc23565293612decee04214609208a2335884b3ee3f786b575", size = 7552 },
-]
-
-[[package]]
 name = "jsonref"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1936,16 +1918,17 @@ wheels = [
 ]
 
 [[package]]
-name = "llama-index-llms-mistralai"
+name = "llama-index-llms-nvidia"
 version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
-    { name = "mistralai" },
+    { name = "llama-index-llms-openai" },
+    { name = "llama-index-llms-openai-like" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/50/9c/5a5e5f8ed77ecac0f790220298580bec484b063a6ba4b775d0de20eaa345/llama_index_llms_mistralai-0.3.2.tar.gz", hash = "sha256:4f1eda1292d4c6c5a511947c64e2b6dceb8cd2f91a7576c987b33dec1aa5aedd", size = 6132 }
+sdist = { url = "https://files.pythonhosted.org/packages/d1/ef/9e9db8ef59c6c63c0020666bacf2ca463b5ac6f43d6c18ddd5d30a4dc8c1/llama_index_llms_nvidia-0.3.2.tar.gz", hash = "sha256:5914f2d5b80e1118db7732ec1ae7c6a4f05d35038f5191e786932d36c6fbab78", size = 10521 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/c5/e8bef42c6adcc9e46ae56a7f06ae8f295753bc3fab81ba0d85417d37db15/llama_index_llms_mistralai-0.3.2-py3-none-any.whl", hash = "sha256:f92f94149935157c2c8cbbf0026496cfe4bc425561ce72fb3ef0caf10ab7b744", size = 6836 },
+    { url = "https://files.pythonhosted.org/packages/dc/46/b85039dbfd92bbd63d0989eb226bd141199e43a0c784200542fe67404c93/llama_index_llms_nvidia-0.3.2-py3-none-any.whl", hash = "sha256:ab1711edec6c665e5b4f794ff90bfac2f5703f3c235d41a2ae8d378873cfd890", size = 9755 },
 ]
 
 [[package]]
@@ -1959,6 +1942,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e1/8c/6639a1b1fa276c280e76444a1fa7bec3f67aceeafb02011c79cb9c6f57ab/llama_index_llms_openai-0.3.17.tar.gz", hash = "sha256:19f478054a017e5e3c16f4335a7e149a1f28cc59871c9873adc49a46b594ac99", size = 14567 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/15/3a4e4c8b1bfaf4d4d9318b3153eccda6dcba64dd5d8900f1a22aedb9e4c7/llama_index_llms_openai-0.3.17-py3-none-any.whl", hash = "sha256:06ae687bfbe17f9eadc09c7167ac2a67d8ff5548164166746be251698f5e7b58", size = 14808 },
+]
+
+[[package]]
+name = "llama-index-llms-openai-like"
+version = "0.3.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+    { name = "llama-index-llms-openai" },
+    { name = "transformers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/04/eb/addc5f02540c0cc60221dc53c224a49a7ecee4cdc417c4db4f5dc42ab0b9/llama_index_llms_openai_like-0.3.3.tar.gz", hash = "sha256:bea042017291d933ac93a0c487c8daad25a70e6f6bf2a5440150f6c18b246df6", size = 2893 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/15/90d8902cba0bddcc6a9f774fc370ed9f995354a8c0c5427e8d87bf89a819/llama_index_llms_openai_like-0.3.3-py3-none-any.whl", hash = "sha256:20051625720053e5d511d3771affee17b5373cc055b86ecbfc267c631c2dc406", size = 3132 },
 ]
 
 [[package]]
@@ -2034,7 +2031,7 @@ dependencies = [
     { name = "llama-index-llms-azure-openai" },
     { name = "llama-index-llms-bedrock" },
     { name = "llama-index-llms-bedrock-converse" },
-    { name = "llama-index-llms-mistralai" },
+    { name = "llama-index-llms-nvidia" },
     { name = "llama-index-llms-openai" },
     { name = "llama-index-postprocessor-bedrock-rerank" },
     { name = "llama-index-postprocessor-nvidia-rerank" },
@@ -2079,7 +2076,7 @@ requires-dist = [
     { name = "llama-index-llms-azure-openai", specifier = ">=0.3.0" },
     { name = "llama-index-llms-bedrock", specifier = ">=0.1.13" },
     { name = "llama-index-llms-bedrock-converse", specifier = ">=0.2.0" },
-    { name = "llama-index-llms-mistralai", specifier = ">=0.1.20" },
+    { name = "llama-index-llms-nvidia", specifier = ">=0.3.2" },
     { name = "llama-index-llms-openai", specifier = ">=0.1.31" },
     { name = "llama-index-postprocessor-bedrock-rerank", specifier = ">=0.3.1" },
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
@@ -2380,23 +2377,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979 },
-]
-
-[[package]]
-name = "mistralai"
-version = "1.5.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "eval-type-backport" },
-    { name = "httpx" },
-    { name = "jsonpath-python" },
-    { name = "pydantic" },
-    { name = "python-dateutil" },
-    { name = "typing-inspect" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/16/9d/aba193fdfe0fc7403efa380189143d965becfb1bc7df3230e5c7664f8c53/mistralai-1.5.0.tar.gz", hash = "sha256:fd94bc93bc25aad9c6dd8005b1a0bc4ba1250c6b3fbf855a49936989cc6e5c0d", size = 131647 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/e7/7147c75c383a975c58c33f8e7ee7dbbb0e7390fbcb1ecd321f63e4c73efd/mistralai-1.5.0-py3-none-any.whl", hash = "sha256:9372537719f87bd6f9feef4747d0bf1f4fbe971f8c02945ca4b4bf3c94571c97", size = 271559 },
 ]
 
 [[package]]

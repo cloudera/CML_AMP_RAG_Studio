@@ -38,7 +38,6 @@
 from typing import Callable, Dict, Sequence, Any
 
 from llama_index.core.base.llms.types import ChatMessage, LLMMetadata, ChatResponse, CompletionResponse
-from llama_index.llms.mistralai.base import MistralAI
 from llama_index.llms.openai import OpenAI
 from pydantic import Field
 
@@ -108,41 +107,3 @@ class DeepseekModel(CaiiModel):
         content: str = raw_response.message.content or ""
         raw_response.message.content = content.split("</think>")[-1]
         return raw_response
-
-
-class CaiiModelMistral(MistralAI):
-    def __init__(
-        self,
-        model: str,
-        context: int,
-        api_base: str,
-        messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
-        completion_to_prompt: Callable[[str], str],
-        default_headers: Dict[str, str],
-    ):
-        super().__init__(
-            api_key=default_headers.get("Authorization"),
-            model=model,
-            endpoint=api_base.removesuffix(
-                "/v1"
-            ),  # mistral expects the base url without the /v1
-            messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt,
-        )
-
-    def _get_all_kwargs(self, **kwargs: Any) -> Dict[str, Any]:
-        all_kwargs = super()._get_all_kwargs(**kwargs)
-        # apparently, this key is no longer acceptable to the API that is implemented by the Nvidia NIMs for mistral.
-        all_kwargs.pop('random_seed', None)
-        return all_kwargs
-
-    @property
-    def metadata(self) -> LLMMetadata:
-        ## todo: pull this info from somewhere
-        return LLMMetadata(
-            context_window=32000,  ## this is the minimum mistral context window from utils.py
-            num_output=self.max_tokens or -1,
-            is_chat_model=False,
-            is_function_calling_model=True,
-            model_name=self.model,
-        )
