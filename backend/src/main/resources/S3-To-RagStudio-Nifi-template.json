@@ -183,6 +183,12 @@
           "Penalize on \"No Retry\"": "false"
         },
         "propertyDescriptors": {
+          "Authorization": {
+            "name": "Authorization",
+            "displayName": "Authorization",
+            "identifiesControllerService": false,
+            "sensitive": true
+          },
           "Proxy Host": {
             "name": "Proxy Host",
             "displayName": "Proxy Host",
