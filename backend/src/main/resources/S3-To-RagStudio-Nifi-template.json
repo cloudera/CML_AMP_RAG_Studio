@@ -166,6 +166,7 @@
           "Use Chunked Encoding": "false",
           "Follow Redirects": "True",
           "Remote URL": "#{Rag Studio URL}/api/v1/rag/dataSources/#{Rag Studio Datasource ID}/files",
+          "Authorization": "Bearer #{Authorization token}",
           "Content-Type": "${mime.type}",
           "form-body-form-name": "file",
           "flow-file-naming-strategy": "RANDOM",
@@ -1604,6 +1605,13 @@
           "sensitive": false,
           "provided": false,
           "value": "$$$RAG_STUDIO_DATASOURCE_ID$$$"
+        },
+        {
+          "name": "Authorization token",
+          "description": "A CML API key created with Application capabilities",
+          "sensitive": true,
+          "provided": false,
+          "value": null
         },
         {
           "name": "Access Key ID",
