@@ -220,19 +220,17 @@ export const getCdfConfigQuery = async (
   );
 };
 
-export const useGetCdfConfigMetadataQuery = () => {
+export const useGetNifiConfigOptionsQuery = () => {
   return useQuery({
     queryKey: [QueryKeys.getCdfConfigMetadata],
     queryFn: async () => {
-      return await getCdfConfigMetadataQuery();
+      return await geNifiConfigOptionsQuery();
     },
   });
 };
 
-const getCdfConfigMetadataQuery = async (): Promise<
-  CdfConfigMetadataType[]
-> => {
-  return await getRequest(`${ragPath}/${paths.dataSources}/nifiConfigMetadata`);
+const geNifiConfigOptionsQuery = async (): Promise<CdfConfigMetadataType[]> => {
+  return await getRequest(`${ragPath}/${paths.dataSources}/nifiConfigOptions`);
 };
 
 export const deleteDataSourceMutation = async (

@@ -38,10 +38,11 @@
 
 import { Button, Card, Flex, Spin, Typography } from "antd";
 import DataFlowCard from "pages/DataSources/DataSourceConnectionsTab/DataFlowCard.tsx";
-import { useGetCdfConfigMetadataQuery } from "src/api/dataSourceApi.ts";
+import { useGetNifiConfigOptionsQuery } from "src/api/dataSourceApi.ts";
 
 const DataSourceConnections = () => {
-  const { data: cdfConfigMetadata, isLoading } = useGetCdfConfigMetadataQuery();
+  const { data: nifiConfigOptions, isLoading: isNifiConfigOptionsLoading } =
+    useGetNifiConfigOptionsQuery();
 
   return (
     <div>
@@ -63,8 +64,16 @@ const DataSourceConnections = () => {
           .
         </Typography.Text>
         <Flex align="center" gap={30} style={{ marginTop: 40 }}>
-          {isLoading && <Spin />}
-          {cdfConfigMetadata?.map((config) => (
+          {isNifiConfigOptionsLoading && (
+            <Flex
+              align="center"
+              justify="center"
+              style={{ width: "100%", height: 200 }}
+            >
+              <Spin />
+            </Flex>
+          )}
+          {nifiConfigOptions?.map((config) => (
             <DataFlowCard
               key={config.configType}
               configType={config.configType}

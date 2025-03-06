@@ -147,8 +147,7 @@ public class Types {
   public record MetadataMetrics(
       int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}
 
-  public record DataFlowConfigMetadata(
-      String name, String description, DataFlowConfigType configType) {}
+  public record NifiConfigOptions(String name, String description, DataFlowConfigType configType) {}
 
   public enum DataFlowConfigType {
     AZURE_BLOB,
