@@ -101,7 +101,8 @@ public class RagDataSourceController {
   }
 
   @GetMapping(value = "/{id}/nifiConfig", produces = "application/json")
-  public String getNifiConfig(@PathVariable Long id, @RequestParam String ragStudioUrl) {
-    return dataSourceService.getNifiConfig(id, ragStudioUrl);
+  public String getNifiConfig(
+      @PathVariable Long id, @RequestParam String ragStudioUrl, @RequestParam String configType) {
+    return dataSourceService.getNifiConfig(id, ragStudioUrl, configType);
   }
 }

@@ -36,16 +36,42 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex } from "antd";
-import { ClouderaDataFlowConnection } from "pages/DataSources/DataSourceConnectionsTab/ClouderaDataFlowConnection.tsx";
+import { Button, Card, Flex, Typography } from "antd";
+import DataFlowCard from "pages/DataSources/DataSourceConnectionsTab/DataFlowCard.tsx";
 
 const DataSourceConnections = () => {
   return (
     <div>
-      <h1>Configurations</h1>
-      <Flex align="center" gap={30}>
-        <ClouderaDataFlowConnection />
-      </Flex>
+      <Typography.Title level={2}>Connections</Typography.Title>
+      <Card>
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          Cloudera DataFlow
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          Download flow definition to be imported into Cloudera DataFlow. For
+          more information about DataFlow, please see the{" "}
+          <Button
+            type="link"
+            href="https://docs.cloudera.com/dataflow/cloud/index.html"
+            target="_blank"
+          >
+            DataFlow documentation
+          </Button>
+          .
+        </Typography.Text>
+        <Flex align="center" gap={30} style={{ marginTop: 40 }}>
+          <DataFlowCard
+            configType="s3"
+            title="S3 Cloudera DataFlow Definition"
+            description="Flow definition for pointing a S3 bucket to RAG Studio"
+          />
+          <DataFlowCard
+            configType="azureBlob"
+            title="Azure Blob Storage Cloudera DataFlow Definition"
+            description="Flow definition for pointing an Azure Blob Store to RAG Studio"
+          />
+        </Flex>
+      </Card>
     </div>
   );
 };

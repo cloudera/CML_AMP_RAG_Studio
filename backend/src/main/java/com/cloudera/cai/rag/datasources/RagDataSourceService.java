@@ -80,9 +80,15 @@ public class RagDataSourceService {
     return new RagDataSourceService(RagDataSourceRepository.createNull());
   }
 
-  public String getNifiConfig(Long id, String ragStudioUrl) {
+  public String getNifiConfig(Long id, String ragStudioUrl, String configType) {
     try {
-      return ResourceUtils.getFileContents("S3-To-RagStudio-Nifi-template.json")
+      String fileName;
+      if (configType.equals("azureBlob")) {
+        fileName = "AzureBlob-To-RagStudio-Nifi-template.json";
+      } else {
+        fileName = "S3-To-RagStudio-Nifi-template.json";
+      }
+      return ResourceUtils.getFileContents(fileName)
           .replace("$$$RAG_STUDIO_DATASOURCE_ID$$$", id.toString())
           .replace("$$$RAG_STUDIO_URL$$$", ragStudioUrl);
     } catch (IOException e) {

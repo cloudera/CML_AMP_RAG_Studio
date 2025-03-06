@@ -203,11 +203,14 @@ const visualizeDataSourceWithUserQuery = async (
   );
 };
 
+export type ConfigType = "s3" | "azureBlob";
+
 export const getCdfConfigQuery = async (
   dataSourceId: string,
+  configType: ConfigType,
 ): Promise<string> => {
   return await getRequest(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/nifiConfig?ragStudioUrl=${window.location.origin}`,
+    `${ragPath}/${paths.dataSources}/${dataSourceId}/nifiConfig?ragStudioUrl=${window.location.origin}&configType=${configType}`,
   );
 };
 

@@ -53,7 +53,8 @@ class RagDataSourceServiceTest {
     RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
     var dataSourceId = 6666666L;
     var url = "https://testing.dev/xyz";
-    String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url);
+    var configType = "s3";
+    String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url, configType);
     assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
     assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");
   }
