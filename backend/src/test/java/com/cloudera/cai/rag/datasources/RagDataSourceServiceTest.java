@@ -40,11 +40,11 @@ package com.cloudera.cai.rag.datasources;
 
 import static com.cloudera.cai.rag.Types.*;
 import static com.cloudera.cai.rag.Types.ConnectionType.MANUAL;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class RagDataSourceServiceTest {
@@ -70,6 +70,14 @@ class RagDataSourceServiceTest {
     String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url, configType);
     assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
     assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");
+  }
+
+  @Test
+  void getNifiConfigOptions() {
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
+    List<NifiConfigOptions> nifiConfig = ragDataSourceService.getNifiConfigOptions();
+    assertThat(nifiConfig).size().isEqualTo(2);
   }
 
   @Test
