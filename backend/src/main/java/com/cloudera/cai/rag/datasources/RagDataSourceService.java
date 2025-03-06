@@ -63,22 +63,21 @@ public class RagDataSourceService {
     return ragDataSourceRepository.getRagDataSourceById(id);
   }
 
-  public List<RagDataSource> getRagDataSources() {
-    return ragDataSourceRepository.getRagDataSources();
-  }
-
-  public RagDataSource getRagDataSourceById(Long id) {
-    return ragDataSourceRepository.getRagDataSourceById(id);
+  public RagDataSource updateRagDataSource(RagDataSource input) {
+    ragDataSourceRepository.updateRagDataSource(input);
+    return ragDataSourceRepository.getRagDataSourceById(input.id());
   }
 
   public void deleteDataSource(Long id) {
     ragDataSourceRepository.deleteDataSource(id);
   }
 
-  // Nullables stuff below here.
+  public List<RagDataSource> getRagDataSources() {
+    return ragDataSourceRepository.getRagDataSources();
+  }
 
-  public static RagDataSourceService createNull() {
-    return new RagDataSourceService(RagDataSourceRepository.createNull());
+  public RagDataSource getRagDataSourceById(Long id) {
+    return ragDataSourceRepository.getRagDataSourceById(id);
   }
 
   public List<Types.DataFlowConfigMetadata> getNifiConfigMetadata() {
@@ -108,8 +107,9 @@ public class RagDataSourceService {
     }
   }
 
-  public RagDataSource updateRagDataSource(RagDataSource input) {
-    ragDataSourceRepository.updateRagDataSource(input);
-    return ragDataSourceRepository.getRagDataSourceById(input.id());
+  // Nullables stuff below here.
+
+  public static RagDataSourceService createNull() {
+    return new RagDataSourceService(RagDataSourceRepository.createNull());
   }
 }

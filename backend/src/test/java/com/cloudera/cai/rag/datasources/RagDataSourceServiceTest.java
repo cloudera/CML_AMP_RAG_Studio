@@ -50,7 +50,8 @@ import org.junit.jupiter.api.Test;
 class RagDataSourceServiceTest {
   @Test
   void getNifiS3Config() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var dataSourceId = 6666666L;
     var url = "https://testing.dev/xyz";
     var configType = DataFlowConfigType.S3;
@@ -61,7 +62,8 @@ class RagDataSourceServiceTest {
 
   @Test
   void getNifiAzureBlobConfig() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var dataSourceId = 6666666L;
     var url = "https://testing.dev/xyz";
     var configType = DataFlowConfigType.AZURE_BLOB;
@@ -72,7 +74,8 @@ class RagDataSourceServiceTest {
 
   @Test
   void createDataSource() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, null, ConnectionType.MANUAL)
@@ -87,7 +90,8 @@ class RagDataSourceServiceTest {
 
   @Test
   void updateDataSourceName() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, 10, ConnectionType.MANUAL)
@@ -110,7 +114,8 @@ class RagDataSourceServiceTest {
 
   @Test
   void deleteDataSource() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, 10, ConnectionType.MANUAL)
