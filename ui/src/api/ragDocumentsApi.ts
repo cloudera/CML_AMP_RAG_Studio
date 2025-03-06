@@ -80,7 +80,9 @@ const createRagDocumentsMutation = async ({
   const promises = files.map((file) =>
     createRagDocumentMutation(file, dataSourceId),
   );
-  return await Promise.allSettled(promises);
+  return await Promise.allSettled(
+    promises.flatMap((value) => value.then((val) => val.flatMap((v) => v))),
+  );
 };
 
 const createRagDocumentMutation = async (
@@ -107,7 +109,7 @@ const createRagDocumentMutation = async (
         `Failed to call API backend. status: ${res.status.toString()} : ${res.statusText}`,
       );
     }
-    return res.json() as Promise<RagDocumentMetadata>;
+    return res.json() as Promise<RagDocumentMetadata[]>;
   });
 };
 

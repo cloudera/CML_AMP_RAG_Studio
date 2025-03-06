@@ -81,7 +81,8 @@ public class RagFileService {
     this.ragFileDeleteReconciler = ragFileDeleteReconciler;
   }
 
-  public RagDocumentMetadata saveRagFile(MultipartFile file, Long dataSourceId, String actorCrn) {
+  public List<RagDocumentMetadata> saveRagFile(
+      MultipartFile file, Long dataSourceId, String actorCrn) {
     ragDataSourceRepository.getRagDataSourceById(dataSourceId);
     String documentId = idGenerator.generateId();
     var s3Path = buildS3Path(dataSourceId, documentId);
@@ -93,8 +94,12 @@ public class RagFileService {
 
     ragFileIndexReconciler.submit(ragDocument.withId(id));
 
-    return new RagDocumentMetadata(
-        ragDocument.filename(), documentId, ragDocument.extension(), ragDocument.sizeInBytes());
+    return List.of(
+        new RagDocumentMetadata(
+            ragDocument.filename(),
+            documentId,
+            ragDocument.extension(),
+            ragDocument.sizeInBytes()));
   }
 
   private String buildS3Path(Long dataSourceId, String documentId) {
@@ -114,10 +119,9 @@ public class RagFileService {
 
   private RagDocument createUnsavedDocument(
       MultipartFile file, String documentId, String s3Path, Long dataSourceId, String actorCrn) {
-    System.out.println("file.getOriginalFilename() = " + file.getOriginalFilename());
     return new RagDocument(
         null,
-        file.getOriginalFilename(),
+        validateFilename(file.getOriginalFilename()),
         dataSourceId,
         documentId,
         s3Path,
@@ -135,15 +139,11 @@ public class RagFileService {
         null);
   }
 
-  private static String removeDirectories(String originalFilename) {
+  private static String validateFilename(String originalFilename) {
     if (originalFilename == null || originalFilename.isBlank()) {
       throw new BadRequest("Filename is required");
     }
-    if (originalFilename.contains("/")) {
-      return originalFilename.substring(originalFilename.lastIndexOf('/') + 1);
-    } else {
-      return originalFilename;
-    }
+    return originalFilename;
   }
 
   public void deleteRagFile(Long id, Long dataSourceId) {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -72,7 +72,7 @@ class RagFileServiceTest {
     RagFileService ragFileService = createRagFileService(documentId, requestTracker);
     var dataSourceId = newDataSourceId();
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id").getFirst();
     Types.RagDocumentMetadata expected =
         new Types.RagDocumentMetadata(originalFilename, documentId, "pdf", 11);
     assertThat(result).isEqualTo(expected);
@@ -122,7 +122,7 @@ class RagFileServiceTest {
     String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id").getFirst();
     Types.RagDocumentMetadata expected =
         new Types.RagDocumentMetadata(originalFilename, documentId, "", 11);
     assertThat(result).isEqualTo(expected);
@@ -139,7 +139,7 @@ class RagFileServiceTest {
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>(), "");
     var dataSourceId = newDataSourceId();
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id").getFirst();
     var savedDocumentMetadata = ragFileRepository.findDocumentByDocumentId(result.documentId());
     assertThat(savedDocumentMetadata.s3Path()).isEqualTo(dataSourceId + "/" + documentId);
   }
@@ -157,9 +157,9 @@ class RagFileServiceTest {
     var requestTracker = new Tracker<UploadRequest>();
     RagFileService ragFileService = createRagFileService(documentId, requestTracker);
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id").getFirst();
     Types.RagDocumentMetadata expected =
-        new Types.RagDocumentMetadata("real-filename.pdf", documentId, "pdf", 11);
+        new Types.RagDocumentMetadata("staging/real-filename.pdf", documentId, "pdf", 11);
     assertThat(result).isEqualTo(expected);
     assertThat(requestTracker.getValues())
         .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
