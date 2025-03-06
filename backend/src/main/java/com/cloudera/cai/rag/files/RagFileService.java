@@ -114,9 +114,10 @@ public class RagFileService {
 
   private RagDocument createUnsavedDocument(
       MultipartFile file, String documentId, String s3Path, Long dataSourceId, String actorCrn) {
+    System.out.println("file.getOriginalFilename() = " + file.getOriginalFilename());
     return new RagDocument(
         null,
-        removeDirectories(file.getOriginalFilename()),
+        file.getOriginalFilename(),
         dataSourceId,
         documentId,
         s3Path,

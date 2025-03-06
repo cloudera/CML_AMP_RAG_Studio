@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import os
 import shutil
 from pathlib import Path
 
@@ -46,11 +46,12 @@ from .base import DocumentStorage
 
 class FileSystemDocumentStorage(DocumentStorage):
     def download(
-        self, temp_dir: str, bucket_name: str, document_key: str, original_filename: str
+        self, temp_dir: str, bucket_name: str, document_key: str, original_filepath: str
     ) -> Path:
         """
         Copy file from local filesystem into the temp directory
         """
+        original_filename = os.path.basename(original_filepath)
         source_file = Path(Settings().rag_databases_dir, "file_storage", document_key)
         target_file = Path(temp_dir, original_filename)
         shutil.copy(source_file, target_file)
