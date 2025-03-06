@@ -81,6 +81,18 @@ public class RagDataSourceService {
     return new RagDataSourceService(RagDataSourceRepository.createNull());
   }
 
+  public List<Types.DataFlowConfigMetadata> getNifiConfigMetadata() {
+    return List.of(
+        new Types.DataFlowConfigMetadata(
+            "S3 Cloudera DataFlow Definition",
+            "Flow definition for pointing a S3 bucket to RAG Studio.  Requires AWS credentials.",
+            Types.DataFlowConfigType.S3),
+        new Types.DataFlowConfigMetadata(
+            "Azure Blob Storage Cloudera DataFlow Definition",
+            "Flow definition for pointing an Azure Blob Store to RAG Studio.  Requires Azure credentials.",
+            Types.DataFlowConfigType.AZURE_BLOB));
+  }
+
   public String getNifiConfig(Long id, String ragStudioUrl, Types.DataFlowConfigType configType) {
     try {
       String fileName =

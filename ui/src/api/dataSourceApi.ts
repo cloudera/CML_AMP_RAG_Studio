@@ -205,6 +205,12 @@ const visualizeDataSourceWithUserQuery = async (
 
 export type ConfigType = "S3" | "AZURE_BLOB";
 
+export interface CdfConfigMetadataType {
+  name: string;
+  description: string;
+  configType: ConfigType;
+}
+
 export const getCdfConfigQuery = async (
   dataSourceId: string,
   configType: ConfigType,
@@ -212,6 +218,21 @@ export const getCdfConfigQuery = async (
   return await getRequest(
     `${ragPath}/${paths.dataSources}/${dataSourceId}/nifiConfig?ragStudioUrl=${window.location.origin}&configType=${configType}`,
   );
+};
+
+export const useGetCdfConfigMetadataQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getCdfConfigMetadata],
+    queryFn: async () => {
+      return await getCdfConfigMetadataQuery();
+    },
+  });
+};
+
+const getCdfConfigMetadataQuery = async (): Promise<
+  CdfConfigMetadataType[]
+> => {
+  return await getRequest(`${ragPath}/${paths.dataSources}/nifiConfigMetadata`);
 };
 
 export const deleteDataSourceMutation = async (

@@ -36,10 +36,13 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Card, Flex, Typography } from "antd";
+import { Button, Card, Flex, Spin, Typography } from "antd";
 import DataFlowCard from "pages/DataSources/DataSourceConnectionsTab/DataFlowCard.tsx";
+import { useGetCdfConfigMetadataQuery } from "src/api/dataSourceApi.ts";
 
 const DataSourceConnections = () => {
+  const { data: cdfConfigMetadata, isLoading } = useGetCdfConfigMetadataQuery();
+
   return (
     <div>
       <Typography.Title level={2}>Connections</Typography.Title>
@@ -60,16 +63,15 @@ const DataSourceConnections = () => {
           .
         </Typography.Text>
         <Flex align="center" gap={30} style={{ marginTop: 40 }}>
-          <DataFlowCard
-            configType="S3"
-            title="S3 Cloudera DataFlow Definition"
-            description="Flow definition for pointing a S3 bucket to RAG Studio.  Requires AWS credentials."
-          />
-          <DataFlowCard
-            configType="AZURE_BLOB"
-            title="Azure Blob Storage Cloudera DataFlow Definition"
-            description="Flow definition for pointing an Azure Blob Store to RAG Studio.  Requires Azure credentials"
-          />
+          {isLoading && <Spin />}
+          {cdfConfigMetadata?.map((config) => (
+            <DataFlowCard
+              key={config.configType}
+              configType={config.configType}
+              title={config.name}
+              description={config.description}
+            />
+          ))}
         </Flex>
       </Card>
     </div>

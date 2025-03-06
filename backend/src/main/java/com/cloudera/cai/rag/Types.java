@@ -41,10 +41,7 @@ package com.cloudera.cai.rag;
 import jakarta.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
-import lombok.With;
+import lombok.*;
 
 public class Types {
   /** Data returned from the file upload endpoint. */
@@ -149,6 +146,9 @@ public class Types {
 
   public record MetadataMetrics(
       int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}
+
+  public record DataFlowConfigMetadata(
+      String name, String description, DataFlowConfigType configType) {}
 
   public enum DataFlowConfigType {
     AZURE_BLOB,

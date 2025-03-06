@@ -107,4 +107,9 @@ public class RagDataSourceController {
       @RequestParam Types.DataFlowConfigType configType) {
     return dataSourceService.getNifiConfig(id, ragStudioUrl, configType);
   }
+
+  @GetMapping(value = "/nifiConfigMetadata", produces = "application/json")
+  public List<Types.DataFlowConfigMetadata> getNifiConfigMetadata() {
+    return dataSourceService.getNifiConfigMetadata();
+  }
 }
