@@ -61,12 +61,12 @@ const DataSourceConnections = () => {
         </Typography.Text>
         <Flex align="center" gap={30} style={{ marginTop: 40 }}>
           <DataFlowCard
-            configType="s3"
+            configType="S3"
             title="S3 Cloudera DataFlow Definition"
             description="Flow definition for pointing a S3 bucket to RAG Studio.  Requires AWS credentials."
           />
           <DataFlowCard
-            configType="azureBlob"
+            configType="AZURE_BLOB"
             title="Azure Blob Storage Cloudera DataFlow Definition"
             description="Flow definition for pointing an Azure Blob Store to RAG Studio.  Requires Azure credentials"
           />

@@ -203,7 +203,7 @@ const visualizeDataSourceWithUserQuery = async (
   );
 };
 
-export type ConfigType = "s3" | "azureBlob";
+export type ConfigType = "S3" | "AZURE_BLOB";
 
 export const getCdfConfigQuery = async (
   dataSourceId: string,

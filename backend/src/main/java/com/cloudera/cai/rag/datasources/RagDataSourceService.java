@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.rag.datasources;
 
+import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.util.ResourceUtils;
 import java.io.IOException;
@@ -80,10 +81,10 @@ public class RagDataSourceService {
     return new RagDataSourceService(RagDataSourceRepository.createNull());
   }
 
-  public String getNifiConfig(Long id, String ragStudioUrl, String configType) {
+  public String getNifiConfig(Long id, String ragStudioUrl, Types.DataFlowConfigType configType) {
     try {
       String fileName;
-      if (configType.equals("azureBlob")) {
+      if (configType.equals(Types.DataFlowConfigType.AZURE_BLOB)) {
         fileName = "AzureBlob-To-RagStudio-Nifi-template.json";
       } else {
         fileName = "S3-To-RagStudio-Nifi-template.json";

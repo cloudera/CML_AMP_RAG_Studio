@@ -49,11 +49,22 @@ import org.junit.jupiter.api.Test;
 
 class RagDataSourceServiceTest {
   @Test
-  void getNifiConfig() {
+  void getNifiS3Config() {
     RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
     var dataSourceId = 6666666L;
     var url = "https://testing.dev/xyz";
-    var configType = "s3";
+    var configType = DataFlowConfigType.S3;
+    String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url, configType);
+    assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
+    assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");
+  }
+
+  @Test
+  void getNifiAzureBlobConfig() {
+    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    var dataSourceId = 6666666L;
+    var url = "https://testing.dev/xyz";
+    var configType = DataFlowConfigType.AZURE_BLOB;
     String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url, configType);
     assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
     assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");

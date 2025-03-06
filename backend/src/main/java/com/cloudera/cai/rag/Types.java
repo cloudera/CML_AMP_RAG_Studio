@@ -149,4 +149,9 @@ public class Types {
 
   public record MetadataMetrics(
       int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}
+
+  public enum DataFlowConfigType {
+    AZURE_BLOB,
+    S3
+  }
 }
