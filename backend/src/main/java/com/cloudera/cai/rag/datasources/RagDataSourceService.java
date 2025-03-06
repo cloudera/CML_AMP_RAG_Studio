@@ -83,12 +83,11 @@ public class RagDataSourceService {
 
   public String getNifiConfig(Long id, String ragStudioUrl, Types.DataFlowConfigType configType) {
     try {
-      String fileName;
-      if (configType.equals(Types.DataFlowConfigType.AZURE_BLOB)) {
-        fileName = "AzureBlob-To-RagStudio-Nifi-template.json";
-      } else {
-        fileName = "S3-To-RagStudio-Nifi-template.json";
-      }
+      String fileName =
+          switch (configType) {
+            case AZURE_BLOB -> "AzureBlob-To-RagStudio-Nifi-template.json";
+            case S3 -> "S3-To-RagStudio-Nifi-template.json";
+          };
       return ResourceUtils.getFileContents(fileName)
           .replace("$$$RAG_STUDIO_DATASOURCE_ID$$$", id.toString())
           .replace("$$$RAG_STUDIO_URL$$$", ragStudioUrl);
