@@ -195,7 +195,7 @@ def generate_suggested_questions_direct_llm(session: Session) -> List[str]:
     chat_response = llm_completion.completion(
         session.id, query_str, session.inference_model
     )
-    suggested_questions = process_response(chat_response.response)
+    suggested_questions = process_response(chat_response.message.content)
     return suggested_questions
 
 
