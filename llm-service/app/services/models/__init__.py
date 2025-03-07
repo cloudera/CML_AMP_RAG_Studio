@@ -50,8 +50,6 @@ __all__ = [
     "Embedding",
     "LLM",
     "Reranking",
-    "ModelSource",
-    "get_model_source",
 ]
 
 
