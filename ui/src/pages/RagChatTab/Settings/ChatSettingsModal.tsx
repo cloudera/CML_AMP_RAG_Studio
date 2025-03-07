@@ -61,6 +61,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
+import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 
 const ChatSettingsModal = ({
   open,
@@ -75,7 +76,7 @@ const ChatSettingsModal = ({
     dataSourcesQuery: { dataSources },
   } = useContext(RagChatContext);
   const { activeSession } = useContext(RagChatContext);
-  const [form] = Form.useForm<Omit<UpdateSessionRequest, "id">>();
+  const [form] = Form.useForm<Omit<CreateSessionType, "id">>();
   const queryClient = useQueryClient();
   const updateSession = useUpdateSessionMutation({
     onError: (error) => {
@@ -102,6 +103,7 @@ const ChatSettingsModal = ({
         const request: UpdateSessionRequest = {
           ...values,
           id: activeSession.id,
+          dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
         };
         updateSession.mutate(request);
       })
@@ -182,6 +184,7 @@ const ChatSettingsModal = ({
           <Form.Item name="dataSourceId" label="Knowledge Base">
             <Select
               disabled={dataSources.length === 0}
+              allowClear={true}
               options={dataSources.map((value) => formatDataSource(value))}
             />
           </Form.Item>
