@@ -40,12 +40,10 @@ import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/Chat
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
-import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 import EmptyChatState from "pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx";
 import NoSessionState from "../Placeholders/NoSessionState";
 import { useParams } from "@tanstack/react-router";
 import { Result } from "antd";
-import NoDataSourceForSession from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourceForSession.tsx";
 
 const ChatBodyController = () => {
   const {
@@ -53,7 +51,6 @@ const ChatBodyController = () => {
     chatHistoryQuery: { chatHistory, chatHistoryStatus },
     dataSourcesQuery: { dataSources, dataSourcesStatus },
     dataSourceSize,
-    activeSession,
   } = useContext(RagChatContext);
   const { sessionId } = useParams({ strict: false });
 

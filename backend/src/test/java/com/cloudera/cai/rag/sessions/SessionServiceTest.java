@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class SessionServiceTest {
@@ -77,9 +78,10 @@ class SessionServiceTest {
             TestData.createTestSessionInstance("test")
                 .withCreatedById("abc")
                 .withUpdatedById("abc"));
-    var updated = result.withRerankModel("");
+    var updated = result.withRerankModel("").withDataSourceIds(List.of(4L));
     var updatedResult = sessionService.update(updated);
     assertThat(updatedResult.rerankModel()).isNull();
+    assertThat(updatedResult.dataSourceIds()).containsExactly(4L);
   }
 
   @Test

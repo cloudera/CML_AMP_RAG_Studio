@@ -71,6 +71,9 @@ const ChatSettingsModal = ({
 }) => {
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
+  const {
+    dataSourcesQuery: { dataSources },
+  } = useContext(RagChatContext);
   const { activeSession } = useContext(RagChatContext);
   const [form] = Form.useForm<Omit<UpdateSessionRequest, "id">>();
   const queryClient = useQueryClient();
@@ -176,6 +179,12 @@ const ChatSettingsModal = ({
     >
       <Flex vertical gap={10}>
         <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+          <Form.Item name="dataSourceId" label="Knowledge Base">
+            <Select
+              disabled={dataSources.length === 0}
+              options={dataSources.map((value) => formatDataSource(value))}
+            />
+          </Form.Item>
           <Form.Item
             name="name"
             label="Name"
