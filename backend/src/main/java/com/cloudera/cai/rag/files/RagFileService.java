@@ -49,6 +49,8 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -87,18 +89,44 @@ public class RagFileService {
   public List<RagDocumentMetadata> saveRagFile(
       MultipartFile file, Long dataSourceId, String actorCrn) {
     ragDataSourceRepository.getRagDataSourceById(dataSourceId);
-    List<RagDocumentMetadata> results = new ArrayList<>();
-    // todo: detect a zip file, unzip and loop over all the entries
 
-    results.add(processFile(dataSourceId, actorCrn, results, new MultipartUploadableFile(file)));
+    if (isZipFile(file)) {
+      List<RagDocumentMetadata> results = processZipFile(file, dataSourceId, actorCrn);
+      if (results.isEmpty()) {
+        throw new BadRequest("Invalid or empty zip file");
+      }
+      return results;
+    }
+    return List.of(processFile(dataSourceId, actorCrn, new MultipartUploadableFile(file)));
+  }
+
+  private boolean isZipFile(MultipartFile file) {
+    return file.getContentType() != null && file.getContentType().equals("application/zip")
+        || (file.getOriginalFilename() != null
+            && file.getOriginalFilename().toLowerCase().endsWith(".zip"));
+  }
+
+  private List<RagDocumentMetadata> processZipFile(
+      MultipartFile file, Long dataSourceId, String actorCrn) {
+    List<RagDocumentMetadata> results = new ArrayList<>();
+    try (ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream())) {
+      ZipEntry entry;
+      while ((entry = zipInputStream.getNextEntry()) != null) {
+        if (entry.isDirectory()) {
+          continue;
+        }
+        results.add(
+            processFile(dataSourceId, actorCrn, new ZipEntryUploadableFile(entry, zipInputStream)));
+        zipInputStream.closeEntry();
+      }
+    } catch (IOException e) {
+      throw new BadRequest("Failed to process zip file: " + e.getMessage());
+    }
     return results;
   }
 
   private RagDocumentMetadata processFile(
-      Long dataSourceId,
-      String actorCrn,
-      List<RagDocumentMetadata> results,
-      UploadableFile uploadableFile) {
+      Long dataSourceId, String actorCrn, UploadableFile uploadableFile) {
     String documentId = idGenerator.generateId();
     var s3Path = buildS3Path(dataSourceId, documentId);
 
@@ -199,6 +227,25 @@ public class RagFileService {
     @Override
     public String getOriginalFilename() {
       return file.getOriginalFilename();
+    }
+  }
+
+  private record ZipEntryUploadableFile(ZipEntry entry, ZipInputStream zipInputStream)
+      implements UploadableFile {
+
+    @Override
+    public String getOriginalFilename() {
+      return entry.getName();
+    }
+
+    @Override
+    public InputStream getInputStream() {
+      return zipInputStream;
+    }
+
+    @Override
+    public long getSize() {
+      return entry.getSize();
     }
   }
 }
