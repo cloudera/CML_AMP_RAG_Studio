@@ -51,7 +51,6 @@ import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.UUID;
@@ -231,20 +230,6 @@ class RagFileServiceTest {
     return TestData.createTestDataSource(dataSourceRepository);
   }
 
-  private MockMultipartFile createZipFile(String[][] fileEntries) throws Exception {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-      for (String[] entry : fileEntries) {
-        ZipEntry zipEntry = new ZipEntry(entry[0]);
-        zos.putNextEntry(zipEntry);
-        zos.write(entry[1].getBytes());
-        zos.closeEntry();
-      }
-    }
-    return new MockMultipartFile(
-        "test.zip", "test.zip", "application/zip", new ByteArrayInputStream(baos.toByteArray()));
-  }
-
   @Test
   void saveRagFile_processZipFile() throws Exception {
     var service = createRagFileService();
@@ -256,7 +241,26 @@ class RagFileServiceTest {
       {"doc2.txt", "content2"},
       {"subfolder/doc3.txt", "content3"}
     };
-    var zipFile = createZipFile(fileEntries);
+    var zipFile = createZipFile(fileEntries, "application/zip");
+
+    var results = service.saveRagFile(zipFile, dataSourceId, actorCrn);
+    assertThat(results).hasSize(3);
+    assertThat(results.stream().map(RagDocumentMetadata::fileName))
+        .containsExactlyInAnyOrder("doc1.txt", "doc2.txt", "subfolder/doc3.txt");
+  }
+
+  @Test
+  void saveRagFile_processZipFile_noContentType() throws Exception {
+    var service = createRagFileService();
+    var dataSourceId = newDataSourceId();
+    var actorCrn = "fake-user";
+
+    String[][] fileEntries = {
+      {"doc1.txt", "content1"},
+      {"doc2.txt", "content2"},
+      {"subfolder/doc3.txt", "content3"}
+    };
+    var zipFile = createZipFile(fileEntries, null);
 
     var results = service.saveRagFile(zipFile, dataSourceId, actorCrn);
     assertThat(results).hasSize(3);
@@ -271,10 +275,11 @@ class RagFileServiceTest {
     var actorCrn = "fake-user";
 
     String[][] fileEntries = {};
-    var zipFile = createZipFile(fileEntries);
+    var zipFile = createZipFile(fileEntries, "application/zip");
 
-    var results = service.saveRagFile(zipFile, dataSourceId, actorCrn);
-    assertThat(results).isEmpty();
+    assertThatThrownBy(() -> service.saveRagFile(zipFile, dataSourceId, actorCrn))
+        .isInstanceOf(BadRequest.class)
+        .hasMessageContaining("Invalid or empty zip file");
   }
 
   @Test
@@ -289,6 +294,20 @@ class RagFileServiceTest {
 
     assertThatThrownBy(() -> service.saveRagFile(invalidZipFile, dataSourceId, actorCrn))
         .isInstanceOf(BadRequest.class)
-        .hasMessageContaining("Invalid zip file format");
+        .hasMessageContaining("Invalid or empty zip file");
+  }
+
+  private MockMultipartFile createZipFile(String[][] fileEntries, String contentType)
+      throws Exception {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    try (ZipOutputStream zipStream = new ZipOutputStream(outputStream)) {
+      for (String[] entry : fileEntries) {
+        ZipEntry zipEntry = new ZipEntry(entry[0]);
+        zipStream.putNextEntry(zipEntry);
+        zipStream.write(entry[1].getBytes());
+        zipStream.closeEntry();
+      }
+    }
+    return new MockMultipartFile("test.zip", "test.zip", contentType, outputStream.toByteArray());
   }
 }
