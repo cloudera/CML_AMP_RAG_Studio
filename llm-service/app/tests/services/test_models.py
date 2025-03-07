@@ -42,7 +42,7 @@ import pytest
 from app.services import models
 from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
-from app.services.models._model_provider import ModelProvider
+from app.services.models._providers._model_provider import ModelProvider
 
 
 def get_all_env_var_names() -> set[str]:

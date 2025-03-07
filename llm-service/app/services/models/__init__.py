@@ -52,10 +52,9 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
-
-from ._azure import AzureModelProvider
-from ._bedrock import BedrockModelProvider
-from ._caii import CAIIModelProvider
+from ._providers.azure import AzureModelProvider
+from ._providers.bedrock import BedrockModelProvider
+from ._providers.caii import CAIIModelProvider
 from . import _noop
 
 from ..caii.caii import get_embedding_model as caii_embedding
@@ -66,13 +65,13 @@ from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..query.simple_reranker import SimpleReranker
 
 __all__ = [
-    'CAIIModelProvider',
-    'ModelType',
-    'Embedding',
-    'LLM',
-    'Reranking',
-    'ModelSource',
-    'BedrockModelProvider'
+    "CAIIModelProvider",
+    "ModelType",
+    "Embedding",
+    "LLM",
+    "Reranking",
+    "ModelSource",
+    "BedrockModelProvider",
 ]
 
 T = TypeVar("T", bound=BaseComponent)

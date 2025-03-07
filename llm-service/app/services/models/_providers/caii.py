@@ -35,25 +35,30 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import List
 
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models._providers.bedrock import (
-    DEFAULT_BEDROCK_LLM_MODEL,
-    DEFAULT_BEDROCK_RERANK_MODEL,
+from ._model_provider import ModelProvider
+from app.services.caii.caii import (
+    get_caii_llm_models,
+    get_caii_embedding_models,
+    get_caii_reranking_models,
 )
+from app.services.caii.types import ModelResponse
 
 
-class QueryConfiguration(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
+class CAIIModelProvider(ModelProvider):
+    @staticmethod
+    def get_env_var_names() -> set[str]:
+        return {"CAII_DOMAIN"}
 
-    top_k: int = 5
-    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
-    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
-    use_summary_filter: Optional[bool] = True
-    use_postprocessor: Optional[bool] = True
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
+        return get_caii_llm_models()
+
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        return get_caii_embedding_models()
+
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        return get_caii_reranking_models()
