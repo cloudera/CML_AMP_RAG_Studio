@@ -54,7 +54,7 @@ const ChatBodyController = () => {
   } = useContext(RagChatContext);
   const { sessionId } = useParams({ strict: false });
 
-  if (!sessionId && dataSources.length > 0) {
+  if (!sessionId) {
     return <NoSessionState />;
   }
 

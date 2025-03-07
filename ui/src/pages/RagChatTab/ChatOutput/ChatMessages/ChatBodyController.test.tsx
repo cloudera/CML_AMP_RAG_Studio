@@ -162,7 +162,7 @@ describe("ChatBodyController", () => {
       activeSession: undefined,
     });
 
-    expect(screen.getByText("No knowledge bases present")).toBeTruthy();
+    expect(screen.getByText("Create New Chat")).toBeTruthy();
   });
 
   it("renders ChatLoading when dataSourcesStatus or chatHistoryStatus is pending", () => {
