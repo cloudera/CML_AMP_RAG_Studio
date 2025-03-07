@@ -44,7 +44,10 @@ import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,22 +87,31 @@ public class RagFileService {
   public List<RagDocumentMetadata> saveRagFile(
       MultipartFile file, Long dataSourceId, String actorCrn) {
     ragDataSourceRepository.getRagDataSourceById(dataSourceId);
+    List<RagDocumentMetadata> results = new ArrayList<>();
+    // todo: detect a zip file, unzip and loop over all the entries
+
+    results.add(processFile(dataSourceId, actorCrn, results, new MultipartUploadableFile(file)));
+    return results;
+  }
+
+  private RagDocumentMetadata processFile(
+      Long dataSourceId,
+      String actorCrn,
+      List<RagDocumentMetadata> results,
+      UploadableFile uploadableFile) {
     String documentId = idGenerator.generateId();
     var s3Path = buildS3Path(dataSourceId, documentId);
 
-    ragFileUploader.uploadFile(file, s3Path);
-    var ragDocument = createUnsavedDocument(file, documentId, s3Path, dataSourceId, actorCrn);
+    ragFileUploader.uploadFile(uploadableFile, s3Path);
+    var ragDocument =
+        createUnsavedDocument(uploadableFile, documentId, s3Path, dataSourceId, actorCrn);
     Long id = ragFileRepository.insertDocumentMetadata(ragDocument);
     log.info("Saved document with id: {}", id);
 
     ragFileIndexReconciler.submit(ragDocument.withId(id));
 
-    return List.of(
-        new RagDocumentMetadata(
-            ragDocument.filename(),
-            documentId,
-            ragDocument.extension(),
-            ragDocument.sizeInBytes()));
+    return new RagDocumentMetadata(
+        ragDocument.filename(), documentId, ragDocument.extension(), ragDocument.sizeInBytes());
   }
 
   private String buildS3Path(Long dataSourceId, String documentId) {
@@ -118,7 +130,7 @@ public class RagFileService {
   }
 
   private RagDocument createUnsavedDocument(
-      MultipartFile file, String documentId, String s3Path, Long dataSourceId, String actorCrn) {
+      UploadableFile file, String documentId, String s3Path, Long dataSourceId, String actorCrn) {
     return new RagDocument(
         null,
         validateFilename(file.getOriginalFilename()),
@@ -170,5 +182,23 @@ public class RagFileService {
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {
     return ragFileRepository.getRagDocuments(dataSourceId);
+  }
+
+  public record MultipartUploadableFile(MultipartFile file) implements UploadableFile {
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+      return file.getInputStream();
+    }
+
+    @Override
+    public long getSize() {
+      return file.getSize();
+    }
+
+    @Override
+    public String getOriginalFilename() {
+      return file.getOriginalFilename();
+    }
   }
 }

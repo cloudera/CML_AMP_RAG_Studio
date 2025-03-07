@@ -44,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.rag.files.RagFileService.MultipartUploadableFile;
 import com.cloudera.cai.rag.files.RagFileUploader.UploadRequest;
 import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.Tracker;
@@ -85,7 +86,8 @@ class RagFileServiceTest {
     assertThat(savedDocument.extension()).isEqualTo("pdf");
     assertThat(savedDocument.dataSourceId()).isEqualTo(dataSourceId);
     assertThat(requestTracker.getValues())
-        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
+        .containsExactly(
+            new UploadRequest(new MultipartUploadableFile(mockMultipartFile), expectedS3Path));
   }
 
   @Test
@@ -162,7 +164,8 @@ class RagFileServiceTest {
         new Types.RagDocumentMetadata("staging/real-filename.pdf", documentId, "pdf", 11);
     assertThat(result).isEqualTo(expected);
     assertThat(requestTracker.getValues())
-        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
+        .containsExactly(
+            new UploadRequest(new MultipartUploadableFile(mockMultipartFile), expectedS3Path));
   }
 
   @Test

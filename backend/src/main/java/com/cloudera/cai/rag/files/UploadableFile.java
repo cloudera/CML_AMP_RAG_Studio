@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,37 +34,17 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
 package com.cloudera.cai.rag.files;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import java.io.InputStream;
 
-@Slf4j
-@Component
-public class FileSystemRagFileUploader implements RagFileUploader {
+public interface UploadableFile {
+  InputStream getInputStream() throws IOException;
 
-  private static final String FILE_STORAGE_ROOT = fileStoragePath();
+  long getSize();
 
-  @Override
-  public void uploadFile(UploadableFile file, String s3Path) {
-    log.info("Uploading file to FS: {}", s3Path);
-    try {
-      Path filePath = Path.of(FILE_STORAGE_ROOT, s3Path);
-      Files.createDirectories(filePath.getParent());
-      Files.copy(file.getInputStream(), filePath);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static String fileStoragePath() {
-    var fileStoragePath = System.getenv("RAG_DATABASES_DIR") + "/file_storage";
-    log.info("configured with fileStoragePath = {}", fileStoragePath);
-    return fileStoragePath;
-  }
+  String getOriginalFilename();
 }
