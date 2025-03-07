@@ -87,7 +87,7 @@ const ChatMessage = ({
               ) : (
                 <Images.Models
                   style={{
-                    padding: "4",
+                    padding: 4,
                     backgroundColor: cdlGray200,
                     borderRadius: 20,
                     width: 26,

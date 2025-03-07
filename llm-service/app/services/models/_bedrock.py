@@ -76,6 +76,11 @@ class BedrockModelProvider(ModelProvider):
         )
         if llama321b:
             models.append(llama321b)
+        claude37sonnet = BedrockModelProvider._get_model_arn_by_suffix(
+            "anthropic.claude-3-7-sonnet-20250219-v1:0"
+        )
+        if claude37sonnet:
+            models.append(claude37sonnet)
 
         return models
 

@@ -82,7 +82,7 @@ const RagChatQueryInput = () => {
   });
 
   const handleChat = (userInput: string) => {
-    if (activeSession && userInput.length > 0 && sessionId) {
+    if (activeSession && userInput.trim().length > 0 && sessionId) {
       setCurrentQuestion(userInput);
       chatMutation.mutate({
         query: userInput,
