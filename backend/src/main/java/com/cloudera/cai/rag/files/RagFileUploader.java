@@ -39,12 +39,11 @@
 package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.util.Tracker;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface RagFileUploader {
-  void uploadFile(MultipartFile file, String path);
+  void uploadFile(UploadableFile file, String path);
 
-  record UploadRequest(MultipartFile file, String documentId) {}
+  record UploadRequest(UploadableFile file, String documentId) {}
 
   // nullables below here
 
@@ -65,7 +64,7 @@ public interface RagFileUploader {
     }
 
     @Override
-    public void uploadFile(MultipartFile file, String s3Path) {
+    public void uploadFile(UploadableFile file, String s3Path) {
       tracker.track(new UploadRequest(file, s3Path));
     }
   }

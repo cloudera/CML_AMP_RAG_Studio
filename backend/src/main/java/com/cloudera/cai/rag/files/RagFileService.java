@@ -44,8 +44,14 @@ import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -81,25 +87,110 @@ public class RagFileService {
     this.ragFileDeleteReconciler = ragFileDeleteReconciler;
   }
 
+  private boolean isZipFile(MultipartFile file) {
+    return file.getContentType() != null && file.getContentType().equals("application/zip")
+        || (file.getOriginalFilename() != null
+            && file.getOriginalFilename().toLowerCase().endsWith(".zip"));
+  }
+
+  private void processZipEntry(
+      ZipEntry entry,
+      ZipInputStream zipInputStream,
+      Long dataSourceId,
+      String actorCrn,
+      List<RagDocumentMetadata> results) {
+    if (!entry.isDirectory()) {
+      UploadableFile uploadableFile =
+          new UploadableFile() {
+            @Override
+            public String getOriginalFilename() {
+              return entry.getName();
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+              return zipInputStream;
+            }
+
+            @Override
+            public long getSize() {
+              return entry.getSize();
+            }
+          };
+      results.add(processFile(dataSourceId, actorCrn, results, uploadableFile));
+    }
+  }
+
+  private void validateZipFile(MultipartFile file) {
+    try {
+      byte[] content = file.getBytes();
+      if (content.length >= 4
+          && content[0] == 'P'
+          && content[1] == 'K'
+          && (content[2] == 3 || content[2] == 5 || content[2] == 7)
+          && (content[3] == 4 || content[3] == 6 || content[3] == 8)) {
+        // Valid zip file signature detected
+        try (ZipInputStream zipInputStream =
+            new ZipInputStream(new ByteArrayInputStream(content))) {
+          // Try to read entries to further validate zip format
+          ZipEntry entry;
+          while ((entry = zipInputStream.getNextEntry()) != null) {
+            zipInputStream.closeEntry();
+          }
+        }
+      } else {
+        throw new BadRequest("Invalid zip file format");
+      }
+    } catch (IOException e) {
+      throw new BadRequest("Invalid zip file format");
+    }
+  }
+
+  private void processZipFile(
+      MultipartFile file, Long dataSourceId, String actorCrn, List<RagDocumentMetadata> results) {
+    //    validateZipFile(file);
+    try (ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream())) {
+      ZipEntry entry;
+      while ((entry = zipInputStream.getNextEntry()) != null) {
+        processZipEntry(entry, zipInputStream, dataSourceId, actorCrn, results);
+        zipInputStream.closeEntry();
+      }
+    } catch (IOException e) {
+      throw new BadRequest("Failed to process zip file: " + e.getMessage());
+    }
+  }
+
   public List<RagDocumentMetadata> saveRagFile(
       MultipartFile file, Long dataSourceId, String actorCrn) {
     ragDataSourceRepository.getRagDataSourceById(dataSourceId);
+    List<RagDocumentMetadata> results = new ArrayList<>();
+
+    if (isZipFile(file)) {
+      processZipFile(file, dataSourceId, actorCrn, results);
+    } else {
+      results.add(processFile(dataSourceId, actorCrn, results, new MultipartUploadableFile(file)));
+    }
+    return results;
+  }
+
+  private RagDocumentMetadata processFile(
+      Long dataSourceId,
+      String actorCrn,
+      List<RagDocumentMetadata> results,
+      UploadableFile uploadableFile) {
     String documentId = idGenerator.generateId();
     var s3Path = buildS3Path(dataSourceId, documentId);
 
-    ragFileUploader.uploadFile(file, s3Path);
-    var ragDocument = createUnsavedDocument(file, documentId, s3Path, dataSourceId, actorCrn);
+    ragFileUploader.uploadFile(uploadableFile, s3Path);
+    var ragDocument =
+        createUnsavedDocument(uploadableFile, documentId, s3Path, dataSourceId, actorCrn);
     Long id = ragFileRepository.insertDocumentMetadata(ragDocument);
     log.info("Saved document with id: {}", id);
 
     ragFileIndexReconciler.submit(ragDocument.withId(id));
 
-    return List.of(
-        new RagDocumentMetadata(
-            ragDocument.filename(),
-            documentId,
-            ragDocument.extension(),
-            ragDocument.sizeInBytes()));
+    return new RagDocumentMetadata(
+        ragDocument.filename(), documentId, ragDocument.extension(), ragDocument.sizeInBytes());
   }
 
   private String buildS3Path(Long dataSourceId, String documentId) {
@@ -118,7 +209,7 @@ public class RagFileService {
   }
 
   private RagDocument createUnsavedDocument(
-      MultipartFile file, String documentId, String s3Path, Long dataSourceId, String actorCrn) {
+      UploadableFile file, String documentId, String s3Path, Long dataSourceId, String actorCrn) {
     return new RagDocument(
         null,
         validateFilename(file.getOriginalFilename()),
@@ -170,5 +261,23 @@ public class RagFileService {
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {
     return ragFileRepository.getRagDocuments(dataSourceId);
+  }
+
+  public record MultipartUploadableFile(MultipartFile file) implements UploadableFile {
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+      return file.getInputStream();
+    }
+
+    @Override
+    public long getSize() {
+      return file.getSize();
+    }
+
+    @Override
+    public String getOriginalFilename() {
+      return file.getOriginalFilename();
+    }
   }
 }
