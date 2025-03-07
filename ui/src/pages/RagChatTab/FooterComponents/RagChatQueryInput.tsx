@@ -119,7 +119,7 @@ const RagChatQueryInput = () => {
             placeholder={
               dataSourceSize && dataSourceSize > 0
                 ? "Ask a question"
-                : "No documents available"
+                : "Chat with the LLM"
             }
             status={dataSourcesStatus === "error" ? "error" : undefined}
             value={userInput}
@@ -140,7 +140,7 @@ const RagChatQueryInput = () => {
                 />
               </Tooltip>
             }
-            disabled={!dataSourceSize || chatMutation.isPending}
+            disabled={chatMutation.isPending}
           />
           <Button
             style={{ padding: 0 }}

@@ -51,7 +51,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 export interface CreateSessionType {
   name: string;
-  dataSourceId: number;
+  dataSourceId?: number;
   inferenceModel: string;
   rerankModel?: string;
   responseChunks: number;
@@ -103,7 +103,7 @@ const CreateSessionModal = ({
       .then((values) => {
         const requestBody: CreateSessionRequest = {
           name: values.name,
-          dataSourceIds: [values.dataSourceId],
+          dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
           inferenceModel: values.inferenceModel,
           rerankModel: values.rerankModel,
           responseChunks: values.responseChunks,

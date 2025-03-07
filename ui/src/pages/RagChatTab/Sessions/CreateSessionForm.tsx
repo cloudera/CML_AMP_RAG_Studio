@@ -149,11 +149,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         }
       }}
     >
-      <Form.Item
-        name="dataSourceId"
-        label="Knowledge Base"
-        rules={[{ required: true }]}
-      >
+      <Form.Item name="dataSourceId" label="Knowledge Base">
         <Select
           disabled={dataSources?.length === 0}
           options={dataSources?.map((value) => formatDataSource(value))}

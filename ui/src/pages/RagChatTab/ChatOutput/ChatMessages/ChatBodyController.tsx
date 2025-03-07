@@ -75,19 +75,7 @@ const ChatBodyController = () => {
     return <ChatMessageController />;
   }
 
-  if (dataSources.length === 0) {
-    return <NoDataSourcesState />;
-  }
-
-  const currentDataSource = dataSources.find((dataSource) => {
-    return dataSource.id === activeSession?.dataSourceIds[0];
-  });
-
-  if (!currentDataSource) {
-    return <NoDataSourceForSession />;
-  }
-
-  if (currentQuestion && dataSourceSize) {
+  if (currentQuestion) {
     return <ChatMessageController />;
   }
 
