@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,20 +34,17 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-package com.cloudera.cai.util;
+package com.cloudera.cai.rag.files;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 
-public class ResourceUtils {
-  public static String getFileContents(String resource) throws IOException {
-    try (var inputStream = ResourceUtils.class.getClassLoader().getResourceAsStream(resource)) {
-      if (inputStream == null) {
-        throw new IOException("Resource not found: " + resource);
-      }
-      return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-    }
-  }
+public interface UploadableFile {
+  InputStream getInputStream() throws IOException;
+
+  long getSize();
+
+  String getOriginalFilename();
 }

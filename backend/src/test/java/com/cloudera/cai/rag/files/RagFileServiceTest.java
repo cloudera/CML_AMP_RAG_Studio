@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -43,14 +43,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.Types.RagDocumentMetadata;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.rag.files.RagFileService.MultipartUploadableFile;
 import com.cloudera.cai.rag.files.RagFileUploader.UploadRequest;
 import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -72,7 +77,7 @@ class RagFileServiceTest {
     RagFileService ragFileService = createRagFileService(documentId, requestTracker);
     var dataSourceId = newDataSourceId();
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id").getFirst();
     Types.RagDocumentMetadata expected =
         new Types.RagDocumentMetadata(originalFilename, documentId, "pdf", 11);
     assertThat(result).isEqualTo(expected);
@@ -85,7 +90,8 @@ class RagFileServiceTest {
     assertThat(savedDocument.extension()).isEqualTo("pdf");
     assertThat(savedDocument.dataSourceId()).isEqualTo(dataSourceId);
     assertThat(requestTracker.getValues())
-        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
+        .containsExactly(
+            new UploadRequest(new MultipartUploadableFile(mockMultipartFile), expectedS3Path));
   }
 
   @Test
@@ -122,7 +128,7 @@ class RagFileServiceTest {
     String documentId = UUID.randomUUID().toString();
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, newDataSourceId(), "test-id").getFirst();
     Types.RagDocumentMetadata expected =
         new Types.RagDocumentMetadata(originalFilename, documentId, "", 11);
     assertThat(result).isEqualTo(expected);
@@ -139,7 +145,7 @@ class RagFileServiceTest {
     RagFileService ragFileService = createRagFileService(documentId, new Tracker<>(), "");
     var dataSourceId = newDataSourceId();
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id").getFirst();
     var savedDocumentMetadata = ragFileRepository.findDocumentByDocumentId(result.documentId());
     assertThat(savedDocumentMetadata.s3Path()).isEqualTo(dataSourceId + "/" + documentId);
   }
@@ -157,12 +163,13 @@ class RagFileServiceTest {
     var requestTracker = new Tracker<UploadRequest>();
     RagFileService ragFileService = createRagFileService(documentId, requestTracker);
     Types.RagDocumentMetadata result =
-        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id");
+        ragFileService.saveRagFile(mockMultipartFile, dataSourceId, "test-id").getFirst();
     Types.RagDocumentMetadata expected =
-        new Types.RagDocumentMetadata("real-filename.pdf", documentId, "pdf", 11);
+        new Types.RagDocumentMetadata("staging/real-filename.pdf", documentId, "pdf", 11);
     assertThat(result).isEqualTo(expected);
     assertThat(requestTracker.getValues())
-        .containsExactly(new UploadRequest(mockMultipartFile, expectedS3Path));
+        .containsExactly(
+            new UploadRequest(new MultipartUploadableFile(mockMultipartFile), expectedS3Path));
   }
 
   @Test
@@ -221,5 +228,86 @@ class RagFileServiceTest {
 
   private long newDataSourceId() {
     return TestData.createTestDataSource(dataSourceRepository);
+  }
+
+  @Test
+  void saveRagFile_processZipFile() throws Exception {
+    var service = createRagFileService();
+    var dataSourceId = newDataSourceId();
+    var actorCrn = "fake-user";
+
+    String[][] fileEntries = {
+      {"doc1.txt", "content1"},
+      {"doc2.txt", "content2"},
+      {"subfolder/doc3.txt", "content3"}
+    };
+    var zipFile = createZipFile(fileEntries, "application/zip");
+
+    var results = service.saveRagFile(zipFile, dataSourceId, actorCrn);
+    assertThat(results).hasSize(3);
+    assertThat(results.stream().map(RagDocumentMetadata::fileName))
+        .containsExactlyInAnyOrder("doc1.txt", "doc2.txt", "subfolder/doc3.txt");
+  }
+
+  @Test
+  void saveRagFile_processZipFile_noContentType() throws Exception {
+    var service = createRagFileService();
+    var dataSourceId = newDataSourceId();
+    var actorCrn = "fake-user";
+
+    String[][] fileEntries = {
+      {"doc1.txt", "content1"},
+      {"doc2.txt", "content2"},
+      {"subfolder/doc3.txt", "content3"}
+    };
+    var zipFile = createZipFile(fileEntries, null);
+
+    var results = service.saveRagFile(zipFile, dataSourceId, actorCrn);
+    assertThat(results).hasSize(3);
+    assertThat(results.stream().map(RagDocumentMetadata::fileName))
+        .containsExactlyInAnyOrder("doc1.txt", "doc2.txt", "subfolder/doc3.txt");
+  }
+
+  @Test
+  void saveRagFile_emptyZipFile() throws Exception {
+    var service = createRagFileService();
+    var dataSourceId = newDataSourceId();
+    var actorCrn = "fake-user";
+
+    String[][] fileEntries = {};
+    var zipFile = createZipFile(fileEntries, "application/zip");
+
+    assertThatThrownBy(() -> service.saveRagFile(zipFile, dataSourceId, actorCrn))
+        .isInstanceOf(BadRequest.class)
+        .hasMessageContaining("Invalid or empty zip file");
+  }
+
+  @Test
+  void saveRagFile_invalidZipContent() {
+    var service = createRagFileService();
+    var dataSourceId = newDataSourceId();
+    var actorCrn = "fake-user";
+
+    var invalidZipFile =
+        new MockMultipartFile(
+            "test.zip", "test.zip", "application/zip", "invalid zip content".getBytes());
+
+    assertThatThrownBy(() -> service.saveRagFile(invalidZipFile, dataSourceId, actorCrn))
+        .isInstanceOf(BadRequest.class)
+        .hasMessageContaining("Invalid or empty zip file");
+  }
+
+  private MockMultipartFile createZipFile(String[][] fileEntries, String contentType)
+      throws Exception {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    try (ZipOutputStream zipStream = new ZipOutputStream(outputStream)) {
+      for (String[] entry : fileEntries) {
+        ZipEntry zipEntry = new ZipEntry(entry[0]);
+        zipStream.putNextEntry(zipEntry);
+        zipStream.write(entry[1].getBytes());
+        zipStream.closeEntry();
+      }
+    }
+    return new MockMultipartFile("test.zip", "test.zip", contentType, outputStream.toByteArray());
   }
 }

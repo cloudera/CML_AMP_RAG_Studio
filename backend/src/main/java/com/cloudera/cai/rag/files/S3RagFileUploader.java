@@ -43,7 +43,6 @@ import com.cloudera.cai.util.s3.RefCountedS3Client;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
@@ -59,7 +58,7 @@ public class S3RagFileUploader implements RagFileUploader {
   }
 
   @Override
-  public void uploadFile(MultipartFile file, String s3Path) {
+  public void uploadFile(UploadableFile file, String s3Path) {
     log.info("Uploading file to S3: {}", s3Path);
     PutObjectRequest objectRequest =
         PutObjectRequest.builder().bucket(bucketName).key(s3Path).build();

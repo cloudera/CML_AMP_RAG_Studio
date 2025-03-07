@@ -93,6 +93,7 @@ export enum QueryKeys {
   "getVisualizeDataSource" = "getVisualizeDataSource",
   "getModelById" = "getModelById",
   "getRerankingModels" = "getRerankingModels",
+  "getCdfConfigMetadata" = "getCdfConfigMetadata",
 }
 
 export const commonHeaders = {

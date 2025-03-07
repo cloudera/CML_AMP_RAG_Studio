@@ -75,10 +75,12 @@ class RagFileControllerTest {
             UserTokenCookieDecoder.USER_TOKEN_COOKIE_NAME,
             UserTokenCookieDecoderTest.encodeCookie("test-user")));
     Types.RagDocumentMetadata metadata =
-        ragFileController.uploadRagDocument(
-            new MockMultipartFile("test-file", fileName, contentType, bytes),
-            createTestDataSource(dataSourceRepository),
-            request);
+        ragFileController
+            .uploadRagDocument(
+                new MockMultipartFile("test-file", fileName, contentType, bytes),
+                createTestDataSource(dataSourceRepository),
+                request)
+            .getFirst();
     assertThat(metadata).isNotNull();
     assertThat(metadata.fileName()).isEqualTo(fileName);
     assertThat(metadata.extension()).isEqualTo(null);
@@ -132,10 +134,12 @@ class RagFileControllerTest {
     String contentType = "text/plain";
     byte[] bytes = "23243223423".getBytes();
     Types.RagDocumentMetadata uploadResult =
-        ragFileController.uploadRagDocument(
-            new MockMultipartFile("file", fileName, contentType, bytes),
-            dataSourceId,
-            new MockHttpServletRequest());
+        ragFileController
+            .uploadRagDocument(
+                new MockMultipartFile("file", fileName, contentType, bytes),
+                dataSourceId,
+                new MockHttpServletRequest())
+            .getFirst();
     assertThat(uploadResult.fileName()).isEqualTo(fileName);
     await()
         .untilAsserted(

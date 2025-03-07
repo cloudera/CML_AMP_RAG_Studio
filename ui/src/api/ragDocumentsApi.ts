@@ -61,7 +61,7 @@ interface RagDocumentMetadata {
 export const useCreateRagDocumentsMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<PromiseSettledResult<RagDocumentMetadata>[]>) => {
+}: UseMutationType<PromiseSettledResult<RagDocumentMetadata[]>[]>) => {
   return useMutation({
     mutationKey: [MutationKeys.createRagDocuments],
     mutationFn: createRagDocumentsMutation,
@@ -80,7 +80,8 @@ const createRagDocumentsMutation = async ({
   const promises = files.map((file) =>
     createRagDocumentMutation(file, dataSourceId),
   );
-  return await Promise.allSettled(promises);
+
+  return Promise.allSettled(promises);
 };
 
 const createRagDocumentMutation = async (
@@ -88,7 +89,7 @@ const createRagDocumentMutation = async (
   dataSourceId: string,
 ) => {
   const formData = new FormData();
-  formData.append("file", file as FileType);
+  formData.append("file", file as FileType, `root/${file.name}`);
   return await fetch(
     `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`,
     {
@@ -107,7 +108,7 @@ const createRagDocumentMutation = async (
         `Failed to call API backend. status: ${res.status.toString()} : ${res.statusText}`,
       );
     }
-    return res.json() as Promise<RagDocumentMetadata>;
+    return res.json() as Promise<RagDocumentMetadata[]>;
   });
 };
 

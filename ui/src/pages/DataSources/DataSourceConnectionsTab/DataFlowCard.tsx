@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -35,17 +35,24 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-
-import { useMutation } from "@tanstack/react-query";
-import { MutationKeys } from "src/api/utils.ts";
-import { getCdfConfigQuery } from "src/api/dataSourceApi.ts";
-import { useContext, useEffect } from "react";
-import { downloadObjectAsJson } from "src/utils/convertJsonToFile.ts";
 import { Button, Card, Flex, Typography } from "antd";
 import { CheckCircleOutlined } from "@ant-design/icons";
+import { useContext, useEffect } from "react";
 import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { useMutation } from "@tanstack/react-query";
+import { MutationKeys } from "src/api/utils.ts";
+import { ConfigType, getCdfConfigQuery } from "src/api/dataSourceApi.ts";
+import { downloadObjectAsJson } from "src/utils/convertJsonToFile.ts";
 
-export const ClouderaDataFlowConnection = () => {
+const DataFlowCard = ({
+  configType,
+  title,
+  description,
+}: {
+  configType: ConfigType;
+  title: string;
+  description: string;
+}) => {
   const { dataSourceId } = useContext(DataSourceContext);
   const {
     data,
@@ -54,7 +61,7 @@ export const ClouderaDataFlowConnection = () => {
     isSuccess,
   } = useMutation({
     mutationKey: [MutationKeys.getCdfConfig],
-    mutationFn: () => getCdfConfigQuery(dataSourceId),
+    mutationFn: () => getCdfConfigQuery(dataSourceId, configType),
     gcTime: 0,
   });
 
@@ -62,17 +69,15 @@ export const ClouderaDataFlowConnection = () => {
     if (data) {
       downloadObjectAsJson(
         data,
-        `cdf-flow-definition-datasource-${dataSourceId}`,
+        `cdf-flow-definition-${configType}-datasource-${dataSourceId}`,
       );
     }
   }, [data]);
 
   return (
-    <Card title={"Cloudera DataFlow from S3"}>
+    <Card title={title}>
       <Flex vertical gap={20}>
-        <Typography.Text type="secondary">
-          Download flow definition to be imported into Cloudera DataFlow
-        </Typography.Text>
+        <Typography.Text type="secondary">{description}</Typography.Text>
         <Flex gap={20}>
           <Button
             loading={isPending}
@@ -91,3 +96,5 @@ export const ClouderaDataFlowConnection = () => {
     </Card>
   );
 };
+
+export default DataFlowCard;
