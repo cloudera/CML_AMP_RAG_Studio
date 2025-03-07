@@ -44,9 +44,9 @@ from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.embeddings.bedrock import BedrockEmbedding
 
 from . import _noop, _model_type
-from ._providers.azure import AzureModelProvider
-from ._providers.bedrock import BedrockModelProvider
-from ._providers.caii import CAIIModelProvider
+from .providers.azure import AzureModelProvider
+from .providers.bedrock import BedrockModelProvider
+from .providers.caii import CAIIModelProvider
 from ..caii.caii import get_embedding_model as caii_embedding
 from ..caii.types import ModelResponse
 

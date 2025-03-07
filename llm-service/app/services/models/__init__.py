@@ -37,21 +37,21 @@
 #
 from enum import Enum
 
-
-from ._providers.azure import AzureModelProvider
-from ._providers.bedrock import BedrockModelProvider
-from ._providers.caii import CAIIModelProvider
-from .llm import LLM
 from .embedding import Embedding
+from .llm import LLM
+from .providers import (
+    AzureModelProvider,
+    BedrockModelProvider,
+    CAIIModelProvider,
+)
 from .reranking import Reranking
 
 __all__ = [
-    "CAIIModelProvider",
     "Embedding",
     "LLM",
     "Reranking",
     "ModelSource",
-    "BedrockModelProvider",
+    "get_model_source",
 ]
 
 
