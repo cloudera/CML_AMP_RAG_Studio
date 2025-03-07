@@ -117,3 +117,7 @@ class BedrockModelProvider(ModelProvider):
                 name="Amazon Rerank v1",
             ),
         ]
+
+
+# ensure interface is implemented
+_ = BedrockModelProvider()

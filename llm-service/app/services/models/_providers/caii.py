@@ -62,3 +62,7 @@ class CAIIModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_models() -> List[ModelResponse]:
         return get_caii_reranking_models()
+
+
+# ensure interface is implemented
+_ = CAIIModelProvider()

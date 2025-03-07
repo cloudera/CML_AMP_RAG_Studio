@@ -46,6 +46,7 @@ class AzureModelProvider(ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
+
     @staticmethod
     def get_llm_models() -> List[ModelResponse]:
         return [
@@ -75,3 +76,7 @@ class AzureModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_models() -> List[ModelResponse]:
         return []
+
+
+# ensure interface is implemented
+_ = AzureModelProvider()
