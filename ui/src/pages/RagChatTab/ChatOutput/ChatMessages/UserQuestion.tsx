@@ -42,6 +42,7 @@ import Images from "src/components/images/Images.ts";
 
 const UserQuestion = (props: { question: string }) => (
   <Flex justify="end" gap={8}>
+    <div style={{ width: 40 }} />
     <Typography.Text style={{ fontSize: 16, whiteSpace: "pre-wrap" }}>
       {props.question}
     </Typography.Text>
@@ -50,7 +51,7 @@ const UserQuestion = (props: { question: string }) => (
         padding: 4,
         backgroundColor: cdlAmber500,
         borderRadius: 20,
-        width: 24,
+        minWidth: 24,
         height: 24,
       }}
     />

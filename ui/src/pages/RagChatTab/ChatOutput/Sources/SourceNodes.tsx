@@ -73,6 +73,7 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
       </Flex>
     );
   }
+
   return (
     <Flex wrap="wrap" style={{ gap: 8 }}>
       {nodes}
