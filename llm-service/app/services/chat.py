@@ -62,9 +62,8 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str
+    session: Session, query: str, configuration: RagPredictConfiguration, user_name: str
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -80,7 +79,7 @@ def v2_chat(
         session, response_id, query, query_configuration, user_name
     )
 
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
 
@@ -256,14 +255,13 @@ def process_response(response: str | None) -> list[str]:
 
 
 def direct_llm_chat(
-    session_id: int, query: str, user_name: str
+    session: Session, query: str, user_name: str
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
     response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.completion(
-        session_id, query, session.inference_model
+        session.id, query, session.inference_model
     )
     new_chat_message = RagStudioChatMessage(
         id=response_id,
@@ -277,5 +275,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message

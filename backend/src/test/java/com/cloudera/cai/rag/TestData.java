@@ -61,9 +61,14 @@ public class TestData {
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
+    return createSessionInstance(sessionName, List.of(1L, 2L, 3L));
+  }
+
+  public static Types.CreateSession createSessionInstance(
+      String sessionName, List<Long> dataSourceIds) {
     return new Types.CreateSession(
         sessionName,
-        List.of(1L, 2L, 3L),
+        dataSourceIds,
         "test-model",
         "test-rerank-model",
         3,
