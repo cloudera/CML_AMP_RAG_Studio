@@ -52,6 +52,7 @@ export interface SourceNode {
   doc_id: string;
   source_file_name: string;
   score: number;
+  dataSourceId?: number;
 }
 
 export interface Evaluation {

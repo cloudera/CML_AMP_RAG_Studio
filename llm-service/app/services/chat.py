@@ -120,7 +120,7 @@ def _run_chat(
     relevance, faithfulness = evaluators.evaluate_response(
         query, response, session.inference_model
     )
-    response_source_nodes = format_source_nodes(response)
+    response_source_nodes = format_source_nodes(response, data_source_id)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         source_nodes=response_source_nodes,
@@ -158,7 +158,9 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     return history
 
 
-def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNode]:
+def format_source_nodes(
+    response: AgentChatResponse, data_source_id
+) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:
         doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
@@ -168,6 +170,7 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
                 doc_id=doc_id,
                 source_file_name=source_node.node.metadata["file_name"],
                 score=source_node.score or 0.0,
+                dataSourceId=data_source_id,
             )
         )
     response_source_nodes = sorted(
