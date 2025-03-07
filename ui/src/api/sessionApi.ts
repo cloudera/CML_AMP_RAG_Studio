@@ -36,7 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { queryOptions, useMutation } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   deleteRequest,
   getRequest,
@@ -48,6 +52,7 @@ import {
   ragPath,
   UseMutationType,
 } from "src/api/utils.ts";
+import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 
 interface SessionQueryConfiguration {
   enableHyde: boolean;
@@ -120,10 +125,22 @@ export const useUpdateSessionMutation = ({
   onSuccess,
   onError,
 }: UseMutationType<UpdateSessionRequest>) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [MutationKeys.updateSession],
     mutationFn: updateSessionMutation,
-    onSuccess,
+    onSuccess: (session) => {
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(session.id.toString()),
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      if (onSuccess) {
+        onSuccess(session);
+      }
+    },
     onError,
   });
 };

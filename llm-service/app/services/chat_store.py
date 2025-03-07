@@ -51,7 +51,7 @@ class RagPredictSourceNode(BaseModel):
     doc_id: str
     source_file_name: str
     score: float
-    dataSourceId: Optional[int]
+    dataSourceId: Optional[int] = None
 
 
 class Evaluation(BaseModel):
