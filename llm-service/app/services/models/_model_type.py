@@ -35,35 +35,35 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from enum import Enum
+
+import abc
+from typing import Generic, Optional, TypeVar
+
+from llama_index.core.schema import BaseComponent
+
+from app.services.caii.types import ModelResponse
 
 
-from ._providers.azure import AzureModelProvider
-from ._providers.bedrock import BedrockModelProvider
-from ._providers.caii import CAIIModelProvider
-from .llm import LLM
-from .embedding import Embedding
-from .reranking import Reranking
-
-__all__ = [
-    "CAIIModelProvider",
-    "Embedding",
-    "LLM",
-    "Reranking",
-    "ModelSource",
-    "BedrockModelProvider",
-]
+T = TypeVar("T", bound=BaseComponent)
 
 
-class ModelSource(str, Enum):
-    BEDROCK = "Bedrock"
-    CAII = "CAII"
-    AZURE = "Azure"
+class ModelType(abc.ABC, Generic[T]):
+    @classmethod
+    @abc.abstractmethod
+    def get(cls, model_name: Optional[str] = None) -> T:
+        raise NotImplementedError
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_noop() -> T:
+        raise NotImplementedError
 
-def get_model_source() -> ModelSource:
-    if CAIIModelProvider.is_enabled():
-        return ModelSource.CAII
-    if AzureModelProvider.is_enabled():
-        return ModelSource.AZURE
-    return ModelSource.BEDROCK
+    @staticmethod
+    @abc.abstractmethod
+    def list_available() -> list[ModelResponse]:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def test(cls, model_name: str) -> str:
+        raise NotImplementedError
