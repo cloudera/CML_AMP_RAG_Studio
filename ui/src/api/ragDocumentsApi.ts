@@ -61,7 +61,7 @@ interface RagDocumentMetadata {
 export const useCreateRagDocumentsMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<PromiseSettledResult<RagDocumentMetadata>[]>) => {
+}: UseMutationType<PromiseSettledResult<RagDocumentMetadata[]>[]>) => {
   return useMutation({
     mutationKey: [MutationKeys.createRagDocuments],
     mutationFn: createRagDocumentsMutation,
@@ -80,9 +80,8 @@ const createRagDocumentsMutation = async ({
   const promises = files.map((file) =>
     createRagDocumentMutation(file, dataSourceId),
   );
-  return await Promise.allSettled(
-    promises.flatMap((value) => value.then((val) => val.flatMap((v) => v))),
-  );
+
+  return Promise.allSettled(promises);
 };
 
 const createRagDocumentMutation = async (
