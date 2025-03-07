@@ -179,10 +179,32 @@ def format_source_nodes(
     return response_source_nodes
 
 
+def generate_suggested_questions_direct_llm(session: Session) -> List[str]:
+    chat_history = retrieve_chat_history(session.id)
+    if not chat_history:
+        return []
+    query_str = (
+        " Give me a list of possible follow-up questions."
+        " Each question should be on a new line."
+        " There should be no more than four (4) questions."
+        " Each question should be no longer than fifteen (15) words."
+        " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
+        " Do not start like this - `Here are four questions that I can answer based on the context information`"
+        " Only return the list."
+    )
+    chat_response = llm_completion.completion(
+        session.id, query_str, session.inference_model
+    )
+    suggested_questions = process_response(chat_response.response)
+    return suggested_questions
+
+
 def generate_suggested_questions(
     session_id: int,
 ) -> List[str]:
     session = session_metadata_api.get_session(session_id)
+    if len(session.data_source_ids) == 0:
+        return generate_suggested_questions_direct_llm(session)
     if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400,
