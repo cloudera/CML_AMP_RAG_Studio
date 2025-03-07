@@ -82,12 +82,7 @@ const RagChatQueryInput = () => {
   });
 
   const handleChat = (userInput: string) => {
-    if (
-      activeSession &&
-      activeSession.dataSourceIds.length > 0 &&
-      userInput.length > 0 &&
-      sessionId
-    ) {
+    if (activeSession && userInput.length > 0 && sessionId) {
       setCurrentQuestion(userInput);
       chatMutation.mutate({
         query: userInput,
@@ -104,7 +99,7 @@ const RagChatQueryInput = () => {
   return (
     <div>
       <Flex vertical align="center" gap={10}>
-        {chatHistory.length > 0 ? (
+        {chatHistory.length > 0 && dataSourceSize ? (
           <SuggestedQuestionsFooter
             questions={sampleQuestions?.suggested_questions ?? []}
             isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
@@ -136,6 +131,7 @@ const RagChatQueryInput = () => {
                 <Switch
                   checkedChildren={<DatabaseFilled />}
                   value={!excludeKnowledgeBase}
+                  style={{ display: dataSourceSize ? "block" : "none" }}
                   onChange={handleExcludeKnowledgeBase}
                 />
               </Tooltip>

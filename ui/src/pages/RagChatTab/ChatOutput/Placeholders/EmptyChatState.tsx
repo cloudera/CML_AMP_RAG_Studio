@@ -117,14 +117,14 @@ const EmptyChatState = ({ dataSourceSize }: { dataSourceSize: number }) => {
         <Typography.Text
           style={{ padding: 10, textAlign: "center", width: "80%" }}
         >
-          In order to get started,&nbsp;
+          If you want to query a knowledge base,&nbsp;
           <Link
             to={"/data/$dataSourceId"}
             params={{ dataSourceId: dataSourceId?.toString() ?? "" }}
           >
-            add documents
+            click here
           </Link>{" "}
-          to the selected knowledge base.
+          to configure.
         </Typography.Text>
       )}
     </Flex>
