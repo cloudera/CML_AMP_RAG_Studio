@@ -181,11 +181,21 @@ const ChatSettingsModal = ({
     >
       <Flex vertical gap={10}>
         <Form autoCorrect="off" form={form} clearOnDestroy={true}>
-          <Form.Item name="dataSourceId" label="Knowledge Base">
+          <Form.Item
+            name="dataSourceId"
+            label="Knowledge Base"
+            initialValue={
+              activeSession.dataSourceIds.length > 0
+                ? activeSession.dataSourceIds[0]
+                : null
+            }
+          >
             <Select
               disabled={dataSources.length === 0}
               allowClear={true}
-              options={dataSources.map((value) => formatDataSource(value))}
+              options={dataSources.map((value) => {
+                return formatDataSource(value);
+              })}
             />
           </Form.Item>
           <Form.Item
