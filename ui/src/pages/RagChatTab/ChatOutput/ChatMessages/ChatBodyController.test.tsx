@@ -74,13 +74,19 @@ const testSession: Session = {
   },
 };
 
-describe("ChatBodyController", () => {
-  vi.mock("@tanstack/react-router", () => ({
-    useParams: vi.fn(() => ({ sessionId: "1" })),
-    useNavigate: vi.fn(),
-    Link: vi.fn(),
-  }));
+const mocks = vi.hoisted(() => {
+  return {
+    useParams: vi.fn(),
+  };
+});
 
+vi.mock("@tanstack/react-router", () => ({
+  useParams: mocks.useParams,
+  useNavigate: vi.fn(),
+  Link: vi.fn(),
+}));
+
+describe("ChatBodyController", () => {
   vi.mock("src/api/ragQueryApi.ts", () => ({
     useSuggestQuestions: vi.fn(() => ({
       data: "Mocked suggested questions",
@@ -157,10 +163,6 @@ describe("ChatBodyController", () => {
   };
 
   it("renders NoSessionState when no sessionId and dataSources are available", () => {
-    // vi.mock("@tanstack/react-router", () => ({
-    // useParams: vi.fn(() => ({ sessionId: undefined })),
-    // useNavigate: vi.fn(),
-    // }));
     const defaultContextValue: RagChatContextType = {
       chatHistoryQuery: { chatHistoryStatus: "success", chatHistory: [] },
       currentQuestionState: ["", () => null],
@@ -169,17 +171,30 @@ describe("ChatBodyController", () => {
       dataSourceSize: null,
       activeSession: undefined,
     };
-
+    mocks.useParams.mockReturnValue({ sessionId: "" });
+    vi.mock(
+      "src/pages/RagChatTab/ChatOutput/Placeholders/NoSessionState.tsx",
+      () => ({
+        __esModule: true,
+        default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
+          <div data-testid="no-session-state">{dataSourceSize}</div>
+        )),
+      }),
+    );
     render(
       <RagChatContext.Provider value={defaultContextValue}>
         <ChatBodyController />
       </RagChatContext.Provider>,
     );
 
-    expect(screen.getByText("Welcome to RAG Studio")).toBeTruthy();
+    expect(screen.getByTestId("no-session-state")).toBeTruthy();
   });
 
   it("renders ChatLoading when dataSourcesStatus or chatHistoryStatus is pending", () => {
+    mocks.useParams.mockImplementation(() => {
+      return { sessionId: "1" };
+    });
+
     renderWithContext({
       dataSourcesQuery: { dataSourcesStatus: "pending", dataSources: [] },
     });
@@ -188,6 +203,9 @@ describe("ChatBodyController", () => {
   });
 
   it("renders error message when dataSourcesStatus or chatHistoryStatus is error", () => {
+    mocks.useParams.mockImplementation(() => {
+      return { sessionId: "1" };
+    });
     renderWithContext({
       dataSourcesQuery: { dataSourcesStatus: "error", dataSources: [] },
     });
@@ -196,6 +214,9 @@ describe("ChatBodyController", () => {
   });
 
   it("renders ChatMessageController when chatHistory exists", () => {
+    mocks.useParams.mockImplementation(() => {
+      return { sessionId: "1" };
+    });
     renderWithContext({
       chatHistoryQuery: {
         chatHistoryStatus: undefined,
@@ -218,7 +239,8 @@ describe("ChatBodyController", () => {
     expect(screen.getByTestId("chat-message")).toBeTruthy();
   });
 
-  it("renders NoDataSourcesState when no dataSources are available", () => {
+  it("renders NoSessionState when no dataSources are available", () => {
+    mocks.useParams.mockReturnValue({ sessionId: "" });
     renderWithContext({
       dataSourcesQuery: { dataSources: [] },
       activeSession: {
@@ -228,12 +250,11 @@ describe("ChatBodyController", () => {
       },
     });
 
-    expect(
-      screen.getByText("Got a question? Dive in and ask away!"),
-    ).toBeTruthy();
+    expect(screen.getByTestId("no-session-state")).toBeTruthy();
   });
 
   it("renders NoDataSourceForSession when no currentDataSource is found", () => {
+    mocks.useParams.mockReturnValue({ sessionId: "1" });
     renderWithContext({
       dataSourcesQuery: { dataSources: [testDataSource] },
       activeSession: { ...testSession, dataSourceIds: [2] },
@@ -245,6 +266,7 @@ describe("ChatBodyController", () => {
   });
 
   it("renders ChatMessageController when currentQuestion and dataSourceSize are available", () => {
+    mocks.useParams.mockReturnValue({ sessionId: "1" });
     renderWithContext({
       currentQuestionState: ["What is AI?", () => null],
       dataSourceSize: 1,
@@ -255,23 +277,24 @@ describe("ChatBodyController", () => {
     expect(screen.getByTestId("chat-message-controller")).toBeTruthy();
   });
 
-  // it("renders EmptyChatState when no chatHistory and dataSourceSize is available", () => {
-  //   vi.mock(
-  //     "src/pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx",
-  //     () => ({
-  //       __esModule: true,
-  //       default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
-  //         <div data-testid="empty-chat-state">{dataSourceSize}</div>
-  //       )),
-  //     }),
-  //   );
-  //
-  //   renderWithContext({
-  //     dataSourceSize: 1,
-  //     dataSourcesQuery: { dataSources: [testDataSource] },
-  //     activeSession: testSession,
-  //   });
-  //
-  //   expect(screen.getByTestId("empty-chat-state")).toBeTruthy();
-  // });
+  it("renders EmptyChatState when no chatHistory and dataSourceSize is available", () => {
+    mocks.useParams.mockReturnValue({ sessionId: "1" });
+    vi.mock(
+      "src/pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx",
+      () => ({
+        __esModule: true,
+        default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
+          <div data-testid="empty-chat-state">{dataSourceSize}</div>
+        )),
+      }),
+    );
+
+    renderWithContext({
+      dataSourceSize: 1,
+      dataSourcesQuery: { dataSources: [testDataSource] },
+      activeSession: testSession,
+    });
+
+    expect(screen.getByTestId("empty-chat-state")).toBeTruthy();
+  });
 });
