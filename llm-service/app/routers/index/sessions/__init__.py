@@ -47,6 +47,7 @@ from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 
 logger = logging.getLogger(__name__)
@@ -141,11 +142,12 @@ def chat(
     _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
     user_name = parse_jwt_cookie(_basusertoken)
+    session = session_metadata_api.get_session(session_id)
 
     configuration = request.configuration or RagPredictConfiguration()
-    if configuration.exclude_knowledge_base:
-        return direct_llm_chat(session_id, request.query, user_name)
-    return v2_chat(session_id, request.query, configuration, user_name)
+    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+        return direct_llm_chat(session, request.query, user_name)
+    return v2_chat(session, request.query, configuration, user_name)
 
 
 class RagSuggestedQuestionsResponse(BaseModel):

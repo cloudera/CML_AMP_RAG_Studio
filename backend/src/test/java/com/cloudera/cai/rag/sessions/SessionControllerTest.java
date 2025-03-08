@@ -46,6 +46,7 @@ import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -66,6 +67,29 @@ class SessionControllerTest {
     assertThat(result.rerankModel()).isEqualTo(input.rerankModel());
     assertThat(result.responseChunks()).isEqualTo(input.responseChunks());
     assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(result.timeCreated()).isNotNull();
+    assertThat(result.timeUpdated()).isNotNull();
+    assertThat(result.createdById()).isEqualTo("test-user");
+    assertThat(result.updatedById()).isEqualTo("test-user");
+    assertThat(result.lastInteractionTime()).isNull();
+    assertThat(result.queryConfiguration()).isNotNull();
+  }
+
+  @Test
+  void create_noDataSource() throws JsonProcessingException {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    request.setCookies(
+        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    var sessionName = "test";
+    Types.CreateSession input = TestData.createSessionInstance(sessionName, List.of());
+    Types.Session result = sessionController.create(input, request);
+    assertThat(result.id()).isNotNull();
+    assertThat(result.name()).isEqualTo(sessionName);
+    assertThat(result.inferenceModel()).isEqualTo(input.inferenceModel());
+    assertThat(result.rerankModel()).isEqualTo(input.rerankModel());
+    assertThat(result.responseChunks()).isEqualTo(input.responseChunks());
+    assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result.timeCreated()).isNotNull();
     assertThat(result.timeUpdated()).isNotNull();
     assertThat(result.createdById()).isEqualTo("test-user");

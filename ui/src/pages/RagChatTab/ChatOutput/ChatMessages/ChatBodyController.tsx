@@ -40,7 +40,6 @@ import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/Chat
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
-import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 import EmptyChatState from "pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx";
 import NoSessionState from "../Placeholders/NoSessionState";
 import { useParams } from "@tanstack/react-router";
@@ -57,7 +56,7 @@ const ChatBodyController = () => {
   } = useContext(RagChatContext);
   const { sessionId } = useParams({ strict: false });
 
-  if (!sessionId && dataSources.length > 0) {
+  if (!sessionId) {
     return <NoSessionState />;
   }
 
@@ -75,19 +74,15 @@ const ChatBodyController = () => {
     return <ChatMessageController />;
   }
 
-  if (dataSources.length === 0) {
-    return <NoDataSourcesState />;
-  }
-
   const currentDataSource = dataSources.find((dataSource) => {
     return dataSource.id === activeSession?.dataSourceIds[0];
   });
 
-  if (!currentDataSource) {
+  if (activeSession?.dataSourceIds[0] && !currentDataSource) {
     return <NoDataSourceForSession />;
   }
 
-  if (currentQuestion && dataSourceSize) {
+  if (currentQuestion) {
     return <ChatMessageController />;
   }
 

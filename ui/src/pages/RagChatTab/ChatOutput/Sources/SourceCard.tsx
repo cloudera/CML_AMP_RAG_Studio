@@ -75,8 +75,10 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
 export const SourceCard = ({ source }: { source: SourceNode }) => {
   const { activeSession } = useContext(RagChatContext);
   const [showContent, setShowContent] = useState(false);
+  const { dataSourceId: nodeDataSourceId } = source;
+  // Older chats did not store dataSourceId.  Need to check activeSession for legacy chats only.
+  const dataSourceId = nodeDataSourceId ?? activeSession?.dataSourceIds[0];
   const chunkContents = useGetChunkContents();
-  const dataSourceId = activeSession?.dataSourceIds[0];
   const documentSummary = useGetDocumentSummary({
     data_source_id: dataSourceId?.toString() ?? "",
     doc_id: source.doc_id,

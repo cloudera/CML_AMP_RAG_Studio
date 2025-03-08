@@ -62,9 +62,8 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str
+    session: Session, query: str, configuration: RagPredictConfiguration, user_name: str
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -80,7 +79,7 @@ def v2_chat(
         session, response_id, query, query_configuration, user_name
     )
 
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
 
@@ -121,7 +120,7 @@ def _run_chat(
     relevance, faithfulness = evaluators.evaluate_response(
         query, response, session.inference_model
     )
-    response_source_nodes = format_source_nodes(response)
+    response_source_nodes = format_source_nodes(response, data_source_id)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         source_nodes=response_source_nodes,
@@ -159,7 +158,9 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     return history
 
 
-def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNode]:
+def format_source_nodes(
+    response: AgentChatResponse, data_source_id: int
+) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:
         doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
@@ -169,6 +170,7 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
                 doc_id=doc_id,
                 source_file_name=source_node.node.metadata["file_name"],
                 score=source_node.score or 0.0,
+                dataSourceId=data_source_id,
             )
         )
     response_source_nodes = sorted(
@@ -177,10 +179,32 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
     return response_source_nodes
 
 
+def generate_suggested_questions_direct_llm(session: Session) -> List[str]:
+    chat_history = retrieve_chat_history(session.id)
+    if not chat_history:
+        return []
+    query_str = (
+        " Give me a list of possible follow-up questions."
+        " Each question should be on a new line."
+        " There should be no more than four (4) questions."
+        " Each question should be no longer than fifteen (15) words."
+        " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
+        " Do not start like this - `Here are four questions that I can answer based on the context information`"
+        " Only return the list."
+    )
+    chat_response = llm_completion.completion(
+        session.id, query_str, session.inference_model
+    )
+    suggested_questions = process_response(chat_response.message.content)
+    return suggested_questions
+
+
 def generate_suggested_questions(
     session_id: int,
 ) -> List[str]:
     session = session_metadata_api.get_session(session_id)
+    if len(session.data_source_ids) == 0:
+        return generate_suggested_questions_direct_llm(session)
     if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400,
@@ -256,14 +280,13 @@ def process_response(response: str | None) -> list[str]:
 
 
 def direct_llm_chat(
-    session_id: int, query: str, user_name: str
+    session: Session, query: str, user_name: str
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
     response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.completion(
-        session_id, query, session.inference_model
+        session.id, query, session.inference_model
     )
     new_chat_message = RagStudioChatMessage(
         id=response_id,
@@ -277,5 +300,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message

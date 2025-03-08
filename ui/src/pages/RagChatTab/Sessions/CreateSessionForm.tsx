@@ -63,17 +63,17 @@ const layout = {
   wrapperCol: { span: 12 },
 };
 
+export const formatDataSource = (value: DataSourceType) => {
+  return {
+    ...value,
+    label: value.name,
+    value: value.id,
+  };
+};
+
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
   const { data } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
-
-  const formatDataSource = (value: DataSourceType) => {
-    return {
-      ...value,
-      label: value.name,
-      value: value.id,
-    };
-  };
 
   const advancedOptions = () => [
     {
@@ -149,13 +149,10 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         }
       }}
     >
-      <Form.Item
-        name="dataSourceId"
-        label="Knowledge Base"
-        rules={[{ required: true }]}
-      >
+      <Form.Item name="dataSourceId" label="Knowledge Base">
         <Select
           disabled={dataSources?.length === 0}
+          allowClear={true}
           options={dataSources?.map((value) => formatDataSource(value))}
         />
       </Form.Item>
