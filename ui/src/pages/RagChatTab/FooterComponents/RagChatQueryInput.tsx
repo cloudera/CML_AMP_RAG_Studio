@@ -136,7 +136,7 @@ const RagChatQueryInput = () => {
                 />
               </Tooltip>
             }
-            disabled={chatMutation.isPending}
+            disabled={chatMutation.isPending || !activeSession}
           />
           <Button
             style={{ padding: 0 }}
@@ -145,6 +145,7 @@ const RagChatQueryInput = () => {
               handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
+            disabled={chatMutation.isPending || !activeSession}
           />
         </Flex>
       </Flex>

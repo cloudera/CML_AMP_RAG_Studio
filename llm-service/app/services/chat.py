@@ -159,7 +159,7 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
 
 
 def format_source_nodes(
-    response: AgentChatResponse, data_source_id
+    response: AgentChatResponse, data_source_id: int
 ) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:

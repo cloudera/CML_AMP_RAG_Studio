@@ -44,6 +44,7 @@ import EmptyChatState from "pages/RagChatTab/ChatOutput/Placeholders/EmptyChatSt
 import NoSessionState from "../Placeholders/NoSessionState";
 import { useParams } from "@tanstack/react-router";
 import { Result } from "antd";
+import NoDataSourceForSession from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourceForSession.tsx";
 
 const ChatBodyController = () => {
   const {
@@ -51,10 +52,11 @@ const ChatBodyController = () => {
     chatHistoryQuery: { chatHistory, chatHistoryStatus },
     dataSourcesQuery: { dataSources, dataSourcesStatus },
     dataSourceSize,
+    activeSession,
   } = useContext(RagChatContext);
   const { sessionId } = useParams({ strict: false });
 
-  if (!sessionId && dataSources.length > 0) {
+  if (!sessionId) {
     return <NoSessionState />;
   }
 
@@ -70,6 +72,14 @@ const ChatBodyController = () => {
 
   if (chatHistoryExists) {
     return <ChatMessageController />;
+  }
+
+  const currentDataSource = dataSources.find((dataSource) => {
+    return dataSource.id === activeSession?.dataSourceIds[0];
+  });
+
+  if (activeSession?.dataSourceIds[0] && !currentDataSource) {
+    return <NoDataSourceForSession />;
   }
 
   if (currentQuestion) {
