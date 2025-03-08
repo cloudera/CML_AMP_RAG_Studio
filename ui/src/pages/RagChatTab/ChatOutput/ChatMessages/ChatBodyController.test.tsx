@@ -191,10 +191,7 @@ describe("ChatBodyController", () => {
   });
 
   it("renders ChatLoading when dataSourcesStatus or chatHistoryStatus is pending", () => {
-    mocks.useParams.mockImplementation(() => {
-      return { sessionId: "1" };
-    });
-
+    mocks.useParams.mockReturnValue({ sessionId: "1" });
     renderWithContext({
       dataSourcesQuery: { dataSourcesStatus: "pending", dataSources: [] },
     });
@@ -203,9 +200,7 @@ describe("ChatBodyController", () => {
   });
 
   it("renders error message when dataSourcesStatus or chatHistoryStatus is error", () => {
-    mocks.useParams.mockImplementation(() => {
-      return { sessionId: "1" };
-    });
+    mocks.useParams.mockReturnValue({ sessionId: "1" });
     renderWithContext({
       dataSourcesQuery: { dataSourcesStatus: "error", dataSources: [] },
     });
@@ -214,9 +209,7 @@ describe("ChatBodyController", () => {
   });
 
   it("renders ChatMessageController when chatHistory exists", () => {
-    mocks.useParams.mockImplementation(() => {
-      return { sessionId: "1" };
-    });
+    mocks.useParams.mockReturnValue({ sessionId: "1" });
     renderWithContext({
       chatHistoryQuery: {
         chatHistoryStatus: undefined,
