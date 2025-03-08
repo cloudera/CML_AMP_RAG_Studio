@@ -124,6 +124,25 @@ describe("ChatBodyController", () => {
     isPlaceholder: vi.fn(() => false),
   }));
 
+  vi.mock(
+    "src/pages/RagChatTab/ChatOutput/Placeholders/NoSessionState.tsx",
+    () => ({
+      __esModule: true,
+      default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
+        <div data-testid="no-session-state">{dataSourceSize}</div>
+      )),
+    }),
+  );
+  vi.mock(
+    "src/pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx",
+    () => ({
+      __esModule: true,
+      default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
+        <div data-testid="empty-chat-state">{dataSourceSize}</div>
+      )),
+    }),
+  );
+
   afterEach(() => {
     cleanup();
   });
@@ -172,15 +191,6 @@ describe("ChatBodyController", () => {
       activeSession: undefined,
     };
     mocks.useParams.mockReturnValue({ sessionId: "" });
-    vi.mock(
-      "src/pages/RagChatTab/ChatOutput/Placeholders/NoSessionState.tsx",
-      () => ({
-        __esModule: true,
-        default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
-          <div data-testid="no-session-state">{dataSourceSize}</div>
-        )),
-      }),
-    );
     render(
       <RagChatContext.Provider value={defaultContextValue}>
         <ChatBodyController />
@@ -272,16 +282,6 @@ describe("ChatBodyController", () => {
 
   it("renders EmptyChatState when no chatHistory and dataSourceSize is available", () => {
     mocks.useParams.mockReturnValue({ sessionId: "1" });
-    vi.mock(
-      "src/pages/RagChatTab/ChatOutput/Placeholders/EmptyChatState.tsx",
-      () => ({
-        __esModule: true,
-        default: vi.fn(({ dataSourceSize }: { dataSourceSize: number }) => (
-          <div data-testid="empty-chat-state">{dataSourceSize}</div>
-        )),
-      }),
-    );
-
     renderWithContext({
       dataSourceSize: 1,
       dataSourcesQuery: { dataSources: [testDataSource] },
