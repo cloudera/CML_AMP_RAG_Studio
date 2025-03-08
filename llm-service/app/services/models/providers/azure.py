@@ -35,32 +35,48 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from enum import Enum
 
-from .embedding import Embedding
-from .llm import LLM
-from .providers import (
-    AzureModelProvider,
-    CAIIModelProvider,
-)
-from .reranking import Reranking
+from typing import List
 
-__all__ = [
-    "Embedding",
-    "LLM",
-    "Reranking",
-]
+from app.services.caii.types import ModelResponse
+from ._model_provider import ModelProvider
 
 
-class ModelSource(str, Enum):
-    BEDROCK = "Bedrock"
-    CAII = "CAII"
-    AZURE = "Azure"
+class AzureModelProvider(ModelProvider):
+    @staticmethod
+    def get_env_var_names() -> set[str]:
+        return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
+
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id="gpt-4o",
+                name="OpenAI GPT-4o",
+            ),
+            ModelResponse(
+                model_id="gpt-4o-mini",
+                name="OpenAI GPT-4o-mini",
+            ),
+        ]
+
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id="text-embedding-ada-002",
+                name="Text Embedding Ada 002",
+            ),
+            ModelResponse(
+                model_id="text-embedding-3-small",
+                name="Text Embedding 3 Small",
+            ),
+        ]
+
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        return []
 
 
-def get_model_source() -> ModelSource:
-    if CAIIModelProvider.is_enabled():
-        return ModelSource.CAII
-    if AzureModelProvider.is_enabled():
-        return ModelSource.AZURE
-    return ModelSource.BEDROCK
+# ensure interface is implemented
+_ = AzureModelProvider()

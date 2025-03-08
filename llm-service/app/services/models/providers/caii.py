@@ -35,43 +35,34 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
 from typing import List
 
-from app.services.caii.types import ModelResponse
 from ._model_provider import ModelProvider
+from app.services.caii.caii import (
+    get_caii_llm_models,
+    get_caii_embedding_models,
+    get_caii_reranking_models,
+)
+from app.services.caii.types import ModelResponse
 
 
-class AzureModelProvider(ModelProvider):
+class CAIIModelProvider(ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
-        return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
+        return {"CAII_DOMAIN"}
+
     @staticmethod
     def get_llm_models() -> List[ModelResponse]:
-        return [
-            ModelResponse(
-                model_id="gpt-4o",
-                name="OpenAI GPT-4o",
-            ),
-            ModelResponse(
-                model_id="gpt-4o-mini",
-                name="OpenAI GPT-4o-mini",
-            ),
-        ]
+        return get_caii_llm_models()
 
     @staticmethod
     def get_embedding_models() -> List[ModelResponse]:
-        return [
-            ModelResponse(
-                model_id="text-embedding-ada-002",
-                name="Text Embedding Ada 002",
-            ),
-            ModelResponse(
-                model_id="text-embedding-3-small",
-                name="Text Embedding 3 Small",
-            ),
-        ]
+        return get_caii_embedding_models()
 
     @staticmethod
     def get_reranking_models() -> List[ModelResponse]:
-        return []
+        return get_caii_reranking_models()
+
+
+# ensure interface is implemented
+_ = CAIIModelProvider()

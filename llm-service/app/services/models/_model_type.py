@@ -36,30 +36,34 @@
 #  DATA.
 #
 
-from typing import List
+import abc
+from typing import Generic, Optional, TypeVar
 
-from ._model_provider import ModelProvider
-from ..caii.caii import (
-    get_caii_llm_models,
-    get_caii_embedding_models,
-    get_caii_reranking_models,
-)
-from ..caii.types import ModelResponse
+from llama_index.core.schema import BaseComponent
+
+from app.services.caii.types import ModelResponse
 
 
-class CAIIModelProvider(ModelProvider):
-    @staticmethod
-    def get_env_var_names() -> set[str]:
-        return {"CAII_DOMAIN"}
+T = TypeVar("T", bound=BaseComponent)
 
-    @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
-        return get_caii_llm_models()
+
+class ModelType(abc.ABC, Generic[T]):
+    @classmethod
+    @abc.abstractmethod
+    def get(cls, model_name: Optional[str] = None) -> T:
+        raise NotImplementedError
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
-        return get_caii_embedding_models()
+    @abc.abstractmethod
+    def get_noop() -> T:
+        raise NotImplementedError
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
-        return get_caii_reranking_models()
+    @abc.abstractmethod
+    def list_available() -> list[ModelResponse]:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def test(cls, model_name: str) -> str:
+        raise NotImplementedError
