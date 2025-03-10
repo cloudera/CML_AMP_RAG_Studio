@@ -35,16 +35,15 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
 from typing import List
 
 from ._model_provider import ModelProvider
-from ..caii.caii import (
+from ...caii.caii import (
     get_caii_llm_models,
     get_caii_embedding_models,
     get_caii_reranking_models,
 )
-from ..caii.types import ModelResponse
+from ...caii.types import ModelResponse
 
 
 class CAIIModelProvider(ModelProvider):
@@ -63,3 +62,7 @@ class CAIIModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_models() -> List[ModelResponse]:
         return get_caii_reranking_models()
+
+
+# ensure interface is implemented
+_ = CAIIModelProvider()
