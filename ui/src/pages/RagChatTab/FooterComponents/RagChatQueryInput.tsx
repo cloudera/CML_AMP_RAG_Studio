@@ -59,7 +59,7 @@ import { useGetLlmModels } from "src/api/modelsApi.ts";
 const RagChatQueryInput = () => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    currentQuestionState: [currentQuestion, setCurrentQuestion],
+    currentQuestionState: [, setCurrentQuestion],
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
@@ -69,6 +69,7 @@ const RagChatQueryInput = () => {
   const { data: models } = useGetLlmModels();
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
+  const [newSessionId, setNewSessionId] = useState<number>();
 
   const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
@@ -90,23 +91,36 @@ const RagChatQueryInput = () => {
     },
   });
 
+  const newChatMutation = useChatMutation({
+    onSuccess: () => {
+      setUserInput("");
+      setCurrentQuestion("");
+      if (newSessionId) {
+        navigate({
+          to: "/sessions/$sessionId",
+          params: { sessionId: newSessionId.toString() },
+        }).catch((reason: unknown) => {
+          messageQueue.error(String(reason));
+        });
+      }
+    },
+    onError: (res: Error) => {
+      messageQueue.error(res.toString());
+    },
+  });
+
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
     onSuccess: async (data) => {
       await queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
-        .then(() => {
-          chatMutation.mutate({
+        .finally(() => {
+          setNewSessionId(data.id);
+          newChatMutation.mutate({
             query: userInput,
             session_id: data.id.toString(),
             configuration: createQueryConfiguration(excludeKnowledgeBase),
-          });
-        })
-        .finally(() => {
-          return navigate({
-            to: "/sessions/$sessionId",
-            params: { sessionId: data.id.toString() },
           });
         });
     },
