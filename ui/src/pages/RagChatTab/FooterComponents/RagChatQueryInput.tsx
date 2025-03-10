@@ -44,10 +44,16 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
+import {
+  CreateSessionRequest,
+  useCreateSessionMutation,
+} from "src/api/sessionApi.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import { useQueryClient } from "@tanstack/react-query";
 
 const RagChatQueryInput = () => {
   const {
@@ -81,14 +87,50 @@ const RagChatQueryInput = () => {
     },
   });
 
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { mutate: createSessionMutation } = useCreateSessionMutation({
+    onSuccess: async (data) => {
+      await queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
+        .then(() => {
+          return navigate({
+            to: "/sessions/$sessionId",
+            params: { sessionId: data.id.toString() },
+          });
+        })
+        .finally(() => {
+          // TODO: ask the question????? maybe before nav??
+        });
+    },
+    onError: () => {
+      messageQueue.error("Session creation failed.");
+    },
+  });
+
   const handleChat = (userInput: string) => {
-    if (activeSession && userInput.trim().length > 0 && sessionId) {
-      setCurrentQuestion(userInput);
+    if (userInput.trim().length <= 0) {
+      return;
+    }
+    setCurrentQuestion(userInput);
+    if (activeSession && sessionId) {
       chatMutation.mutate({
         query: userInput,
         session_id: sessionId,
         configuration: createQueryConfiguration(excludeKnowledgeBase),
       });
+    } else {
+      const requestBody: CreateSessionRequest = {
+        name: userInput,
+        dataSourceIds: [],
+        inferenceModel: values.inferenceModel,
+        responseChunks: values.responseChunks,
+        queryConfiguration: {
+          enableHyde: values.queryConfiguration.enableHyde,
+          enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+        },
+      };
+      createSessionMutation(requestBody);
     }
   };
 
@@ -136,7 +178,7 @@ const RagChatQueryInput = () => {
                 />
               </Tooltip>
             }
-            disabled={chatMutation.isPending || !activeSession}
+            disabled={chatMutation.isPending}
           />
           <Button
             style={{ padding: 0 }}
@@ -145,7 +187,7 @@ const RagChatQueryInput = () => {
               handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={chatMutation.isPending || !activeSession}
+            disabled={chatMutation.isPending}
           />
         </Flex>
       </Flex>
