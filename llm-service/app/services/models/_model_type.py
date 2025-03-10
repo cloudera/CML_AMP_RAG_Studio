@@ -36,38 +36,33 @@
 #  DATA.
 #
 import abc
-import os
-from typing import List
+from typing import Generic, Optional, TypeVar
 
-from app.services.caii.types import ModelResponse
+from llama_index.core.schema import BaseComponent
+
+from ..caii.types import ModelResponse
 
 
-class ModelProvider(abc.ABC):
+T = TypeVar("T", bound=BaseComponent)
+
+
+class ModelType(abc.ABC, Generic[T]):
     @classmethod
-    def is_enabled(cls) -> bool:
-        """Return whether this model provider is enabled, based on the presence of required env vars."""
-        return all(map(os.environ.get, cls.get_env_var_names()))
-
-    @staticmethod
     @abc.abstractmethod
-    def get_env_var_names() -> set[str]:
-        """Return the names of the env vars required by this model provider."""
+    def get(cls, model_name: Optional[str] = None) -> T:
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_llm_models() -> List[ModelResponse]:
-        """Return available LLM models."""
+    def get_noop() -> T:
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_embedding_models() -> List[ModelResponse]:
-        """Return available embedding models."""
+    def list_available() -> list[ModelResponse]:
         raise NotImplementedError
 
-    @staticmethod
+    @classmethod
     @abc.abstractmethod
-    def get_reranking_models() -> List[ModelResponse]:
-        """Return available reranking models."""
+    def test(cls, model_name: str) -> str:
         raise NotImplementedError

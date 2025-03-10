@@ -35,32 +35,39 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from enum import Enum
+import abc
+import os
+from typing import List
 
-from .embedding import Embedding
-from .llm import LLM
-from .providers import (
-    AzureModelProvider,
-    CAIIModelProvider,
-)
-from .reranking import Reranking
-
-__all__ = [
-    "Embedding",
-    "LLM",
-    "Reranking",
-]
+from ...caii.types import ModelResponse
 
 
-class ModelSource(str, Enum):
-    BEDROCK = "Bedrock"
-    CAII = "CAII"
-    AZURE = "Azure"
+class ModelProvider(abc.ABC):
+    @classmethod
+    def is_enabled(cls) -> bool:
+        """Return whether this model provider is enabled, based on the presence of required env vars."""
+        return all(map(os.environ.get, cls.get_env_var_names()))
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_env_var_names() -> set[str]:
+        """Return the names of the env vars required by this model provider."""
+        raise NotImplementedError
 
-def get_model_source() -> ModelSource:
-    if CAIIModelProvider.is_enabled():
-        return ModelSource.CAII
-    if AzureModelProvider.is_enabled():
-        return ModelSource.AZURE
-    return ModelSource.BEDROCK
+    @staticmethod
+    @abc.abstractmethod
+    def get_llm_models() -> List[ModelResponse]:
+        """Return available LLM models."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        """Return available embedding models."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        """Return available reranking models."""
+        raise NotImplementedError
