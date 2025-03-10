@@ -51,6 +51,7 @@ class RagPredictSourceNode(BaseModel):
     doc_id: str
     source_file_name: str
     score: float
+    dataSourceId: Optional[int] = None
 
 
 class Evaluation(BaseModel):
@@ -119,7 +120,7 @@ class ChatHistoryManager:
                         "evaluations", []
                     ),
                     timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
-                    condensed_question=None
+                    condensed_question=None,
                 )
             )
             i += 2

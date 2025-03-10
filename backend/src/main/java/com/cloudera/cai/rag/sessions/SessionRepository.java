@@ -194,7 +194,7 @@ public class SessionRepository {
   public void update(Types.Session input) {
     var updatedInput = input.withTimeUpdated(Instant.now());
     String json = serializeQueryConfiguration(input);
-    jdbi.useHandle(
+    jdbi.useTransaction(
         handle -> {
           var sql =
               """
@@ -208,6 +208,11 @@ public class SessionRepository {
               .bind("queryConfiguration", json)
               .bindMethods(updatedInput)
               .execute();
+          handle
+              .createUpdate("DELETE FROM CHAT_SESSION_DATA_SOURCE WHERE CHAT_SESSION_ID = :id")
+              .bind("id", input.id())
+              .execute();
+          insertSessionDataSources(handle, input.id(), input.dataSourceIds());
         });
   }
 

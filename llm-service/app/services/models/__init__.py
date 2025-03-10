@@ -66,13 +66,13 @@ from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..query.simple_reranker import SimpleReranker
 
 __all__ = [
-    'CAIIModelProvider',
-    'ModelType',
-    'Embedding',
-    'LLM',
-    'Reranking',
-    'ModelSource',
-    'BedrockModelProvider'
+    "CAIIModelProvider",
+    "ModelType",
+    "Embedding",
+    "LLM",
+    "Reranking",
+    "ModelSource",
+    "BedrockModelProvider",
 ]
 
 T = TypeVar("T", bound=BaseComponent)

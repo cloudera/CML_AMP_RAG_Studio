@@ -82,12 +82,7 @@ const RagChatQueryInput = () => {
   });
 
   const handleChat = (userInput: string) => {
-    if (
-      activeSession &&
-      activeSession.dataSourceIds.length > 0 &&
-      userInput.length > 0 &&
-      sessionId
-    ) {
+    if (activeSession && userInput.trim().length > 0 && sessionId) {
       setCurrentQuestion(userInput);
       chatMutation.mutate({
         query: userInput,
@@ -119,7 +114,7 @@ const RagChatQueryInput = () => {
             placeholder={
               dataSourceSize && dataSourceSize > 0
                 ? "Ask a question"
-                : "No documents available"
+                : "Chat with the LLM"
             }
             status={dataSourcesStatus === "error" ? "error" : undefined}
             value={userInput}
@@ -136,11 +131,12 @@ const RagChatQueryInput = () => {
                 <Switch
                   checkedChildren={<DatabaseFilled />}
                   value={!excludeKnowledgeBase}
+                  style={{ display: dataSourceSize ? "block" : "none" }}
                   onChange={handleExcludeKnowledgeBase}
                 />
               </Tooltip>
             }
-            disabled={!dataSourceSize || chatMutation.isPending}
+            disabled={chatMutation.isPending || !activeSession}
           />
           <Button
             style={{ padding: 0 }}
@@ -149,6 +145,7 @@ const RagChatQueryInput = () => {
               handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
+            disabled={chatMutation.isPending || !activeSession}
           />
         </Flex>
       </Flex>
