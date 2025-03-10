@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from fastapi import HTTPException
 from llama_index.core import llms
@@ -43,10 +43,12 @@ from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
 
-from . import _noop, _model_type
-from .providers.azure import AzureModelProvider
-from .providers.bedrock import BedrockModelProvider
-from .providers.caii import CAIIModelProvider
+from . import _model_type, _noop
+from .providers import (
+    AzureModelProvider,
+    BedrockModelProvider,
+    CAIIModelProvider,
+)
 from ..caii.caii import get_llm as caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt

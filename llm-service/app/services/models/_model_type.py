@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
 import abc
 from typing import Generic, Optional, TypeVar
 

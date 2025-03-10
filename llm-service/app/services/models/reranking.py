@@ -43,9 +43,11 @@ from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 from . import _model_type
-from .providers.azure import AzureModelProvider
-from .providers.bedrock import BedrockModelProvider
-from .providers.caii import CAIIModelProvider
+from .providers import (
+    AzureModelProvider,
+    BedrockModelProvider,
+    CAIIModelProvider,
+)
 from ..caii.caii import get_reranking_model as caii_reranking
 from ..caii.types import ModelResponse
 from ..query.simple_reranker import SimpleReranker
