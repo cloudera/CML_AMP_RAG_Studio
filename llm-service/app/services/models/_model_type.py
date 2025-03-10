@@ -40,7 +40,7 @@ from typing import Generic, Optional, TypeVar
 
 from llama_index.core.schema import BaseComponent
 
-from app.services.caii.types import ModelResponse
+from ..caii.types import ModelResponse
 
 
 T = TypeVar("T", bound=BaseComponent)

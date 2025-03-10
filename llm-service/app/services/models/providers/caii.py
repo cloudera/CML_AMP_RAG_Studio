@@ -38,12 +38,12 @@
 from typing import List
 
 from ._model_provider import ModelProvider
-from app.services.caii.caii import (
+from ...caii.caii import (
     get_caii_llm_models,
     get_caii_embedding_models,
     get_caii_reranking_models,
 )
-from app.services.caii.types import ModelResponse
+from ...caii.types import ModelResponse
 
 
 class CAIIModelProvider(ModelProvider):

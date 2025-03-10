@@ -39,7 +39,7 @@ import abc
 import os
 from typing import List
 
-from app.services.caii.types import ModelResponse
+from ...caii.types import ModelResponse
 
 
 class ModelProvider(abc.ABC):

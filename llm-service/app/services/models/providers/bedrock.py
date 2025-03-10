@@ -40,7 +40,7 @@ from typing import List, Optional
 
 import boto3
 
-from app.services.caii.types import ModelResponse
+from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"

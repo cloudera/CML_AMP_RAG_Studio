@@ -38,7 +38,7 @@
 
 from typing import List
 
-from app.services.caii.types import ModelResponse
+from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
 
 
