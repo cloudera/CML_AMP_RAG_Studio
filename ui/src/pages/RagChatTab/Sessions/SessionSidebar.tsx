@@ -95,16 +95,12 @@ export function SessionSidebar({
 }: {
   sessionsByDate: Dictionary<Session[]>;
 }) {
-  const {
-    dataSourcesQuery: { dataSources },
-  } = useContext(RagChatContext);
   const { isModalOpen, setIsModalOpen, showModal, handleCancel } = useModal();
   const { activeSession } = useContext(RagChatContext);
   const [collapsed, setCollapsed] = useState(false);
-  const disableNewChat = dataSources.length === 0;
 
   const openItems: ItemType[] = [
-    ...newChatItem(showModal, disableNewChat, 18),
+    ...newChatItem(showModal, 18),
     { type: "divider", key: "newChatDivider" },
     {
       type: "group",
@@ -119,7 +115,7 @@ export function SessionSidebar({
   ];
 
   const collapsedItems: ItemType[] = [
-    ...newChatItem(showModal, disableNewChat, 24),
+    ...newChatItem(showModal, 24),
     { type: "divider", key: "collapsedNewChatDivider" },
     {
       key: "history",

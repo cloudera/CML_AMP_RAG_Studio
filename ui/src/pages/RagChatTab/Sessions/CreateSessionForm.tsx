@@ -180,10 +180,10 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       </Form.Item>
       <Form.Item<CreateSessionType>
         name="responseChunks"
-        initialValue={5}
+        initialValue={10}
         label="Maximum number of documents"
       >
-        <Slider marks={ResponseChunksRange} min={1} max={10} />
+        <Slider marks={ResponseChunksRange} min={1} max={20} />
       </Form.Item>
       <Collapse items={advancedOptions()} />
     </Form>
