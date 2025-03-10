@@ -54,16 +54,19 @@ import {
 } from "src/api/sessionApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
 
 const RagChatQueryInput = () => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    currentQuestionState: [, setCurrentQuestion],
+    currentQuestionState: [currentQuestion, setCurrentQuestion],
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
     activeSession,
   } = useContext(RagChatContext);
+
+  const { data: models } = useGetLlmModels();
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
@@ -89,18 +92,22 @@ const RagChatQueryInput = () => {
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { mutate: createSessionMutation } = useCreateSessionMutation({
+  const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
     onSuccess: async (data) => {
       await queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
         .then(() => {
+          chatMutation.mutate({
+            query: userInput,
+            session_id: data.id.toString(),
+            configuration: createQueryConfiguration(excludeKnowledgeBase),
+          });
+        })
+        .finally(() => {
           return navigate({
             to: "/sessions/$sessionId",
             params: { sessionId: data.id.toString() },
           });
-        })
-        .finally(() => {
-          // TODO: ask the question????? maybe before nav??
         });
     },
     onError: () => {
@@ -119,18 +126,18 @@ const RagChatQueryInput = () => {
         session_id: sessionId,
         configuration: createQueryConfiguration(excludeKnowledgeBase),
       });
-    } else {
+    } else if (models && models.length > 0) {
       const requestBody: CreateSessionRequest = {
         name: userInput,
         dataSourceIds: [],
-        inferenceModel: values.inferenceModel,
-        responseChunks: values.responseChunks,
+        inferenceModel: models[0].model_id,
+        responseChunks: 10,
         queryConfiguration: {
-          enableHyde: values.queryConfiguration.enableHyde,
-          enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+          enableHyde: false,
+          enableSummaryFilter: true,
         },
       };
-      createSessionMutation(requestBody);
+      createSessionAndAskQuestion(requestBody);
     }
   };
 
