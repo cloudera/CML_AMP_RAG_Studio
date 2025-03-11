@@ -67,6 +67,17 @@ class Session:
     query_configuration: SessionQueryConfiguration
 
 
+@dataclass
+class UpdatableSession:
+    id: int
+    name: str
+    dataSourceIds: List[int]
+    inferenceModel: str
+    rerankModel: str
+    responseChunks: int
+    queryConfiguration: SessionQueryConfiguration
+
+
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
 
@@ -92,7 +103,25 @@ def get_session(session_id: int) -> Session:
         ),
     )
 
+
 def update_session(session: Session) -> Session:
-    response = requests.post(url_template.format(session.id), data = json.dumps(session.__dict__, default=str), headers={'Content-Type': 'application/json'})
+    updatable_session = UpdatableSession(
+        id=session.id,
+        name=session.name,
+        dataSourceIds=session.data_source_ids or [],
+        inferenceModel=session.inference_model,
+        rerankModel=session.rerank_model,
+        responseChunks=session.response_chunks,
+        queryConfiguration={
+            "enableHyde": session.query_configuration.enable_hyde,
+            "enableSummaryFilter": session.query_configuration.enable_summary_filter,
+        },
+    )
+    response = requests.post(
+        url_template.format(updatable_session.id),
+        data=json.dumps(updatable_session.__dict__, default=str),
+        headers={"Content-Type": "application/json"},
+        timeout=10,  # Add a timeout of 10 seconds
+    )
     print(f"{response.text=}")
     return json.loads(response.text)

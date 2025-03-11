@@ -154,6 +154,14 @@ const updateSessionMutation = async (
   );
 };
 
+const renameSessionMutation = async (
+  sessionId: string,
+): Promise<string> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/rename-session`, {}
+  )
+}
+
 export const useDeleteSessionMutation = ({
   onSuccess,
   onError,
