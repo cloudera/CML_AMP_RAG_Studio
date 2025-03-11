@@ -39,7 +39,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Any
 
 import requests
 
@@ -86,6 +86,10 @@ def get_session(session_id: int) -> Session:
     response = requests.get(url_template.format(session_id))
     raise_for_http_error(response)
     data = body_to_json(response)
+    return session_from_java_response(data)
+
+
+def session_from_java_response(data: dict[str, Any]) -> Session:
     return Session(
         id=data["id"],
         name=data["name"],
@@ -121,7 +125,7 @@ def update_session(session: Session) -> Session:
         url_template.format(updatable_session.id),
         data=json.dumps(updatable_session.__dict__, default=str),
         headers={"Content-Type": "application/json"},
-        timeout=10,  # Add a timeout of 10 seconds
+        timeout=10,
     )
-    print(f"{response.text=}")
-    return json.loads(response.text)
+    raise_for_http_error(response)
+    return session_from_java_response(body_to_json(response))
