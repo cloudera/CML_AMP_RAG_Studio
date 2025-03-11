@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
@@ -90,3 +91,8 @@ def get_session(session_id: int) -> Session:
             enable_summary_filter=data["queryConfiguration"]["enableSummaryFilter"],
         ),
     )
+
+def update_session(session: Session) -> Session:
+    response = requests.post(url_template.format(session.id), data = json.dumps(session.__dict__, default=str), headers={'Content-Type': 'application/json'})
+    print(f"{response.text=}")
+    return json.loads(response.text)

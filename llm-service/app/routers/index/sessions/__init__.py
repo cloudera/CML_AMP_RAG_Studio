@@ -102,8 +102,9 @@ def rename_session(session_id: int) -> str:
 
     response = llm.complete(prompt=prompt)
     session_name = response.text.strip()
-
-    return session_name
+    session_metadata.name = session_name
+    updated_session = session_metadata_api.update_session(session_metadata)
+    return updated_session['name']
 
 
 @router.get(
