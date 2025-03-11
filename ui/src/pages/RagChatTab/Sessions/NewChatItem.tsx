@@ -39,11 +39,10 @@
 import { Flex } from "antd";
 import { MenuItem } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
 import Images from "src/components/images/Images.ts";
+import { useNavigate } from "@tanstack/react-router";
 
-export const newChatItem = (
-  showModal: () => void,
-  iconSize?: number,
-): MenuItem => {
+export const newChatItem = (iconSize?: number): MenuItem => {
+  const navigate = useNavigate();
   return [
     {
       key: "new",
@@ -53,7 +52,11 @@ export const newChatItem = (
           <Images.PlusCircle style={iconSize ? { fontSize: iconSize } : {}} />
         </Flex>
       ),
-      onClick: showModal,
+      onClick: () => {
+        void navigate({
+          to: "/sessions",
+        });
+      },
     },
   ];
 };

@@ -187,6 +187,7 @@ const RagChatQueryInput = () => {
         ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <Input
+            autoFocus
             placeholder={
               dataSourceSize && dataSourceSize > 0
                 ? "Ask a question"

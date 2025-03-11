@@ -53,10 +53,8 @@ import {
   cdlSlate800,
   cdlWhite,
 } from "src/cuix/variables.ts";
-import CreateSessionModal from "./CreateSessionModal";
 import { Dictionary } from "lodash";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import useModal from "src/utils/useModal.ts";
 import { sessionItems } from "pages/RagChatTab/Sessions/SessionItems.tsx";
 import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
@@ -95,12 +93,11 @@ export function SessionSidebar({
 }: {
   sessionsByDate: Dictionary<Session[]>;
 }) {
-  const { isModalOpen, setIsModalOpen, showModal, handleCancel } = useModal();
   const { activeSession } = useContext(RagChatContext);
   const [collapsed, setCollapsed] = useState(false);
 
   const openItems: ItemType[] = [
-    ...newChatItem(showModal, 18),
+    ...newChatItem(18),
     { type: "divider", key: "newChatDivider" },
     {
       type: "group",
@@ -115,7 +112,7 @@ export function SessionSidebar({
   ];
 
   const collapsedItems: ItemType[] = [
-    ...newChatItem(showModal, 24),
+    ...newChatItem(24),
     { type: "divider", key: "collapsedNewChatDivider" },
     {
       key: "history",
@@ -155,11 +152,6 @@ export function SessionSidebar({
               scrollbarWidth: "thin",
             }}
             items={collapsed ? collapsedItems : openItems}
-          />
-          <CreateSessionModal
-            isModalOpen={isModalOpen}
-            handleCancel={handleCancel}
-            setIsModalOpen={setIsModalOpen}
           />
         </Layout.Sider>
       </div>
