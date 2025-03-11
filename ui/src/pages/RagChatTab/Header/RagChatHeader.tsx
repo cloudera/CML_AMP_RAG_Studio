@@ -42,7 +42,7 @@ import { Button, Flex, Layout, Typography } from "antd";
 import ChatSettingsModal from "pages/RagChatTab/Settings/ChatSettingsModal.tsx";
 import useModal from "src/utils/useModal.ts";
 import SettingsIcon from "src/cuix/icons/SettingsIcon";
-import { cdlBlue600, cdlGray600 } from "src/cuix/variables.ts";
+import { cdlBlue600 } from "src/cuix/variables.ts";
 import CreateSessionModal from "../Sessions/CreateSessionModal";
 
 const { Header } = Layout;
@@ -91,7 +91,6 @@ export const RagChatHeader = ({
         <Button
           style={{ width: 140, alignItems: "center" }}
           onClick={handleOpenModal}
-          // disabled={!activeSession}
         >
           <Flex
             align="center"
