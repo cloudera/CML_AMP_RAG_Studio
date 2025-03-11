@@ -57,6 +57,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useGetLlmModels } from "src/api/modelsApi.ts";
 
 const RagChatQueryInput = () => {
+  const navigate = useNavigate();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     currentQuestionState: [, setCurrentQuestion],
@@ -64,12 +65,13 @@ const RagChatQueryInput = () => {
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
     activeSession,
+    firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
 
   const { data: models } = useGetLlmModels();
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
-  const [newSessionId, setNewSessionId] = useState<number>();
+  const [newSessionId, setNewSessionId] = useState(0);
 
   const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
@@ -78,7 +80,7 @@ const RagChatQueryInput = () => {
     isFetching: sampleQuestionsIsFetching,
   } = useSuggestQuestions({
     configuration,
-    session_id: sessionId ?? "",
+    session_id: sessionId && sessionId != "0" ? sessionId : "",
   });
 
   const chatMutation = useChatMutation({
@@ -93,16 +95,10 @@ const RagChatQueryInput = () => {
 
   const newChatMutation = useChatMutation({
     onSuccess: () => {
-      setUserInput("");
-      setCurrentQuestion("");
-      if (newSessionId) {
-        navigate({
-          to: "/sessions/$sessionId",
-          params: { sessionId: newSessionId.toString() },
-        }).catch((reason: unknown) => {
-          messageQueue.error(String(reason));
-        });
-      }
+      return navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: newSessionId.toString() },
+      });
     },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
@@ -110,18 +106,22 @@ const RagChatQueryInput = () => {
   });
 
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
     onSuccess: async (data) => {
       await queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
-        .finally(() => {
+        .then(() => {
           setNewSessionId(data.id);
+          setFirstQuestion(userInput);
+
           newChatMutation.mutate({
             query: userInput,
             session_id: data.id.toString(),
             configuration: createQueryConfiguration(excludeKnowledgeBase),
           });
+        })
+        .catch((x: unknown) => {
+          messageQueue.error(String(x));
         });
     },
     onError: () => {

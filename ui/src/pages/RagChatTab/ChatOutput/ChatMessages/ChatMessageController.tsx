@@ -39,11 +39,15 @@
 import { useContext, useEffect, useRef } from "react";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { Flex, Image, Typography } from "antd";
+import Images from "src/components/images/Images.ts";
+import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 
 const ChatMessageController = () => {
   const {
     chatHistoryQuery: { chatHistory },
     activeSession,
+    firstQuestionState: [firstQuestion],
   } = useContext(RagChatContext);
   const scrollEl = useRef<HTMLDivElement>(null);
   const dataSourceId = activeSession?.dataSourceIds[0];
@@ -55,7 +59,24 @@ const ChatMessageController = () => {
       }
     }, 50);
   }, [scrollEl.current, chatHistory.length, dataSourceId]);
-
+  if (firstQuestion) {
+    return <PendingRagOutputSkeleton question={firstQuestion} />;
+  }
+  if (chatHistory.length == 0) {
+    return (
+      <Flex vertical align="center" gap={16}>
+        <Image
+          src={Images.BrandTalking}
+          alt="Machines Chatting"
+          style={{ width: 80 }}
+          preview={false}
+        />
+        <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+          Welcome to Chatbot Studio
+        </Typography.Title>
+      </Flex>
+    );
+  }
   return (
     <div data-testid="chat-message-controller">
       {chatHistory.map((historyMessage, index) => (

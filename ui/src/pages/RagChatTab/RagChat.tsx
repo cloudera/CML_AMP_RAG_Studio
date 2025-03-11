@@ -38,10 +38,10 @@
 
 import { Layout } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import ChatBodyController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatBodyController.tsx";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
+import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
 
 const { Footer, Content } = Layout;
 
@@ -69,7 +69,7 @@ const RagChat = () => {
           paddingRight: 20,
         }}
       >
-        <ChatBodyController />
+        <ChatMessageController />
       </Content>
       <Footer
         style={{

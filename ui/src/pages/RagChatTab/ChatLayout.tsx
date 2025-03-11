@@ -67,6 +67,7 @@ function ChatLayout() {
 
   const activeSession = getSessionForSessionId(sessionId, sessions);
   const dataSourceId = activeSession?.dataSourceIds[0];
+  const [firstQuestion, setFirstQuestion] = useState<string>("");
 
   const dataSourceSize = useMemo(() => {
     return (
@@ -98,6 +99,7 @@ function ChatLayout() {
           dataSourcesStatus: dataSourcesStatus,
         },
         activeSession,
+        firstQuestionState: [firstQuestion, setFirstQuestion],
       }}
     >
       <Layout
