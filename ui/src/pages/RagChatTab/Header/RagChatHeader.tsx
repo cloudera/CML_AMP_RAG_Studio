@@ -43,12 +43,13 @@ import ChatSettingsModal from "pages/RagChatTab/Settings/ChatSettingsModal.tsx";
 import useModal from "src/utils/useModal.ts";
 import SettingsIcon from "src/cuix/icons/SettingsIcon";
 import { cdlBlue600, cdlGray600 } from "src/cuix/variables.ts";
+import CreateSessionModal from "../Sessions/CreateSessionModal";
 
 const { Header } = Layout;
 
 function getHeaderTitle(
   activeSession?: Session,
-  currentDataSource?: DataSourceType,
+  currentDataSource?: DataSourceType
 ): string {
   if (!activeSession) {
     return "";
@@ -90,31 +91,34 @@ export const RagChatHeader = ({
         <Button
           style={{ width: 140, alignItems: "center" }}
           onClick={handleOpenModal}
-          disabled={!activeSession}
+          // disabled={!activeSession}
         >
           <Flex
             align="center"
             gap={5}
             style={{ margin: 0, padding: 0, height: "100%" }}
           >
-            <SettingsIcon
-              color={activeSession ? cdlBlue600 : cdlGray600}
-              fontSize={18}
-            />
-            <Typography.Text
-              style={{ color: activeSession ? cdlBlue600 : cdlGray600 }}
-            >
+            <SettingsIcon color={cdlBlue600} fontSize={18} />
+            <Typography.Text style={{ color: cdlBlue600 }}>
               Chat Settings
             </Typography.Text>
           </Flex>
         </Button>
       </Flex>{" "}
-      <ChatSettingsModal
-        open={settingsModal.isModalOpen}
-        closeModal={() => {
-          settingsModal.setIsModalOpen(false);
-        }}
-      />
+      {activeSession ? (
+        <ChatSettingsModal
+          open={settingsModal.isModalOpen}
+          closeModal={() => {
+            settingsModal.setIsModalOpen(false);
+          }}
+        />
+      ) : (
+        <CreateSessionModal
+          isModalOpen={settingsModal.isModalOpen}
+          handleCancel={settingsModal.handleCancel}
+          setIsModalOpen={settingsModal.setIsModalOpen}
+        />
+      )}
     </Header>
   );
 };

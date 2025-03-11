@@ -56,6 +56,7 @@ import {
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { ac } from "vitest/dist/chunks/reporters.nr4dxCkA.js";
 
 const RagChatQueryInput = () => {
   const navigate = useNavigate();
@@ -86,6 +87,9 @@ const RagChatQueryInput = () => {
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
+      if (activeSession && activeSession.name === "") {
+        renameSessionMutation.mutate(activeSession.id.toString());
+      }
       setUserInput("");
       setCurrentQuestion("");
     },

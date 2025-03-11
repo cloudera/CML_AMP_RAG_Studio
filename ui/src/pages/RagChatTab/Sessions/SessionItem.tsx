@@ -106,7 +106,9 @@ const SessionItem = ({ session }: { session: Session }) => {
       }}
     >
       <Tooltip title={session.name.length > 15 ? session.name : ""}>
-        <Typography.Text ellipsis>{session.name}</Typography.Text>
+        <Typography.Text ellipsis>
+          {session.name === "" ? "New Chat" : session.name}
+        </Typography.Text>
       </Tooltip>
       <Popover
         style={{ padding: 0, margin: 0 }}
