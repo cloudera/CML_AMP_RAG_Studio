@@ -51,6 +51,7 @@ import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import {
   CreateSessionRequest,
   useCreateSessionMutation,
+  useRenameNameMutation,
 } from "src/api/sessionApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
@@ -95,12 +96,24 @@ const RagChatQueryInput = () => {
 
   const newChatMutation = useChatMutation({
     onSuccess: () => {
+      if (newSessionId) {
+        renameSessionMutation.mutate(newSessionId.toString());
+      }
       return navigate({
         to: "/sessions/$sessionId",
         params: { sessionId: newSessionId.toString() },
       });
     },
     onError: (res: Error) => {
+      messageQueue.error(res.toString());
+    },
+  });
+
+  const renameSessionMutation = useRenameNameMutation({
+    onSuccess: (name) => {
+      messageQueue.success(`session renamed to ${name}`);
+    },
+    onError: (res) => {
       messageQueue.error(res.toString());
     },
   });
@@ -142,7 +155,7 @@ const RagChatQueryInput = () => {
       });
     } else if (models && models.length > 0) {
       const requestBody: CreateSessionRequest = {
-        name: userInput,
+        name: "New Chat",
         dataSourceIds: [],
         inferenceModel: models[0].model_id,
         responseChunks: 10,

@@ -75,7 +75,7 @@ class UpdatableSession:
     inferenceModel: str
     rerankModel: str
     responseChunks: int
-    queryConfiguration: SessionQueryConfiguration
+    queryConfiguration: dict[str, bool]
 
 
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
