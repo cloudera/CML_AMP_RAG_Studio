@@ -178,13 +178,15 @@ const RagChatQueryInput = () => {
   return (
     <div>
       <Flex vertical align="center" gap={10}>
-        {chatHistory.length > 0 ? (
+        {chatHistory.length > 0 || dataSourceSize ? (
           <SuggestedQuestionsFooter
             questions={sampleQuestions?.suggested_questions ?? []}
             isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
             handleChat={handleChat}
             condensedQuestion={
-              chatHistory[chatHistory.length - 1].condensed_question
+              chatHistory.length > 0
+                ? chatHistory[chatHistory.length - 1].condensed_question
+                : undefined
             }
           />
         ) : null}
