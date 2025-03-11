@@ -40,10 +40,11 @@ import json
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie
+from fastapi import APIRouter, Cookie, HTTPException
 from pydantic import BaseModel
 
 from .... import exceptions
+from ....services import models
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
@@ -52,6 +53,57 @@ from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_ta
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+
+
+@router.post(
+    "/rename-session",
+    summary="Rename the session using AI",
+)
+@exceptions.propagates
+def rename_session(session_id: int) -> str:
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id=session_id)
+    if not chat_history:
+        raise HTTPException(status_code=400, detail="No chat history found")
+    first_interaction = chat_history[0].rag_message
+    session_metadata = session_metadata_api.get_session(session_id)
+    llm = models.LLM.get(session_metadata.inference_model)
+    prompt = f"""
+    You are tasked with suggesting an apt name for a chat session based on its first interaction. Only return the name of the session. 
+
+    ========================================
+    First Interaction:
+    ```
+    User: What is you name?
+    Assistant: My name is Assistant.
+    ```
+
+    Session Name:
+    Introduction
+
+    ========================================
+    First Interaction:
+    ```
+    User: What do you know about the Moon?
+    Assistant: The Moon is Earth's only natural satellite. It is the fifth-largest satellite in the Solar System, and by far the largest among planetary satellites relative to the size of the planet that it orbits.
+    ```
+
+    Session Name:
+    Facts about the Moon
+
+    ========================================
+    First Interaction:
+    ```
+    User: {first_interaction.user}
+    Assistant: {first_interaction.assistant}
+    ```
+
+    Session Name: 
+    """
+
+    response = llm.complete(prompt=prompt)
+    session_name = response.text.strip()
+
+    return session_name
 
 
 @router.get(
