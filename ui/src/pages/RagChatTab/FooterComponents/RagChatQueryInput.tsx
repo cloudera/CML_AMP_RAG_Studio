@@ -39,26 +39,17 @@
 import { Button, Flex, Input, Switch, Tooltip } from "antd";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import messageQueue from "src/utils/messageQueue.ts";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import { createQueryConfiguration } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
+import useChatActions from "src/utils/useChatActions.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
-import {
-  CreateSessionRequest,
-  useCreateSessionMutation,
-  useRenameNameMutation,
-} from "src/api/sessionApi.ts";
-import { QueryKeys } from "src/api/utils.ts";
-import { useQueryClient } from "@tanstack/react-query";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
 
 const RagChatQueryInput = () => {
-  const navigate = useNavigate();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { chatHistory },
@@ -68,10 +59,7 @@ const RagChatQueryInput = () => {
     firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
 
-  const { data: models } = useGetLlmModels();
-  const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
-  const [newSessionId, setNewSessionId] = useState<number>();
 
   const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
@@ -83,89 +71,17 @@ const RagChatQueryInput = () => {
     session_id: sessionId ?? "",
   });
 
-  function chatOnSuccess() {
-    return () => {
-      if (newSessionId) {
-        renameSessionMutation.mutate(newSessionId.toString());
-        return navigate({
-          to: "/sessions/$sessionId",
-          params: { sessionId: newSessionId.toString() },
-        });
-      }
-      if (activeSession && activeSession.name === "") {
-        renameSessionMutation.mutate(activeSession.id.toString());
-      }
-      setUserInput("");
-    };
-  }
-
-  const renameSessionMutation = useRenameNameMutation({
-    onSuccess: (name) => {
-      messageQueue.success(`session renamed to ${name}`);
-    },
-    onError: (res) => {
-      messageQueue.error(res.toString());
-    },
+  const {
+    userInput,
+    setUserInput,
+    handleChat,
+    chatMutation,
+  } = useChatActions({
+    sessionId,
+    activeSession,
+    excludeKnowledgeBase,
+    setFirstQuestion,
   });
-
-  const chatMutation = useChatMutation({
-    onSuccess: chatOnSuccess(),
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
-  const queryClient = useQueryClient();
-  const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
-    onSuccess: async (session) => {
-      await queryClient
-        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
-        .then(() => {
-          setNewSessionId(session.id);
-          setFirstQuestion(userInput);
-
-          chatMutation.mutate({
-            query: userInput,
-            session_id: session.id.toString(),
-            configuration: createQueryConfiguration(excludeKnowledgeBase),
-          });
-        })
-        .catch((x: unknown) => {
-          messageQueue.error(String(x));
-        });
-    },
-    onError: () => {
-      messageQueue.error("Session creation failed.");
-    },
-  });
-
-  const reallyHandleChat = (userInput: string) => {
-    if (activeSession && sessionId) {
-      chatMutation.mutate({
-        query: userInput,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
-    } else if (models && models.length > 0) {
-      const requestBody: CreateSessionRequest = {
-        name: "New Chat",
-        dataSourceIds: [],
-        inferenceModel: models[0].model_id,
-        responseChunks: 10,
-        queryConfiguration: {
-          enableHyde: false,
-          enableSummaryFilter: true,
-        },
-      };
-      createSessionAndAskQuestion(requestBody);
-    }
-  };
-  const handleChat = (userInput: string) => {
-    if (userInput.trim().length <= 0) {
-      return;
-    }
-    reallyHandleChat(userInput);
-  };
 
   const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
     setExcludeKnowledgeBase(() => !checked);

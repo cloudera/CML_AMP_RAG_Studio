@@ -40,8 +40,8 @@ import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import messageQueue from "src/utils/messageQueue.ts";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import { createQueryConfiguration } from "src/api/chatApi.ts";
+import useChatActions from "src/utils/useChatActions.ts";
 
 const SAMPLE_QUESTIONS = [
   "How does Cloudera Machine Learning handle data preparation and ingestion from various data sources?",
@@ -70,6 +70,7 @@ const SuggestedQuestionsCards = () => {
   const {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
+    firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id.toString();
   const { data, isFetching: suggestedQuestionsIsFetching } =
@@ -78,8 +79,14 @@ const SuggestedQuestionsCards = () => {
       session_id: sessionId ?? "",
     });
 
-  let suggestedQuestions = data?.suggested_questions ?? [];
+  const { handleChat, chatMutation } = useChatActions({
+    sessionId,
+    activeSession,
+    excludeKnowledgeBase,
+    setFirstQuestion,
+  });
 
+  let suggestedQuestions = data?.suggested_questions ?? [];
   if (!sessionId) {
     suggestedQuestions = SAMPLE_QUESTIONS.sort(() => 0.5 - Math.random()).slice(
       0,
@@ -87,28 +94,14 @@ const SuggestedQuestionsCards = () => {
     );
   }
 
-  const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
   const handleAskSample = (suggestedQuestion: string) => {
-    if (
-      activeSession &&
-      activeSession.dataSourceIds.length > 0 &&
-      suggestedQuestion.length > 0 &&
-      sessionId
-    ) {
-      chatMutation({
-        query: suggestedQuestion,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
+    if (suggestedQuestion.length > 0) {
+      setFirstQuestion(suggestedQuestion);
+      handleChat(suggestedQuestion);
     }
   };
 
-  if (suggestedQuestionsIsFetching || askRagIsPending) {
+  if (suggestedQuestionsIsFetching || chatMutation.isPending) {
     return (
       <Flex gap={10} wrap="wrap" justify="space-between">
         {Array.from({ length: 4 }).map((_, index) => (
