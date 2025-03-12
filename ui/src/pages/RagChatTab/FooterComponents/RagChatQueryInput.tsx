@@ -99,18 +99,18 @@ const RagChatQueryInput = () => {
     };
   }
 
-  const chatMutation = useChatMutation({
-    onSuccess: chatOnSuccess(),
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
   const renameSessionMutation = useRenameNameMutation({
     onSuccess: (name) => {
       messageQueue.success(`session renamed to ${name}`);
     },
     onError: (res) => {
+      messageQueue.error(res.toString());
+    },
+  });
+
+  const chatMutation = useChatMutation({
+    onSuccess: chatOnSuccess(),
+    onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
   });
@@ -139,10 +139,7 @@ const RagChatQueryInput = () => {
     },
   });
 
-  const handleChat = (userInput: string) => {
-    if (userInput.trim().length <= 0) {
-      return;
-    }
+  const reallyHandleChat = (userInput: string) => {
     if (activeSession && sessionId) {
       chatMutation.mutate({
         query: userInput,
@@ -162,6 +159,12 @@ const RagChatQueryInput = () => {
       };
       createSessionAndAskQuestion(requestBody);
     }
+  };
+  const handleChat = (userInput: string) => {
+    if (userInput.trim().length <= 0) {
+      return;
+    }
+    reallyHandleChat(userInput);
   };
 
   const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {

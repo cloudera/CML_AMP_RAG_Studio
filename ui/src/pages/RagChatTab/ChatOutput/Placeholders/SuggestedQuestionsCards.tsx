@@ -43,20 +43,49 @@ import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 
+const SAMPLE_QUESTIONS = [
+  "How does Cloudera Machine Learning handle data preparation and ingestion from various data sources?",
+  "What data formats are supported by Cloudera Machine Learning, and how are they processed?",
+  "Can Cloudera Machine Learning handle large-scale data ingestion and processing?",
+  "How does Cloudera Machine Learning support data quality and data governance?",
+  "Can Cloudera Machine Learning integrate with other data preparation and ingestion tools?",
+  "What machine learning algorithms are supported by Cloudera Machine Learning?",
+  "How does Cloudera Machine Learning support model development and training, including hyperparameter tuning?",
+  "Can Cloudera Machine Learning handle large-scale model training and deployment?",
+  "How does Cloudera Machine Learning support model explainability and interpretability?",
+  "Can Cloudera Machine Learning integrate with other machine learning frameworks and tools?",
+  "How does Cloudera Machine Learning support model deployment and serving, including model scoring and prediction?",
+  "Can Cloudera Machine Learning handle high-volume and high-velocity data streams?",
+  "How does Cloudera Machine Learning support model updates and retraining?",
+  "Can Cloudera Machine Learning integrate with other model serving and deployment platforms?",
+  "What are the security and access controls for model deployment and serving in Cloudera Machine Learning?",
+  "What security features are built into Cloudera Machine Learning, including data encryption and access controls?",
+  "How does Cloudera Machine Learning support data governance and compliance, including regulatory requirements?",
+  "Can Cloudera Machine Learning handle sensitive data, such as PII or PHI?",
+  "How does Cloudera Machine Learning support auditing and logging?",
+  "Can Cloudera Machine Learning integrate with other security and governance tools?",
+];
+
 const SuggestedQuestionsCards = () => {
   const {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id.toString();
-  const {
-    data,
-    isPending: suggestedQuestionsIsPending,
-    isFetching: suggestedQuestionsIsFetching,
-  } = useSuggestQuestions({
-    configuration: createQueryConfiguration(excludeKnowledgeBase),
-    session_id: sessionId ?? "",
-  });
+  const { data, isFetching: suggestedQuestionsIsFetching } =
+    useSuggestQuestions({
+      configuration: createQueryConfiguration(excludeKnowledgeBase),
+      session_id: sessionId ?? "",
+    });
+
+  let suggestedQuestions = data?.suggested_questions ?? [];
+
+  if (!sessionId) {
+    suggestedQuestions = SAMPLE_QUESTIONS.sort(() => 0.5 - Math.random()).slice(
+      0,
+      4,
+    );
+  }
 
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
     onError: (res: Error) => {
@@ -79,11 +108,7 @@ const SuggestedQuestionsCards = () => {
     }
   };
 
-  if (
-    suggestedQuestionsIsPending ||
-    askRagIsPending ||
-    suggestedQuestionsIsFetching
-  ) {
+  if (suggestedQuestionsIsFetching || askRagIsPending) {
     return (
       <Flex gap={10} wrap="wrap" justify="space-between">
         {Array.from({ length: 4 }).map((_, index) => (
@@ -102,7 +127,7 @@ const SuggestedQuestionsCards = () => {
 
   return (
     <Flex gap={10} wrap="wrap" justify="space-between">
-      {data?.suggested_questions.map((question, index) => {
+      {suggestedQuestions.map((question, index) => {
         return (
           <Card
             key={question}
