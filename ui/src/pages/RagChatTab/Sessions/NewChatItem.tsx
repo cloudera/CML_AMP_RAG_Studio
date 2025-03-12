@@ -53,9 +53,9 @@ export const newChatItem = (iconSize?: number): MenuItem => {
         </Flex>
       ),
       onClick: () => {
-        void navigate({
+        navigate({
           to: "/sessions",
-        });
+        }).catch(() => null);
       },
     },
   ];

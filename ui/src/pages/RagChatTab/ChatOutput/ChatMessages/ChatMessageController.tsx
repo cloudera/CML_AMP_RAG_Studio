@@ -42,15 +42,15 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { Flex, Image, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
+import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory },
+    chatHistoryQuery: { chatHistory, chatHistoryStatus },
     activeSession,
     firstQuestionState: [firstQuestion],
   } = useContext(RagChatContext);
   const scrollEl = useRef<HTMLDivElement>(null);
-  const dataSourceId = activeSession?.dataSourceIds[0];
 
   useEffect(() => {
     setTimeout(() => {
@@ -58,10 +58,16 @@ const ChatMessageController = () => {
         scrollEl.current.scrollIntoView({ behavior: "auto" });
       }
     }, 50);
-  }, [scrollEl.current, chatHistory.length, dataSourceId]);
+  }, [scrollEl.current, chatHistory.length, activeSession?.id]);
+
+  if (chatHistoryStatus === "pending") {
+    return <ChatLoading />;
+  }
+
   if (firstQuestion) {
     return <PendingRagOutputSkeleton question={firstQuestion} />;
   }
+
   if (chatHistory.length == 0) {
     return (
       <Flex vertical align="center" gap={16}>

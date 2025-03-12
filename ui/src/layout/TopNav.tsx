@@ -56,29 +56,21 @@ const TopNav: React.FC = () => {
   const navigate = useNavigate();
 
   const navToRagApp = () => {
-    navigate({ to: "/sessions" })
-      .then(() => null)
-      .catch(() => null);
+    navigate({ to: "/sessions" }).catch(() => null);
     return;
   };
 
   const navToData = () => {
-    navigate({ to: "/data" })
-      .then(() => null)
-      .catch(() => null);
+    navigate({ to: "/data" }).catch(() => null);
     return;
   };
 
   const navToAnalytics = () => {
-    navigate({ to: "/analytics" })
-      .then(() => null)
-      .catch(() => null);
+    navigate({ to: "/analytics" }).catch(() => null);
   };
 
   const navToModels = () => {
-    navigate({ to: "/models" })
-      .then(() => null)
-      .catch(() => null);
+    navigate({ to: "/models" }).catch(() => null);
   };
 
   const TechPreviewItem = () => {
