@@ -38,10 +38,18 @@
 
 import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { createQueryConfiguration } from "src/api/chatApi.ts";
-import useChatActions from "src/utils/useChatActions.ts";
+import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  CreateSessionRequest,
+  useCreateSessionMutation,
+  useRenameNameMutation,
+} from "src/api/sessionApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { QueryKeys } from "src/api/utils.ts";
 
 const SAMPLE_QUESTIONS = [
   "How does Cloudera Machine Learning handle data preparation and ingestion from various data sources?",
@@ -73,17 +81,99 @@ const SuggestedQuestionsCards = () => {
     firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id.toString();
+  const [userQuestion, setUserQuestion] = useState<string>();
   const { data, isFetching: suggestedQuestionsIsFetching } =
     useSuggestQuestions({
       configuration: createQueryConfiguration(excludeKnowledgeBase),
       session_id: sessionId ?? "",
     });
 
-  const { handleChat, chatMutation } = useChatActions({
-    sessionId,
-    activeSession,
-    excludeKnowledgeBase,
-    setFirstQuestion,
+  const navigate = useNavigate();
+  const [newSessionId, setNewSessionId] = useState<number>();
+  const queryClient = useQueryClient();
+
+  const handleChat = () => {
+    if (!userQuestion || userQuestion.trim().length <= 0) {
+      return;
+    }
+    console.log(`First Question: ${String(userQuestion)}`);
+    if (activeSession && sessionId && userQuestion) {
+      chatMutation.mutate({
+        query: userQuestion,
+        session_id: sessionId,
+        configuration: createQueryConfiguration(excludeKnowledgeBase),
+      });
+    } else {
+      const requestBody: CreateSessionRequest = {
+        name: "New Chat",
+        dataSourceIds: [],
+        inferenceModel: undefined,
+        responseChunks: 10,
+        queryConfiguration: {
+          enableHyde: false,
+          enableSummaryFilter: true,
+        },
+      };
+      mutate(requestBody);
+    }
+  };
+
+  useEffect(() => {
+    console.log("using the effect!");
+    if (userQuestion) {
+      handleChat();
+    }
+  }, [userQuestion]);
+
+  function chatOnSuccess() {
+    if (newSessionId) {
+      renameSessionMutation.mutate(newSessionId.toString());
+      return navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: newSessionId.toString() },
+      });
+    }
+    if (activeSession && activeSession.name === "") {
+      renameSessionMutation.mutate(activeSession.id.toString());
+    }
+  }
+
+  const renameSessionMutation = useRenameNameMutation({
+    onSuccess: (name) => {
+      messageQueue.success(`session renamed to ${name}`);
+    },
+    onError: (res) => {
+      messageQueue.error(res.toString());
+    },
+  });
+
+  const chatMutation = useChatMutation({
+    onSuccess: chatOnSuccess,
+    onError: (res: Error) => {
+      messageQueue.error(res.toString());
+    },
+  });
+
+  const { mutate } = useCreateSessionMutation({
+    onSuccess: async (session) => {
+      await queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
+        .then(() => {
+          setNewSessionId(session.id);
+
+          chatMutation.mutate({
+            query: userQuestion ?? "",
+            session_id: session.id.toString(),
+            configuration: createQueryConfiguration(excludeKnowledgeBase),
+          });
+        })
+        .catch((x: unknown) => {
+          messageQueue.error(String(x));
+        });
+    },
+    onError: () => {
+      messageQueue.error("Session creation failed.");
+    },
   });
 
   let suggestedQuestions = data?.suggested_questions ?? [];
@@ -96,8 +186,9 @@ const SuggestedQuestionsCards = () => {
 
   const handleAskSample = (suggestedQuestion: string) => {
     if (suggestedQuestion.length > 0) {
+      console.log(`setting first question to ${suggestedQuestion}`);
       setFirstQuestion(suggestedQuestion);
-      handleChat(suggestedQuestion);
+      setUserQuestion(suggestedQuestion);
     }
   };
 
@@ -147,5 +238,4 @@ const SuggestedQuestionsCards = () => {
     </Flex>
   );
 };
-
 export default SuggestedQuestionsCards;
