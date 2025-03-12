@@ -39,7 +39,7 @@
 import { Button, Flex, Input, Switch, Tooltip } from "antd";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { createQueryConfiguration } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
@@ -70,13 +70,9 @@ const RagChatQueryInput = () => {
     configuration,
     session_id: sessionId ?? "",
   });
+  const [userInput, setUserInput] = useState("");
 
-  const {
-    userInput,
-    setUserInput,
-    handleChat,
-    chatMutation,
-  } = useChatActions({
+  const { handleChat, chatMutation } = useChatActions({
     sessionId,
     activeSession,
     excludeKnowledgeBase,

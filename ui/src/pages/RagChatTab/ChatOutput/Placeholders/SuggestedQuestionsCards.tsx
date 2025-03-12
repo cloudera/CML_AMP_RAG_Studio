@@ -79,7 +79,7 @@ const SuggestedQuestionsCards = () => {
       session_id: sessionId ?? "",
     });
 
-  const { handleChat, chatMutation, setUserInput } = useChatActions({
+  const { handleChat, chatMutation } = useChatActions({
     sessionId,
     activeSession,
     excludeKnowledgeBase,
@@ -90,14 +90,13 @@ const SuggestedQuestionsCards = () => {
   if (!sessionId) {
     suggestedQuestions = SAMPLE_QUESTIONS.sort(() => 0.5 - Math.random()).slice(
       0,
-      4
+      4,
     );
   }
 
   const handleAskSample = (suggestedQuestion: string) => {
     if (suggestedQuestion.length > 0) {
       setFirstQuestion(suggestedQuestion);
-      setUserInput(suggestedQuestion);
       handleChat(suggestedQuestion);
     }
   };

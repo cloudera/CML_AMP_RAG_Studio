@@ -40,7 +40,11 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
-import { CreateSessionRequest, useCreateSessionMutation, useRenameNameMutation } from "src/api/sessionApi.ts";
+import {
+  CreateSessionRequest,
+  useCreateSessionMutation,
+  useRenameNameMutation,
+} from "src/api/sessionApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Session } from "src/api/sessionApi.ts";
@@ -64,17 +68,17 @@ const useChatActions = ({
   const queryClient = useQueryClient();
 
   function chatOnSuccess() {
-      if (newSessionId) {
-        renameSessionMutation.mutate(newSessionId.toString());
-        return navigate({
-          to: "/sessions/$sessionId",
-          params: { sessionId: newSessionId.toString() },
-        });
-      }
-      if (activeSession && activeSession.name === "") {
-        renameSessionMutation.mutate(activeSession.id.toString());
-      }
-      setUserInput("");
+    if (newSessionId) {
+      renameSessionMutation.mutate(newSessionId.toString());
+      return navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: newSessionId.toString() },
+      });
+    }
+    if (activeSession && activeSession.name === "") {
+      renameSessionMutation.mutate(activeSession.id.toString());
+    }
+    setUserInput("");
   }
 
   const renameSessionMutation = useRenameNameMutation({
@@ -93,7 +97,7 @@ const useChatActions = ({
     },
   });
 
-  const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
+  const { mutate } = useCreateSessionMutation({
     onSuccess: async (session) => {
       await queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
@@ -116,14 +120,23 @@ const useChatActions = ({
     },
   });
 
-  const reallyHandleChat = (input: string) => {
+  const createSessionAndAskQuestion = (
+    requestBody: CreateSessionRequest,
+    question: string,
+  ) => {
+    setUserInput(question);
+    mutate(requestBody);
+  };
+
+  const reallyHandleChat = (question: string) => {
     if (activeSession && sessionId) {
       chatMutation.mutate({
-        query: input,
+        query: question,
         session_id: sessionId,
         configuration: createQueryConfiguration(excludeKnowledgeBase),
       });
-    } else if (input.trim().length > 0) {
+    } else if (question.trim().length > 0) {
+      setUserInput(question);
       const requestBody: CreateSessionRequest = {
         name: "New Chat",
         dataSourceIds: [],
@@ -134,7 +147,7 @@ const useChatActions = ({
           enableSummaryFilter: true,
         },
       };
-      createSessionAndAskQuestion(requestBody);
+      createSessionAndAskQuestion(requestBody, question);
     }
   };
 
@@ -146,8 +159,6 @@ const useChatActions = ({
   };
 
   return {
-    userInput,
-    setUserInput,
     handleChat,
     chatMutation,
   };
