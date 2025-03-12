@@ -64,7 +64,6 @@ const useChatActions = ({
   const queryClient = useQueryClient();
 
   function chatOnSuccess() {
-    return () => {
       if (newSessionId) {
         renameSessionMutation.mutate(newSessionId.toString());
         return navigate({
@@ -76,7 +75,6 @@ const useChatActions = ({
         renameSessionMutation.mutate(activeSession.id.toString());
       }
       setUserInput("");
-    };
   }
 
   const renameSessionMutation = useRenameNameMutation({
@@ -89,7 +87,7 @@ const useChatActions = ({
   });
 
   const chatMutation = useChatMutation({
-    onSuccess: chatOnSuccess(),
+    onSuccess: chatOnSuccess,
     onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
