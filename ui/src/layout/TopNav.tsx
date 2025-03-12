@@ -55,22 +55,8 @@ const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
 
-  const navToRagApp = () => {
-    navigate({ to: "/sessions" }).catch(() => null);
-    return;
-  };
-
-  const navToData = () => {
-    navigate({ to: "/data" }).catch(() => null);
-    return;
-  };
-
-  const navToAnalytics = () => {
-    navigate({ to: "/analytics" }).catch(() => null);
-  };
-
-  const navToModels = () => {
-    navigate({ to: "/models" }).catch(() => null);
+  const navigateTo = (path: string) => () => {
+    navigate({ to: path }).catch(() => null);
   };
 
   const TechPreviewItem = () => {
@@ -114,13 +100,13 @@ const TopNav: React.FC = () => {
     getItem(
       <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
-      navToRagApp,
+      navigateTo("/sessions"),
       <DesktopOutlined />,
     ),
     getItem(
       <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
-      navToData,
+      navigateTo("/data"),
       <DatabaseFilled />,
     ),
   ];
@@ -128,14 +114,14 @@ const TopNav: React.FC = () => {
   const models = getItem(
     <span data-testid="models-nav">Models</span>,
     "models",
-    navToModels,
+    navigateTo("/models"),
     <CloudOutlined />,
   );
 
   const analyticsItem = getItem(
     <span data-testid="analytics-nav">Analytics</span>,
     "analytics",
-    navToAnalytics,
+    navigateTo("/analytics"),
     <LineChartOutlined />,
   );
 
