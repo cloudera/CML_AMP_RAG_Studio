@@ -39,9 +39,10 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Any
+from typing import List, Any, Optional, Annotated
 
 import requests
+from fastapi import Cookie
 
 from app.services.utils import raise_for_http_error, body_to_json
 
@@ -68,6 +69,15 @@ class Session:
 
 
 @dataclass
+class NewSession:
+    name: str
+    data_source_ids: List[int]
+    inference_model: Optional[str]
+    response_chunks: int
+    query_configuration: SessionQueryConfiguration
+
+
+@dataclass
 class UpdatableSession:
     id: int
     name: str
@@ -87,6 +97,32 @@ def get_session(session_id: int) -> Session:
     raise_for_http_error(response)
     data = body_to_json(response)
     return session_from_java_response(data)
+
+
+def session_to_java_response(session: NewSession) -> dict[str, Any]:
+    return {
+        "name": session.name,
+        "dataSourceIds": session.data_source_ids,
+        "inferenceModel": session.inference_model,
+        "responseChunks": session.response_chunks,
+        "queryConfiguration": {
+            "enableHyde": session.query_configuration.enable_hyde,
+            "enableSummaryFilter": session.query_configuration.enable_summary_filter,
+        },
+    }
+
+
+def create_session(session: NewSession, user_token: Optional[str] = None) -> Session:
+    response = requests.post(
+        BACKEND_BASE_URL + "/api/v1/rag/sessions",
+        data=json.dumps(session_to_java_response(session), default=str),
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+        cookies={"_basusertoken": user_token},
+    )
+    raise_for_http_error(response)
+    print(response.text)
+    return session_from_java_response(body_to_json(response))
 
 
 def session_from_java_response(data: dict[str, Any]) -> Session:

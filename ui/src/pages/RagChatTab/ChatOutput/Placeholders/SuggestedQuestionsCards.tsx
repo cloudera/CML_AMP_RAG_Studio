@@ -79,11 +79,11 @@ const SuggestedQuestionsCards = () => {
       session_id: sessionId ?? "",
     });
 
+  // todo: how to handle first question
   const { handleChat, chatMutation } = useChatActions({
     sessionId,
     activeSession,
     excludeKnowledgeBase,
-    setFirstQuestion,
   });
 
   let suggestedQuestions = data?.suggested_questions ?? [];

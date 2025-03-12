@@ -38,7 +38,7 @@
 import base64
 import json
 import logging
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Cookie
 from pydantic import BaseModel
@@ -48,6 +48,7 @@ from ....rag_types import RagPredictConfiguration
 from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
+from ....services.metadata_apis.session_metadata_api import Session, NewSession
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
 
@@ -152,6 +153,7 @@ def chat(
     _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
     user_name = parse_jwt_cookie(_basusertoken)
+
     session = session_metadata_api.get_session(session_id)
 
     configuration = request.configuration or RagPredictConfiguration()

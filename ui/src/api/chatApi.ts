@@ -72,7 +72,7 @@ export interface QueryConfiguration {
 
 export interface ChatMutationRequest {
   query: string;
-  session_id: string;
+  session_id?: string;
   configuration: QueryConfiguration;
 }
 
@@ -82,6 +82,7 @@ interface ChatHistoryRequestType {
 
 export interface ChatMessageType {
   id: string;
+  session_id: number;
   source_nodes: SourceNode[];
   inference_model?: string;
   rag_message: RagMessageV2;
@@ -109,6 +110,7 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
       assistant: "",
     },
     evaluations: [],
+    session_id: 0,
     timestamp: Date.now(),
   };
 };
@@ -168,24 +170,28 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
-      queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
-        (cachedData) =>
-          appendPlaceholderToChatHistory(variables.query, cachedData),
-      );
+      if (variables.session_id) {
+        queryClient.setQueryData<ChatMessageType[]>(
+          chatHistoryQueryKey(variables.session_id),
+          (cachedData) =>
+            appendPlaceholderToChatHistory(variables.query, cachedData),
+        );
+      }
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
-        (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
-      );
-      queryClient
-        .invalidateQueries({
-          queryKey: suggestedQuestionKey(variables.session_id),
-        })
-        .catch((error: unknown) => {
-          console.error(error);
-        });
+      if (variables.session_id) {
+        queryClient.setQueryData<ChatMessageType[]>(
+          chatHistoryQueryKey(variables.session_id),
+          (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
+        );
+        queryClient
+          .invalidateQueries({
+            queryKey: suggestedQuestionKey(variables.session_id),
+          })
+          .catch((error: unknown) => {
+            console.error(error);
+          });
+      }
       onSuccess?.(data);
     },
     onError: (error: Error) => onError?.(error),
@@ -196,7 +202,7 @@ const chatMutation = async (
   request: ChatMutationRequest,
 ): Promise<ChatMessageType> => {
   return await postRequest(
-    `${llmServicePath}/sessions/${request.session_id}/chat`,
+    `${llmServicePath}/chats${request.session_id ? `/${request.session_id}` : ""}`,
     request,
   );
 };

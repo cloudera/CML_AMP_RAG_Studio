@@ -56,7 +56,6 @@ const RagChatQueryInput = () => {
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
     activeSession,
-    firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
 
   const { sessionId } = useParams({ strict: false });
@@ -76,7 +75,9 @@ const RagChatQueryInput = () => {
     sessionId,
     activeSession,
     excludeKnowledgeBase,
-    setFirstQuestion,
+    onSuccess: () => {
+      setUserInput("");
+    },
   });
 
   const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
