@@ -61,7 +61,6 @@ const RagChatQueryInput = () => {
   const navigate = useNavigate();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    currentQuestionState: [, setCurrentQuestion],
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
@@ -72,7 +71,7 @@ const RagChatQueryInput = () => {
   const { data: models } = useGetLlmModels();
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
-  const [newSessionId, setNewSessionId] = useState(0);
+  const [newSessionId, setNewSessionId] = useState<number>();
 
   const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
@@ -81,32 +80,27 @@ const RagChatQueryInput = () => {
     isFetching: sampleQuestionsIsFetching,
   } = useSuggestQuestions({
     configuration,
-    session_id: sessionId && sessionId != "0" ? sessionId : "",
+    session_id: sessionId ?? "",
   });
 
-  const chatMutation = useChatMutation({
-    onSuccess: () => {
+  function chatOnSuccess() {
+    return () => {
+      if (newSessionId) {
+        renameSessionMutation.mutate(newSessionId.toString());
+        return navigate({
+          to: "/sessions/$sessionId",
+          params: { sessionId: newSessionId.toString() },
+        });
+      }
       if (activeSession && activeSession.name === "") {
         renameSessionMutation.mutate(activeSession.id.toString());
       }
       setUserInput("");
-      setCurrentQuestion("");
-    },
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
-  });
+    };
+  }
 
-  const newChatMutation = useChatMutation({
-    onSuccess: () => {
-      if (newSessionId) {
-        renameSessionMutation.mutate(newSessionId.toString());
-      }
-      return navigate({
-        to: "/sessions/$sessionId",
-        params: { sessionId: newSessionId.toString() },
-      });
-    },
+  const chatMutation = useChatMutation({
+    onSuccess: chatOnSuccess(),
     onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
@@ -123,16 +117,16 @@ const RagChatQueryInput = () => {
 
   const queryClient = useQueryClient();
   const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
-    onSuccess: async (data) => {
+    onSuccess: async (session) => {
       await queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
         .then(() => {
-          setNewSessionId(data.id);
+          setNewSessionId(session.id);
           setFirstQuestion(userInput);
 
-          newChatMutation.mutate({
+          chatMutation.mutate({
             query: userInput,
-            session_id: data.id.toString(),
+            session_id: session.id.toString(),
             configuration: createQueryConfiguration(excludeKnowledgeBase),
           });
         })
@@ -149,7 +143,6 @@ const RagChatQueryInput = () => {
     if (userInput.trim().length <= 0) {
       return;
     }
-    setCurrentQuestion(userInput);
     if (activeSession && sessionId) {
       chatMutation.mutate({
         query: userInput,

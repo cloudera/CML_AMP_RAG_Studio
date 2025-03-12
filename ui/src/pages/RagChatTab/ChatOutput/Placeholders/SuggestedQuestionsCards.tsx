@@ -45,7 +45,6 @@ import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 
 const SuggestedQuestionsCards = () => {
   const {
-    currentQuestionState: [, setCurrentQuestion],
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
   } = useContext(RagChatContext);
@@ -60,9 +59,6 @@ const SuggestedQuestionsCards = () => {
   });
 
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
-    onSuccess: () => {
-      setCurrentQuestion("");
-    },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
@@ -75,7 +71,6 @@ const SuggestedQuestionsCards = () => {
       suggestedQuestion.length > 0 &&
       sessionId
     ) {
-      setCurrentQuestion(suggestedQuestion);
       chatMutation({
         query: suggestedQuestion,
         session_id: sessionId,

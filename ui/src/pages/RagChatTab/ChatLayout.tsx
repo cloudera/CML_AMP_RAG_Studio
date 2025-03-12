@@ -43,7 +43,7 @@ import { getSessionsQueryOptions, Session } from "src/api/sessionApi.ts";
 import { groupBy } from "lodash";
 import { format } from "date-fns";
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
@@ -57,7 +57,6 @@ function ChatLayout() {
   const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
 
   const { sessionId } = useParams({ strict: false });
-  const [currentQuestion, setCurrentQuestion] = useState("");
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesQuery();
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
@@ -75,10 +74,6 @@ function ChatLayout() {
     );
   }, [dataSources, dataSourceId]);
 
-  useEffect(() => {
-    setCurrentQuestion("");
-  }, [sessionId]);
-
   const sessionsByDate = groupBy(sessions, (session) => {
     const relevantTime = session.lastInteractionTime || session.timeUpdated;
     return format(relevantTime * 1000, "yyyyMMdd");
@@ -91,7 +86,6 @@ function ChatLayout() {
           excludeKnowledgeBase,
           setExcludeKnowledgeBase,
         ],
-        currentQuestionState: [currentQuestion, setCurrentQuestion],
         chatHistoryQuery: { chatHistory, chatHistoryStatus },
         dataSourceSize,
         dataSourcesQuery: {

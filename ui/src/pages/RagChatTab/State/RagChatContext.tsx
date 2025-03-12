@@ -43,7 +43,6 @@ import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 export interface RagChatContextType {
   activeSession?: Session;
-  currentQuestionState: [string, Dispatch<SetStateAction<string>>];
   chatHistoryQuery: {
     chatHistory: ChatMessageType[];
     chatHistoryStatus?: "error" | "success" | "pending";
@@ -59,7 +58,6 @@ export interface RagChatContextType {
 
 export const RagChatContext = createContext<RagChatContextType>({
   activeSession: undefined,
-  currentQuestionState: ["", () => null],
   chatHistoryQuery: { chatHistory: [], chatHistoryStatus: undefined },
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
