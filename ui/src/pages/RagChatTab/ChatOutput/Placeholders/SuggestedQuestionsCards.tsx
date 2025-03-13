@@ -55,7 +55,6 @@ const QuestionCard = ({
 }) => {
   return (
     <Card
-      key={question}
       size={"small"}
       hoverable
       style={{
@@ -138,6 +137,7 @@ const SuggestedQuestionsCards = () => {
           <QuestionCard
             question={question}
             index={index}
+            key={index}
             onClick={handleAskSample}
           />
         );

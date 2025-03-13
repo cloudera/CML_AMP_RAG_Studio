@@ -100,7 +100,7 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     gcTime: 0,
     placeholderData: useMemo(() => {
       const randomQuestions = SAMPLE_QUESTIONS.sort(() => Math.random() - 0.5);
-      return { suggested_questions: randomQuestions.slice(0, 3) };
+      return { suggested_questions: randomQuestions.slice(0, 4) };
     }, []),
   });
 };
