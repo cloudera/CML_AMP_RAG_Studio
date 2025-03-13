@@ -51,7 +51,6 @@ import { useNavigate } from "@tanstack/react-router";
 
 const SuggestedQuestionsCards = () => {
   const {
-    currentQuestionState: [, setCurrentQuestion],
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
   } = useContext(RagChatContext);
@@ -67,9 +66,6 @@ const SuggestedQuestionsCards = () => {
   const { data: models } = useGetLlmModels();
   const navigate = useNavigate();
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
-    onSuccess: () => {
-      setCurrentQuestion("");
-    },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
@@ -77,7 +73,6 @@ const SuggestedQuestionsCards = () => {
 
   const handleAskSample = (suggestedQuestion: string) => {
     if (suggestedQuestion.length > 0) {
-      setCurrentQuestion(suggestedQuestion);
       if (sessionId) {
         chatMutation({
           query: suggestedQuestion,

@@ -58,7 +58,6 @@ const RagChatQueryInput = () => {
   const navigate = useNavigate();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    currentQuestionState: [, setCurrentQuestion],
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
@@ -81,7 +80,6 @@ const RagChatQueryInput = () => {
   const chatMutation = useChatMutation({
     onSuccess: () => {
       setUserInput("");
-      setCurrentQuestion("");
     },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
@@ -93,7 +91,6 @@ const RagChatQueryInput = () => {
       return;
     }
     if (userInput.length > 0) {
-      setCurrentQuestion(userInput);
       if (sessionId) {
         chatMutation.mutate({
           query: userInput,
