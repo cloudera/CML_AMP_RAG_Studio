@@ -38,7 +38,7 @@
 
 import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
@@ -54,7 +54,6 @@ const SuggestedQuestionsCards = () => {
     currentQuestionState: [, setCurrentQuestion],
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
-    firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id.toString();
   const {
@@ -86,7 +85,6 @@ const SuggestedQuestionsCards = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        setFirstQuestion(suggestedQuestion);
         if (models) {
           const requestBody: CreateSessionRequest = {
             name: "New Chat",
@@ -100,12 +98,11 @@ const SuggestedQuestionsCards = () => {
           };
           createSessionMutation(requestBody)
             .then((session) => {
-              chatMutation({
-                query: suggestedQuestion,
-                session_id: session.id.toString(),
-                configuration: createQueryConfiguration(excludeKnowledgeBase),
-              });
-              return session;
+              navigate({
+                to: `/sessions/${session.id.toString()}`,
+                params: { sessionId: session.id.toString() },
+                search: { question: suggestedQuestion },
+              }).catch(() => null);
             })
             .catch(() => null);
         }

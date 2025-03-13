@@ -71,6 +71,7 @@ class RagMessage(BaseModel):
 
 class RagStudioChatMessage(BaseModel):
     id: str
+    session_id: int
     source_nodes: list[RagPredictSourceNode]
     inference_model: Optional[str]  # `None` for legacy data or no chunks
     rag_message: RagMessage
@@ -106,6 +107,7 @@ class ChatHistoryManager:
             results.append(
                 RagStudioChatMessage(
                     id=user_message.additional_kwargs["id"],
+                    session_id=session_id,
                     source_nodes=assistant_message.additional_kwargs.get(
                         "source_nodes", []
                     ),

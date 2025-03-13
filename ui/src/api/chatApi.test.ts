@@ -43,6 +43,7 @@ describe("replacePlaceholderInChatHistory", () => {
   it("replaces placeholder with actual data when cachedData contains placeholder", () => {
     const placeholder = {
       id: "placeholder",
+      session_id: 0,
       source_nodes: [],
       rag_message: { user: "query", assistant: "" },
       evaluations: [],
@@ -50,6 +51,7 @@ describe("replacePlaceholderInChatHistory", () => {
     };
     const actualData = {
       id: "actual",
+      session_id: 1,
       source_nodes: [],
       rag_message: { user: "query", assistant: "response" },
       evaluations: [],
@@ -65,6 +67,7 @@ describe("replacePlaceholderInChatHistory", () => {
   it("returns actual data when cachedData is undefined", () => {
     const actualData = {
       id: "actual",
+      session_id: 1,
       source_nodes: [],
       rag_message: { user: "query", assistant: "response" },
       evaluations: [],
@@ -79,6 +82,7 @@ describe("replacePlaceholderInChatHistory", () => {
   it("does not replace any data when cachedData does not contain placeholder", () => {
     const actualData = {
       id: "actual",
+      session_id: 1,
       source_nodes: [],
       rag_message: { user: "query", assistant: "response" },
       evaluations: [],
@@ -87,6 +91,7 @@ describe("replacePlaceholderInChatHistory", () => {
     const cachedData = [
       {
         id: "other",
+        session_id: 2,
         source_nodes: [],
         rag_message: { user: "query", assistant: "response" },
         evaluations: [],
