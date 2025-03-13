@@ -141,7 +141,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       onValuesChange={(changedValues: CreateSessionType, allValues) => {
         if (changedValues.dataSourceId && !allValues.name) {
           const dataSource = dataSources?.find(
-            (value) => value.id === changedValues.dataSourceId
+            (value) => value.id === changedValues.dataSourceId,
           );
           form.setFieldsValue({
             name: dataSource?.name,
@@ -159,7 +159,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       <Form.Item
         name="name"
         label="Name"
-        rules={[{ required: false }]}
+        rules={[{ required: true }]}
         initialValue={""}
       >
         <Input />

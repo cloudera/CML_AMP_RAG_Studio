@@ -48,6 +48,7 @@ import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import useChatActions from "src/utils/useChatActions.ts";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
@@ -67,6 +68,8 @@ function ChatLayout() {
   const activeSession = getSessionForSessionId(sessionId, sessions);
   const dataSourceId = activeSession?.dataSourceIds[0];
   const [firstQuestion, setFirstQuestion] = useState<string>("");
+  console.log({ firstQuestion, sessions, sessionId, activeSession });
+  const { handleChat, chatMutation } = useChatActions();
 
   const dataSourceSize = useMemo(() => {
     return (
@@ -94,6 +97,11 @@ function ChatLayout() {
         },
         activeSession,
         firstQuestionState: [firstQuestion, setFirstQuestion],
+        chatActions: {
+          handleChat,
+          isPending: chatMutation.isPending,
+          isSuccess: chatMutation.isSuccess,
+        },
       }}
     >
       <Layout

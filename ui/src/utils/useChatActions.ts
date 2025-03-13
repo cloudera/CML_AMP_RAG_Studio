@@ -36,50 +36,48 @@
  * DATA.
  ******************************************************************************/
 
-import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import {
   CreateSessionRequest,
-  useCreateSessionMutation,
   useRenameNameMutation,
 } from "src/api/sessionApi.ts";
-import { QueryKeys } from "src/api/utils.ts";
+import {
+  MutationKeys,
+  paths,
+  postRequest,
+  QueryKeys,
+  ragPath,
+} from "src/api/utils.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Session } from "src/api/sessionApi.ts";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
-interface UseChatActionsProps {
-  sessionId?: string;
-  activeSession?: Session;
-  excludeKnowledgeBase: boolean;
-  setFirstQuestion: (question: string) => void;
+const initialNewSession: CreateSessionRequest = {
+  name: "New Chat",
+  dataSourceIds: [],
+  inferenceModel: undefined,
+  responseChunks: 10,
+  queryConfiguration: {
+    enableHyde: false,
+    enableSummaryFilter: true,
+  },
+};
+
+interface CreateSessionWithQuestion extends CreateSessionRequest {
+  question: string;
 }
 
-const useChatActions = ({
-  sessionId,
-  activeSession,
-  excludeKnowledgeBase,
-  setFirstQuestion,
-}: UseChatActionsProps) => {
+const useChatActions = () => {
+  const {
+    firstQuestionState: [, setFirstQuestion],
+    excludeKnowledgeBaseState: [excludeKnowledgeBase],
+  } = useContext(RagChatContext);
+  const { sessionId } = useParams({ strict: false });
   const navigate = useNavigate();
-  const [userInput, setUserInput] = useState("");
-  const [newSessionId, setNewSessionId] = useState<number>();
   const queryClient = useQueryClient();
-
-  function chatOnSuccess() {
-    if (newSessionId) {
-      renameSessionMutation.mutate(newSessionId.toString());
-      return navigate({
-        to: "/sessions/$sessionId",
-        params: { sessionId: newSessionId.toString() },
-      });
-    }
-    if (activeSession && activeSession.name === "") {
-      renameSessionMutation.mutate(activeSession.id.toString());
-    }
-    setUserInput("");
-  }
 
   const renameSessionMutation = useRenameNameMutation({
     onSuccess: (name) => {
@@ -91,71 +89,62 @@ const useChatActions = ({
   });
 
   const chatMutation = useChatMutation({
-    onSuccess: chatOnSuccess,
+    onSuccess: (chatMessage) => {
+      if (!sessionId) {
+        renameSessionMutation.mutate(chatMessage.session_id.toString());
+        setFirstQuestion("");
+        return navigate({
+          to: "/sessions/$sessionId",
+          params: { sessionId: chatMessage.session_id.toString() },
+        });
+      }
+    },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
   });
 
-  const { mutate } = useCreateSessionMutation({
-    onSuccess: async (session) => {
-      await queryClient
+  const createSessionMutation = useMutation({
+    mutationKey: [MutationKeys.createSession],
+    mutationFn: async (
+      request: CreateSessionWithQuestion,
+    ): Promise<Session> => {
+      return await postRequest(`${ragPath}/${paths.sessions}`, request);
+    },
+    onSuccess: (session, variables) => {
+      queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
         .then(() => {
-          setNewSessionId(session.id);
-          setFirstQuestion(userInput);
-
           chatMutation.mutate({
-            query: userInput,
+            query: variables.question,
             session_id: session.id.toString(),
             configuration: createQueryConfiguration(excludeKnowledgeBase),
           });
         })
-        .catch((x: unknown) => {
-          messageQueue.error(String(x));
+        .catch((error: unknown) => {
+          messageQueue.error(String(error));
         });
     },
     onError: () => {
+      setFirstQuestion("");
       messageQueue.error("Session creation failed.");
     },
   });
 
-  const createSessionAndAskQuestion = (
-    requestBody: CreateSessionRequest,
-    question: string,
-  ) => {
-    setUserInput(question);
-    mutate(requestBody);
-  };
-
-  const reallyHandleChat = (question: string) => {
-    if (activeSession && sessionId) {
+  const handleChat = (input: string) => {
+    if (input.trim().length < 1) {
+      return;
+    }
+    if (sessionId) {
       chatMutation.mutate({
-        query: question,
+        query: input,
         session_id: sessionId,
         configuration: createQueryConfiguration(excludeKnowledgeBase),
       });
-    } else if (question.trim().length > 0) {
-      setUserInput(question);
-      const requestBody: CreateSessionRequest = {
-        name: "New Chat",
-        dataSourceIds: [],
-        inferenceModel: undefined,
-        responseChunks: 10,
-        queryConfiguration: {
-          enableHyde: false,
-          enableSummaryFilter: true,
-        },
-      };
-      createSessionAndAskQuestion(requestBody, question);
+    } else {
+      setFirstQuestion(input);
+      createSessionMutation.mutate({ ...initialNewSession, question: input });
     }
-  };
-
-  const handleChat = (input: string) => {
-    if (input.trim().length <= 0) {
-      return;
-    }
-    reallyHandleChat(input);
   };
 
   return {

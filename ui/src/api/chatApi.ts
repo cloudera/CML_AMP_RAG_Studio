@@ -82,6 +82,7 @@ interface ChatHistoryRequestType {
 
 export interface ChatMessageType {
   id: string;
+  session_id: number;
   source_nodes: SourceNode[];
   inference_model?: string;
   rag_message: RagMessageV2;
@@ -110,6 +111,7 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
     },
     evaluations: [],
     timestamp: Date.now(),
+    session_id: 0,
   };
 };
 

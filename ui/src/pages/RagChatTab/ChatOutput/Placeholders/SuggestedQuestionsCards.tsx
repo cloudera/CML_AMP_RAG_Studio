@@ -38,161 +38,30 @@
 
 import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
-import { useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  CreateSessionRequest,
-  useCreateSessionMutation,
-  useRenameNameMutation,
-} from "src/api/sessionApi.ts";
-import messageQueue from "src/utils/messageQueue.ts";
-import { QueryKeys } from "src/api/utils.ts";
-
-const SAMPLE_QUESTIONS = [
-  "How does Cloudera Machine Learning handle data preparation and ingestion from various data sources?",
-  "What data formats are supported by Cloudera Machine Learning, and how are they processed?",
-  "Can Cloudera Machine Learning handle large-scale data ingestion and processing?",
-  "How does Cloudera Machine Learning support data quality and data governance?",
-  "Can Cloudera Machine Learning integrate with other data preparation and ingestion tools?",
-  "What machine learning algorithms are supported by Cloudera Machine Learning?",
-  "How does Cloudera Machine Learning support model development and training, including hyperparameter tuning?",
-  "Can Cloudera Machine Learning handle large-scale model training and deployment?",
-  "How does Cloudera Machine Learning support model explainability and interpretability?",
-  "Can Cloudera Machine Learning integrate with other machine learning frameworks and tools?",
-  "How does Cloudera Machine Learning support model deployment and serving, including model scoring and prediction?",
-  "Can Cloudera Machine Learning handle high-volume and high-velocity data streams?",
-  "How does Cloudera Machine Learning support model updates and retraining?",
-  "Can Cloudera Machine Learning integrate with other model serving and deployment platforms?",
-  "What are the security and access controls for model deployment and serving in Cloudera Machine Learning?",
-  "What security features are built into Cloudera Machine Learning, including data encryption and access controls?",
-  "How does Cloudera Machine Learning support data governance and compliance, including regulatory requirements?",
-  "Can Cloudera Machine Learning handle sensitive data, such as PII or PHI?",
-  "How does Cloudera Machine Learning support auditing and logging?",
-  "Can Cloudera Machine Learning integrate with other security and governance tools?",
-];
+import { createQueryConfiguration } from "src/api/chatApi.ts";
+import { useParams } from "@tanstack/react-router";
 
 const SuggestedQuestionsCards = () => {
   const {
-    activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
-    firstQuestionState: [, setFirstQuestion],
+    chatActions: { handleChat, isPending },
   } = useContext(RagChatContext);
-  const sessionId = activeSession?.id.toString();
-  const [userQuestion, setUserQuestion] = useState<string>();
+  const { sessionId } = useParams({ strict: false });
   const { data, isFetching: suggestedQuestionsIsFetching } =
     useSuggestQuestions({
       configuration: createQueryConfiguration(excludeKnowledgeBase),
       session_id: sessionId ?? "",
     });
 
-  const navigate = useNavigate();
-  const [newSessionId, setNewSessionId] = useState<number>();
-  const queryClient = useQueryClient();
-
-  const handleChat = () => {
-    if (!userQuestion || userQuestion.trim().length <= 0) {
-      return;
-    }
-    console.log(`First Question: ${String(userQuestion)}`);
-    if (activeSession && sessionId && userQuestion) {
-      chatMutation.mutate({
-        query: userQuestion,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
-    } else {
-      const requestBody: CreateSessionRequest = {
-        name: "New Chat",
-        dataSourceIds: [],
-        inferenceModel: undefined,
-        responseChunks: 10,
-        queryConfiguration: {
-          enableHyde: false,
-          enableSummaryFilter: true,
-        },
-      };
-      mutate(requestBody);
-    }
-  };
-
-  useEffect(() => {
-    console.log("using the effect!");
-    if (userQuestion) {
-      handleChat();
-    }
-  }, [userQuestion]);
-
-  function chatOnSuccess() {
-    if (newSessionId) {
-      renameSessionMutation.mutate(newSessionId.toString());
-      return navigate({
-        to: "/sessions/$sessionId",
-        params: { sessionId: newSessionId.toString() },
-      });
-    }
-    if (activeSession && activeSession.name === "") {
-      renameSessionMutation.mutate(activeSession.id.toString());
-    }
-  }
-
-  const renameSessionMutation = useRenameNameMutation({
-    onSuccess: (name) => {
-      messageQueue.success(`session renamed to ${name}`);
-    },
-    onError: (res) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
-  const chatMutation = useChatMutation({
-    onSuccess: chatOnSuccess,
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
-  const { mutate } = useCreateSessionMutation({
-    onSuccess: async (session) => {
-      await queryClient
-        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
-        .then(() => {
-          setNewSessionId(session.id);
-
-          chatMutation.mutate({
-            query: userQuestion ?? "",
-            session_id: session.id.toString(),
-            configuration: createQueryConfiguration(excludeKnowledgeBase),
-          });
-        })
-        .catch((x: unknown) => {
-          messageQueue.error(String(x));
-        });
-    },
-    onError: () => {
-      messageQueue.error("Session creation failed.");
-    },
-  });
-
-  let suggestedQuestions = data?.suggested_questions ?? [];
-  if (!sessionId) {
-    suggestedQuestions = SAMPLE_QUESTIONS.sort(() => 0.5 - Math.random()).slice(
-      0,
-      4,
-    );
-  }
-
   const handleAskSample = (suggestedQuestion: string) => {
     if (suggestedQuestion.length > 0) {
-      console.log(`setting first question to ${suggestedQuestion}`);
-      setFirstQuestion(suggestedQuestion);
-      setUserQuestion(suggestedQuestion);
+      handleChat(suggestedQuestion);
     }
   };
 
-  if (suggestedQuestionsIsFetching || chatMutation.isPending) {
+  if (suggestedQuestionsIsFetching || isPending) {
     return (
       <Flex gap={10} wrap="wrap" justify="space-between">
         {Array.from({ length: 4 }).map((_, index) => (
@@ -211,7 +80,7 @@ const SuggestedQuestionsCards = () => {
 
   return (
     <Flex gap={10} wrap="wrap" justify="space-between">
-      {suggestedQuestions.map((question, index) => {
+      {data?.suggested_questions.map((question, index) => {
         return (
           <Card
             key={question}

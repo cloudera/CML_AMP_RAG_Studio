@@ -54,6 +54,11 @@ export interface RagChatContextType {
   dataSourceSize: number | null;
   excludeKnowledgeBaseState: [boolean, Dispatch<SetStateAction<boolean>>];
   firstQuestionState: [string, Dispatch<SetStateAction<string>>];
+  chatActions: {
+    isPending: boolean;
+    isSuccess: boolean;
+    handleChat: (question: string) => void;
+  };
 }
 
 export const RagChatContext = createContext<RagChatContextType>({
@@ -63,4 +68,5 @@ export const RagChatContext = createContext<RagChatContextType>({
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],
   firstQuestionState: ["", () => null],
+  chatActions: { handleChat: () => null, isSuccess: false, isPending: false },
 });

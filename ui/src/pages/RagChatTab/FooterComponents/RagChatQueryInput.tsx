@@ -39,13 +39,12 @@
 import { Button, Flex, Input, Switch, Tooltip } from "antd";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { createQueryConfiguration } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
-import useChatActions from "src/utils/useChatActions.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 
@@ -55,8 +54,7 @@ const RagChatQueryInput = () => {
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
-    activeSession,
-    firstQuestionState: [, setFirstQuestion],
+    chatActions,
   } = useContext(RagChatContext);
 
   const { sessionId } = useParams({ strict: false });
@@ -72,12 +70,11 @@ const RagChatQueryInput = () => {
   });
   const [userInput, setUserInput] = useState("");
 
-  const { handleChat, chatMutation } = useChatActions({
-    sessionId,
-    activeSession,
-    excludeKnowledgeBase,
-    setFirstQuestion,
-  });
+  useEffect(() => {
+    if (chatActions.isSuccess) {
+      setUserInput("");
+    }
+  }, [chatActions.isSuccess, setUserInput]);
 
   const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
     setExcludeKnowledgeBase(() => !checked);
@@ -90,7 +87,7 @@ const RagChatQueryInput = () => {
           <SuggestedQuestionsFooter
             questions={sampleQuestions?.suggested_questions ?? []}
             isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
-            handleChat={handleChat}
+            handleChat={chatActions.handleChat}
             condensedQuestion={
               chatHistory.length > 0
                 ? chatHistory[chatHistory.length - 1].condensed_question
@@ -113,7 +110,7 @@ const RagChatQueryInput = () => {
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleChat(userInput);
+                chatActions.handleChat(userInput);
               }
             }}
             suffix={
@@ -126,16 +123,16 @@ const RagChatQueryInput = () => {
                 />
               </Tooltip>
             }
-            disabled={chatMutation.isPending}
+            disabled={chatActions.isPending}
           />
           <Button
             style={{ padding: 0 }}
             type="text"
             onClick={() => {
-              handleChat(userInput);
+              chatActions.handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={chatMutation.isPending}
+            disabled={chatActions.isPending}
           />
         </Flex>
       </Flex>

@@ -108,6 +108,7 @@ def _run_chat(
             evaluations=[],
             timestamp=time.time(),
             condensed_question=None,
+            session_id=session.id,
         )
     response, condensed_question = querier.query(
         data_source_id,
@@ -135,6 +136,7 @@ def _run_chat(
         ],
         timestamp=time.time(),
         condensed_question=condensed_question,
+        session_id=session.id,
     )
 
     record_rag_mlflow_run(
@@ -299,6 +301,7 @@ def direct_llm_chat(
         ),
         timestamp=time.time(),
         condensed_question=None,
+        session_id=session.id,
     )
     ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
