@@ -122,7 +122,7 @@ def record_rag_mlflow_run(
     }
 
     write_mlflow_run_json(
-        experiment_name=f"session_{session.name}_{session.id}",
+        experiment_name=f"session_{session.id}",
         run_name=f"{response_id}",
         data={
             "params": params,
@@ -139,7 +139,7 @@ def record_direct_llm_mlflow_run(
     response_id: str, session: Session, user_name: str
 ) -> None:
     write_mlflow_run_json(
-        f"session_{session.name}_{session.id}",
+        f"session_{session.id}",
         f"{response_id}",
         {
             "params": {
