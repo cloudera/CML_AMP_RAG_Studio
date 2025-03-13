@@ -38,16 +38,23 @@
 
 import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import {
+  createSessionMutation,
+  CreateSessionRequest,
+} from "src/api/sessionApi.ts";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { useNavigate } from "@tanstack/react-router";
 
 const SuggestedQuestionsCards = () => {
   const {
     currentQuestionState: [, setCurrentQuestion],
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
+    firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id.toString();
   const {
@@ -58,7 +65,8 @@ const SuggestedQuestionsCards = () => {
     configuration: createQueryConfiguration(excludeKnowledgeBase),
     session_id: sessionId ?? "",
   });
-
+  const { data: models } = useGetLlmModels();
+  const navigate = useNavigate();
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
     onSuccess: () => {
       setCurrentQuestion("");
@@ -69,18 +77,39 @@ const SuggestedQuestionsCards = () => {
   });
 
   const handleAskSample = (suggestedQuestion: string) => {
-    if (
-      activeSession &&
-      activeSession.dataSourceIds.length > 0 &&
-      suggestedQuestion.length > 0 &&
-      sessionId
-    ) {
+    if (suggestedQuestion.length > 0) {
       setCurrentQuestion(suggestedQuestion);
-      chatMutation({
-        query: suggestedQuestion,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
+      if (sessionId) {
+        chatMutation({
+          query: suggestedQuestion,
+          session_id: sessionId,
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
+        });
+      } else {
+        setFirstQuestion(suggestedQuestion);
+        if (models) {
+          const requestBody: CreateSessionRequest = {
+            name: "New Chat",
+            dataSourceIds: [],
+            inferenceModel: models[0].model_id,
+            responseChunks: 10,
+            queryConfiguration: {
+              enableHyde: false,
+              enableSummaryFilter: true,
+            },
+          };
+          createSessionMutation(requestBody)
+            .then((session) => {
+              chatMutation({
+                query: suggestedQuestion,
+                session_id: session.id.toString(),
+                configuration: createQueryConfiguration(excludeKnowledgeBase),
+              });
+              return session;
+            })
+            .catch(() => null);
+        }
+      }
     }
   };
 

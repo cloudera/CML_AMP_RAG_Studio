@@ -115,7 +115,7 @@ export const useCreateSessionMutation = ({
   });
 };
 
-const createSessionMutation = async (
+export const createSessionMutation = async (
   request: CreateSessionRequest,
 ): Promise<Session> => {
   return await postRequest(`${ragPath}/${paths.sessions}`, request);

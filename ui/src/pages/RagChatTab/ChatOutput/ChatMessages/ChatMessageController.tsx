@@ -43,6 +43,7 @@ import { Flex, Image, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
+import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
 
 const ChatMessageController = () => {
   const {
@@ -80,6 +81,7 @@ const ChatMessageController = () => {
         <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
           Welcome to Chatbot Studio
         </Typography.Title>
+        <SuggestedQuestionsCards />
       </Flex>
     );
   }
