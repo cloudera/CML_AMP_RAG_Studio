@@ -9,7 +9,7 @@ const useCreateSessionAndRedirect = () => {
   const navigate = useNavigate();
   const { data: models } = useGetLlmModels();
 
-  const createSessionAndRedirect = (question: string) => {
+  return (question: string) => {
     if (models) {
       const requestBody: CreateSessionRequest = {
         name: "New Chat",
@@ -32,8 +32,6 @@ const useCreateSessionAndRedirect = () => {
         .catch(() => null);
     }
   };
-
-  return createSessionAndRedirect;
 };
 
 export default useCreateSessionAndRedirect;

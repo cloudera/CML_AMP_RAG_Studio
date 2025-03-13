@@ -44,6 +44,37 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
+const QuestionCard = ({
+  question,
+  index,
+  onClick,
+}: {
+  question: string;
+  index: number;
+  onClick: (suggestedQuestion: string) => void;
+}) => {
+  return (
+    <Card
+      key={question}
+      size={"small"}
+      hoverable
+      style={{
+        width: 178,
+        margin: 0,
+        padding: 0,
+      }}
+      extra={
+        <Typography.Text type="secondary">{`#${(index + 1).toString()}`}</Typography.Text>
+      }
+      onClick={() => {
+        onClick(question);
+      }}
+    >
+      <Card.Meta description={<Typography.Text>{question}</Typography.Text>} />
+    </Card>
+  );
+};
+
 const SuggestedQuestionsCards = () => {
   const {
     activeSession,
@@ -104,26 +135,11 @@ const SuggestedQuestionsCards = () => {
     <Flex gap={10} wrap="wrap" justify="space-between">
       {data?.suggested_questions.map((question, index) => {
         return (
-          <Card
-            key={question}
-            size={"small"}
-            hoverable
-            style={{
-              width: 178,
-              margin: 0,
-              padding: 0,
-            }}
-            extra={
-              <Typography.Text type="secondary">{`#${(index + 1).toString()}`}</Typography.Text>
-            }
-            onClick={() => {
-              handleAskSample(question);
-            }}
-          >
-            <Card.Meta
-              description={<Typography.Text>{question}</Typography.Text>}
-            />
-          </Card>
+          <QuestionCard
+            question={question}
+            index={index}
+            onClick={handleAskSample}
+          />
         );
       })}
     </Flex>
