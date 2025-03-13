@@ -42,12 +42,7 @@ import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
-import {
-  createSessionMutation,
-  CreateSessionRequest,
-} from "src/api/sessionApi.ts";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
-import { useNavigate } from "@tanstack/react-router";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
 const SuggestedQuestionsCards = () => {
   const {
@@ -63,8 +58,7 @@ const SuggestedQuestionsCards = () => {
     configuration: createQueryConfiguration(excludeKnowledgeBase),
     session_id: sessionId ?? "",
   });
-  const { data: models } = useGetLlmModels();
-  const navigate = useNavigate();
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
     onError: (res: Error) => {
       messageQueue.error(res.toString());
@@ -80,27 +74,7 @@ const SuggestedQuestionsCards = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        if (models) {
-          const requestBody: CreateSessionRequest = {
-            name: "New Chat",
-            dataSourceIds: [],
-            inferenceModel: models[0].model_id,
-            responseChunks: 10,
-            queryConfiguration: {
-              enableHyde: false,
-              enableSummaryFilter: true,
-            },
-          };
-          createSessionMutation(requestBody)
-            .then((session) => {
-              navigate({
-                to: `/sessions/${session.id.toString()}`,
-                params: { sessionId: session.id.toString() },
-                search: { question: suggestedQuestion },
-              }).catch(() => null);
-            })
-            .catch(() => null);
-        }
+        createSessionAndRedirect(suggestedQuestion);
       }
     }
   };

@@ -44,18 +44,14 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
-import {
-  createSessionMutation,
-  CreateSessionRequest,
-} from "src/api/sessionApi.ts";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
 const RagChatQueryInput = () => {
-  const navigate = useNavigate();
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { chatHistory },
@@ -63,7 +59,6 @@ const RagChatQueryInput = () => {
     dataSourcesQuery: { dataSourcesStatus },
   } = useContext(RagChatContext);
 
-  const { data: models } = useGetLlmModels();
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
@@ -98,27 +93,7 @@ const RagChatQueryInput = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        if (models) {
-          const requestBody: CreateSessionRequest = {
-            name: "New Chat",
-            dataSourceIds: [],
-            inferenceModel: models[0].model_id,
-            responseChunks: 10,
-            queryConfiguration: {
-              enableHyde: false,
-              enableSummaryFilter: true,
-            },
-          };
-          createSessionMutation(requestBody)
-            .then((session) => {
-              navigate({
-                to: `/sessions/${session.id.toString()}`,
-                params: { sessionId: session.id.toString() },
-                search: { question: userInput },
-              }).catch(() => null);
-            })
-            .catch(() => null);
-        }
+        createSessionAndRedirect(userInput);
       }
     }
   };
