@@ -88,11 +88,13 @@ const ChatMessageController = () => {
   }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (scrollEl.current) {
-        scrollEl.current.scrollIntoView({ behavior: "auto" });
-      }
-    }, 50);
+    if (chatHistory.length > 0) {
+      setTimeout(() => {
+        if (scrollEl.current) {
+          scrollEl.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 50);
+    }
   }, [scrollEl.current, chatHistory.length, activeSession?.id]);
 
   if (chatHistoryStatus === "pending") {
@@ -102,22 +104,21 @@ const ChatMessageController = () => {
   if (chatHistory.length === 0) {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;
-    } else {
-      return (
-        <Flex vertical align="center" gap={16}>
-          <Image
-            src={Images.BrandTalking}
-            alt="Machines Chatting"
-            style={{ width: 80 }}
-            preview={false}
-          />
-          <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
-            Welcome to Chatbot Studio
-          </Typography.Title>
-          <SuggestedQuestionsCards />
-        </Flex>
-      );
     }
+    return (
+      <Flex vertical align="center" gap={16}>
+        <Image
+          src={Images.BrandTalking}
+          alt="Machines Chatting"
+          style={{ width: 80 }}
+          preview={false}
+        />
+        <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+          Welcome to Chatbot Studio
+        </Typography.Title>
+        <SuggestedQuestionsCards />
+      </Flex>
+    );
   }
 
   return (
