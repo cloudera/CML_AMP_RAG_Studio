@@ -91,9 +91,7 @@ const GettingStarted = () => {
             size="large"
             style={{ width: 113 }}
             onClick={() => {
-              navigate({ to: "/data", search: { create: true } }).catch(
-                () => null,
-              );
+              navigate({ to: "/sessions" }).catch(() => null);
             }}
           >
             Get Started

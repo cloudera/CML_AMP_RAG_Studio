@@ -69,6 +69,7 @@ export enum MutationKeys {
   "testEmbeddingModel" = "testEmbeddingModel",
   "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
   "updateSession" = "updateSession",
+  "renameSession" = "renameSession",
   "testRerankingModel" = "testRerankingModel",
   "ratingMutation" = "ratingMutation",
   "feedbackMutation" = "feedbackMutation",

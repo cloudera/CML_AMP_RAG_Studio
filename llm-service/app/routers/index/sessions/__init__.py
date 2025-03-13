@@ -49,9 +49,19 @@ from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
+from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+
+
+@router.post(
+    "/rename-session",
+    summary="Rename the session using AI",
+)
+@exceptions.propagates
+def post_rename_session(session_id: int) -> str:
+    return rename_session(session_id)
 
 
 @router.get(

@@ -39,14 +39,53 @@
 import { useContext, useEffect, useRef } from "react";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { Flex, Image, Typography } from "antd";
+import Images from "src/components/images/Images.ts";
+import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
+import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
+import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
+import { useSearch } from "@tanstack/react-router";
+import messageQueue from "src/utils/messageQueue.ts";
+import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import { useRenameNameMutation } from "src/api/sessionApi.ts";
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory },
+    chatHistoryQuery: { chatHistory, chatHistoryStatus },
     activeSession,
   } = useContext(RagChatContext);
   const scrollEl = useRef<HTMLDivElement>(null);
-  const dataSourceId = activeSession?.dataSourceIds[0];
+  const search: { question?: string } = useSearch({
+    strict: false,
+  });
+  const renameMutation = useRenameNameMutation({
+    onError: (err) => {
+      messageQueue.error(err.message);
+    },
+  });
+  const chatMutation = useChatMutation({
+    onError: (err) => {
+      messageQueue.error(err.message);
+    },
+    onSuccess: (chatMessage) => {
+      renameMutation.mutate(chatMessage.session_id.toString());
+      const url = new URL(window.location.href);
+      url.searchParams.delete("question");
+      window.history.pushState(null, "", url.toString());
+    },
+  });
+
+  useEffect(() => {
+    if (search.question && activeSession) {
+      chatMutation.mutate({
+        query: search.question,
+        session_id: activeSession.id.toString(),
+        configuration: createQueryConfiguration(
+          !(activeSession.dataSourceIds.length > 0),
+        ),
+      });
+    }
+  }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -54,7 +93,32 @@ const ChatMessageController = () => {
         scrollEl.current.scrollIntoView({ behavior: "auto" });
       }
     }, 50);
-  }, [scrollEl.current, chatHistory.length, dataSourceId]);
+  }, [scrollEl.current, chatHistory.length, activeSession?.id]);
+
+  if (chatHistoryStatus === "pending") {
+    return <ChatLoading />;
+  }
+
+  if (chatHistory.length === 0) {
+    if (search.question) {
+      return <PendingRagOutputSkeleton question={search.question} />;
+    } else {
+      return (
+        <Flex vertical align="center" gap={16}>
+          <Image
+            src={Images.BrandTalking}
+            alt="Machines Chatting"
+            style={{ width: 80 }}
+            preview={false}
+          />
+          <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+            Welcome to Chatbot Studio
+          </Typography.Title>
+          <SuggestedQuestionsCards />
+        </Flex>
+      );
+    }
+  }
 
   return (
     <div data-testid="chat-message-controller">

@@ -35,10 +35,11 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Any
 
 import requests
 
@@ -66,6 +67,17 @@ class Session:
     query_configuration: SessionQueryConfiguration
 
 
+@dataclass
+class UpdatableSession:
+    id: int
+    name: str
+    dataSourceIds: List[int]
+    inferenceModel: str
+    rerankModel: str
+    responseChunks: int
+    queryConfiguration: dict[str, bool]
+
+
 BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
 
@@ -74,6 +86,10 @@ def get_session(session_id: int) -> Session:
     response = requests.get(url_template.format(session_id))
     raise_for_http_error(response)
     data = body_to_json(response)
+    return session_from_java_response(data)
+
+
+def session_from_java_response(data: dict[str, Any]) -> Session:
     return Session(
         id=data["id"],
         name=data["name"],
@@ -90,3 +106,26 @@ def get_session(session_id: int) -> Session:
             enable_summary_filter=data["queryConfiguration"]["enableSummaryFilter"],
         ),
     )
+
+
+def update_session(session: Session) -> Session:
+    updatable_session = UpdatableSession(
+        id=session.id,
+        name=session.name,
+        dataSourceIds=session.data_source_ids or [],
+        inferenceModel=session.inference_model,
+        rerankModel=session.rerank_model,
+        responseChunks=session.response_chunks,
+        queryConfiguration={
+            "enableHyde": session.query_configuration.enable_hyde,
+            "enableSummaryFilter": session.query_configuration.enable_summary_filter,
+        },
+    )
+    response = requests.post(
+        url_template.format(updatable_session.id),
+        data=json.dumps(updatable_session.__dict__, default=str),
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+    )
+    raise_for_http_error(response)
+    return session_from_java_response(body_to_json(response))

@@ -65,10 +65,11 @@ export const sessionItems = (sessions: Dictionary<Session[]>): MenuItem => {
       return {
         key: session.id.toString(),
         label: <SessionItem session={session} />,
-        onClick: () =>
+        onClick: () => {
           navigate({
             to: `/sessions/${session.id.toString()}`,
-          }),
+          }).catch(() => null);
+        },
       };
     });
 

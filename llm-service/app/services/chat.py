@@ -99,6 +99,7 @@ def _run_chat(
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
+            session_id=session.id,
             source_nodes=[],
             inference_model=None,
             rag_message=RagMessage(
@@ -123,6 +124,7 @@ def _run_chat(
     response_source_nodes = format_source_nodes(response, data_source_id)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
+        session_id=session.id,
         source_nodes=response_source_nodes,
         inference_model=session.inference_model,
         rag_message=RagMessage(
@@ -290,6 +292,7 @@ def direct_llm_chat(
     )
     new_chat_message = RagStudioChatMessage(
         id=response_id,
+        session_id=session.id,
         source_nodes=[],
         inference_model=session.inference_model,
         evaluations=[],

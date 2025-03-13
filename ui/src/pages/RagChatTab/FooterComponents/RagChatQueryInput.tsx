@@ -48,16 +48,17 @@ import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
 const RagChatQueryInput = () => {
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    currentQuestionState: [, setCurrentQuestion],
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
-    activeSession,
   } = useContext(RagChatContext);
+
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
@@ -68,13 +69,12 @@ const RagChatQueryInput = () => {
     isFetching: sampleQuestionsIsFetching,
   } = useSuggestQuestions({
     configuration,
-    session_id: sessionId ?? "",
+    session_id: sessionId && sessionId != "0" ? sessionId : "",
   });
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
       setUserInput("");
-      setCurrentQuestion("");
     },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
@@ -82,13 +82,19 @@ const RagChatQueryInput = () => {
   });
 
   const handleChat = (userInput: string) => {
-    if (activeSession && userInput.trim().length > 0 && sessionId) {
-      setCurrentQuestion(userInput);
-      chatMutation.mutate({
-        query: userInput,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
+    if (userInput.trim().length <= 0) {
+      return;
+    }
+    if (userInput.length > 0) {
+      if (sessionId) {
+        chatMutation.mutate({
+          query: userInput,
+          session_id: sessionId,
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
+        });
+      } else {
+        createSessionAndRedirect(userInput);
+      }
     }
   };
 
@@ -99,18 +105,21 @@ const RagChatQueryInput = () => {
   return (
     <div>
       <Flex vertical align="center" gap={10}>
-        {chatHistory.length > 0 ? (
+        {chatHistory.length > 0 || dataSourceSize ? (
           <SuggestedQuestionsFooter
             questions={sampleQuestions?.suggested_questions ?? []}
             isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
             handleChat={handleChat}
             condensedQuestion={
-              chatHistory[chatHistory.length - 1].condensed_question
+              chatHistory.length > 0
+                ? chatHistory[chatHistory.length - 1].condensed_question
+                : undefined
             }
           />
         ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <Input
+            autoFocus
             placeholder={
               dataSourceSize && dataSourceSize > 0
                 ? "Ask a question"
@@ -136,7 +145,7 @@ const RagChatQueryInput = () => {
                 />
               </Tooltip>
             }
-            disabled={chatMutation.isPending || !activeSession}
+            disabled={chatMutation.isPending}
           />
           <Button
             style={{ padding: 0 }}
@@ -145,7 +154,7 @@ const RagChatQueryInput = () => {
               handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={chatMutation.isPending || !activeSession}
+            disabled={chatMutation.isPending}
           />
         </Flex>
       </Flex>

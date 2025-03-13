@@ -115,7 +115,7 @@ export const useCreateSessionMutation = ({
   });
 };
 
-const createSessionMutation = async (
+export const createSessionMutation = async (
   request: CreateSessionRequest,
 ): Promise<Session> => {
   return await postRequest(`${ragPath}/${paths.sessions}`, request);
@@ -151,6 +151,37 @@ const updateSessionMutation = async (
   return await postRequest(
     `${ragPath}/${paths.sessions}/${request.id.toString()}`,
     request,
+  );
+};
+
+export const useRenameNameMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [MutationKeys.renameSession],
+    mutationFn: renameSessionMutation,
+    onSuccess: (name) => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getSessions],
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      if (onSuccess) {
+        onSuccess(name);
+      }
+    },
+    onError,
+  });
+};
+
+const renameSessionMutation = async (sessionId: string): Promise<string> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/rename-session`,
+    {},
   );
 };
 

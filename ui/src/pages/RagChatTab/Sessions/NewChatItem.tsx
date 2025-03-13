@@ -36,30 +36,27 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Tooltip } from "antd";
+import { Flex } from "antd";
 import { MenuItem } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
 import Images from "src/components/images/Images.ts";
+import { useNavigate } from "@tanstack/react-router";
 
-export const newChatItem = (
-  showModal: () => void,
-  disableNewChat: boolean,
-  iconSize?: number,
-): MenuItem => {
+export const newChatItem = (iconSize?: number): MenuItem => {
+  const navigate = useNavigate();
   return [
     {
       key: "new",
-      label: disableNewChat ? (
-        <Tooltip title="No knowledge bases present">New Chat</Tooltip>
-      ) : (
-        "New Chat"
-      ),
+      label: "New Chat",
       icon: (
         <Flex justify="center" align="center" style={{ height: "100%" }}>
           <Images.PlusCircle style={iconSize ? { fontSize: iconSize } : {}} />
         </Flex>
       ),
-      onClick: showModal,
-      disabled: disableNewChat,
+      onClick: () => {
+        navigate({
+          to: "/sessions",
+        }).catch(() => null);
+      },
     },
   ];
 };
