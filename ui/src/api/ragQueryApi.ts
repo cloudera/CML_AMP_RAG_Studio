@@ -45,6 +45,7 @@ import {
   postRequest,
   QueryKeys,
 } from "src/api/utils.ts";
+import { useMemo } from "react";
 
 const SAMPLE_QUESTIONS = [
   "How does Cloudera Machine Learning handle data preparation and ingestion from various data sources?",
@@ -97,9 +98,10 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     queryFn: () => suggestQuestionsQuery(request),
     enabled: Boolean(request.session_id),
     gcTime: 0,
-    placeholderData: () => {
-      return { suggested_questions: SAMPLE_QUESTIONS.slice(0, 3) };
-    },
+    placeholderData: useMemo(() => {
+      const randomQuestions = SAMPLE_QUESTIONS.sort(() => Math.random() - 0.5);
+      return { suggested_questions: randomQuestions.slice(0, 3) };
+    }, []),
   });
 };
 
