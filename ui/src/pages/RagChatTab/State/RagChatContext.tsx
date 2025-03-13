@@ -54,7 +54,6 @@ export interface RagChatContextType {
   };
   dataSourceSize: number | null;
   excludeKnowledgeBaseState: [boolean, Dispatch<SetStateAction<boolean>>];
-  firstQuestionState: [string, Dispatch<SetStateAction<string>>];
 }
 
 export const RagChatContext = createContext<RagChatContextType>({
@@ -64,5 +63,4 @@ export const RagChatContext = createContext<RagChatContextType>({
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],
-  firstQuestionState: ["", () => null],
 });

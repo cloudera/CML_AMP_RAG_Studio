@@ -49,12 +49,9 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import {
+  createSessionMutation,
   CreateSessionRequest,
-  useCreateSessionMutation,
-  useRenameNameMutation,
 } from "src/api/sessionApi.ts";
-import { QueryKeys } from "src/api/utils.ts";
-import { useQueryClient } from "@tanstack/react-query";
 import { useGetLlmModels } from "src/api/modelsApi.ts";
 
 const RagChatQueryInput = () => {
@@ -65,14 +62,11 @@ const RagChatQueryInput = () => {
     chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
-    activeSession,
-    firstQuestionState: [, setFirstQuestion],
   } = useContext(RagChatContext);
 
   const { data: models } = useGetLlmModels();
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
-  const [newSessionId, setNewSessionId] = useState(0);
 
   const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
@@ -86,9 +80,6 @@ const RagChatQueryInput = () => {
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
-      if (activeSession && activeSession.name === "") {
-        renameSessionMutation.mutate(activeSession.id.toString());
-      }
       setUserInput("");
       setCurrentQuestion("");
     },
@@ -97,77 +88,41 @@ const RagChatQueryInput = () => {
     },
   });
 
-  const newChatMutation = useChatMutation({
-    onSuccess: () => {
-      if (newSessionId) {
-        renameSessionMutation.mutate(newSessionId.toString());
-      }
-      return navigate({
-        to: "/sessions/$sessionId",
-        params: { sessionId: newSessionId.toString() },
-      });
-    },
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
-  const renameSessionMutation = useRenameNameMutation({
-    onSuccess: (name) => {
-      messageQueue.success(`session renamed to ${name}`);
-    },
-    onError: (res) => {
-      messageQueue.error(res.toString());
-    },
-  });
-
-  const queryClient = useQueryClient();
-  const { mutate: createSessionAndAskQuestion } = useCreateSessionMutation({
-    onSuccess: async (data) => {
-      await queryClient
-        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
-        .then(() => {
-          setNewSessionId(data.id);
-          setFirstQuestion(userInput);
-
-          newChatMutation.mutate({
-            query: userInput,
-            session_id: data.id.toString(),
-            configuration: createQueryConfiguration(excludeKnowledgeBase),
-          });
-        })
-        .catch((x: unknown) => {
-          messageQueue.error(String(x));
-        });
-    },
-    onError: () => {
-      messageQueue.error("Session creation failed.");
-    },
-  });
-
   const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
       return;
     }
-    setCurrentQuestion(userInput);
-    if (activeSession && sessionId) {
-      chatMutation.mutate({
-        query: userInput,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
-    } else if (models && models.length > 0) {
-      const requestBody: CreateSessionRequest = {
-        name: "New Chat",
-        dataSourceIds: [],
-        inferenceModel: models[0].model_id,
-        responseChunks: 10,
-        queryConfiguration: {
-          enableHyde: false,
-          enableSummaryFilter: true,
-        },
-      };
-      createSessionAndAskQuestion(requestBody);
+    if (userInput.length > 0) {
+      setCurrentQuestion(userInput);
+      if (sessionId) {
+        chatMutation.mutate({
+          query: userInput,
+          session_id: sessionId,
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
+        });
+      } else {
+        if (models) {
+          const requestBody: CreateSessionRequest = {
+            name: "New Chat",
+            dataSourceIds: [],
+            inferenceModel: models[0].model_id,
+            responseChunks: 10,
+            queryConfiguration: {
+              enableHyde: false,
+              enableSummaryFilter: true,
+            },
+          };
+          createSessionMutation(requestBody)
+            .then((session) => {
+              navigate({
+                to: `/sessions/${session.id.toString()}`,
+                params: { sessionId: session.id.toString() },
+                search: { question: userInput },
+              }).catch(() => null);
+            })
+            .catch(() => null);
+        }
+      }
     }
   };
 
