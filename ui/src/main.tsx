@@ -70,7 +70,7 @@ const queryCache = queryClient.getQueryCache();
 
 const callback = (event) => {
   if (event.query.queryKey && event.query.queryKey[0].includes("chatHistory")) {
-    console.log(event.type, event.query);
+    console.log(event.type, event.query.state.data);
   }
 };
 
