@@ -52,7 +52,7 @@ import { Button, Flex, Result, Spin, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-export const queryClient = new QueryClient({
+const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (_, error: Error) => {

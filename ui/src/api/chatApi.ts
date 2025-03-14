@@ -172,17 +172,14 @@ export const useChatMutation = ({
     onMutate: (variables) => {
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
-        (cachedData) => {
-          return appendPlaceholderToChatHistory(variables.query, cachedData);
-        },
+        (cachedData) =>
+          appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
     onSuccess: (data, variables) => {
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
-        (cachedData) => {
-          return replacePlaceholderInChatHistory(data, cachedData);
-        },
+        (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
       );
       queryClient
         .invalidateQueries({
