@@ -38,9 +38,43 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { Button, Flex, Typography } from "antd";
+import { useContext } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
+  const {
+    activeSession,
+    dataSourcesQuery: { dataSources, dataSourcesStatus },
+  } = useContext(RagChatContext);
+
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
+
+  const handleCreateSession = (dataSourceId: number) => {
+    createSessionAndRedirect(undefined, dataSourceId);
+  };
+
+  if (activeSession?.dataSourceIds.length) {
+    return null;
+  }
+
+  if (dataSourcesStatus === "success" && dataSources.length > 0) {
+    return (
+      <Flex
+        vertical
+        align="center"
+        justify="center"
+        style={{ height: "100%" }}
+        gap={10}
+      >
+        <Typography.Title level={3} type="secondary" italic={true}>
+          OR
+        </Typography.Title>
+        <Typography.Text>Hook it up!</Typography.Text>
+      </Flex>
+    );
+  }
 
   return (
     <Flex
@@ -50,6 +84,9 @@ const NoDataSourcesState = () => {
       style={{ height: "100%" }}
       gap={10}
     >
+      <Typography.Title level={3} type="secondary" italic={true}>
+        OR
+      </Typography.Title>
       <Typography.Text>
         In order to get started, create a new knowledge base using the button
         below.

@@ -117,9 +117,6 @@ const ChatMessageController = () => {
           Welcome to Chatbot Studio
         </Typography.Title>
         <SuggestedQuestionsCards />
-        <Typography.Title level={3} type="secondary" italic={true}>
-          OR
-        </Typography.Title>
         <NoDataSourcesState />
       </Flex>
     );

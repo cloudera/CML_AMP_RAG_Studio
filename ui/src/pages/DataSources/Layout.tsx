@@ -38,10 +38,12 @@
 
 import { Button, Flex, Layout, Tooltip, Typography } from "antd";
 import DataSourcesTabs from "pages/DataSources/Tabs.tsx";
-import { DataSourceType, useGetDataSourceById } from "src/api/dataSourceApi.ts";
+import { DataSourceType, getDataSourceById } from "src/api/dataSourceApi.ts";
 import { createContext } from "react";
 import { Route } from "src/routes/_layout/data/_layout-datasources/$dataSourceId";
 import { MessageOutlined } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 
 export const DataSourceContext = createContext<{
   dataSourceId: string;
@@ -50,8 +52,12 @@ export const DataSourceContext = createContext<{
 
 function DataSourceLayout() {
   const { dataSourceId } = Route.useParams();
-  // const { data } = useQuery(getDataSourceById(dataSourceId));
-  const { data } = useGetDataSourceById(dataSourceId);
+  const { data } = useQuery(getDataSourceById(dataSourceId));
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
+
+  const handleCreateSession = () => {
+    createSessionAndRedirect(undefined, +dataSourceId);
+  };
 
   return (
     <Layout
@@ -68,6 +74,7 @@ function DataSourceLayout() {
               type="text"
               style={{ marginBottom: 12 }}
               icon={<MessageOutlined />}
+              onClick={handleCreateSession}
             />
           </Tooltip>
         ) : null}
