@@ -170,11 +170,9 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
-      console.log({ variables });
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
         (cachedData) => {
-          console.log({ cachedData });
           return appendPlaceholderToChatHistory(variables.query, cachedData);
         },
       );
@@ -182,7 +180,11 @@ export const useChatMutation = ({
     onSuccess: (data, variables) => {
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
-        (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
+        (cachedData) => {
+          const newThing = replacePlaceholderInChatHistory(data, cachedData);
+          console.log({ newThing, data, cachedData, variables });
+          return newThing;
+        },
       );
       queryClient
         .invalidateQueries({
