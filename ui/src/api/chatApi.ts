@@ -170,10 +170,13 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
+      console.log({ variables });
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
-        (cachedData) =>
-          appendPlaceholderToChatHistory(variables.query, cachedData),
+        (cachedData) => {
+          console.log({ cachedData });
+          return appendPlaceholderToChatHistory(variables.query, cachedData);
+        },
       );
     },
     onSuccess: (data, variables) => {

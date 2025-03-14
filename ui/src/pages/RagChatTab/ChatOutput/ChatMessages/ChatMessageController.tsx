@@ -58,17 +58,17 @@ const ChatMessageController = () => {
   const search: { question?: string } = useSearch({
     strict: false,
   });
-  const renameMutation = useRenameNameMutation({
+  const { mutate: renameMutation } = useRenameNameMutation({
     onError: (err) => {
       messageQueue.error(err.message);
     },
   });
-  const chatMutation = useChatMutation({
+  const { mutate: chatMutation } = useChatMutation({
     onError: (err) => {
       messageQueue.error(err.message);
     },
     onSuccess: (chatMessage) => {
-      renameMutation.mutate(chatMessage.session_id.toString());
+      renameMutation(chatMessage.session_id.toString());
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
@@ -77,7 +77,7 @@ const ChatMessageController = () => {
 
   useEffect(() => {
     if (search.question && activeSession) {
-      chatMutation.mutate({
+      chatMutation({
         query: search.question,
         session_id: activeSession.id.toString(),
         configuration: createQueryConfiguration(
@@ -100,7 +100,7 @@ const ChatMessageController = () => {
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;
   }
-
+  console.log(`chat history length: ${chatHistory.length.toString()}`);
   if (chatHistory.length === 0) {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;
