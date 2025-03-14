@@ -37,44 +37,36 @@
  ******************************************************************************/
 
 import { useNavigate } from "@tanstack/react-router";
-import { Button, Empty, Flex, Typography } from "antd";
+import { Button, Flex, Typography } from "antd";
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
 
   return (
-    <Flex vertical align="center" justify="center" style={{ height: "100%" }}>
-      <Typography.Title level={3} style={{ padding: 10 }}>
-        Getting started
-      </Typography.Title>
-      <Typography.Text style={{ padding: 10 }}>
-        This application allows you to upload your documents and immediately
-        start asking questions about them.
-      </Typography.Text>
+    <Flex
+      vertical
+      align="center"
+      justify="center"
+      style={{ height: "100%" }}
+      gap={10}
+    >
       <Typography.Text>
         In order to get started, create a new knowledge base using the button
         below.
       </Typography.Text>
-      <Empty
-        style={{ padding: 40 }}
-        description={
-          <Flex vertical gap={10}>
-            <Typography.Text>No knowledge bases present</Typography.Text>
-            <Button
-              type="primary"
-              onClick={() => {
-                navigate({
-                  to: "/data",
-                  search: { create: true },
-                }).catch(() => null);
-                return;
-              }}
-            >
-              Create Knowledge Base
-            </Button>
-          </Flex>
-        }
-      />
+      <Button
+        type="primary"
+        style={{ width: 200 }}
+        onClick={() => {
+          navigate({
+            to: "/data",
+            search: { create: true },
+          }).catch(() => null);
+          return;
+        }}
+      >
+        Create Knowledge Base
+      </Button>
     </Flex>
   );
 };

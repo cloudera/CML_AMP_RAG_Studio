@@ -48,6 +48,7 @@ import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
+import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 
 const ChatMessageController = () => {
   const {
@@ -116,6 +117,10 @@ const ChatMessageController = () => {
           Welcome to Chatbot Studio
         </Typography.Title>
         <SuggestedQuestionsCards />
+        <Typography.Title level={3} type="secondary" italic={true}>
+          OR
+        </Typography.Title>
+        <NoDataSourcesState />
       </Flex>
     );
   }

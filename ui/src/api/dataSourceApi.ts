@@ -155,6 +155,13 @@ export const getDataSourceById = (dataSourceId: string) => {
   });
 };
 
+export const useGetDataSourceById = (dataSourceId: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.getDataSourceById, { dataSourceId }],
+    queryFn: () => getDataSourceByIdQuery(dataSourceId),
+  });
+};
+
 const getDataSourceByIdQuery = async (
   dataSourceId: string,
 ): Promise<DataSourceType> => {
