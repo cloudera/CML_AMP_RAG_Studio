@@ -4,6 +4,7 @@ import {
   createSessionMutation,
   CreateSessionRequest,
 } from "src/api/sessionApi";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const useCreateSessionAndRedirect = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const useCreateSessionAndRedirect = () => {
   return (question?: string, dataSourceId?: number) => {
     if (models) {
       const requestBody: CreateSessionRequest = {
-        name: "New Chat",
+        name: "",
         dataSourceIds: dataSourceId ? [dataSourceId] : [],
         inferenceModel: models[0].model_id,
         responseChunks: 10,
@@ -29,7 +30,9 @@ const useCreateSessionAndRedirect = () => {
             search: question ? { question: question } : undefined,
           }).catch(() => null);
         })
-        .catch(() => null);
+        .catch(() => {
+          messageQueue.error("Failed to create session");
+        });
     }
   };
 };

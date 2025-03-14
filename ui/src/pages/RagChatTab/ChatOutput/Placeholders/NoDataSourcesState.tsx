@@ -37,13 +37,16 @@
  ******************************************************************************/
 
 import { useNavigate } from "@tanstack/react-router";
-import { Button, Flex, Typography } from "antd";
+import { Button, Flex, Form, Select, Typography } from "antd";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
+import { ArrowRightOutlined } from "@ant-design/icons";
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
+  const [form] = Form.useForm<{ dataSourceId: number }>();
   const {
     activeSession,
     dataSourcesQuery: { dataSources, dataSourcesStatus },
@@ -51,8 +54,16 @@ const NoDataSourcesState = () => {
 
   const createSessionAndRedirect = useCreateSessionAndRedirect();
 
-  const handleCreateSession = (dataSourceId: number) => {
-    createSessionAndRedirect(undefined, dataSourceId);
+  const handleCreateSession = () => {
+    form
+      .validateFields()
+      .catch(() => null)
+      .then((values) => {
+        if (values?.dataSourceId) {
+          createSessionAndRedirect(undefined, values.dataSourceId);
+        }
+      })
+      .catch(() => null);
   };
 
   if (activeSession?.dataSourceIds.length) {
@@ -68,10 +79,36 @@ const NoDataSourcesState = () => {
         style={{ height: "100%" }}
         gap={10}
       >
-        <Typography.Title level={3} type="secondary" italic={true}>
+        <Typography.Title level={4} type="secondary" italic={true}>
           OR
         </Typography.Title>
-        <Typography.Text>Hook it up!</Typography.Text>
+        <Typography.Text>
+          Start chatting with an existing Knowledge Base
+        </Typography.Text>
+
+        <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+          <Flex gap={8}>
+            <Form.Item
+              name="dataSourceId"
+              rules={[
+                { required: true, message: "Please select a Knowledge Base" },
+              ]}
+            >
+              <Select
+                disabled={dataSources.length === 0}
+                style={{ width: 300 }}
+                options={dataSources.map((value) => {
+                  return formatDataSource(value);
+                })}
+              />
+            </Form.Item>
+            <Button
+              type="primary"
+              icon={<ArrowRightOutlined />}
+              onClick={handleCreateSession}
+            />
+          </Flex>
+        </Form>
       </Flex>
     );
   }
@@ -84,7 +121,7 @@ const NoDataSourcesState = () => {
       style={{ height: "100%" }}
       gap={10}
     >
-      <Typography.Title level={3} type="secondary" italic={true}>
+      <Typography.Title level={4} type="secondary" italic={true}>
         OR
       </Typography.Title>
       <Typography.Text>
