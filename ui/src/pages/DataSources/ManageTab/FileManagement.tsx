@@ -86,9 +86,18 @@ const FileManagement: React.FC = () => {
       });
 
       setFileList([]);
-      void queryClient.invalidateQueries({
-        queryKey: [QueryKeys.getRagDocuments],
-      });
+
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getRagDocuments],
+        })
+        .catch(() => null);
+
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getDataSourceById, { dataSourceId }],
+        })
+        .catch(() => null);
 
       if (fulfilledValues > 0) {
         messageQueue.success(

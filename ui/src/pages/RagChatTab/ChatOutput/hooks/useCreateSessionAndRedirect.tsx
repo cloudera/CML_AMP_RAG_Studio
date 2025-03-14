@@ -4,16 +4,17 @@ import {
   createSessionMutation,
   CreateSessionRequest,
 } from "src/api/sessionApi";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const useCreateSessionAndRedirect = () => {
   const navigate = useNavigate();
   const { data: models } = useGetLlmModels();
 
-  return (question: string) => {
+  return (question?: string, dataSourceId?: number) => {
     if (models) {
       const requestBody: CreateSessionRequest = {
-        name: "New Chat",
-        dataSourceIds: [],
+        name: "",
+        dataSourceIds: dataSourceId ? [dataSourceId] : [],
         inferenceModel: models[0].model_id,
         responseChunks: 10,
         queryConfiguration: {
@@ -26,10 +27,12 @@ const useCreateSessionAndRedirect = () => {
           navigate({
             to: `/sessions/${session.id.toString()}`,
             params: { sessionId: session.id.toString() },
-            search: { question: question },
+            search: question ? { question: question } : undefined,
           }).catch(() => null);
         })
-        .catch(() => null);
+        .catch(() => {
+          messageQueue.error("Failed to create session");
+        });
     }
   };
 };

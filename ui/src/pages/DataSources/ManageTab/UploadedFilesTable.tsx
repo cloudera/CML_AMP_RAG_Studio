@@ -178,6 +178,11 @@ const UploadedFilesTable = () => {
         .catch(() => {
           messageQueue.error("Failed to refresh document list");
         });
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getDataSourceById, { dataSourceId }],
+        })
+        .catch(() => null);
     },
     onError: () => {
       messageQueue.error("Failed to delete document");

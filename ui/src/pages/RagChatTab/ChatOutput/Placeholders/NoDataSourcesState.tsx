@@ -37,45 +37,110 @@
  ******************************************************************************/
 
 import { useNavigate } from "@tanstack/react-router";
-import { Button, Empty, Flex, Typography } from "antd";
+import { Button, Flex, Form, Select, Typography } from "antd";
+import { useContext, ReactNode } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
+import { ArrowRightOutlined } from "@ant-design/icons";
+
+// Reusable placeholder component to eliminate duplication
+const PlaceholderContainer = ({
+  message,
+  children,
+}: {
+  message: string;
+  children: ReactNode;
+}) => {
+  return (
+    <Flex
+      vertical
+      align="center"
+      justify="center"
+      style={{ height: "100%" }}
+      gap={10}
+    >
+      <Typography.Title level={4} type="secondary" italic={true}>
+        OR
+      </Typography.Title>
+      <Typography.Text>{message}</Typography.Text>
+      {children}
+    </Flex>
+  );
+};
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
+  const [form] = Form.useForm<{ dataSourceId: number }>();
+  const {
+    activeSession,
+    dataSourcesQuery: { dataSources, dataSourcesStatus },
+  } = useContext(RagChatContext);
 
-  return (
-    <Flex vertical align="center" justify="center" style={{ height: "100%" }}>
-      <Typography.Title level={3} style={{ padding: 10 }}>
-        Getting started
-      </Typography.Title>
-      <Typography.Text style={{ padding: 10 }}>
-        This application allows you to upload your documents and immediately
-        start asking questions about them.
-      </Typography.Text>
-      <Typography.Text>
-        In order to get started, create a new knowledge base using the button
-        below.
-      </Typography.Text>
-      <Empty
-        style={{ padding: 40 }}
-        description={
-          <Flex vertical gap={10}>
-            <Typography.Text>No knowledge bases present</Typography.Text>
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
+
+  const handleCreateSession = () => {
+    form
+      .validateFields()
+      .catch(() => null)
+      .then((values) => {
+        if (values?.dataSourceId) {
+          createSessionAndRedirect(undefined, values.dataSourceId);
+        }
+      })
+      .catch(() => null);
+  };
+
+  if (activeSession?.dataSourceIds.length) {
+    return null;
+  }
+
+  if (dataSourcesStatus === "success" && dataSources.length > 0) {
+    return (
+      <PlaceholderContainer message="Start chatting with an existing Knowledge Base">
+        <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+          <Flex gap={8}>
+            <Form.Item
+              name="dataSourceId"
+              rules={[
+                { required: true, message: "Please select a Knowledge Base" },
+              ]}
+            >
+              <Select
+                disabled={dataSources.length === 0}
+                style={{ width: 300 }}
+                options={dataSources.map((value) => {
+                  return formatDataSource(value);
+                })}
+              />
+            </Form.Item>
             <Button
               type="primary"
-              onClick={() => {
-                navigate({
-                  to: "/data",
-                  search: { create: true },
-                }).catch(() => null);
-                return;
-              }}
-            >
-              Create Knowledge Base
-            </Button>
+              icon={<ArrowRightOutlined />}
+              onClick={handleCreateSession}
+            />
           </Flex>
-        }
-      />
-    </Flex>
+        </Form>
+      </PlaceholderContainer>
+    );
+  }
+
+  return (
+    <PlaceholderContainer message="In order to get started, create a new knowledge base using the button below.">
+      <Button
+        type="primary"
+        style={{ width: 200 }}
+        onClick={() => {
+          navigate({
+            to: "/data",
+            search: { create: true },
+          }).catch(() => null);
+          return;
+        }}
+      >
+        Create Knowledge Base
+      </Button>
+    </PlaceholderContainer>
   );
 };
 

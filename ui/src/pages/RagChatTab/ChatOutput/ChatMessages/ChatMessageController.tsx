@@ -46,8 +46,13 @@ import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx
 import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
 import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import {
+  createQueryConfiguration,
+  isPlaceholder,
+  useChatMutation,
+} from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
+import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 
 const ChatMessageController = () => {
   const {
@@ -67,13 +72,22 @@ const ChatMessageController = () => {
     onError: (err) => {
       messageQueue.error(err.message);
     },
-    onSuccess: (chatMessage) => {
-      renameMutation(chatMessage.session_id.toString());
+    onSuccess: () => {
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
     },
   });
+
+  useEffect(() => {
+    if (activeSession?.name === "") {
+      const lastMessage =
+        chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+      if (lastMessage && !isPlaceholder(lastMessage)) {
+        renameMutation(activeSession.id.toString());
+      }
+    }
+  }, [activeSession?.name, chatHistory, chatHistoryStatus]);
 
   useEffect(() => {
     if (search.question && activeSession) {
@@ -116,6 +130,7 @@ const ChatMessageController = () => {
           Welcome to Chatbot Studio
         </Typography.Title>
         <SuggestedQuestionsCards />
+        <NoDataSourcesState />
       </Flex>
     );
   }
