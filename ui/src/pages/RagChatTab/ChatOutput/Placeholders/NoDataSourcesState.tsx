@@ -38,11 +38,36 @@
 
 import { useNavigate } from "@tanstack/react-router";
 import { Button, Flex, Form, Select, Typography } from "antd";
-import { useContext } from "react";
+import { useContext, ReactNode } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 import { ArrowRightOutlined } from "@ant-design/icons";
+
+// Reusable placeholder component to eliminate duplication
+const PlaceholderContainer = ({
+  message,
+  children,
+}: {
+  message: string;
+  children: ReactNode;
+}) => {
+  return (
+    <Flex
+      vertical
+      align="center"
+      justify="center"
+      style={{ height: "100%" }}
+      gap={10}
+    >
+      <Typography.Title level={4} type="secondary" italic={true}>
+        OR
+      </Typography.Title>
+      <Typography.Text>{message}</Typography.Text>
+      {children}
+    </Flex>
+  );
+};
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
@@ -72,20 +97,7 @@ const NoDataSourcesState = () => {
 
   if (dataSourcesStatus === "success" && dataSources.length > 0) {
     return (
-      <Flex
-        vertical
-        align="center"
-        justify="center"
-        style={{ height: "100%" }}
-        gap={10}
-      >
-        <Typography.Title level={4} type="secondary" italic={true}>
-          OR
-        </Typography.Title>
-        <Typography.Text>
-          Start chatting with an existing Knowledge Base
-        </Typography.Text>
-
+      <PlaceholderContainer message="Start chatting with an existing Knowledge Base">
         <Form autoCorrect="off" form={form} clearOnDestroy={true}>
           <Flex gap={8}>
             <Form.Item
@@ -109,25 +121,12 @@ const NoDataSourcesState = () => {
             />
           </Flex>
         </Form>
-      </Flex>
+      </PlaceholderContainer>
     );
   }
 
   return (
-    <Flex
-      vertical
-      align="center"
-      justify="center"
-      style={{ height: "100%" }}
-      gap={10}
-    >
-      <Typography.Title level={4} type="secondary" italic={true}>
-        OR
-      </Typography.Title>
-      <Typography.Text>
-        In order to get started, create a new knowledge base using the button
-        below.
-      </Typography.Text>
+    <PlaceholderContainer message="In order to get started, create a new knowledge base using the button below.">
       <Button
         type="primary"
         style={{ width: 200 }}
@@ -141,7 +140,7 @@ const NoDataSourcesState = () => {
       >
         Create Knowledge Base
       </Button>
-    </Flex>
+    </PlaceholderContainer>
   );
 };
 
