@@ -173,7 +173,12 @@ export const useChatMutation = ({
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
         (cachedData) => {
-          return appendPlaceholderToChatHistory(variables.query, cachedData);
+          const result = appendPlaceholderToChatHistory(
+            variables.query,
+            cachedData,
+          );
+          console.log({ variables, result });
+          return result;
         },
       );
     },
