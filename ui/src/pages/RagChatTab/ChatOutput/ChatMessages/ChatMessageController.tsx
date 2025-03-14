@@ -100,7 +100,6 @@ const ChatMessageController = () => {
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;
   }
-  console.log(`chat history length: ${chatHistory.length.toString()}`);
   if (chatHistory.length === 0) {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;

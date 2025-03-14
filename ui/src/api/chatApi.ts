@@ -150,7 +150,7 @@ export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
   cachedData?: ChatMessageType[],
 ) => {
-  if (!cachedData) {
+  if (!cachedData || cachedData.length == 0) {
     return [data];
   }
   return cachedData.map((message) => {
@@ -173,12 +173,7 @@ export const useChatMutation = ({
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
         (cachedData) => {
-          const result = appendPlaceholderToChatHistory(
-            variables.query,
-            cachedData,
-          );
-          console.log({ variables, result });
-          return result;
+          return appendPlaceholderToChatHistory(variables.query, cachedData);
         },
       );
     },
@@ -186,9 +181,7 @@ export const useChatMutation = ({
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey(variables.session_id),
         (cachedData) => {
-          const newThing = replacePlaceholderInChatHistory(data, cachedData);
-          console.log({ newThing, data, cachedData, variables });
-          return newThing;
+          return replacePlaceholderInChatHistory(data, cachedData);
         },
       );
       queryClient
