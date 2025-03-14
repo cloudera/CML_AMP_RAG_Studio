@@ -53,6 +53,7 @@ from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
 from .utils import build_auth_headers, get_caii_access_token
 from ..utils import raise_for_http_error, body_to_json
+from ..llama_utils import completion_to_prompt, messages_to_prompt
 import logging
 
 DEFAULT_NAMESPACE = "serving-default"
@@ -142,7 +143,6 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 # FILL_MASK = 6;
 # RANK = 7;
 
-from ..llama_utils import completion_to_prompt, messages_to_prompt
 
 def get_caii_llm_models() -> List[ModelResponse]:
     potential_models = get_models_with_task("TEXT_GENERATION")
@@ -152,7 +152,7 @@ def get_caii_llm_models() -> List[ModelResponse]:
             model = get_llm(endpoint_name=potential.name, messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt)
             if model.metadata:
                 results.append(potential)
-        except Exception as e:
+        except Exception:
             logger.warning(f"Unable to load model metadata for model: {potential.name}")
             pass
 
