@@ -51,8 +51,9 @@ import { ApiError } from "./api/utils";
 import { Button, Flex, Result, Spin, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { QueryCache } from "@tanstack/react-query";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (_, error: Error) => {
@@ -64,6 +65,16 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const queryCache = queryClient.getQueryCache();
+
+const callback = (event) => {
+  if (event.query.queryKey && event.query.queryKey[0].includes("chatHistory")) {
+    console.log(event.type, event.query);
+  }
+};
+
+queryCache.subscribe(callback);
 
 const router = createRouter({
   routeTree,
