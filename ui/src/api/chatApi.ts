@@ -150,7 +150,7 @@ export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
   cachedData?: ChatMessageType[],
 ) => {
-  if (!cachedData) {
+  if (!cachedData || cachedData.length == 0) {
     return [data];
   }
   return cachedData.map((message) => {

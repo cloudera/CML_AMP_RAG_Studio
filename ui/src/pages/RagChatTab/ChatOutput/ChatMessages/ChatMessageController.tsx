@@ -58,17 +58,17 @@ const ChatMessageController = () => {
   const search: { question?: string } = useSearch({
     strict: false,
   });
-  const renameMutation = useRenameNameMutation({
+  const { mutate: renameMutation } = useRenameNameMutation({
     onError: (err) => {
       messageQueue.error(err.message);
     },
   });
-  const chatMutation = useChatMutation({
+  const { mutate: chatMutation } = useChatMutation({
     onError: (err) => {
       messageQueue.error(err.message);
     },
     onSuccess: (chatMessage) => {
-      renameMutation.mutate(chatMessage.session_id.toString());
+      renameMutation(chatMessage.session_id.toString());
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
@@ -77,7 +77,7 @@ const ChatMessageController = () => {
 
   useEffect(() => {
     if (search.question && activeSession) {
-      chatMutation.mutate({
+      chatMutation({
         query: search.question,
         session_id: activeSession.id.toString(),
         configuration: createQueryConfiguration(
@@ -88,36 +88,36 @@ const ChatMessageController = () => {
   }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (scrollEl.current) {
-        scrollEl.current.scrollIntoView({ behavior: "auto" });
-      }
-    }, 50);
+    if (chatHistory.length > 0) {
+      setTimeout(() => {
+        if (scrollEl.current) {
+          scrollEl.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 50);
+    }
   }, [scrollEl.current, chatHistory.length, activeSession?.id]);
 
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;
   }
-
   if (chatHistory.length === 0) {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;
-    } else {
-      return (
-        <Flex vertical align="center" gap={16}>
-          <Image
-            src={Images.BrandTalking}
-            alt="Machines Chatting"
-            style={{ width: 80 }}
-            preview={false}
-          />
-          <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
-            Welcome to Chatbot Studio
-          </Typography.Title>
-          <SuggestedQuestionsCards />
-        </Flex>
-      );
     }
+    return (
+      <Flex vertical align="center" gap={16}>
+        <Image
+          src={Images.BrandTalking}
+          alt="Machines Chatting"
+          style={{ width: 80 }}
+          preview={false}
+        />
+        <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+          Welcome to Chatbot Studio
+        </Typography.Title>
+        <SuggestedQuestionsCards />
+      </Flex>
+    );
   }
 
   return (

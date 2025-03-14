@@ -40,11 +40,13 @@ import { createLazyFileRoute, Navigate } from "@tanstack/react-router";
 import GettingStarted from "src/components/GettingStarted/GettingStarted.tsx";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 
 const Home = () => {
   const dataSources = useSuspenseQuery(getDataSourcesQueryOptions);
+  const sessions = useSuspenseQuery(getSessionsQueryOptions);
 
-  if (dataSources.data.length === 0) {
+  if (dataSources.data.length === 0 && sessions.data.length === 0) {
     return <GettingStarted />;
   }
   return <Navigate to="/sessions" />;
