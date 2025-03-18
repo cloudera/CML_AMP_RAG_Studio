@@ -88,6 +88,13 @@ from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
 from ..metadata_apis.data_sources_metadata_api import get_metadata
+from llama_index.core.agent import ReActAgent
+from llama_index.core.tools import BaseTool, FunctionTool, QueryEngineTool, ToolMetadata
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.chat_engine.utils import (
+    get_prefix_messages_with_context,
+    get_response_synthesizer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +113,15 @@ from the conversation. Just provide the question, not any description of it.
 """
 
 CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
+
+
+def multiply(a: int, b: int) -> int:
+    """Multiply two integers and returns the result integer"""
+    print("i can math")
+    return a * b
+
+
+multiply_tool = FunctionTool.from_defaults(fn=multiply)
 
 
 def query(
@@ -139,11 +155,33 @@ def query(
         )
     )
 
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=chat_engine._get_response_synthesizer(
+            chat_history=chat_messages
+        ),
+    )
+
+    # todo: add summary as description
+    query_engine_tools = QueryEngineTool(
+        query_engine=query_engine,
+        metadata=ToolMetadata(
+            name="Knowledge_base_retriever",
+            description="Retrieves documents from the knowledge base",
+        ),
+    )
+    agent = ReActAgent.from_tools(
+        [query_engine_tools, multiply_tool], llm=llm, verbose=True
+    )
+
     condensed_question: str = chat_engine.condense_question(
         chat_messages, query_str
     ).strip()
     try:
-        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
+        chat_response: AgentChatResponse = agent.chat(
+            message=query_str, chat_history=chat_messages
+        )
+        # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
@@ -213,6 +251,7 @@ def _build_flexible_chat_engine(
         condense_question_prompt=CUSTOM_PROMPT,
         retriever=retriever,
         node_postprocessors=postprocessors,
+        chat_mode="react",
     )
     chat_engine._configuration = configuration
     return chat_engine
