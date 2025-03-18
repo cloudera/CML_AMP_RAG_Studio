@@ -36,7 +36,7 @@
 #  DATA.
 #
 import os
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import boto3
 
@@ -106,7 +106,7 @@ class BedrockModelProvider(ModelProvider):
         default_region = os.environ.get("AWS_DEFAULT_REGION") or None
         bedrock_client = boto3.client("bedrock", region_name=default_region)
         profiles = bedrock_client.list_inference_profiles()["inferenceProfileSummaries"]
-        return profiles
+        return cast(List[dict[str, str]], profiles)
 
     @staticmethod
     def get_embedding_models() -> List[ModelResponse]:
