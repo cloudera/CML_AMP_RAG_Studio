@@ -38,14 +38,18 @@
 import base64
 import json
 import logging
-from typing import Annotated, Optional, List
+from typing import Annotated
 
 from fastapi import APIRouter, Cookie
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat, generate_dummy_suggested_questions
+from ....services.chat import (
+    v2_chat,
+    direct_llm_chat,
+    generate_dummy_suggested_questions,
+)
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
@@ -54,15 +58,17 @@ from ....services.session import rename_session
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
+
 class RagSuggestedQuestionsResponse(BaseModel):
     suggested_questions: list[str]
-
 
 
 @router.get("/suggest-questions")
 @exceptions.propagates
 def suggest_questions() -> RagSuggestedQuestionsResponse:
-    return RagSuggestedQuestionsResponse(suggested_questions=generate_dummy_suggested_questions())
+    return RagSuggestedQuestionsResponse(
+        suggested_questions=generate_dummy_suggested_questions()
+    )
 
 
 @router.post(

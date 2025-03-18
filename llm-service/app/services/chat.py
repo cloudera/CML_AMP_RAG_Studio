@@ -38,7 +38,7 @@
 import time
 import uuid
 from random import shuffle
-from typing import List, Iterable, Optional
+from typing import List, Iterable
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -195,10 +195,12 @@ SAMPLE_QUESTIONS = [
     "What tools and features does Cloudera provide for data governance, lineage, and cataloging?,",
 ]
 
+
 def generate_dummy_suggested_questions() -> List[str]:
     questions = SAMPLE_QUESTIONS.copy()
     shuffle(questions)
     return questions[:4]
+
 
 def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
     chat_history = retrieve_chat_history(session.id)
@@ -218,7 +220,6 @@ def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
     )
     suggested_questions = process_response(chat_response.message.content)
     return suggested_questions
-
 
 
 def generate_suggested_questions(
