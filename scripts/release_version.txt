@@ -1,1 +1,1 @@
-export RELEASE_TAG=dev-testing
+export RELEASE_TAG=1.12.0-beta
