@@ -91,7 +91,7 @@ const NoDataSourcesState = () => {
       .catch(() => null);
   };
 
-  if (activeSession?.dataSourceIds.length) {
+  if (activeSession) {
     return null;
   }
 

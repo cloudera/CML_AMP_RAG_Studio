@@ -72,12 +72,12 @@ export interface QueryConfiguration {
 
 export interface ChatMutationRequest {
   query: string;
-  session_id: string;
+  session_id: number;
   configuration: QueryConfiguration;
 }
 
 interface ChatHistoryRequestType {
-  session_id: string;
+  session_id: number;
 }
 
 export interface ChatMessageType {
@@ -115,11 +115,11 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
   };
 };
 
-export const chatHistoryQueryKey = (session_id: string) => {
+export const chatHistoryQueryKey = (session_id: number) => {
   return [QueryKeys.chatHistoryQuery, { session_id }];
 };
 
-export const useChatHistoryQuery = (session_id: string) => {
+export const useChatHistoryQuery = (session_id: number) => {
   return useQuery({
     queryKey: chatHistoryQueryKey(session_id),
     queryFn: () => chatHistoryQuery({ session_id }),
@@ -132,7 +132,7 @@ export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
 ): Promise<ChatMessageType[]> => {
   return await getRequest(
-    `${llmServicePath}/sessions/${request.session_id}/chat-history`,
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history`,
   );
 };
 
@@ -198,7 +198,7 @@ const chatMutation = async (
   request: ChatMutationRequest,
 ): Promise<ChatMessageType> => {
   return await postRequest(
-    `${llmServicePath}/sessions/${request.session_id}/chat`,
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat`,
     request,
   );
 };

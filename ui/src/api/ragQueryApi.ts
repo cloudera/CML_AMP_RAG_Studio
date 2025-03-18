@@ -37,7 +37,6 @@
  ******************************************************************************/
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryConfiguration } from "src/api/chatApi.ts";
 import {
   getRequest,
   llmServicePath,
@@ -45,34 +44,9 @@ import {
   postRequest,
   QueryKeys,
 } from "src/api/utils.ts";
-import { useMemo } from "react";
-
-const SAMPLE_QUESTIONS = [
-  "How does Cloudera Machine Learning handle data preparation and ingestion from various data sources?",
-  "What data formats are supported by Cloudera Machine Learning, and how are they processed?",
-  "Can Cloudera Machine Learning handle large-scale data ingestion and processing?",
-  "How does Cloudera Machine Learning support data quality and data governance?",
-  "Can Cloudera Machine Learning integrate with other data preparation and ingestion tools?",
-  "What machine learning algorithms are supported by Cloudera Machine Learning?",
-  "How does Cloudera Machine Learning support model development and training, including hyperparameter tuning?",
-  "Can Cloudera Machine Learning handle large-scale model training and deployment?",
-  "How does Cloudera Machine Learning support model explainability and interpretability?",
-  "Can Cloudera Machine Learning integrate with other machine learning frameworks and tools?",
-  "How does Cloudera Machine Learning support model deployment and serving, including model scoring and prediction?",
-  "Can Cloudera Machine Learning handle high-volume and high-velocity data streams?",
-  "How does Cloudera Machine Learning support model updates and retraining?",
-  "Can Cloudera Machine Learning integrate with other model serving and deployment platforms?",
-  "What are the security and access controls for model deployment and serving in Cloudera Machine Learning?",
-  "What security features are built into Cloudera Machine Learning, including data encryption and access controls?",
-  "How does Cloudera Machine Learning support data governance and compliance, including regulatory requirements?",
-  "Can Cloudera Machine Learning handle sensitive data, such as PII or PHI?",
-  "How does Cloudera Machine Learning support auditing and logging?",
-  "Can Cloudera Machine Learning integrate with other security and governance tools?",
-];
 
 export interface SuggestQuestionsRequest {
-  configuration: QueryConfiguration;
-  session_id: string;
+  session_id?: number;
 }
 
 export interface SuggestQuestionsResponse {
@@ -96,22 +70,15 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: suggestedQuestionKey(request.session_id),
     queryFn: () => suggestQuestionsQuery(request),
-    enabled: Boolean(request.session_id),
+    enabled: true,
     gcTime: 0,
-    placeholderData: useMemo(() => {
-      const randomQuestions = SAMPLE_QUESTIONS.sort(() => Math.random() - 0.5);
-      return { suggested_questions: randomQuestions.slice(0, 4) };
-    }, []),
   });
 };
 
 const suggestQuestionsQuery = async (
   request: SuggestQuestionsRequest,
 ): Promise<SuggestQuestionsResponse> => {
-  return await postRequest(
-    `${llmServicePath}/sessions/${request.session_id}/suggest-questions`,
-    request,
-  );
+  return await postRequest(`${llmServicePath}/chat/suggest-questions`, request);
 };
 
 export interface ChunkMetadata {

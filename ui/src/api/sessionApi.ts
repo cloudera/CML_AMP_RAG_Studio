@@ -132,7 +132,7 @@ export const useUpdateSessionMutation = ({
     onSuccess: (session) => {
       queryClient
         .invalidateQueries({
-          queryKey: suggestedQuestionKey(session.id.toString()),
+          queryKey: suggestedQuestionKey(session.id),
         })
         .catch((error: unknown) => {
           console.error(error);

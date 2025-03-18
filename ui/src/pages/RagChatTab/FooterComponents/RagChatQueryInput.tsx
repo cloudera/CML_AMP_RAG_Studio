@@ -62,14 +62,12 @@ const RagChatQueryInput = () => {
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
-  const configuration = createQueryConfiguration(excludeKnowledgeBase);
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
     isFetching: sampleQuestionsIsFetching,
   } = useSuggestQuestions({
-    configuration,
-    session_id: sessionId && sessionId != "0" ? sessionId : "",
+    session_id: sessionId ? +sessionId : undefined,
   });
 
   const chatMutation = useChatMutation({
@@ -89,7 +87,7 @@ const RagChatQueryInput = () => {
       if (sessionId) {
         chatMutation.mutate({
           query: userInput,
-          session_id: sessionId,
+          session_id: +sessionId,
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {

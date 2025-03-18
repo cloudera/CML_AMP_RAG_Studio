@@ -1,4 +1,4 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,28 +34,27 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
-
+#
 import logging
+from typing import Optional
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
-from . import data_source
-from . import sessions
-from . import amp_metadata
-from . import models
-from . import metrics
-from . import chat
+from app import exceptions
+from app.services.chat import generate_suggested_questions
 
 logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/chat", tags=["Chat"])
 
+class RagSuggestedQuestionsResponse(BaseModel):
+    suggested_questions: list[str]
 
-router = APIRouter()
-router.include_router(chat.router)
-router.include_router(data_source.router)
-router.include_router(sessions.router)
-router.include_router(amp_metadata.router)
-# include this for legacy UI calls
-router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
-router.include_router(models.router)
-router.include_router(metrics.router)
+class SuggestedQuestionsRequest(BaseModel):
+    session_id: Optional[int] = None
+
+@router.post("/suggest-questions")
+@exceptions.propagates
+def suggest_questions(request: SuggestedQuestionsRequest) -> RagSuggestedQuestionsResponse:
+    return RagSuggestedQuestionsResponse(suggested_questions=generate_suggested_questions(request.session_id))
+

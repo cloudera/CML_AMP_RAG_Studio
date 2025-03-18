@@ -93,7 +93,7 @@ const ChatMessageController = () => {
     if (search.question && activeSession) {
       chatMutation({
         query: search.question,
-        session_id: activeSession.id.toString(),
+        session_id: activeSession.id,
         configuration: createQueryConfiguration(
           !(activeSession.dataSourceIds.length > 0),
         ),
