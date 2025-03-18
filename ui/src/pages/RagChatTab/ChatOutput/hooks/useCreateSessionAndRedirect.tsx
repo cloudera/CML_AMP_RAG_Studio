@@ -1,14 +1,22 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useGetLlmModels } from "src/api/modelsApi";
 import {
-  createSessionMutation,
   CreateSessionRequest,
+  useCreateSessionMutation,
 } from "src/api/sessionApi";
 import messageQueue from "src/utils/messageQueue.ts";
 
 const useCreateSessionAndRedirect = () => {
   const navigate = useNavigate();
   const { data: models } = useGetLlmModels();
+  const createSession = useCreateSessionMutation({
+    onSuccess: () => {
+      messageQueue.success("Session created successfully");
+    },
+    onError: () => {
+      messageQueue.error("Failed to create session");
+    },
+  });
 
   return (question?: string, dataSourceId?: number) => {
     if (models) {
@@ -22,7 +30,8 @@ const useCreateSessionAndRedirect = () => {
           enableSummaryFilter: true,
         },
       };
-      createSessionMutation(requestBody)
+      createSession
+        .mutateAsync(requestBody)
         .then((session) => {
           navigate({
             to: `/sessions/${session.id.toString()}`,
