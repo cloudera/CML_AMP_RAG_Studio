@@ -37,7 +37,8 @@
 # ##############################################################################
 import time
 import uuid
-from typing import List, Iterable
+from random import shuffle
+from typing import List, Iterable, Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -181,10 +182,28 @@ def format_source_nodes(
     return response_source_nodes
 
 
-def generate_suggested_questions_direct_llm(session: Session) -> List[str]:
+SAMPLE_QUESTIONS = [
+    "What is Cloudera, and how does it support organizations in managing big data?",
+    "What are the key components of the Cloudera Data Platform (CDP), and how do they work together?",
+    "How does Cloudera enable hybrid and multi-cloud data management for enterprises?",
+    "What are the primary use cases for Cloudera's platform in industries such as finance, healthcare, and retail?",
+    "How does Cloudera ensure data security and compliance with regulations like GDPR, HIPAA, and CCPA?",
+    "What is the role of Apache Hadoop and Apache Spark in Cloudera's ecosystem, and how do they contribute to data processing?",
+    "How does Cloudera's platform support machine learning and artificial intelligence workflows?",
+    "What are the differences between Cloudera Data Platform (CDP) Public Cloud and CDP Private Cloud?",
+    "How does Cloudera's platform handle data ingestion, storage, and real-time analytics at scale?",
+    "What tools and features does Cloudera provide for data governance, lineage, and cataloging?,",
+]
+
+def generate_dummy_suggested_questions() -> List[str]:
+    questions = SAMPLE_QUESTIONS.copy()
+    shuffle(questions)
+    return questions[:4]
+
+def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
     chat_history = retrieve_chat_history(session.id)
     if not chat_history:
-        return []
+        return generate_dummy_suggested_questions()
     query_str = (
         " Give me a list of possible follow-up questions."
         " Each question should be on a new line."
@@ -201,12 +220,15 @@ def generate_suggested_questions_direct_llm(session: Session) -> List[str]:
     return suggested_questions
 
 
+
 def generate_suggested_questions(
     session_id: int,
 ) -> List[str]:
+    if session_id is None:
+        return generate_dummy_suggested_questions()
     session = session_metadata_api.get_session(session_id)
     if len(session.data_source_ids) == 0:
-        return generate_suggested_questions_direct_llm(session)
+        return _generate_suggested_questions_direct_llm(session)
     if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400,

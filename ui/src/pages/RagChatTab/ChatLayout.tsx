@@ -61,7 +61,7 @@ function ChatLayout() {
     useGetDataSourcesQuery();
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
   const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery(
-    sessionId?.toString() ?? ""
+    sessionId ? +sessionId : 0,
   );
 
   const activeSession = getSessionForSessionId(sessionId, sessions);

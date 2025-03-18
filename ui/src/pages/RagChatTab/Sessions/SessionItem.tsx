@@ -61,7 +61,7 @@ const SessionItem = ({ session }: { session: Session }) => {
   const { mutate: deleteChatHistoryMutate } = useDeleteChatHistoryMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: chatHistoryQueryKey(session.id.toString()),
+        queryKey: chatHistoryQueryKey(session.id),
       });
       deleteChatHistoryModal.setIsModalOpen(false);
       messageQueue.success("Chat history cleared successfully");

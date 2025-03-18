@@ -79,14 +79,13 @@ const SuggestedQuestionsCards = () => {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
   } = useContext(RagChatContext);
-  const sessionId = activeSession?.id.toString();
+  const sessionId = activeSession?.id;
   const {
     data,
     isPending: suggestedQuestionsIsPending,
     isFetching: suggestedQuestionsIsFetching,
   } = useSuggestQuestions({
-    configuration: createQueryConfiguration(excludeKnowledgeBase),
-    session_id: sessionId ?? "",
+    session_id: sessionId ?? undefined,
   });
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
