@@ -38,7 +38,7 @@
 import time
 import uuid
 from random import shuffle
-from typing import List, Iterable
+from typing import List, Iterable, Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -223,7 +223,7 @@ def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
 
 
 def generate_suggested_questions(
-    session_id: int,
+    session_id: Optional[int],
 ) -> List[str]:
     if session_id is None:
         return generate_dummy_suggested_questions()
