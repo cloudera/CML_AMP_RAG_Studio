@@ -43,7 +43,6 @@ from pydantic import BaseModel
 
 from app import exceptions
 from app.services.chat import generate_suggested_questions
-from fastmcp import FastMCP
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -65,12 +64,3 @@ def suggest_questions(
     return RagSuggestedQuestionsResponse(
         suggested_questions=generate_suggested_questions(request.session_id)
     )
-
-
-mcp = FastMCP("Demo 🚀")
-
-
-@mcp.tool()
-def add(a: int, b: int) -> int:
-    """Add two numbers"""
-    return a + b
