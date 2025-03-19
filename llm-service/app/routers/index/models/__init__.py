@@ -37,7 +37,7 @@
 #
 from typing import List, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from .... import exceptions
 from ....services.caii.types import ModelResponse
@@ -48,7 +48,10 @@ router = APIRouter(prefix="/models", tags=["Models"])
 
 @router.get("/llm", summary="Get LLM Inference models.")
 @exceptions.propagates
-def get_llm_models() -> List[ModelResponse]:
+def get_llm_models(request: Request) -> List[ModelResponse]:
+    header_names = request.headers.keys()
+    for header in header_names:
+        print(f"{header} = {request.headers.get(header)=}")
     return models.LLM.list_available()
 
 
