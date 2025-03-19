@@ -36,13 +36,14 @@
 #  DATA.
 #
 import logging
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, AnyUrl
 
 from app import exceptions
 from app.services.chat import generate_suggested_questions
+from app.services.query.querier import available_tools
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -64,3 +65,8 @@ def suggest_questions(
     return RagSuggestedQuestionsResponse(
         suggested_questions=generate_suggested_questions(request.session_id)
     )
+
+@router.post("/tools")
+@exceptions.propagates
+def tools() -> List[dict[str, str]]:
+    return available_tools()

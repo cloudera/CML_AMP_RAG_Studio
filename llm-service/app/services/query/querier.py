@@ -82,6 +82,9 @@ def multiply(a: int, b: int) -> int:
 
 mcp_tool_spec = McpToolSpec(BasicMCPClient("http://localhost:8888/sse"))
 
+def available_tools() -> List[dict[str, str]]:
+    return list(map(lambda x: {"name": x.metadata.name, "description": x.metadata.description}, mcp_tool_spec.to_tool_list()))
+
 def query(
     data_source_id: int,
     query_str: str,
