@@ -38,16 +38,6 @@
 
 BEGIN;
 
-CREATE TABLE project
-(
-    id                    BIGINT auto_increment NOT NULL,
-    name                  VARCHAR(1024)         NOT NULL,
-    default_project       BOOLEAN               NOT NULL DEFAULT FALSE,
-    time_created          TIMESTAMP             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    time_updated          TIMESTAMP             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by_id         VARCHAR(255)                NOT NULL,
-    updated_by_id         VARCHAR(255)                NOT NULL,
-    CONSTRAINT PK_project PRIMARY KEY (id)
-);
+ALTER TABLE CHAT_SESSION DROP COLUMN project_id;
 
 COMMIT;

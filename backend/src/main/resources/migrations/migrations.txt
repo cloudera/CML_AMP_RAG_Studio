@@ -39,3 +39,7 @@
 19_create_project.up.sql
 20_create_default_project.down.sql
 20_create_default_project.up.sql
+21_add_chat_project.down.sql
+21_add_chat_project.up.sql
+22_assign_default_project_session.down.sql
+22_assign_default_project_session.up.sql
