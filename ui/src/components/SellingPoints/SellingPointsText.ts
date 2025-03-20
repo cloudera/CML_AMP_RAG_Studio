@@ -46,15 +46,15 @@ export const sellingPointsText = [
     image: Images.Chat,
   },
   {
-    title: "Create Your Knowledge Base",
-    body: "Add a Knowledge Base. It's the foundation for unlocking insights from your documents.",
+    title: "Upload Documents, Build a Knowledge Base",
+    body: "Your chat unlocks insights from your documents.",
     altText: "database",
     image: Images.DB,
   },
   {
-    title: "Upload Your Documents",
-    body: "Once your Knowledge Base is ready, upload your files to store and organize your content.",
+    title: "Grows with You",
+    body: "Access advanced RAG techniques and agents (coming soon).",
     altText: "upload",
-    image: Images.Upload,
+    image: Images.AiAssistant,
   },
 ];
