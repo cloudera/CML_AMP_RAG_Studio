@@ -89,7 +89,7 @@ const createRagDocumentMutation = async (
   dataSourceId: string,
 ) => {
   const formData = new FormData();
-  formData.append("file", file as FileType, `root/${file.name}`);
+  formData.append("file", file as FileType, file.name);
   return await fetch(
     `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`,
     {
