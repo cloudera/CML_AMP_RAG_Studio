@@ -40,8 +40,14 @@ import Images from "src/components/images/Images.ts";
 
 export const sellingPointsText = [
   {
+    title: "Ask Questions, Get Answers",
+    body: "Get started quickly by chatting with an LLM.",
+    altText: "chat",
+    image: Images.Chat,
+  },
+  {
     title: "Create Your Knowledge Base",
-    body: "Start by setting up your Knowledge Base. It's the foundation for unlocking insights from your documents.",
+    body: "Add a Knowledge Base. It's the foundation for unlocking insights from your documents.",
     altText: "database",
     image: Images.DB,
   },
@@ -50,11 +56,5 @@ export const sellingPointsText = [
     body: "Once your Knowledge Base is ready, upload your files to store and organize your content.",
     altText: "upload",
     image: Images.Upload,
-  },
-  {
-    title: "Ask Questions, Get Answers",
-    body: "With everything set up, ask detailed questions about your documents and get instant, clear answers.",
-    altText: "chat",
-    image: Images.Chat,
   },
 ];

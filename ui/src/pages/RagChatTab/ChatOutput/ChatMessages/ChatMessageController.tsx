@@ -127,7 +127,7 @@ const ChatMessageController = () => {
           preview={false}
         />
         <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
-          Welcome to Chatbot Studio
+          Welcome to RAG Studio
         </Typography.Title>
         <SuggestedQuestionsCards />
         <NoDataSourcesState />
