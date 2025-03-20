@@ -40,8 +40,8 @@ from typing import List, Literal
 from fastapi import APIRouter
 
 from .... import exceptions
-from ....services.caii.types import ModelResponse
 from ....services import models
+from ....services.caii.types import ModelResponse
 
 router = APIRouter(prefix="/models", tags=["Models"])
 

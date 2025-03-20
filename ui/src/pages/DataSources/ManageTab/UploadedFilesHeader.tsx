@@ -37,10 +37,16 @@
  ******************************************************************************/
 
 import { RagDocumentResponseType } from "src/api/ragDocumentsApi.ts";
-import { Flex, Typography } from "antd";
+import { Button, Flex, Tooltip, Typography } from "antd";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
-import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  LoadingOutlined,
+  MessageOutlined,
+} from "@ant-design/icons";
 import KnowledgeBaseSummary from "pages/DataSources/ManageTab/KnowledgeBaseSummary.tsx";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { Route } from "src/routes/_layout/data/_layout-datasources/$dataSourceId.tsx";
 
 const UploadedFilesHeader = ({
   ragDocuments,
@@ -49,29 +55,45 @@ const UploadedFilesHeader = ({
   ragDocuments: RagDocumentResponseType[];
   docsLoading: boolean;
 }) => {
+  const { dataSourceId } = Route.useParams();
   const completedIndexing = ragDocuments.filter(
     (doc) => doc.vectorUploadTimestamp !== null,
   ).length;
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
   const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
+
+  const handleCreateSession = () => {
+    createSessionAndRedirect(undefined, +dataSourceId);
+  };
+
+  const fullyIndexed =
+    !docsLoading && ragDocuments.length === completedIndexing;
 
   return (
     <Flex style={{ width: "100%", marginBottom: 10 }} vertical gap={10}>
       <Flex flex={1} style={{ width: "100%" }}>
         <KnowledgeBaseSummary ragDocuments={ragDocuments} />
       </Flex>
-      <Flex vertical justify="end" align="end">
-        <Typography.Text type="secondary">
-          Total Documents: {ragDocuments.length} (
-          {bytesConversion(totalSize.toString())})
-        </Typography.Text>
-        <Typography.Text type="secondary">
-          Documents indexed: {completedIndexing} / {ragDocuments.length}
-          {docsLoading || ragDocuments.length !== completedIndexing ? (
-            <LoadingOutlined style={{ marginLeft: 5 }} />
-          ) : (
-            <CheckCircleOutlined style={{ marginLeft: 5, color: "green" }} />
-          )}
-        </Typography.Text>
+      <Flex justify="end" align="center" gap={16}>
+        {fullyIndexed ? (
+          <Tooltip title="Create a new session with this Knowledge Base">
+            <Button onClick={handleCreateSession} icon={<MessageOutlined />} />
+          </Tooltip>
+        ) : null}
+        <Flex vertical>
+          <Typography.Text type="secondary">
+            Total Documents: {ragDocuments.length} (
+            {bytesConversion(totalSize.toString())})
+          </Typography.Text>
+          <Typography.Text type="secondary">
+            Documents indexed: {completedIndexing} / {ragDocuments.length}
+            {fullyIndexed ? (
+              <CheckCircleOutlined style={{ marginLeft: 5, color: "green" }} />
+            ) : (
+              <LoadingOutlined style={{ marginLeft: 5 }} />
+            )}
+          </Typography.Text>
+        </Flex>
       </Flex>
     </Flex>
   );

@@ -51,6 +51,10 @@ public class UserTokenCookieDecoder {
   private final ObjectMapper objectMapper =
       new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+  // note: switch to getting these from headers
+  //  remote-user-perm
+  //  remote-user
+
   public String extractUsername(Cookie[] cookies) {
     if (cookies != null) {
       for (Cookie cookie : cookies) {
