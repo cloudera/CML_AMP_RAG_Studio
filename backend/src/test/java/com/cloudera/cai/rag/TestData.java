@@ -44,6 +44,22 @@ import java.time.Instant;
 import java.util.List;
 
 public class TestData {
+  public static Types.Project createTestProjectInstance(String name, Boolean defaultProject) {
+    return Types.Project.builder()
+        .id(null)
+        .name(name)
+        .defaultProject(defaultProject)
+        .timeCreated(null)
+        .timeUpdated(null)
+        .createdById("fake-user")
+        .updatedById("fake-user")
+        .build();
+  }
+
+  public static Types.CreateProject createProjectRequest(String name) {
+    return new Types.CreateProject(name);
+  }
+
   public static Types.Session createTestSessionInstance(String sessionName) {
     return new Types.Session(
         null,

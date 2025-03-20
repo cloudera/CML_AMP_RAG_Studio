@@ -155,4 +155,23 @@ public class Types {
     AZURE_BLOB,
     S3
   }
+
+  @With
+  @Builder
+  public record Project(
+      Long id,
+      String name,
+      boolean defaultProject,
+      Instant timeCreated,
+      Instant timeUpdated,
+      String createdById,
+      String updatedById) {
+
+    public static Project fromCreateRequest(CreateProject input, String username) {
+      return new Project(null, input.name(), false, null, null, username, username);
+    }
+  }
+
+  @With
+  public record CreateProject(String name) {}
 }
