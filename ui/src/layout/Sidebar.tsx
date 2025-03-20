@@ -42,6 +42,7 @@ import {
   DatabaseFilled,
   DesktopOutlined,
   LineChartOutlined,
+  ProjectOutlined,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -69,7 +70,7 @@ function getItem(
   key: React.Key,
   onClick: () => void,
   icon?: React.ReactNode,
-  children?: MenuItem[],
+  children?: MenuItem[]
 ): MenuItem {
   return {
     key,
@@ -102,6 +103,10 @@ const Sidebar: React.FC = () => {
 
   const navToModels = () => {
     navigate({ to: "/models" }).catch(() => null);
+  };
+
+  const navToProjects = () => {
+    navigate({ to: "/projects" }).catch(() => null);
   };
 
   const baseItems: MenuItem[] = [
@@ -158,13 +163,13 @@ const Sidebar: React.FC = () => {
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
       navToRagApp,
-      <DesktopOutlined />,
+      <DesktopOutlined />
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
       navToData,
-      <DatabaseFilled />,
+      <DatabaseFilled />
     ),
   ];
 
@@ -172,17 +177,24 @@ const Sidebar: React.FC = () => {
     <div data-testid="models-nav">Models</div>,
     "models",
     navToModels,
-    <CloudOutlined />,
+    <CloudOutlined />
+  );
+
+  const projects = getItem(
+    <div data-testid="projects-nav">Projects</div>,
+    "projects",
+    navToProjects,
+    <ProjectOutlined />
   );
 
   const analyticsItem = getItem(
     <div data-testid="analytics-nav">Analytics</div>,
     "analytics",
     navToAnalytics,
-    <LineChartOutlined />,
+    <LineChartOutlined />
   );
 
-  const items = [...baseItems, models, analyticsItem];
+  const items = [...baseItems, models, projects, analyticsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -193,6 +205,8 @@ const Sidebar: React.FC = () => {
       return ["models"];
     } else if (matchRoute({ to: "/analytics", fuzzy: true })) {
       return ["analytics"];
+    } else if (matchRoute({ to: "/projects", fuzzy: true })) {
+      return ["projects"];
     } else {
       return ["chat"];
     }

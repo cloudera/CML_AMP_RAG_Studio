@@ -15,6 +15,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as IndexImport } from './routes/index'
+import { Route as LayoutProjectsImport } from './routes/_layout/projects'
 import { Route as LayoutSessionsIndexImport } from './routes/_layout/sessions/index'
 import { Route as LayoutSessionsSessionIdImport } from './routes/_layout/sessions/$sessionId'
 import { Route as LayoutModelsLayoutModelsImport } from './routes/_layout/models/_layout-models'
@@ -59,6 +60,12 @@ const LayoutDataRoute = LayoutDataImport.update({
 const LayoutAnalyticsRoute = LayoutAnalyticsImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutProjectsRoute = LayoutProjectsImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -156,6 +163,13 @@ declare module '@tanstack/react-router' {
       fullPath: ''
       preLoaderRoute: typeof LayoutImport
       parentRoute: typeof rootRoute
+    }
+    '/_layout/projects': {
+      id: '/_layout/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof LayoutProjectsImport
+      parentRoute: typeof LayoutImport
     }
     '/_layout/analytics': {
       id: '/_layout/analytics'
@@ -332,6 +346,7 @@ const LayoutModelsRouteWithChildren = LayoutModelsRoute._addFileChildren(
 )
 
 interface LayoutRouteChildren {
+  LayoutProjectsRoute: typeof LayoutProjectsRoute
   LayoutAnalyticsRoute: typeof LayoutAnalyticsRouteWithChildren
   LayoutDataRoute: typeof LayoutDataRouteWithChildren
   LayoutModelsRoute: typeof LayoutModelsRouteWithChildren
@@ -340,6 +355,7 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutProjectsRoute: LayoutProjectsRoute,
   LayoutAnalyticsRoute: LayoutAnalyticsRouteWithChildren,
   LayoutDataRoute: LayoutDataRouteWithChildren,
   LayoutModelsRoute: LayoutModelsRouteWithChildren,
@@ -353,6 +369,7 @@ const LayoutRouteWithChildren =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof LayoutRouteWithChildren
+  '/projects': typeof LayoutProjectsRoute
   '/analytics': typeof LayoutAnalyticsLayoutModelsRouteWithChildren
   '/data': typeof LayoutDataLayoutDatasourcesRouteWithChildren
   '/models': typeof LayoutModelsLayoutModelsRouteWithChildren
@@ -367,6 +384,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof LayoutRouteWithChildren
+  '/projects': typeof LayoutProjectsRoute
   '/analytics': typeof LayoutAnalyticsLayoutModelsIndexRoute
   '/data': typeof LayoutDataLayoutDatasourcesIndexRoute
   '/models': typeof LayoutModelsLayoutModelsIndexRoute
@@ -379,6 +397,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/projects': typeof LayoutProjectsRoute
   '/_layout/analytics': typeof LayoutAnalyticsRouteWithChildren
   '/_layout/analytics/_layout-models': typeof LayoutAnalyticsLayoutModelsRouteWithChildren
   '/_layout/data': typeof LayoutDataRouteWithChildren
@@ -398,6 +417,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
+    | '/projects'
     | '/analytics'
     | '/data'
     | '/models'
@@ -411,6 +431,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | ''
+    | '/projects'
     | '/analytics'
     | '/data'
     | '/models'
@@ -421,6 +442,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_layout'
+    | '/_layout/projects'
     | '/_layout/analytics'
     | '/_layout/analytics/_layout-models'
     | '/_layout/data'
@@ -466,12 +488,17 @@ export const routeTree = rootRoute
     "/_layout": {
       "filePath": "_layout.tsx",
       "children": [
+        "/_layout/projects",
         "/_layout/analytics",
         "/_layout/data",
         "/_layout/models",
         "/_layout/sessions/$sessionId",
         "/_layout/sessions/"
       ]
+    },
+    "/_layout/projects": {
+      "filePath": "_layout/projects.tsx",
+      "parent": "/_layout"
     },
     "/_layout/analytics": {
       "filePath": "_layout/analytics",
