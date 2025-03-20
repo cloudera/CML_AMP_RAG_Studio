@@ -51,9 +51,9 @@ public class UserTokenCookieDecoder {
   private final ObjectMapper objectMapper =
       new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-  // note: we have a much easier way to get the user info...these headers are provided by CML
-  //  remote-user-perm = 'RW'
-  //  remote-user ='csso_jwatson'
+  // note: switch to getting these from headers
+  //  remote-user-perm
+  //  remote-user
 
   public String extractUsername(Cookie[] cookies) {
     if (cookies != null) {
