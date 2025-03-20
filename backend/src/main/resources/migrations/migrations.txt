@@ -35,3 +35,7 @@
 17_add_chat_rerank_model.up.sql
 18_add_chat_query_config.down.sql
 18_add_chat_query_config.up.sql
+19_create_project.down.sql
+19_create_project.up.sql
+20_create_default_project.down.sql
+20_create_default_project.up.sql
