@@ -73,11 +73,6 @@ export enum MutationKeys {
   "testRerankingModel" = "testRerankingModel",
   "ratingMutation" = "ratingMutation",
   "feedbackMutation" = "feedbackMutation",
-  "createProject" = "createProject",
-  "updateProject" = "updateProject",
-  "deleteProject" = "deleteProject",
-  "addDataSourceToProject" = "addDataSourceToProject",
-  "removeDataSourceFromProject" = "removeDataSourceFromProject",
 }
 
 export enum QueryKeys {
@@ -100,10 +95,6 @@ export enum QueryKeys {
   "getModelById" = "getModelById",
   "getRerankingModels" = "getRerankingModels",
   "getCdfConfigMetadata" = "getCdfConfigMetadata",
-  "getProjects" = "getProjects",
-  "getProjectById" = "getProjectById",
-  "getDefaultProject" = "getDefaultProject",
-  "getDataSourceIdsForProject" = "getDataSourceIdsForProject",
 }
 
 export const commonHeaders = {
@@ -124,7 +115,7 @@ export interface CustomError {
 export class ApiError extends Error {
   constructor(
     message = "unknown",
-    public status: number
+    public status: number,
   ) {
     super(message);
     this.name = "CustomError";
@@ -134,7 +125,7 @@ export class ApiError extends Error {
 
 export const postRequest = async <T>(
   url: string,
-  body: Record<never, never>
+  body: Record<never, never>,
 ): Promise<T> => {
   const res = await fetch(url, {
     method: "POST",
