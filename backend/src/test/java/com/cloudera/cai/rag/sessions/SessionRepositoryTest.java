@@ -51,7 +51,10 @@ class SessionRepositoryTest {
   void create() {
     SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
+        TestData.createTestSessionInstance("test")
+            .withCreatedById("abc")
+            .withUpdatedById("abc")
+            .withProjectId(2L);
     var id = sessionRepository.create(input);
     assertThat(id).isNotNull();
 
@@ -64,6 +67,7 @@ class SessionRepositoryTest {
     assertThat(result.timeUpdated()).isNotNull();
     assertThat(result.createdById()).isEqualTo("abc");
     assertThat(result.updatedById()).isEqualTo("abc");
+    assertThat(result.projectId()).isEqualTo(2L);
     assertThat(result.lastInteractionTime()).isNull();
   }
 

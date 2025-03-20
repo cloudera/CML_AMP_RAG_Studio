@@ -70,8 +70,8 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration)
-            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration)
+            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration, project_id)
+            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration, :projectId)
           """;
           Long id = insertSession(input, handle, sql);
           insertSessionDataSources(handle, id, input.dataSourceIds());
@@ -144,7 +144,8 @@ public class SessionRepository {
                             .updatedById(rowView.getColumn("updated_by_id", String.class))
                             .timeUpdated(rowView.getColumn("time_updated", Instant.class))
                             .lastInteractionTime(
-                                rowView.getColumn("last_interaction_time", Instant.class));
+                                rowView.getColumn("last_interaction_time", Instant.class))
+                            .projectId(rowView.getColumn("project_id", Long.class));
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                       }
