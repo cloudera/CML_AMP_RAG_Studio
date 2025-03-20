@@ -44,7 +44,6 @@ import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCr
 import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 import { ArrowRightOutlined } from "@ant-design/icons";
 
-// Reusable placeholder component to eliminate duplication
 const PlaceholderContainer = ({
   message,
   children,
@@ -61,7 +60,7 @@ const PlaceholderContainer = ({
       gap={10}
     >
       <Typography.Title level={4} type="secondary" italic={true}>
-        OR
+        Ask any question
       </Typography.Title>
       <Typography.Text>{message}</Typography.Text>
       {children}
@@ -126,9 +125,9 @@ const NoDataSourcesState = () => {
   }
 
   return (
-    <PlaceholderContainer message="In order to get started, create a new knowledge base using the button below.">
+    <PlaceholderContainer message="Or create a knowledge base to chat with your documents.">
       <Button
-        type="primary"
+        type="default"
         style={{ width: 200 }}
         onClick={() => {
           navigate({
