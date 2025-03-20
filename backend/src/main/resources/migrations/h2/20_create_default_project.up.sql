@@ -40,6 +40,6 @@ SET MODE MYSQL;
 
 BEGIN;
 
-INSERT INTO project (name, created_by_id, updated_by_id) VALUES ('Default', 'admin', 'admin');
+INSERT INTO project (name, default_project, created_by_id, updated_by_id) VALUES ('Default', true, 'admin', 'admin');
 
 COMMIT;
