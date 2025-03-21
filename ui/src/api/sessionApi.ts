@@ -72,6 +72,7 @@ export interface Session {
   updatedById: string;
   lastInteractionTime: number;
   queryConfiguration: SessionQueryConfiguration;
+  projectId: number;
 }
 
 export type CreateSessionRequest = Pick<
