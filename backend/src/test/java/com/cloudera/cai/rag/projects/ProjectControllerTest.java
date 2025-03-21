@@ -44,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.Project;
+import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.Types.Session;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.sessions.SessionService;
@@ -57,7 +58,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 class ProjectControllerTest {
 
   @Test
-  void create() throws Exception, JsonProcessingException {
+  void create() throws Exception {
     ProjectController controller = createController();
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
 
@@ -76,7 +77,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void update() throws Exception, JsonProcessingException {
+  void update() throws Exception {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -97,7 +98,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjectById() throws Exception, JsonProcessingException {
+  void getProjectById() throws Exception {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -113,7 +114,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void deleteProject() throws Exception, JsonProcessingException {
+  void deleteProject() throws Exception {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -131,7 +132,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void deleteProjectWithAssociatedData() throws Exception, JsonProcessingException {
+  void deleteProjectWithAssociatedData() throws Exception {
     // Create controller with both ProjectService and SessionService
     ProjectService projectService = ProjectService.createNull();
     SessionService sessionService = SessionService.createNull();
@@ -157,8 +158,8 @@ class ProjectControllerTest {
                 .withProjectId(newProject.id()));
 
     // Verify the data source is associated with the project
-    List<Long> dataSourceIds = controller.getDataSourceIdsForProject(newProject.id());
-    assertThat(dataSourceIds).contains(dataSourceId);
+    List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
+    assertThat(dataSources).extracting("id").contains(dataSourceId);
 
     // Verify the session is associated with the project
     List<Types.Session> sessions = controller.getSessionsForProject(newProject.id());
@@ -172,14 +173,14 @@ class ProjectControllerTest {
         .isInstanceOf(NotFound.class);
 
     // Verify the data source associations are deleted
-    assertThat(projectService.getDataSourceIdsForProject(newProject.id())).isEmpty();
+    assertThat(projectService.getDataSourcesForProject(newProject.id())).isEmpty();
 
     // Verify the sessions are marked as deleted
     assertThat(sessionService.getSessionsByProjectId(newProject.id())).isEmpty();
   }
 
   @Test
-  void getProjects() throws Exception, JsonProcessingException {
+  void getProjects() throws Exception {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -197,7 +198,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getDefaultProject() throws Exception, JsonProcessingException {
+  void getDefaultProject() throws Exception {
     ProjectController controller = createController();
 
     // Get all projects and update any existing default projects to set defaultProject = false
@@ -229,7 +230,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void addAndRemoveDataSourceToProject() throws Exception, JsonProcessingException {
+  void addAndRemoveDataSourceToProject() throws Exception {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -245,21 +246,21 @@ class ProjectControllerTest {
     controller.addDataSourceToProject(newProject.id(), dataSourceId);
 
     // Get the data source IDs for the project
-    List<Long> dataSourceIds = controller.getDataSourceIdsForProject(newProject.id());
+    List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
 
-    assertThat(dataSourceIds).contains(dataSourceId);
+    assertThat(dataSources).extracting("id").contains(dataSourceId);
 
     // Remove the data source from the project
     controller.removeDataSourceFromProject(newProject.id(), dataSourceId);
 
     // Get the data source IDs for the project again
-    dataSourceIds = controller.getDataSourceIdsForProject(newProject.id());
+    dataSources = controller.getDataSourcesForProject(newProject.id());
 
-    assertThat(dataSourceIds).doesNotContain(dataSourceId);
+    assertThat(dataSources).extracting("id").doesNotContain(dataSourceId);
   }
 
   @Test
-  void createWithEmptyName() throws Exception, JsonProcessingException {
+  void createWithEmptyName() throws Exception {
     ProjectController controller = createController();
     Types.CreateProject createProject = TestData.createProjectRequest("");
 
@@ -272,7 +273,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void updateWithEmptyName() throws Exception, JsonProcessingException {
+  void updateWithEmptyName() throws Exception {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -290,7 +291,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjectByIdNotFound() throws JsonProcessingException {
+  void getProjectByIdNotFound() {
     ProjectController controller = createController();
 
     assertThatThrownBy(() -> controller.getProjectById(999L)).isInstanceOf(NotFound.class);

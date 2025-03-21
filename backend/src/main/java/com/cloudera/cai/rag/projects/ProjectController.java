@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.projects;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.sessions.SessionService;
 import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
 import com.cloudera.cai.util.exceptions.BadRequest;
@@ -122,9 +123,9 @@ public class ProjectController {
   }
 
   @GetMapping(value = "/{projectId}/dataSources", produces = "application/json")
-  public List<Long> getDataSourceIdsForProject(@PathVariable Long projectId) {
+  public List<RagDataSource> getDataSourcesForProject(@PathVariable Long projectId) {
     log.debug("Getting DataSource IDs for Project {}", projectId);
-    return projectService.getDataSourceIdsForProject(projectId);
+    return projectService.getDataSourcesForProject(projectId);
   }
 
   @GetMapping(value = "/{projectId}/sessions", produces = "application/json")

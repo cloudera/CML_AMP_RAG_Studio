@@ -38,7 +38,9 @@
 
 package com.cloudera.cai.rag.projects;
 
+import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.Project;
+import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.sessions.SessionRepository;
 import java.util.List;
@@ -98,8 +100,9 @@ public class ProjectService {
     projectRepository.removeDataSourceFromProject(projectId, dataSourceId);
   }
 
-  public List<Long> getDataSourceIdsForProject(Long projectId) {
-    return projectRepository.getDataSourceIdsForProject(projectId);
+  public List<RagDataSource> getDataSourcesForProject(Long projectId) {
+    List<Long> dataSourceIds = projectRepository.getDataSourceIdsForProject(projectId);
+
   }
 
   // Nullables stuff below here.
