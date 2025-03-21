@@ -66,7 +66,6 @@ export interface CreateProject {
 
 // Project API hooks and functions
 
-// Get all projects
 export const useGetProjects = () => {
   return useQuery({
     queryKey: [QueryKeys.getProjects],
