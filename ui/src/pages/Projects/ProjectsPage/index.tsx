@@ -34,8 +34,11 @@ const ProjectsPage = () => {
   return (
     <Flex
       vertical
-      align="end"
-      style={{ width: "80%", maxWidth: 1000, marginTop: 40, marginBottom: 40 }}
+      style={{
+        width: "80%",
+        maxWidth: 1000,
+        padding: 40,
+      }}
       gap={20}
     >
       <Flex gap={24}>
