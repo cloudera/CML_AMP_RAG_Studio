@@ -64,6 +64,7 @@ import FormItem from "antd/es/form/FormItem";
 import messageQueue from "src/utils/messageQueue";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils";
+import { useState } from "react";
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -134,6 +135,7 @@ const Sessions = () => {
 
 const ProjectKnowledgeBases = () => {
   const { projectId } = Route.useParams();
+  const [popoverVisible, setPopoverVisible] = useState(false);
   const { data: dataSources, isLoading } =
     useGetDataSourcesForProject(+projectId);
 
@@ -147,12 +149,17 @@ const ProjectKnowledgeBases = () => {
     },
     onSuccess: () => {
       messageQueue.success("Knowledge Base added to project");
-      queryClient.invalidateQueries({
-        queryKey: [
-          QueryKeys.getDataSourcesForProject,
-          { projectId: +projectId },
-        ],
-      });
+      setPopoverVisible(false);
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            QueryKeys.getDataSourcesForProject,
+            { projectId: +projectId },
+          ],
+        })
+        .catch(() => {
+          messageQueue.error("Error re-fetching Knowledge Bases for project");
+        });
     },
   });
   const allDataSourcesIds = dataSources?.map((dataSource) => dataSource.id);
@@ -181,6 +188,9 @@ const ProjectKnowledgeBases = () => {
       extra={
         <Popover
           title="Add Knowledge Base"
+          open={popoverVisible && unusedDataSources?.length !== 0}
+          onOpenChange={setPopoverVisible}
+          destroyTooltipOnHide={true}
           content={
             <Form autoCorrect="off" form={form} clearOnDestroy={true}>
               <FormItem name="dataSourceId">
@@ -195,6 +205,7 @@ const ProjectKnowledgeBases = () => {
               <Button
                 type="primary"
                 style={{ marginTop: 8 }}
+                disabled={unusedDataSources?.length === 0}
                 onClick={handleAddDataSource}
               >
                 Add
@@ -202,7 +213,11 @@ const ProjectKnowledgeBases = () => {
             </Form>
           }
         >
-          <Button type="text" icon={<PlusCircleOutlined />} />
+          <Button
+            type="text"
+            disabled={unusedDataSources?.length === 0}
+            icon={<PlusCircleOutlined />}
+          />
         </Popover>
       }
     >
@@ -224,7 +239,7 @@ const ProjectPage = () => {
   const { data: project } = useGetProjectById(+projectId);
 
   return (
-    <Flex style={{ padding: 40 }} vertical>
+    <Flex style={{ padding: 40, width: "80%", maxWidth: 2000 }} vertical>
       <h1>{project?.name}</h1>
       <Flex gap={32}>
         <Flex flex={2} vertical>
