@@ -61,7 +61,6 @@ import { PlusCircleOutlined } from "@ant-design/icons";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 import FormItem from "antd/es/form/FormItem";
-import { on } from "events";
 import messageQueue from "src/utils/messageQueue";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils";
