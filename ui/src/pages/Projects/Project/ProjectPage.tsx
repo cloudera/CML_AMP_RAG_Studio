@@ -39,6 +39,7 @@ import {
   Button,
   Card,
   Flex,
+  Form,
   Popover,
   Select,
   Skeleton,
@@ -46,6 +47,7 @@ import {
   Typography,
 } from "antd";
 import {
+  useAddDataSourceToProject,
   useGetDataSourcesForProject,
   useGetProjectById,
   useGetSessionsForProject,
@@ -58,6 +60,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { PlusCircleOutlined } from "@ant-design/icons";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
+import FormItem from "antd/es/form/FormItem";
+import { on } from "events";
+import messageQueue from "src/utils/messageQueue";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils";
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -134,9 +141,40 @@ const ProjectKnowledgeBases = () => {
   const { data: allDataSources, isLoading: allAreLoading } =
     useGetDataSourcesQuery();
 
-  const unusedDataSources = allDataSources?.filter((dataSource) => {
-    return !dataSources?.includes(dataSource);
+  const queryClient = useQueryClient();
+  const { mutate: addDataSourceToProject } = useAddDataSourceToProject({
+    onError: (res: Error) => {
+      messageQueue.error(res.toString());
+    },
+    onSuccess: () => {
+      messageQueue.success("Knowledge Base added to project");
+      queryClient.invalidateQueries({
+        queryKey: [
+          QueryKeys.getDataSourcesForProject,
+          { projectId: +projectId },
+        ],
+      });
+    },
   });
+  const allDataSourcesIds = dataSources?.map((dataSource) => dataSource.id);
+  const unusedDataSources = allDataSources?.filter((dataSource) => {
+    return !allDataSourcesIds?.includes(dataSource.id);
+  });
+  const [form] = Form.useForm<{ dataSourceId: number }>();
+  const handleAddDataSource = () => {
+    form
+      .validateFields()
+      .catch(() => null)
+      .then((values) => {
+        if (values?.dataSourceId) {
+          addDataSourceToProject({
+            projectId: +projectId,
+            dataSourceId: values.dataSourceId,
+          });
+        }
+      })
+      .catch(() => null);
+  };
 
   return (
     <Card
@@ -145,13 +183,24 @@ const ProjectKnowledgeBases = () => {
         <Popover
           title="Add Knowledge Base"
           content={
-            <Select
-              disabled={allAreLoading || allDataSources?.length === 0}
-              style={{ width: 300 }}
-              options={allDataSources?.map((value) => {
-                return formatDataSource(value);
-              })}
-            />
+            <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+              <FormItem name="dataSourceId">
+                <Select
+                  disabled={allAreLoading || allDataSources?.length === 0}
+                  style={{ width: 300 }}
+                  options={unusedDataSources?.map((value) => {
+                    return formatDataSource(value);
+                  })}
+                />
+              </FormItem>
+              <Button
+                type="primary"
+                style={{ marginTop: 8 }}
+                onClick={handleAddDataSource}
+              >
+                Add
+              </Button>
+            </Form>
           }
         >
           <Button type="text" icon={<PlusCircleOutlined />} />
