@@ -35,8 +35,9 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Card, Flex, Skeleton, Typography } from "antd";
+import { Button, Card, Flex, Skeleton, Spin, Typography } from "antd";
 import {
+  useGetDataSourcesForProject,
   useGetProjectById,
   useGetSessionsForProject,
 } from "src/api/projectsApi.ts";
@@ -45,6 +46,12 @@ import { Session } from "src/api/sessionApi.ts";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { format } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
+import {
+  PlusCircleFilled,
+  PlusCircleOutlined,
+  PlusCircleTwoTone,
+} from "@ant-design/icons";
+import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -113,6 +120,32 @@ const Sessions = () => {
   );
 };
 
+const ProjectKnowledgeBases = () => {
+  const { projectId } = Route.useParams();
+  const { data: dataSources, isLoading } =
+    useGetDataSourcesForProject(+projectId);
+
+  const { data: allDataSources, isLoading: allAreLoading } =
+    useGetDataSourcesQuery();
+
+  return (
+    <Card
+      title="Knowledge Bases"
+      extra={<Button type="text" icon={<PlusCircleOutlined />} />}
+    >
+      {isLoading ? (
+        <Spin />
+      ) : (
+        dataSources?.map((dataSource) => (
+          <Card style={{ margin: 8 }}>
+            <Typography.Text>{dataSource.name}</Typography.Text>
+          </Card>
+        ))
+      )}
+    </Card>
+  );
+};
+
 const ProjectPage = () => {
   const { projectId } = Route.useParams();
   const { data: project } = useGetProjectById(+projectId);
@@ -126,7 +159,7 @@ const ProjectPage = () => {
         </Flex>
         <Flex flex={1} vertical gap={16}>
           <Card title="Settings">This is where settings goes</Card>
-          <Card title="Knowledge Bases">This is where KBs go</Card>
+          <ProjectKnowledgeBases />
         </Flex>
       </Flex>
     </Flex>
