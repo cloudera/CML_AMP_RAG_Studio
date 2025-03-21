@@ -40,9 +40,11 @@ package com.cloudera.cai.rag.projects;
 
 import com.cloudera.cai.rag.Types.Project;
 import com.cloudera.cai.rag.Types.RagDataSource;
+import com.cloudera.cai.rag.Types.Session;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.sessions.SessionRepository;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -105,6 +107,20 @@ public class ProjectService {
 
   public void removeDataSourceFromProject(Long projectId, Long dataSourceId) {
     projectRepository.removeDataSourceFromProject(projectId, dataSourceId);
+
+    removeDataSourceFromProjectSessions(projectId, dataSourceId);
+  }
+
+  private void removeDataSourceFromProjectSessions(Long projectId, Long dataSourceId) {
+    List<Session> sessions = sessionRepository.getSessionsByProjectId(projectId);
+    for (Session session : sessions) {
+      if (session.dataSourceIds().contains(dataSourceId)) {
+        List<Long> updatedDataSourceIds = new ArrayList<>(session.dataSourceIds());
+        updatedDataSourceIds.remove(dataSourceId);
+        Session updatedSession = session.withDataSourceIds(updatedDataSourceIds);
+        sessionRepository.update(updatedSession);
+      }
+    }
   }
 
   public List<RagDataSource> getDataSourcesForProject(Long projectId) {

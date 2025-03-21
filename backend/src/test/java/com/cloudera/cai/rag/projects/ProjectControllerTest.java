@@ -359,6 +359,46 @@ class ProjectControllerTest {
     assertThat(nonExistentProjectSessions).isEmpty();
   }
 
+  @Test
+  void removeDataSourceFromProjectRemovesFromSessions() throws Exception {
+    // Create controller with both ProjectService and SessionService
+    ProjectService projectService = ProjectService.createNull();
+    SessionService sessionService = SessionService.createNull();
+    ProjectController controller = new ProjectController(projectService, sessionService);
+
+    // Create a new Project
+    Types.CreateProject createProject = TestData.createProjectRequest("test-project");
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    var newProject = controller.create(createProject, request);
+
+    // Create a data source
+    var dataSourceId = TestData.createTestDataSource(RagDataSourceRepository.createNull());
+
+    // Add the data source to the project
+    controller.addDataSourceToProject(newProject.id(), dataSourceId);
+
+    // Create a session for the project with the data source
+    Types.CreateSession createSession =
+        TestData.createSessionInstance("test-session", List.of(dataSourceId));
+    var session =
+        sessionService.create(
+            Types.Session.fromCreateRequest(createSession, "test-user")
+                .withProjectId(newProject.id()));
+
+    // Verify the data source is in the session's list of data sources
+    assertThat(session.dataSourceIds()).contains(dataSourceId);
+
+    // Remove the data source from the project
+    controller.removeDataSourceFromProject(newProject.id(), dataSourceId);
+
+    // Get the updated session
+    var updatedSession = sessionService.getSessionById(session.id());
+
+    // Verify the data source is no longer in the session's list of data sources
+    assertThat(updatedSession.dataSourceIds()).doesNotContain(dataSourceId);
+  }
+
   private ProjectController createController() {
     return new ProjectController(ProjectService.createNull(), SessionService.createNull());
   }

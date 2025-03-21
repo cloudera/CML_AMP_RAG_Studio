@@ -47,12 +47,12 @@ public class RagFileDeleteReconciler extends BaseReconciler<Types.RagDocument> {
   @Override
   public ReconcileResult reconcile(Set<Types.RagDocument> documents) throws Exception {
     for (Types.RagDocument document : documents) {
-      log.info("starting deletion of document: {}", document);
+      log.debug("starting deletion of document: {}", document);
       try {
         ragBackendClient.deleteDocument(document.dataSourceId(), document.documentId());
-        log.info("finished requesting deletion of document {}", document);
+        log.debug("finished requesting deletion of document {}", document);
       } catch (NotFound e) {
-        log.info("got a not found exception from the rag backend: {}", e.getMessage());
+        log.debug("got a not found exception from the rag backend: {}", e.getMessage());
       }
       jdbi.useHandle(
           handle ->
