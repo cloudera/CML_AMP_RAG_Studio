@@ -50,7 +50,7 @@ import {
 import { Session } from "src/api/sessionApi.ts";
 
 export interface Project {
-  id?: number;
+  id: number;
   name: string;
   defaultProject: boolean;
   timeCreated: number;

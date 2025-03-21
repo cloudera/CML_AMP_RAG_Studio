@@ -35,12 +35,16 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import {useGetProjectById} from "src/api/projectsApi.ts";
+import {useParams} from "@tanstack/react-router";
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import ProjectPage from "pages/Projects/Project/ProjectPage.tsx";
+const ProjectPage = () => (
+const { projectId } = useParams();
+const { data } = useGetProjectById(projectId);
 
-export const Route = createLazyFileRoute(
-  "/_layout/projects/_layout-projects/$projectId",
-)({
-  component: () => <ProjectPage />,
-});
+  <div>
+    <h1>Project Page</h1>
+  </div>
+);
+
+export default ProjectPage;
