@@ -62,7 +62,7 @@ public class RagDataSourceController {
   @PostMapping(consumes = "application/json", produces = "application/json")
   public Types.RagDataSource create(
       @RequestBody Types.RagDataSource input, HttpServletRequest request) {
-    log.info("Creating RagDataSource: {}", input);
+    log.debug("Creating RagDataSource: {}", input);
     if (input.chunkSize() == null || input.chunkSize() < 1) {
       throw new BadRequest("chunkSize must be non-null and greater than 0");
     }
@@ -74,7 +74,7 @@ public class RagDataSourceController {
   @PostMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
   public Types.RagDataSource update(
       @RequestBody Types.RagDataSource input, HttpServletRequest request) {
-    log.info("Updating RagDataSource: {}", input);
+    log.debug("Updating RagDataSource: {}", input);
     if (input.name() == null) {
       throw new BadRequest("name must be a non-empty string");
     }
@@ -90,13 +90,13 @@ public class RagDataSourceController {
 
   @DeleteMapping(value = "/{id}")
   public void deleteDataSource(@PathVariable long id) {
-    log.info("Deleting DataSource with id: {}", id);
+    log.debug("Deleting DataSource with id: {}", id);
     dataSourceService.deleteDataSource(id);
   }
 
   @GetMapping(produces = "application/json")
   public List<Types.RagDataSource> getRagDataSources() {
-    log.info("Getting all RagDataSources");
+    log.debug("Getting all RagDataSources");
     return dataSourceService.getRagDataSources();
   }
 

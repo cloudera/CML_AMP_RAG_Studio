@@ -34,57 +34,18 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-package com.cloudera.cai.rag.sessions;
+SET MODE MYSQL;
 
-import com.cloudera.cai.rag.Types;
-import java.util.List;
-import org.springframework.stereotype.Component;
+BEGIN;
 
-@Component
-public class SessionService {
+CREATE TABLE project_data_source
+(
+    id              BIGINT auto_increment NOT NULL,
+    project_id      BIGINT                NOT NULL,
+    data_source_id  BIGINT                NOT NULL,
+    CONSTRAINT PK_project_ds PRIMARY KEY (id)
+);
 
-  private final SessionRepository sessionRepository;
-
-  public SessionService(SessionRepository sessionRepository) {
-    this.sessionRepository = sessionRepository;
-  }
-
-  public Types.Session create(Types.Session input) {
-    var id = sessionRepository.create(cleanInputs(input));
-    return sessionRepository.getSessionById(id);
-  }
-
-  public Types.Session update(Types.Session input) {
-    sessionRepository.update(cleanInputs(input));
-    return sessionRepository.getSessionById(input.id());
-  }
-
-  private Types.Session cleanInputs(Types.Session input) {
-    if (input.rerankModel() != null && input.rerankModel().isEmpty()) {
-      input = input.withRerankModel(null);
-    }
-    return input;
-  }
-
-  public List<Types.Session> getSessions() {
-    return sessionRepository.getSessions();
-  }
-
-  public List<Types.Session> getSessionsByProjectId(Long projectId) {
-    return sessionRepository.getSessionsByProjectId(projectId);
-  }
-
-  public Types.Session getSessionById(Long id) {
-    return sessionRepository.getSessionById(id);
-  }
-
-  public void delete(Long id) {
-    sessionRepository.delete(id);
-  }
-
-  public static SessionService createNull() {
-    return new SessionService(SessionRepository.createNull());
-  }
-}
+COMMIT;

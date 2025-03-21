@@ -129,7 +129,7 @@ public class RagDataSourceRepository {
   }
 
   public List<RagDataSource> getRagDataSources() {
-    log.info("Getting all RagDataSources");
+    log.debug("Getting all RagDataSources");
     return jdbi.withHandle(
         handle -> {
           var sql =

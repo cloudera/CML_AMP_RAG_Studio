@@ -70,8 +70,8 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration)
-            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration)
+            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration, project_id)
+            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration, :projectId)
           """;
           Long id = insertSession(input, handle, sql);
           insertSessionDataSources(handle, id, input.dataSourceIds());
@@ -144,7 +144,8 @@ public class SessionRepository {
                             .updatedById(rowView.getColumn("updated_by_id", String.class))
                             .timeUpdated(rowView.getColumn("time_updated", Instant.class))
                             .lastInteractionTime(
-                                rowView.getColumn("last_interaction_time", Instant.class));
+                                rowView.getColumn("last_interaction_time", Instant.class))
+                            .projectId(rowView.getColumn("project_id", Long.class));
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                       }
@@ -186,9 +187,36 @@ public class SessionRepository {
         });
   }
 
+  public List<Types.Session> getSessionsByProjectId(Long projectId) {
+    return jdbi.withHandle(
+        handle -> {
+          var sql =
+              """
+                SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
+                LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                WHERE cs.DELETED IS NULL AND cs.project_id = :projectId
+                ORDER BY last_interaction_time DESC, time_created DESC
+              """;
+          return querySessions(handle.createQuery(sql).bind("projectId", projectId))
+              .map(Types.Session.SessionBuilder::build)
+              .toList();
+        });
+  }
+
   public void delete(Long id) {
     jdbi.useHandle(
         handle -> handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE ID = ?", true, id));
+  }
+
+  public void deleteByProjectId(Long projectId) {
+    jdbi.useHandle(
+        handle ->
+            handle.execute(
+                "UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, projectId));
+  }
+
+  public void deleteByProjectId(Handle handle, Long projectId) {
+    handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, projectId);
   }
 
   public void update(Types.Session input) {

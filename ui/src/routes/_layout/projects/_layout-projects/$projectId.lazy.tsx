@@ -36,23 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { Empty, Flex, Typography } from "antd";
+import { createLazyFileRoute } from "@tanstack/react-router";
+import ProjectPage from "pages/Projects/Project/ProjectPage.tsx";
 
-const NoDataSourceForSession = () => {
-  return (
-    <Flex vertical align="center" justify="center" style={{ height: "100%" }}>
-      <Empty
-        style={{ padding: 40 }}
-        description={
-          <Flex vertical gap={10}>
-            <Typography.Text>
-              No knowledge base for this session.
-            </Typography.Text>
-          </Flex>
-        }
-      />
-    </Flex>
-  );
-};
-
-export default NoDataSourceForSession;
+export const Route = createLazyFileRoute(
+  "/_layout/projects/_layout-projects/$projectId",
+)({
+  component: () => <ProjectPage />,
+});

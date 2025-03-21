@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,55 +36,10 @@
  * DATA.
  ******************************************************************************/
 
-package com.cloudera.cai.rag.sessions;
+import { createFileRoute } from "@tanstack/react-router";
+import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
 
-import com.cloudera.cai.rag.Types;
-import java.util.List;
-import org.springframework.stereotype.Component;
-
-@Component
-public class SessionService {
-
-  private final SessionRepository sessionRepository;
-
-  public SessionService(SessionRepository sessionRepository) {
-    this.sessionRepository = sessionRepository;
-  }
-
-  public Types.Session create(Types.Session input) {
-    var id = sessionRepository.create(cleanInputs(input));
-    return sessionRepository.getSessionById(id);
-  }
-
-  public Types.Session update(Types.Session input) {
-    sessionRepository.update(cleanInputs(input));
-    return sessionRepository.getSessionById(input.id());
-  }
-
-  private Types.Session cleanInputs(Types.Session input) {
-    if (input.rerankModel() != null && input.rerankModel().isEmpty()) {
-      input = input.withRerankModel(null);
-    }
-    return input;
-  }
-
-  public List<Types.Session> getSessions() {
-    return sessionRepository.getSessions();
-  }
-
-  public List<Types.Session> getSessionsByProjectId(Long projectId) {
-    return sessionRepository.getSessionsByProjectId(projectId);
-  }
-
-  public Types.Session getSessionById(Long id) {
-    return sessionRepository.getSessionById(id);
-  }
-
-  public void delete(Long id) {
-    sessionRepository.delete(id);
-  }
-
-  public static SessionService createNull() {
-    return new SessionService(SessionRepository.createNull());
-  }
-}
+export const Route = createFileRoute("/_layout/projects/_layout-projects/")({
+  loader: async ({ context }) =>
+    await context.queryClient.ensureQueryData(getProjectsQueryOptions),
+});

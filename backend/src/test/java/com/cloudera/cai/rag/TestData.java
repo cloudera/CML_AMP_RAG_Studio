@@ -40,15 +40,36 @@ package com.cloudera.cai.rag;
 
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileRepository;
+import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.mock.web.MockCookie;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 public class TestData {
+  public static Types.Project createTestProjectInstance(String name, Boolean defaultProject) {
+    return Types.Project.builder()
+        .id(null)
+        .name(name)
+        .defaultProject(defaultProject)
+        .timeCreated(null)
+        .timeUpdated(null)
+        .createdById("fake-user")
+        .updatedById("fake-user")
+        .build();
+  }
+
+  public static Types.CreateProject createProjectRequest(String name) {
+    return new Types.CreateProject(name);
+  }
+
   public static Types.Session createTestSessionInstance(String sessionName) {
     return new Types.Session(
         null,
         sessionName,
         List.of(1L, 2L, 3L),
+        1L,
         null,
         null,
         "fake-user",
@@ -117,5 +138,11 @@ public class TestData {
             .updatedById("doesn't matter")
             .build();
     return ragFileRepository.insertDocumentMetadata(ragDocument);
+  }
+
+  public static void addUserToRequest(MockHttpServletRequest request)
+      throws JsonProcessingException {
+    request.setCookies(
+        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
   }
 }
