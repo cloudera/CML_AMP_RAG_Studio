@@ -131,6 +131,54 @@ class ProjectControllerTest {
   }
 
   @Test
+  void deleteProjectWithAssociatedData() throws Exception, JsonProcessingException {
+    // Create controller with both ProjectService and SessionService
+    ProjectService projectService = ProjectService.createNull();
+    SessionService sessionService = SessionService.createNull();
+    ProjectController controller = new ProjectController(projectService, sessionService);
+
+    // Create a new Project
+    Types.CreateProject createProject = TestData.createProjectRequest("test-project");
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    var newProject = controller.create(createProject, request);
+
+    // Create a data source
+    var dataSourceId = TestData.createTestDataSource(RagDataSourceRepository.createNull());
+
+    // Add the data source to the project
+    controller.addDataSourceToProject(newProject.id(), dataSourceId);
+
+    // Create a session for the project
+    Types.CreateSession createSession = TestData.createSessionInstance("test-session");
+    var session =
+        sessionService.create(
+            Types.Session.fromCreateRequest(createSession, "test-user")
+                .withProjectId(newProject.id()));
+
+    // Verify the data source is associated with the project
+    List<Long> dataSourceIds = controller.getDataSourceIdsForProject(newProject.id());
+    assertThat(dataSourceIds).contains(dataSourceId);
+
+    // Verify the session is associated with the project
+    List<Types.Session> sessions = controller.getSessionsForProject(newProject.id());
+    assertThat(sessions).extracting(Types.Session::id).contains(session.id());
+
+    // Delete the project
+    controller.deleteProject(newProject.id());
+
+    // Verify the project is deleted
+    assertThatThrownBy(() -> controller.getProjectById(newProject.id()))
+        .isInstanceOf(NotFound.class);
+
+    // Verify the data source associations are deleted
+    assertThat(projectService.getDataSourceIdsForProject(newProject.id())).isEmpty();
+
+    // Verify the sessions are marked as deleted
+    assertThat(sessionService.getSessionsByProjectId(newProject.id())).isEmpty();
+  }
+
+  @Test
   void getProjects() throws Exception, JsonProcessingException {
     ProjectController controller = createController();
 

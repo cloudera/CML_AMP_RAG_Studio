@@ -131,7 +131,17 @@ public class ProjectRepository {
   }
 
   public void deleteProject(Long id) {
-    jdbi.useTransaction(handle -> handle.execute("DELETE FROM project WHERE id = ?", id));
+    jdbi.useTransaction(
+        handle -> {
+          // Delete associated sessions (mark as deleted)
+          handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, id);
+
+          // Delete associated data source associations
+          handle.execute("DELETE FROM project_data_source WHERE project_id = ?", id);
+
+          // Delete the project
+          handle.execute("DELETE FROM project WHERE id = ?", id);
+        });
   }
 
   public Project getDefaultProject() {
