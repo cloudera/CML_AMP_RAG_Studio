@@ -48,6 +48,7 @@ import {
   UseMutationType,
 } from "src/api/utils.ts";
 import { Session } from "src/api/sessionApi.ts";
+import { DataSourceType } from "./dataSourceApi";
 
 export interface Project {
   id: number;
@@ -201,30 +202,30 @@ const deleteProject = async (projectId: number): Promise<void> => {
 };
 
 // Get data source IDs for project
-export const useGetDataSourceIdsForProject = (projectId?: number) => {
+export const useGetDataSourcesForProject = (projectId?: number) => {
   return useQuery({
-    queryKey: [QueryKeys.getDataSourceIdsForProject, { projectId }],
+    queryKey: [QueryKeys.getDataSourcesForProject, { projectId }],
     queryFn: async () => {
       if (!projectId) {
         return [];
       }
-      return await getDataSourceIdsForProject(projectId);
+      return await getDataSourcesForProject(projectId);
     },
     enabled: !!projectId,
   });
 };
 
-export const getDataSourceIdsForProjectQueryOptions = (projectId: number) =>
+export const getDataSourcesForProjectQueryOptions = (projectId: number) =>
   queryOptions({
-    queryKey: [QueryKeys.getDataSourceIdsForProject, { projectId }],
+    queryKey: [QueryKeys.getDataSourcesForProject, { projectId }],
     queryFn: async () => {
-      return await getDataSourceIdsForProject(projectId);
+      return await getDataSourcesForProject(projectId);
     },
   });
 
-const getDataSourceIdsForProject = async (
+const getDataSourcesForProject = async (
   projectId: number,
-): Promise<number[]> => {
+): Promise<DataSourceType[]> => {
   return await getRequest(
     `${ragPath}/projects/${String(projectId)}/dataSources`,
   );

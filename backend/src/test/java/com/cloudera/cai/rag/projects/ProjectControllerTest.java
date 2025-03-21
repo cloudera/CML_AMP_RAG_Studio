@@ -201,7 +201,8 @@ class ProjectControllerTest {
   void getDefaultProject() throws Exception {
     ProjectController controller = createController();
 
-    // Get all projects and update any existing default projects to set defaultProject = false
+    // Get all projects and update any existing default projects to set
+    // defaultProject = false
     List<Project> existingProjects = controller.getProjects();
     for (Project project : existingProjects) {
       if (Boolean.TRUE.equals(project.defaultProject())) {
@@ -239,21 +240,16 @@ class ProjectControllerTest {
     TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
-    // Create a data source
     var dataSourceId = TestData.createTestDataSource(RagDataSourceRepository.createNull());
 
-    // Add the data source to the project
     controller.addDataSourceToProject(newProject.id(), dataSourceId);
 
-    // Get the data source IDs for the project
     List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
 
     assertThat(dataSources).extracting("id").contains(dataSourceId);
 
-    // Remove the data source from the project
     controller.removeDataSourceFromProject(newProject.id(), dataSourceId);
 
-    // Get the data source IDs for the project again
     dataSources = controller.getDataSourcesForProject(newProject.id());
 
     assertThat(dataSources).extracting("id").doesNotContain(dataSourceId);

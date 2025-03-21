@@ -103,7 +103,7 @@ export enum QueryKeys {
   "getProjects" = "getProjects",
   "getProjectById" = "getProjectById",
   "getDefaultProject" = "getDefaultProject",
-  "getDataSourceIdsForProject" = "getDataSourceIdsForProject",
+  "getDataSourcesForProject" = "getDataSourcesForProject",
   "getSessionsForProject" = "getSessionsForProject",
 }
 

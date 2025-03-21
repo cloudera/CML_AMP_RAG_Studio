@@ -38,12 +38,14 @@
 
 package com.cloudera.cai.rag.projects;
 
-import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.Project;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
+import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.sessions.SessionRepository;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.jdbi.v3.core.Jdbi;
 import org.springframework.stereotype.Component;
 
@@ -51,12 +53,17 @@ import org.springframework.stereotype.Component;
 public class ProjectService {
   private final ProjectRepository projectRepository;
   private final SessionRepository sessionRepository;
+  private final RagDataSourceRepository dataSourceRepository;
   private final Jdbi jdbi;
 
   public ProjectService(
-      ProjectRepository projectRepository, SessionRepository sessionRepository, Jdbi jdbi) {
+      ProjectRepository projectRepository,
+      SessionRepository sessionRepository,
+      RagDataSourceRepository dataSourceRepository,
+      Jdbi jdbi) {
     this.projectRepository = projectRepository;
     this.sessionRepository = sessionRepository;
+    this.dataSourceRepository = dataSourceRepository;
     this.jdbi = jdbi;
   }
 
@@ -101,8 +108,12 @@ public class ProjectService {
   }
 
   public List<RagDataSource> getDataSourcesForProject(Long projectId) {
-    List<Long> dataSourceIds = projectRepository.getDataSourceIdsForProject(projectId);
-
+    Set<Long> dataSourceIds =
+        new HashSet<>(projectRepository.getDataSourceIdsForProject(projectId));
+    List<RagDataSource> dataSources = dataSourceRepository.getRagDataSources();
+    return dataSources.stream()
+        .filter(dataSource -> dataSourceIds.contains(dataSource.id()))
+        .toList();
   }
 
   // Nullables stuff below here.
@@ -111,6 +122,7 @@ public class ProjectService {
     return new ProjectService(
         ProjectRepository.createNull(),
         SessionRepository.createNull(),
+        RagDataSourceRepository.createNull(),
         JdbiConfiguration.createNull());
   }
 }
