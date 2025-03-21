@@ -42,7 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.projects.ProjectRepository;
 import com.cloudera.cai.rag.projects.ProjectService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -114,7 +113,7 @@ class SessionServiceTest {
   @Test
   void getSessionsByProjectId() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
-    ProjectService projectService = new ProjectService(ProjectRepository.createNull());
+    ProjectService projectService = ProjectService.createNull();
 
     var project =
         projectService.createProject(TestData.createTestProjectInstance("test-project", false));

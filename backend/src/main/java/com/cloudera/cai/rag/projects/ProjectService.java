@@ -39,15 +39,23 @@
 package com.cloudera.cai.rag.projects;
 
 import com.cloudera.cai.rag.Types.Project;
+import com.cloudera.cai.rag.configuration.JdbiConfiguration;
+import com.cloudera.cai.rag.sessions.SessionRepository;
 import java.util.List;
+import org.jdbi.v3.core.Jdbi;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProjectService {
   private final ProjectRepository projectRepository;
+  private final SessionRepository sessionRepository;
+  private final Jdbi jdbi;
 
-  public ProjectService(ProjectRepository projectRepository) {
+  public ProjectService(
+      ProjectRepository projectRepository, SessionRepository sessionRepository, Jdbi jdbi) {
     this.projectRepository = projectRepository;
+    this.sessionRepository = sessionRepository;
+    this.jdbi = jdbi;
   }
 
   public Project createProject(Project input) {
@@ -63,7 +71,11 @@ public class ProjectService {
   }
 
   public void deleteProject(Long id) {
-    projectRepository.deleteProject(id);
+    jdbi.useTransaction(
+        handle -> {
+          projectRepository.deleteProject(handle, id);
+          sessionRepository.deleteByProjectId(handle, id);
+        });
   }
 
   public List<Project> getProjects() {
@@ -93,6 +105,9 @@ public class ProjectService {
   // Nullables stuff below here.
 
   public static ProjectService createNull() {
-    return new ProjectService(ProjectRepository.createNull());
+    return new ProjectService(
+        ProjectRepository.createNull(),
+        SessionRepository.createNull(),
+        JdbiConfiguration.createNull());
   }
 }

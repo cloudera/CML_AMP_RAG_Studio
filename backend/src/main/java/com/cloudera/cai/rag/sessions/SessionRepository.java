@@ -208,6 +208,17 @@ public class SessionRepository {
         handle -> handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE ID = ?", true, id));
   }
 
+  public void deleteByProjectId(Long projectId) {
+    jdbi.useHandle(
+        handle ->
+            handle.execute(
+                "UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, projectId));
+  }
+
+  public void deleteByProjectId(Handle handle, Long projectId) {
+    handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, projectId);
+  }
+
   public void update(Types.Session input) {
     var updatedInput = input.withTimeUpdated(Instant.now());
     String json = serializeQueryConfiguration(input);

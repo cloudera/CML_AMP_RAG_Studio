@@ -44,6 +44,7 @@ import com.cloudera.cai.util.exceptions.NotFound;
 import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
@@ -130,18 +131,9 @@ public class ProjectRepository {
         });
   }
 
-  public void deleteProject(Long id) {
-    jdbi.useTransaction(
-        handle -> {
-          // Delete associated sessions (mark as deleted)
-          handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, id);
-
-          // Delete associated data source associations
-          handle.execute("DELETE FROM project_data_source WHERE project_id = ?", id);
-
-          // Delete the project
-          handle.execute("DELETE FROM project WHERE id = ?", id);
-        });
+  public void deleteProject(Handle handle, Long id) {
+    handle.execute("DELETE FROM project_data_source WHERE project_id = ?", id);
+    handle.execute("DELETE FROM project WHERE id = ?", id);
   }
 
   public Project getDefaultProject() {
