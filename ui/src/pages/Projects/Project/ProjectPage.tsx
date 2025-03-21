@@ -35,16 +35,48 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import {useGetProjectById} from "src/api/projectsApi.ts";
-import {useParams} from "@tanstack/react-router";
+import { Flex, Skeleton, Typography } from "antd";
+import {
+  useGetProjectById,
+  useGetSessionsForProject,
+} from "src/api/projectsApi.ts";
+import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId";
 
-const ProjectPage = () => (
-const { projectId } = useParams();
-const { data } = useGetProjectById(projectId);
+const Sessions = () => {
+  const { projectId } = Route.useParams();
+  const { data: sessions, isLoading } = useGetSessionsForProject(+projectId);
 
-  <div>
-    <h1>Project Page</h1>
-  </div>
-);
+  if (isLoading) {
+    return;
+    <Flex>
+      <Typography.Title level={3}>Chats</Typography.Title>
+      <Skeleton active />
+      <Skeleton active />
+      <Skeleton active />
+      <Skeleton active />
+    </Flex>;
+  }
+
+  return (
+    <Flex>
+      <Typography.Title level={3}>Chats</Typography.Title>
+      <ul>
+        {sessions?.map((session) => <li key={session.id}>{session.name}</li>)}
+      </ul>
+    </Flex>
+  );
+};
+
+const ProjectPage = () => {
+  const { projectId } = Route.useParams();
+  const { data: project } = useGetProjectById(+projectId);
+
+  return (
+    <div>
+      <h1>{project?.name}</h1>
+      <Sessions />
+    </div>
+  );
+};
 
 export default ProjectPage;
