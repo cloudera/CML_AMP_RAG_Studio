@@ -43,15 +43,44 @@ import {
 import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId";
 import { Session } from "src/api/sessionApi.ts";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
+import { format } from "date-fns";
+import { useNavigate } from "@tanstack/react-router";
 
 const SessionCard = ({ session }: { session: Session }) => {
+  const navigate = useNavigate();
   const { data: chatHistory, isSuccess } = useChatHistoryQuery(session.id);
 
+  const lastMessage = chatHistory.length
+    ? chatHistory[chatHistory.length - 1]
+    : null;
+
+  const handleNavOnClick = () => {
+    navigate({
+      to: "/sessions/$sessionId",
+      params: { sessionId: session.id.toString() },
+    }).catch(() => null);
+  };
+
   return (
-    <Card title={session.name}>
-      {isSuccess && chatHistory.length > 0
-        ? chatHistory[chatHistory.length - 1].rag_message.assistant
-        : null}
+    <Card
+      title={session.name}
+      extra={
+        <Typography.Text type="secondary">
+          Created by: {session.createdById}
+        </Typography.Text>
+      }
+      hoverable={true}
+      onClick={handleNavOnClick}
+    >
+      <Typography.Paragraph ellipsis={{ rows: 2 }}>
+        {isSuccess && lastMessage ? lastMessage.rag_message.assistant : null}
+      </Typography.Paragraph>
+      <Typography.Text type="secondary">
+        Last message:{" "}
+        {lastMessage?.timestamp
+          ? format(lastMessage.timestamp * 1000, "MMM dd yyyy, pp")
+          : "No messages"}
+      </Typography.Text>
     </Card>
   );
 };
@@ -74,7 +103,9 @@ const Sessions = () => {
 
   return (
     <Flex vertical gap={15}>
-      <Typography.Title level={3}>Chats</Typography.Title>
+      <Typography.Title level={4} style={{ margin: 0 }}>
+        Chats
+      </Typography.Title>
       {sessions?.map((session) => (
         <SessionCard session={session} key={session.id} />
       ))}
@@ -87,10 +118,18 @@ const ProjectPage = () => {
   const { data: project } = useGetProjectById(+projectId);
 
   return (
-    <div>
+    <Flex style={{ padding: 40 }} vertical>
       <h1>{project?.name}</h1>
-      <Sessions />
-    </div>
+      <Flex gap={32}>
+        <Flex flex={2} vertical>
+          <Sessions />
+        </Flex>
+        <Flex flex={1} vertical gap={16}>
+          <Card title="Settings">This is where settings goes</Card>
+          <Card title="Knowledge Bases">This is where KBs go</Card>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 };
 
