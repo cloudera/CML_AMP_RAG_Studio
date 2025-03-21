@@ -104,6 +104,7 @@ export enum QueryKeys {
   "getProjectById" = "getProjectById",
   "getDefaultProject" = "getDefaultProject",
   "getDataSourceIdsForProject" = "getDataSourceIdsForProject",
+  "getSessionsForProject" = "getSessionsForProject",
 }
 
 export const commonHeaders = {

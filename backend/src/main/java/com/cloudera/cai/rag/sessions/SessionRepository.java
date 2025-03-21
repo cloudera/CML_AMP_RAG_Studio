@@ -187,6 +187,22 @@ public class SessionRepository {
         });
   }
 
+  public List<Types.Session> getSessionsByProjectId(Long projectId) {
+    return jdbi.withHandle(
+        handle -> {
+          var sql =
+              """
+                SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
+                LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                WHERE cs.DELETED IS NULL AND cs.project_id = :projectId
+                ORDER BY last_interaction_time DESC, time_created DESC
+              """;
+          return querySessions(handle.createQuery(sql).bind("projectId", projectId))
+              .map(Types.Session.SessionBuilder::build)
+              .toList();
+        });
+  }
+
   public void delete(Long id) {
     jdbi.useHandle(
         handle -> handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE ID = ?", true, id));

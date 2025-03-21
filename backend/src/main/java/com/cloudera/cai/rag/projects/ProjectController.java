@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.projects;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.sessions.SessionService;
 import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,11 +53,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/rag/projects")
 public class ProjectController {
   private final ProjectService projectService;
+  private final SessionService sessionService;
   private final UserTokenCookieDecoder userTokenCookieDecoder = new UserTokenCookieDecoder();
 
   @Autowired
-  public ProjectController(ProjectService projectService) {
+  public ProjectController(ProjectService projectService, SessionService sessionService) {
     this.projectService = projectService;
+    this.sessionService = sessionService;
   }
 
   @PostMapping(consumes = "application/json", produces = "application/json")
@@ -122,5 +125,11 @@ public class ProjectController {
   public List<Long> getDataSourceIdsForProject(@PathVariable Long projectId) {
     log.debug("Getting DataSource IDs for Project {}", projectId);
     return projectService.getDataSourceIdsForProject(projectId);
+  }
+
+  @GetMapping(value = "/{projectId}/sessions", produces = "application/json")
+  public List<Types.Session> getSessionsForProject(@PathVariable Long projectId) {
+    log.debug("Getting Sessions for Project {}", projectId);
+    return sessionService.getSessionsByProjectId(projectId);
   }
 }

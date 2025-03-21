@@ -40,8 +40,12 @@ package com.cloudera.cai.rag;
 
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileRepository;
+import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.mock.web.MockCookie;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 public class TestData {
   public static Types.Project createTestProjectInstance(String name, Boolean defaultProject) {
@@ -134,5 +138,11 @@ public class TestData {
             .updatedById("doesn't matter")
             .build();
     return ragFileRepository.insertDocumentMetadata(ragDocument);
+  }
+
+  public static void addUserToRequest(MockHttpServletRequest request)
+      throws JsonProcessingException {
+    request.setCookies(
+        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
   }
 }

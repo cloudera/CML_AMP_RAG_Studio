@@ -42,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.projects.ProjectRepository;
+import com.cloudera.cai.rag.projects.ProjectService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -107,5 +109,62 @@ class SessionServiceTest {
     var result = sessionService.getSessions();
 
     assertThat(result).hasSizeGreaterThanOrEqualTo(2);
+  }
+
+  @Test
+  void getSessionsByProjectId() {
+    SessionService sessionService = new SessionService(SessionRepository.createNull());
+    ProjectService projectService = new ProjectService(ProjectRepository.createNull());
+
+    var project =
+        projectService.createProject(TestData.createTestProjectInstance("test-project", false));
+    var project2 =
+        projectService.createProject(TestData.createTestProjectInstance("test-project2", false));
+
+    // Create sessions with different project IDs
+    var session1 =
+        TestData.createTestSessionInstance("test1")
+            .withProjectId(project.id())
+            .withCreatedById("user1")
+            .withUpdatedById("user1");
+
+    var session2 =
+        TestData.createTestSessionInstance("test2")
+            .withProjectId(project.id())
+            .withCreatedById("user2")
+            .withUpdatedById("user2");
+
+    var session3 =
+        TestData.createTestSessionInstance("test3")
+            .withProjectId(project2.id())
+            .withCreatedById("user3")
+            .withUpdatedById("user3");
+
+    // Save the sessions
+    sessionService.create(session1);
+    sessionService.create(session2);
+    sessionService.create(session3);
+
+    // Get sessions for project ID 1
+    var projectOneSessions = sessionService.getSessionsByProjectId(project.id());
+
+    // Verify that sessions with project ID 1 are returned
+    assertThat(projectOneSessions).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(projectOneSessions).extracting("name").contains("test1", "test2");
+    assertThat(projectOneSessions).extracting("projectId").containsOnly(project.id());
+
+    // Get sessions for project ID 2
+    var projectTwoSessions = sessionService.getSessionsByProjectId(project2.id());
+
+    // Verify that only sessions with project ID 2 are returned
+    assertThat(projectTwoSessions).hasSize(1);
+    assertThat(projectTwoSessions).extracting("name").containsExactly("test3");
+    assertThat(projectTwoSessions).extracting("projectId").containsOnly(project2.id());
+
+    // Get sessions for non-existent project ID
+    var nonExistentProjectSessions = sessionService.getSessionsByProjectId(999L);
+
+    // Verify that no sessions are returned
+    assertThat(nonExistentProjectSessions).isEmpty();
   }
 }

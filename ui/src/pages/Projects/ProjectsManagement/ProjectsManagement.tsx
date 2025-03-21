@@ -58,9 +58,11 @@ import {
   useDeleteProject,
   useGetDataSourceIdsForProject,
   useGetProjects,
+  useGetSessionsForProject,
   useUpdateProject,
 } from "src/api/projectsApi";
 import { DataSourceType, useGetDataSourcesQuery } from "src/api/dataSourceApi";
+import { Session } from "src/api/sessionApi";
 
 const { Title } = Typography;
 
@@ -228,6 +230,40 @@ const ProjectsManagement = () => {
     );
   };
 
+  const ProjectSessionsTable = ({ projectId }: { projectId: number }) => {
+    const { data: sessions = [] as Session[] } =
+      useGetSessionsForProject(projectId);
+
+    return (
+      <Table
+        dataSource={sessions}
+        columns={[
+          {
+            title: "Name",
+            dataIndex: "name",
+            key: "name",
+          },
+          {
+            title: "Inference Model",
+            dataIndex: "inferenceModel",
+            key: "inferenceModel",
+          },
+          {
+            title: "Last Interaction",
+            dataIndex: "lastInteractionTime",
+            key: "lastInteractionTime",
+            render: (lastInteractionTime: number) =>
+              lastInteractionTime
+                ? new Date(lastInteractionTime).toLocaleString()
+                : "",
+          },
+        ]}
+        rowKey="id"
+        pagination={false}
+      />
+    );
+  };
+
   return (
     <>
       {contextHolder}
@@ -252,9 +288,18 @@ const ProjectsManagement = () => {
           expandedRowRender: (record) => {
             if (record.id) {
               return (
-                <Card title="Associated Data Sources">
-                  <ProjectDataSourcesTable projectId={record.id} />
-                </Card>
+                <Space
+                  direction="vertical"
+                  style={{ width: "100%" }}
+                  size="large"
+                >
+                  <Card title="Associated Data Sources">
+                    <ProjectDataSourcesTable projectId={record.id} />
+                  </Card>
+                  <Card title="Associated Sessions">
+                    <ProjectSessionsTable projectId={record.id} />
+                  </Card>
+                </Space>
               );
             }
             return null;

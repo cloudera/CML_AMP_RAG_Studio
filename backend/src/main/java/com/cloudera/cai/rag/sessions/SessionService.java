@@ -72,6 +72,10 @@ public class SessionService {
     return sessionRepository.getSessions();
   }
 
+  public List<Types.Session> getSessionsByProjectId(Long projectId) {
+    return sessionRepository.getSessionsByProjectId(projectId);
+  }
+
   public Types.Session getSessionById(Long id) {
     return sessionRepository.getSessionById(id);
   }

@@ -44,25 +44,25 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.Project;
+import com.cloudera.cai.rag.Types.Session;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
+import com.cloudera.cai.rag.sessions.SessionService;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 class ProjectControllerTest {
 
   @Test
-  void create() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void create() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
 
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
 
     var result = controller.create(createProject, request);
 
@@ -76,14 +76,13 @@ class ProjectControllerTest {
   }
 
   @Test
-  void update() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void update() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Create a new Project
     Types.CreateProject createProject = TestData.createProjectRequest("original-name");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Update the project
@@ -98,14 +97,13 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjectById() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void getProjectById() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Create a new Project
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Get the project by ID
@@ -115,14 +113,13 @@ class ProjectControllerTest {
   }
 
   @Test
-  void deleteProject() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void deleteProject() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Create a new Project
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Delete the project
@@ -134,14 +131,13 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjects() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void getProjects() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Create a new Project
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Get all projects
@@ -153,16 +149,15 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getDefaultProject() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void getDefaultProject() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Get all projects and update any existing default projects to set defaultProject = false
     List<Project> existingProjects = controller.getProjects();
     for (Project project : existingProjects) {
       if (Boolean.TRUE.equals(project.defaultProject())) {
         var request = new MockHttpServletRequest();
-        request.setCookies(
-            new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+        TestData.addUserToRequest(request);
         controller.update(project.id(), project.withDefaultProject(false), request);
       }
     }
@@ -170,8 +165,7 @@ class ProjectControllerTest {
     // Create a project and then update it to be the default
     Types.CreateProject createProject = TestData.createProjectRequest("default-project");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Update the project to be the default
@@ -187,14 +181,13 @@ class ProjectControllerTest {
   }
 
   @Test
-  void addAndRemoveDataSourceToProject() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void addAndRemoveDataSourceToProject() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Create a new Project
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Create a data source
@@ -218,13 +211,12 @@ class ProjectControllerTest {
   }
 
   @Test
-  void createWithEmptyName() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void createWithEmptyName() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
     Types.CreateProject createProject = TestData.createProjectRequest("");
 
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
 
     assertThatThrownBy(() -> controller.create(createProject, request))
         .isInstanceOf(BadRequest.class)
@@ -232,14 +224,13 @@ class ProjectControllerTest {
   }
 
   @Test
-  void updateWithEmptyName() throws Exception {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void updateWithEmptyName() throws Exception, JsonProcessingException {
+    ProjectController controller = createController();
 
     // Create a new Project
     Types.CreateProject createProject = TestData.createProjectRequest("original-name");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Update with empty name
@@ -251,9 +242,79 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjectByIdNotFound() {
-    ProjectController controller = new ProjectController(ProjectService.createNull());
+  void getProjectByIdNotFound() throws JsonProcessingException {
+    ProjectController controller = createController();
 
     assertThatThrownBy(() -> controller.getProjectById(999L)).isInstanceOf(NotFound.class);
+  }
+
+  @Test
+  void getSessionsForProject() throws JsonProcessingException {
+    // Create controller with both ProjectService and SessionService
+    ProjectService projectService = ProjectService.createNull();
+    SessionService sessionService = SessionService.createNull();
+    ProjectController controller = new ProjectController(projectService, sessionService);
+
+    // Create a project
+    Types.CreateProject createProject = TestData.createProjectRequest("test-project");
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    var project = controller.create(createProject, request);
+
+    // Create another project
+    Types.CreateProject createProject2 = TestData.createProjectRequest("test-project-2");
+    var project2 = controller.create(createProject2, request);
+
+    // Create sessions with different project IDs
+    var session1 =
+        TestData.createTestSessionInstance("session1")
+            .withProjectId(project.id())
+            .withCreatedById("user1")
+            .withUpdatedById("user1");
+
+    var session2 =
+        TestData.createTestSessionInstance("session2")
+            .withProjectId(project.id())
+            .withCreatedById("user2")
+            .withUpdatedById("user2");
+
+    var session3 =
+        TestData.createTestSessionInstance("session3")
+            .withProjectId(project2.id())
+            .withCreatedById("user3")
+            .withUpdatedById("user3");
+
+    // Save the sessions
+    sessionService.create(session1);
+    sessionService.create(session2);
+    sessionService.create(session3);
+
+    // Get sessions for the first project
+    List<Session> projectSessions = controller.getSessionsForProject(project.id());
+
+    // Verify that only sessions with the specified project ID are returned
+    assertThat(projectSessions).hasSize(2);
+    assertThat(projectSessions)
+        .extracting("name")
+        .containsExactlyInAnyOrder("session1", "session2");
+    assertThat(projectSessions).extracting("projectId").containsOnly(project.id());
+
+    // Get sessions for the second project
+    List<Session> project2Sessions = controller.getSessionsForProject(project2.id());
+
+    // Verify that only sessions with the specified project ID are returned
+    assertThat(project2Sessions).hasSize(1);
+    assertThat(project2Sessions).extracting("name").containsExactly("session3");
+    assertThat(project2Sessions).extracting("projectId").containsOnly(project2.id());
+
+    // Get sessions for non-existent project ID
+    List<Session> nonExistentProjectSessions = controller.getSessionsForProject(999L);
+
+    // Verify that no sessions are returned
+    assertThat(nonExistentProjectSessions).isEmpty();
+  }
+
+  private ProjectController createController() {
+    return new ProjectController(ProjectService.createNull(), SessionService.createNull());
   }
 }
