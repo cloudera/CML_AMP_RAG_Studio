@@ -35,38 +35,23 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import logging
-from typing import Optional, List
 
-from fastapi import APIRouter
-from pydantic import BaseModel, AnyUrl
+from mcp.server.fastmcp import FastMCP
 
-from app import exceptions
-from app.services.chat import generate_suggested_questions
-from app.services.query.querier import available_tools
+# Initialize FastMCP server for a multiplication server
+mcp = FastMCP("testing", port=8888, log_level="INFO")
 
-logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/chat", tags=["Chat"])
+@mcp.tool()
+async def multiply(x: int, y: int) -> int:
+    """Multiply two numbers together
 
+    Args:
+        x: the first number
+        y: the second number
+    """
+    print("I can math")
+    return x * y
 
-class RagSuggestedQuestionsResponse(BaseModel):
-    suggested_questions: list[str]
-
-
-class SuggestedQuestionsRequest(BaseModel):
-    session_id: Optional[int] = None
-
-
-@router.post("/suggest-questions")
-@exceptions.propagates
-def suggest_questions(
-    request: SuggestedQuestionsRequest,
-) -> RagSuggestedQuestionsResponse:
-    return RagSuggestedQuestionsResponse(
-        suggested_questions=generate_suggested_questions(request.session_id)
-    )
-
-@router.post("/tools")
-@exceptions.propagates
-def tools() -> List[dict[str, str]]:
-    return available_tools()
+if __name__ == "__main__":
+    # note: this sometimes seems to take a long time to start up...
+    mcp.run(transport="sse")

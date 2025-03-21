@@ -37,6 +37,8 @@ dependencies = [
     "llama-index-llms-azure-openai>=0.3.0",
     "llama-index-embeddings-azure-openai>=0.3.0",
     "llama-index-llms-nvidia>=0.3.2",
+    "mcp[cli]>=1.4.1",
+    "llama-index-tools-mcp>=0.1.0",
 ]
 requires-python = ">=3.10,<=3.12"
 readme = "README.md"
