@@ -15,19 +15,22 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as IndexImport } from './routes/index'
-import { Route as LayoutProjectsImport } from './routes/_layout/projects'
 import { Route as LayoutSessionsIndexImport } from './routes/_layout/sessions/index'
 import { Route as LayoutSessionsSessionIdImport } from './routes/_layout/sessions/$sessionId'
+import { Route as LayoutProjectsLayoutProjectsImport } from './routes/_layout/projects/_layout-projects'
 import { Route as LayoutModelsLayoutModelsImport } from './routes/_layout/models/_layout-models'
 import { Route as LayoutDataLayoutDatasourcesImport } from './routes/_layout/data/_layout-datasources'
 import { Route as LayoutAnalyticsLayoutModelsImport } from './routes/_layout/analytics/_layout-models'
+import { Route as LayoutProjectsLayoutProjectsIndexImport } from './routes/_layout/projects/_layout-projects/index'
 import { Route as LayoutModelsLayoutModelsIndexImport } from './routes/_layout/models/_layout-models/index'
 import { Route as LayoutDataLayoutDatasourcesIndexImport } from './routes/_layout/data/_layout-datasources/index'
 import { Route as LayoutAnalyticsLayoutModelsIndexImport } from './routes/_layout/analytics/_layout-models/index'
+import { Route as LayoutProjectsLayoutProjectsProjectIdImport } from './routes/_layout/projects/_layout-projects/$projectId'
 import { Route as LayoutDataLayoutDatasourcesDataSourceIdImport } from './routes/_layout/data/_layout-datasources/$dataSourceId'
 
 // Create Virtual Routes
 
+const LayoutProjectsImport = createFileRoute('/_layout/projects')()
 const LayoutModelsImport = createFileRoute('/_layout/models')()
 const LayoutDataImport = createFileRoute('/_layout/data')()
 const LayoutAnalyticsImport = createFileRoute('/_layout/analytics')()
@@ -44,6 +47,12 @@ const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+
+const LayoutProjectsRoute = LayoutProjectsImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => LayoutRoute,
+} as any)
 
 const LayoutModelsRoute = LayoutModelsImport.update({
   id: '/models',
@@ -63,12 +72,6 @@ const LayoutAnalyticsRoute = LayoutAnalyticsImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutProjectsRoute = LayoutProjectsImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => LayoutRoute,
-} as any)
-
 const LayoutSessionsIndexRoute = LayoutSessionsIndexImport.update({
   id: '/sessions/',
   path: '/sessions/',
@@ -84,6 +87,12 @@ const LayoutSessionsSessionIdRoute = LayoutSessionsSessionIdImport.update({
 } as any).lazy(() =>
   import('./routes/_layout/sessions/$sessionId.lazy').then((d) => d.Route),
 )
+
+const LayoutProjectsLayoutProjectsRoute =
+  LayoutProjectsLayoutProjectsImport.update({
+    id: '/_layout-projects',
+    getParentRoute: () => LayoutProjectsRoute,
+  } as any)
 
 const LayoutModelsLayoutModelsRoute = LayoutModelsLayoutModelsImport.update({
   id: '/_layout-models',
@@ -101,6 +110,17 @@ const LayoutAnalyticsLayoutModelsRoute =
     id: '/_layout-models',
     getParentRoute: () => LayoutAnalyticsRoute,
   } as any)
+
+const LayoutProjectsLayoutProjectsIndexRoute =
+  LayoutProjectsLayoutProjectsIndexImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => LayoutProjectsLayoutProjectsRoute,
+  } as any).lazy(() =>
+    import('./routes/_layout/projects/_layout-projects/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 
 const LayoutModelsLayoutModelsIndexRoute =
   LayoutModelsLayoutModelsIndexImport.update({
@@ -135,6 +155,17 @@ const LayoutAnalyticsLayoutModelsIndexRoute =
     ),
   )
 
+const LayoutProjectsLayoutProjectsProjectIdRoute =
+  LayoutProjectsLayoutProjectsProjectIdImport.update({
+    id: '/$projectId',
+    path: '/$projectId',
+    getParentRoute: () => LayoutProjectsLayoutProjectsRoute,
+  } as any).lazy(() =>
+    import('./routes/_layout/projects/_layout-projects/$projectId.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
 const LayoutDataLayoutDatasourcesDataSourceIdRoute =
   LayoutDataLayoutDatasourcesDataSourceIdImport.update({
     id: '/$dataSourceId',
@@ -163,13 +194,6 @@ declare module '@tanstack/react-router' {
       fullPath: ''
       preLoaderRoute: typeof LayoutImport
       parentRoute: typeof rootRoute
-    }
-    '/_layout/projects': {
-      id: '/_layout/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof LayoutProjectsImport
-      parentRoute: typeof LayoutImport
     }
     '/_layout/analytics': {
       id: '/_layout/analytics'
@@ -213,6 +237,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutModelsLayoutModelsImport
       parentRoute: typeof LayoutModelsRoute
     }
+    '/_layout/projects': {
+      id: '/_layout/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof LayoutProjectsImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/projects/_layout-projects': {
+      id: '/_layout/projects/_layout-projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof LayoutProjectsLayoutProjectsImport
+      parentRoute: typeof LayoutProjectsRoute
+    }
     '/_layout/sessions/$sessionId': {
       id: '/_layout/sessions/$sessionId'
       path: '/sessions/$sessionId'
@@ -234,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutDataLayoutDatasourcesDataSourceIdImport
       parentRoute: typeof LayoutDataLayoutDatasourcesImport
     }
+    '/_layout/projects/_layout-projects/$projectId': {
+      id: '/_layout/projects/_layout-projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof LayoutProjectsLayoutProjectsProjectIdImport
+      parentRoute: typeof LayoutProjectsLayoutProjectsImport
+    }
     '/_layout/analytics/_layout-models/': {
       id: '/_layout/analytics/_layout-models/'
       path: '/'
@@ -254,6 +299,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/models/'
       preLoaderRoute: typeof LayoutModelsLayoutModelsIndexImport
       parentRoute: typeof LayoutModelsLayoutModelsImport
+    }
+    '/_layout/projects/_layout-projects/': {
+      id: '/_layout/projects/_layout-projects/'
+      path: '/'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof LayoutProjectsLayoutProjectsIndexImport
+      parentRoute: typeof LayoutProjectsLayoutProjectsImport
     }
   }
 }
@@ -345,20 +397,51 @@ const LayoutModelsRouteWithChildren = LayoutModelsRoute._addFileChildren(
   LayoutModelsRouteChildren,
 )
 
+interface LayoutProjectsLayoutProjectsRouteChildren {
+  LayoutProjectsLayoutProjectsProjectIdRoute: typeof LayoutProjectsLayoutProjectsProjectIdRoute
+  LayoutProjectsLayoutProjectsIndexRoute: typeof LayoutProjectsLayoutProjectsIndexRoute
+}
+
+const LayoutProjectsLayoutProjectsRouteChildren: LayoutProjectsLayoutProjectsRouteChildren =
+  {
+    LayoutProjectsLayoutProjectsProjectIdRoute:
+      LayoutProjectsLayoutProjectsProjectIdRoute,
+    LayoutProjectsLayoutProjectsIndexRoute:
+      LayoutProjectsLayoutProjectsIndexRoute,
+  }
+
+const LayoutProjectsLayoutProjectsRouteWithChildren =
+  LayoutProjectsLayoutProjectsRoute._addFileChildren(
+    LayoutProjectsLayoutProjectsRouteChildren,
+  )
+
+interface LayoutProjectsRouteChildren {
+  LayoutProjectsLayoutProjectsRoute: typeof LayoutProjectsLayoutProjectsRouteWithChildren
+}
+
+const LayoutProjectsRouteChildren: LayoutProjectsRouteChildren = {
+  LayoutProjectsLayoutProjectsRoute:
+    LayoutProjectsLayoutProjectsRouteWithChildren,
+}
+
+const LayoutProjectsRouteWithChildren = LayoutProjectsRoute._addFileChildren(
+  LayoutProjectsRouteChildren,
+)
+
 interface LayoutRouteChildren {
-  LayoutProjectsRoute: typeof LayoutProjectsRoute
   LayoutAnalyticsRoute: typeof LayoutAnalyticsRouteWithChildren
   LayoutDataRoute: typeof LayoutDataRouteWithChildren
   LayoutModelsRoute: typeof LayoutModelsRouteWithChildren
+  LayoutProjectsRoute: typeof LayoutProjectsRouteWithChildren
   LayoutSessionsSessionIdRoute: typeof LayoutSessionsSessionIdRoute
   LayoutSessionsIndexRoute: typeof LayoutSessionsIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutProjectsRoute: LayoutProjectsRoute,
   LayoutAnalyticsRoute: LayoutAnalyticsRouteWithChildren,
   LayoutDataRoute: LayoutDataRouteWithChildren,
   LayoutModelsRoute: LayoutModelsRouteWithChildren,
+  LayoutProjectsRoute: LayoutProjectsRouteWithChildren,
   LayoutSessionsSessionIdRoute: LayoutSessionsSessionIdRoute,
   LayoutSessionsIndexRoute: LayoutSessionsIndexRoute,
 }
@@ -369,47 +452,53 @@ const LayoutRouteWithChildren =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof LayoutRouteWithChildren
-  '/projects': typeof LayoutProjectsRoute
   '/analytics': typeof LayoutAnalyticsLayoutModelsRouteWithChildren
   '/data': typeof LayoutDataLayoutDatasourcesRouteWithChildren
   '/models': typeof LayoutModelsLayoutModelsRouteWithChildren
+  '/projects': typeof LayoutProjectsLayoutProjectsRouteWithChildren
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
+  '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
   '/analytics/': typeof LayoutAnalyticsLayoutModelsIndexRoute
   '/data/': typeof LayoutDataLayoutDatasourcesIndexRoute
   '/models/': typeof LayoutModelsLayoutModelsIndexRoute
+  '/projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof LayoutRouteWithChildren
-  '/projects': typeof LayoutProjectsRoute
   '/analytics': typeof LayoutAnalyticsLayoutModelsIndexRoute
   '/data': typeof LayoutDataLayoutDatasourcesIndexRoute
   '/models': typeof LayoutModelsLayoutModelsIndexRoute
+  '/projects': typeof LayoutProjectsLayoutProjectsIndexRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions': typeof LayoutSessionsIndexRoute
   '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
+  '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
-  '/_layout/projects': typeof LayoutProjectsRoute
   '/_layout/analytics': typeof LayoutAnalyticsRouteWithChildren
   '/_layout/analytics/_layout-models': typeof LayoutAnalyticsLayoutModelsRouteWithChildren
   '/_layout/data': typeof LayoutDataRouteWithChildren
   '/_layout/data/_layout-datasources': typeof LayoutDataLayoutDatasourcesRouteWithChildren
   '/_layout/models': typeof LayoutModelsRouteWithChildren
   '/_layout/models/_layout-models': typeof LayoutModelsLayoutModelsRouteWithChildren
+  '/_layout/projects': typeof LayoutProjectsRouteWithChildren
+  '/_layout/projects/_layout-projects': typeof LayoutProjectsLayoutProjectsRouteWithChildren
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/_layout/sessions/': typeof LayoutSessionsIndexRoute
   '/_layout/data/_layout-datasources/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
+  '/_layout/projects/_layout-projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
   '/_layout/analytics/_layout-models/': typeof LayoutAnalyticsLayoutModelsIndexRoute
   '/_layout/data/_layout-datasources/': typeof LayoutDataLayoutDatasourcesIndexRoute
   '/_layout/models/_layout-models/': typeof LayoutModelsLayoutModelsIndexRoute
+  '/_layout/projects/_layout-projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -417,44 +506,50 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
-    | '/projects'
     | '/analytics'
     | '/data'
     | '/models'
+    | '/projects'
     | '/sessions/$sessionId'
     | '/sessions'
     | '/data/$dataSourceId'
+    | '/projects/$projectId'
     | '/analytics/'
     | '/data/'
     | '/models/'
+    | '/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | ''
-    | '/projects'
     | '/analytics'
     | '/data'
     | '/models'
+    | '/projects'
     | '/sessions/$sessionId'
     | '/sessions'
     | '/data/$dataSourceId'
+    | '/projects/$projectId'
   id:
     | '__root__'
     | '/'
     | '/_layout'
-    | '/_layout/projects'
     | '/_layout/analytics'
     | '/_layout/analytics/_layout-models'
     | '/_layout/data'
     | '/_layout/data/_layout-datasources'
     | '/_layout/models'
     | '/_layout/models/_layout-models'
+    | '/_layout/projects'
+    | '/_layout/projects/_layout-projects'
     | '/_layout/sessions/$sessionId'
     | '/_layout/sessions/'
     | '/_layout/data/_layout-datasources/$dataSourceId'
+    | '/_layout/projects/_layout-projects/$projectId'
     | '/_layout/analytics/_layout-models/'
     | '/_layout/data/_layout-datasources/'
     | '/_layout/models/_layout-models/'
+    | '/_layout/projects/_layout-projects/'
   fileRoutesById: FileRoutesById
 }
 
@@ -488,17 +583,13 @@ export const routeTree = rootRoute
     "/_layout": {
       "filePath": "_layout.tsx",
       "children": [
-        "/_layout/projects",
         "/_layout/analytics",
         "/_layout/data",
         "/_layout/models",
+        "/_layout/projects",
         "/_layout/sessions/$sessionId",
         "/_layout/sessions/"
       ]
-    },
-    "/_layout/projects": {
-      "filePath": "_layout/projects.tsx",
-      "parent": "/_layout"
     },
     "/_layout/analytics": {
       "filePath": "_layout/analytics",
@@ -543,6 +634,21 @@ export const routeTree = rootRoute
         "/_layout/models/_layout-models/"
       ]
     },
+    "/_layout/projects": {
+      "filePath": "_layout/projects",
+      "parent": "/_layout",
+      "children": [
+        "/_layout/projects/_layout-projects"
+      ]
+    },
+    "/_layout/projects/_layout-projects": {
+      "filePath": "_layout/projects/_layout-projects.tsx",
+      "parent": "/_layout/projects",
+      "children": [
+        "/_layout/projects/_layout-projects/$projectId",
+        "/_layout/projects/_layout-projects/"
+      ]
+    },
     "/_layout/sessions/$sessionId": {
       "filePath": "_layout/sessions/$sessionId.tsx",
       "parent": "/_layout"
@@ -555,6 +661,10 @@ export const routeTree = rootRoute
       "filePath": "_layout/data/_layout-datasources/$dataSourceId.tsx",
       "parent": "/_layout/data/_layout-datasources"
     },
+    "/_layout/projects/_layout-projects/$projectId": {
+      "filePath": "_layout/projects/_layout-projects/$projectId.tsx",
+      "parent": "/_layout/projects/_layout-projects"
+    },
     "/_layout/analytics/_layout-models/": {
       "filePath": "_layout/analytics/_layout-models/index.tsx",
       "parent": "/_layout/analytics/_layout-models"
@@ -566,6 +676,10 @@ export const routeTree = rootRoute
     "/_layout/models/_layout-models/": {
       "filePath": "_layout/models/_layout-models/index.tsx",
       "parent": "/_layout/models/_layout-models"
+    },
+    "/_layout/projects/_layout-projects/": {
+      "filePath": "_layout/projects/_layout-projects/index.tsx",
+      "parent": "/_layout/projects/_layout-projects"
     }
   }
 }

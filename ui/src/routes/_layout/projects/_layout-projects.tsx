@@ -36,29 +36,31 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Layout } from "antd";
-import ProjectsManagement from "./ProjectsManagement/ProjectsManagement";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Flex, Layout, Typography } from "antd";
+import { cdlGray300 } from "src/cuix/variables.ts";
 
-function ProjectsLayout() {
-  return (
+const { Content, Header } = Layout;
+
+export const Route = createFileRoute("/_layout/projects/_layout-projects")({
+  component: () => (
     <Layout
       style={{
-        alignItems: "center",
+        minHeight: "100%",
         width: "100%",
+        margin: 0,
       }}
     >
-      <Flex
-        vertical
-        style={{
-          width: "100%",
-          maxWidth: 1200,
-          padding: "24px",
-        }}
-      >
-        <ProjectsManagement />
-      </Flex>
+      <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
+        <Flex align="center" style={{ height: "100%" }}>
+          <Typography.Title level={4} style={{ margin: 0 }}>
+            Projects
+          </Typography.Title>
+        </Flex>
+      </Header>
+      <Content style={{ margin: "0", overflowY: "auto" }}>
+        <Outlet />
+      </Content>
     </Layout>
-  );
-}
-
-export default ProjectsLayout;
+  ),
+});

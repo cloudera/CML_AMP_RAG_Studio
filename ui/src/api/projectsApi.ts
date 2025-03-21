@@ -53,10 +53,10 @@ export interface Project {
   id?: number;
   name: string;
   defaultProject: boolean;
-  timeCreated?: string;
-  timeUpdated?: string;
-  createdById?: string;
-  updatedById?: string;
+  timeCreated: string;
+  timeUpdated: string;
+  createdById: string;
+  updatedById: string;
 }
 
 export interface CreateProject {
@@ -108,7 +108,7 @@ export const getProjectByIdQueryOptions = (projectId: number) =>
     },
   });
 
-const getProjectById = async (projectId: number): Promise<Project> => {
+export const getProjectById = async (projectId: number): Promise<Project> => {
   return await getRequest(`${ragPath}/projects/${String(projectId)}`);
 };
 
@@ -223,10 +223,10 @@ export const getDataSourceIdsForProjectQueryOptions = (projectId: number) =>
   });
 
 const getDataSourceIdsForProject = async (
-  projectId: number
+  projectId: number,
 ): Promise<number[]> => {
   return await getRequest(
-    `${ragPath}/projects/${String(projectId)}/dataSources`
+    `${ragPath}/projects/${String(projectId)}/dataSources`,
   );
 };
 
@@ -283,7 +283,7 @@ const addDataSourceToProject = async ({
       headers: {
         Accept: "application/json",
       },
-    }
+    },
   ).then(async (res) => {
     if (!res.ok) {
       const detail = (await res.json()) as CustomError;
@@ -313,6 +313,6 @@ const removeDataSourceFromProject = async ({
   dataSourceId: number;
 }): Promise<void> => {
   await deleteRequest(
-    `${ragPath}/projects/${String(projectId)}/dataSources/${String(dataSourceId)}`
+    `${ragPath}/projects/${String(projectId)}/dataSources/${String(dataSourceId)}`,
   );
 };

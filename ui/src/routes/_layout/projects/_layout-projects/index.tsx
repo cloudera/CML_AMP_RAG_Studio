@@ -37,31 +37,9 @@
  ******************************************************************************/
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Flex, Layout, Typography } from "antd";
-import { cdlGray300 } from "src/cuix/variables.ts";
-import ProjectsLayout from "src/pages/Projects/Layout";
+import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
 
-const { Content, Header } = Layout;
-
-export const Route = createFileRoute("/_layout/projects")({
-  component: () => (
-    <Layout
-      style={{
-        minHeight: "100%",
-        width: "100%",
-        margin: 0,
-      }}
-    >
-      <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
-        <Flex align="center" style={{ height: "100%" }}>
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            Projects
-          </Typography.Title>
-        </Flex>
-      </Header>
-      <Content style={{ margin: "0", overflowY: "auto" }}>
-        <ProjectsLayout />
-      </Content>
-    </Layout>
-  ),
+export const Route = createFileRoute("/_layout/projects/_layout-projects/")({
+  loader: async ({ context }) =>
+    await context.queryClient.ensureQueryData(getProjectsQueryOptions),
 });
