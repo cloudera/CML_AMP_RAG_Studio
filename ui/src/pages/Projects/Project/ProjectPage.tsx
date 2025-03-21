@@ -35,34 +35,49 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex, Skeleton, Typography } from "antd";
+import { Card, Flex, Skeleton, Typography } from "antd";
 import {
   useGetProjectById,
   useGetSessionsForProject,
 } from "src/api/projectsApi.ts";
 import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId";
+import { Session } from "src/api/sessionApi.ts";
+import { useChatHistoryQuery } from "src/api/chatApi.ts";
+
+const SessionCard = ({ session }: { session: Session }) => {
+  const { data: chatHistory, isSuccess } = useChatHistoryQuery(session.id);
+
+  return (
+    <Card title={session.name}>
+      {isSuccess && chatHistory.length > 0
+        ? chatHistory[chatHistory.length - 1].rag_message.assistant
+        : null}
+    </Card>
+  );
+};
 
 const Sessions = () => {
   const { projectId } = Route.useParams();
   const { data: sessions, isLoading } = useGetSessionsForProject(+projectId);
 
   if (isLoading) {
-    return;
-    <Flex>
-      <Typography.Title level={3}>Chats</Typography.Title>
-      <Skeleton active />
-      <Skeleton active />
-      <Skeleton active />
-      <Skeleton active />
-    </Flex>;
+    return (
+      <Flex>
+        <Typography.Title level={3}>Chats</Typography.Title>
+        <Skeleton active />
+        <Skeleton active />
+        <Skeleton active />
+        <Skeleton active />
+      </Flex>
+    );
   }
 
   return (
-    <Flex>
+    <Flex vertical gap={15}>
       <Typography.Title level={3}>Chats</Typography.Title>
-      <ul>
-        {sessions?.map((session) => <li key={session.id}>{session.name}</li>)}
-      </ul>
+      {sessions?.map((session) => (
+        <SessionCard session={session} key={session.id} />
+      ))}
     </Flex>
   );
 };
