@@ -53,8 +53,8 @@ export interface Project {
   id?: number;
   name: string;
   defaultProject: boolean;
-  timeCreated: string;
-  timeUpdated: string;
+  timeCreated: number;
+  timeUpdated: number;
   createdById: string;
   updatedById: string;
 }
