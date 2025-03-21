@@ -35,7 +35,16 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Card, Flex, Skeleton, Spin, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Flex,
+  Popover,
+  Select,
+  Skeleton,
+  Spin,
+  Typography,
+} from "antd";
 import {
   useGetDataSourcesForProject,
   useGetProjectById,
@@ -47,7 +56,8 @@ import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { format } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
 import { PlusCircleOutlined } from "@ant-design/icons";
-// import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -121,13 +131,32 @@ const ProjectKnowledgeBases = () => {
   const { data: dataSources, isLoading } =
     useGetDataSourcesForProject(+projectId);
 
-  // const { data: allDataSources, isLoading: allAreLoading } =
-  //   useGetDataSourcesQuery();
+  const { data: allDataSources, isLoading: allAreLoading } =
+    useGetDataSourcesQuery();
+
+  const unusedDataSources = allDataSources?.filter((dataSource) => {
+    return !dataSources?.includes(dataSource);
+  });
 
   return (
     <Card
       title="Knowledge Bases"
-      extra={<Button type="text" icon={<PlusCircleOutlined />} />}
+      extra={
+        <Popover
+          title="Add Knowledge Base"
+          content={
+            <Select
+              disabled={allAreLoading || allDataSources?.length === 0}
+              style={{ width: 300 }}
+              options={allDataSources?.map((value) => {
+                return formatDataSource(value);
+              })}
+            />
+          }
+        >
+          <Button type="text" icon={<PlusCircleOutlined />} />
+        </Popover>
+      }
     >
       {isLoading ? (
         <Spin />
