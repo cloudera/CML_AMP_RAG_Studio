@@ -46,12 +46,8 @@ import { Session } from "src/api/sessionApi.ts";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { format } from "date-fns";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  PlusCircleFilled,
-  PlusCircleOutlined,
-  PlusCircleTwoTone,
-} from "@ant-design/icons";
-import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { PlusCircleOutlined } from "@ant-design/icons";
+// import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -125,8 +121,8 @@ const ProjectKnowledgeBases = () => {
   const { data: dataSources, isLoading } =
     useGetDataSourcesForProject(+projectId);
 
-  const { data: allDataSources, isLoading: allAreLoading } =
-    useGetDataSourcesQuery();
+  // const { data: allDataSources, isLoading: allAreLoading } =
+  //   useGetDataSourcesQuery();
 
   return (
     <Card
