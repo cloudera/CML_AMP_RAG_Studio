@@ -36,17 +36,27 @@
  * DATA.
  ******************************************************************************/
 
-import { Dictionary } from "lodash";
+import { Dictionary, groupBy } from "lodash";
 import { Session } from "src/api/sessionApi.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ItemType } from "antd/lib/menu/interface";
 import { Typography } from "antd";
-import { parse } from "date-fns";
+import { format, parse } from "date-fns";
 import SessionItem from "pages/RagChatTab/Sessions/SessionItem.tsx";
 import { MenuItem } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
+import { useGetDefaultProject } from "src/api/projectsApi.ts";
 
-export const sessionItems = (sessions: Dictionary<Session[]>): MenuItem => {
+export const defaultSessionItems = (sessions: Session[]): MenuItem => {
   const navigate = useNavigate();
+  const { data: defaultProject } = useGetDefaultProject();
+
+  const defaultSessions = sessions.filter(
+    (session) => defaultProject?.id === session.projectId,
+  );
+  const defaultSessionsByDate = groupBy(defaultSessions, (session) => {
+    const relevantTime = session.lastInteractionTime || session.timeUpdated;
+    return format(relevantTime * 1000, "yyyyMMdd");
+  });
 
   const sortedDates = Object.keys(sessions).sort().reverse();
 

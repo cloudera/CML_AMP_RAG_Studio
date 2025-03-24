@@ -57,9 +57,9 @@ import {
   cdlSlate800,
   cdlWhite,
 } from "src/cuix/variables.ts";
-import { Dictionary } from "lodash";
+import { Dictionary, groupBy } from "lodash";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { sessionItems } from "pages/RagChatTab/Sessions/SessionItems.tsx";
+import { defaultSessionItems } from "pages/RagChatTab/Sessions/DefaultSessionItems.tsx";
 import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
@@ -67,6 +67,7 @@ import "./index.css";
 import {
   Project,
   useCreateProject,
+  useGetDefaultProject,
   useGetProjects,
 } from "src/api/projectsApi.ts";
 import {
@@ -78,6 +79,7 @@ import useModal from "src/utils/useModal.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
+import { format } from "date-fns";
 
 const { Sider } = Layout;
 
@@ -192,18 +194,16 @@ const projectSessionSidebarItem = ({
   };
 };
 
-export function SessionSidebar({
-  sessionsByDate,
-}: {
-  sessionsByDate: Dictionary<Session[]>;
-}) {
+export function SessionSidebar({ sessions }: { sessions: Session[] }) {
   const { activeSession } = useContext(RagChatContext);
   const { data: projects } = useGetProjects();
 
   const projectItems: ItemType[] = projects
-    ? projects.map((project) => {
-        return projectSessionSidebarItem({ project });
-      })
+    ? projects
+        .filter((p) => !p.defaultProject)
+        .map((project) => {
+          return projectSessionSidebarItem({ project });
+        })
     : [];
 
   const items: ItemType[] = [
@@ -223,7 +223,7 @@ export function SessionSidebar({
         </Flex>
       ),
     },
-    ...sessionItems(sessionsByDate),
+    ...defaultSessionItems(sessions),
   ];
 
   return (

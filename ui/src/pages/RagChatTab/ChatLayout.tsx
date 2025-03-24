@@ -40,8 +40,6 @@ import { Divider, Flex, Layout } from "antd";
 import RagChat from "pages/RagChatTab/RagChat.tsx";
 import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
 import { Session } from "src/api/sessionApi.ts";
-import { groupBy } from "lodash";
-import { format } from "date-fns";
 import { useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
@@ -84,11 +82,6 @@ function ChatLayout() {
     );
   }, [dataSources, dataSourceId]);
 
-  const sessionsByDate = groupBy(sessions, (session) => {
-    const relevantTime = session.lastInteractionTime || session.timeUpdated;
-    return format(relevantTime * 1000, "yyyyMMdd");
-  });
-
   return (
     <RagChatContext.Provider
       value={{
@@ -113,7 +106,7 @@ function ChatLayout() {
         }}
       >
         <div style={{ paddingTop: 20 }}>
-          <SessionSidebar sessionsByDate={sessionsByDate} />
+          <SessionSidebar sessions={sessions} />
         </div>
         <Divider
           key="chatLayoutDivider"
