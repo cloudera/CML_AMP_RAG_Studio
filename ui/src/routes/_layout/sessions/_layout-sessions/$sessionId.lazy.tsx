@@ -36,9 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from '@tanstack/react-router'
-import ProjectPage from 'pages/Projects/ProjectPage/ProjectPage.tsx'
+import { createLazyFileRoute } from "@tanstack/react-router";
+import RagChat from "pages/RagChatTab/RagChat.tsx";
 
-export const Route = createLazyFileRoute('/_layout/chat/projects/$projectId')({
-  component: () => <ProjectPage />,
-})
+export const Route = createLazyFileRoute(
+  "/_layout/sessions/_layout-sessions/$sessionId",
+)({
+  component: () => <RagChat />,
+});

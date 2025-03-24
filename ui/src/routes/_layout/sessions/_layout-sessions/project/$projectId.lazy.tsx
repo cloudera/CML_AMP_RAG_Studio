@@ -35,28 +35,20 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Card, Flex } from "antd";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
-import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
-import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 
-const ProjectPage = () => {
-  const { project } = useProjectContext();
+import { createLazyFileRoute } from "@tanstack/react-router";
+import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
+import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
 
-  return (
-    <Flex style={{ padding: 40, width: "80%", maxWidth: 2000 }} vertical>
-      <h1>{project.name}</h1>
-      <Flex gap={32}>
-        <Flex flex={2} vertical>
-          <Sessions />
-        </Flex>
-        <Flex flex={1} vertical gap={16}>
-          <Card title="Settings">This is where settings goes</Card>
-          <ProjectKnowledgeBases />
-        </Flex>
-      </Flex>
-    </Flex>
-  );
-};
-
-export default ProjectPage;
+export const Route = createLazyFileRoute(
+  "/_layout/sessions/_layout-sessions/project/$projectId",
+)({
+  component: () => {
+    const { project } = Route.useLoaderData();
+    return (
+      <ProjectProvider project={project}>
+        <ProjectPage />
+      </ProjectProvider>
+    );
+  },
+});

@@ -37,11 +37,15 @@
  ******************************************************************************/
 
 import { createFileRoute } from '@tanstack/react-router'
-import { getProjectByIdQueryOptions } from 'src/api/projectsApi.ts'
+import { getSessionsQueryOptions } from 'src/api/sessionApi.ts'
+import { getLlmModelsQueryOptions } from 'src/api/modelsApi.ts'
 
-export const Route = createFileRoute('/_layout/chat/projects/$projectId')({
-  loader: async ({ params: { projectId }, context }) =>
-    await context.queryClient.ensureQueryData(
-      getProjectByIdQueryOptions(+projectId),
-    ),
+export const Route = createFileRoute(
+  '/_layout/sessions/_layout-sessions/$sessionId',
+)({
+  loader: async ({ context }) =>
+    await Promise.all([
+      context.queryClient.ensureQueryData(getSessionsQueryOptions),
+      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
+    ]),
 })

@@ -186,7 +186,7 @@ const ProjectLabel = ({ project }: { project: Project }) => {
     <Typography.Text
       onClick={() => {
         navigate({
-          to: "/chat/projects/$projectId",
+          to: "/sessions/project/$projectId",
           params: { projectId: project.id.toString() },
         }).catch(() => null);
       }}

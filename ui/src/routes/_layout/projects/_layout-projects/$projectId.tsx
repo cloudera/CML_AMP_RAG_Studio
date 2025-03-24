@@ -37,13 +37,13 @@
  ******************************************************************************/
 
 import { createFileRoute } from "@tanstack/react-router";
-import { getProjectByIdQueryOptions } from "src/api/projectsApi.ts";
+import { getProjectById } from "src/api/projectsApi.ts";
 
 export const Route = createFileRoute(
   "/_layout/projects/_layout-projects/$projectId",
 )({
-  loader: async ({ params: { projectId }, context }) =>
-    await context.queryClient.ensureQueryData(
-      getProjectByIdQueryOptions(+projectId),
-    ),
+  loader: async ({ params: { projectId } }) => {
+    const project = await getProjectById(+projectId);
+    return { project };
+  },
 });

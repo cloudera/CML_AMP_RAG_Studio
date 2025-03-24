@@ -38,9 +38,17 @@
 
 import { createLazyFileRoute } from "@tanstack/react-router";
 import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
+import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
 
 export const Route = createLazyFileRoute(
   "/_layout/projects/_layout-projects/$projectId",
 )({
-  component: () => <ProjectPage />,
+  component: () => {
+    const { project } = Route.useLoaderData();
+    return (
+      <ProjectProvider project={project}>
+        <ProjectPage />
+      </ProjectProvider>
+    );
+  },
 });

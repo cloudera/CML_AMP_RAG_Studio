@@ -37,10 +37,9 @@
  ******************************************************************************/
 
 import { Divider, Flex, Layout } from "antd";
-import RagChat from "pages/RagChatTab/RagChat.tsx";
 import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
 import { Session } from "src/api/sessionApi.ts";
-import { useParams } from "@tanstack/react-router";
+import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -125,7 +124,7 @@ function ChatLayout() {
             }}
             gap={20}
           >
-            <RagChat />
+            <Outlet />
           </Flex>
         </Flex>
       </Layout>

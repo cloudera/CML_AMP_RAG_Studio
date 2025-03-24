@@ -36,9 +36,16 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import ChatLayout from "pages/RagChatTab/ChatLayout.tsx";
+import { createFileRoute } from '@tanstack/react-router'
+import { getSessionsQueryOptions } from 'src/api/sessionApi.ts'
+import { getLlmModelsQueryOptions } from 'src/api/modelsApi.ts'
+import { getDefaultProjectQueryOptions } from 'src/api/projectsApi.ts'
 
-export const Route = createLazyFileRoute("/_layout/sessions/")({
-  component: () => <ChatLayout />,
-});
+export const Route = createFileRoute('/_layout/sessions/_layout-sessions/')({
+  loader: async ({ context }) =>
+    await Promise.all([
+      context.queryClient.ensureQueryData(getSessionsQueryOptions),
+      context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
+      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
+    ]),
+})

@@ -36,9 +36,33 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import ChatLayout from "pages/RagChatTab/ChatLayout.tsx";
+import { createContext, ReactNode, useContext } from "react";
+import { Project } from "src/api/projectsApi.ts";
 
-export const Route = createLazyFileRoute("/_layout/sessions/$sessionId")({
-  component: () => <ChatLayout />,
-});
+interface ProjectContextType {
+  project: Project;
+}
+
+const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
+
+export const ProjectProvider = ({
+  children,
+  project,
+}: {
+  children: ReactNode;
+  project: Project;
+}) => {
+  return (
+    <ProjectContext.Provider value={{ project }}>
+      {children}
+    </ProjectContext.Provider>
+  );
+};
+
+export const useProjectContext = (): ProjectContextType => {
+  const context = useContext(ProjectContext);
+  if (context === undefined) {
+    throw new Error("useProjectContext must be used within a ProjectProvider");
+  }
+  return context;
+};

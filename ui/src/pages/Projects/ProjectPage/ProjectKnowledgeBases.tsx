@@ -36,12 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId.tsx";
 import { Dispatch, SetStateAction, useState } from "react";
 import {
   useAddDataSourceToProject,
   useGetDataSourcesForProject,
 } from "src/api/projectsApi.ts";
+import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import {
   DataSourceType,
   useGetDataSourcesQuery,
@@ -61,7 +61,7 @@ const SelectKnowledgeBaseForm = ({
   setPopoverVisible: Dispatch<SetStateAction<boolean>>;
   unusedDataSources?: DataSourceType[];
 }) => {
-  const { projectId } = Route.useParams();
+  const { project } = useProjectContext();
   const [form] = Form.useForm<{ dataSourceId: number }>();
   const queryClient = useQueryClient();
   const { data: allDataSources, isLoading: allAreLoading } =
@@ -77,7 +77,7 @@ const SelectKnowledgeBaseForm = ({
         .invalidateQueries({
           queryKey: [
             QueryKeys.getDataSourcesForProject,
-            { projectId: +projectId },
+            { projectId: project.id },
           ],
         })
         .catch(() => {
@@ -93,7 +93,7 @@ const SelectKnowledgeBaseForm = ({
       .then((values) => {
         if (values?.dataSourceId) {
           addDataSourceToProject({
-            projectId: +projectId,
+            projectId: project.id,
             dataSourceId: values.dataSourceId,
           });
         }
@@ -125,10 +125,11 @@ const SelectKnowledgeBaseForm = ({
 };
 
 export const ProjectKnowledgeBases = () => {
-  const { projectId } = Route.useParams();
+  const { project } = useProjectContext();
   const [popoverVisible, setPopoverVisible] = useState(false);
-  const { data: dataSources, isLoading } =
-    useGetDataSourcesForProject(+projectId);
+  const { data: dataSources, isLoading } = useGetDataSourcesForProject(
+    project.id,
+  );
 
   const { data: allDataSources } = useGetDataSourcesQuery();
 

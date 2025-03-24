@@ -36,14 +36,14 @@
  * DATA.
  ******************************************************************************/
 
-import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId.tsx";
 import { useGetSessionsForProject } from "src/api/projectsApi.ts";
 import { Flex, Skeleton, Typography } from "antd";
 import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
+import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 
 export const Sessions = () => {
-  const { projectId } = Route.useParams();
-  const { data: sessions, isLoading } = useGetSessionsForProject(+projectId);
+  const { project } = useProjectContext();
+  const { data: sessions, isLoading } = useGetSessionsForProject(project.id);
 
   if (isLoading) {
     return (
