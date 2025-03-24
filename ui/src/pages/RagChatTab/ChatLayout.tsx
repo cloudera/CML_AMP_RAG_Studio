@@ -50,6 +50,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   getDefaultProjectQueryOptions,
   useGetDataSourcesForProject,
+  useGetProjects,
+  useGetSessionsForProject,
 } from "src/api/projectsApi.ts";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
@@ -60,8 +62,11 @@ function ChatLayout() {
   const { data: defaultProject } = useSuspenseQuery(
     getDefaultProjectQueryOptions,
   );
+  const { data: defaultSessions } = useGetSessionsForProject(defaultProject.id);
 
-  const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+  // const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+
+  const sessions = defaultSessions ?? [];
 
   const { sessionId } = useParams({ strict: false });
   const activeSession = getSessionForSessionId(sessionId, sessions);
