@@ -115,7 +115,7 @@ export function SessionSidebar({
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
-        <Sider style={{ height: "88vh" }}>
+        <Sider width={250} style={{ height: "88vh" }}>
           <Menu
             selectedKeys={[activeSession?.id.toString() ?? ""]}
             mode="inline"
