@@ -87,9 +87,13 @@ const DataSourcesTable = ({
   dataSources?: DataSourceType[];
   dataSourcesLoading: boolean;
 }) => {
+  const dataSourcesWithKey = dataSources?.map((dataSource) => ({
+    ...dataSource,
+    key: dataSource.id,
+  }));
   return (
     <Table
-      dataSource={dataSources}
+      dataSource={dataSourcesWithKey}
       columns={columns}
       style={{ width: "100%" }}
       loading={dataSourcesLoading}

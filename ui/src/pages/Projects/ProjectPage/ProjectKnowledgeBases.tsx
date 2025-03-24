@@ -37,12 +37,15 @@
  ******************************************************************************/
 
 import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId.tsx";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import {
   useAddDataSourceToProject,
   useGetDataSourcesForProject,
 } from "src/api/projectsApi.ts";
-import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import {
+  DataSourceType,
+  useGetDataSourcesQuery,
+} from "src/api/dataSourceApi.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
@@ -51,16 +54,18 @@ import FormItem from "antd/es/form/FormItem";
 import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 import { PlusCircleOutlined } from "@ant-design/icons";
 
-export const ProjectKnowledgeBases = () => {
+const SelectKnowledgeBaseForm = ({
+  setPopoverVisible,
+  unusedDataSources,
+}: {
+  setPopoverVisible: Dispatch<SetStateAction<boolean>>;
+  unusedDataSources?: DataSourceType[];
+}) => {
   const { projectId } = Route.useParams();
-  const [popoverVisible, setPopoverVisible] = useState(false);
-  const { data: dataSources, isLoading } =
-    useGetDataSourcesForProject(+projectId);
-
+  const [form] = Form.useForm<{ dataSourceId: number }>();
+  const queryClient = useQueryClient();
   const { data: allDataSources, isLoading: allAreLoading } =
     useGetDataSourcesQuery();
-
-  const queryClient = useQueryClient();
   const { mutate: addDataSourceToProject } = useAddDataSourceToProject({
     onError: (res: Error) => {
       messageQueue.error(res.toString());
@@ -80,11 +85,7 @@ export const ProjectKnowledgeBases = () => {
         });
     },
   });
-  const allDataSourcesIds = dataSources?.map((dataSource) => dataSource.id);
-  const unusedDataSources = allDataSources?.filter((dataSource) => {
-    return !allDataSourcesIds?.includes(dataSource.id);
-  });
-  const [form] = Form.useForm<{ dataSourceId: number }>();
+
   const handleAddDataSource = () => {
     form
       .validateFields()
@@ -101,6 +102,42 @@ export const ProjectKnowledgeBases = () => {
   };
 
   return (
+    <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+      <FormItem name="dataSourceId">
+        <Select
+          disabled={allAreLoading || allDataSources?.length === 0}
+          style={{ width: 300 }}
+          options={unusedDataSources?.map((value) => {
+            return formatDataSource(value);
+          })}
+        />
+      </FormItem>
+      <Button
+        type="primary"
+        style={{ marginTop: 8 }}
+        disabled={unusedDataSources?.length === 0}
+        onClick={handleAddDataSource}
+      >
+        Add
+      </Button>
+    </Form>
+  );
+};
+
+export const ProjectKnowledgeBases = () => {
+  const { projectId } = Route.useParams();
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const { data: dataSources, isLoading } =
+    useGetDataSourcesForProject(+projectId);
+
+  const { data: allDataSources } = useGetDataSourcesQuery();
+
+  const allDataSourcesIds = dataSources?.map((dataSource) => dataSource.id);
+  const unusedDataSources = allDataSources?.filter((dataSource) => {
+    return !allDataSourcesIds?.includes(dataSource.id);
+  });
+
+  return (
     <Card
       title="Knowledge Bases"
       extra={
@@ -110,25 +147,10 @@ export const ProjectKnowledgeBases = () => {
           onOpenChange={setPopoverVisible}
           destroyTooltipOnHide={true}
           content={
-            <Form autoCorrect="off" form={form} clearOnDestroy={true}>
-              <FormItem name="dataSourceId">
-                <Select
-                  disabled={allAreLoading || allDataSources?.length === 0}
-                  style={{ width: 300 }}
-                  options={unusedDataSources?.map((value) => {
-                    return formatDataSource(value);
-                  })}
-                />
-              </FormItem>
-              <Button
-                type="primary"
-                style={{ marginTop: 8 }}
-                disabled={unusedDataSources?.length === 0}
-                onClick={handleAddDataSource}
-              >
-                Add
-              </Button>
-            </Form>
+            <SelectKnowledgeBaseForm
+              unusedDataSources={unusedDataSources}
+              setPopoverVisible={setPopoverVisible}
+            />
           }
         >
           <Button
@@ -143,7 +165,7 @@ export const ProjectKnowledgeBases = () => {
         <Spin />
       ) : (
         dataSources?.map((dataSource) => (
-          <Card style={{ margin: 8 }}>
+          <Card style={{ margin: 8 }} key={dataSource.id}>
             <Typography.Text>{dataSource.name}</Typography.Text>
           </Card>
         ))
