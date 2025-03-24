@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { createLazyFileRoute } from "@tanstack/react-router";
-import ProjectPage from "pages/Projects/Project/ProjectPage.tsx";
+import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
 
 export const Route = createLazyFileRoute(
   "/_layout/projects/_layout-projects/$projectId",

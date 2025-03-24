@@ -36,14 +36,18 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { Session } from "src/api/sessionApi.ts";
 import {
+  Button,
   ConfigProvider,
   Flex,
+  Form,
+  Input,
   Layout,
   Menu,
   MenuProps,
+  Modal,
   theme,
   Typography,
 } from "antd";
@@ -60,6 +64,27 @@ import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
 import "./index.css";
+import {
+  Project,
+  useCreateProject,
+  useGetProjects,
+} from "src/api/projectsApi.ts";
+import {
+  FolderAddOutlined,
+  FolderOpenFilled,
+  FolderOpenOutlined,
+  FolderOutlined,
+  FolderTwoTone,
+  FolderViewOutlined,
+  PlusCircleOutlined,
+  ProjectOutlined,
+} from "@ant-design/icons";
+import useModal from "src/utils/useModal.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
+
+const { Sider } = Layout;
 
 export type MenuItem = Required<MenuProps>["items"];
 
@@ -88,17 +113,116 @@ const SessionMenuTheme = {
   },
 };
 
+const ProjectsHeaderItem = () => {
+  const createProjectModal = useModal();
+  const [form] = Form.useForm<{ name: string }>();
+  const queryClient = useQueryClient();
+
+  const createProject = useCreateProject({
+    onSuccess: () => {
+      createProjectModal.setIsModalOpen(false);
+      queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getProjects] })
+        .catch(() => {
+          messageQueue.error("Failed to refresh projects");
+        });
+    },
+    onError: () => {
+      messageQueue.error("Failed to create a new project");
+    },
+  });
+  const handleCreateNewProject = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        createProject.mutate({ name: values.name });
+      })
+      .catch(() => null);
+  };
+
+  return (
+    <Flex
+      justify="space-between"
+      gap={6}
+      style={{ paddingLeft: 12, paddingTop: 8 }}
+    >
+      <Flex gap={6} align="center">
+        <ProjectOutlined style={{ fontSize: 18 }} />
+        <Typography.Text type="secondary">Projects</Typography.Text>
+      </Flex>
+      <Button
+        type="text"
+        icon={<PlusCircleOutlined />}
+        onClick={() => {
+          createProjectModal.setIsModalOpen(true);
+        }}
+      />
+      <Modal
+        title="Create New Project"
+        open={createProjectModal.isModalOpen}
+        onCancel={() => {
+          createProjectModal.setIsModalOpen(false);
+        }}
+        footer={
+          <Button onClick={handleCreateNewProject} type="primary">
+            OK
+          </Button>
+        }
+      >
+        <Form form={form}>
+          <Form.Item
+            name="name"
+            label="Project name"
+            rules={[
+              { required: true, message: "Please provide a project name" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </Flex>
+  );
+};
+
+const projectSessionSidebarItem = ({
+  project,
+}: {
+  project: Project;
+}): ItemType => {
+  return {
+    key: project.id,
+    icon: <FolderOutlined />,
+    label: (
+      <Typography.Text strong style={{ paddingLeft: 12 }}>
+        {project.name}
+      </Typography.Text>
+    ),
+  };
+};
+
 export function SessionSidebar({
   sessionsByDate,
 }: {
   sessionsByDate: Dictionary<Session[]>;
 }) {
   const { activeSession } = useContext(RagChatContext);
-  const [collapsed, setCollapsed] = useState(false);
+  const { data: projects } = useGetProjects();
 
-  const openItems: ItemType[] = [
+  const projectItems: ItemType[] = projects
+    ? projects.map((project) => {
+        return projectSessionSidebarItem({ project });
+      })
+    : [];
+
+  const items: ItemType[] = [
     ...newChatItem(18),
     { type: "divider", key: "newChatDivider" },
+    {
+      type: "group",
+      label: <ProjectsHeaderItem />,
+    },
+    ...projectItems,
     {
       type: "group",
       label: (
@@ -111,36 +235,10 @@ export function SessionSidebar({
     ...sessionItems(sessionsByDate),
   ];
 
-  const collapsedItems: ItemType[] = [
-    ...newChatItem(24),
-    { type: "divider", key: "collapsedNewChatDivider" },
-    {
-      key: "history",
-      label: "",
-      onClick: () => {
-        setCollapsed(false);
-      },
-      icon: (
-        <Flex align="center" justify="center" style={{ height: "100%" }}>
-          <Images.History style={{ fontSize: 24 }} />
-        </Flex>
-      ),
-    },
-  ];
-
-  const handleCollapse = (collapsedState: boolean) => {
-    setCollapsed(collapsedState);
-  };
-
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
-        <Layout.Sider
-          style={{ height: "88vh" }}
-          collapsible
-          onCollapse={handleCollapse}
-          collapsed={collapsed}
-        >
+        <Sider width={250} style={{ height: "88vh" }}>
           <Menu
             selectedKeys={[activeSession?.id.toString() ?? ""]}
             mode="inline"
@@ -151,9 +249,9 @@ export function SessionSidebar({
               overflowY: "auto",
               scrollbarWidth: "thin",
             }}
-            items={collapsed ? collapsedItems : openItems}
+            items={items}
           />
-        </Layout.Sider>
+        </Sider>
       </div>
     </ConfigProvider>
   );

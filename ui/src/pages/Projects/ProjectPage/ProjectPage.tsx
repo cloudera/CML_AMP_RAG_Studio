@@ -35,17 +35,30 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { Card, Flex } from "antd";
+import { useGetProjectById } from "src/api/projectsApi.ts";
+import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId";
+import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
+import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
-import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
+const ProjectPage = () => {
+  const { projectId } = Route.useParams();
+  const { data: project } = useGetProjectById(+projectId);
 
-export const Route = createFileRoute("/_layout/sessions/")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
-});
+  return (
+    <Flex style={{ padding: 40, width: "80%", maxWidth: 2000 }} vertical>
+      <h1>{project?.name}</h1>
+      <Flex gap={32}>
+        <Flex flex={2} vertical>
+          <Sessions />
+        </Flex>
+        <Flex flex={1} vertical gap={16}>
+          <Card title="Settings">This is where settings goes</Card>
+          <ProjectKnowledgeBases />
+        </Flex>
+      </Flex>
+    </Flex>
+  );
+};
+
+export default ProjectPage;

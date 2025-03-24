@@ -36,16 +36,49 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
-import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
+import { Session } from "src/api/sessionApi.ts";
+import { useNavigate } from "@tanstack/react-router";
+import { useChatHistoryQuery } from "src/api/chatApi.ts";
+import { Card, Typography } from "antd";
+import { format } from "date-fns";
 
-export const Route = createFileRoute("/_layout/sessions/")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
-});
+const SessionCard = ({ session }: { session: Session }) => {
+  const navigate = useNavigate();
+  const { data: chatHistory, isSuccess } = useChatHistoryQuery(session.id);
+
+  const lastMessage = chatHistory.length
+    ? chatHistory[chatHistory.length - 1]
+    : null;
+
+  const handleNavOnClick = () => {
+    navigate({
+      to: "/sessions/$sessionId",
+      params: { sessionId: session.id.toString() },
+    }).catch(() => null);
+  };
+
+  return (
+    <Card
+      title={session.name}
+      extra={
+        <Typography.Text type="secondary">
+          Created by: {session.createdById}
+        </Typography.Text>
+      }
+      hoverable={true}
+      onClick={handleNavOnClick}
+    >
+      <Typography.Paragraph ellipsis={{ rows: 2 }}>
+        {isSuccess && lastMessage ? lastMessage.rag_message.assistant : null}
+      </Typography.Paragraph>
+      <Typography.Text type="secondary">
+        Last message:{" "}
+        {lastMessage?.timestamp
+          ? format(lastMessage.timestamp * 1000, "MMM dd yyyy, pp")
+          : "No messages"}
+      </Typography.Text>
+    </Card>
+  );
+};
+
+export default SessionCard;

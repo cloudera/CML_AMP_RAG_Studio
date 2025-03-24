@@ -39,7 +39,7 @@
 import { Divider, Flex, Layout } from "antd";
 import RagChat from "pages/RagChatTab/RagChat.tsx";
 import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
-import { getSessionsQueryOptions, Session } from "src/api/sessionApi.ts";
+import { Session } from "src/api/sessionApi.ts";
 import { groupBy } from "lodash";
 import { format } from "date-fns";
 import { useParams } from "@tanstack/react-router";
@@ -47,14 +47,25 @@ import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useGetDataSourcesForProject } from "src/api/projectsApi.ts";
+import {
+  getDefaultProjectQueryOptions,
+  useGetDataSourcesForProject,
+  useGetSessionsForProject,
+} from "src/api/projectsApi.ts";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
 };
 
 function ChatLayout() {
-  const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
+  const { data: defaultSessions } = useGetSessionsForProject(defaultProject.id);
+
+  // const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+
+  const sessions = defaultSessions ?? [];
 
   const { sessionId } = useParams({ strict: false });
   const activeSession = getSessionForSessionId(sessionId, sessions);
