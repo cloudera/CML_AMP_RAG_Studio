@@ -64,8 +64,21 @@ import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
 import "./index.css";
-import { useCreateProject, useGetProjects } from "src/api/projectsApi.ts";
-import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
+import {
+  Project,
+  useCreateProject,
+  useGetProjects,
+} from "src/api/projectsApi.ts";
+import {
+  FolderAddOutlined,
+  FolderOpenFilled,
+  FolderOpenOutlined,
+  FolderOutlined,
+  FolderTwoTone,
+  FolderViewOutlined,
+  PlusCircleOutlined,
+  ProjectOutlined,
+} from "@ant-design/icons";
 import useModal from "src/utils/useModal.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
@@ -172,6 +185,22 @@ const ProjectsHeaderItem = () => {
   );
 };
 
+const projectSessionSidebarItem = ({
+  project,
+}: {
+  project: Project;
+}): ItemType => {
+  return {
+    key: project.id,
+    icon: <FolderOutlined />,
+    label: (
+      <Typography.Text strong style={{ paddingLeft: 12 }}>
+        {project.name}
+      </Typography.Text>
+    ),
+  };
+};
+
 export function SessionSidebar({
   sessionsByDate,
 }: {
@@ -182,14 +211,7 @@ export function SessionSidebar({
 
   const projectItems: ItemType[] = projects
     ? projects.map((project) => {
-        return {
-          key: project.id,
-          label: (
-            <Typography.Text strong style={{ paddingLeft: 12 }}>
-              {project.name}
-            </Typography.Text>
-          ),
-        };
+        return projectSessionSidebarItem({ project });
       })
     : [];
 
