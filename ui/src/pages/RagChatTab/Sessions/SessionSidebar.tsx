@@ -77,6 +77,7 @@ import useModal from "src/utils/useModal.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
+import { useNavigate } from "@tanstack/react-router";
 
 const { Sider } = Layout;
 
@@ -179,6 +180,22 @@ const ProjectsHeaderItem = () => {
   );
 };
 
+const ProjectLabel = ({ project }: { project: Project }) => {
+  const navigate = useNavigate();
+  return (
+    <Typography.Text
+      onClick={() => {
+        navigate({
+          to: "/chat/projects/$projectId",
+          params: { projectId: project.id.toString() },
+        }).catch(() => null);
+      }}
+    >
+      {project.name}
+    </Typography.Text>
+  );
+};
+
 const projectSessionSidebarItem = ({
   project,
 }: {
@@ -187,7 +204,7 @@ const projectSessionSidebarItem = ({
   return {
     key: `project-${project.id.toString()}`,
     icon: <FolderOutlined style={{ marginLeft: 8 }} />,
-    label: <Typography.Text>{project.name}</Typography.Text>,
+    label: <ProjectLabel project={project} />,
   };
 };
 
