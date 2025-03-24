@@ -43,6 +43,7 @@ import {
   ConfigProvider,
   Flex,
   Form,
+  Input,
   Layout,
   Menu,
   MenuProps,
@@ -66,6 +67,7 @@ import "./index.css";
 import { useCreateProject, useGetProjects } from "src/api/projectsApi.ts";
 import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
 import useModal from "src/utils/useModal.ts";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const { Sider } = Layout;
 
@@ -98,9 +100,24 @@ const SessionMenuTheme = {
 
 const ProjectsHeaderItem = () => {
   const createProjectModal = useModal();
+  const [form] = Form.useForm<{ name: string }>();
 
-  const createProject = useCreateProject();
-  const handleCreateNewProject = (name: string) => {};
+  const createProject = useCreateProject({
+    onSuccess: () => {
+      createProjectModal.setIsModalOpen(false);
+    },
+    onError: () => {
+      messageQueue.error("Failed to create a new project");
+    },
+  });
+  const handleCreateNewProject = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        createProject.mutate({ name: values.name });
+      })
+      .catch(() => null);
+  };
 
   return (
     <Flex
@@ -119,9 +136,19 @@ const ProjectsHeaderItem = () => {
           createProjectModal.setIsModalOpen(true);
         }}
       />
-      <Modal title="Create New Project" open={createProjectModal.isModalOpen}>
-        <Form>
-          <Button>No</Button>
+      <Modal
+        title="Create New Project"
+        open={createProjectModal.isModalOpen}
+        footer={
+          <Button onClick={handleCreateNewProject} type="primary">
+            OK
+          </Button>
+        }
+      >
+        <Form form={form}>
+          <Form.Item name="name" label="Project name" required={true}>
+            <Input />
+          </Form.Item>
         </Form>
       </Modal>
     </Flex>
