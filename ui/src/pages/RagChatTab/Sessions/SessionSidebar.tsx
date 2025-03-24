@@ -57,7 +57,6 @@ import {
   cdlSlate800,
   cdlWhite,
 } from "src/cuix/variables.ts";
-import { Dictionary, groupBy } from "lodash";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { defaultSessionItems } from "pages/RagChatTab/Sessions/DefaultSessionItems.tsx";
 import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
@@ -67,7 +66,6 @@ import "./index.css";
 import {
   Project,
   useCreateProject,
-  useGetDefaultProject,
   useGetProjects,
 } from "src/api/projectsApi.ts";
 import {
@@ -79,7 +77,6 @@ import useModal from "src/utils/useModal.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
-import { format } from "date-fns";
 
 const { Sider } = Layout;
 

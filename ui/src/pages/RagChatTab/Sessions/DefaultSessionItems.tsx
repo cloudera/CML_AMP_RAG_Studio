@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Dictionary, groupBy } from "lodash";
+import { groupBy } from "lodash";
 import { Session } from "src/api/sessionApi.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ItemType } from "antd/lib/menu/interface";
@@ -57,9 +57,8 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
     const relevantTime = session.lastInteractionTime || session.timeUpdated;
     return format(relevantTime * 1000, "yyyyMMdd");
   });
-
-  const sortedDates = Object.keys(sessions).sort().reverse();
-
+  const sortedDates = Object.keys(defaultSessions).sort().reverse();
+  debugger;
   const items: ItemType[][] = sortedDates.map((date) => {
     const dateItem: ItemType = {
       key: date,
@@ -71,17 +70,19 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
       ),
     };
 
-    const sessionItems: ItemType[] = sessions[date].map((session) => {
-      return {
-        key: session.id.toString(),
-        label: <SessionItem session={session} />,
-        onClick: () => {
-          navigate({
-            to: `/sessions/${session.id.toString()}`,
-          }).catch(() => null);
-        },
-      };
-    });
+    const sessionItems: ItemType[] = defaultSessionsByDate[date].map(
+      (session) => {
+        return {
+          key: session.id.toString(),
+          label: <SessionItem session={session} />,
+          onClick: () => {
+            navigate({
+              to: `/sessions/${session.id.toString()}`,
+            }).catch(() => null);
+          },
+        };
+      },
+    );
 
     return [
       { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
