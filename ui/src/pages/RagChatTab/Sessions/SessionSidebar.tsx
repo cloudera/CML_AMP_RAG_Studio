@@ -61,6 +61,8 @@ import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
 import "./index.css";
 import { useGetProjects } from "src/api/projectsApi.ts";
+import { ProjectOutlined } from "@ant-design/icons";
+import { parse } from "date-fns";
 
 const { Sider } = Layout;
 
@@ -99,24 +101,30 @@ export function SessionSidebar({
   const { activeSession } = useContext(RagChatContext);
   const { data: projects, isLoading: isProjectsLoading } = useGetProjects();
 
-  const projectItems: ItemType[] = [
+  const projectItems: ItemType[] = projects?.map((project) => {
+    return {
+      key: project.id,
+      label: (
+        <Typography.Text strong style={{ paddingLeft: 12 }}>
+          {project.name}
+        </Typography.Text>
+      ),
+    };
+  });
+
+  const items: ItemType[] = [
     ...newChatItem(18),
     { type: "divider", key: "newChatDivider" },
     {
       type: "group",
       label: (
         <Flex gap={6} style={{ paddingLeft: 12, paddingTop: 8 }}>
-          <Images.History style={{ fontSize: 18 }} />
-          <Typography.Text type="secondary">Chat History</Typography.Text>
+          <ProjectOutlined style={{ fontSize: 18 }} />
+          <Typography.Text type="secondary">Projects</Typography.Text>
         </Flex>
       ),
     },
-    ...sessionItems(sessionsByDate),
-  ];
-
-  const items: ItemType[] = [
-    ...newChatItem(18),
-    { type: "divider", key: "newChatDivider" },
+    ...projectItems,
     {
       type: "group",
       label: (
@@ -133,18 +141,6 @@ export function SessionSidebar({
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
         <Sider width={250} style={{ height: "88vh" }}>
-          <Menu
-            selectedKeys={[activeSession?.id.toString() ?? ""]}
-            mode="inline"
-            style={{
-              backgroundColor: cdlWhite,
-              height: "100%",
-              borderRight: 0,
-              overflowY: "auto",
-              scrollbarWidth: "thin",
-            }}
-            items={projectItems}
-          />
           <Menu
             selectedKeys={[activeSession?.id.toString() ?? ""]}
             mode="inline"
