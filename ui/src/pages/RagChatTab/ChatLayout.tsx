@@ -39,7 +39,7 @@
 import { Divider, Flex, Layout } from "antd";
 import RagChat from "pages/RagChatTab/RagChat.tsx";
 import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
-import { getSessionsQueryOptions, Session } from "src/api/sessionApi.ts";
+import { Session } from "src/api/sessionApi.ts";
 import { groupBy } from "lodash";
 import { format } from "date-fns";
 import { useParams } from "@tanstack/react-router";
@@ -50,7 +50,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   getDefaultProjectQueryOptions,
   useGetDataSourcesForProject,
-  useGetProjects,
   useGetSessionsForProject,
 } from "src/api/projectsApi.ts";
 

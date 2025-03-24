@@ -42,6 +42,7 @@ import {
   Button,
   ConfigProvider,
   Flex,
+  Form,
   Layout,
   Menu,
   MenuProps,
@@ -62,7 +63,7 @@ import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
 import "./index.css";
-import { useGetProjects } from "src/api/projectsApi.ts";
+import { useCreateProject, useGetProjects } from "src/api/projectsApi.ts";
 import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
 import useModal from "src/utils/useModal.ts";
 
@@ -98,6 +99,9 @@ const SessionMenuTheme = {
 const ProjectsHeaderItem = () => {
   const createProjectModal = useModal();
 
+  const createProject = useCreateProject();
+  const handleCreateNewProject = (name: string) => {};
+
   return (
     <Flex
       justify="space-between"
@@ -115,7 +119,11 @@ const ProjectsHeaderItem = () => {
           createProjectModal.setIsModalOpen(true);
         }}
       />
-      <Modal title="Create New Project" />
+      <Modal title="Create New Project" open={createProjectModal.isModalOpen}>
+        <Form>
+          <Button>No</Button>
+        </Form>
+      </Modal>
     </Flex>
   );
 };
@@ -126,11 +134,10 @@ export function SessionSidebar({
   sessionsByDate: Dictionary<Session[]>;
 }) {
   const { activeSession } = useContext(RagChatContext);
-  const { data: projects, isLoading: isProjectsLoading } = useGetProjects();
+  const { data: projects } = useGetProjects();
 
-  const projectItems: ItemType[] = isProjectsLoading
-    ? []
-    : projects?.map((project) => {
+  const projectItems: ItemType[] = projects
+    ? projects.map((project) => {
         return {
           key: project.id,
           label: (
@@ -139,7 +146,8 @@ export function SessionSidebar({
             </Typography.Text>
           ),
         };
-      });
+      })
+    : [];
 
   const items: ItemType[] = [
     ...newChatItem(18),
