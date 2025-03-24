@@ -35,105 +35,23 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import {
-  Button,
-  Card,
-  Flex,
-  Form,
-  Popover,
-  Select,
-  Skeleton,
-  Spin,
-  Typography,
-} from "antd";
+
+import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId.tsx";
+import { useState } from "react";
 import {
   useAddDataSourceToProject,
   useGetDataSourcesForProject,
-  useGetProjectById,
-  useGetSessionsForProject,
 } from "src/api/projectsApi.ts";
-import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId";
-import { Session } from "src/api/sessionApi.ts";
-import { useChatHistoryQuery } from "src/api/chatApi.ts";
-import { format } from "date-fns";
-import { useNavigate } from "@tanstack/react-router";
-import { PlusCircleOutlined } from "@ant-design/icons";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
-import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
-import FormItem from "antd/es/form/FormItem";
-import messageQueue from "src/utils/messageQueue";
 import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "src/api/utils";
-import { useState } from "react";
+import messageQueue from "src/utils/messageQueue.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import { Button, Card, Form, Popover, Select, Spin, Typography } from "antd";
+import FormItem from "antd/es/form/FormItem";
+import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
+import { PlusCircleOutlined } from "@ant-design/icons";
 
-const SessionCard = ({ session }: { session: Session }) => {
-  const navigate = useNavigate();
-  const { data: chatHistory, isSuccess } = useChatHistoryQuery(session.id);
-
-  const lastMessage = chatHistory.length
-    ? chatHistory[chatHistory.length - 1]
-    : null;
-
-  const handleNavOnClick = () => {
-    navigate({
-      to: "/sessions/$sessionId",
-      params: { sessionId: session.id.toString() },
-    }).catch(() => null);
-  };
-
-  return (
-    <Card
-      title={session.name}
-      extra={
-        <Typography.Text type="secondary">
-          Created by: {session.createdById}
-        </Typography.Text>
-      }
-      hoverable={true}
-      onClick={handleNavOnClick}
-    >
-      <Typography.Paragraph ellipsis={{ rows: 2 }}>
-        {isSuccess && lastMessage ? lastMessage.rag_message.assistant : null}
-      </Typography.Paragraph>
-      <Typography.Text type="secondary">
-        Last message:{" "}
-        {lastMessage?.timestamp
-          ? format(lastMessage.timestamp * 1000, "MMM dd yyyy, pp")
-          : "No messages"}
-      </Typography.Text>
-    </Card>
-  );
-};
-
-const Sessions = () => {
-  const { projectId } = Route.useParams();
-  const { data: sessions, isLoading } = useGetSessionsForProject(+projectId);
-
-  if (isLoading) {
-    return (
-      <Flex>
-        <Typography.Title level={3}>Chats</Typography.Title>
-        <Skeleton active />
-        <Skeleton active />
-        <Skeleton active />
-        <Skeleton active />
-      </Flex>
-    );
-  }
-
-  return (
-    <Flex vertical gap={15}>
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        Chats
-      </Typography.Title>
-      {sessions?.map((session) => (
-        <SessionCard session={session} key={session.id} />
-      ))}
-    </Flex>
-  );
-};
-
-const ProjectKnowledgeBases = () => {
+export const ProjectKnowledgeBases = () => {
   const { projectId } = Route.useParams();
   const [popoverVisible, setPopoverVisible] = useState(false);
   const { data: dataSources, isLoading } =
@@ -233,25 +151,3 @@ const ProjectKnowledgeBases = () => {
     </Card>
   );
 };
-
-const ProjectPage = () => {
-  const { projectId } = Route.useParams();
-  const { data: project } = useGetProjectById(+projectId);
-
-  return (
-    <Flex style={{ padding: 40, width: "80%", maxWidth: 2000 }} vertical>
-      <h1>{project?.name}</h1>
-      <Flex gap={32}>
-        <Flex flex={2} vertical>
-          <Sessions />
-        </Flex>
-        <Flex flex={1} vertical gap={16}>
-          <Card title="Settings">This is where settings goes</Card>
-          <ProjectKnowledgeBases />
-        </Flex>
-      </Flex>
-    </Flex>
-  );
-};
-
-export default ProjectPage;

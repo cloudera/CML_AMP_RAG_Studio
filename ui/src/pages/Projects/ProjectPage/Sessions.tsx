@@ -36,11 +36,35 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
+import { Route } from "src/routes/_layout/projects/_layout-projects/$projectId.tsx";
+import { useGetSessionsForProject } from "src/api/projectsApi.ts";
+import { Flex, Skeleton, Typography } from "antd";
+import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
 
-export const Route = createLazyFileRoute(
-  "/_layout/projects/_layout-projects/$projectId",
-)({
-  component: () => <ProjectPage />,
-});
+export const Sessions = () => {
+  const { projectId } = Route.useParams();
+  const { data: sessions, isLoading } = useGetSessionsForProject(+projectId);
+
+  if (isLoading) {
+    return (
+      <Flex>
+        <Typography.Title level={3}>Chats</Typography.Title>
+        <Skeleton active />
+        <Skeleton active />
+        <Skeleton active />
+        <Skeleton active />
+      </Flex>
+    );
+  }
+
+  return (
+    <Flex vertical gap={15}>
+      <Typography.Title level={4} style={{ margin: 0 }}>
+        Chats
+      </Typography.Title>
+      {sessions?.map((session) => (
+        <SessionCard session={session} key={session.id} />
+      ))}
+    </Flex>
+  );
+};
