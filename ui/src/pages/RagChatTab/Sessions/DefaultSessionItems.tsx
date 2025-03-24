@@ -49,7 +49,6 @@ import { useGetDefaultProject } from "src/api/projectsApi.ts";
 export const defaultSessionItems = (sessions: Session[]): MenuItem => {
   const navigate = useNavigate();
   const { data: defaultProject } = useGetDefaultProject();
-
   const defaultSessions = sessions.filter(
     (session) => defaultProject?.id === session.projectId,
   );
@@ -57,8 +56,9 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
     const relevantTime = session.lastInteractionTime || session.timeUpdated;
     return format(relevantTime * 1000, "yyyyMMdd");
   });
-  const sortedDates = Object.keys(defaultSessions).sort().reverse();
-  debugger;
+
+  const sortedDates = Object.keys(defaultSessionsByDate).sort().reverse();
+
   const items: ItemType[][] = sortedDates.map((date) => {
     const dateItem: ItemType = {
       key: date,
