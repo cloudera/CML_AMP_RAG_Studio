@@ -39,11 +39,13 @@
 import { useContext } from "react";
 import { Session } from "src/api/sessionApi.ts";
 import {
+  Button,
   ConfigProvider,
   Flex,
   Layout,
   Menu,
   MenuProps,
+  Modal,
   theme,
   Typography,
 } from "antd";
@@ -61,8 +63,8 @@ import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
 import "./index.css";
 import { useGetProjects } from "src/api/projectsApi.ts";
-import { ProjectOutlined } from "@ant-design/icons";
-import { parse } from "date-fns";
+import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
+import useModal from "src/utils/useModal.ts";
 
 const { Sider } = Layout;
 
@@ -93,6 +95,31 @@ const SessionMenuTheme = {
   },
 };
 
+const ProjectsHeaderItem = () => {
+  const createProjectModal = useModal();
+
+  return (
+    <Flex
+      justify="space-between"
+      gap={6}
+      style={{ paddingLeft: 12, paddingTop: 8 }}
+    >
+      <Flex gap={6} align="center">
+        <ProjectOutlined style={{ fontSize: 18 }} />
+        <Typography.Text type="secondary">Projects</Typography.Text>
+      </Flex>
+      <Button
+        type="text"
+        icon={<PlusCircleOutlined />}
+        onClick={() => {
+          createProjectModal.setIsModalOpen(true);
+        }}
+      />
+      <Modal title="Create New Project" />
+    </Flex>
+  );
+};
+
 export function SessionSidebar({
   sessionsByDate,
 }: {
@@ -101,28 +128,25 @@ export function SessionSidebar({
   const { activeSession } = useContext(RagChatContext);
   const { data: projects, isLoading: isProjectsLoading } = useGetProjects();
 
-  const projectItems: ItemType[] = projects?.map((project) => {
-    return {
-      key: project.id,
-      label: (
-        <Typography.Text strong style={{ paddingLeft: 12 }}>
-          {project.name}
-        </Typography.Text>
-      ),
-    };
-  });
+  const projectItems: ItemType[] = isProjectsLoading
+    ? []
+    : projects?.map((project) => {
+        return {
+          key: project.id,
+          label: (
+            <Typography.Text strong style={{ paddingLeft: 12 }}>
+              {project.name}
+            </Typography.Text>
+          ),
+        };
+      });
 
   const items: ItemType[] = [
     ...newChatItem(18),
     { type: "divider", key: "newChatDivider" },
     {
       type: "group",
-      label: (
-        <Flex gap={6} style={{ paddingLeft: 12, paddingTop: 8 }}>
-          <ProjectOutlined style={{ fontSize: 18 }} />
-          <Typography.Text type="secondary">Projects</Typography.Text>
-        </Flex>
-      ),
+      label: <ProjectsHeaderItem />,
     },
     ...projectItems,
     {
