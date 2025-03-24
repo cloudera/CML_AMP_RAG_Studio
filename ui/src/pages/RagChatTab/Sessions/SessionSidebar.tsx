@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { Session } from "src/api/sessionApi.ts";
 import {
   ConfigProvider,
@@ -60,6 +60,8 @@ import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
 import Images from "src/components/images/Images.ts";
 import "./index.css";
+
+const { Sider } = Layout;
 
 export type MenuItem = Required<MenuProps>["items"];
 
@@ -94,9 +96,8 @@ export function SessionSidebar({
   sessionsByDate: Dictionary<Session[]>;
 }) {
   const { activeSession } = useContext(RagChatContext);
-  const [collapsed, setCollapsed] = useState(false);
 
-  const openItems: ItemType[] = [
+  const items: ItemType[] = [
     ...newChatItem(18),
     { type: "divider", key: "newChatDivider" },
     {
@@ -111,36 +112,10 @@ export function SessionSidebar({
     ...sessionItems(sessionsByDate),
   ];
 
-  const collapsedItems: ItemType[] = [
-    ...newChatItem(24),
-    { type: "divider", key: "collapsedNewChatDivider" },
-    {
-      key: "history",
-      label: "",
-      onClick: () => {
-        setCollapsed(false);
-      },
-      icon: (
-        <Flex align="center" justify="center" style={{ height: "100%" }}>
-          <Images.History style={{ fontSize: 24 }} />
-        </Flex>
-      ),
-    },
-  ];
-
-  const handleCollapse = (collapsedState: boolean) => {
-    setCollapsed(collapsedState);
-  };
-
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
-        <Layout.Sider
-          style={{ height: "88vh" }}
-          collapsible
-          onCollapse={handleCollapse}
-          collapsed={collapsed}
-        >
+        <Sider style={{ height: "88vh" }}>
           <Menu
             selectedKeys={[activeSession?.id.toString() ?? ""]}
             mode="inline"
@@ -151,9 +126,9 @@ export function SessionSidebar({
               overflowY: "auto",
               scrollbarWidth: "thin",
             }}
-            items={collapsed ? collapsedItems : openItems}
+            items={items}
           />
-        </Layout.Sider>
+        </Sider>
       </div>
     </ConfigProvider>
   );
