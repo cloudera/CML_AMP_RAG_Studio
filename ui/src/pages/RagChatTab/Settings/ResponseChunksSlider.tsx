@@ -39,5 +39,8 @@ import { SliderSingleProps } from "antd";
 
 export const ResponseChunksRange: SliderSingleProps["marks"] = {
   1: "1",
+  5: "5",
   10: "10",
+  15: "15",
+  20: "20",
 };

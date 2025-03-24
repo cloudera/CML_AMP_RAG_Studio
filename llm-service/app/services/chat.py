@@ -37,7 +37,8 @@
 # ##############################################################################
 import time
 import uuid
-from typing import List, Iterable
+from random import shuffle
+from typing import List, Iterable, Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
@@ -62,9 +63,8 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session_id: int, query: str, configuration: RagPredictConfiguration, user_name: str
+    session: Session, query: str, configuration: RagPredictConfiguration, user_name: str
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -80,7 +80,7 @@ def v2_chat(
         session, response_id, query, query_configuration, user_name
     )
 
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
 
@@ -100,6 +100,7 @@ def _run_chat(
     if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
         return RagStudioChatMessage(
             id=response_id,
+            session_id=session.id,
             source_nodes=[],
             inference_model=None,
             rag_message=RagMessage(
@@ -121,9 +122,10 @@ def _run_chat(
     relevance, faithfulness = evaluators.evaluate_response(
         query, response, session.inference_model
     )
-    response_source_nodes = format_source_nodes(response)
+    response_source_nodes = format_source_nodes(response, data_source_id)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
+        session_id=session.id,
         source_nodes=response_source_nodes,
         inference_model=session.inference_model,
         rag_message=RagMessage(
@@ -159,7 +161,9 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     return history
 
 
-def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNode]:
+def format_source_nodes(
+    response: AgentChatResponse, data_source_id: int
+) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:
         doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
@@ -169,6 +173,7 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
                 doc_id=doc_id,
                 source_file_name=source_node.node.metadata["file_name"],
                 score=source_node.score or 0.0,
+                dataSourceId=data_source_id,
             )
         )
     response_source_nodes = sorted(
@@ -177,10 +182,54 @@ def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNod
     return response_source_nodes
 
 
+SAMPLE_QUESTIONS = [
+    "What is Cloudera, and how does it support organizations in managing big data?",
+    "What are the key components of the Cloudera Data Platform (CDP), and how do they work together?",
+    "How does Cloudera enable hybrid and multi-cloud data management for enterprises?",
+    "What are the primary use cases for Cloudera's platform in industries such as finance, healthcare, and retail?",
+    "How does Cloudera ensure data security and compliance with regulations like GDPR, HIPAA, and CCPA?",
+    "What is the role of Apache Hadoop and Apache Spark in Cloudera's ecosystem, and how do they contribute to data processing?",
+    "How does Cloudera's platform support machine learning and artificial intelligence workflows?",
+    "What are the differences between Cloudera Data Platform (CDP) Public Cloud and CDP Private Cloud?",
+    "How does Cloudera's platform handle data ingestion, storage, and real-time analytics at scale?",
+    "What tools and features does Cloudera provide for data governance, lineage, and cataloging?,",
+]
+
+
+def generate_dummy_suggested_questions() -> List[str]:
+    questions = SAMPLE_QUESTIONS.copy()
+    shuffle(questions)
+    return questions[:4]
+
+
+def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
+    chat_history = retrieve_chat_history(session.id)
+    if not chat_history:
+        return generate_dummy_suggested_questions()
+    query_str = (
+        " Give me a list of possible follow-up questions."
+        " Each question should be on a new line."
+        " There should be no more than four (4) questions."
+        " Each question should be no longer than fifteen (15) words."
+        " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
+        " Do not start like this - `Here are four questions that I can answer based on the context information`"
+        " Only return the list."
+    )
+    chat_response = llm_completion.completion(
+        session.id, query_str, session.inference_model
+    )
+    suggested_questions = process_response(chat_response.message.content)
+    return suggested_questions
+
+
 def generate_suggested_questions(
-    session_id: int,
+    session_id: Optional[int],
 ) -> List[str]:
+    if session_id is None:
+        return generate_dummy_suggested_questions()
     session = session_metadata_api.get_session(session_id)
+    if len(session.data_source_ids) == 0:
+        return _generate_suggested_questions_direct_llm(session)
     if len(session.data_source_ids) != 1:
         raise HTTPException(
             status_code=400,
@@ -256,17 +305,17 @@ def process_response(response: str | None) -> list[str]:
 
 
 def direct_llm_chat(
-    session_id: int, query: str, user_name: str
+    session: Session, query: str, user_name: str
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id)
     response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.completion(
-        session_id, query, session.inference_model
+        session.id, query, session.inference_model
     )
     new_chat_message = RagStudioChatMessage(
         id=response_id,
+        session_id=session.id,
         source_nodes=[],
         inference_model=session.inference_model,
         evaluations=[],
@@ -277,5 +326,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    ChatHistoryManager().append_to_history(session_id, [new_chat_message])
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message

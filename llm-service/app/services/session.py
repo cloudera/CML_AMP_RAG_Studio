@@ -36,43 +36,61 @@
 #  DATA.
 #
 
-from typing import List
+from fastapi import HTTPException
 
-from app.services.caii.types import ModelResponse
-from ._model_provider import ModelProvider
+from . import models
+from .chat_store import ChatHistoryManager
+from .metadata_apis import session_metadata_api
 
 
-class AzureModelProvider(ModelProvider):
-    @staticmethod
-    def get_env_var_names() -> set[str]:
-        return {"AZURE_OPENAI_API_KEY" "AZURE_OPENAI_ENDPOINT" "OPENAI_API_VERSION"}
+RENAME_SESSION_PROMPT_TEMPLATE = """
+You are tasked with suggesting an apt name for a chat session based on its first interaction. Only return the name of the session. 
 
-    @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
-        return [
-            ModelResponse(
-                model_id="gpt-4o",
-                name="OpenAI GPT-4o",
-            ),
-            ModelResponse(
-                model_id="gpt-4o-mini",
-                name="OpenAI GPT-4o-mini",
-            ),
-        ]
+========================================
+First Interaction:
+```
+User: What is your name?
+Assistant: My name is Assistant.
+```
 
-    @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
-        return [
-            ModelResponse(
-                model_id="text-embedding-ada-002",
-                name="Text Embedding Ada 002",
-            ),
-            ModelResponse(
-                model_id="text-embedding-3-small",
-                name="Text Embedding 3 Small",
-            ),
-        ]
+Session Name:
+Introduction
 
-    @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
-        return []
+========================================
+First Interaction:
+```
+User: What do you know about the Moon?
+Assistant: The Moon is Earth's only natural satellite. It is the fifth-largest satellite in the Solar System, and by far the largest among planetary satellites relative to the size of the planet that it orbits.
+```
+
+Session Name:
+Facts about the Moon
+
+========================================
+First Interaction:
+```
+User: {}
+Assistant: {}
+```
+
+Session Name: 
+"""
+
+
+def rename_session(session_id: int) -> str:
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id=session_id)
+    if not chat_history:
+        raise HTTPException(status_code=400, detail="No chat history found")
+    first_interaction = chat_history[0].rag_message
+    session_metadata = session_metadata_api.get_session(session_id)
+    llm = models.LLM.get(session_metadata.inference_model)
+    prompt = RENAME_SESSION_PROMPT_TEMPLATE.format(
+        first_interaction.user,
+        first_interaction.assistant,
+    )
+
+    response = llm.complete(prompt=prompt)
+    session_name = response.text.strip()
+    session_metadata.name = session_name
+    updated_session = session_metadata_api.update_session(session_metadata)
+    return updated_session.name

@@ -40,21 +40,21 @@ import Images from "src/components/images/Images.ts";
 
 export const sellingPointsText = [
   {
-    title: "Create Your Knowledge Base",
-    body: "Start by setting up your Knowledge Base. It's the foundation for unlocking insights from your documents.",
+    title: "Ask Questions, Get Answers",
+    body: "Get started quickly by chatting with an LLM.",
+    altText: "chat",
+    image: Images.Chat,
+  },
+  {
+    title: "Upload Documents, Build a Knowledge Base",
+    body: "Your chat unlocks insights from your documents.",
     altText: "database",
     image: Images.DB,
   },
   {
-    title: "Upload Your Documents",
-    body: "Once your Knowledge Base is ready, upload your files to store and organize your content.",
+    title: "Grows with You",
+    body: "Access advanced RAG techniques and agents (coming soon).",
     altText: "upload",
-    image: Images.Upload,
-  },
-  {
-    title: "Ask Questions, Get Answers",
-    body: "With everything set up, ask detailed questions about your documents and get instant, clear answers.",
-    altText: "chat",
-    image: Images.Chat,
+    image: Images.AiAssistant,
   },
 ];

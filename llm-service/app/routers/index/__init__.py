@@ -45,11 +45,13 @@ from . import sessions
 from . import amp_metadata
 from . import models
 from . import metrics
+from . import chat
 
 logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
+router.include_router(chat.router)
 router.include_router(data_source.router)
 router.include_router(sessions.router)
 router.include_router(amp_metadata.router)

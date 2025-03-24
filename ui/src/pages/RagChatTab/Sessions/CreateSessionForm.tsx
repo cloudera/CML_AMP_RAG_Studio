@@ -63,17 +63,17 @@ const layout = {
   wrapperCol: { span: 12 },
 };
 
+export const formatDataSource = (value: DataSourceType) => {
+  return {
+    ...value,
+    label: value.name,
+    value: value.id,
+  };
+};
+
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
   const { data } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
-
-  const formatDataSource = (value: DataSourceType) => {
-    return {
-      ...value,
-      label: value.name,
-      value: value.id,
-    };
-  };
 
   const advancedOptions = () => [
     {
@@ -141,7 +141,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       onValuesChange={(changedValues: CreateSessionType, allValues) => {
         if (changedValues.dataSourceId && !allValues.name) {
           const dataSource = dataSources?.find(
-            (value) => value.id === changedValues.dataSourceId,
+            (value) => value.id === changedValues.dataSourceId
           );
           form.setFieldsValue({
             name: dataSource?.name,
@@ -149,17 +149,19 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         }
       }}
     >
-      <Form.Item
-        name="dataSourceId"
-        label="Knowledge Base"
-        rules={[{ required: true }]}
-      >
+      <Form.Item name="dataSourceId" label="Knowledge Base">
         <Select
           disabled={dataSources?.length === 0}
+          allowClear={true}
           options={dataSources?.map((value) => formatDataSource(value))}
         />
       </Form.Item>
-      <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+      <Form.Item
+        name="name"
+        label="Name"
+        rules={[{ required: false }]}
+        initialValue={""}
+      >
         <Input />
       </Form.Item>
       <Form.Item<CreateSessionType>
@@ -183,10 +185,10 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       </Form.Item>
       <Form.Item<CreateSessionType>
         name="responseChunks"
-        initialValue={5}
+        initialValue={10}
         label="Maximum number of documents"
       >
-        <Slider marks={ResponseChunksRange} min={1} max={10} />
+        <Slider marks={ResponseChunksRange} min={1} max={20} />
       </Form.Item>
       <Collapse items={advancedOptions()} />
     </Form>

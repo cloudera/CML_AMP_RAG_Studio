@@ -45,12 +45,39 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services.chat import generate_suggested_questions, v2_chat, direct_llm_chat
+from ....services.chat import (
+    v2_chat,
+    direct_llm_chat,
+    generate_dummy_suggested_questions,
+)
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
+from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+
+
+class RagSuggestedQuestionsResponse(BaseModel):
+    suggested_questions: list[str]
+
+
+@router.get("/suggest-questions")
+@exceptions.propagates
+def suggest_questions() -> RagSuggestedQuestionsResponse:
+    return RagSuggestedQuestionsResponse(
+        suggested_questions=generate_dummy_suggested_questions()
+    )
+
+
+@router.post(
+    "/rename-session",
+    summary="Rename the session using AI",
+)
+@exceptions.propagates
+def post_rename_session(session_id: int) -> str:
+    return rename_session(session_id)
 
 
 @router.get(
@@ -141,21 +168,9 @@ def chat(
     _basusertoken: Annotated[str | None, Cookie()] = None,
 ) -> RagStudioChatMessage:
     user_name = parse_jwt_cookie(_basusertoken)
+    session = session_metadata_api.get_session(session_id)
 
     configuration = request.configuration or RagPredictConfiguration()
-    if configuration.exclude_knowledge_base:
-        return direct_llm_chat(session_id, request.query, user_name)
-    return v2_chat(session_id, request.query, configuration, user_name)
-
-
-class RagSuggestedQuestionsResponse(BaseModel):
-    suggested_questions: list[str]
-
-
-@router.post("/suggest-questions", summary="Suggest questions with context")
-@exceptions.propagates
-def suggest_questions(
-    session_id: int,
-) -> RagSuggestedQuestionsResponse:
-    suggested_questions = generate_suggested_questions(session_id)
-    return RagSuggestedQuestionsResponse(suggested_questions=suggested_questions)
+    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+        return direct_llm_chat(session, request.query, user_name)
+    return v2_chat(session, request.query, configuration, user_name)

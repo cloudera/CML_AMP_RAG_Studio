@@ -36,12 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import { Layout, Typography } from "antd";
+import { Flex, Layout, Typography } from "antd";
 import DataSourcesTabs from "pages/DataSources/Tabs.tsx";
-import { useQuery } from "@tanstack/react-query";
 import { DataSourceType, getDataSourceById } from "src/api/dataSourceApi.ts";
 import { createContext } from "react";
 import { Route } from "src/routes/_layout/data/_layout-datasources/$dataSourceId";
+import { useQuery } from "@tanstack/react-query";
 
 export const DataSourceContext = createContext<{
   dataSourceId: string;
@@ -59,7 +59,9 @@ function DataSourceLayout() {
         width: "100%",
       }}
     >
-      <Typography.Title level={1}>{data?.name}</Typography.Title>
+      <Flex align="center">
+        <Typography.Title level={1}>{data?.name}</Typography.Title>
+      </Flex>
       <DataSourceContext.Provider
         value={{ dataSourceId, dataSourceMetaData: data }}
       >

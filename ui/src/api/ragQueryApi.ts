@@ -37,7 +37,6 @@
  ******************************************************************************/
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { QueryConfiguration } from "src/api/chatApi.ts";
 import {
   getRequest,
   llmServicePath,
@@ -47,8 +46,7 @@ import {
 } from "src/api/utils.ts";
 
 export interface SuggestQuestionsRequest {
-  configuration: QueryConfiguration;
-  session_id: string;
+  session_id?: number;
 }
 
 export interface SuggestQuestionsResponse {
@@ -72,7 +70,7 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: suggestedQuestionKey(request.session_id),
     queryFn: () => suggestQuestionsQuery(request),
-    enabled: Boolean(request.session_id),
+    enabled: true,
     gcTime: 0,
   });
 };
@@ -80,10 +78,7 @@ export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
 const suggestQuestionsQuery = async (
   request: SuggestQuestionsRequest,
 ): Promise<SuggestQuestionsResponse> => {
-  return await postRequest(
-    `${llmServicePath}/sessions/${request.session_id}/suggest-questions`,
-    request,
-  );
+  return await postRequest(`${llmServicePath}/chat/suggest-questions`, request);
 };
 
 export interface ChunkMetadata {

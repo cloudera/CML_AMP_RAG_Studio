@@ -42,15 +42,22 @@ import { ChatMessageType } from "src/api/chatApi.ts";
 import { WarningTwoTone } from "@ant-design/icons";
 import { cdlOrange050, cdlOrange500 } from "src/cuix/variables.ts";
 import { useGetModelById } from "src/api/modelsApi.ts";
+import { useContext } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const SourceNodes = ({ data }: { data: ChatMessageType }) => {
   const { data: inferenceModel } = useGetModelById(data.inference_model);
+  const { activeSession } = useContext(RagChatContext);
 
   const nodes = data.source_nodes.map((node) => (
     <SourceCard key={node.node_id} source={node} />
   ));
 
-  if (nodes.length === 0) {
+  if (
+    nodes.length === 0 &&
+    activeSession &&
+    activeSession.dataSourceIds.length > 0
+  ) {
     return (
       <Flex
         style={{ gap: 8, padding: "6px 12px", backgroundColor: cdlOrange050 }}
@@ -66,6 +73,7 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
       </Flex>
     );
   }
+
   return (
     <Flex wrap="wrap" style={{ gap: 8 }}>
       {nodes}

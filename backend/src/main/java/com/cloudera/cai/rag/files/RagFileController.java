@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -65,7 +65,7 @@ public class RagFileController {
       value = "/dataSources/{dataSourceId}/files",
       consumes = "multipart/form-data",
       produces = "application/json")
-  public RagDocumentMetadata uploadRagDocument(
+  public List<RagDocumentMetadata> uploadRagDocument(
       @RequestPart("file") MultipartFile file,
       @PathVariable Long dataSourceId,
       HttpServletRequest request) {

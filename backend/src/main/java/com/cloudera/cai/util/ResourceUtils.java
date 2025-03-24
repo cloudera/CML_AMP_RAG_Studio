@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -38,14 +38,12 @@
 
 package com.cloudera.cai.util;
 
-import com.cloudera.cai.util.db.migration.Migrator;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class ResourceUtils {
-  // todo: move to a utility, so we don't duplicate from the Migrator code
   public static String getFileContents(String resource) throws IOException {
-    try (var inputStream = Migrator.class.getClassLoader().getResourceAsStream(resource)) {
+    try (var inputStream = ResourceUtils.class.getClassLoader().getResourceAsStream(resource)) {
       if (inputStream == null) {
         throw new IOException("Resource not found: " + resource);
       }

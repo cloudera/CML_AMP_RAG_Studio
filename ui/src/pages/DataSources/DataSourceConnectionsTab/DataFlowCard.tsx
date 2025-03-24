@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -35,56 +35,66 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { Button, Card, Flex, Typography } from "antd";
+import { CheckCircleOutlined } from "@ant-design/icons";
+import { useContext, useEffect } from "react";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { useMutation } from "@tanstack/react-query";
+import { MutationKeys } from "src/api/utils.ts";
+import { ConfigType, getCdfConfigQuery } from "src/api/dataSourceApi.ts";
+import { downloadObjectAsJson } from "src/utils/convertJsonToFile.ts";
 
-import { Button, Flex, Image, Typography } from "antd";
-import CreateSessionModal from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
-import useModal from "src/utils/useModal.ts";
-import { PlusCircleOutlined } from "@ant-design/icons";
-import Images from "src/components/images/Images.ts";
+const DataFlowCard = ({
+  configType,
+  title,
+  description,
+}: {
+  configType: ConfigType;
+  title: string;
+  description: string;
+}) => {
+  const { dataSourceId } = useContext(DataSourceContext);
+  const {
+    data,
+    isPending,
+    mutate: fetchCdfConfigQuery,
+    isSuccess,
+  } = useMutation({
+    mutationKey: [MutationKeys.getCdfConfig],
+    mutationFn: () => getCdfConfigQuery(dataSourceId, configType),
+    gcTime: 0,
+  });
 
-const NoSessionState = () => {
-  const { isModalOpen, setIsModalOpen, showModal, handleCancel } = useModal();
+  useEffect(() => {
+    if (data) {
+      downloadObjectAsJson(
+        data,
+        `cdf-flow-definition-${configType}-datasource-${dataSourceId}`,
+      );
+    }
+  }, [data]);
+
   return (
-    <Flex style={{ height: "100%" }} vertical>
-      <Flex
-        vertical
-        align="center"
-        justify="center"
-        gap={24}
-        style={{ height: "100%" }}
-      >
-        <Flex vertical align="center" gap={16}>
-          <Image
-            src={Images.BrandTalking}
-            alt="Machines Chatting"
-            style={{ width: 80 }}
-            preview={false}
-          />
-          <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
-            Welcome to RAG Studio
-          </Typography.Title>
+    <Card title={title}>
+      <Flex vertical gap={20}>
+        <Typography.Text type="secondary">{description}</Typography.Text>
+        <Flex gap={20}>
+          <Button
+            loading={isPending}
+            type="primary"
+            onClick={() => {
+              fetchCdfConfigQuery();
+            }}
+          >
+            Download
+          </Button>
+          {isSuccess ? (
+            <CheckCircleOutlined style={{ fontSize: 20, color: "#4CCF4C" }} />
+          ) : null}
         </Flex>
-        <Typography.Text
-          style={{ padding: 10, textAlign: "center", width: "80%" }}
-        >
-          You can use this chat to get answers to any questions related to your
-          company data, configure your services, analyze and much more.
-        </Typography.Text>
-        <Button
-          type="primary"
-          onClick={showModal}
-          icon={<PlusCircleOutlined />}
-        >
-          Create New Chat
-        </Button>
-        <CreateSessionModal
-          isModalOpen={isModalOpen}
-          handleCancel={handleCancel}
-          setIsModalOpen={setIsModalOpen}
-        />
       </Flex>
-    </Flex>
+    </Card>
   );
 };
 
-export default NoSessionState;
+export default DataFlowCard;

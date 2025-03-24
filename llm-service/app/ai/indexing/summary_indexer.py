@@ -48,6 +48,7 @@ from llama_index.core import (
     StorageContext,
     get_response_synthesizer,
     load_index_from_storage,
+    PromptHelper,
 )
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -66,6 +67,7 @@ from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
 from ...config import Settings
+from ...services.models.providers import CAIIModelProvider
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +119,10 @@ class SummaryIndexer(BaseTextIndexer):
         data_source_id: int,
         embed_summaries: bool = True,
     ) -> Dict[str, Any]:
+        prompt_helper: Optional[PromptHelper] = None
+        # if we're using CAII, let's be conservative, and use a small context window to account for mistral's small context
+        if CAIIModelProvider.is_enabled():
+            prompt_helper = PromptHelper(context_window=3000)
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
@@ -124,6 +130,7 @@ class SummaryIndexer(BaseTextIndexer):
                 llm=llm,
                 use_async=True,
                 verbose=True,
+                prompt_helper=prompt_helper,
             ),
             "show_progress": True,
             "embed_model": embedding_model,

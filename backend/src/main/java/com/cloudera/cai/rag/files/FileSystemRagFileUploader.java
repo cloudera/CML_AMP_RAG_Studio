@@ -43,7 +43,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Component
@@ -52,12 +51,12 @@ public class FileSystemRagFileUploader implements RagFileUploader {
   private static final String FILE_STORAGE_ROOT = fileStoragePath();
 
   @Override
-  public void uploadFile(MultipartFile file, String s3Path) {
+  public void uploadFile(UploadableFile file, String s3Path) {
     log.info("Uploading file to FS: {}", s3Path);
     try {
       Path filePath = Path.of(FILE_STORAGE_ROOT, s3Path);
       Files.createDirectories(filePath.getParent());
-      Files.write(filePath, file.getBytes());
+      Files.copy(file.getInputStream(), filePath);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

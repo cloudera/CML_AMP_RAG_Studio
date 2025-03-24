@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.rag.datasources;
 
+import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.util.ResourceUtils;
 import java.io.IOException;
@@ -62,6 +63,15 @@ public class RagDataSourceService {
     return ragDataSourceRepository.getRagDataSourceById(id);
   }
 
+  public RagDataSource updateRagDataSource(RagDataSource input) {
+    ragDataSourceRepository.updateRagDataSource(input);
+    return ragDataSourceRepository.getRagDataSourceById(input.id());
+  }
+
+  public void deleteDataSource(Long id) {
+    ragDataSourceRepository.deleteDataSource(id);
+  }
+
   public List<RagDataSource> getRagDataSources() {
     return ragDataSourceRepository.getRagDataSources();
   }
@@ -70,19 +80,26 @@ public class RagDataSourceService {
     return ragDataSourceRepository.getRagDataSourceById(id);
   }
 
-  public void deleteDataSource(Long id) {
-    ragDataSourceRepository.deleteDataSource(id);
+  public List<Types.NifiConfigOptions> getNifiConfigOptions() {
+    return List.of(
+        new Types.NifiConfigOptions(
+            "S3 Cloudera DataFlow Definition",
+            "Flow definition for pointing a S3 bucket to RAG Studio.  Requires AWS credentials.",
+            Types.DataFlowConfigType.S3),
+        new Types.NifiConfigOptions(
+            "Azure Blob Storage Cloudera DataFlow Definition",
+            "Flow definition for pointing an Azure Blob Store to RAG Studio.  Requires Azure credentials.",
+            Types.DataFlowConfigType.AZURE_BLOB));
   }
 
-  // Nullables stuff below here.
-
-  public static RagDataSourceService createNull() {
-    return new RagDataSourceService(RagDataSourceRepository.createNull());
-  }
-
-  public String getNifiConfig(Long id, String ragStudioUrl) {
+  public String getNifiConfig(Long id, String ragStudioUrl, Types.DataFlowConfigType configType) {
     try {
-      return ResourceUtils.getFileContents("S3-To-RagStudio-Nifi-template.json")
+      String fileName =
+          switch (configType) {
+            case AZURE_BLOB -> "AzureBlob-To-RagStudio-Nifi-template.json";
+            case S3 -> "S3-To-RagStudio-Nifi-template.json";
+          };
+      return ResourceUtils.getFileContents(fileName)
           .replace("$$$RAG_STUDIO_DATASOURCE_ID$$$", id.toString())
           .replace("$$$RAG_STUDIO_URL$$$", ragStudioUrl);
     } catch (IOException e) {
@@ -90,8 +107,9 @@ public class RagDataSourceService {
     }
   }
 
-  public RagDataSource updateRagDataSource(RagDataSource input) {
-    ragDataSourceRepository.updateRagDataSource(input);
-    return ragDataSourceRepository.getRagDataSourceById(input.id());
+  // Nullables stuff below here.
+
+  public static RagDataSourceService createNull() {
+    return new RagDataSourceService(RagDataSourceRepository.createNull());
   }
 }

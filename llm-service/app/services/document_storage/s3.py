@@ -89,7 +89,7 @@ class S3DocumentStorage(DocumentStorage):
 
 
 def _download(
-    tmpdirname: str, bucket_name: str, document_key: str, original_filename: str
+    tmpdirname: str, bucket_name: str, document_key: str, original_filepath: str
 ) -> Path:
     """
     Download document from S3
@@ -103,6 +103,7 @@ def _download(
     session = boto3.session.Session()
     s3 = session.client("s3")
     try:
+        original_filename = os.path.basename(original_filepath)
         final_filename = os.path.join(tmpdirname, original_filename)
         s3.download_file(bucket_name, document_key, final_filename)
         logger.info(

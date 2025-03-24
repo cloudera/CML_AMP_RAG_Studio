@@ -105,7 +105,6 @@ const getDarkModeFromLocalStorage = (): boolean => {
 
 const RootComponent = () => {
   const darkMode = getDarkModeFromLocalStorage();
-
   return (
     <ConfigProvider theme={darkMode ? customDarkTheme : customLightTheme}>
       <Outlet />

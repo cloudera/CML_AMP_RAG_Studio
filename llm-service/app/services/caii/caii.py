@@ -45,16 +45,20 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.llms.nvidia import NVIDIA
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
-from .CaiiModel import CaiiModel, CaiiModelMistral, DeepseekModel
+from .CaiiModel import DeepseekModel
 from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
 from .utils import build_auth_headers, get_caii_access_token
 from ..utils import raise_for_http_error, body_to_json
+from ..llama_utils import completion_to_prompt, messages_to_prompt
+import logging
 
 DEFAULT_NAMESPACE = "serving-default"
 
+logger = logging.getLogger(__name__)
 
 def describe_endpoint(endpoint_name: str) -> Endpoint:
     domain = os.environ["CAII_DOMAIN"]
@@ -103,9 +107,9 @@ def get_llm(
 ) -> LLM:
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint.url.removesuffix("/chat/completions")
-    headers = build_auth_headers()
 
     model = endpoint.model_name
+    # todo: test if the NVIDIA impl works with deepseek, too
     if "deepseek" in endpoint_name.lower():
         return DeepseekModel(
             model=model,
@@ -113,33 +117,19 @@ def get_llm(
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
             api_base=api_base,
-            default_headers=headers,
+            default_headers=(build_auth_headers()),
         )
-
-    if "mistral" in endpoint_name.lower():
-        return CaiiModelMistral(
-            model=model,
-            messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt,
-            api_base=api_base,
-            context=128000,
-            default_headers=headers,
-        )
-
-    else:
-        return CaiiModel(
-            model=model,
-            context=128000,
-            messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt,
-            api_base=api_base,
-            default_headers=headers,
-        )
+    return NVIDIA(
+        api_key=get_caii_access_token(),
+        base_url=api_base,
+        model=model
+    )
 
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
+    # todo: figure out if the Nvidia library can be made to work for embeddings as well.
     return CaiiEmbeddingModel(endpoint=endpoint)
 
 
@@ -155,7 +145,18 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 
 
 def get_caii_llm_models() -> List[ModelResponse]:
-    return get_models_with_task("TEXT_GENERATION")
+    potential_models = get_models_with_task("TEXT_GENERATION")
+    results: list[ModelResponse] = []
+    for potential in potential_models:
+        try:
+            model = get_llm(endpoint_name=potential.name, messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt)
+            if model.metadata:
+                results.append(potential)
+        except Exception:
+            logger.warning(f"Unable to load model metadata for model: {potential.name}")
+            pass
+
+    return results
 
 def get_caii_reranking_models() -> List[ModelResponse]:
     return get_models_with_task("RANK")

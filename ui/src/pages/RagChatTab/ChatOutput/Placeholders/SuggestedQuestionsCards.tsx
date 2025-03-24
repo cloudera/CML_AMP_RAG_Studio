@@ -42,45 +42,69 @@ import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
+
+const QuestionCard = ({
+  question,
+  index,
+  onClick,
+}: {
+  question: string;
+  index: number;
+  onClick: (suggestedQuestion: string) => void;
+}) => {
+  return (
+    <Card
+      size={"small"}
+      hoverable
+      style={{
+        width: 178,
+        margin: 0,
+        padding: 0,
+      }}
+      extra={
+        <Typography.Text type="secondary">{`#${(index + 1).toString()}`}</Typography.Text>
+      }
+      onClick={() => {
+        onClick(question);
+      }}
+    >
+      <Card.Meta description={<Typography.Text>{question}</Typography.Text>} />
+    </Card>
+  );
+};
 
 const SuggestedQuestionsCards = () => {
   const {
-    currentQuestionState: [, setCurrentQuestion],
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
   } = useContext(RagChatContext);
-  const sessionId = activeSession?.id.toString();
+  const sessionId = activeSession?.id;
   const {
     data,
     isPending: suggestedQuestionsIsPending,
     isFetching: suggestedQuestionsIsFetching,
   } = useSuggestQuestions({
-    configuration: createQueryConfiguration(excludeKnowledgeBase),
-    session_id: sessionId ?? "",
+    session_id: sessionId ?? undefined,
   });
-
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation({
-    onSuccess: () => {
-      setCurrentQuestion("");
-    },
     onError: (res: Error) => {
       messageQueue.error(res.toString());
     },
   });
 
   const handleAskSample = (suggestedQuestion: string) => {
-    if (
-      activeSession &&
-      activeSession.dataSourceIds.length > 0 &&
-      suggestedQuestion.length > 0 &&
-      sessionId
-    ) {
-      setCurrentQuestion(suggestedQuestion);
-      chatMutation({
-        query: suggestedQuestion,
-        session_id: sessionId,
-        configuration: createQueryConfiguration(excludeKnowledgeBase),
-      });
+    if (suggestedQuestion.length > 0) {
+      if (sessionId) {
+        chatMutation({
+          query: suggestedQuestion,
+          session_id: sessionId,
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
+        });
+      } else {
+        createSessionAndRedirect(suggestedQuestion);
+      }
     }
   };
 
@@ -109,26 +133,12 @@ const SuggestedQuestionsCards = () => {
     <Flex gap={10} wrap="wrap" justify="space-between">
       {data?.suggested_questions.map((question, index) => {
         return (
-          <Card
-            key={question}
-            size={"small"}
-            hoverable
-            style={{
-              width: 178,
-              margin: 0,
-              padding: 0,
-            }}
-            extra={
-              <Typography.Text type="secondary">{`#${(index + 1).toString()}`}</Typography.Text>
-            }
-            onClick={() => {
-              handleAskSample(question);
-            }}
-          >
-            <Card.Meta
-              description={<Typography.Text>{question}</Typography.Text>}
-            />
-          </Card>
+          <QuestionCard
+            question={question}
+            index={index}
+            key={index}
+            onClick={handleAskSample}
+          />
         );
       })}
     </Flex>

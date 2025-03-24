@@ -36,11 +36,11 @@
 #  DATA.
 #
 import os
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import boto3
 
-from app.services.caii.types import ModelResponse
+from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
@@ -66,13 +66,23 @@ class BedrockModelProvider(ModelProvider):
                 model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
             ),
         ]
-        llama323b = BedrockModelProvider._get_model_arn_by_suffix(
-            "meta.llama3-2-3b-instruct-v1:0"
+
+        model_arns = BedrockModelProvider._get_model_arns()
+
+        claude37sonnet = BedrockModelProvider._get_model_arn_by_profiles(
+            "anthropic.claude-3-7-sonnet-20250219-v1:0", model_arns
+        )
+        if claude37sonnet:
+            models.append(claude37sonnet)
+
+        llama323b = BedrockModelProvider._get_model_arn_by_profiles(
+            "meta.llama3-2-3b-instruct-v1:0", model_arns
         )
         if llama323b:
             models.append(llama323b)
-        llama321b = BedrockModelProvider._get_model_arn_by_suffix(
-            "meta.llama3-2-1b-instruct-v1:0"
+
+        llama321b = BedrockModelProvider._get_model_arn_by_profiles(
+            "meta.llama3-2-1b-instruct-v1:0", model_arns
         )
         if llama321b:
             models.append(llama321b)
@@ -80,10 +90,9 @@ class BedrockModelProvider(ModelProvider):
         return models
 
     @staticmethod
-    def _get_model_arn_by_suffix(suffix: str) -> Optional[ModelResponse]:
-        default_region = os.environ.get("AWS_DEFAULT_REGION") or None
-        bedrock_client = boto3.client("bedrock", region_name=default_region)
-        profiles = bedrock_client.list_inference_profiles()["inferenceProfileSummaries"]
+    def _get_model_arn_by_profiles(
+        suffix: str, profiles: List[dict[str, str]]
+    ) -> Optional[ModelResponse]:
         for profile in profiles:
             if profile["inferenceProfileId"].endswith(suffix):
                 return ModelResponse(
@@ -91,6 +100,13 @@ class BedrockModelProvider(ModelProvider):
                     name=profile["inferenceProfileName"],
                 )
         return None
+
+    @staticmethod
+    def _get_model_arns() -> List[dict[str, str]]:
+        default_region = os.environ.get("AWS_DEFAULT_REGION") or None
+        bedrock_client = boto3.client("bedrock", region_name=default_region)
+        profiles = bedrock_client.list_inference_profiles()["inferenceProfileSummaries"]
+        return cast(List[dict[str, str]], profiles)
 
     @staticmethod
     def get_embedding_models() -> List[ModelResponse]:
@@ -117,3 +133,7 @@ class BedrockModelProvider(ModelProvider):
                 name="Amazon Rerank v1",
             ),
         ]
+
+
+# ensure interface is implemented
+_ = BedrockModelProvider()

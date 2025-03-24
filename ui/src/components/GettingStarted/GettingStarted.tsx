@@ -82,18 +82,14 @@ const GettingStarted = () => {
           >
             RAG Studio
           </Typography.Title>
-          <Typography.Text>
-            Ready to transform your documents into a powerful knowledge hub?
-          </Typography.Text>
+          <Typography.Text>Private AI chats at your fingertips</Typography.Text>
           <GettingStartedSellingPoints />
           <Button
             type="primary"
             size="large"
             style={{ width: 113 }}
             onClick={() => {
-              navigate({ to: "/data", search: { create: true } }).catch(
-                () => null,
-              );
+              navigate({ to: "/sessions" }).catch(() => null);
             }}
           >
             Get Started

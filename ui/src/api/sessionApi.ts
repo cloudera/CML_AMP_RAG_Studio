@@ -36,7 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { queryOptions, useMutation } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   deleteRequest,
   getRequest,
@@ -48,6 +52,7 @@ import {
   ragPath,
   UseMutationType,
 } from "src/api/utils.ts";
+import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 
 interface SessionQueryConfiguration {
   enableHyde: boolean;
@@ -81,7 +86,12 @@ export type CreateSessionRequest = Pick<
 
 export type UpdateSessionRequest = Pick<
   Session,
-  "queryConfiguration" | "responseChunks" | "inferenceModel" | "name" | "id"
+  | "queryConfiguration"
+  | "responseChunks"
+  | "inferenceModel"
+  | "name"
+  | "id"
+  | "dataSourceIds"
 >;
 
 export const getSessionsQueryOptions = queryOptions({
@@ -105,7 +115,7 @@ export const useCreateSessionMutation = ({
   });
 };
 
-const createSessionMutation = async (
+export const createSessionMutation = async (
   request: CreateSessionRequest,
 ): Promise<Session> => {
   return await postRequest(`${ragPath}/${paths.sessions}`, request);
@@ -115,10 +125,22 @@ export const useUpdateSessionMutation = ({
   onSuccess,
   onError,
 }: UseMutationType<UpdateSessionRequest>) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [MutationKeys.updateSession],
     mutationFn: updateSessionMutation,
-    onSuccess,
+    onSuccess: (session) => {
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(session.id),
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      if (onSuccess) {
+        onSuccess(session);
+      }
+    },
     onError,
   });
 };
@@ -129,6 +151,37 @@ const updateSessionMutation = async (
   return await postRequest(
     `${ragPath}/${paths.sessions}/${request.id.toString()}`,
     request,
+  );
+};
+
+export const useRenameNameMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [MutationKeys.renameSession],
+    mutationFn: renameSessionMutation,
+    onSuccess: (name) => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getSessions],
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      if (onSuccess) {
+        onSuccess(name);
+      }
+    },
+    onError,
+  });
+};
+
+const renameSessionMutation = async (sessionId: string): Promise<string> => {
+  return await postRequest(
+    `${llmServicePath}/sessions/${sessionId}/rename-session`,
+    {},
   );
 };
 

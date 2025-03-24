@@ -52,6 +52,7 @@ export interface SourceNode {
   doc_id: string;
   source_file_name: string;
   score: number;
+  dataSourceId?: number;
 }
 
 export interface Evaluation {
@@ -71,16 +72,17 @@ export interface QueryConfiguration {
 
 export interface ChatMutationRequest {
   query: string;
-  session_id: string;
+  session_id: number;
   configuration: QueryConfiguration;
 }
 
 interface ChatHistoryRequestType {
-  session_id: string;
+  session_id: number;
 }
 
 export interface ChatMessageType {
   id: string;
+  session_id: number;
   source_nodes: SourceNode[];
   inference_model?: string;
   rag_message: RagMessageV2;
@@ -102,6 +104,7 @@ export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
 export const placeholderChatResponse = (query: string): ChatMessageType => {
   return {
     id: placeholderChatResponseId,
+    session_id: 0,
     source_nodes: [],
     rag_message: {
       user: query,
@@ -112,11 +115,11 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
   };
 };
 
-export const chatHistoryQueryKey = (session_id: string) => {
+export const chatHistoryQueryKey = (session_id: number) => {
   return [QueryKeys.chatHistoryQuery, { session_id }];
 };
 
-export const useChatHistoryQuery = (session_id: string) => {
+export const useChatHistoryQuery = (session_id: number) => {
   return useQuery({
     queryKey: chatHistoryQueryKey(session_id),
     queryFn: () => chatHistoryQuery({ session_id }),
@@ -129,7 +132,7 @@ export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
 ): Promise<ChatMessageType[]> => {
   return await getRequest(
-    `${llmServicePath}/sessions/${request.session_id}/chat-history`,
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history`,
   );
 };
 
@@ -147,7 +150,7 @@ export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
   cachedData?: ChatMessageType[],
 ) => {
-  if (!cachedData) {
+  if (!cachedData || cachedData.length == 0) {
     return [data];
   }
   return cachedData.map((message) => {
@@ -195,7 +198,7 @@ const chatMutation = async (
   request: ChatMutationRequest,
 ): Promise<ChatMessageType> => {
   return await postRequest(
-    `${llmServicePath}/sessions/${request.session_id}/chat`,
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat`,
     request,
   );
 };

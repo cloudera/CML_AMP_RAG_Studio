@@ -69,6 +69,7 @@ export enum MutationKeys {
   "testEmbeddingModel" = "testEmbeddingModel",
   "visualizeDataSourceWithUserQuery" = "visualizeDataSourceWithUserQuery",
   "updateSession" = "updateSession",
+  "renameSession" = "renameSession",
   "testRerankingModel" = "testRerankingModel",
   "ratingMutation" = "ratingMutation",
   "feedbackMutation" = "feedbackMutation",
@@ -93,6 +94,7 @@ export enum QueryKeys {
   "getVisualizeDataSource" = "getVisualizeDataSource",
   "getModelById" = "getModelById",
   "getRerankingModels" = "getRerankingModels",
+  "getCdfConfigMetadata" = "getCdfConfigMetadata",
 }
 
 export const commonHeaders = {

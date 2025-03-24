@@ -40,27 +40,50 @@ package com.cloudera.cai.rag.datasources;
 
 import static com.cloudera.cai.rag.Types.*;
 import static com.cloudera.cai.rag.Types.ConnectionType.MANUAL;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class RagDataSourceServiceTest {
   @Test
-  void getNifiConfig() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+  void getNifiS3Config() {
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var dataSourceId = 6666666L;
     var url = "https://testing.dev/xyz";
-    String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url);
+    var configType = DataFlowConfigType.S3;
+    String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url, configType);
     assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
     assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");
   }
 
   @Test
+  void getNifiAzureBlobConfig() {
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
+    var dataSourceId = 6666666L;
+    var url = "https://testing.dev/xyz";
+    var configType = DataFlowConfigType.AZURE_BLOB;
+    String nifiConfig = ragDataSourceService.getNifiConfig(dataSourceId, url, configType);
+    assertThat(nifiConfig).contains("\"value\": \"" + dataSourceId + "\"");
+    assertThat(nifiConfig).contains("\"value\": \"" + url + "\"");
+  }
+
+  @Test
+  void getNifiConfigOptions() {
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
+    List<NifiConfigOptions> nifiConfig = ragDataSourceService.getNifiConfigOptions();
+    assertThat(nifiConfig).size().isEqualTo(2);
+  }
+
+  @Test
   void createDataSource() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, null, ConnectionType.MANUAL)
@@ -75,7 +98,8 @@ class RagDataSourceServiceTest {
 
   @Test
   void updateDataSourceName() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, 10, ConnectionType.MANUAL)
@@ -98,7 +122,8 @@ class RagDataSourceServiceTest {
 
   @Test
   void deleteDataSource() {
-    RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
+    RagDataSourceService ragDataSourceService =
+        new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, 10, ConnectionType.MANUAL)

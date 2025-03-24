@@ -14,11 +14,12 @@ Follow the [standard instructions](https://docs.cloudera.com/machine-learning/cl
 The "File Name" to use is `catalog-entry.yaml`.
 
 If you do not want to use the catalog-entry, then you should specify the release branch when installing the AMP directly:
+
 - `release/1` is the branch name to use for the latest stable release.
 
 ### LLM Model Options
 
-RAG Studio can be used with Cloudera Inference (CAII), AWS Bedrock, or Azure OpenAI for selecting LLM and embedding models. 
+RAG Studio can be used with Cloudera Inference (CAII), AWS Bedrock, or Azure OpenAI for selecting LLM and embedding models.
 
 #### Cloudera Inference (CAII) Setup:
 
@@ -53,7 +54,7 @@ S3 will also require providing the AWS credentials for the bucket.
 
 ### Enhanced Parsing Options:
 
-RAG Studio can optionally enable enhanced parsing by providing the `USE_ENHANCED_PDF_PROCESSING` environment variable.  Enabling this will allow RAG Studio to parse images and tables from PDFs.  When enabling this feature, we strongly recommend using this with a GPU and at least 16GB of memory.
+RAG Studio can optionally enable enhanced parsing by providing the `USE_ENHANCED_PDF_PROCESSING` environment variable. Enabling this will allow RAG Studio to parse images and tables from PDFs. When enabling this feature, we strongly recommend using this with a GPU and at least 16GB of memory.
 
 ### Cloudera DataFlow (Nifi) Setup:
 
@@ -106,13 +107,14 @@ the Node service locally, you can do so by following these steps:
 
 - Build the FE service (`cd ./ui` and then `pnpm build`)
 - Navigate to the Node subdirectory (`cd ./express`)
-- Start the Node server (`npm run start`)
+- Run `pnpm install` (if pnpm is not installed on your system, install globally `brew install pnpm`)
+- Start the Node server (`pnpm run start`)
 
 #### Python Setup
 
 - Install Python 3.10 (via [pyenv](https://github.com/pyenv/pyenv), probably) (directly via brew, if you must)
 - `cd llm-service`
-- Install `uv`. 
+- Install `uv`.
   - We recommend installing via `brew install uv`, but you can also install it directly in your python environment if you prefer.
 - `uv sync` - this creates a `uv` virtual environment in `.venv` and installs the dependencies
 - `uv fastapi dev`

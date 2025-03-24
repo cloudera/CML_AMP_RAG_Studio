@@ -51,6 +51,7 @@ class RagPredictSourceNode(BaseModel):
     doc_id: str
     source_file_name: str
     score: float
+    dataSourceId: Optional[int] = None
 
 
 class Evaluation(BaseModel):
@@ -70,6 +71,7 @@ class RagMessage(BaseModel):
 
 class RagStudioChatMessage(BaseModel):
     id: str
+    session_id: int
     source_nodes: list[RagPredictSourceNode]
     inference_model: Optional[str]  # `None` for legacy data or no chunks
     rag_message: RagMessage
@@ -105,6 +107,7 @@ class ChatHistoryManager:
             results.append(
                 RagStudioChatMessage(
                     id=user_message.additional_kwargs["id"],
+                    session_id=session_id,
                     source_nodes=assistant_message.additional_kwargs.get(
                         "source_nodes", []
                     ),
@@ -119,7 +122,7 @@ class ChatHistoryManager:
                         "evaluations", []
                     ),
                     timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
-                    condensed_question=None
+                    condensed_question=None,
                 )
             )
             i += 2

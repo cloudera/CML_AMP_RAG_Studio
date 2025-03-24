@@ -39,22 +39,101 @@
 import { useContext, useEffect, useRef } from "react";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { Flex, Image, Typography } from "antd";
+import Images from "src/components/images/Images.ts";
+import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
+import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
+import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
+import { useSearch } from "@tanstack/react-router";
+import messageQueue from "src/utils/messageQueue.ts";
+import {
+  createQueryConfiguration,
+  isPlaceholder,
+  useChatMutation,
+} from "src/api/chatApi.ts";
+import { useRenameNameMutation } from "src/api/sessionApi.ts";
+import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory },
+    chatHistoryQuery: { chatHistory, chatHistoryStatus },
     activeSession,
   } = useContext(RagChatContext);
   const scrollEl = useRef<HTMLDivElement>(null);
-  const dataSourceId = activeSession?.dataSourceIds[0];
+  const search: { question?: string } = useSearch({
+    strict: false,
+  });
+  const { mutate: renameMutation } = useRenameNameMutation({
+    onError: (err) => {
+      messageQueue.error(err.message);
+    },
+  });
+  const { mutate: chatMutation } = useChatMutation({
+    onError: (err) => {
+      messageQueue.error(err.message);
+    },
+    onSuccess: () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("question");
+      window.history.pushState(null, "", url.toString());
+    },
+  });
 
   useEffect(() => {
-    setTimeout(() => {
-      if (scrollEl.current) {
-        scrollEl.current.scrollIntoView({ behavior: "auto" });
+    if (activeSession?.name === "") {
+      const lastMessage =
+        chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+      if (lastMessage && !isPlaceholder(lastMessage)) {
+        renameMutation(activeSession.id.toString());
       }
-    }, 50);
-  }, [scrollEl.current, chatHistory.length, dataSourceId]);
+    }
+  }, [activeSession?.name, chatHistory, chatHistoryStatus]);
+
+  useEffect(() => {
+    if (search.question && activeSession) {
+      chatMutation({
+        query: search.question,
+        session_id: activeSession.id,
+        configuration: createQueryConfiguration(
+          !(activeSession.dataSourceIds.length > 0),
+        ),
+      });
+    }
+  }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
+
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      setTimeout(() => {
+        if (scrollEl.current) {
+          scrollEl.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 50);
+    }
+  }, [scrollEl.current, chatHistory.length, activeSession?.id]);
+
+  if (chatHistoryStatus === "pending") {
+    return <ChatLoading />;
+  }
+  if (chatHistory.length === 0) {
+    if (search.question) {
+      return <PendingRagOutputSkeleton question={search.question} />;
+    }
+    return (
+      <Flex vertical align="center" gap={16}>
+        <Image
+          src={Images.BrandTalking}
+          alt="Machines Chatting"
+          style={{ width: 80 }}
+          preview={false}
+        />
+        <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+          Welcome to RAG Studio
+        </Typography.Title>
+        <SuggestedQuestionsCards />
+        <NoDataSourcesState />
+      </Flex>
+    );
+  }
 
   return (
     <div data-testid="chat-message-controller">
