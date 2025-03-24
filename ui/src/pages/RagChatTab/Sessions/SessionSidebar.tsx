@@ -68,6 +68,8 @@ import { useCreateProject, useGetProjects } from "src/api/projectsApi.ts";
 import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
 import useModal from "src/utils/useModal.ts";
 import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
 
 const { Sider } = Layout;
 
@@ -101,10 +103,16 @@ const SessionMenuTheme = {
 const ProjectsHeaderItem = () => {
   const createProjectModal = useModal();
   const [form] = Form.useForm<{ name: string }>();
+  const queryClient = useQueryClient();
 
   const createProject = useCreateProject({
     onSuccess: () => {
       createProjectModal.setIsModalOpen(false);
+      queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getProjects] })
+        .catch(() => {
+          messageQueue.error("Failed to refresh projects");
+        });
     },
     onError: () => {
       messageQueue.error("Failed to create a new project");
@@ -139,6 +147,9 @@ const ProjectsHeaderItem = () => {
       <Modal
         title="Create New Project"
         open={createProjectModal.isModalOpen}
+        onCancel={() => {
+          createProjectModal.setIsModalOpen(false);
+        }}
         footer={
           <Button onClick={handleCreateNewProject} type="primary">
             OK
@@ -146,7 +157,13 @@ const ProjectsHeaderItem = () => {
         }
       >
         <Form form={form}>
-          <Form.Item name="name" label="Project name" required={true}>
+          <Form.Item
+            name="name"
+            label="Project name"
+            rules={[
+              { required: true, message: "Please provide a project name" },
+            ]}
+          >
             <Input />
           </Form.Item>
         </Form>
