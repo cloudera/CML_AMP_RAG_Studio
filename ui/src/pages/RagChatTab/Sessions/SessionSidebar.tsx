@@ -70,12 +70,7 @@ import {
   useGetProjects,
 } from "src/api/projectsApi.ts";
 import {
-  FolderAddOutlined,
-  FolderOpenFilled,
-  FolderOpenOutlined,
   FolderOutlined,
-  FolderTwoTone,
-  FolderViewOutlined,
   PlusCircleOutlined,
   ProjectOutlined,
 } from "@ant-design/icons";
@@ -146,8 +141,8 @@ const ProjectsHeaderItem = () => {
       gap={6}
       style={{ paddingLeft: 12, paddingTop: 8 }}
     >
-      <Flex gap={6} align="center">
-        <ProjectOutlined style={{ fontSize: 18 }} />
+      <Flex gap={8} align="center">
+        <ProjectOutlined />
         <Typography.Text type="secondary">Projects</Typography.Text>
       </Flex>
       <Button
@@ -191,13 +186,9 @@ const projectSessionSidebarItem = ({
   project: Project;
 }): ItemType => {
   return {
-    key: project.id,
-    icon: <FolderOutlined />,
-    label: (
-      <Typography.Text strong style={{ paddingLeft: 12 }}>
-        {project.name}
-      </Typography.Text>
-    ),
+    key: `project-${project.id.toString()}`,
+    icon: <FolderOutlined style={{ marginLeft: 8 }} />,
+    label: <Typography.Text>{project.name}</Typography.Text>,
   };
 };
 
