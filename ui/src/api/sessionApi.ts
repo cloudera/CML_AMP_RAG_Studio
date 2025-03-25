@@ -116,10 +116,25 @@ export const useCreateSessionMutation = ({
   onSuccess,
   onError,
 }: UseMutationType<Session>) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [MutationKeys.createSession],
     mutationFn: createSessionMutation,
-    onSuccess,
+    onSuccess: (session) => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            QueryKeys.getSessionsForProject,
+            { projectId: session.projectId },
+          ],
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      if (onSuccess) {
+        onSuccess(session);
+      }
+    },
     onError,
   });
 };
@@ -175,6 +190,14 @@ export const useRenameNameMutation = ({
       queryClient
         .invalidateQueries({
           queryKey: [QueryKeys.getSessions],
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      // todo: only invalidate the sessions for the project that was renamed
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getSessionsForProject],
         })
         .catch((error: unknown) => {
           console.error(error);
