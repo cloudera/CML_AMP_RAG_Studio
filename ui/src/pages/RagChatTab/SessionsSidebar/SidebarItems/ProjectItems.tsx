@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,42 +36,40 @@
  * DATA.
  ******************************************************************************/
 
-import { groupBy } from "lodash";
-import { Session } from "src/api/sessionApi.ts";
-import { useNavigate } from "@tanstack/react-router";
+import {
+  Project,
+  useGetProjects,
+  useGetSessionsForProject,
+} from "src/api/projectsApi.ts";
 import { ItemType } from "antd/lib/menu/interface";
-import { Typography } from "antd";
-import { format, parse } from "date-fns";
-import SessionItem from "pages/RagChatTab/Sessions/SessionItem.tsx";
-import { MenuItem } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
-import { useGetDefaultProject } from "src/api/projectsApi.ts";
+import { useNavigate } from "@tanstack/react-router";
+import { Flex, Typography } from "antd";
+import SessionItem from "pages/RagChatTab/SessionsSidebar/SidebarItems/SessionItem.tsx";
 
-export const defaultSessionItems = (sessions: Session[]): MenuItem => {
+const ProjectLabel = ({ project }: { project: Project }) => {
   const navigate = useNavigate();
-  const { data: defaultProject } = useGetDefaultProject();
-  const defaultSessions = sessions.filter(
-    (session) => defaultProject?.id === session.projectId,
+  return (
+    <Flex style={{ marginLeft: 16 }}>
+      <Typography.Text
+        onClick={() => {
+          navigate({
+            to: "/sessions/project/$projectId",
+            params: { projectId: project.id.toString() },
+          }).catch(() => null);
+        }}
+      >
+        {project.name}
+      </Typography.Text>
+    </Flex>
   );
-  const defaultSessionsByDate = groupBy(defaultSessions, (session) => {
-    const relevantTime = session.lastInteractionTime || session.timeUpdated;
-    return format(relevantTime * 1000, "yyyyMMdd");
-  });
+};
 
-  const sortedDates = Object.keys(defaultSessionsByDate).sort().reverse();
+const getProjectSessions = (project: Project) => {
+  const { data: sessions } = useGetSessionsForProject(project.id);
+  const navigate = useNavigate();
 
-  const items: ItemType[][] = sortedDates.map((date) => {
-    const dateItem: ItemType = {
-      key: date,
-      type: "group",
-      label: (
-        <Typography.Text strong style={{ paddingLeft: 12 }}>
-          {parse(date, "yyyyMMdd", new Date()).toDateString()}
-        </Typography.Text>
-      ),
-    };
-
-    const sessionItems: ItemType[] = defaultSessionsByDate[date].map(
-      (session) => {
+  return sessions
+    ? sessions.map((session) => {
         return {
           key: session.id.toString(),
           label: <SessionItem session={session} />,
@@ -81,15 +79,32 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
             }).catch(() => null);
           },
         };
-      },
-    );
+      })
+    : [];
+};
 
-    return [
-      { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
-      dateItem,
-      ...sessionItems,
-    ];
-  });
+export const projectSessionSidebarItem = ({
+  project,
+}: {
+  project: Project;
+}): ItemType => {
+  return {
+    key: `project-${project.id.toString()}`,
+    label: <ProjectLabel project={project} />,
+    children: getProjectSessions(project),
+  };
+};
 
-  return [...items.flatMap((item) => item)];
+export const getProjectItems = () => {
+  const { data: projects } = useGetProjects();
+
+  const projectItems: ItemType[] = projects
+    ? projects
+        .filter((p) => !p.defaultProject)
+        .map((project) => {
+          return projectSessionSidebarItem({ project });
+        })
+    : [];
+
+  return projectItems;
 };

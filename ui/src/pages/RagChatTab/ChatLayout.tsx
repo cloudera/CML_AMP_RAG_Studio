@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { Divider, Flex, Layout } from "antd";
-import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
+import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
 import { Session } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";

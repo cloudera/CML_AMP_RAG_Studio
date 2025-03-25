@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -48,7 +48,7 @@ import {
   Typography,
 } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
+import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
@@ -141,7 +141,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       onValuesChange={(changedValues: CreateSessionType, allValues) => {
         if (changedValues.dataSourceId && !allValues.name) {
           const dataSource = dataSources?.find(
-            (value) => value.id === changedValues.dataSourceId
+            (value) => value.id === changedValues.dataSourceId,
           );
           form.setFieldsValue({
             name: dataSource?.name,

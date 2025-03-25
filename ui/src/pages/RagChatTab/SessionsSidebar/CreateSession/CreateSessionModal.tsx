@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -38,14 +38,14 @@
 
 import { Button, Form, Modal } from "antd";
 import { Dispatch, SetStateAction, useContext } from "react";
-import CreateSessionForm from "./CreateSessionForm";
-import messageQueue from "src/utils/messageQueue";
+import CreateSessionForm from "./CreateSessionForm.tsx";
+import messageQueue from "src/utils/messageQueue.ts";
 import {
   CreateSessionRequest,
   useCreateSessionMutation,
-} from "src/api/sessionApi";
+} from "src/api/sessionApi.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "src/api/utils";
+import { QueryKeys } from "src/api/utils.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useNavigate } from "@tanstack/react-router";
 

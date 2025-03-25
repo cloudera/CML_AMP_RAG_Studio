@@ -60,8 +60,8 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { CreateSessionType } from "pages/RagChatTab/Sessions/CreateSessionModal.tsx";
-import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
+import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
+import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
 
 const ChatSettingsModal = ({
   open,

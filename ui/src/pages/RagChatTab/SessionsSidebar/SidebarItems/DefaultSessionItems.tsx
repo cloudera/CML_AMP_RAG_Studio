@@ -36,27 +36,60 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex } from "antd";
-import { MenuItem } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
-import Images from "src/components/images/Images.ts";
+import { groupBy } from "lodash";
+import { Session } from "src/api/sessionApi.ts";
 import { useNavigate } from "@tanstack/react-router";
+import { ItemType } from "antd/lib/menu/interface";
+import { Typography } from "antd";
+import { format, parse } from "date-fns";
+import SessionItem from "pages/RagChatTab/SessionsSidebar/SidebarItems/SessionItem.tsx";
+import { MenuItem } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
+import { useGetDefaultProject } from "src/api/projectsApi.ts";
 
-export const newChatItem = (iconSize?: number): MenuItem => {
+export const defaultSessionItems = (sessions: Session[]): MenuItem => {
   const navigate = useNavigate();
-  return [
-    {
-      key: "new",
-      label: "New Chat",
-      icon: (
-        <Flex justify="center" align="center" style={{ height: "100%" }}>
-          <Images.PlusCircle style={iconSize ? { fontSize: iconSize } : {}} />
-        </Flex>
+  const { data: defaultProject } = useGetDefaultProject();
+  const defaultSessions = sessions.filter(
+    (session) => defaultProject?.id === session.projectId,
+  );
+  const defaultSessionsByDate = groupBy(defaultSessions, (session) => {
+    const relevantTime = session.lastInteractionTime || session.timeUpdated;
+    return format(relevantTime * 1000, "yyyyMMdd");
+  });
+
+  const sortedDates = Object.keys(defaultSessionsByDate).sort().reverse();
+
+  const items: ItemType[][] = sortedDates.map((date) => {
+    const dateItem: ItemType = {
+      key: date,
+      type: "group",
+      label: (
+        <Typography.Text strong style={{ paddingLeft: 12 }}>
+          {parse(date, "yyyyMMdd", new Date()).toDateString()}
+        </Typography.Text>
       ),
-      onClick: () => {
-        navigate({
-          to: "/sessions",
-        }).catch(() => null);
+    };
+
+    const sessionItems: ItemType[] = defaultSessionsByDate[date].map(
+      (session) => {
+        return {
+          key: session.id.toString(),
+          label: <SessionItem session={session} />,
+          onClick: () => {
+            navigate({
+              to: `/sessions/${session.id.toString()}`,
+            }).catch(() => null);
+          },
+        };
       },
-    },
-  ];
+    );
+
+    return [
+      { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
+      dateItem,
+      ...sessionItems,
+    ];
+  });
+
+  return [...items.flatMap((item) => item)];
 };

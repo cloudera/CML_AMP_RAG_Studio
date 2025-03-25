@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,79 +36,15 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext } from "react";
-import { Session } from "src/api/sessionApi.ts";
-import {
-  Button,
-  ConfigProvider,
-  Flex,
-  Form,
-  Input,
-  Layout,
-  Menu,
-  MenuProps,
-  Modal,
-  theme,
-  Typography,
-} from "antd";
-import {
-  cdlGray200,
-  cdlGray800,
-  cdlSlate800,
-  cdlWhite,
-} from "src/cuix/variables.ts";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { defaultSessionItems } from "pages/RagChatTab/Sessions/DefaultSessionItems.tsx";
-import { newChatItem } from "pages/RagChatTab/Sessions/NewChatItem.tsx";
-import { ItemType } from "antd/lib/menu/interface";
-import Images from "src/components/images/Images.ts";
-import "./index.css";
-import {
-  Project,
-  useCreateProject,
-  useGetProjects,
-} from "src/api/projectsApi.ts";
-import {
-  FolderOutlined,
-  PlusCircleOutlined,
-  ProjectOutlined,
-} from "@ant-design/icons";
 import useModal from "src/utils/useModal.ts";
-import messageQueue from "src/utils/messageQueue.ts";
+import { Button, Flex, Form, Input, Modal, Typography } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCreateProject } from "src/api/projectsApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
-import { useNavigate } from "@tanstack/react-router";
+import messageQueue from "src/utils/messageQueue.ts";
+import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
 
-const { Sider } = Layout;
-
-export type MenuItem = Required<MenuProps>["items"];
-
-const SessionMenuTheme = {
-  algorithm: theme.defaultAlgorithm,
-  token: { colorBgBase: cdlWhite },
-  components: {
-    Menu: {
-      itemSelectedBg: cdlGray200,
-      itemActiveBg: cdlSlate800,
-      itemBg: cdlSlate800,
-      colorText: cdlGray800,
-      itemColor: cdlGray800,
-      itemSelectedColor: cdlSlate800,
-    },
-    Layout: {
-      triggerBg: cdlWhite,
-      lightTriggerBg: cdlWhite,
-      lightTriggerColor: cdlWhite,
-      triggerColor: cdlWhite,
-      siderBg: cdlWhite,
-      bodyBg: cdlWhite,
-      footerBg: cdlWhite,
-      lightSiderBg: cdlWhite,
-    },
-  },
-};
-
-const ProjectsHeaderItem = () => {
+export const ProjectsHeaderItem = () => {
   const createProjectModal = useModal();
   const [form] = Form.useForm<{ name: string }>();
   const queryClient = useQueryClient();
@@ -179,85 +115,3 @@ const ProjectsHeaderItem = () => {
     </Flex>
   );
 };
-
-const ProjectLabel = ({ project }: { project: Project }) => {
-  const navigate = useNavigate();
-  return (
-    <Typography.Text
-      onClick={() => {
-        navigate({
-          to: "/sessions/project/$projectId",
-          params: { projectId: project.id.toString() },
-        }).catch(() => null);
-      }}
-    >
-      {project.name}
-    </Typography.Text>
-  );
-};
-
-const projectSessionSidebarItem = ({
-  project,
-}: {
-  project: Project;
-}): ItemType => {
-  return {
-    key: `project-${project.id.toString()}`,
-    icon: <FolderOutlined style={{ marginLeft: 8 }} />,
-    label: <ProjectLabel project={project} />,
-  };
-};
-
-export function SessionSidebar({ sessions }: { sessions: Session[] }) {
-  const { activeSession } = useContext(RagChatContext);
-  const { data: projects } = useGetProjects();
-
-  const projectItems: ItemType[] = projects
-    ? projects
-        .filter((p) => !p.defaultProject)
-        .map((project) => {
-          return projectSessionSidebarItem({ project });
-        })
-    : [];
-
-  const items: ItemType[] = [
-    ...newChatItem(18),
-    { type: "divider", key: "newChatDivider" },
-    {
-      type: "group",
-      label: <ProjectsHeaderItem />,
-    },
-    ...projectItems,
-    {
-      type: "group",
-      label: (
-        <Flex gap={6} style={{ paddingLeft: 12, paddingTop: 8 }}>
-          <Images.History style={{ fontSize: 18 }} />
-          <Typography.Text type="secondary">Chat History</Typography.Text>
-        </Flex>
-      ),
-    },
-    ...defaultSessionItems(sessions),
-  ];
-
-  return (
-    <ConfigProvider theme={SessionMenuTheme}>
-      <div className="session-sider">
-        <Sider width={250} style={{ height: "88vh" }}>
-          <Menu
-            selectedKeys={[activeSession?.id.toString() ?? ""]}
-            mode="inline"
-            style={{
-              backgroundColor: cdlWhite,
-              height: "100%",
-              borderRight: 0,
-              overflowY: "auto",
-              scrollbarWidth: "thin",
-            }}
-            items={items}
-          />
-        </Sider>
-      </div>
-    </ConfigProvider>
-  );
-}

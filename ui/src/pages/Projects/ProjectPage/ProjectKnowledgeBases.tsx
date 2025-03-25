@@ -51,7 +51,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { Button, Card, Form, Popover, Select, Spin, Typography } from "antd";
 import FormItem from "antd/es/form/FormItem";
-import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
+import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
 import { PlusCircleOutlined } from "@ant-design/icons";
 
 const SelectKnowledgeBaseForm = ({
