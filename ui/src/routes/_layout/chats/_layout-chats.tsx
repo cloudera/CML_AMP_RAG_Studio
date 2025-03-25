@@ -37,13 +37,10 @@
  ******************************************************************************/
 
 import { createFileRoute } from '@tanstack/react-router'
-import { getProjectById } from 'src/api/projectsApi.ts'
+import ChatLayout from 'pages/RagChatTab/ChatLayout.tsx'
 
-export const Route = createFileRoute(
-  '/_layout/sessions/_layout-sessions/projects/$projectId',
-)({
-  loader: async ({ params: { projectId } }) => {
-    const project = await getProjectById(+projectId)
-    return { project }
+export const Route = createFileRoute('/_layout/chats/_layout-chats')({
+  component: () => {
+    return <ChatLayout />
   },
 })
