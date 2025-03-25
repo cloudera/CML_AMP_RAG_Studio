@@ -40,7 +40,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getProjectById } from 'src/api/projectsApi.ts'
 
 export const Route = createFileRoute(
-  '/_layout/chats/_layout-chats/projects/$projectId',
+  '/_layout/chats/_layout-chats/projects/$projectId/',
 )({
   loader: async ({ params: { projectId } }) => {
     const project = await getProjectById(+projectId)
