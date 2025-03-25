@@ -124,7 +124,7 @@ public class Types {
           null,
           input.name(),
           input.dataSourceIds(),
-          1L,
+          input.projectId(),
           null,
           null,
           username,
@@ -144,7 +144,8 @@ public class Types {
       String inferenceModel,
       String rerankModel,
       Integer responseChunks,
-      QueryConfiguration queryConfiguration) {}
+      QueryConfiguration queryConfiguration,
+      Long projectId) {}
 
   public record MetadataMetrics(
       int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}

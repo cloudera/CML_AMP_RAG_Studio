@@ -1,13 +1,17 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useGetLlmModels } from "src/api/modelsApi";
 import {
   CreateSessionRequest,
   useCreateSessionMutation,
 } from "src/api/sessionApi";
 import messageQueue from "src/utils/messageQueue.ts";
+import { useGetDefaultProject } from "src/api/projectsApi.ts";
 
 const useCreateSessionAndRedirect = () => {
   const navigate = useNavigate();
+  const { projectId } = useParams({ strict: false });
+  const { data: defaultProject } = useGetDefaultProject();
+
   const { data: models } = useGetLlmModels();
   const createSession = useCreateSessionMutation({
     onSuccess: () => {
@@ -19,7 +23,7 @@ const useCreateSessionAndRedirect = () => {
   });
 
   return (question?: string, dataSourceId?: number) => {
-    if (models) {
+    if (models && defaultProject) {
       const requestBody: CreateSessionRequest = {
         name: "",
         dataSourceIds: dataSourceId ? [dataSourceId] : [],
@@ -29,6 +33,7 @@ const useCreateSessionAndRedirect = () => {
           enableHyde: false,
           enableSummaryFilter: true,
         },
+        projectId: projectId ? parseInt(projectId) : defaultProject.id,
       };
       createSession
         .mutateAsync(requestBody)

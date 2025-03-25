@@ -82,18 +82,19 @@ public class TestData {
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
-    return createSessionInstance(sessionName, List.of(1L, 2L, 3L));
+    return createSessionInstance(sessionName, List.of(1L, 2L, 3L), 1L);
   }
 
   public static Types.CreateSession createSessionInstance(
-      String sessionName, List<Long> dataSourceIds) {
+      String sessionName, List<Long> dataSourceIds, Long projectId) {
     return new Types.CreateSession(
         sessionName,
         dataSourceIds,
         "test-model",
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false, true));
+        new Types.QueryConfiguration(false, true),
+        projectId);
   }
 
   public static Types.RagDataSource createTestDataSourceInstance(

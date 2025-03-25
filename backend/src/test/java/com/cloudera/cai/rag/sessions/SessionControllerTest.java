@@ -82,7 +82,7 @@ class SessionControllerTest {
     request.setCookies(
         new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
     var sessionName = "test";
-    Types.CreateSession input = TestData.createSessionInstance(sessionName, List.of());
+    Types.CreateSession input = TestData.createSessionInstance(sessionName, List.of(), 1L);
     Types.Session result = sessionController.create(input, request);
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(sessionName);

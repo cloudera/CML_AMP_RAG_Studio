@@ -380,7 +380,7 @@ class ProjectControllerTest {
 
     // Create a session for the project with the data source
     Types.CreateSession createSession =
-        TestData.createSessionInstance("test-session", List.of(dataSourceId));
+        TestData.createSessionInstance("test-session", List.of(dataSourceId), newProject.id());
     var session =
         sessionService.create(
             Types.Session.fromCreateRequest(createSession, "test-user")
