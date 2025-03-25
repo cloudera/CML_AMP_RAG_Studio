@@ -38,7 +38,7 @@
 
 import { Divider, Flex, Layout } from "antd";
 import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
-import { Session } from "src/api/sessionApi.ts";
+import { Session, useGetSessions } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
@@ -47,7 +47,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   getDefaultProjectQueryOptions,
   useGetDataSourcesForProject,
-  useGetSessionsForProject,
 } from "src/api/projectsApi.ts";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
@@ -58,9 +57,10 @@ function ChatLayout() {
   const { data: defaultProject } = useSuspenseQuery(
     getDefaultProjectQueryOptions,
   );
-  const { data: defaultSessions } = useGetSessionsForProject(defaultProject.id);
-
-  // const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+  const { data: allSessions } = useGetSessions();
+  const defaultSessions = allSessions?.filter(
+    (session) => session.projectId === defaultProject.id,
+  );
 
   const sessions = defaultSessions ?? [];
 

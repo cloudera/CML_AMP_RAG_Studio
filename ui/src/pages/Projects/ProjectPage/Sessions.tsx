@@ -36,16 +36,18 @@
  * DATA.
  ******************************************************************************/
 
-import { useGetSessionsForProject } from "src/api/projectsApi.ts";
 import { Flex, Skeleton, Typography } from "antd";
 import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
+import { useGetSessions } from "src/api/sessionApi.ts";
 
 export const Sessions = () => {
   const { project } = useProjectContext();
-  const { data: sessions, isLoading } = useGetSessionsForProject(project.id);
-
+  const { data: allSessions, isLoading } = useGetSessions();
+  const sessions = allSessions?.filter(
+    (session) => session.projectId === project.id,
+  );
   if (isLoading) {
     return (
       <Flex>

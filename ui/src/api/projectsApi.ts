@@ -47,7 +47,6 @@ import {
   ragPath,
   UseMutationType,
 } from "src/api/utils.ts";
-import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "./dataSourceApi";
 
 export interface Project {
@@ -230,33 +229,6 @@ const getDataSourcesForProject = async (
   );
 };
 
-// Get sessions for project
-export const useGetSessionsForProject = (projectId?: number) => {
-  return useQuery({
-    queryKey: [QueryKeys.getSessionsForProject, { projectId }],
-    queryFn: async () => {
-      if (!projectId) {
-        return [];
-      }
-      return await getSessionsForProject(projectId);
-    },
-    enabled: !!projectId,
-  });
-};
-
-export const getSessionsForProjectQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKeys.getSessionsForProject, { projectId }],
-    queryFn: async () => {
-      return await getSessionsForProject(projectId);
-    },
-  });
-
-const getSessionsForProject = async (projectId: number): Promise<Session[]> => {
-  return await getRequest(`${ragPath}/projects/${String(projectId)}/sessions`);
-};
-
-// Add data source to project
 export const useAddDataSourceToProject = ({
   onSuccess,
   onError,
