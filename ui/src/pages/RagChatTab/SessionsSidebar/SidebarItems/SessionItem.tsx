@@ -75,6 +75,12 @@ const SessionItem = ({ session }: { session: Session }) => {
       void queryClient.invalidateQueries({
         queryKey: [QueryKeys.getSessions],
       });
+      void queryClient.invalidateQueries({
+        queryKey: [
+          QueryKeys.getSessionsForProject,
+          { projectId: session.projectId },
+        ],
+      });
       deleteSessionModal.setIsModalOpen(false);
       messageQueue.success("Session deleted successfully");
       return navigate({
