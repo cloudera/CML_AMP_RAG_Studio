@@ -115,7 +115,6 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     },
     ...defaultSessionItems(sessions),
   ];
-  console.log(activeSession);
 
   return (
     <ConfigProvider theme={SessionMenuTheme}>

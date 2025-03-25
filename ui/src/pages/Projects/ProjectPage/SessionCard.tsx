@@ -52,8 +52,11 @@ const SessionCard = ({ session }: { session: Session }) => {
 
   const handleNavOnClick = () => {
     navigate({
-      to: "/chats/$sessionId",
-      params: { sessionId: session.id.toString() },
+      to: "/chats/projects/$projectId/sessions/$sessionId",
+      params: {
+        sessionId: session.id.toString(),
+        projectId: session.projectId.toString(),
+      },
     }).catch(() => null);
   };
 
