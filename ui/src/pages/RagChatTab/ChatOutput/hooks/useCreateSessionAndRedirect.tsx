@@ -45,16 +45,16 @@ const useCreateSessionAndRedirect = () => {
             session.projectId === defaultProject.id
               ? "/chats/$sessionId"
               : "/chats/projects/$projectId/sessions/$sessionId";
-
+          const params =
+            session.projectId === defaultProject.id
+              ? { sessionId: session.id.toString() }
+              : {
+                  projectId: session.projectId.toString(),
+                  sessionId: session.id.toString(),
+                };
           navigate({
             to,
-            params: {
-              projectId:
-                session.projectId === defaultProject.id
-                  ? undefined
-                  : session.projectId.toString(),
-              sessionId: session.id.toString(),
-            },
+            params,
             search: question ? { question: question } : undefined,
           }).catch(() => null);
         })

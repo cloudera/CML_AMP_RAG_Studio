@@ -80,7 +80,8 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
           label: <SessionItem session={session} />,
           onClick: () => {
             navigate({
-              to: `/chats/${session.id.toString()}`,
+              to: `/chats/$sessionId`,
+              params: { sessionId: session.id.toString() },
             }).catch(() => null);
           },
         };

@@ -54,7 +54,6 @@ const RagChat = () => {
   const currentDataSource = dataSources.find((dataSource) => {
     return dataSource.id === activeSession?.dataSourceIds[0];
   });
-
   return (
     <Layout style={{ height: "100%", width: "100%" }}>
       <RagChatHeader

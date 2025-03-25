@@ -97,20 +97,20 @@ export type UpdateSessionRequest = Pick<
   | "dataSourceIds"
 >;
 
+export const getSessionsQuery = async (): Promise<Session[]> => {
+  return await getRequest(`${ragPath}/${paths.sessions}`);
+};
+
 export const getSessionsQueryOptions = queryOptions({
   queryKey: [QueryKeys.getSessions],
-  queryFn: async () => await getSessionsQuery(),
+  queryFn: getSessionsQuery,
 });
 
 export const useGetSessions = () => {
   return useQuery({
     queryKey: [QueryKeys.getSessions],
-    queryFn: async () => await getSessionsQuery(),
+    queryFn: getSessionsQuery,
   });
-};
-
-export const getSessionsQuery = async (): Promise<Session[]> => {
-  return await getRequest(`${ragPath}/${paths.sessions}`);
 };
 
 export const useCreateSessionMutation = ({

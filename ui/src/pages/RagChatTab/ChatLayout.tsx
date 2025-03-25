@@ -43,28 +43,19 @@ import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import {
-  getDefaultProjectQueryOptions,
-  useGetDataSourcesForProject,
-} from "src/api/projectsApi.ts";
+import { useGetDataSourcesForProject } from "src/api/projectsApi.ts";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
 };
 
 function ChatLayout() {
-  const { data: defaultProject } = useSuspenseQuery(
-    getDefaultProjectQueryOptions,
-  );
   const { data: allSessions } = useGetSessions();
-  const defaultSessions = allSessions?.filter(
-    (session) => session.projectId === defaultProject.id,
-  );
 
-  const sessions = defaultSessions ?? [];
+  const sessions = allSessions ?? [];
 
   const { sessionId } = useParams({ strict: false });
+
   const activeSession = getSessionForSessionId(sessionId, sessions);
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(activeSession?.projectId);

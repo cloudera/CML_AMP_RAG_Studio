@@ -46,17 +46,16 @@ import { Session, useGetSessions } from "src/api/sessionApi.ts";
 const ProjectLabel = ({ project }: { project: Project }) => {
   const navigate = useNavigate();
   return (
-    <Flex style={{ marginLeft: 16 }}>
-      <Typography.Text
-        onClick={() => {
-          navigate({
-            to: "/chats/projects/$projectId",
-            params: { projectId: project.id.toString() },
-          }).catch(() => null);
-        }}
-      >
-        {project.name}
-      </Typography.Text>
+    <Flex
+      style={{ marginLeft: 16 }}
+      onClick={() => {
+        navigate({
+          to: "/chats/projects/$projectId",
+          params: { projectId: project.id.toString() },
+        }).catch(() => null);
+      }}
+    >
+      <Typography.Text>{project.name}</Typography.Text>
     </Flex>
   );
 };
@@ -71,7 +70,11 @@ const getProjectSessions = (
       label: <SessionItem session={session} />,
       onClick: () => {
         navigate({
-          to: `/chats/projects/${session.projectId.toString()}/sessions/${session.id.toString()}`,
+          to: "/chats/projects/$projectId/sessions/$sessionId",
+          params: {
+            projectId: session.projectId.toString(),
+            sessionId: session.id.toString(),
+          },
         }).catch(() => null);
       },
     };
