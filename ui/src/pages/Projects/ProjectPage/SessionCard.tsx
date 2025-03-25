@@ -52,7 +52,7 @@ const SessionCard = ({ session }: { session: Session }) => {
 
   const handleNavOnClick = () => {
     navigate({
-      to: "/sessions/$sessionId",
+      to: "/chats/$sessionId",
       params: { sessionId: session.id.toString() },
     }).catch(() => null);
   };

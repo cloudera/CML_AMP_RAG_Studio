@@ -105,7 +105,7 @@ const TopNav: React.FC = () => {
     getItem(
       <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
-      navigateTo("/sessions"),
+      navigateTo("/chats"),
       <DesktopOutlined />,
     ),
     getItem(
@@ -142,7 +142,7 @@ const TopNav: React.FC = () => {
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
       return ["data"];
-    } else if (matchRoute({ to: "/sessions", fuzzy: true })) {
+    } else if (matchRoute({ to: "/chats", fuzzy: true })) {
       return ["chat"];
     } else if (matchRoute({ to: "/models", fuzzy: true })) {
       return ["models"];

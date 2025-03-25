@@ -70,7 +70,7 @@ function getItem(
   key: React.Key,
   onClick: () => void,
   icon?: React.ReactNode,
-  children?: MenuItem[]
+  children?: MenuItem[],
 ): MenuItem {
   return {
     key,
@@ -88,7 +88,7 @@ const Sidebar: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
 
   const navToRagApp = () => {
-    navigate({ to: "/sessions" }).catch(() => null);
+    navigate({ to: "/chats" }).catch(() => null);
     return;
   };
 
@@ -163,13 +163,13 @@ const Sidebar: React.FC = () => {
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
       navToRagApp,
-      <DesktopOutlined />
+      <DesktopOutlined />,
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
       navToData,
-      <DatabaseFilled />
+      <DatabaseFilled />,
     ),
   ];
 
@@ -177,21 +177,21 @@ const Sidebar: React.FC = () => {
     <div data-testid="models-nav">Models</div>,
     "models",
     navToModels,
-    <CloudOutlined />
+    <CloudOutlined />,
   );
 
   const projects = getItem(
     <div data-testid="projects-nav">Projects</div>,
     "projects",
     navToProjects,
-    <ProjectOutlined />
+    <ProjectOutlined />,
   );
 
   const analyticsItem = getItem(
     <div data-testid="analytics-nav">Analytics</div>,
     "analytics",
     navToAnalytics,
-    <LineChartOutlined />
+    <LineChartOutlined />,
   );
 
   const items = [...baseItems, models, projects, analyticsItem];
@@ -199,7 +199,7 @@ const Sidebar: React.FC = () => {
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
       return ["data"];
-    } else if (matchRoute({ to: "/sessions", fuzzy: true })) {
+    } else if (matchRoute({ to: "/chats", fuzzy: true })) {
       return ["chat"];
     } else if (matchRoute({ to: "/models", fuzzy: true })) {
       return ["models"];

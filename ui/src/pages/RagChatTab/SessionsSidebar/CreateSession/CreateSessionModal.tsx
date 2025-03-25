@@ -87,7 +87,7 @@ const CreateSessionModal = ({
         .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
         .then(() => {
           return navigate({
-            to: "/sessions/$sessionId",
+            to: "/chats/$sessionId",
             params: { sessionId: data.id.toString() },
           });
         })

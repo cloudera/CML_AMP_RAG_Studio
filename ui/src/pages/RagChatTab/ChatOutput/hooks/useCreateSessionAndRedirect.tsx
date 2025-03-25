@@ -39,7 +39,7 @@ const useCreateSessionAndRedirect = () => {
         .mutateAsync(requestBody)
         .then((session) => {
           navigate({
-            to: `/sessions/${session.id.toString()}`,
+            to: `/chats/${session.id.toString()}`,
             params: { sessionId: session.id.toString() },
             search: question ? { question: question } : undefined,
           }).catch(() => null);

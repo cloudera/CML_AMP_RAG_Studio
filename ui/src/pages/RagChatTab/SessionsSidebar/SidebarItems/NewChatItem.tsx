@@ -54,7 +54,7 @@ export const newChatItem = (iconSize?: number): MenuItem => {
       ),
       onClick: () => {
         navigate({
-          to: "/sessions",
+          to: "/chats",
         }).catch(() => null);
       },
     },

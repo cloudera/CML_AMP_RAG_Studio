@@ -44,11 +44,14 @@ import { Typography } from "antd";
 import { format, parse } from "date-fns";
 import SessionItem from "pages/RagChatTab/SessionsSidebar/SidebarItems/SessionItem.tsx";
 import { MenuItem } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
-import { useGetDefaultProject } from "src/api/projectsApi.ts";
+import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const defaultSessionItems = (sessions: Session[]): MenuItem => {
   const navigate = useNavigate();
-  const { data: defaultProject } = useGetDefaultProject();
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
   const defaultSessions = sessions.filter(
     (session) => defaultProject?.id === session.projectId,
   );
@@ -77,7 +80,10 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
           label: <SessionItem session={session} />,
           onClick: () => {
             navigate({
-              to: `/sessions/${session.id.toString()}`,
+              to:
+                session.projectId === defaultProject.id
+                  ? `/chats/${session.id.toString()}`
+                  : `/chats/projects/${session.projectId.toString()}/sessions/${session.id.toString()}`,
             }).catch(() => null);
           },
         };

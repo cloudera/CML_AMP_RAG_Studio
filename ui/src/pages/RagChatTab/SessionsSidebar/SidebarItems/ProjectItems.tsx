@@ -50,7 +50,7 @@ const ProjectLabel = ({ project }: { project: Project }) => {
       <Typography.Text
         onClick={() => {
           navigate({
-            to: "/sessions/projects/$projectId",
+            to: "/chats/projects/$projectId",
             params: { projectId: project.id.toString() },
           }).catch(() => null);
         }}
@@ -71,7 +71,7 @@ const getProjectSessions = (
       label: <SessionItem session={session} />,
       onClick: () => {
         navigate({
-          to: `/sessions/${session.id.toString()}`,
+          to: `/chats/${session.id.toString()}`,
         }).catch(() => null);
       },
     };

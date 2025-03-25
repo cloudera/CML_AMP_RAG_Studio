@@ -78,7 +78,7 @@ const SessionItem = ({ session }: { session: Session }) => {
       deleteSessionModal.setIsModalOpen(false);
       messageQueue.success("Session deleted successfully");
       return navigate({
-        to: "/sessions",
+        to: "/chats",
       });
     },
     onError: () => {
