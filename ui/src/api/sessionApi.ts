@@ -84,6 +84,7 @@ export type CreateSessionRequest = Pick<
   | "rerankModel"
   | "responseChunks"
   | "queryConfiguration"
+  | "projectId"
 >;
 
 export type UpdateSessionRequest = Pick<
