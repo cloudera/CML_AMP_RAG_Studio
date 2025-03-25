@@ -50,7 +50,7 @@ const ProjectLabel = ({ project }: { project: Project }) => {
       <Typography.Text
         onClick={() => {
           navigate({
-            to: "/sessions/project/$projectId",
+            to: "/sessions/projects/$projectId",
             params: { projectId: project.id.toString() },
           }).catch(() => null);
         }}

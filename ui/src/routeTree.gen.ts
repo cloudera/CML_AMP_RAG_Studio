@@ -28,7 +28,7 @@ import { Route as LayoutAnalyticsLayoutModelsIndexImport } from './routes/_layou
 import { Route as LayoutSessionsLayoutSessionsSessionIdImport } from './routes/_layout/sessions/_layout-sessions/$sessionId'
 import { Route as LayoutProjectsLayoutProjectsProjectIdImport } from './routes/_layout/projects/_layout-projects/$projectId'
 import { Route as LayoutDataLayoutDatasourcesDataSourceIdImport } from './routes/_layout/data/_layout-datasources/$dataSourceId'
-import { Route as LayoutSessionsLayoutSessionsProjectProjectIdImport } from './routes/_layout/sessions/_layout-sessions/project/$projectId'
+import { Route as LayoutSessionsLayoutSessionsProjectsProjectIdImport } from './routes/_layout/sessions/_layout-sessions/projects/$projectId'
 
 // Create Virtual Routes
 
@@ -198,14 +198,14 @@ const LayoutDataLayoutDatasourcesDataSourceIdRoute =
     ),
   )
 
-const LayoutSessionsLayoutSessionsProjectProjectIdRoute =
-  LayoutSessionsLayoutSessionsProjectProjectIdImport.update({
-    id: '/project/$projectId',
-    path: '/project/$projectId',
+const LayoutSessionsLayoutSessionsProjectsProjectIdRoute =
+  LayoutSessionsLayoutSessionsProjectsProjectIdImport.update({
+    id: '/projects/$projectId',
+    path: '/projects/$projectId',
     getParentRoute: () => LayoutSessionsLayoutSessionsRoute,
   } as any).lazy(() =>
     import(
-      './routes/_layout/sessions/_layout-sessions/project/$projectId.lazy'
+      './routes/_layout/sessions/_layout-sessions/projects/$projectId.lazy'
     ).then((d) => d.Route),
   )
 
@@ -353,11 +353,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSessionsLayoutSessionsIndexImport
       parentRoute: typeof LayoutSessionsLayoutSessionsImport
     }
-    '/_layout/sessions/_layout-sessions/project/$projectId': {
-      id: '/_layout/sessions/_layout-sessions/project/$projectId'
-      path: '/project/$projectId'
-      fullPath: '/sessions/project/$projectId'
-      preLoaderRoute: typeof LayoutSessionsLayoutSessionsProjectProjectIdImport
+    '/_layout/sessions/_layout-sessions/projects/$projectId': {
+      id: '/_layout/sessions/_layout-sessions/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/sessions/projects/$projectId'
+      preLoaderRoute: typeof LayoutSessionsLayoutSessionsProjectsProjectIdImport
       parentRoute: typeof LayoutSessionsLayoutSessionsImport
     }
   }
@@ -484,7 +484,7 @@ const LayoutProjectsRouteWithChildren = LayoutProjectsRoute._addFileChildren(
 interface LayoutSessionsLayoutSessionsRouteChildren {
   LayoutSessionsLayoutSessionsSessionIdRoute: typeof LayoutSessionsLayoutSessionsSessionIdRoute
   LayoutSessionsLayoutSessionsIndexRoute: typeof LayoutSessionsLayoutSessionsIndexRoute
-  LayoutSessionsLayoutSessionsProjectProjectIdRoute: typeof LayoutSessionsLayoutSessionsProjectProjectIdRoute
+  LayoutSessionsLayoutSessionsProjectsProjectIdRoute: typeof LayoutSessionsLayoutSessionsProjectsProjectIdRoute
 }
 
 const LayoutSessionsLayoutSessionsRouteChildren: LayoutSessionsLayoutSessionsRouteChildren =
@@ -493,8 +493,8 @@ const LayoutSessionsLayoutSessionsRouteChildren: LayoutSessionsLayoutSessionsRou
       LayoutSessionsLayoutSessionsSessionIdRoute,
     LayoutSessionsLayoutSessionsIndexRoute:
       LayoutSessionsLayoutSessionsIndexRoute,
-    LayoutSessionsLayoutSessionsProjectProjectIdRoute:
-      LayoutSessionsLayoutSessionsProjectProjectIdRoute,
+    LayoutSessionsLayoutSessionsProjectsProjectIdRoute:
+      LayoutSessionsLayoutSessionsProjectsProjectIdRoute,
   }
 
 const LayoutSessionsLayoutSessionsRouteWithChildren =
@@ -550,7 +550,7 @@ export interface FileRoutesByFullPath {
   '/models/': typeof LayoutModelsLayoutModelsIndexRoute
   '/projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
   '/sessions/': typeof LayoutSessionsLayoutSessionsIndexRoute
-  '/sessions/project/$projectId': typeof LayoutSessionsLayoutSessionsProjectProjectIdRoute
+  '/sessions/projects/$projectId': typeof LayoutSessionsLayoutSessionsProjectsProjectIdRoute
 }
 
 export interface FileRoutesByTo {
@@ -564,7 +564,7 @@ export interface FileRoutesByTo {
   '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
   '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
   '/sessions/$sessionId': typeof LayoutSessionsLayoutSessionsSessionIdRoute
-  '/sessions/project/$projectId': typeof LayoutSessionsLayoutSessionsProjectProjectIdRoute
+  '/sessions/projects/$projectId': typeof LayoutSessionsLayoutSessionsProjectsProjectIdRoute
 }
 
 export interface FileRoutesById {
@@ -589,7 +589,7 @@ export interface FileRoutesById {
   '/_layout/models/_layout-models/': typeof LayoutModelsLayoutModelsIndexRoute
   '/_layout/projects/_layout-projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
   '/_layout/sessions/_layout-sessions/': typeof LayoutSessionsLayoutSessionsIndexRoute
-  '/_layout/sessions/_layout-sessions/project/$projectId': typeof LayoutSessionsLayoutSessionsProjectProjectIdRoute
+  '/_layout/sessions/_layout-sessions/projects/$projectId': typeof LayoutSessionsLayoutSessionsProjectsProjectIdRoute
 }
 
 export interface FileRouteTypes {
@@ -610,7 +610,7 @@ export interface FileRouteTypes {
     | '/models/'
     | '/projects/'
     | '/sessions/'
-    | '/sessions/project/$projectId'
+    | '/sessions/projects/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -623,7 +623,7 @@ export interface FileRouteTypes {
     | '/data/$dataSourceId'
     | '/projects/$projectId'
     | '/sessions/$sessionId'
-    | '/sessions/project/$projectId'
+    | '/sessions/projects/$projectId'
   id:
     | '__root__'
     | '/'
@@ -646,7 +646,7 @@ export interface FileRouteTypes {
     | '/_layout/models/_layout-models/'
     | '/_layout/projects/_layout-projects/'
     | '/_layout/sessions/_layout-sessions/'
-    | '/_layout/sessions/_layout-sessions/project/$projectId'
+    | '/_layout/sessions/_layout-sessions/projects/$projectId'
   fileRoutesById: FileRoutesById
 }
 
@@ -758,7 +758,7 @@ export const routeTree = rootRoute
       "children": [
         "/_layout/sessions/_layout-sessions/$sessionId",
         "/_layout/sessions/_layout-sessions/",
-        "/_layout/sessions/_layout-sessions/project/$projectId"
+        "/_layout/sessions/_layout-sessions/projects/$projectId"
       ]
     },
     "/_layout/data/_layout-datasources/$dataSourceId": {
@@ -793,8 +793,8 @@ export const routeTree = rootRoute
       "filePath": "_layout/sessions/_layout-sessions/index.tsx",
       "parent": "/_layout/sessions/_layout-sessions"
     },
-    "/_layout/sessions/_layout-sessions/project/$projectId": {
-      "filePath": "_layout/sessions/_layout-sessions/project/$projectId.tsx",
+    "/_layout/sessions/_layout-sessions/projects/$projectId": {
+      "filePath": "_layout/sessions/_layout-sessions/projects/$projectId.tsx",
       "parent": "/_layout/sessions/_layout-sessions"
     }
   }

@@ -44,10 +44,11 @@ import {
   CreateSessionRequest,
   useCreateSessionMutation,
 } from "src/api/sessionApi.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useNavigate } from "@tanstack/react-router";
+import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
 
 export interface CreateSessionType {
   name: string;
@@ -76,6 +77,9 @@ const CreateSessionModal = ({
     dataSourcesQuery: { dataSources },
   } = useContext(RagChatContext);
   const navigate = useNavigate();
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
   const { mutate: createSessionMutation } = useCreateSessionMutation({
     onSuccess: async (data) => {
       setIsModalOpen(false);
@@ -111,6 +115,7 @@ const CreateSessionModal = ({
             enableHyde: values.queryConfiguration.enableHyde,
             enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
           },
+          projectId: defaultProject.id,
         };
         createSessionMutation(requestBody);
       })

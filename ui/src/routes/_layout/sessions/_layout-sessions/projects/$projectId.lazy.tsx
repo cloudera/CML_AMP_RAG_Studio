@@ -36,19 +36,19 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
-import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
+import { createLazyFileRoute } from '@tanstack/react-router'
+import { ProjectProvider } from 'pages/Projects/ProjectContext.tsx'
+import ProjectPage from 'pages/Projects/ProjectPage/ProjectPage.tsx'
 
 export const Route = createLazyFileRoute(
-  "/_layout/sessions/_layout-sessions/project/$projectId",
+  '/_layout/sessions/_layout-sessions/projects/$projectId',
 )({
   component: () => {
-    const { project } = Route.useLoaderData();
+    const { project } = Route.useLoaderData()
     return (
       <ProjectProvider project={project}>
         <ProjectPage />
       </ProjectProvider>
-    );
+    )
   },
-});
+})

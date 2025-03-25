@@ -36,14 +36,14 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getProjectById } from "src/api/projectsApi.ts";
+import { createFileRoute } from '@tanstack/react-router'
+import { getProjectById } from 'src/api/projectsApi.ts'
 
 export const Route = createFileRoute(
-  "/_layout/sessions/_layout-sessions/project/$projectId",
+  '/_layout/sessions/_layout-sessions/projects/$projectId',
 )({
   loader: async ({ params: { projectId } }) => {
-    const project = await getProjectById(+projectId);
-    return { project };
+    const project = await getProjectById(+projectId)
+    return { project }
   },
-});
+})
