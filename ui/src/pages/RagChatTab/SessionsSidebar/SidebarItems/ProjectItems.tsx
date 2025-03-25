@@ -36,15 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import {
-  Project,
-  useGetProjects,
-  useGetSessionsForProject,
-} from "src/api/projectsApi.ts";
+import { Project, useGetProjects } from "src/api/projectsApi.ts";
 import { ItemType } from "antd/lib/menu/interface";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, UseNavigateResult } from "@tanstack/react-router";
 import { Flex, Typography } from "antd";
 import SessionItem from "pages/RagChatTab/SessionsSidebar/SidebarItems/SessionItem.tsx";
+import { Session, useGetSessions } from "src/api/sessionApi.ts";
 
 const ProjectLabel = ({ project }: { project: Project }) => {
   const navigate = useNavigate();
@@ -64,45 +61,56 @@ const ProjectLabel = ({ project }: { project: Project }) => {
   );
 };
 
-const getProjectSessions = (project: Project) => {
-  const { data: sessions } = useGetSessionsForProject(project.id);
-  const navigate = useNavigate();
-
-  return sessions
-    ? sessions.map((session) => {
-        return {
-          key: session.id.toString(),
-          label: <SessionItem session={session} />,
-          onClick: () => {
-            navigate({
-              to: `/sessions/${session.id.toString()}`,
-            }).catch(() => null);
-          },
-        };
-      })
-    : [];
+const getProjectSessions = (
+  sessions: Session[],
+  navigate: UseNavigateResult<string>,
+) => {
+  return sessions.map((session) => {
+    return {
+      key: session.id.toString(),
+      label: <SessionItem session={session} />,
+      onClick: () => {
+        navigate({
+          to: `/sessions/${session.id.toString()}`,
+        }).catch(() => null);
+      },
+    };
+  });
 };
 
 export const projectSessionSidebarItem = ({
   project,
+  sessions,
+  navigate,
 }: {
   project: Project;
+  sessions: Session[];
+  navigate: UseNavigateResult<string>;
 }): ItemType => {
   return {
     key: `project-${project.id.toString()}`,
     label: <ProjectLabel project={project} />,
-    children: getProjectSessions(project),
+    children: getProjectSessions(sessions, navigate),
   };
 };
 
 export const getProjectItems = () => {
   const { data: projects } = useGetProjects();
+  const { data: sessions } = useGetSessions();
+  const navigate = useNavigate();
 
   const projectItems: ItemType[] = projects
     ? projects
         .filter((p) => !p.defaultProject)
         .map((project) => {
-          return projectSessionSidebarItem({ project });
+          const sessionsForProject = sessions?.filter(
+            (s) => s.projectId === project.id,
+          );
+          return projectSessionSidebarItem({
+            project,
+            sessions: sessionsForProject ?? [],
+            navigate,
+          });
         })
     : [];
 

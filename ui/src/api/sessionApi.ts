@@ -39,6 +39,7 @@
 import {
   queryOptions,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -99,6 +100,13 @@ export const getSessionsQueryOptions = queryOptions({
   queryKey: [QueryKeys.getSessions],
   queryFn: async () => await getSessionsQuery(),
 });
+
+export const useGetSessions = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getSessions],
+    queryFn: async () => await getSessionsQuery(),
+  });
+};
 
 export const getSessionsQuery = async (): Promise<Session[]> => {
   return await getRequest(`${ragPath}/${paths.sessions}`);
