@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -34,48 +34,12 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
-import { Layout, Typography } from "antd";
-import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
-import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
-import "./index.css";
+ */
 
-const ProjectPage = () => {
-  const { project } = useProjectContext();
+.project-sider {
+    background-color: #fff !important;
+}
 
-  return (
-    <Layout style={{ height: "100%", width: "100%" }}>
-      <Layout.Header>
-        <Typography.Title level={2}>{project.name}</Typography.Title>
-      </Layout.Header>
-      <Layout style={{ height: "100%", width: "100%" }}>
-        <Layout.Content
-          style={{
-            height: "20vh",
-            overflowY: "auto",
-            width: "100%",
-            paddingRight: 20,
-          }}
-        >
-          <Sessions />
-        </Layout.Content>
-        <div className="project-sider">
-          <Layout.Sider
-            style={{
-              width: "30%",
-              height: "100vh",
-              overflowY: "auto",
-              padding: 20,
-            }}
-          >
-            <ProjectKnowledgeBases />
-          </Layout.Sider>
-        </div>
-      </Layout>
-      <Layout.Footer>Hello</Layout.Footer>
-    </Layout>
-  );
-};
-
-export default ProjectPage;
+.project-sider .anticon {
+    color: #000;
+}
