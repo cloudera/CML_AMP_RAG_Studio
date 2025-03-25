@@ -29,6 +29,7 @@ import { Route as LayoutProjectsLayoutProjectsProjectIdImport } from './routes/_
 import { Route as LayoutDataLayoutDatasourcesDataSourceIdImport } from './routes/_layout/data/_layout-datasources/$dataSourceId'
 import { Route as LayoutChatsLayoutChatsSessionIdImport } from './routes/_layout/chats/_layout-chats/$sessionId'
 import { Route as LayoutChatsLayoutChatsProjectsProjectIdIndexImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/index'
+import { Route as LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/index'
 import { Route as LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
 
 // Create Virtual Routes
@@ -209,6 +210,17 @@ const LayoutChatsLayoutChatsProjectsProjectIdIndexRoute =
     ).then((d) => d.Route),
   )
 
+const LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute =
+  LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexImport.update({
+    id: '/projects/$projectId/sessions/',
+    path: '/projects/$projectId/sessions/',
+    getParentRoute: () => LayoutChatsLayoutChatsRoute,
+  } as any).lazy(() =>
+    import(
+      './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/index.lazy'
+    ).then((d) => d.Route),
+  )
+
 const LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute =
   LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdImport.update({
     id: '/projects/$projectId/sessions/$sessionId',
@@ -378,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdImport
       parentRoute: typeof LayoutChatsLayoutChatsImport
     }
+    '/_layout/chats/_layout-chats/projects/$projectId/sessions/': {
+      id: '/_layout/chats/_layout-chats/projects/$projectId/sessions/'
+      path: '/projects/$projectId/sessions'
+      fullPath: '/chats/projects/$projectId/sessions'
+      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexImport
+      parentRoute: typeof LayoutChatsLayoutChatsImport
+    }
   }
 }
 
@@ -416,6 +435,7 @@ interface LayoutChatsLayoutChatsRouteChildren {
   LayoutChatsLayoutChatsIndexRoute: typeof LayoutChatsLayoutChatsIndexRoute
   LayoutChatsLayoutChatsProjectsProjectIdIndexRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
   LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
 }
 
 const LayoutChatsLayoutChatsRouteChildren: LayoutChatsLayoutChatsRouteChildren =
@@ -426,6 +446,8 @@ const LayoutChatsLayoutChatsRouteChildren: LayoutChatsLayoutChatsRouteChildren =
       LayoutChatsLayoutChatsProjectsProjectIdIndexRoute,
     LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute:
       LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute,
+    LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute:
+      LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute,
   }
 
 const LayoutChatsLayoutChatsRouteWithChildren =
@@ -570,6 +592,7 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
   '/chats/projects/$projectId': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
   '/chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  '/chats/projects/$projectId/sessions': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -585,6 +608,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
   '/chats/projects/$projectId': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
   '/chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  '/chats/projects/$projectId/sessions': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
 }
 
 export interface FileRoutesById {
@@ -611,6 +635,7 @@ export interface FileRoutesById {
   '/_layout/projects/_layout-projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
   '/_layout/chats/_layout-chats/projects/$projectId/': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
   '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  '/_layout/chats/_layout-chats/projects/$projectId/sessions/': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -633,6 +658,7 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/chats/projects/$projectId'
     | '/chats/projects/$projectId/sessions/$sessionId'
+    | '/chats/projects/$projectId/sessions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -647,6 +673,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/chats/projects/$projectId'
     | '/chats/projects/$projectId/sessions/$sessionId'
+    | '/chats/projects/$projectId/sessions'
   id:
     | '__root__'
     | '/'
@@ -671,6 +698,7 @@ export interface FileRouteTypes {
     | '/_layout/projects/_layout-projects/'
     | '/_layout/chats/_layout-chats/projects/$projectId/'
     | '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
+    | '/_layout/chats/_layout-chats/projects/$projectId/sessions/'
   fileRoutesById: FileRoutesById
 }
 
@@ -739,7 +767,8 @@ export const routeTree = rootRoute
         "/_layout/chats/_layout-chats/$sessionId",
         "/_layout/chats/_layout-chats/",
         "/_layout/chats/_layout-chats/projects/$projectId/",
-        "/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId"
+        "/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId",
+        "/_layout/chats/_layout-chats/projects/$projectId/sessions/"
       ]
     },
     "/_layout/data": {
@@ -824,6 +853,10 @@ export const routeTree = rootRoute
     },
     "/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId": {
       "filePath": "_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId.tsx",
+      "parent": "/_layout/chats/_layout-chats"
+    },
+    "/_layout/chats/_layout-chats/projects/$projectId/sessions/": {
+      "filePath": "_layout/chats/_layout-chats/projects/$projectId/sessions/index.tsx",
       "parent": "/_layout/chats/_layout-chats"
     }
   }
