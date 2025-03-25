@@ -115,12 +115,18 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     },
     ...defaultSessionItems(sessions),
   ];
+  console.log(activeSession);
 
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
         <Sider width={250} style={{ height: "88vh" }}>
           <Menu
+            defaultOpenKeys={[
+              activeSession
+                ? `project-${activeSession.projectId.toString()}`
+                : "",
+            ]}
             selectedKeys={[activeSession?.id.toString() ?? ""]}
             mode="inline"
             style={{
