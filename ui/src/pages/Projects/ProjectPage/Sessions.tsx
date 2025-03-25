@@ -40,6 +40,7 @@ import { useGetSessionsForProject } from "src/api/projectsApi.ts";
 import { Flex, Skeleton, Typography } from "antd";
 import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
+import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 
 export const Sessions = () => {
   const { project } = useProjectContext();
@@ -59,6 +60,7 @@ export const Sessions = () => {
 
   return (
     <Flex vertical gap={15}>
+      <RagChatQueryInput />
       <Typography.Title level={4} style={{ margin: 0 }}>
         Chats
       </Typography.Title>

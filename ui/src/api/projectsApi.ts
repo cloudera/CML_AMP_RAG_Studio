@@ -316,5 +316,3 @@ const removeDataSourceFromProject = async ({
     `${ragPath}/projects/${String(projectId)}/dataSources/${String(dataSourceId)}`,
   );
 };
-
-
