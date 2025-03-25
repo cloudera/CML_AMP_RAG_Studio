@@ -5,12 +5,18 @@ import {
   useCreateSessionMutation,
 } from "src/api/sessionApi";
 import messageQueue from "src/utils/messageQueue.ts";
-import { useGetDefaultProject } from "src/api/projectsApi.ts";
+import {
+  getDefaultProjectQueryOptions,
+  useGetDefaultProject,
+} from "src/api/projectsApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const useCreateSessionAndRedirect = () => {
   const navigate = useNavigate();
   const { projectId } = useParams({ strict: false });
-  const { data: defaultProject } = useGetDefaultProject();
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
 
   const { data: models } = useGetLlmModels();
   const createSession = useCreateSessionMutation({
@@ -23,7 +29,7 @@ const useCreateSessionAndRedirect = () => {
   });
 
   return (question?: string, dataSourceId?: number) => {
-    if (models && defaultProject) {
+    if (models) {
       const requestBody: CreateSessionRequest = {
         name: "",
         dataSourceIds: dataSourceId ? [dataSourceId] : [],
@@ -38,8 +44,12 @@ const useCreateSessionAndRedirect = () => {
       createSession
         .mutateAsync(requestBody)
         .then((session) => {
+          const to =
+            projectId === defaultProject.id.toString()
+              ? `/chats/${session.id.toString()}`
+              : `/chats/projects/${session.projectId.toString()}/sessions/${session.id.toString()}`;
           navigate({
-            to: `/chats/${session.id.toString()}`,
+            to,
             params: { sessionId: session.id.toString() },
             search: question ? { question: question } : undefined,
           }).catch(() => null);

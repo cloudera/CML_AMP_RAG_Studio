@@ -71,7 +71,7 @@ const getProjectSessions = (
       label: <SessionItem session={session} />,
       onClick: () => {
         navigate({
-          to: `/chats/${session.id.toString()}`,
+          to: `/chats/projects/${session.projectId.toString()}/sessions/${session.id.toString()}`,
         }).catch(() => null);
       },
     };

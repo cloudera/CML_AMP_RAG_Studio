@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -53,7 +53,7 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
     getDefaultProjectQueryOptions,
   );
   const defaultSessions = sessions.filter(
-    (session) => defaultProject?.id === session.projectId,
+    (session) => defaultProject.id === session.projectId,
   );
   const defaultSessionsByDate = groupBy(defaultSessions, (session) => {
     const relevantTime = session.lastInteractionTime || session.timeUpdated;
@@ -80,10 +80,7 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
           label: <SessionItem session={session} />,
           onClick: () => {
             navigate({
-              to:
-                session.projectId === defaultProject.id
-                  ? `/chats/${session.id.toString()}`
-                  : `/chats/projects/${session.projectId.toString()}/sessions/${session.id.toString()}`,
+              to: `/chats/${session.id.toString()}`,
             }).catch(() => null);
           },
         };
