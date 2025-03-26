@@ -114,7 +114,10 @@ const SelectKnowledgeBaseForm = ({
 
   return (
     <Form autoCorrect="off" form={form} clearOnDestroy={true}>
-      <FormItem name="dataSourceId">
+      <FormItem
+        name="dataSourceId"
+        rules={[{ required: true, message: "Please select a Knowledge Base" }]}
+      >
         <Select
           disabled={allAreLoading || allDataSources?.length === 0}
           style={{ width: 300 }}
@@ -193,7 +196,12 @@ const KnowledgeBaseCard = (props: { dataSource: DataSourceType }) => {
   const [popoverVisible, setPopoverVisible] = useState(false);
   return (
     <Card
-      title={props.dataSource.name}
+      title={
+        <Typography.Title level={5} style={{ margin: 0 }} ellipsis>
+          {props.dataSource.name}
+        </Typography.Title>
+      }
+      style={{ width: 225 }}
       extra={
         <Popover
           title={
@@ -278,7 +286,7 @@ export const ProjectKnowledgeBases = () => {
       {isLoading ? (
         <Spin />
       ) : (
-        <Flex>
+        <Flex gap={12}>
           {dataSources?.length === 0 && (
             <Typography.Text type="secondary">
               No Knowledge Bases in this Project. Click the{" "}
