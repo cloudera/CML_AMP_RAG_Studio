@@ -61,7 +61,7 @@ import {
 } from "antd";
 import FormItem from "antd/es/form/FormItem";
 import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { MinusCircleOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
 
 const SelectKnowledgeBaseForm = ({
@@ -134,6 +134,71 @@ const SelectKnowledgeBaseForm = ({
   );
 };
 
+const KnowledgeBaseCard = (props: { dataSource: DataSourceType }) => {
+  const [popoverVisible, setPopoverVisible] = useState(false);
+
+  return (
+    <Card
+      title={props.dataSource.name}
+      style={{ margin: 4 }}
+      styles={{
+        body: {
+          padding: 12,
+        },
+        header: {
+          minHeight: 40,
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingLeft: 12,
+          paddingRight: 12,
+        },
+      }}
+      extra={
+        <Popover
+          title="Remove From Project"
+          open={popoverVisible}
+          destroyTooltipOnHide={true}
+          content={
+            <Flex style={{ width: 350 }}>
+              <Typography>
+                Removing Knowledge Base from the Project will remove it from
+                associated Chats
+              </Typography>
+            </Flex>
+          }
+        >
+          <Button
+            type="text"
+            icon={<MinusCircleOutlined />}
+            onClick={() => {
+              setPopoverVisible(true);
+            }}
+          />
+        </Popover>
+      }
+    >
+      <Flex gap={8} align="baseline">
+        <Typography.Text type="secondary" style={{ fontSize: "smaller" }}>
+          Documents:
+        </Typography.Text>
+        <Typography.Text style={{ fontSize: "small" }}>
+          {props.dataSource.documentCount}
+        </Typography.Text>
+      </Flex>
+      <Flex gap={8} align="baseline">
+        <Typography.Text type="secondary" style={{ fontSize: "smaller" }}>
+          Total doc size:
+        </Typography.Text>
+        <Typography.Text style={{ fontSize: "small" }}>
+          {props.dataSource.totalDocSize
+            ? bytesConversion(props.dataSource.totalDocSize.toString())
+            : "N/A"}
+        </Typography.Text>
+      </Flex>
+    </Card>
+  );
+};
+
 export const ProjectKnowledgeBases = () => {
   const { project } = useProjectContext();
   const [popoverVisible, setPopoverVisible] = useState(false);
@@ -183,48 +248,7 @@ export const ProjectKnowledgeBases = () => {
             </Typography.Text>
           )}
           {dataSources?.map((dataSource) => (
-            <Card
-              title={dataSource.name}
-              style={{ margin: 4 }}
-              key={dataSource.id}
-              styles={{
-                body: {
-                  padding: 12,
-                },
-                header: {
-                  minHeight: 40,
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  paddingLeft: 12,
-                  paddingRight: 12,
-                },
-              }}
-            >
-              <Flex gap={8} align="baseline">
-                <Typography.Text
-                  type="secondary"
-                  style={{ fontSize: "smaller" }}
-                >
-                  Documents:
-                </Typography.Text>
-                <Typography.Text style={{ fontSize: "small" }}>
-                  {dataSource.documentCount}
-                </Typography.Text>
-              </Flex>
-              <Flex gap={8} align="baseline">
-                <Typography.Text
-                  type="secondary"
-                  style={{ fontSize: "smaller" }}
-                >
-                  Total doc size:
-                </Typography.Text>
-                <Typography.Text style={{ fontSize: "small" }}>
-                  {dataSource.totalDocSize
-                    ? bytesConversion(dataSource.totalDocSize.toString())
-                    : "N/A"}
-                </Typography.Text>
-              </Flex>
-            </Card>
+            <KnowledgeBaseCard key={dataSource.id} dataSource={dataSource} />
           ))}
         </Flex>
       )}
