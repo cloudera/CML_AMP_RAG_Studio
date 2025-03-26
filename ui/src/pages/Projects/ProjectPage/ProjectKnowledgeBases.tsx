@@ -123,14 +123,16 @@ const SelectKnowledgeBaseForm = ({
           })}
         />
       </FormItem>
-      <Button
-        type="primary"
-        style={{ marginTop: 8 }}
-        disabled={unusedDataSources?.length === 0}
-        onClick={handleAddDataSource}
-      >
-        Add
-      </Button>
+      <Flex style={{ width: "100%" }} justify="end">
+        <Button
+          type="primary"
+          style={{ marginTop: 8 }}
+          disabled={unusedDataSources?.length === 0}
+          onClick={handleAddDataSource}
+        >
+          Add
+        </Button>
+      </Flex>
     </Form>
   );
 };

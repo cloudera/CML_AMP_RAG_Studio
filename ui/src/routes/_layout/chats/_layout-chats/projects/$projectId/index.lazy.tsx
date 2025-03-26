@@ -48,7 +48,7 @@ export const Route = createLazyFileRoute(
     const { project } = Route.useLoaderData();
     return (
       <ProjectProvider project={project}>
-        <Flex style={{ margin: 0 }}>
+        <Flex style={{ margin: 0, width: "100%", height: "100%" }}>
           <ProjectPage />
         </Flex>
       </ProjectProvider>
