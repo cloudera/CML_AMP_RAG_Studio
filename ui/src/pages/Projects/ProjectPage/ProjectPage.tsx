@@ -40,6 +40,7 @@ import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowled
 import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import { ProjectOutlined } from "@ant-design/icons";
+import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 
 const ProjectPage = () => {
   const { project } = useProjectContext();
@@ -51,12 +52,18 @@ const ProjectPage = () => {
         {project.name}
       </Typography.Title>
       <Flex gap={32}>
-        <Flex flex={2} vertical>
-          <Sessions />
-        </Flex>
-        <Flex flex={1} vertical gap={16}>
-          <Card title="Settings">This is where settings goes</Card>
+        <Flex flex={2} vertical gap={32}>
+          <Card
+            title={
+              <Typography.Title level={5} style={{ margin: 0 }}>
+                Start a new chat session
+              </Typography.Title>
+            }
+          >
+            <RagChatQueryInput />
+          </Card>
           <ProjectKnowledgeBases />
+          <Sessions />
         </Flex>
       </Flex>
     </Flex>

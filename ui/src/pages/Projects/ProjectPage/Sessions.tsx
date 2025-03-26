@@ -36,10 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { Card, Flex, Skeleton, Typography } from "antd";
+import { Flex, Skeleton, Typography } from "antd";
 import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 import { useGetSessions } from "src/api/sessionApi.ts";
 
 export const Sessions = () => {
@@ -61,16 +60,7 @@ export const Sessions = () => {
   }
 
   return (
-    <Flex vertical gap={15} style={{ height: "75vh" }}>
-      <Card
-        title={
-          <Typography.Title level={5} style={{ margin: 0 }}>
-            Start a new chat session
-          </Typography.Title>
-        }
-      >
-        <RagChatQueryInput />
-      </Card>
+    <Flex vertical gap={15} style={{ height: "55vh" }}>
       <Typography.Title level={5} style={{ margin: 0 }}>
         Chats
       </Typography.Title>

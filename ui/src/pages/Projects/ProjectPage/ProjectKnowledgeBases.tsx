@@ -49,7 +49,16 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
-import { Button, Card, Form, Popover, Select, Spin, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Flex,
+  Form,
+  Popover,
+  Select,
+  Spin,
+  Typography,
+} from "antd";
 import FormItem from "antd/es/form/FormItem";
 import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
 import { PlusCircleOutlined } from "@ant-design/icons";
@@ -165,11 +174,18 @@ export const ProjectKnowledgeBases = () => {
       {isLoading ? (
         <Spin />
       ) : (
-        dataSources?.map((dataSource) => (
-          <Card style={{ margin: 8 }} key={dataSource.id}>
-            <Typography.Text>{dataSource.name}</Typography.Text>
-          </Card>
-        ))
+        <Flex>
+          {dataSources?.map((dataSource) => (
+            <Card
+              title={dataSource.name}
+              style={{ margin: 0 }}
+              key={dataSource.id}
+            >
+              <Typography.Text>Documents:</Typography.Text>
+              <Typography.Text>{dataSource.documentCount}</Typography.Text>
+            </Card>
+          ))}
+        </Flex>
       )}
     </Card>
   );
