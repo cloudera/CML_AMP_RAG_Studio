@@ -140,40 +140,32 @@ const KnowledgeBaseCard = (props: { dataSource: DataSourceType }) => {
   return (
     <Card
       title={props.dataSource.name}
-      style={{ margin: 4 }}
-      styles={{
-        body: {
-          padding: 12,
-        },
-        header: {
-          minHeight: 40,
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingLeft: 12,
-          paddingRight: 12,
-        },
-      }}
       extra={
         <Popover
-          title="Remove From Project"
+          title={
+            <Typography.Title level={5} style={{ margin: 12 }}>
+              Remove from project
+            </Typography.Title>
+          }
           open={popoverVisible}
           destroyTooltipOnHide={true}
+          onOpenChange={setPopoverVisible}
+          trigger="click"
           content={
-            <Flex style={{ width: 350 }}>
+            <Flex style={{ width: 350, padding: 12 }} vertical gap={8}>
               <Typography>
                 Removing Knowledge Base from the Project will remove it from
                 associated Chats
               </Typography>
+              <Flex justify="end">
+                <Button style={{ width: 100 }} danger>
+                  Remove
+                </Button>
+              </Flex>
             </Flex>
           }
         >
-          <Button
-            type="text"
-            icon={<MinusCircleOutlined />}
-            onClick={() => {
-              setPopoverVisible(true);
-            }}
-          />
+          <Button type="text" icon={<MinusCircleOutlined />} />
         </Popover>
       }
     >
