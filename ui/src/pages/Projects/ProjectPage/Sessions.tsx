@@ -61,14 +61,16 @@ export const Sessions = () => {
   }
 
   return (
-    <Flex vertical gap={15}>
+    <Flex vertical gap={15} style={{ height: "75vh" }}>
       <RagChatQueryInput />
       <Typography.Title level={4} style={{ margin: 0 }}>
         Chats
       </Typography.Title>
-      {sessions?.map((session) => (
-        <SessionCard session={session} key={session.id} />
-      ))}
+      <Flex vertical gap={15} style={{ height: "100%", overflowY: "auto" }}>
+        {sessions?.map((session) => (
+          <SessionCard session={session} key={session.id} />
+        ))}
+      </Flex>
     </Flex>
   );
 };

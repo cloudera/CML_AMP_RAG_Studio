@@ -35,46 +35,27 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Layout, Typography } from "antd";
+import { Card, Flex } from "antd";
+import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
 import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
-import "./index.css";
 
 const ProjectPage = () => {
   const { project } = useProjectContext();
 
   return (
-    <Layout style={{ height: "100%", width: "100%" }}>
-      <Layout.Header>
-        <Typography.Title level={2}>{project.name}</Typography.Title>
-      </Layout.Header>
-      <Layout style={{ height: "100%", width: "100%" }}>
-        <Layout.Content
-          style={{
-            height: "20vh",
-            overflowY: "auto",
-            width: "100%",
-            paddingRight: 20,
-          }}
-        >
+    <Flex style={{ padding: 40, maxWidth: 1500 }} vertical>
+      <h1>{project.name}</h1>
+      <Flex gap={32}>
+        <Flex flex={2} vertical>
           <Sessions />
-        </Layout.Content>
-        <div className="project-sider">
-          <Layout.Sider
-            style={{
-              width: "30%",
-              height: "100vh",
-              overflowY: "auto",
-              padding: 20,
-            }}
-          >
-            <ProjectKnowledgeBases />
-          </Layout.Sider>
-        </div>
-      </Layout>
-      <Layout.Footer>Hello</Layout.Footer>
-    </Layout>
+        </Flex>
+        <Flex flex={1} vertical gap={16}>
+          <Card title="Settings">This is where settings goes</Card>
+          <ProjectKnowledgeBases />
+        </Flex>
+      </Flex>
+    </Flex>
   );
 };
 
