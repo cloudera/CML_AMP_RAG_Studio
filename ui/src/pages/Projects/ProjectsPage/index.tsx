@@ -14,7 +14,7 @@ const ProjectCard = ({ project }: { project: Project }) => {
   return (
     <Card
       title={project.name}
-      style={{ width: 300 }}
+      style={{ width: 300, minWidth: 200 }}
       onClick={handleOpenProject}
       hoverable={true}
     >
@@ -35,13 +35,13 @@ const ProjectsPage = () => {
     <Flex
       vertical
       style={{
-        width: "80%",
-        maxWidth: 1000,
+        width: "100%",
+        maxWidth: 1500,
         padding: 40,
       }}
       gap={20}
     >
-      <Flex gap={24}>
+      <Flex gap={24} wrap={true}>
         {projects.data.map((project) => {
           return <ProjectCard project={project} key={project.id} />;
         })}
