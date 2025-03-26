@@ -62,6 +62,7 @@ import {
 import FormItem from "antd/es/form/FormItem";
 import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
 import { PlusCircleOutlined } from "@ant-design/icons";
+import { bytesConversion } from "src/utils/bytesConversion.ts";
 
 const SelectKnowledgeBaseForm = ({
   setPopoverVisible,
@@ -212,7 +213,9 @@ export const ProjectKnowledgeBases = () => {
                   Total doc size:
                 </Typography.Text>
                 <Typography.Text style={{ fontSize: "small" }}>
-                  {dataSource.totalDocSize ?? "N/A"}
+                  {dataSource.totalDocSize
+                    ? bytesConversion(dataSource.totalDocSize.toString())
+                    : "N/A"}
                 </Typography.Text>
               </Flex>
             </Card>

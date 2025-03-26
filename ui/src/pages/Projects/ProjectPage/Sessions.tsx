@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Skeleton, Typography } from "antd";
+import { Card, Flex, Skeleton, Typography } from "antd";
 import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import { useGetSessions } from "src/api/sessionApi.ts";
@@ -69,9 +69,17 @@ export const Sessions = () => {
         gap={15}
         style={{ height: "100%", overflowY: "auto", scrollbarWidth: "thin" }}
       >
-        {sessions?.map((session) => (
-          <SessionCard session={session} key={session.id} />
-        ))}
+        {sessions?.length ? (
+          sessions.map((session) => (
+            <SessionCard session={session} key={session.id} />
+          ))
+        ) : (
+          <Card>
+            <Typography.Text type="secondary">
+              No chats available
+            </Typography.Text>
+          </Card>
+        )}
       </Flex>
     </Flex>
   );
