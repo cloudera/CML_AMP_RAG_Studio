@@ -40,6 +40,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import {
   useAddDataSourceToProject,
   useGetDataSourcesForProject,
+  useRemoveDataSourceFromProject,
 } from "src/api/projectsApi.ts";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import {
@@ -134,9 +135,60 @@ const SelectKnowledgeBaseForm = ({
   );
 };
 
+const RemoveKnowledgeBaseConfirmation = ({
+  dataSource,
+}: {
+  dataSource: DataSourceType;
+}) => {
+  const { project } = useProjectContext();
+  const queryClient = useQueryClient();
+  const removeDataSourceFromProject = useRemoveDataSourceFromProject({
+    onError: (res: Error) => {
+      messageQueue.error(res.toString());
+    },
+    onSuccess: () => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            QueryKeys.getDataSourcesForProject,
+            { projectId: project.id },
+          ],
+        })
+        .catch(() => {
+          messageQueue.error("Error re-fetching Knowledge Bases for project");
+        });
+      messageQueue.success("Knowledge Base removed from project");
+    },
+  });
+
+  const handleRemoveKnowledgeBase = () => {
+    removeDataSourceFromProject.mutate({
+      projectId: project.id,
+      dataSourceId: dataSource.id,
+    });
+  };
+
+  return (
+    <Flex style={{ width: 350, padding: 12 }} vertical gap={8}>
+      <Typography>
+        Removing Knowledge Base from the Project will remove it from associated
+        Chats
+      </Typography>
+      <Flex justify="end">
+        <Button
+          style={{ width: 100 }}
+          danger
+          onClick={handleRemoveKnowledgeBase}
+        >
+          Remove
+        </Button>
+      </Flex>
+    </Flex>
+  );
+};
+
 const KnowledgeBaseCard = (props: { dataSource: DataSourceType }) => {
   const [popoverVisible, setPopoverVisible] = useState(false);
-
   return (
     <Card
       title={props.dataSource.name}
@@ -152,17 +204,7 @@ const KnowledgeBaseCard = (props: { dataSource: DataSourceType }) => {
           onOpenChange={setPopoverVisible}
           trigger="click"
           content={
-            <Flex style={{ width: 350, padding: 12 }} vertical gap={8}>
-              <Typography>
-                Removing Knowledge Base from the Project will remove it from
-                associated Chats
-              </Typography>
-              <Flex justify="end">
-                <Button style={{ width: 100 }} danger>
-                  Remove
-                </Button>
-              </Flex>
-            </Flex>
+            <RemoveKnowledgeBaseConfirmation dataSource={props.dataSource} />
           }
         >
           <Button type="text" icon={<MinusCircleOutlined />} />
@@ -213,6 +255,8 @@ export const ProjectKnowledgeBases = () => {
           title="Add Knowledge Base"
           open={popoverVisible && unusedDataSources?.length !== 0}
           onOpenChange={setPopoverVisible}
+          trigger="click"
+          placement="bottomRight"
           destroyTooltipOnHide={true}
           content={
             <SelectKnowledgeBaseForm
