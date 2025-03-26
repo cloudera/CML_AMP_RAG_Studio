@@ -106,7 +106,7 @@ function ChatLayout() {
           transition: "height 0.5s",
         }}
       >
-        <div style={{ paddingTop: 20 }}>
+        <div>
           <SessionSidebar sessions={sessions} />
         </div>
         <Divider

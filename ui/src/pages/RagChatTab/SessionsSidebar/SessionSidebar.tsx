@@ -103,11 +103,12 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
       type: "group",
       label: <ProjectsHeaderItem />,
     },
+    { type: "divider", key: "newChatDivider" },
     ...projectItems,
     {
       type: "group",
       label: (
-        <Flex gap={6} style={{ paddingLeft: 12, paddingTop: 8 }}>
+        <Flex gap={6} style={{ paddingLeft: 12, paddingTop: 32 }}>
           <Images.History style={{ fontSize: 18 }} />
           <Typography.Text type="secondary">Chat History</Typography.Text>
         </Flex>
@@ -119,7 +120,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
-        <Sider width={250} style={{ height: "88vh" }}>
+        <Sider width={280} style={{ height: "94vh" }}>
           <Menu
             defaultOpenKeys={[
               activeSession
@@ -134,6 +135,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
               borderRight: 0,
               overflowY: "auto",
               scrollbarWidth: "thin",
+              paddingTop: 20,
             }}
             items={items}
           />

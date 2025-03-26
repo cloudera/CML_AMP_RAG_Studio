@@ -35,17 +35,21 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Card, Flex } from "antd";
+import { Card, Flex, Typography } from "antd";
 import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
 import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
+import { ProjectOutlined } from "@ant-design/icons";
 
 const ProjectPage = () => {
   const { project } = useProjectContext();
 
   return (
-    <Flex style={{ padding: 40, maxWidth: 1500 }} vertical>
-      <h1>{project.name}</h1>
+    <Flex style={{ maxWidth: 1500 }} vertical>
+      <Typography.Title level={2}>
+        <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
+        {project.name}
+      </Typography.Title>
       <Flex gap={32}>
         <Flex flex={2} vertical>
           <Sessions />

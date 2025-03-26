@@ -55,7 +55,7 @@ const ProjectLabel = ({ project }: { project: Project }) => {
         }).catch(() => null);
       }}
     >
-      <Typography.Text>{project.name}</Typography.Text>
+      <Typography.Text strong>{project.name}</Typography.Text>
     </Flex>
   );
 };

@@ -39,6 +39,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
 import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
+import { Flex } from "antd";
 
 export const Route = createLazyFileRoute(
   "/_layout/projects/_layout-projects/$projectId",
@@ -47,7 +48,9 @@ export const Route = createLazyFileRoute(
     const { project } = Route.useLoaderData();
     return (
       <ProjectProvider project={project}>
-        <ProjectPage />
+        <Flex style={{ margin: 40 }}>
+          <ProjectPage />
+        </Flex>
       </ProjectProvider>
     );
   },
