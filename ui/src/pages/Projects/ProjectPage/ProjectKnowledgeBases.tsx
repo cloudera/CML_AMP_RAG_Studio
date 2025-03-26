@@ -178,11 +178,43 @@ export const ProjectKnowledgeBases = () => {
           {dataSources?.map((dataSource) => (
             <Card
               title={dataSource.name}
-              style={{ margin: 0 }}
+              style={{ margin: 4 }}
               key={dataSource.id}
+              styles={{
+                body: {
+                  padding: 12,
+                },
+                header: {
+                  minHeight: 40,
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                  paddingLeft: 12,
+                  paddingRight: 12,
+                },
+              }}
             >
-              <Typography.Text>Documents:</Typography.Text>
-              <Typography.Text>{dataSource.documentCount}</Typography.Text>
+              <Flex gap={8} align="baseline">
+                <Typography.Text
+                  type="secondary"
+                  style={{ fontSize: "smaller" }}
+                >
+                  Documents:
+                </Typography.Text>
+                <Typography.Text style={{ fontSize: "small" }}>
+                  {dataSource.documentCount}
+                </Typography.Text>
+              </Flex>
+              <Flex gap={8} align="baseline">
+                <Typography.Text
+                  type="secondary"
+                  style={{ fontSize: "smaller" }}
+                >
+                  Total doc size:
+                </Typography.Text>
+                <Typography.Text style={{ fontSize: "small" }}>
+                  {dataSource.totalDocSize ?? "N/A"}
+                </Typography.Text>
+              </Flex>
             </Card>
           ))}
         </Flex>
