@@ -46,7 +46,14 @@ const ProjectPage = () => {
   const { project } = useProjectContext();
 
   return (
-    <Flex style={{ maxWidth: 1500, width: "100%" }} vertical>
+    <Flex
+      style={{
+        maxWidth: 1500,
+        width: "100%",
+        height: "100%",
+      }}
+      vertical
+    >
       <Typography.Title level={2}>
         <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
         {project.name}

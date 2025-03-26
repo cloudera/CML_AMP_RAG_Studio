@@ -176,6 +176,12 @@ export const ProjectKnowledgeBases = () => {
         <Spin />
       ) : (
         <Flex>
+          {dataSources?.length === 0 && (
+            <Typography.Text type="secondary">
+              No Knowledge Bases in this Project. Click the{" "}
+              <PlusCircleOutlined /> button to add one.
+            </Typography.Text>
+          )}
           {dataSources?.map((dataSource) => (
             <Card
               title={dataSource.name}
