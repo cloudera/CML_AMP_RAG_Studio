@@ -95,7 +95,8 @@ export const projectSessionSidebarItem = ({
   return {
     key: `project-${project.id.toString()}`,
     label: <ProjectLabel project={project} />,
-    children: getProjectSessions(sessions, navigate),
+    children:
+      sessions.length > 0 ? getProjectSessions(sessions, navigate) : undefined,
   };
 };
 
