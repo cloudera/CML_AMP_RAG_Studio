@@ -50,7 +50,7 @@ import { QueryKeys } from "src/api/utils.ts";
 import { Flex, Menu, Modal, Popover, Tooltip, Typography } from "antd";
 import { cdlWhite } from "src/cuix/variables.ts";
 import { ClearOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useState, MouseEvent } from "react";
 
 const SessionItem = ({ session }: { session: Session }) => {
   const { sessionId: routeSessionId, projectId: routeProjectId } = useParams({
@@ -98,11 +98,13 @@ const SessionItem = ({ session }: { session: Session }) => {
     },
   });
 
-  const handleDeleteChatHistory = () => {
+  const handleDeleteChatHistory = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     deleteChatHistoryMutate(session.id.toString());
   };
 
-  const handleDeleteSession = () => {
+  const handleDeleteSession = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     deleteSessionMutate(session.id.toString());
   };
 
@@ -166,7 +168,9 @@ const SessionItem = ({ session }: { session: Session }) => {
       <Modal
         title="Clear chat history?"
         open={deleteChatHistoryModal.isModalOpen}
-        onOk={handleDeleteChatHistory}
+        onOk={(event) => {
+          handleDeleteChatHistory(event);
+        }}
         okText={"Yes, clear it!"}
         okButtonProps={{
           danger: true,
@@ -176,7 +180,9 @@ const SessionItem = ({ session }: { session: Session }) => {
       <Modal
         title="Delete session?"
         open={deleteSessionModal.isModalOpen}
-        onOk={handleDeleteSession}
+        onOk={(event) => {
+          handleDeleteSession(event);
+        }}
         okText={"Yes, delete it!"}
         okButtonProps={{
           danger: true,
