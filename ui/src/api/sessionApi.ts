@@ -214,7 +214,11 @@ export const useDeleteSessionMutation = ({
   return useMutation({
     mutationKey: [MutationKeys.deleteSession],
     mutationFn: deleteSessionMutation,
-    onSuccess,
+    onSuccess: (data, variables) => {
+      if (onSuccess) {
+        onSuccess(data, variables);
+      }
+    },
     onError,
   });
 };

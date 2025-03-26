@@ -103,7 +103,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
       type: "group",
       label: <ProjectsHeaderItem />,
     },
-    { type: "divider", key: "newChatDivider" },
+    { type: "divider", key: "projectHeaderDivider" },
     ...projectItems,
     {
       type: "group",

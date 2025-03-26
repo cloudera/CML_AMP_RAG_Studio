@@ -43,7 +43,7 @@ import {
 } from "src/api/sessionApi.ts";
 import useModal from "src/utils/useModal.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { chatHistoryQueryKey } from "src/api/chatApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
@@ -53,6 +53,9 @@ import { ClearOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 const SessionItem = ({ session }: { session: Session }) => {
+  const { sessionId: routeSessionId, projectId: routeProjectId } = useParams({
+    strict: false,
+  });
   const deleteChatHistoryModal = useModal();
   const deleteSessionModal = useModal();
   const queryClient = useQueryClient();
@@ -71,15 +74,24 @@ const SessionItem = ({ session }: { session: Session }) => {
     },
   });
   const { mutate: deleteSessionMutate } = useDeleteSessionMutation({
-    onSuccess: () => {
+    onSuccess: (_, variables: unknown) => {
       void queryClient.invalidateQueries({
         queryKey: [QueryKeys.getSessions],
       });
+      const deletedSessionId = variables as string;
       deleteSessionModal.setIsModalOpen(false);
       messageQueue.success("Session deleted successfully");
-      return navigate({
-        to: "/chats",
-      });
+      if (deletedSessionId === routeSessionId) {
+        if (session.projectId.toString() === routeProjectId) {
+          return navigate({
+            to: "/chats/projects/$projectId",
+            params: { projectId: routeProjectId },
+          });
+        }
+        return navigate({
+          to: "/chats",
+        });
+      }
     },
     onError: () => {
       messageQueue.error("Failed to delete session");
