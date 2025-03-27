@@ -42,6 +42,7 @@ import { EditOutlined, ProjectOutlined } from "@ant-design/icons";
 import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
 import { useUpdateProject } from "src/api/projectsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
+import { useState } from "react";
 
 export const ProjectTitleBar = () => {
   const { project } = useProjectContext();
@@ -53,9 +54,9 @@ export const ProjectTitleBar = () => {
       messageQueue.error("Failed to update project name");
     },
   });
+  const [editing, setEditing] = useState(false);
 
   const handleEditProjectName = (updatedName: string) => {
-    console.log(updatedName);
     if (updatedName.length > 0 && updatedName !== project.name) {
       editProject.mutate({
         ...project,
@@ -71,12 +72,26 @@ export const ProjectTitleBar = () => {
           <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
         </Typography.Title>
         <Typography.Title
-          level={2}
+          level={editing ? 3 : 2}
+          style={editing ? { marginLeft: 12, fontSize: 16, lineHeight: 1 } : {}}
           editable={{
+            onStart: () => {
+              setEditing(true);
+            },
+            onEnd: () => {
+              setEditing(false);
+            },
+            onCancel: () => {
+              setEditing(false);
+            },
             icon: <EditOutlined />,
             tooltip: "Click to edit project name",
             onChange: (updatedName) => {
               handleEditProjectName(updatedName);
+            },
+            autoSize: {
+              minRows: 1,
+              maxRows: 1,
             },
           }}
         >
