@@ -40,11 +40,8 @@ package com.cloudera.cai.rag;
 
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileRepository;
-import com.cloudera.cai.rag.util.UsernameExtractorTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.Instant;
 import java.util.List;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 public class TestData {
@@ -141,10 +138,11 @@ public class TestData {
     return ragFileRepository.insertDocumentMetadata(ragDocument);
   }
 
-  public static void addUserToRequest(MockHttpServletRequest request)
-      throws JsonProcessingException {
-    request.addHeader("remote-user", "test-user");
-    request.setCookies(
-        new MockCookie("_basusertoken", UsernameExtractorTest.encodeCookie("test-user")));
+  public static void addUserToRequest(MockHttpServletRequest request) {
+    addUserToRequest(request, "test-user");
+  }
+
+  public static void addUserToRequest(MockHttpServletRequest request, String username) {
+    request.addHeader("remote-user", username);
   }
 }

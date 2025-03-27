@@ -189,12 +189,20 @@ class ProjectControllerTest {
     TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
+    // Create a new Project from a different user
+    Types.CreateProject createDiffUserProject =
+        TestData.createProjectRequest("diff-user-test-project");
+    var request2 = new MockHttpServletRequest();
+    TestData.addUserToRequest(request2, "diff-user");
+    var diffUserProject = controller.create(createDiffUserProject, request2);
+
     // Get user's projects
     List<Project> results = controller.getProjects(request);
 
     assertThat(results)
         .filteredOn(project -> project.id().equals(newProject.id()))
-        .contains(newProject);
+        .contains(newProject)
+        .doesNotContain(diffUserProject);
   }
 
   @Test
