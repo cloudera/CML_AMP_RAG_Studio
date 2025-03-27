@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { Flex, Typography } from "antd";
+import { Button, Flex, Input, Typography } from "antd";
 import { EditOutlined, ProjectOutlined } from "@ant-design/icons";
 import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
 import { useUpdateProject } from "src/api/projectsApi.ts";
@@ -49,18 +49,21 @@ export const ProjectTitleBar = () => {
   const editProject = useUpdateProject({
     onSuccess: () => {
       messageQueue.success("Project name updated");
+      setEditing(false);
     },
     onError: () => {
       messageQueue.error("Failed to update project name");
+      setEditing(false);
     },
   });
   const [editing, setEditing] = useState(false);
+  const [newName, setNewName] = useState(project.name);
 
-  const handleEditProjectName = (updatedName: string) => {
-    if (updatedName.length > 0 && updatedName !== project.name) {
+  const handleEditProjectName = () => {
+    if (newName.length > 0 && newName !== project.name) {
       editProject.mutate({
         ...project,
-        name: updatedName,
+        name: newName,
       });
     }
   };
@@ -71,32 +74,41 @@ export const ProjectTitleBar = () => {
         <Typography.Title level={2}>
           <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
         </Typography.Title>
-        <Typography.Title
-          level={editing ? 3 : 2}
-          style={editing ? { marginLeft: 12, fontSize: 16, lineHeight: 1 } : {}}
-          editable={{
-            onStart: () => {
-              setEditing(true);
-            },
-            onEnd: () => {
+        {editing ? (
+          <Input
+            onChange={(e) => {
+              setNewName(e.target.value);
+            }}
+            onPressEnter={() => {
+              handleEditProjectName();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setEditing(false);
+              }
+            }}
+            value={newName}
+            style={{
+              fontSize: 16,
+            }}
+            onBlur={() => {
               setEditing(false);
-            },
-            onCancel: () => {
-              setEditing(false);
-            },
-            icon: <EditOutlined />,
-            tooltip: "Click to edit project name",
-            onChange: (updatedName) => {
-              handleEditProjectName(updatedName);
-            },
-            autoSize: {
-              minRows: 1,
-              maxRows: 1,
-            },
-          }}
-        >
-          {project.name}
-        </Typography.Title>
+            }}
+            autoFocus={true}
+          />
+        ) : (
+          <>
+            <Typography.Title level={2}>{project.name}</Typography.Title>
+            <Button
+              type="text"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setEditing(true);
+              }}
+            />
+          </>
+        )}
       </Flex>
       <DeleteProjectButton project={project} />
     </Flex>
