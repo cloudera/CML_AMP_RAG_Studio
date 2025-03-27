@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
 import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
 import { Flex } from "antd";
@@ -52,6 +52,9 @@ export const Route = createLazyFileRoute(
     const project = projects.find((p) => {
       return p.id === +projectId;
     });
+    if (!project) {
+      throw notFound();
+    }
     return (
       <ProjectProvider project={project}>
         <Flex style={{ margin: 40 }}>
