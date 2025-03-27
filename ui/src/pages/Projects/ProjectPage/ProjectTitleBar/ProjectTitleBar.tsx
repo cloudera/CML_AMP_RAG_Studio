@@ -35,40 +35,55 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Card, Flex, Typography } from "antd";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
-import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
-import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import { ProjectTitleBar } from "pages/Projects/ProjectPage/ProjectTitleBar/ProjectTitleBar.tsx";
 
-const ProjectPage = () => {
+import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
+import { Flex, Typography } from "antd";
+import { EditOutlined, ProjectOutlined } from "@ant-design/icons";
+import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
+import { useUpdateProject } from "src/api/projectsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+
+export const ProjectTitleBar = () => {
+  const { project } = useProjectContext();
+  const editProject = useUpdateProject({
+    onSuccess: () => {
+      messageQueue.success("Project name updated");
+    },
+    onError: () => {
+      messageQueue.error("Failed to update project name");
+    },
+  });
+
+  const handleEditProjectName = (updatedName: string) => {
+    console.log(updatedName);
+    if (updatedName.length > 0 && updatedName !== project.name) {
+      editProject.mutate({
+        ...project,
+        name: updatedName,
+      });
+    }
+  };
+
   return (
-    <Flex
-      style={{
-        maxWidth: 1500,
-        width: "100%",
-        height: "100%",
-      }}
-      vertical
-    >
-      <ProjectTitleBar />
-      <Flex gap={32}>
-        <Flex flex={2} vertical gap={32}>
-          <Card
-            title={
-              <Typography.Title level={5} style={{ margin: 0 }}>
-                Start a new chat session
-              </Typography.Title>
-            }
-          >
-            <RagChatQueryInput />
-          </Card>
-          <ProjectKnowledgeBases />
-          <Sessions />
-        </Flex>
+    <Flex justify="space-between" align="baseline">
+      <Flex align="baseline">
+        <Typography.Title level={2}>
+          <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
+        </Typography.Title>
+        <Typography.Title
+          level={2}
+          editable={{
+            icon: <EditOutlined />,
+            tooltip: "Click to edit project name",
+            onChange: (updatedName) => {
+              handleEditProjectName(updatedName);
+            },
+          }}
+        >
+          {project.name}
+        </Typography.Title>
       </Flex>
+      <DeleteProjectButton project={project} />
     </Flex>
   );
 };
-
-export default ProjectPage;
