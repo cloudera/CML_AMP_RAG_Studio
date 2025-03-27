@@ -115,17 +115,18 @@ public class ProjectRepository {
         });
   }
 
-  public List<Project> getProjects() {
-    log.info("Getting all Projects");
+  public List<Project> getProjects(String username) {
     return jdbi.withHandle(
         handle -> {
           var sql =
               """
               SELECT *
                 FROM project
+                WHERE created_by_id = :createdById
               """;
           handle.registerRowMapper(ConstructorMapper.factory(Project.class));
           try (Query query = handle.createQuery(sql)) {
+            query.bind("createdById", username);
             return query.mapTo(Project.class).list();
           }
         });

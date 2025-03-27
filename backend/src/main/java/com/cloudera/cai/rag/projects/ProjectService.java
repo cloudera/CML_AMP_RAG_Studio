@@ -89,8 +89,8 @@ public class ProjectService {
         });
   }
 
-  public List<Project> getProjects() {
-    return projectRepository.getProjects();
+  public List<Project> getProjects(String username) {
+    return projectRepository.getProjects(username);
   }
 
   public Project getProjectById(Long id) {

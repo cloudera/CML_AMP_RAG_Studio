@@ -189,9 +189,8 @@ class ProjectControllerTest {
     TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
-    // Get all projects
-    TestData.addUserToRequest(request);
-    List<Project> results = controller.getProjects();
+    // Get user's projects
+    List<Project> results = controller.getProjects(request);
 
     assertThat(results)
         .filteredOn(project -> project.id().equals(newProject.id()))
@@ -202,21 +201,19 @@ class ProjectControllerTest {
   void getDefaultProject() throws Exception {
     ProjectController controller = createController();
 
-    // Get all projects and update any existing default projects to set
+    // Get user's projects and update any existing default projects to set
     // defaultProject = false
-    List<Project> existingProjects = controller.getProjects();
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    List<Project> existingProjects = controller.getProjects(request);
     for (Project project : existingProjects) {
       if (Boolean.TRUE.equals(project.defaultProject())) {
-        var request = new MockHttpServletRequest();
-        TestData.addUserToRequest(request);
         controller.update(project.id(), project.withDefaultProject(false), request);
       }
     }
 
     // Create a project and then update it to be the default
     Types.CreateProject createProject = TestData.createProjectRequest("default-project");
-    var request = new MockHttpServletRequest();
-    TestData.addUserToRequest(request);
     var newProject = controller.create(createProject, request);
 
     // Update the project to be the default
