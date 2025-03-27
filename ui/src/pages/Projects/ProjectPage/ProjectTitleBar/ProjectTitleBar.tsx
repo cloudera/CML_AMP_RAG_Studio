@@ -42,7 +42,7 @@ import { EditOutlined, ProjectOutlined } from "@ant-design/icons";
 import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
 import { useUpdateProject } from "src/api/projectsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const ProjectTitleBar = () => {
   const { project } = useProjectContext();
@@ -58,6 +58,10 @@ export const ProjectTitleBar = () => {
   });
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState(project.name);
+
+  useEffect(() => {
+    setNewName(project.name);
+  }, [project.name]);
 
   const handleEditProjectName = () => {
     if (newName.length > 0 && newName !== project.name) {
@@ -89,7 +93,9 @@ export const ProjectTitleBar = () => {
             }}
             value={newName}
             style={{
-              fontSize: 32,
+              fontSize: 30,
+              fontWeight: 600,
+              width: 500,
             }}
             onBlur={() => {
               setEditing(false);
