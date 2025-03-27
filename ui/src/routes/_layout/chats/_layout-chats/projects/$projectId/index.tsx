@@ -37,14 +37,11 @@
  ******************************************************************************/
 
 import { createFileRoute } from "@tanstack/react-router";
-import { getProjects } from "src/api/projectsApi.ts";
+import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
 
 export const Route = createFileRoute(
   "/_layout/chats/_layout-chats/projects/$projectId/",
 )({
-  loader: async ({ params: { projectId } }) => {
-    const projects = await getProjects();
-    const project = projects.find((p) => p.id === +projectId);
-    return { project };
-  },
+  loader: async ({ context }) =>
+    await context.queryClient.ensureQueryData(getProjectsQueryOptions),
 });

@@ -36,16 +36,32 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute, notFound } from "@tanstack/react-router";
 import { Flex } from "antd";
 import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
 import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
+import { NotFoundComponent } from "src/main.tsx";
 
 export const Route = createLazyFileRoute(
   "/_layout/chats/_layout-chats/projects/$projectId/",
 )({
+  notFoundComponent: () => <NotFoundComponent />,
   component: () => {
-    const { project } = Route.useLoaderData();
+    const { projectId } = Route.useParams();
+    const { data: projects } = useSuspenseQuery(getProjectsQueryOptions);
+    const project = projects.find((p) => {
+      return p.id === +projectId;
+    });
+
+    if (!project) {
+      return notFound({
+        throw: true,
+        routeId: "/_layout/projects/_layout-projects/$projectId",
+      });
+    }
+
     return (
       <ProjectProvider project={project}>
         <Flex style={{ margin: 0, width: "100%", height: "100%" }}>

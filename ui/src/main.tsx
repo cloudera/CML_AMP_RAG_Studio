@@ -65,39 +65,41 @@ const queryClient = new QueryClient({
   },
 });
 
+export const NotFoundComponent = () => {
+  const navigate = useNavigate();
+  return (
+    <Flex align="center" justify="center" style={{ height: "100vh" }}>
+      <Result
+        icon={
+          <img
+            src={Images.image404}
+            alt="Page not found"
+            height={300}
+            style={{ borderRadius: 20 }}
+          />
+        }
+        title="404"
+        subTitle="Sorry, the page you visited does not exist."
+        extra={
+          <Button
+            type="primary"
+            onClick={() => {
+              navigate({ to: "/" }).catch(() => null);
+            }}
+          >
+            Back Home
+          </Button>
+        }
+      />
+    </Flex>
+  );
+};
+
 const router = createRouter({
   routeTree,
   context: { queryClient: queryClient },
   defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
-  defaultNotFoundComponent: () => {
-    const navigate = useNavigate();
-    return (
-      <Flex align="center" justify="center" style={{ height: "100vh" }}>
-        <Result
-          icon={
-            <img
-              src={Images.image404}
-              alt="Page not found"
-              height={300}
-              style={{ borderRadius: 20 }}
-            />
-          }
-          title="404"
-          subTitle="Sorry, the page you visited does not exist."
-          extra={
-            <Button
-              type="primary"
-              onClick={() => {
-                navigate({ to: "/" }).catch(() => null);
-              }}
-            >
-              Back Home
-            </Button>
-          }
-        />
-      </Flex>
-    );
-  },
+  defaultNotFoundComponent: () => <NotFoundComponent />,
   defaultPendingComponent: () => (
     <Flex
       align="center"
