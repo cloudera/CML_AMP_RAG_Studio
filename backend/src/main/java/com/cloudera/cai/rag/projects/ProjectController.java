@@ -76,7 +76,7 @@ public class ProjectController {
   @PostMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
   public Types.Project update(
       @PathVariable Long id, @RequestBody Types.Project input, HttpServletRequest request) {
-    log.debug("Updating Project: {}", input);
+    log.info("Updating Project: {}", input);
     if (input.name() == null || input.name().isEmpty()) {
       throw new BadRequest("name must be a non-empty string");
     }

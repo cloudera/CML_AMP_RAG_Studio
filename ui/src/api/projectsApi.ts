@@ -35,7 +35,12 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   ApiError,
   CustomError,
@@ -153,11 +158,29 @@ export const useUpdateProject = ({
   onSuccess,
   onError,
 }: UseMutationType<Project>) => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: [MutationKeys.updateProject],
     mutationFn: updateProject,
     onError,
-    onSuccess,
+    onSuccess: (data) => {
+      queryClient.setQueryData(
+        [QueryKeys.getProjects],
+        (oldData: Project[]) => {
+          const index = oldData.findIndex((item) => item.id === data.id);
+          if (index !== -1) {
+            const updatedData = [...oldData];
+            updatedData[index] = data;
+            return updatedData;
+          }
+          return [...oldData, data];
+        },
+      );
+      if (onSuccess) {
+        onSuccess(data);
+      }
+    },
   });
 };
 
@@ -165,9 +188,10 @@ const updateProject = async (project: Project): Promise<Project> => {
   if (!project.id) {
     throw new Error("Project ID is required for update");
   }
-  return await postRequest(`${ragPath}/projects/${String(project.id)}`, {
-    body: JSON.stringify(project),
-  });
+  return await postRequest(
+    `${ragPath}/projects/${String(project.id)}`,
+    project,
+  );
 };
 
 export const useDeleteProject = ({
