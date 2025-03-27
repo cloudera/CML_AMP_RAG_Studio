@@ -190,6 +190,7 @@ class ProjectControllerTest {
     var newProject = controller.create(createProject, request);
 
     // Get all projects
+    TestData.addUserToRequest(request);
     List<Project> results = controller.getProjects();
 
     assertThat(results)

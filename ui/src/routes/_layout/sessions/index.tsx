@@ -36,8 +36,8 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
-export const Route = createFileRoute("/_layout/sessions")({
-  loader: () => redirect({ to: "/chats" }),
-});
+export const Route = createFileRoute('/_layout/sessions/')({
+  loader: () => redirect({ to: '/chats' }),
+})
