@@ -149,7 +149,6 @@ const createProject = async (input: CreateProject): Promise<Project> => {
   return await postRequest(`${ragPath}/projects`, input);
 };
 
-// Update project
 export const useUpdateProject = ({
   onSuccess,
   onError,
@@ -166,23 +165,11 @@ const updateProject = async (project: Project): Promise<Project> => {
   if (!project.id) {
     throw new Error("Project ID is required for update");
   }
-  return await fetch(`${ragPath}/projects/${String(project.id)}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+  return await postRequest(`${ragPath}/projects/${String(project.id)}`, {
     body: JSON.stringify(project),
-  }).then(async (res) => {
-    if (!res.ok) {
-      const detail = (await res.json()) as CustomError;
-      throw new ApiError(detail.message ?? detail.detail, res.status);
-    }
-    return (await res.json()) as Project;
   });
 };
 
-// Delete project
 export const useDeleteProject = ({
   onSuccess,
   onError,

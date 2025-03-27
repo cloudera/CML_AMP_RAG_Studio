@@ -35,12 +35,87 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Card, Flex, Typography } from "antd";
+import { Button, Card, Flex, Input, Modal, Typography } from "antd";
 import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
 import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import { ProjectOutlined } from "@ant-design/icons";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
+import { cdlRed600 } from "src/cuix/variables.ts";
+import DeleteIcon from "src/cuix/icons/DeleteIcon.ts";
+import useModal from "src/utils/useModal.ts";
+import { Project, useDeleteProject } from "src/api/projectsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useState } from "react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+
+const DeleteProjectButton = ({ project }: { project: Project }) => {
+  const location = useLocation();
+  const deleteProjectModal = useModal();
+  const [confirmationText, setConfirmationText] = useState("");
+  const navigate = useNavigate();
+  const { mutate: deleteProjectMutate } = useDeleteProject({
+    onSuccess: () => {
+      messageQueue.success("Project deleted successfully");
+      if (location.pathname.includes("/chats/")) {
+        return navigate({
+          to: "/chats",
+        });
+      }
+      return navigate({
+        to: "/projects",
+      });
+    },
+    onError: (res: Error) => {
+      messageQueue.error("Failed to delete project : " + res.message);
+    },
+  });
+
+  const deleteProject = () => {
+    deleteProjectMutate(project.id);
+  };
+
+  const handleConfirmationText = (text: string) => {
+    setConfirmationText(text);
+  };
+
+  return (
+    <>
+      <Button
+        icon={<DeleteIcon style={{ width: 18, height: 22 }} />}
+        type="text"
+        style={{ color: cdlRed600 }}
+        onClick={() => {
+          deleteProjectModal.setIsModalOpen(true);
+        }}
+      />
+      <Modal
+        title="Delete this Project?"
+        open={deleteProjectModal.isModalOpen}
+        onOk={deleteProject}
+        okText={"Yes, delete it!"}
+        okButtonProps={{
+          danger: true,
+          disabled: confirmationText !== "delete",
+        }}
+        onCancel={() => {
+          deleteProjectModal.setIsModalOpen(false);
+        }}
+      >
+        <Typography>
+          Deleting a Project is permanent and cannot be undone
+        </Typography>
+        <Input
+          style={{ marginTop: 15 }}
+          placeholder='type "delete" to confirm'
+          onChange={(e) => {
+            handleConfirmationText(e.target.value);
+          }}
+        />
+      </Modal>
+    </>
+  );
+};
 
 const ProjectPage = () => {
   const { project } = useProjectContext();
@@ -54,10 +129,13 @@ const ProjectPage = () => {
       }}
       vertical
     >
-      <Typography.Title level={2}>
-        <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
-        {project.name}
-      </Typography.Title>
+      <Flex justify="space-between" align="baseline">
+        <Typography.Title level={2}>
+          <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
+          {project.name}
+        </Typography.Title>
+        <DeleteProjectButton project={project} />
+      </Flex>
       <Flex gap={32}>
         <Flex flex={2} vertical gap={32}>
           <Card
