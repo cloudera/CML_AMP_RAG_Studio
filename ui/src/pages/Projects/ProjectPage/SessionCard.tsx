@@ -36,14 +36,69 @@
  * DATA.
  ******************************************************************************/
 
-import { Session } from "src/api/sessionApi.ts";
+import { Session, useDeleteSessionMutation } from "src/api/sessionApi.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
-import { Button, Card, Flex, Typography } from "antd";
+import { Button, Card, Flex, Modal, Typography } from "antd";
 import { format } from "date-fns";
-import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
 import DeleteIcon from "src/cuix/icons/DeleteIcon.ts";
 import { cdlRed600 } from "src/cuix/variables.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import useModal from "src/utils/useModal.ts";
+import { useQueryClient } from "@tanstack/react-query";
+
+const DeleteSession = ({ session }: { session: Session }) => {
+  const deleteSessionModal = useModal();
+  const queryClient = useQueryClient();
+  const { mutate: deleteSessionMutate } = useDeleteSessionMutation({
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [QueryKeys.getSessions],
+      });
+      deleteSessionModal.setIsModalOpen(false);
+      messageQueue.success("Session deleted successfully");
+    },
+    onError: () => {
+      messageQueue.error("Failed to delete session");
+    },
+  });
+
+  const handleDeleteSession = () => {
+    deleteSessionMutate(session.id.toString());
+  };
+
+  return (
+    <div
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+    >
+      <Button
+        type="text"
+        style={{ color: cdlRed600 }}
+        icon={<DeleteIcon style={{ width: 16, height: 20 }} />}
+        onClick={() => {
+          deleteSessionModal.setIsModalOpen(true);
+        }}
+      />
+      <Modal
+        title="Delete session?"
+        open={deleteSessionModal.isModalOpen}
+        onOk={() => {
+          handleDeleteSession();
+        }}
+        okText={"Yes, delete it!"}
+        okButtonProps={{
+          danger: true,
+        }}
+        onCancel={() => {
+          deleteSessionModal.handleCancel();
+        }}
+      />
+    </div>
+  );
+};
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -66,13 +121,7 @@ const SessionCard = ({ session }: { session: Session }) => {
   return (
     <Card
       title={session.name}
-      extra={
-        <Button
-          type="text"
-          style={{ color: cdlRed600 }}
-          icon={<DeleteIcon style={{ width: 18, height: 22 }} />}
-        />
-      }
+      extra={<DeleteSession session={session} />}
       hoverable={true}
       onClick={handleNavOnClick}
     >
