@@ -37,13 +37,14 @@
  ******************************************************************************/
 
 import { createFileRoute } from "@tanstack/react-router";
-import { getProjectById } from "src/api/projectsApi.ts";
+import { getProjects } from "src/api/projectsApi.ts";
 
 export const Route = createFileRoute(
   "/_layout/projects/_layout-projects/$projectId",
 )({
   loader: async ({ params: { projectId } }) => {
-    const project = await getProjectById(+projectId);
+    const projects = await getProjects();
+    const project = projects.find((p) => p.id === +projectId);
     return { project };
   },
 });

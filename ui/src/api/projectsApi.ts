@@ -86,34 +86,8 @@ export const getProjectsQueryOptions = queryOptions({
   },
 });
 
-const getProjects = async (): Promise<Project[]> => {
+export const getProjects = async (): Promise<Project[]> => {
   return await getRequest(`${ragPath}/projects`);
-};
-
-// Get project by ID
-export const useGetProjectById = (projectId?: number) => {
-  return useQuery({
-    queryKey: [QueryKeys.getProjectById, { projectId }],
-    queryFn: async () => {
-      if (!projectId) {
-        return undefined;
-      }
-      return await getProjectById(projectId);
-    },
-    enabled: !!projectId,
-  });
-};
-
-export const getProjectByIdQueryOptions = (projectId: number) =>
-  queryOptions({
-    queryKey: [QueryKeys.getProjectById, { projectId }],
-    queryFn: async () => {
-      return await getProjectById(projectId);
-    },
-  });
-
-export const getProjectById = async (projectId: number): Promise<Project> => {
-  return await getRequest(`${ragPath}/projects/${String(projectId)}`);
 };
 
 // Get default project
