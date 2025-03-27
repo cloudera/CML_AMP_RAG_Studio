@@ -40,12 +40,18 @@ import { createLazyFileRoute } from "@tanstack/react-router";
 import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
 import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
 import { Flex } from "antd";
+import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const Route = createLazyFileRoute(
   "/_layout/projects/_layout-projects/$projectId",
 )({
   component: () => {
-    const { project } = Route.useLoaderData();
+    const { projectId } = Route.useParams();
+    const { data: projects } = useSuspenseQuery(getProjectsQueryOptions);
+    const project = projects.find((p) => {
+      return p.id === +projectId;
+    });
     return (
       <ProjectProvider project={project}>
         <Flex style={{ margin: 40 }}>
