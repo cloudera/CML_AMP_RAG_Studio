@@ -70,7 +70,7 @@ export const ProjectTitleBar = () => {
 
   return (
     <Flex justify="space-between" align="baseline">
-      <Flex align="baseline">
+      <Flex align="baseline" style={{ height: 80 }}>
         <Typography.Title level={2}>
           <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
         </Typography.Title>
@@ -89,7 +89,7 @@ export const ProjectTitleBar = () => {
             }}
             value={newName}
             style={{
-              fontSize: 16,
+              fontSize: 32,
             }}
             onBlur={() => {
               setEditing(false);
@@ -98,7 +98,9 @@ export const ProjectTitleBar = () => {
           />
         ) : (
           <>
-            <Typography.Title level={2}>{project.name}</Typography.Title>
+            <Typography.Title level={2} style={{ margin: 0 }}>
+              {project.name}
+            </Typography.Title>
             <Button
               type="text"
               size="small"
