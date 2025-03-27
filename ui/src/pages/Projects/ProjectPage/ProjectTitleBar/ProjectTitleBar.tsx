@@ -61,7 +61,7 @@ export const ProjectTitleBar = () => {
 
   useEffect(() => {
     setNewName(project.name);
-  }, [project.name]);
+  }, [project.name, editing]);
 
   const handleEditProjectName = () => {
     if (newName.length > 0 && newName !== project.name) {
