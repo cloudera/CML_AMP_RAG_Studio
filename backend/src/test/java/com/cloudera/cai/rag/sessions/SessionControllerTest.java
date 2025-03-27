@@ -43,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
+import com.cloudera.cai.rag.util.UsernameExtractorTest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
@@ -56,8 +56,7 @@ class SessionControllerTest {
   void create() throws JsonProcessingException {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var sessionName = "test";
     Types.CreateSession input = TestData.createSessionInstance(sessionName);
     Types.Session result = sessionController.create(input, request);
@@ -79,8 +78,7 @@ class SessionControllerTest {
   void create_noDataSource() throws JsonProcessingException {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var sessionName = "test";
     Types.CreateSession input = TestData.createSessionInstance(sessionName, List.of(), 1L);
     Types.Session result = sessionController.create(input, request);
@@ -112,8 +110,7 @@ class SessionControllerTest {
   void update() throws JsonProcessingException {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var sessionName = "test";
     var input = TestData.createSessionInstance(sessionName);
     Types.Session insertedSession = sessionController.create(input, request);
@@ -124,9 +121,7 @@ class SessionControllerTest {
     var updatedRerankModel = "new-rerank-model";
 
     request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie(
-            "_basusertoken", UserTokenCookieDecoderTest.encodeCookie("update-test-user")));
+    request.addHeader("remote-user", "update-test-user");
 
     var updatedSession =
         sessionController.update(
@@ -158,7 +153,7 @@ class SessionControllerTest {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
     request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+        new MockCookie("_basusertoken", UsernameExtractorTest.encodeCookie("test-user")));
     var sessionName = "test";
     Types.CreateSession input =
         TestData.createSessionInstance(sessionName).withQueryConfiguration(null);

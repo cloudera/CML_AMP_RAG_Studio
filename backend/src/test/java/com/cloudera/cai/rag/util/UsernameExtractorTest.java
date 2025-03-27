@@ -42,50 +42,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockCookie;
+import org.springframework.mock.web.MockHttpServletRequest;
 
-public class UserTokenCookieDecoderTest {
+public class UsernameExtractorTest {
   public static String encodeCookie(String userName) throws JsonProcessingException {
     return "xyz."
         + Base64.getEncoder()
             .encodeToString(
                 new ObjectMapper()
-                    .writeValueAsString(new UserTokenCookieDecoder.JwtCookie(userName))
+                    .writeValueAsString(new UsernameExtractor.JwtCookie(userName))
                     .getBytes())
         + ".abc";
   }
 
   @Test
   void decode() throws Exception {
-    var cookie = encodeCookie("johnson");
-    var extractedUsername =
-        new UserTokenCookieDecoder()
-            .extractUsername(new Cookie[] {new MockCookie("_basusertoken", cookie)});
-    assertThat(extractedUsername).isEqualTo("johnson");
+    String userName = "johnson";
+    var extractedUsername = new UsernameExtractor().extractUsername(request(userName));
+    assertThat(extractedUsername).isEqualTo(userName);
   }
 
+  private HttpServletRequest request(String userName) throws JsonProcessingException {
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    if (userName != null) {
+      request.addHeader("remote-user", userName);
+    }
+    return request;
+  }
+  ;
+
   @Test
-  void decode_noCookies() {
-    var extractedUsername = new UserTokenCookieDecoder().extractUsername(new Cookie[] {});
+  void decode_noCookies() throws JsonProcessingException {
+    var extractedUsername = new UsernameExtractor().extractUsername(request(null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }
 
   @Test
-  void decode_badCookie() {
-    var extractedUsername =
-        new UserTokenCookieDecoder()
-            .extractUsername(new Cookie[] {new MockCookie("_basusertoken", "asdfasdf")});
+  void decode_badCookie() throws JsonProcessingException {
+    var extractedUsername = new UsernameExtractor().extractUsername(request(null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }
 
   @Test
-  void decode_differentCookie() {
-    var extractedUsername =
-        new UserTokenCookieDecoder()
-            .extractUsername(new Cookie[] {new MockCookie("wut", "asdfasdf")});
+  void decode_differentCookie() throws JsonProcessingException {
+    var extractedUsername = new UsernameExtractor().extractUsername(request(null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }
 }

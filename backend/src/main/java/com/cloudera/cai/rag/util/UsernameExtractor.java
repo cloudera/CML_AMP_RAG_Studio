@@ -38,46 +38,18 @@
 
 package com.cloudera.cai.rag.util;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
-import java.util.Base64;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UserTokenCookieDecoder {
-  public static final String USER_TOKEN_COOKIE_NAME = "_basusertoken";
-  private final ObjectMapper objectMapper =
-      new ObjectMapper().configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+public class UsernameExtractor {
 
   // note: switch to getting these from headers
   //  remote-user-perm
-  //  remote-user
 
-  public String extractUsername(Cookie[] cookies) {
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        if (USER_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
-          try {
-            var rawJwt = cookie.getValue();
-            var pieces = rawJwt.split("\\.");
-            if (pieces.length != 3) {
-              log.warn("Invalid JWT cookie: {}", rawJwt);
-              return "unknown";
-            }
-            Base64.Decoder decoder = Base64.getDecoder();
-            var decodedUserInfo = decoder.decode(pieces[1]);
-            JwtCookie jwtCookie = objectMapper.readValue(decodedUserInfo, JwtCookie.class);
-            log.info("Extracted username from cookie: {}", jwtCookie.username());
-            return jwtCookie.username();
-          } catch (Exception e) {
-            log.warn("Failed to extract username from cookie", e);
-          }
-        }
-      }
-    }
-    return "unknown";
+  public String extractUsername(HttpServletRequest request) {
+    String header = request.getHeader("remote-user");
+    return null == header ? "unknown" : header;
   }
 
   record JwtCookie(String username) {}

@@ -40,7 +40,7 @@ package com.cloudera.cai.rag;
 
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileRepository;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
+import com.cloudera.cai.rag.util.UsernameExtractorTest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.Instant;
 import java.util.List;
@@ -143,7 +143,8 @@ public class TestData {
 
   public static void addUserToRequest(MockHttpServletRequest request)
       throws JsonProcessingException {
+    request.addHeader("remote-user", "test-user");
     request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+        new MockCookie("_basusertoken", UsernameExtractorTest.encodeCookie("test-user")));
   }
 }

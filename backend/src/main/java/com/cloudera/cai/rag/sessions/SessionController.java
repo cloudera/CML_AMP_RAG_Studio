@@ -40,7 +40,7 @@ package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types.CreateSession;
 import com.cloudera.cai.rag.Types.Session;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
+import com.cloudera.cai.rag.util.UsernameExtractor;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/rag/sessions")
 public class SessionController {
   private final SessionService sessionService;
-  private final UserTokenCookieDecoder userTokenCookieDecoder = new UserTokenCookieDecoder();
+  private final UsernameExtractor usernameExtractor = new UsernameExtractor();
 
   public SessionController(SessionService sessionService) {
     this.sessionService = sessionService;
@@ -64,14 +64,14 @@ public class SessionController {
 
   @PostMapping(consumes = "application/json", produces = "application/json")
   public Session create(@RequestBody CreateSession input, HttpServletRequest request) {
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     Session toCreate = Session.fromCreateRequest(input, username);
     return sessionService.create(toCreate);
   }
 
   @PostMapping(path = "/{id}", consumes = "application/json", produces = "application/json")
   public Session update(@RequestBody Session input, HttpServletRequest request) {
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     input = input.withUpdatedById(username);
     return sessionService.update(input);
   }

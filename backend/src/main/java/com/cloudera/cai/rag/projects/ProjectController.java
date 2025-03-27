@@ -41,7 +41,7 @@ package com.cloudera.cai.rag.projects;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.sessions.SessionService;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
+import com.cloudera.cai.rag.util.UsernameExtractor;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -55,7 +55,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProjectController {
   private final ProjectService projectService;
   private final SessionService sessionService;
-  private final UserTokenCookieDecoder userTokenCookieDecoder = new UserTokenCookieDecoder();
+  private final UsernameExtractor usernameExtractor = new UsernameExtractor();
 
   @Autowired
   public ProjectController(ProjectService projectService, SessionService sessionService) {
@@ -69,7 +69,7 @@ public class ProjectController {
     if (input.name() == null || input.name().isEmpty()) {
       throw new BadRequest("name must be a non-empty string");
     }
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     return projectService.createProject(Types.Project.fromCreateRequest(input, username));
   }
 
@@ -80,7 +80,7 @@ public class ProjectController {
     if (input.name() == null || input.name().isEmpty()) {
       throw new BadRequest("name must be a non-empty string");
     }
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     input = input.withId(id).withUpdatedById(username);
     return projectService.updateProject(input);
   }
@@ -99,7 +99,7 @@ public class ProjectController {
   @GetMapping(produces = "application/json")
   public List<Types.Project> getProjects(HttpServletRequest request) {
     log.debug("Getting user's Projects");
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     return projectService.getProjects(username);
   }
 
