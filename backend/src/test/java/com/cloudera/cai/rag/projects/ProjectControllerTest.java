@@ -203,16 +203,20 @@ class ProjectControllerTest {
 
     // Get user's projects and update any existing default projects to set
     // defaultProject = false
-    var request = new MockHttpServletRequest();
-    TestData.addUserToRequest(request);
-    List<Project> existingProjects = controller.getProjects(request);
+    var req = new MockHttpServletRequest();
+    TestData.addUserToRequest(req);
+    List<Project> existingProjects = controller.getProjects(req);
     for (Project project : existingProjects) {
       if (Boolean.TRUE.equals(project.defaultProject())) {
+        var request = new MockHttpServletRequest();
+        TestData.addUserToRequest(request);
         controller.update(project.id(), project.withDefaultProject(false), request);
       }
     }
 
     // Create a project and then update it to be the default
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
     Types.CreateProject createProject = TestData.createProjectRequest("default-project");
     var newProject = controller.create(createProject, request);
 
