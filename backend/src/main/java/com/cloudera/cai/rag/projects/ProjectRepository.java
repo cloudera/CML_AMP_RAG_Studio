@@ -123,6 +123,7 @@ public class ProjectRepository {
               SELECT *
                 FROM project
                 WHERE created_by_id = :createdById
+                OR default_project = true
               """;
           handle.registerRowMapper(ConstructorMapper.factory(Project.class));
           try (Query query = handle.createQuery(sql)) {
