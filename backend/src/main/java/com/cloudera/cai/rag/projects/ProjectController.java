@@ -97,7 +97,7 @@ public class ProjectController {
   }
 
   @GetMapping(produces = "application/json")
-  public List<Types.Project> getProjects(@RequestBody HttpServletRequest request) {
+  public List<Types.Project> getProjects(HttpServletRequest request) {
     log.debug("Getting user's Projects");
     String username = userTokenCookieDecoder.extractUsername(request.getCookies());
     return projectService.getProjects(username);

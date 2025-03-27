@@ -42,7 +42,6 @@ import {
   DatabaseFilled,
   DesktopOutlined,
   LineChartOutlined,
-  ProjectOutlined,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -58,10 +57,6 @@ const TopNav: React.FC = () => {
 
   const navigateTo = (path: string) => () => {
     navigate({ to: path }).catch(() => null);
-  };
-
-  const navToProjects = () => {
-    navigate({ to: "/projects" }).catch(() => null);
   };
 
   const TechPreviewItem = () => {
@@ -130,14 +125,7 @@ const TopNav: React.FC = () => {
     <LineChartOutlined />,
   );
 
-  const projects = getItem(
-    <span data-testid="projects-nav">Projects</span>,
-    "projects",
-    navToProjects,
-    <ProjectOutlined />,
-  );
-
-  const items = [...baseItems, models, analyticsItem, projects];
+  const items = [...baseItems, models, analyticsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {

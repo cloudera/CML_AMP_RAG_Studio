@@ -39,8 +39,11 @@
 import { Session } from "src/api/sessionApi.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
-import { Card, Typography } from "antd";
+import { Button, Card, Flex, Typography } from "antd";
 import { format } from "date-fns";
+import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
+import DeleteIcon from "src/cuix/icons/DeleteIcon.ts";
+import { cdlRed600 } from "src/cuix/variables.ts";
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
@@ -64,9 +67,11 @@ const SessionCard = ({ session }: { session: Session }) => {
     <Card
       title={session.name}
       extra={
-        <Typography.Text type="secondary">
-          Created by: {session.createdById}
-        </Typography.Text>
+        <Button
+          type="text"
+          style={{ color: cdlRed600 }}
+          icon={<DeleteIcon style={{ width: 18, height: 22 }} />}
+        />
       }
       hoverable={true}
       onClick={handleNavOnClick}
@@ -74,12 +79,17 @@ const SessionCard = ({ session }: { session: Session }) => {
       <Typography.Paragraph ellipsis={{ rows: 2 }}>
         {isSuccess && lastMessage ? lastMessage.rag_message.assistant : null}
       </Typography.Paragraph>
-      <Typography.Text type="secondary">
-        Last message:{" "}
-        {lastMessage?.timestamp
-          ? format(lastMessage.timestamp * 1000, "MMM dd yyyy, pp")
-          : "No messages"}
-      </Typography.Text>
+      <Flex justify="space-between">
+        <Typography.Text type="secondary">
+          Last message:{" "}
+          {lastMessage?.timestamp
+            ? format(lastMessage.timestamp * 1000, "MMM dd yyyy, pp")
+            : "No messages"}
+        </Typography.Text>
+        <Typography.Text type="secondary">
+          Created by: {session.createdById}
+        </Typography.Text>
+      </Flex>
     </Card>
   );
 };

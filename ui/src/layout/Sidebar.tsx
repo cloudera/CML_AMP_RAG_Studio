@@ -42,7 +42,6 @@ import {
   DatabaseFilled,
   DesktopOutlined,
   LineChartOutlined,
-  ProjectOutlined,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -103,10 +102,6 @@ const Sidebar: React.FC = () => {
 
   const navToModels = () => {
     navigate({ to: "/models" }).catch(() => null);
-  };
-
-  const navToProjects = () => {
-    navigate({ to: "/projects" }).catch(() => null);
   };
 
   const baseItems: MenuItem[] = [
@@ -180,13 +175,6 @@ const Sidebar: React.FC = () => {
     <CloudOutlined />,
   );
 
-  const projects = getItem(
-    <div data-testid="projects-nav">Projects</div>,
-    "projects",
-    navToProjects,
-    <ProjectOutlined />,
-  );
-
   const analyticsItem = getItem(
     <div data-testid="analytics-nav">Analytics</div>,
     "analytics",
@@ -194,7 +182,7 @@ const Sidebar: React.FC = () => {
     <LineChartOutlined />,
   );
 
-  const items = [...baseItems, models, projects, analyticsItem];
+  const items = [...baseItems, models, analyticsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
