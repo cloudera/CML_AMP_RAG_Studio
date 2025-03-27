@@ -69,6 +69,7 @@ public class ProjectRepository {
               """;
           try (var update = handle.createUpdate(sql)) {
             update.bindMethods(input);
+            update.bind("defaultProject", false);
             return update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
           }
         });
@@ -80,13 +81,12 @@ public class ProjectRepository {
           var sql =
               """
               UPDATE project
-              SET name = :name, default_project = :defaultProject, updated_by_id = :updatedById, time_updated = :now
+              SET name = :name, updated_by_id = :updatedById, time_updated = :now
               WHERE id = :id
           """;
           try (var update = handle.createUpdate(sql)) {
             return update
                 .bind("name", input.name())
-                .bind("defaultProject", input.defaultProject())
                 .bind("updatedById", input.updatedById())
                 .bind("id", input.id())
                 .bind("now", Instant.now())

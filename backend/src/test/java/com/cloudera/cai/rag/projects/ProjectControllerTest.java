@@ -87,12 +87,12 @@ class ProjectControllerTest {
     var newProject = controller.create(createProject, request);
 
     // Update the project
-    Project updatedProject = newProject.withName("updated-name").withDefaultProject(true);
+    Project updatedProject = newProject.withName("updated-name");
     var result = controller.update(newProject.id(), updatedProject, request);
 
     assertThat(result.id()).isEqualTo(newProject.id());
     assertThat(result.name()).isEqualTo("updated-name");
-    assertThat(result.defaultProject()).isTrue();
+    assertThat(result.defaultProject()).isFalse();
     assertThat(result.createdById()).isEqualTo("test-user");
     assertThat(result.updatedById()).isEqualTo("test-user");
   }
@@ -201,34 +201,10 @@ class ProjectControllerTest {
   void getDefaultProject() throws Exception {
     ProjectController controller = createController();
 
-    // Get user's projects and update any existing default projects to set
-    // defaultProject = false
-    var req = new MockHttpServletRequest();
-    TestData.addUserToRequest(req);
-    List<Project> existingProjects = controller.getProjects(req);
-    for (Project project : existingProjects) {
-      if (Boolean.TRUE.equals(project.defaultProject())) {
-        var request = new MockHttpServletRequest();
-        TestData.addUserToRequest(request);
-        controller.update(project.id(), project.withDefaultProject(false), request);
-      }
-    }
-
-    // Create a project and then update it to be the default
-    var request = new MockHttpServletRequest();
-    TestData.addUserToRequest(request);
-    Types.CreateProject createProject = TestData.createProjectRequest("default-project");
-    var newProject = controller.create(createProject, request);
-
-    // Update the project to be the default
-    var defaultProject =
-        controller.update(newProject.id(), newProject.withDefaultProject(true), request);
-
     // Get the default project
     var result = controller.getDefaultProject();
 
-    assertThat(result.id()).isEqualTo(defaultProject.id());
-    assertThat(result.name()).isEqualTo("default-project");
+    assertThat(result.name()).isEqualTo("Default");
     assertThat(result.defaultProject()).isTrue();
   }
 
