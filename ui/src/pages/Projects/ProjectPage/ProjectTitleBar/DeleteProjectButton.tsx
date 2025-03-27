@@ -44,15 +44,23 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { Button, Input, Modal, Typography } from "antd";
 import DeleteIcon from "src/cuix/icons/DeleteIcon.ts";
 import { cdlRed600 } from "src/cuix/variables.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
 
 export const DeleteProjectButton = ({ project }: { project: Project }) => {
   const location = useLocation();
   const deleteProjectModal = useModal();
   const [confirmationText, setConfirmationText] = useState("");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { mutate: deleteProjectMutate } = useDeleteProject({
     onSuccess: () => {
       messageQueue.success("Project deleted successfully");
+      queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getProjects] })
+        .catch(() => {
+          messageQueue.error("Failed to refresh projects");
+        });
       if (location.pathname.includes("/chats/")) {
         return navigate({
           to: "/chats",
