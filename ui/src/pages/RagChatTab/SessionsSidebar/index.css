@@ -43,3 +43,11 @@
 .session-sider .anticon {
     color: #000;
 }
+
+.session-sider .ant-menu-item-selected {
+    background-color: lightgray;
+}
+
+.session-sider .ant-menu-submenu-selected > div {
+    background-color: #eaebec;
+}
