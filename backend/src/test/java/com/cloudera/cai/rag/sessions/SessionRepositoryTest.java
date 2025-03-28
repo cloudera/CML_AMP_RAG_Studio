@@ -51,10 +51,11 @@ class SessionRepositoryTest {
   @Test
   void create() {
     SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
+    String username = "abc";
     var input =
         TestData.createTestSessionInstance("test")
-            .withCreatedById("abc")
-            .withUpdatedById("abc")
+            .withCreatedById(username)
+            .withUpdatedById(username)
             .withProjectId(2L);
     var id = sessionRepository.create(input);
     assertThat(id).isNotNull();
@@ -66,8 +67,8 @@ class SessionRepositoryTest {
     assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
     assertThat(result.timeCreated()).isNotNull();
     assertThat(result.timeUpdated()).isNotNull();
-    assertThat(result.createdById()).isEqualTo("abc");
-    assertThat(result.updatedById()).isEqualTo("abc");
+    assertThat(result.createdById()).isEqualTo(username);
+    assertThat(result.updatedById()).isEqualTo(username);
     assertThat(result.projectId()).isEqualTo(2L);
     assertThat(result.lastInteractionTime()).isNull();
   }
@@ -103,14 +104,16 @@ class SessionRepositoryTest {
   @Test
   void delete() {
     SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
+    String username = "abc";
     var id =
         sessionRepository.create(
             TestData.createTestSessionInstance("test")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(username)
+                .withUpdatedById(username));
     assertThat(sessionRepository.getSessionById(id, username)).isNotNull();
 
     sessionRepository.delete(id);
-    assertThatThrownBy(() -> sessionRepository.getSessionById(id, username)).isInstanceOf(NotFound.class);
+    assertThatThrownBy(() -> sessionRepository.getSessionById(id, username))
+        .isInstanceOf(NotFound.class);
   }
 }

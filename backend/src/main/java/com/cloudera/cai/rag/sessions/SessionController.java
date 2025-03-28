@@ -67,14 +67,14 @@ public class SessionController {
   public Session create(@RequestBody CreateSession input, HttpServletRequest request) {
     String username = usernameExtractor.extractUsername(request);
     Session toCreate = Session.fromCreateRequest(input, username);
-    return sessionService.create(toCreate);
+    return sessionService.create(toCreate, username);
   }
 
   @PostMapping(path = "/{id}", consumes = "application/json", produces = "application/json")
   public Session update(@RequestBody Session input, HttpServletRequest request) {
     String username = usernameExtractor.extractUsername(request);
     input = input.withUpdatedById(username);
-    return sessionService.update(input);
+    return sessionService.update(input, username);
   }
 
   @DeleteMapping(path = "/{id}")

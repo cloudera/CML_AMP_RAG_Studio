@@ -152,10 +152,11 @@ class ProjectControllerTest {
 
     // Create a session for the project
     Types.CreateSession createSession = TestData.createSessionInstance("test-session");
+    String username = "test-user";
     var session =
         sessionService.create(
-            Types.Session.fromCreateRequest(createSession, "test-user")
-                .withProjectId(newProject.id()));
+            Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
+            username);
 
     // Verify the data source is associated with the project
     List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
@@ -316,9 +317,9 @@ class ProjectControllerTest {
             .withUpdatedById("user3");
 
     // Save the sessions
-    sessionService.create(session1);
-    sessionService.create(session2);
-    sessionService.create(session3);
+    sessionService.create(session1, "user1");
+    sessionService.create(session2, "user2");
+    sessionService.create(session3, "user3");
 
     // Get sessions for the first project
     List<Session> projectSessions = controller.getSessionsForProject(project.id());
@@ -367,10 +368,11 @@ class ProjectControllerTest {
     // Create a session for the project with the data source
     Types.CreateSession createSession =
         TestData.createSessionInstance("test-session", List.of(dataSourceId), newProject.id());
+    String username = "test-user";
     var session =
         sessionService.create(
-            Types.Session.fromCreateRequest(createSession, "test-user")
-                .withProjectId(newProject.id()));
+            Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
+            username);
 
     // Verify the data source is in the session's list of data sources
     assertThat(session.dataSourceIds()).contains(dataSourceId);
@@ -379,7 +381,7 @@ class ProjectControllerTest {
     controller.removeDataSourceFromProject(newProject.id(), dataSourceId);
 
     // Get the updated session
-    var updatedSession = sessionService.getSessionById(session.id(), "test-user");
+    var updatedSession = sessionService.getSessionById(session.id(), username);
 
     // Verify the data source is no longer in the session's list of data sources
     assertThat(updatedSession.dataSourceIds()).doesNotContain(dataSourceId);

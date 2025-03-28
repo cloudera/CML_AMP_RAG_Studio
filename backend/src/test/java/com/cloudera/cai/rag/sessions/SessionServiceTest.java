@@ -48,14 +48,17 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SessionServiceTest {
+  private static final String USERNAME = "test-user";
+
   @Test
   void create() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
     Types.Session result =
         sessionService.create(
             TestData.createTestSessionInstance("test")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(USERNAME)
+                .withUpdatedById(USERNAME),
+            USERNAME);
     assertThat(result).isNotNull();
   }
 
@@ -66,8 +69,9 @@ class SessionServiceTest {
         sessionService.create(
             TestData.createTestSessionInstance("test")
                 .withRerankModel("")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(USERNAME)
+                .withUpdatedById(USERNAME),
+            USERNAME);
     assertThat(result.rerankModel()).isNull();
     assertThat(result).isNotNull();
   }
@@ -78,10 +82,11 @@ class SessionServiceTest {
     Types.Session result =
         sessionService.create(
             TestData.createTestSessionInstance("test")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(USERNAME)
+                .withUpdatedById(USERNAME),
+            USERNAME);
     var updated = result.withRerankModel("").withDataSourceIds(List.of(4L));
-    var updatedResult = sessionService.update(updated);
+    var updatedResult = sessionService.update(updated, USERNAME);
     assertThat(updatedResult.rerankModel()).isNull();
     assertThat(updatedResult.dataSourceIds()).containsExactly(4L);
   }
@@ -90,8 +95,10 @@ class SessionServiceTest {
   void delete() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
-    var createdSession = sessionService.create(input);
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(USERNAME)
+            .withUpdatedById(USERNAME);
+    var createdSession = sessionService.create(input, USERNAME);
     sessionService.delete(createdSession.id());
     assertThat(sessionService.getSessions("fake-user")).doesNotContain(createdSession);
   }
@@ -110,8 +117,8 @@ class SessionServiceTest {
         TestData.createTestSessionInstance("test2")
             .withCreatedById(username2)
             .withUpdatedById(username2);
-    sessionService.create(input);
-    sessionService.create(input2);
+    sessionService.create(input, USERNAME);
+    sessionService.create(input2, USERNAME);
 
     assertThat(sessionService.getSessions(username3)).hasSize(0);
     assertThat(sessionService.getSessions(username1)).hasSizeGreaterThanOrEqualTo(1);
@@ -148,9 +155,9 @@ class SessionServiceTest {
             .withUpdatedById("user3");
 
     // Save the sessions
-    sessionService.create(session1);
-    sessionService.create(session2);
-    sessionService.create(session3);
+    sessionService.create(session1, USERNAME);
+    sessionService.create(session2, USERNAME);
+    sessionService.create(session3, USERNAME);
 
     // Get sessions for project ID 1
     var projectOneSessions = sessionService.getSessionsByProjectId(project.id());

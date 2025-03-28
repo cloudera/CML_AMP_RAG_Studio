@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -77,7 +77,7 @@ class DeleteSessionReconcilerTest {
     reconciler.resync();
     await().until(reconciler::isEmpty);
 
-    assertThatThrownBy(() -> ragSessionRepository.getSessionById(sessionId, username))
+    assertThatThrownBy(() -> ragSessionRepository.getSessionById(sessionId))
         .isInstanceOf(NotFound.class);
     await().untilAsserted(() -> assertThat(sessionIsInTheDatabase(sessionId)).isFalse());
     assertThatThrownBy(() -> ragFileRepository.findDocumentByDocumentId(documentId))

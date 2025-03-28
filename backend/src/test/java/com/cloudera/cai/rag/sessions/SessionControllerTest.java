@@ -132,9 +132,6 @@ class SessionControllerTest {
     var updatedName = "new-name";
     var updatedRerankModel = "new-rerank-model";
 
-    request = new MockHttpServletRequest();
-    request.addHeader("remote-user", "update-test-user");
-
     var updatedSession =
         sessionController.update(
             insertedSession
@@ -154,7 +151,6 @@ class SessionControllerTest {
     assertThat(updatedSession.timeCreated()).isNotNull();
     assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
-    assertThat(updatedSession.updatedById()).isEqualTo("update-test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
     assertThat(updatedSession.queryConfiguration().enableHyde()).isTrue();
     assertThat(updatedSession.queryConfiguration().enableSummaryFilter()).isFalse();

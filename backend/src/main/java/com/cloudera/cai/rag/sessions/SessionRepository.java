@@ -113,8 +113,26 @@ public class SessionRepository {
                   """
                 SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
                 LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
-                WHERE cs.ID = :id AND cs.DELETED IS NULL
+                WHERE cs.ID = :id AND cs.DELETED IS NULL AND cs.created_by_id = :username
               """;
+              return querySessions(
+                      handle.createQuery(sql).bind("id", id).bind("username", username))
+                  .findFirst()
+                  .orElseThrow(() -> new NotFound("Session not found"));
+            })
+        .build();
+  }
+
+  public Types.Session getSessionById(Long id) {
+    return jdbi.withHandle(
+            handle -> {
+              handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
+              var sql =
+                  """
+                                  SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
+                                  LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                                  WHERE cs.ID = :id AND cs.DELETED IS NULL
+                                """;
               return querySessions(handle.createQuery(sql).bind("id", id))
                   .findFirst()
                   .orElseThrow(() -> new NotFound("Session not found"));

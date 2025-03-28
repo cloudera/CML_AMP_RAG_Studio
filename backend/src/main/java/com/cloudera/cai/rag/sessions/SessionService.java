@@ -51,12 +51,12 @@ public class SessionService {
     this.sessionRepository = sessionRepository;
   }
 
-  public Types.Session create(Types.Session input) {
+  public Types.Session create(Types.Session input, String username) {
     var id = sessionRepository.create(cleanInputs(input));
     return sessionRepository.getSessionById(id, username);
   }
 
-  public Types.Session update(Types.Session input) {
+  public Types.Session update(Types.Session input, String username) {
     sessionRepository.update(cleanInputs(input));
     return sessionRepository.getSessionById(input.id(), username);
   }
