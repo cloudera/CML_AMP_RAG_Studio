@@ -44,9 +44,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
-import org.junit.jupiter.api.Test;
-
 import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
 class SessionRepositoryTest {
   @Test
@@ -80,15 +79,25 @@ class SessionRepositoryTest {
     String username2 = UUID.randomUUID().toString();
     String username3 = UUID.randomUUID().toString();
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById(username1).withUpdatedById(username1);
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(username1)
+            .withUpdatedById(username1);
     var input2 =
-        TestData.createTestSessionInstance("test2").withCreatedById(username2).withUpdatedById(username2);
+        TestData.createTestSessionInstance("test2")
+            .withCreatedById(username2)
+            .withUpdatedById(username2);
     var id = sessionRepository.create(input);
     var id2 = sessionRepository.create(input2);
 
+    assertThat(sessionRepository.getSessions(username1))
+        .hasSize(1)
+        .extracting("id")
+        .containsExactly(id);
+    assertThat(sessionRepository.getSessions(username2))
+        .hasSize(1)
+        .extracting("id")
+        .containsExactly(id2);
     assertThat(sessionRepository.getSessions(username3)).hasSize(0);
-    assertThat(sessionRepository.getSessions(username2)).hasSize(1).extracting("id").containsExactly(id2, id);
-    assertThat(result).hasSize(0).extracting("id").containsSequence(id2, id);
   }
 
   @Test
