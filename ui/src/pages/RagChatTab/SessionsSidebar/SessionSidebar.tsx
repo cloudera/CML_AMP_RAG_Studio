@@ -61,6 +61,7 @@ import Images from "src/components/images/Images.ts";
 import "./index.css";
 import { ProjectsHeaderItem } from "pages/RagChatTab/SessionsSidebar/SidebarItems/ProjectsHeaderItem.tsx";
 import { getProjectItems } from "pages/RagChatTab/SessionsSidebar/SidebarItems/ProjectItems.tsx";
+import { useParams } from "@tanstack/react-router";
 
 const { Sider } = Layout;
 
@@ -93,6 +94,7 @@ const SessionMenuTheme = {
 
 export function SessionSidebar({ sessions }: { sessions: Session[] }) {
   const { activeSession } = useContext(RagChatContext);
+  const { projectId } = useParams({ strict: false });
 
   const projectItems = getProjectItems();
 
@@ -117,6 +119,22 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     ...defaultSessionItems(sessions),
   ];
 
+  const chooseSelectedKeys = (): string[] => {
+    if (activeSession) {
+      return [
+        activeSession.id.toString(),
+        `project-${activeSession.projectId.toString()}`,
+      ];
+    } else {
+      if (projectId) {
+        const result = [`project-${projectId}`];
+        console.log(result);
+        return result;
+      }
+      return [];
+    }
+  };
+
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
@@ -127,7 +145,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
                 ? `project-${activeSession.projectId.toString()}`
                 : "",
             ]}
-            selectedKeys={[activeSession?.id.toString() ?? ""]}
+            selectedKeys={chooseSelectedKeys()}
             mode="inline"
             style={{
               backgroundColor: cdlWhite,
