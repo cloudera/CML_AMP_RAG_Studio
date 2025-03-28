@@ -85,8 +85,7 @@ public class ProjectController {
     return projectService.updateProject(input);
   }
 
-  @GetMapping(value = "/{id}", produces = "application/json")
-  public Types.Project getProjectById(@PathVariable Long id) {
+  public Types.Project getProjectById(Long id) {
     return projectService.getProjectById(id);
   }
 

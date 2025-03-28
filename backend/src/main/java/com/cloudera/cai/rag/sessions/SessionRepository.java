@@ -123,23 +123,6 @@ public class SessionRepository {
         .build();
   }
 
-  public void getSessionById(Long id) {
-    jdbi.withHandle(
-            handle -> {
-              handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
-              var sql =
-                  """
-                                            SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
-                                            LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
-                                            WHERE cs.ID = :id AND cs.DELETED IS NULL
-                                          """;
-              return querySessions(handle.createQuery(sql).bind("id", id))
-                  .findFirst()
-                  .orElseThrow(() -> new NotFound("Session not found"));
-            })
-        .build();
-  }
-
   private Stream<Types.Session.SessionBuilder> querySessions(Query query) {
     try (query) {
       return query.reduceRows(
@@ -224,13 +207,6 @@ public class SessionRepository {
   public void delete(Long id) {
     jdbi.useHandle(
         handle -> handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE ID = ?", true, id));
-  }
-
-  public void deleteByProjectId(Long projectId) {
-    jdbi.useHandle(
-        handle ->
-            handle.execute(
-                "UPDATE CHAT_SESSION SET DELETED = ? WHERE project_id = ?", true, projectId));
   }
 
   public void deleteByProjectId(Handle handle, Long projectId) {

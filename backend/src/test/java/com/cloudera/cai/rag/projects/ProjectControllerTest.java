@@ -98,22 +98,6 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjectById() throws Exception {
-    ProjectController controller = createController();
-
-    // Create a new Project
-    Types.CreateProject createProject = TestData.createProjectRequest("test-project");
-    var request = new MockHttpServletRequest();
-    TestData.addUserToRequest(request);
-    var newProject = controller.create(createProject, request);
-
-    // Get the project by ID
-    var result = controller.getProjectById(newProject.id());
-
-    assertThat(result).isEqualTo(newProject);
-  }
-
-  @Test
   void deleteProject() throws Exception {
     ProjectController controller = createController();
 
