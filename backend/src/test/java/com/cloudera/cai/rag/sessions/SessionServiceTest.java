@@ -117,12 +117,12 @@ class SessionServiceTest {
         TestData.createTestSessionInstance("test2")
             .withCreatedById(username2)
             .withUpdatedById(username2);
-    sessionService.create(input, USERNAME);
-    sessionService.create(input2, USERNAME);
+    sessionService.create(input, username1);
+    sessionService.create(input2, username2);
 
-    assertThat(sessionService.getSessions(username3)).hasSize(0);
     assertThat(sessionService.getSessions(username1)).hasSizeGreaterThanOrEqualTo(1);
     assertThat(sessionService.getSessions(username2)).hasSizeGreaterThanOrEqualTo(1);
+    assertThat(sessionService.getSessions(username3)).hasSize(0);
   }
 
   @Test
@@ -136,28 +136,31 @@ class SessionServiceTest {
         projectService.createProject(TestData.createTestProjectInstance("test-project2", false));
 
     // Create sessions with different project IDs
+    String user1 = "user1";
     var session1 =
         TestData.createTestSessionInstance("test1")
             .withProjectId(project.id())
-            .withCreatedById("user1")
-            .withUpdatedById("user1");
+            .withCreatedById(user1)
+            .withUpdatedById(user1);
 
+    String user2 = "user2";
     var session2 =
         TestData.createTestSessionInstance("test2")
             .withProjectId(project.id())
-            .withCreatedById("user2")
-            .withUpdatedById("user2");
+            .withCreatedById(user2)
+            .withUpdatedById(user2);
 
+    String user3 = "user3";
     var session3 =
         TestData.createTestSessionInstance("test3")
             .withProjectId(project2.id())
-            .withCreatedById("user3")
-            .withUpdatedById("user3");
+            .withCreatedById(user3)
+            .withUpdatedById(user3);
 
     // Save the sessions
-    sessionService.create(session1, USERNAME);
-    sessionService.create(session2, USERNAME);
-    sessionService.create(session3, USERNAME);
+    sessionService.create(session1, user1);
+    sessionService.create(session2, user2);
+    sessionService.create(session3, user3);
 
     // Get sessions for project ID 1
     var projectOneSessions = sessionService.getSessionsByProjectId(project.id());
