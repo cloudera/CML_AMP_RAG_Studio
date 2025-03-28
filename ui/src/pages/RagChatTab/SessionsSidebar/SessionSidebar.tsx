@@ -119,7 +119,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     ...defaultSessionItems(sessions),
   ];
 
-  const chooseSelectedKeys = (): string[] => {
+  const chooseKeys = (): string[] => {
     if (activeSession) {
       return [
         activeSession.id.toString(),
@@ -140,12 +140,9 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
       <div className="session-sider">
         <Sider width={280} style={{ height: "94vh" }}>
           <Menu
-            defaultOpenKeys={[
-              activeSession
-                ? `project-${activeSession.projectId.toString()}`
-                : "",
-            ]}
-            selectedKeys={chooseSelectedKeys()}
+            defaultOpenKeys={chooseKeys()}
+            selectedKeys={chooseKeys()}
+            multiple={true}
             mode="inline"
             style={{
               backgroundColor: cdlWhite,
