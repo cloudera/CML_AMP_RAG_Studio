@@ -99,6 +99,7 @@ export const ProjectsHeaderItem = () => {
       <Modal
         title="Create New Project"
         open={createProjectModal.isModalOpen}
+        destroyOnClose={true}
         onCancel={() => {
           createProjectModal.setIsModalOpen(false);
         }}
@@ -108,7 +109,7 @@ export const ProjectsHeaderItem = () => {
           </Button>
         }
       >
-        <Form form={form}>
+        <Form form={form} clearOnDestroy={true}>
           <Form.Item
             name="name"
             label="Project name"
