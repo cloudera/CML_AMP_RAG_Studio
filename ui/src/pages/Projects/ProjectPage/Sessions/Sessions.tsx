@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { Card, Flex, Skeleton, Typography } from "antd";
-import SessionCard from "pages/Projects/ProjectPage/SessionCard.tsx";
+import SessionCard from "pages/Projects/ProjectPage/Sessions/SessionCard.tsx";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import { useGetSessions } from "src/api/sessionApi.ts";
 

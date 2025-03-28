@@ -36,8 +36,8 @@
  * DATA.
  ******************************************************************************/
 import { Card, Flex, Typography } from "antd";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/ProjectKnowledgeBases.tsx";
-import { Sessions } from "pages/Projects/ProjectPage/Sessions.tsx";
+import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/KnowledgeBases/ProjectKnowledgeBases.tsx";
+import { Sessions } from "pages/Projects/ProjectPage/Sessions/Sessions.tsx";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 import { ProjectTitleBar } from "pages/Projects/ProjectPage/ProjectTitleBar/ProjectTitleBar.tsx";
 
