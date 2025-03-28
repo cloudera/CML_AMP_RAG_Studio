@@ -48,7 +48,7 @@ export const NewChatSession = () => {
         </Typography.Title>
       }
     >
-      <RagChatQueryInput />
+      <RagChatQueryInput dataSourceId={1} />
     </Card>
   );
 };

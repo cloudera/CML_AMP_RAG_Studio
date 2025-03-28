@@ -50,7 +50,7 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
-const RagChatQueryInput = () => {
+const RagChatQueryInput = ({ dataSourceId }: { dataSourceId?: number }) => {
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
@@ -91,7 +91,7 @@ const RagChatQueryInput = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        createSessionAndRedirect(userInput);
+        createSessionAndRedirect(userInput, dataSourceId);
       }
     }
   };
