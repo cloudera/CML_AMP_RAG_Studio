@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -40,54 +40,41 @@ package com.cloudera.cai.rag.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Base64;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 public class UsernameExtractorTest {
-  public static String encodeCookie(String userName) throws JsonProcessingException {
-    return "xyz."
-        + Base64.getEncoder()
-            .encodeToString(
-                new ObjectMapper()
-                    .writeValueAsString(new UsernameExtractor.JwtCookie(userName))
-                    .getBytes())
-        + ".abc";
-  }
 
   @Test
-  void decode() throws Exception {
+  void decode() {
     String userName = "johnson";
     var extractedUsername = new UsernameExtractor().extractUsername(request(userName));
     assertThat(extractedUsername).isEqualTo(userName);
   }
 
-  private HttpServletRequest request(String userName) throws JsonProcessingException {
+  private HttpServletRequest request(String userName) {
     MockHttpServletRequest request = new MockHttpServletRequest();
     if (userName != null) {
       request.addHeader("remote-user", userName);
     }
     return request;
   }
-  ;
 
   @Test
-  void decode_noCookies() throws JsonProcessingException {
+  void decode_noCookies() {
     var extractedUsername = new UsernameExtractor().extractUsername(request(null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }
 
   @Test
-  void decode_badCookie() throws JsonProcessingException {
+  void decode_badCookie() {
     var extractedUsername = new UsernameExtractor().extractUsername(request(null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }
 
   @Test
-  void decode_differentCookie() throws JsonProcessingException {
+  void decode_differentCookie() {
     var extractedUsername = new UsernameExtractor().extractUsername(request(null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }

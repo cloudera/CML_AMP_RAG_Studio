@@ -43,17 +43,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.util.UsernameExtractorTest;
 import com.cloudera.cai.util.exceptions.NotFound;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 class SessionControllerTest {
   @Test
-  void create() throws JsonProcessingException {
+  void create() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
     TestData.addUserToRequest(request);
@@ -75,7 +72,7 @@ class SessionControllerTest {
   }
 
   @Test
-  void create_noDataSource() throws JsonProcessingException {
+  void create_noDataSource() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
     TestData.addUserToRequest(request);
@@ -107,7 +104,7 @@ class SessionControllerTest {
   }
 
   @Test
-  void update() throws JsonProcessingException {
+  void update() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
     TestData.addUserToRequest(request);
@@ -149,11 +146,9 @@ class SessionControllerTest {
   }
 
   @Test
-  void noQueryConfiguration_create() throws JsonProcessingException {
+  void noQueryConfiguration_create() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UsernameExtractorTest.encodeCookie("test-user")));
     var sessionName = "test";
     Types.CreateSession input =
         TestData.createSessionInstance(sessionName).withQueryConfiguration(null);
