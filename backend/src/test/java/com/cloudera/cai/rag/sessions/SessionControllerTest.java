@@ -185,7 +185,7 @@ class SessionControllerTest {
     var input3 = TestData.createSessionInstance("test");
     var otherPersonsSession = sessionController.create(input3, request2);
 
-    var result = sessionController.getSessions(new MockHttpServletRequest());
+    var result = sessionController.getSessions(request);
 
     assertThat(result).hasSizeGreaterThanOrEqualTo(2);
     assertThat(result).doesNotContain(otherPersonsSession);

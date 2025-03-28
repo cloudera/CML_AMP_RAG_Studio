@@ -44,6 +44,7 @@ import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.projects.ProjectService;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SessionServiceTest {
@@ -98,16 +99,23 @@ class SessionServiceTest {
   @Test
   void getSessions() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
+    String username1 = UUID.randomUUID().toString();
+    String username2 = UUID.randomUUID().toString();
+    String username3 = UUID.randomUUID().toString();
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(username1)
+            .withUpdatedById(username1);
     var input2 =
-        TestData.createTestSessionInstance("test2").withCreatedById("abc2").withUpdatedById("abc2");
+        TestData.createTestSessionInstance("test2")
+            .withCreatedById(username2)
+            .withUpdatedById(username2);
     sessionService.create(input);
     sessionService.create(input2);
 
-    var result = sessionService.getSessions("fake-user");
-
-    assertThat(result).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(sessionService.getSessions(username3)).hasSize(0);
+    assertThat(sessionService.getSessions(username1)).hasSizeGreaterThanOrEqualTo(1);
+    assertThat(sessionService.getSessions(username2)).hasSizeGreaterThanOrEqualTo(1);
   }
 
   @Test

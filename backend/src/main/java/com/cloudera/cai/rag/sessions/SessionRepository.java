@@ -171,17 +171,17 @@ public class SessionRepository {
     return queryConfiguration;
   }
 
-  public List<Types.Session> getSessions() {
+  public List<Types.Session> getSessions(String username) {
     return jdbi.withHandle(
         handle -> {
           var sql =
               """
                 SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
                 LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
-                WHERE cs.DELETED IS NULL
+                WHERE cs.DELETED IS NULL AND cs.created_by_id = :username
                 ORDER BY last_interaction_time DESC, time_created DESC
               """;
-          return querySessions(handle.createQuery(sql))
+          return querySessions(handle.createQuery(sql).bind("username", username))
               .map(Types.Session.SessionBuilder::build)
               .toList();
         });

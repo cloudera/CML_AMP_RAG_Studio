@@ -69,7 +69,7 @@ public class SessionService {
   }
 
   public List<Types.Session> getSessions(String username) {
-    return sessionRepository.getSessions();
+    return sessionRepository.getSessions(username);
   }
 
   public List<Types.Session> getSessionsByProjectId(Long projectId) {
