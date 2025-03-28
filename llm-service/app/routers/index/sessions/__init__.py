@@ -38,9 +38,9 @@
 import base64
 import json
 import logging
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Cookie
+from fastapi import APIRouter, Cookie, Header
 from pydantic import BaseModel
 
 from .... import exceptions
@@ -76,8 +76,10 @@ def suggest_questions() -> RagSuggestedQuestionsResponse:
     summary="Rename the session using AI",
 )
 @exceptions.propagates
-def post_rename_session(session_id: int) -> str:
-    return rename_session(session_id)
+def post_rename_session(
+    session_id: int, remote_user: Optional[str] = Header(None)
+) -> str:
+    return rename_session(session_id, user_name=remote_user)
 
 
 @router.get(
@@ -117,8 +119,11 @@ def rating(
     session_id: int,
     response_id: str,
     request: ChatResponseRating,
+    remote_user: Optional[str] = Header(None),
 ) -> ChatResponseRating:
-    rating_mlflow_log_metric(request.rating, response_id, session_id)
+    rating_mlflow_log_metric(
+        request.rating, response_id, session_id, user_name=remote_user
+    )
     return ChatResponseRating(rating=request.rating)
 
 
@@ -134,8 +139,9 @@ def feedback(
     session_id: int,
     response_id: str,
     request: ChatResponseFeedback,
+        remote_user: Optional[str] = Header(None),
 ) -> ChatResponseFeedback:
-    feedback_mlflow_log_table(request.feedback, response_id, session_id)
+    feedback_mlflow_log_table(request.feedback, response_id, session_id, user_name=remote_user)
     return ChatResponseFeedback(feedback=request.feedback)
 
 
@@ -165,12 +171,11 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
-    _basusertoken: Annotated[str | None, Cookie()] = None,
+    remote_user: Optional[str] = Header(None),
 ) -> RagStudioChatMessage:
-    user_name = parse_jwt_cookie(_basusertoken)
-    session = session_metadata_api.get_session(session_id)
+    session = session_metadata_api.get_session(session_id, user_name=remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
     if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return direct_llm_chat(session, request.query, user_name)
-    return v2_chat(session, request.query, configuration, user_name)
+        return direct_llm_chat(session, request.query, user_name=remote_user)
+    return v2_chat(session, request.query, configuration, user_name=remote_user)

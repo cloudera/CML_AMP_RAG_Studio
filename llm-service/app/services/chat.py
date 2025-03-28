@@ -224,10 +224,11 @@ def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
 
 def generate_suggested_questions(
     session_id: Optional[int],
+    user_name: Optional[str] = None,
 ) -> List[str]:
     if session_id is None:
         return generate_dummy_suggested_questions()
-    session = session_metadata_api.get_session(session_id)
+    session = session_metadata_api.get_session(session_id, user_name)
     if len(session.data_source_ids) == 0:
         return _generate_suggested_questions_direct_llm(session)
     if len(session.data_source_ids) != 1:

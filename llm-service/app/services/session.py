@@ -77,12 +77,12 @@ Session Name:
 """
 
 
-def rename_session(session_id: int) -> str:
+def rename_session(session_id: int, user_name: str) -> str:
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id=session_id)
     if not chat_history:
         raise HTTPException(status_code=400, detail="No chat history found")
     first_interaction = chat_history[0].rag_message
-    session_metadata = session_metadata_api.get_session(session_id)
+    session_metadata = session_metadata_api.get_session(session_id, user_name)
     llm = models.LLM.get(session_metadata.inference_model)
     prompt = RENAME_SESSION_PROMPT_TEMPLATE.format(
         first_interaction.user,

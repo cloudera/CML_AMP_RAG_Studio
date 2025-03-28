@@ -84,8 +84,10 @@ BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
 
 
-def get_session(session_id: int) -> Session:
-    response = requests.get(url_template.format(session_id))
+def get_session(session_id: int, user_name: str) -> Session:
+    response = requests.get(
+        url_template.format(session_id), headers={"remote-user": user_name}
+    )
     raise_for_http_error(response)
     data = body_to_json(response)
     return session_from_java_response(data)
