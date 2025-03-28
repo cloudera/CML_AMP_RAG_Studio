@@ -38,8 +38,11 @@
 
 import { Card, Typography } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 
 export const NewChatSession = () => {
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
+
   return (
     <Card
       title={
@@ -48,7 +51,11 @@ export const NewChatSession = () => {
         </Typography.Title>
       }
     >
-      <RagChatQueryInput dataSourceId={1} />
+      <RagChatQueryInput
+        newSessionCallback={(userInput) => {
+          createSessionAndRedirect(userInput, 1);
+        }}
+      />
     </Card>
   );
 };
