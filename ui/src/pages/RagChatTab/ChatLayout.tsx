@@ -105,10 +105,9 @@ function ChatLayout() {
           height: "95vh",
           transition: "height 0.5s",
         }}
+        hasSider={true}
       >
-        <div>
-          <SessionSidebar sessions={sessions} />
-        </div>
+        <SessionSidebar sessions={sessions} />
         <Divider
           key="chatLayoutDivider"
           type="vertical"

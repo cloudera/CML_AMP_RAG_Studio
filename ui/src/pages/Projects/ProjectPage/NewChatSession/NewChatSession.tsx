@@ -35,32 +35,20 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex } from "antd";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/KnowledgeBases/ProjectKnowledgeBases.tsx";
-import { Sessions } from "pages/Projects/ProjectPage/Sessions/Sessions.tsx";
-import { ProjectTitleBar } from "pages/Projects/ProjectPage/ProjectTitleBar/ProjectTitleBar.tsx";
-import { NewChatSession } from "pages/Projects/ProjectPage/NewChatSession/NewChatSession.tsx";
 
-const ProjectPage = () => {
+import { Card, Typography } from "antd";
+import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
+
+export const NewChatSession = () => {
   return (
-    <Flex
-      style={{
-        maxWidth: 1500,
-        width: "100%",
-        height: "100%",
-      }}
-      vertical
+    <Card
+      title={
+        <Typography.Title level={5} style={{ margin: 0 }}>
+          Start a new chat session
+        </Typography.Title>
+      }
     >
-      <ProjectTitleBar />
-      <Flex gap={32}>
-        <Flex flex={2} vertical gap={32}>
-          <NewChatSession />
-          <ProjectKnowledgeBases />
-          <Sessions />
-        </Flex>
-      </Flex>
-    </Flex>
+      <RagChatQueryInput />
+    </Card>
   );
 };
-
-export default ProjectPage;
