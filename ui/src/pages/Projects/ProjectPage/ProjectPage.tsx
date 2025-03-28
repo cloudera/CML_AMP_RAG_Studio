@@ -52,7 +52,7 @@ const ProjectPage = () => {
       vertical
     >
       <ProjectTitleBar />
-      <Flex gap={32}>
+      <Flex gap={32} style={{ overflowY: "auto" }}>
         <Flex flex={2} vertical gap={32}>
           <NewChatSession />
           <ProjectKnowledgeBases />
