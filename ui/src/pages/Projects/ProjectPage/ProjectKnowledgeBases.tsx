@@ -286,7 +286,7 @@ export const ProjectKnowledgeBases = () => {
       {isLoading ? (
         <Spin />
       ) : (
-        <Flex gap={12}>
+        <Flex gap={12} wrap="wrap">
           {dataSources?.length === 0 && (
             <Typography.Text type="secondary">
               No Knowledge Bases in this Project. Click the{" "}
