@@ -38,7 +38,14 @@
 
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 
-export const formatDataSource = (value: DataSourceType) => {
+export interface DataSourceInputType extends DataSourceType {
+  label: string;
+  value: number;
+}
+
+export const formatDataSource = (
+  value: DataSourceType,
+): DataSourceInputType => {
   return {
     ...value,
     label: value.name,

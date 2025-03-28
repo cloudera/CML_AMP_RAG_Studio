@@ -41,12 +41,16 @@ import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInp
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 import { useGetDataSourcesForProject } from "src/api/projectsApi.ts";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { formatDataSource } from "src/utils/formatters.ts";
+import { DataSourceInputType, formatDataSource } from "src/utils/formatters.ts";
+import { useState } from "react";
 
 export const NewChatSession = () => {
   const { project } = useProjectContext();
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { data: dataSources } = useGetDataSourcesForProject(project.id);
+  const [selectedDataSource, setSelectedDataSource] = useState<
+    number | undefined
+  >();
 
   return (
     <Card
@@ -57,9 +61,12 @@ export const NewChatSession = () => {
       }
       extra={
         <Select
-          disabled={dataSources.length === 0}
+          disabled={!dataSources || dataSources.length === 0}
           style={{ width: 300 }}
-          options={dataSources.map((value) => {
+          onSelect={(option: DataSourceInputType) => {
+            setSelectedDataSource(option.value);
+          }}
+          options={dataSources?.map((value) => {
             return formatDataSource(value);
           })}
         />
@@ -67,7 +74,7 @@ export const NewChatSession = () => {
     >
       <RagChatQueryInput
         newSessionCallback={(userInput: string) => {
-          createSessionAndRedirect(userInput, 1);
+          createSessionAndRedirect(userInput, selectedDataSource);
         }}
       />
     </Card>
