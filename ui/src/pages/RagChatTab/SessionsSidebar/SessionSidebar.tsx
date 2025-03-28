@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Session } from "src/api/sessionApi.ts";
 import {
   ConfigProvider,
@@ -95,8 +95,26 @@ const SessionMenuTheme = {
 export function SessionSidebar({ sessions }: { sessions: Session[] }) {
   const { activeSession } = useContext(RagChatContext);
   const { projectId } = useParams({ strict: false });
-
   const projectItems = getProjectItems();
+
+  const chooseKeys = (): string[] => {
+    if (activeSession) {
+      return [
+        activeSession.id.toString(),
+        `project-${activeSession.projectId.toString()}`,
+      ];
+    } else {
+      if (projectId) {
+        return [`project-${projectId}`];
+      }
+      return [];
+    }
+  };
+
+  const [openItems, setOpenItems] = useState<string[]>(chooseKeys());
+  useEffect(() => {
+    setOpenItems(chooseKeys());
+  }, [activeSession, projectId]);
 
   const items: ItemType[] = [
     ...newChatItem(18),
@@ -119,26 +137,14 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     ...defaultSessionItems(sessions),
   ];
 
-  const chooseKeys = (): string[] => {
-    if (activeSession) {
-      return [
-        activeSession.id.toString(),
-        `project-${activeSession.projectId.toString()}`,
-      ];
-    } else {
-      if (projectId) {
-        return [`project-${projectId}`];
-      }
-      return [];
-    }
-  };
-
   return (
     <ConfigProvider theme={SessionMenuTheme}>
       <div className="session-sider">
         <Sider width={280} style={{ height: "94vh" }}>
           <Menu
             defaultOpenKeys={chooseKeys()}
+            onOpenChange={setOpenItems}
+            openKeys={openItems}
             selectedKeys={chooseKeys()}
             multiple={true}
             mode="inline"
