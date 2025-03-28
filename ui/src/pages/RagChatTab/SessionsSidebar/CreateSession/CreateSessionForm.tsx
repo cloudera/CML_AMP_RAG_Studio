@@ -52,6 +52,7 @@ import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSessio
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
+import { formatDataSource } from "src/utils/formatters.ts";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
@@ -61,14 +62,6 @@ export interface CreateSessionFormProps {
 const layout = {
   labelCol: { span: 12 },
   wrapperCol: { span: 12 },
-};
-
-export const formatDataSource = (value: DataSourceType) => {
-  return {
-    ...value,
-    label: value.name,
-    value: value.id,
-  };
 };
 
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {

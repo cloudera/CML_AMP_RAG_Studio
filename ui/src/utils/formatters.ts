@@ -36,40 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import { Card, Select, Typography } from "antd";
-import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
-import { useGetDataSourcesForProject } from "src/api/projectsApi.ts";
-import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { formatDataSource } from "src/utils/formatters.ts";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 
-export const NewChatSession = () => {
-  const { project } = useProjectContext();
-  const createSessionAndRedirect = useCreateSessionAndRedirect();
-  const { data: dataSources } = useGetDataSourcesForProject(project.id);
-
-  return (
-    <Card
-      title={
-        <Typography.Title level={5} style={{ margin: 0 }}>
-          Start a new chat session
-        </Typography.Title>
-      }
-      extra={
-        <Select
-          disabled={dataSources.length === 0}
-          style={{ width: 300 }}
-          options={dataSources.map((value) => {
-            return formatDataSource(value);
-          })}
-        />
-      }
-    >
-      <RagChatQueryInput
-        newSessionCallback={(userInput: string) => {
-          createSessionAndRedirect(userInput, 1);
-        }}
-      />
-    </Card>
-  );
+export const formatDataSource = (value: DataSourceType) => {
+  return {
+    ...value,
+    label: value.name,
+    value: value.id,
+  };
 };

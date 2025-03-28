@@ -81,7 +81,11 @@ const RagChat = () => {
           padding: "8px 8px 20px 8px",
         }}
       >
-        <RagChatQueryInput newSessionCallback={createSessionAndRedirect} />
+        <RagChatQueryInput
+          newSessionCallback={(userInput: string) => {
+            createSessionAndRedirect(userInput);
+          }}
+        />
       </Footer>
     </Layout>
   );

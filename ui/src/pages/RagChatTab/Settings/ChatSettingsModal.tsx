@@ -61,7 +61,8 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
-import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
+
+import { formatDataSource } from "src/utils/formatters.ts";
 
 const ChatSettingsModal = ({
   open,

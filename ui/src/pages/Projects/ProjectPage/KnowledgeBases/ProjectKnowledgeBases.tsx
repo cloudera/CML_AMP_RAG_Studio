@@ -61,9 +61,9 @@ import {
   Typography,
 } from "antd";
 import FormItem from "antd/es/form/FormItem";
-import { formatDataSource } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionForm.tsx";
 import { MinusCircleOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
+import { formatDataSource } from "src/utils/formatters.ts";
 
 const SelectKnowledgeBaseForm = ({
   setPopoverVisible,
