@@ -63,7 +63,7 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session: Session, query: str, configuration: RagPredictConfiguration, user_name: str
+    session: Session, query: str, configuration: RagPredictConfiguration, user_name: Optional[str]
 ) -> RagStudioChatMessage:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -89,7 +89,7 @@ def _run_chat(
     response_id: str,
     query: str,
     query_configuration: QueryConfiguration,
-    user_name: str,
+    user_name: Optional[str],
 ) -> RagStudioChatMessage:
     if len(session.data_source_ids) != 1:
         raise HTTPException(
@@ -306,7 +306,7 @@ def process_response(response: str | None) -> list[str]:
 
 
 def direct_llm_chat(
-    session: Session, query: str, user_name: str
+    session: Session, query: str, user_name: Optional[str]
 ) -> RagStudioChatMessage:
     response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)

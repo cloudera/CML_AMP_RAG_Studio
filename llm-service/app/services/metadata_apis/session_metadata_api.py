@@ -39,7 +39,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Any
+from typing import List, Any, Optional
 
 import requests
 
@@ -84,9 +84,10 @@ BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
 
 
-def get_session(session_id: int, user_name: str) -> Session:
+def get_session(session_id: int, user_name: Optional[str]) -> Session:
+    headers = {"remote-user": user_name} if user_name else {}
     response = requests.get(
-        url_template.format(session_id), headers={"remote-user": user_name}
+        url_template.format(session_id), headers=headers
     )
     raise_for_http_error(response)
     data = body_to_json(response)
@@ -113,7 +114,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
     )
 
 
-def update_session(session: Session) -> Session:
+def update_session(session: Session, user_name: Optional[str]) -> Session:
     updatable_session = UpdatableSession(
         id=session.id,
         name=session.name,
@@ -130,7 +131,7 @@ def update_session(session: Session) -> Session:
     response = requests.post(
         url_template.format(updatable_session.id),
         data=json.dumps(updatable_session.__dict__, default=str),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "remote-user": user_name},
         timeout=10,
     )
     raise_for_http_error(response)

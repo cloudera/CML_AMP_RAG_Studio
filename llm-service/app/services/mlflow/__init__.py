@@ -80,7 +80,7 @@ def chat_log_ml_flow_table(message: RagStudioChatMessage) -> dict[str, Any]:
 
 
 def chat_log_ml_flow_params(
-    session: Session, query_configuration: QueryConfiguration, user_name: str
+    session: Session, query_configuration: QueryConfiguration, user_name: Optional[str]
 ) -> dict[str, Any]:
     data_source_metadata = data_sources_metadata_api.get_metadata(
         session.data_source_ids[0]
@@ -108,7 +108,7 @@ def record_rag_mlflow_run(
     query_configuration: QueryConfiguration,
     response_id: str,
     session: Session,
-    user_name: str,
+    user_name: Optional[str],
 ) -> None:
     params = chat_log_ml_flow_params(session, query_configuration, user_name)
     source_nodes: list[RagPredictSourceNode] = new_chat_message.source_nodes
@@ -136,7 +136,7 @@ def record_rag_mlflow_run(
 
 
 def record_direct_llm_mlflow_run(
-    response_id: str, session: Session, user_name: str
+    response_id: str, session: Session, user_name: Optional[str]
 ) -> None:
     write_mlflow_run_json(
         f"session_{session.id}",
