@@ -127,9 +127,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
       ];
     } else {
       if (projectId) {
-        const result = [`project-${projectId}`];
-        console.log(result);
-        return result;
+        return [`project-${projectId}`];
       }
       return [];
     }
