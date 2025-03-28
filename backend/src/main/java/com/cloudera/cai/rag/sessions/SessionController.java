@@ -82,7 +82,8 @@ public class SessionController {
   }
 
   @GetMapping(produces = "application/json")
-  public List<Session> getSessions() {
-    return sessionService.getSessions();
+  public List<Session> getSessions(HttpServletRequest request) {
+    String username = usernameExtractor.extractUsername(request);
+    return sessionService.getSessions(username);
   }
 }

@@ -68,7 +68,7 @@ public class SessionService {
     return input;
   }
 
-  public List<Types.Session> getSessions() {
+  public List<Types.Session> getSessions(String username) {
     return sessionRepository.getSessions();
   }
 

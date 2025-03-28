@@ -174,13 +174,20 @@ class SessionControllerTest {
   void getSessions() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request, "user-one");
     var input = TestData.createSessionInstance("test");
     var input2 = TestData.createSessionInstance("test2");
     sessionController.create(input, request);
     sessionController.create(input2, request);
 
-    var result = sessionController.getSessions();
+    var request2 = new MockHttpServletRequest();
+    TestData.addUserToRequest(request2, "user-two");
+    var input3 = TestData.createSessionInstance("test");
+    var otherPersonsSession = sessionController.create(input3, request2);
+
+    var result = sessionController.getSessions(new MockHttpServletRequest());
 
     assertThat(result).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(result).doesNotContain(otherPersonsSession);
   }
 }

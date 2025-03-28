@@ -92,7 +92,7 @@ class SessionServiceTest {
         TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
     var createdSession = sessionService.create(input);
     sessionService.delete(createdSession.id());
-    assertThat(sessionService.getSessions()).doesNotContain(createdSession);
+    assertThat(sessionService.getSessions("fake-user")).doesNotContain(createdSession);
   }
 
   @Test
@@ -105,7 +105,7 @@ class SessionServiceTest {
     sessionService.create(input);
     sessionService.create(input2);
 
-    var result = sessionService.getSessions();
+    var result = sessionService.getSessions("fake-user");
 
     assertThat(result).hasSizeGreaterThanOrEqualTo(2);
   }
