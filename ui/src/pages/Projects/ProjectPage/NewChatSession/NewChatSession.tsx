@@ -59,10 +59,11 @@ export const NewChatSession = () => {
       }
       extra={
         <Select
+          placeholder="Select a data source (optional)"
           disabled={!dataSources || dataSources.length === 0}
           style={{ width: 300 }}
           allowClear={true}
-          onSelect={(id: DataSourceInputType["value"]) => {
+          onChange={(id: DataSourceInputType["value"]) => {
             setSelectedDataSource(id);
           }}
           options={dataSources?.map((value) => {
@@ -73,7 +74,6 @@ export const NewChatSession = () => {
     >
       <RagChatQueryInput
         newSessionCallback={(userInput: string) => {
-          console.log(selectedDataSource);
           createSessionAndRedirect(userInput, selectedDataSource);
         }}
       />

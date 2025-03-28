@@ -43,17 +43,25 @@ import { useCreateProject } from "src/api/projectsApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
+import { useNavigate } from "@tanstack/react-router";
 
 export const ProjectsHeaderItem = () => {
   const createProjectModal = useModal();
   const [form] = Form.useForm<{ name: string }>();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const createProject = useCreateProject({
-    onSuccess: () => {
+    onSuccess: (project) => {
       createProjectModal.setIsModalOpen(false);
       queryClient
         .invalidateQueries({ queryKey: [QueryKeys.getProjects] })
+        .then(() => {
+          return navigate({
+            to: "/chats/projects/$projectId",
+            params: { projectId: project.id.toString() },
+          });
+        })
         .catch(() => {
           messageQueue.error("Failed to refresh projects");
         });
