@@ -59,7 +59,7 @@ class SessionRepositoryTest {
     var id = sessionRepository.create(input);
     assertThat(id).isNotNull();
 
-    var result = sessionRepository.getSessionById(id);
+    var result = sessionRepository.getSessionById(id, username);
 
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(input.name());
@@ -108,9 +108,9 @@ class SessionRepositoryTest {
             TestData.createTestSessionInstance("test")
                 .withCreatedById("abc")
                 .withUpdatedById("abc"));
-    assertThat(sessionRepository.getSessionById(id)).isNotNull();
+    assertThat(sessionRepository.getSessionById(id, username)).isNotNull();
 
     sessionRepository.delete(id);
-    assertThatThrownBy(() -> sessionRepository.getSessionById(id)).isInstanceOf(NotFound.class);
+    assertThatThrownBy(() -> sessionRepository.getSessionById(id, username)).isInstanceOf(NotFound.class);
   }
 }

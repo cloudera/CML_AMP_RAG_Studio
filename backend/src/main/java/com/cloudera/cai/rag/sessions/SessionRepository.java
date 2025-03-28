@@ -105,7 +105,7 @@ public class SessionRepository {
     }
   }
 
-  public Types.Session getSessionById(Long id) {
+  public Types.Session getSessionById(Long id, String username) {
     return jdbi.withHandle(
             handle -> {
               handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));

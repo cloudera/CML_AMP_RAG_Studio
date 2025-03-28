@@ -77,7 +77,7 @@ class DeleteSessionReconcilerTest {
     reconciler.resync();
     await().until(reconciler::isEmpty);
 
-    assertThatThrownBy(() -> ragSessionRepository.getSessionById(sessionId))
+    assertThatThrownBy(() -> ragSessionRepository.getSessionById(sessionId, username))
         .isInstanceOf(NotFound.class);
     await().untilAsserted(() -> assertThat(sessionIsInTheDatabase(sessionId)).isFalse());
     assertThatThrownBy(() -> ragFileRepository.findDocumentByDocumentId(documentId))

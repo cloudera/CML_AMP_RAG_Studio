@@ -97,10 +97,25 @@ class SessionControllerTest {
   void get() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
     var input = TestData.createSessionInstance("test");
     var createdSession = sessionController.create(input, request);
-    var result = sessionController.getSession(createdSession.id());
+    var result = sessionController.getSession(createdSession.id(), request);
     assertThat(result).isEqualTo(createdSession);
+  }
+
+  @Test
+  void get_otherUserSession() {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    var input = TestData.createSessionInstance("test");
+    var createdSession = sessionController.create(input, request);
+
+    var request2 = new MockHttpServletRequest();
+    TestData.addUserToRequest(request2, "other-user");
+    assertThatThrownBy(() -> sessionController.getSession(createdSession.id(), request2))
+        .isInstanceOf(NotFound.class);
   }
 
   @Test
@@ -162,11 +177,12 @@ class SessionControllerTest {
     SessionService sessionService = SessionService.createNull();
     SessionController sessionController = new SessionController(sessionService);
     var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request, "test-user");
 
     var input = TestData.createSessionInstance("test");
     var createdSession = sessionController.create(input, request);
     sessionController.delete(createdSession.id());
-    assertThatThrownBy(() -> sessionService.getSessionById(createdSession.id()))
+    assertThatThrownBy(() -> sessionService.getSessionById(createdSession.id(), "test-user"))
         .isInstanceOf(NotFound.class);
   }
 

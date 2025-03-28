@@ -58,8 +58,9 @@ public class SessionController {
   }
 
   @GetMapping(path = "/{id}", produces = "application/json")
-  public Session getSession(@PathVariable Long id) {
-    return sessionService.getSessionById(id);
+  public Session getSession(@PathVariable Long id, HttpServletRequest request) {
+    String username = usernameExtractor.extractUsername(request);
+    return sessionService.getSessionById(id, username);
   }
 
   @PostMapping(consumes = "application/json", produces = "application/json")

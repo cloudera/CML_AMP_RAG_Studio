@@ -379,7 +379,7 @@ class ProjectControllerTest {
     controller.removeDataSourceFromProject(newProject.id(), dataSourceId);
 
     // Get the updated session
-    var updatedSession = sessionService.getSessionById(session.id());
+    var updatedSession = sessionService.getSessionById(session.id(), "test-user");
 
     // Verify the data source is no longer in the session's list of data sources
     assertThat(updatedSession.dataSourceIds()).doesNotContain(dataSourceId);

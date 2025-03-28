@@ -53,12 +53,12 @@ public class SessionService {
 
   public Types.Session create(Types.Session input) {
     var id = sessionRepository.create(cleanInputs(input));
-    return sessionRepository.getSessionById(id);
+    return sessionRepository.getSessionById(id, username);
   }
 
   public Types.Session update(Types.Session input) {
     sessionRepository.update(cleanInputs(input));
-    return sessionRepository.getSessionById(input.id());
+    return sessionRepository.getSessionById(input.id(), username);
   }
 
   private Types.Session cleanInputs(Types.Session input) {
@@ -76,8 +76,8 @@ public class SessionService {
     return sessionRepository.getSessionsByProjectId(projectId);
   }
 
-  public Types.Session getSessionById(Long id) {
-    return sessionRepository.getSessionById(id);
+  public Types.Session getSessionById(Long id, String username) {
+    return sessionRepository.getSessionById(id, username);
   }
 
   public void delete(Long id) {
