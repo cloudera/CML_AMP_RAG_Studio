@@ -50,15 +50,16 @@ import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.sessions.SessionService;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 class ProjectControllerTest {
 
+  private final ProjectService projectService = ProjectService.createNull();
+
   @Test
-  void create() throws Exception {
+  void create() {
     ProjectController controller = createController();
     Types.CreateProject createProject = TestData.createProjectRequest("test-project");
 
@@ -77,7 +78,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void update() throws Exception {
+  void update() {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -98,7 +99,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void deleteProject() throws Exception {
+  void deleteProject() {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -111,12 +112,12 @@ class ProjectControllerTest {
     controller.deleteProject(newProject.id());
 
     // Verify the project is deleted
-    assertThatThrownBy(() -> controller.getProjectById(newProject.id()))
+    assertThatThrownBy(() -> projectService.getProjectById(newProject.id()))
         .isInstanceOf(NotFound.class);
   }
 
   @Test
-  void deleteProjectWithAssociatedData() throws Exception {
+  void deleteProjectWithAssociatedData() {
     // Create controller with both ProjectService and SessionService
     ProjectService projectService = ProjectService.createNull();
     SessionService sessionService = SessionService.createNull();
@@ -154,7 +155,7 @@ class ProjectControllerTest {
     controller.deleteProject(newProject.id());
 
     // Verify the project is deleted
-    assertThatThrownBy(() -> controller.getProjectById(newProject.id()))
+    assertThatThrownBy(() -> projectService.getProjectById(newProject.id()))
         .isInstanceOf(NotFound.class);
 
     // Verify the data source associations are deleted
@@ -165,7 +166,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getProjects() throws Exception {
+  void getProjects() {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -191,7 +192,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void getDefaultProject() throws Exception {
+  void getDefaultProject() {
     ProjectController controller = createController();
 
     // Get the default project
@@ -202,7 +203,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void addAndRemoveDataSourceToProject() throws Exception {
+  void addAndRemoveDataSourceToProject() {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -227,7 +228,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void createWithEmptyName() throws Exception {
+  void createWithEmptyName() {
     ProjectController controller = createController();
     Types.CreateProject createProject = TestData.createProjectRequest("");
 
@@ -240,7 +241,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void updateWithEmptyName() throws Exception {
+  void updateWithEmptyName() {
     ProjectController controller = createController();
 
     // Create a new Project
@@ -259,13 +260,12 @@ class ProjectControllerTest {
 
   @Test
   void getProjectByIdNotFound() {
-    ProjectController controller = createController();
 
-    assertThatThrownBy(() -> controller.getProjectById(999L)).isInstanceOf(NotFound.class);
+    assertThatThrownBy(() -> projectService.getProjectById(999L)).isInstanceOf(NotFound.class);
   }
 
   @Test
-  void getSessionsForProject() throws JsonProcessingException {
+  void getSessionsForProject() {
     // Create controller with both ProjectService and SessionService
     ProjectService projectService = ProjectService.createNull();
     SessionService sessionService = SessionService.createNull();
@@ -331,7 +331,7 @@ class ProjectControllerTest {
   }
 
   @Test
-  void removeDataSourceFromProjectRemovesFromSessions() throws Exception {
+  void removeDataSourceFromProjectRemovesFromSessions() {
     // Create controller with both ProjectService and SessionService
     ProjectService projectService = ProjectService.createNull();
     SessionService sessionService = SessionService.createNull();
@@ -372,6 +372,6 @@ class ProjectControllerTest {
   }
 
   private ProjectController createController() {
-    return new ProjectController(ProjectService.createNull(), SessionService.createNull());
+    return new ProjectController(projectService, SessionService.createNull());
   }
 }

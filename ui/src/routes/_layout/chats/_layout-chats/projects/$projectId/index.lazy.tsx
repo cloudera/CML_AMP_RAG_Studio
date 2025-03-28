@@ -58,7 +58,7 @@ export const Route = createLazyFileRoute(
     if (!project) {
       return notFound({
         throw: true,
-        routeId: "/_layout/projects/_layout-projects/$projectId",
+        routeId: "/_layout/chats/_layout-chats/projects/$projectId/",
       });
     }
 

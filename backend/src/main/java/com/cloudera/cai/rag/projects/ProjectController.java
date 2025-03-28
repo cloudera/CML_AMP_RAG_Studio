@@ -85,10 +85,6 @@ public class ProjectController {
     return projectService.updateProject(input);
   }
 
-  public Types.Project getProjectById(Long id) {
-    return projectService.getProjectById(id);
-  }
-
   @DeleteMapping(value = "/{id}")
   public void deleteProject(@PathVariable long id) {
     log.debug("Deleting Project with id: {}", id);
