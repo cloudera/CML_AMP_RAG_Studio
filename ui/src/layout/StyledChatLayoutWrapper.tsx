@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+ * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -35,34 +35,18 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex } from "antd";
-import { ProjectKnowledgeBases } from "pages/Projects/ProjectPage/KnowledgeBases/ProjectKnowledgeBases.tsx";
-import { Sessions } from "pages/Projects/ProjectPage/Sessions/Sessions.tsx";
-import { ProjectTitleBar } from "pages/Projects/ProjectPage/ProjectTitleBar/ProjectTitleBar.tsx";
-import { NewChatSession } from "pages/Projects/ProjectPage/NewChatSession/NewChatSession.tsx";
-import { StyledChatLayoutWrapper } from "src/layout/StyledChatLayoutWrapper.tsx";
 
-const ProjectPage = () => {
+import { ReactNode } from "react";
+import { Flex } from "antd";
+
+export const StyledChatLayoutWrapper = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   return (
-    <Flex
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
-      vertical
-    >
-      <StyledChatLayoutWrapper>
-        <ProjectTitleBar />
-      </StyledChatLayoutWrapper>
-      <Flex gap={32} style={{ overflowY: "auto" }}>
-        <Flex flex={2} vertical gap={32}>
-          <NewChatSession />
-          <ProjectKnowledgeBases />
-          <Sessions />
-        </Flex>
-      </Flex>
+    <Flex justify="center">
+      <Flex style={{ width: "100%", maxWidth: 900 }}>{children}</Flex>
     </Flex>
   );
 };
-
-export default ProjectPage;

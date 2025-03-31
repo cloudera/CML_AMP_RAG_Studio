@@ -38,21 +38,14 @@
 
 import { Flex, Layout } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import { useContext, ReactNode } from "react";
+import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
 import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { StyledChatLayoutWrapper } from "src/layout/StyledChatLayoutWrapper.tsx";
 
 const { Footer, Content } = Layout;
-
-const StyledChatLayoutWrapper = ({ children }: { children: ReactNode }) => {
-  return (
-    <Flex justify="center">
-      <Flex style={{ width: "100%", maxWidth: 900 }}>{children}</Flex>
-    </Flex>
-  );
-};
 
 const RagChat = () => {
   const {
@@ -66,14 +59,12 @@ const RagChat = () => {
   });
   return (
     <Layout style={{ height: "100%", width: "100%" }}>
-      <Flex justify="center" style={{ margin: 20 }}>
-        <Flex style={{ maxWidth: 900, width: "100%" }}>
-          <RagChatHeader
-            activeSession={activeSession}
-            currentDataSource={currentDataSource}
-          />
-        </Flex>
-      </Flex>
+      <StyledChatLayoutWrapper>
+        <RagChatHeader
+          activeSession={activeSession}
+          currentDataSource={currentDataSource}
+        />
+      </StyledChatLayoutWrapper>
       <Content
         style={{
           height: "20vh",
@@ -82,19 +73,17 @@ const RagChat = () => {
           paddingRight: 20,
         }}
       >
-        <Flex justify="center">
-          <Flex style={{ width: "100%", maxWidth: 900 }}>
-            <Flex
-              vertical
-              align="center"
-              gap={16}
-              justify="center"
-              style={{ width: "100%" }}
-            >
-              <ChatMessageController />
-            </Flex>
+        <StyledChatLayoutWrapper>
+          <Flex
+            vertical
+            align="center"
+            gap={16}
+            justify="center"
+            style={{ width: "100%" }}
+          >
+            <ChatMessageController />
           </Flex>
-        </Flex>
+        </StyledChatLayoutWrapper>
       </Content>
       <Flex justify="center">
         <Footer
