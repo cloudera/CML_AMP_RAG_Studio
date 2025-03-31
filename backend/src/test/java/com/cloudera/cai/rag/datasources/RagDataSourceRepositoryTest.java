@@ -82,12 +82,14 @@ class RagDataSourceRepositoryTest {
     assertThat(insertedDataSource.updatedById()).isEqualTo("abc");
     var timeInserted = insertedDataSource.timeUpdated();
     assertThat(timeInserted).isNotNull();
+    assertThat(insertedDataSource.availableForDefaultProject()).isTrue();
 
     var expectedRagDataSource =
         TestData.createTestDataSourceInstance("new-name", 512, 10, API)
             .withCreatedById("abc")
             .withUpdatedById("def")
             .withId(id)
+            .withAvailableForDefaultProject(false)
             .withDocumentCount(0);
     // wait a moment so the updated time will always be later than insert time
     await().atLeast(Duration.ofMillis(1));

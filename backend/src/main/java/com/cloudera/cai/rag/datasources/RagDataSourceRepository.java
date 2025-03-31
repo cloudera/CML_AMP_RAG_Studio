@@ -72,7 +72,7 @@ public class RagDataSourceRepository {
             update.bindMethods(cleanedInputs);
             result = update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
           }
-          if (Boolean.TRUE.equals(input.isAvailableForDefaultProject())) {
+          if (Boolean.TRUE.equals(input.availableForDefaultProject())) {
             handle.execute(
                 "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
                 result);
@@ -89,7 +89,6 @@ public class RagDataSourceRepository {
   }
 
   public void updateRagDataSource(RagDataSource input) {
-
     RagDataSource cleanedInputs = cleanInputs(input);
     jdbi.inTransaction(
         handle -> {
@@ -123,7 +122,7 @@ public class RagDataSourceRepository {
                   LEFT JOIN project_data_source rdsp ON rds.id = rdsp.data_source_id
                WHERE rds.ID = :id
                  AND rds.deleted IS NULL
-                 AND (rdsp.project_id = 1)
+                 AND rdsp.project_id = 1
                 GROUP BY rds.ID
               """;
           handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
@@ -143,11 +142,13 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-              SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size
+              SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as is_available_for_default_project
                 FROM rag_data_source rds
                 LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
+                LEFT JOIN project_data_source rdsp ON rds.id = rdsp.data_source_id
               WHERE rds.deleted IS NULL
-               GROUP BY rds.ID
+                AND rdsp.project_id = 1
+              GROUP BY rds.ID
               """;
           handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
           try (Query query = handle.createQuery(sql)) {
