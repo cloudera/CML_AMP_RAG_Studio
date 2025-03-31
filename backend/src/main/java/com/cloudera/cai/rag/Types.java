@@ -99,7 +99,7 @@ public class Types {
       ConnectionType connectionType,
       @Nullable Integer documentCount,
       @Nullable Long totalDocSize,
-      @Nullable Boolean availableForDefaultProject) {}
+      boolean availableForDefaultProject) {}
 
   public record QueryConfiguration(boolean enableHyde, boolean enableSummaryFilter) {}
 

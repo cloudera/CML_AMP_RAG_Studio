@@ -124,15 +124,17 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-               SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
-                    COALESCE(pds.project_id, 0) as available_for_default_project
-                 FROM rag_data_source rds
+              SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
+              EXISTS(
+                  SELECT 1 from project_data_source pds
+                  WHERE pds.data_source_id = rds.id
+                    AND pds.project_id = 1
+              ) as available_for_default_project
+              FROM rag_data_source rds
                   LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
-                  LEFT JOIN project_data_source pds ON rds.id = pds.data_source_id
-               WHERE rds.ID = :id
-                 AND rds.deleted IS NULL
-                 AND (pds.project_id = 1 OR pds.project_id IS NULL)
-                GROUP BY rds.ID
+              WHERE rds.deleted IS NULL
+               AND rds.id = :id
+              GROUP BY rds.ID
               """;
           handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
           try (Query query = handle.createQuery(sql)) {
@@ -152,12 +154,14 @@ public class RagDataSourceRepository {
           var sql =
               """
               SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
-                  COALESCE(pds.project_id, 0) as available_for_default_project
-                FROM rag_data_source rds
-                LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
-                LEFT JOIN project_data_source pds ON rds.id = pds.data_source_id
+              EXISTS(
+                  SELECT 1 from project_data_source pds
+                  WHERE pds.data_source_id = rds.id
+                    AND pds.project_id = 1
+              ) as available_for_default_project
+              FROM rag_data_source rds
+                       LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
               WHERE rds.deleted IS NULL
-                  AND (pds.project_id = 1 OR pds.project_id IS NULL)
               GROUP BY rds.ID
               """;
           handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
