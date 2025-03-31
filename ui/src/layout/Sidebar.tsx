@@ -38,10 +38,10 @@
 
 import React, { useRef, useState } from "react";
 import {
-  CloudOutlined,
   CommentOutlined,
   DatabaseOutlined,
   LineChartOutlined,
+  RobotFilled,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -172,7 +172,7 @@ const Sidebar: React.FC = () => {
     <div data-testid="models-nav">Models</div>,
     "models",
     navToModels,
-    <CloudOutlined />,
+    <RobotFilled />,
   );
 
   const analyticsItem = getItem(

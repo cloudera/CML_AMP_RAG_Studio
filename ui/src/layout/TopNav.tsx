@@ -38,10 +38,10 @@
 
 import React from "react";
 import {
-  CloudOutlined,
   CommentOutlined,
   DatabaseOutlined,
   LineChartOutlined,
+  RobotFilled,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -115,7 +115,7 @@ const TopNav: React.FC = () => {
     <span data-testid="models-nav">Models</span>,
     "models",
     navigateTo("/models"),
-    <CloudOutlined />,
+    <RobotFilled />,
   );
 
   const analyticsItem = getItem(

@@ -86,19 +86,19 @@ public class Types {
 
   @With
   public record RagDataSource(
-      Long id,
-      String name,
-      String embeddingModel,
-      String summarizationModel,
-      Integer chunkSize,
-      Integer chunkOverlapPercent,
-      Instant timeCreated,
-      Instant timeUpdated,
-      String createdById,
-      String updatedById,
-      ConnectionType connectionType,
-      @Nullable Integer documentCount,
-      @Nullable Long totalDocSize) {}
+          Long id,
+          String name,
+          String embeddingModel,
+          String summarizationModel,
+          Integer chunkSize,
+          Integer chunkOverlapPercent,
+          Instant timeCreated,
+          Instant timeUpdated,
+          String createdById,
+          String updatedById,
+          ConnectionType connectionType,
+          @Nullable Integer documentCount,
+          @Nullable Long totalDocSize, Boolean isAvailableForDefaultProject) {}
 
   public record QueryConfiguration(boolean enableHyde, boolean enableSummaryFilter) {}
 
