@@ -258,9 +258,11 @@ export const ProjectKnowledgeBases = () => {
   });
 
   return (
-    <Card
-      title="Knowledge Bases"
-      extra={
+    <Flex vertical gap={15} style={{ width: "100%" }}>
+      <Flex justify="space-between">
+        <Typography.Title level={5} style={{ margin: 0 }}>
+          Knowledge Bases
+        </Typography.Title>
         <Popover
           title="Add Knowledge Base"
           open={popoverVisible && unusedDataSources?.length !== 0}
@@ -281,8 +283,7 @@ export const ProjectKnowledgeBases = () => {
             icon={<PlusCircleOutlined />}
           />
         </Popover>
-      }
-    >
+      </Flex>
       {isLoading ? (
         <Spin />
       ) : (
@@ -298,6 +299,6 @@ export const ProjectKnowledgeBases = () => {
           ))}
         </Flex>
       )}
-    </Card>
+    </Flex>
   );
 };

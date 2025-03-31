@@ -60,7 +60,7 @@ export const Sessions = () => {
   }
 
   return (
-    <Flex vertical gap={15} style={{ height: "55vh", width: "100%" }}>
+    <Flex vertical gap={15} style={{ width: "100%" }}>
       <Typography.Title level={5} style={{ margin: 0 }}>
         Chats
       </Typography.Title>
