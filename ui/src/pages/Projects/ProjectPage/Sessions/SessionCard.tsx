@@ -122,8 +122,9 @@ const SessionCard = ({ session }: { session: Session }) => {
     <Card
       title={session.name}
       extra={<DeleteSession session={session} />}
-      hoverable={true}
       onClick={handleNavOnClick}
+      hoverable={true}
+      // style={{ cursor: "pointer" }}
     >
       <Typography.Paragraph ellipsis={{ rows: 2 }}>
         {isSuccess && lastMessage ? lastMessage.rag_message.assistant : null}

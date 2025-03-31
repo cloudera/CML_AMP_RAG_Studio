@@ -258,7 +258,7 @@ export const ProjectKnowledgeBases = () => {
   });
 
   return (
-    <Flex vertical gap={15} style={{ width: "100%" }}>
+    <Flex vertical gap={20} style={{ width: "100%" }}>
       <Flex justify="space-between">
         <Typography.Title level={5} style={{ margin: 0 }}>
           Knowledge Bases
@@ -287,7 +287,7 @@ export const ProjectKnowledgeBases = () => {
       {isLoading ? (
         <Spin />
       ) : (
-        <Flex gap={12} wrap="wrap">
+        <Flex gap={12} wrap="wrap" style={{ padding: 8 }}>
           {dataSources?.length === 0 && (
             <Typography.Text type="secondary">
               No Knowledge Bases in this Project. Click the{" "}
