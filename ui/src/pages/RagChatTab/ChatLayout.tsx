@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Divider, Flex, Layout } from "antd";
+import { Divider, Layout } from "antd";
 import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
 import { Session, useGetSessions } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
@@ -113,21 +113,21 @@ function ChatLayout() {
           type="vertical"
           style={{ height: "100%", padding: 0, margin: 0 }}
         />
-        <Flex style={{ width: "100%" }} justify="center">
-          <Flex
-            vertical
-            align="center"
-            justify="center"
-            style={{
-              maxWidth: 900,
-              width: "100%",
-              margin: 20,
-            }}
-            gap={20}
-          >
-            <Outlet />
-          </Flex>
-        </Flex>
+        {/*<Flex style={{ width: "100%" }} justify="center">*/}
+        {/*  <Flex*/}
+        {/*    vertical*/}
+        {/*    align="center"*/}
+        {/*    justify="center"*/}
+        {/*    style={{*/}
+        {/*      maxWidth: 900,*/}
+        {/*      width: "100%",*/}
+        {/*      margin: 20,*/}
+        {/*    }}*/}
+        {/*    gap={20}*/}
+        {/*  >*/}
+        <Outlet />
+        {/*  </Flex>*/}
+        {/*</Flex>*/}
       </Layout>
     </RagChatContext.Provider>
   );

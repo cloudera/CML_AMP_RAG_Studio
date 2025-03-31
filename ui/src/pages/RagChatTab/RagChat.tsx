@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Layout } from "antd";
+import { Flex, Layout } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -58,10 +58,14 @@ const RagChat = () => {
   });
   return (
     <Layout style={{ height: "100%", width: "100%" }}>
-      <RagChatHeader
-        activeSession={activeSession}
-        currentDataSource={currentDataSource}
-      />
+      <Flex justify="center" style={{ margin: 20 }}>
+        <Flex style={{ maxWidth: 900, width: "100%" }}>
+          <RagChatHeader
+            activeSession={activeSession}
+            currentDataSource={currentDataSource}
+          />
+        </Flex>
+      </Flex>
       <Content
         style={{
           height: "20vh",
@@ -70,23 +74,30 @@ const RagChat = () => {
           paddingRight: 20,
         }}
       >
-        <ChatMessageController />
+        <Flex justify="center">
+          <Flex style={{ width: "100%", maxWidth: 900 }}>
+            <ChatMessageController />
+          </Flex>
+        </Flex>
       </Content>
-      <Footer
-        style={{
-          position: "sticky",
-          bottom: 0,
-          zIndex: 1,
-          width: "100%",
-          padding: "8px 8px 20px 8px",
-        }}
-      >
-        <RagChatQueryInput
-          newSessionCallback={(userInput: string) => {
-            createSessionAndRedirect(userInput);
+      <Flex justify="center">
+        <Footer
+          style={{
+            position: "sticky",
+            bottom: 0,
+            zIndex: 1,
+            width: "100%",
+            padding: "8px 8px 20px 8px",
+            maxWidth: 900,
           }}
-        />
-      </Footer>
+        >
+          <RagChatQueryInput
+            newSessionCallback={(userInput: string) => {
+              createSessionAndRedirect(userInput);
+            }}
+          />
+        </Footer>
+      </Flex>
     </Layout>
   );
 };
