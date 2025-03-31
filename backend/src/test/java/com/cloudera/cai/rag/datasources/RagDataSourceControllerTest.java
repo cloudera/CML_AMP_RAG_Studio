@@ -98,7 +98,8 @@ class RagDataSourceControllerTest {
             newDataSource.updatedById(),
             newDataSource.connectionType(),
             0,
-            null, true);
+            null,
+            true);
     controller.update(expectedDataSource, new MockHttpServletRequest());
 
     // Retrieve the updated RagDataSource and verify the name change

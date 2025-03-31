@@ -182,7 +182,8 @@ class RagFileIndexReconcilerTest {
             "test-id",
             Types.ConnectionType.API,
             null,
-            null, true));
+            null,
+            true));
   }
 
   @Test

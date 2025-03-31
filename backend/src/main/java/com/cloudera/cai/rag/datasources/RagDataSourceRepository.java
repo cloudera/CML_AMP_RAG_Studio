@@ -59,7 +59,6 @@ public class RagDataSourceRepository {
   }
 
   public Long createRagDataSource(RagDataSource input) {
-
     RagDataSource cleanedInputs = cleanInputs(input);
     return jdbi.inTransaction(
         handle -> {
@@ -68,10 +67,17 @@ public class RagDataSourceRepository {
                 INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type, embedding_model, summarization_model)
                 VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel, :summarizationModel)
               """;
+          Long result;
           try (var update = handle.createUpdate(sql)) {
             update.bindMethods(cleanedInputs);
-            return update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
+            result = update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
           }
+          if (Boolean.TRUE.equals(input.isAvailableForDefaultProject())) {
+            handle.execute(
+                "INSERT INTO rag_data_source_project (data_source_id, project_id) VALUES (?, 1)",
+                result);
+          }
+          return result;
         });
   }
 
@@ -111,10 +117,13 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-               SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size
+               SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as is_available_for_default_project
                  FROM rag_data_source rds
                   LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
-               WHERE rds.ID = :id AND rds.deleted IS NULL
+                  LEFT JOIN rag_data_source_project rdsp ON rds.id = rdsp.data_source_id
+               WHERE rds.ID = :id
+                 AND rds.deleted IS NULL
+                 AND (rdsp.project_id = 1)
                 GROUP BY rds.ID
               """;
           handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));

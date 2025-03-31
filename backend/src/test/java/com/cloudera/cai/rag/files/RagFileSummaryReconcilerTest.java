@@ -183,7 +183,8 @@ class RagFileSummaryReconcilerTest {
             "test-id",
             Types.ConnectionType.API,
             null,
-            null, true));
+            null,
+            true));
   }
 
   @Test
