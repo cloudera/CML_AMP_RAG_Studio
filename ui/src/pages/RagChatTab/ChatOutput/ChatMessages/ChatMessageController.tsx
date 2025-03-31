@@ -119,7 +119,13 @@ const ChatMessageController = () => {
       return <PendingRagOutputSkeleton question={search.question} />;
     }
     return (
-      <Flex vertical align="center" gap={16}>
+      <Flex
+        vertical
+        align="center"
+        gap={16}
+        justify="center"
+        style={{ width: "100%" }}
+      >
         <Image
           src={Images.BrandTalking}
           alt="Machines Chatting"
