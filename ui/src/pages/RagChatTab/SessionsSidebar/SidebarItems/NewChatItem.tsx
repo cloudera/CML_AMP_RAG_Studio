@@ -36,27 +36,45 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex } from "antd";
+import { Button, Flex, Typography } from "antd";
 import { MenuItem } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
-import Images from "src/components/images/Images.ts";
 import { useNavigate } from "@tanstack/react-router";
+import { PlusCircleOutlined } from "@ant-design/icons";
+import { cdlGray700 } from "src/cuix/variables.ts";
+import Images from "src/components/images/Images";
 
-export const newChatItem = (iconSize?: number): MenuItem => {
+export const newChatItem = (): MenuItem => {
   const navigate = useNavigate();
   return [
     {
       key: "new",
-      label: "New Chat",
-      icon: (
-        <Flex justify="center" align="center" style={{ height: "100%" }}>
-          <Images.PlusCircle style={iconSize ? { fontSize: iconSize } : {}} />
+      type: "group",
+      label: (
+        <Flex
+          gap={6}
+          style={{ paddingLeft: 12, paddingTop: 32 }}
+          justify="space-between"
+          align="center"
+        >
+          <Flex gap={4} align="center">
+            <Images.Comment
+              style={{ height: 20, width: 20, paddingBottom: 2 }}
+            />
+            <Typography.Text style={{ fontSize: 16, color: cdlGray700 }}>
+              Chats
+            </Typography.Text>
+          </Flex>
+          <Button
+            type="text"
+            icon={<PlusCircleOutlined />}
+            onClick={() => {
+              navigate({
+                to: "/chats",
+              }).catch(() => null);
+            }}
+          />
         </Flex>
       ),
-      onClick: () => {
-        navigate({
-          to: "/chats",
-        }).catch(() => null);
-      },
     },
   ];
 };

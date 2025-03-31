@@ -53,6 +53,7 @@ import PlusCircle from "./ic-plus-circle.svg?react";
 import RagStudioProduct from "./rag-studio-product-icon.svg";
 import image404 from "./404image.png";
 import Models from "./ic-models.svg?react";
+import Comment from "./comment.svg?react";
 
 const Images = {
   AiAssistant: AiAssistant,
@@ -62,6 +63,7 @@ const Images = {
   Cloudera: Cloudera,
   ClouderaSmall: ClouderaSmall,
   Clipboard: Clipboard,
+  Comment: Comment,
   DB: DB,
   Ghost: Ghost,
   History: History,

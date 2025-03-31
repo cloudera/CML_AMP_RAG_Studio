@@ -38,16 +38,7 @@
 
 import { useContext, useEffect, useState } from "react";
 import { Session } from "src/api/sessionApi.ts";
-import {
-  Button,
-  ConfigProvider,
-  Flex,
-  Layout,
-  Menu,
-  MenuProps,
-  theme,
-  Typography,
-} from "antd";
+import { ConfigProvider, Layout, Menu, MenuProps, theme } from "antd";
 import {
   cdlGray200,
   cdlGray800,
@@ -61,7 +52,7 @@ import "./index.css";
 import { ProjectsHeaderItem } from "pages/RagChatTab/SessionsSidebar/SidebarItems/ProjectsHeaderItem.tsx";
 import { getProjectItems } from "pages/RagChatTab/SessionsSidebar/SidebarItems/ProjectItems.tsx";
 import { useParams } from "@tanstack/react-router";
-import { MonitorOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { newChatItem } from "pages/RagChatTab/SessionsSidebar/SidebarItems/NewChatItem.tsx";
 
 const { Sider } = Layout;
 
@@ -124,26 +115,7 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     { type: "divider", key: "projectHeaderDivider" },
     ...projectItems,
     { type: "divider", key: "newChatDivider" },
-    {
-      type: "group",
-      label: (
-        <Flex
-          gap={6}
-          style={{ paddingLeft: 12, paddingTop: 32 }}
-          justify="space-between"
-          align="center"
-        >
-          <div>
-            <MonitorOutlined /> <Typography.Text>Chats</Typography.Text>
-          </div>
-          <Button
-            type="text"
-            icon={<PlusCircleOutlined />}
-            onClick={() => {}}
-          />
-        </Flex>
-      ),
-    },
+    ...newChatItem(),
     ...defaultSessionItems(sessions),
   ];
 
