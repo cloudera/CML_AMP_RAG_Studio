@@ -101,6 +101,9 @@ class RagDataSourceRepositoryTest {
         .ignoringFieldsOfTypes(Instant.class)
         .isEqualTo(expectedRagDataSource);
     assertThat(updatedDataSource.timeUpdated()).isAfter(timeInserted);
+
+    repository.updateRagDataSource(expectedRagDataSource.withAvailableForDefaultProject(true));
+    assertThat(repository.getRagDataSourceById(id).availableForDefaultProject()).isTrue();
   }
 
   @Test
