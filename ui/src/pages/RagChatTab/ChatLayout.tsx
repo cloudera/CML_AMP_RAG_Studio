@@ -64,10 +64,12 @@ function ChatLayout() {
     getDefaultProjectQueryOptions,
   );
 
-  const projectId: string =
-    routeProjectId ?? sessionId ?? defaultProject.id.toString();
-
   const activeSession = getSessionForSessionId(sessionId, sessions);
+  const projectId: string =
+    routeProjectId ??
+    activeSession?.projectId.toString() ??
+    defaultProject.id.toString();
+
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);

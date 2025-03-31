@@ -37,6 +37,7 @@
  ******************************************************************************/
 
 import {
+  Checkbox,
   Collapse,
   Form,
   FormInstance,
@@ -122,6 +123,7 @@ export const dataSourceCreationInitialValues = {
   chunkOverlapPercent: 10,
   embeddingModel: "",
   summarizationModel: "",
+  availableForDefaultProject: true,
 };
 
 export interface DataSourcesFormProps {
@@ -166,6 +168,14 @@ const DataSourcesForm = ({
         rules={[{ required: true }]}
       >
         <Input />
+      </Form.Item>
+      <Form.Item
+        name="availableForDefaultProject"
+        label="Available without project"
+        initialValue={initialValues.availableForDefaultProject}
+        valuePropName="checked"
+      >
+        <Checkbox />
       </Form.Item>
       <Form.Item
         name="chunkSize"

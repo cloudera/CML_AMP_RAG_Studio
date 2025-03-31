@@ -54,6 +54,7 @@ export interface CreateDataSourceType {
   chunkSize: number;
   chunkOverlapPercent: number;
   embeddingModel: string;
+  availableForDefaultProject: boolean;
 }
 
 export enum ConnectionType {
@@ -71,6 +72,7 @@ export interface DataSourceBaseType {
   connectionType: ConnectionType;
   embeddingModel: string;
   summarizationModel?: string;
+  availableForDefaultProject: boolean;
 }
 
 export type DataSourceType = DataSourceBaseType & {
