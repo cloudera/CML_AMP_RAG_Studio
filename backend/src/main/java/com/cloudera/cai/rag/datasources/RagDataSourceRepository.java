@@ -74,7 +74,7 @@ public class RagDataSourceRepository {
           }
           if (Boolean.TRUE.equals(input.isAvailableForDefaultProject())) {
             handle.execute(
-                "INSERT INTO rag_data_source_project (data_source_id, project_id) VALUES (?, 1)",
+                "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
                 result);
           }
           return result;
@@ -120,7 +120,7 @@ public class RagDataSourceRepository {
                SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as is_available_for_default_project
                  FROM rag_data_source rds
                   LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
-                  LEFT JOIN rag_data_source_project rdsp ON rds.id = rdsp.data_source_id
+                  LEFT JOIN project_data_source rdsp ON rds.id = rdsp.data_source_id
                WHERE rds.ID = :id
                  AND rds.deleted IS NULL
                  AND (rdsp.project_id = 1)
