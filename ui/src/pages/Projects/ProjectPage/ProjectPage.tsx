@@ -52,14 +52,22 @@ const ProjectPage = () => {
       vertical
     >
       <StyledChatLayoutWrapper>
-        <ProjectTitleBar />
-      </StyledChatLayoutWrapper>
-      <Flex gap={32} style={{ overflowY: "auto" }}>
-        <Flex flex={2} vertical gap={32}>
+        <Flex vertical gap={8} style={{ width: "100%" }}>
+          <ProjectTitleBar />
           <NewChatSession />
-          <ProjectKnowledgeBases />
-          <Sessions />
         </Flex>
+      </StyledChatLayoutWrapper>
+      <Flex
+        gap={32}
+        style={{ overflowY: "auto", marginTop: 32 }}
+        justify="center"
+      >
+        <StyledChatLayoutWrapper>
+          <Flex flex={2} vertical gap={32} style={{ width: "100%" }}>
+            <ProjectKnowledgeBases />
+            <Sessions />
+          </Flex>
+        </StyledChatLayoutWrapper>
       </Flex>
     </Flex>
   );
