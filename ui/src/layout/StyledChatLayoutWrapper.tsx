@@ -45,8 +45,10 @@ export const StyledChatLayoutWrapper = ({
   children: ReactNode;
 }) => {
   return (
-    <Flex justify="center">
-      <Flex style={{ width: "100%", maxWidth: 900 }}>{children}</Flex>
+    <Flex justify="center" style={{ width: "100%" }}>
+      <Flex style={{ width: "100%", maxWidth: 900 }} vertical gap={32}>
+        {children}
+      </Flex>
     </Flex>
   );
 };

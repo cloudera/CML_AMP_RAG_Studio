@@ -63,10 +63,8 @@ const ProjectPage = () => {
         justify="center"
       >
         <StyledChatLayoutWrapper>
-          <Flex flex={2} vertical gap={32} style={{ width: "100%" }}>
-            <ProjectKnowledgeBases />
-            <Sessions />
-          </Flex>
+          <ProjectKnowledgeBases />
+          <Sessions />
         </StyledChatLayoutWrapper>
       </Flex>
     </Flex>
