@@ -66,6 +66,7 @@ class RagDataSourceRepositoryTest {
     assertThat(savedDataSource.name()).isEqualTo("test-name");
     assertThat(savedDataSource.updatedById()).isEqualTo("abc");
     assertThat(savedDataSource.embeddingModel()).isEqualTo("test-embedding-model");
+    assertThat(savedDataSource.availableForDefaultProject()).isTrue();
   }
 
   @Test

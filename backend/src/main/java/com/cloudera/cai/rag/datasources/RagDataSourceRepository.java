@@ -90,7 +90,7 @@ public class RagDataSourceRepository {
 
   public void updateRagDataSource(RagDataSource input) {
     RagDataSource cleanedInputs = cleanInputs(input);
-    jdbi.inTransaction(
+    jdbi.useTransaction(
         handle -> {
           var sql =
               """
@@ -99,7 +99,7 @@ public class RagDataSourceRepository {
               WHERE id = :id AND deleted IS NULL
           """;
           try (var update = handle.createUpdate(sql)) {
-            return update
+            update
                 .bind("name", cleanedInputs.name())
                 .bind("updatedById", cleanedInputs.updatedById())
                 .bind("connectionType", cleanedInputs.connectionType())
@@ -107,6 +107,15 @@ public class RagDataSourceRepository {
                 .bind("summarizationModel", cleanedInputs.summarizationModel())
                 .bind("now", Instant.now())
                 .execute();
+          }
+          if (Boolean.TRUE.equals(input.availableForDefaultProject())) {
+            handle.execute(
+                "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
+                input.id());
+          } else {
+            handle.execute(
+                "DELETE FROM project_data_source WHERE data_source_id = ? AND project_id = 1",
+                input.id());
           }
         });
   }
@@ -116,7 +125,7 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-               SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as is_available_for_default_project
+               SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as available_for_default_project
                  FROM rag_data_source rds
                   LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
                   LEFT JOIN project_data_source rdsp ON rds.id = rdsp.data_source_id
@@ -142,7 +151,7 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-              SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as is_available_for_default_project
+              SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size, rdsp.project_id as available_for_default_project
                 FROM rag_data_source rds
                 LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
                 LEFT JOIN project_data_source rdsp ON rds.id = rdsp.data_source_id
