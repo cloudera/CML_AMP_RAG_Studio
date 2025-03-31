@@ -38,7 +38,7 @@
 
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
 import { Button, Flex, Input, Typography } from "antd";
-import { EditOutlined, ProjectOutlined } from "@ant-design/icons";
+import { ContainerOutlined, EditOutlined } from "@ant-design/icons";
 import { DeleteProjectButton } from "pages/Projects/ProjectPage/ProjectTitleBar/DeleteProjectButton.tsx";
 import { useUpdateProject } from "src/api/projectsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -76,7 +76,7 @@ export const ProjectTitleBar = () => {
     <Flex justify="space-between" align="baseline" style={{ width: "100%" }}>
       <Flex align="baseline" style={{ height: 80 }}>
         <Typography.Title level={2}>
-          <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
+          <ContainerOutlined style={{ marginLeft: 16, marginRight: 8 }} />
         </Typography.Title>
         {editing ? (
           <Input

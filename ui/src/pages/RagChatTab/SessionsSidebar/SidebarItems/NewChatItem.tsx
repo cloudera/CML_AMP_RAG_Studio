@@ -39,9 +39,8 @@
 import { Button, Flex, Typography } from "antd";
 import { MenuItem } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
 import { useNavigate } from "@tanstack/react-router";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { CommentOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { cdlGray700 } from "src/cuix/variables.ts";
-import Images from "src/components/images/Images";
 
 export const newChatItem = (): MenuItem => {
   const navigate = useNavigate();
@@ -56,17 +55,15 @@ export const newChatItem = (): MenuItem => {
           justify="space-between"
           align="center"
         >
-          <Flex gap={4} align="center">
-            <Images.Comment
-              style={{ height: 20, width: 20, paddingBottom: 2 }}
-            />
+          <Flex gap={8} align="center">
+            <CommentOutlined style={{ color: cdlGray700 }} />
             <Typography.Text style={{ fontSize: 16, color: cdlGray700 }}>
               Chats
             </Typography.Text>
           </Flex>
           <Button
             type="text"
-            icon={<PlusCircleOutlined />}
+            icon={<PlusCircleOutlined style={{ color: "#1677ff" }} />}
             onClick={() => {
               navigate({
                 to: "/chats",

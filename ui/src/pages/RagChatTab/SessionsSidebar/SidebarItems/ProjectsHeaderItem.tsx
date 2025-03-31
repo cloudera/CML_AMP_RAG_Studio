@@ -42,8 +42,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateProject } from "src/api/projectsApi.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { PlusCircleOutlined, ProjectOutlined } from "@ant-design/icons";
+import { ContainerOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "@tanstack/react-router";
+import { cdlGray700 } from "src/cuix/variables.ts";
 
 export const ProjectsHeaderItem = () => {
   const createProjectModal = useModal();
@@ -86,12 +87,14 @@ export const ProjectsHeaderItem = () => {
       style={{ paddingLeft: 12, paddingTop: 8 }}
     >
       <Flex gap={8} align="center">
-        <ProjectOutlined />
-        <Typography.Text type="secondary">Projects</Typography.Text>
+        <ContainerOutlined style={{ color: cdlGray700 }} />
+        <Typography.Text style={{ fontSize: 16, color: cdlGray700 }}>
+          Projects
+        </Typography.Text>
       </Flex>
       <Button
         type="text"
-        icon={<PlusCircleOutlined />}
+        icon={<PlusCircleOutlined style={{ color: "#1677ff" }} />}
         onClick={() => {
           createProjectModal.setIsModalOpen(true);
         }}
