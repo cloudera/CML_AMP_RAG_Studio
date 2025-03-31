@@ -38,13 +38,21 @@
 
 import { Flex, Layout } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import { useContext } from "react";
+import { useContext, ReactNode } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
 import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 
 const { Footer, Content } = Layout;
+
+const StyledChatLayoutWrapper = ({ children }: { children: ReactNode }) => {
+  return (
+    <Flex justify="center">
+      <Flex style={{ width: "100%", maxWidth: 900 }}>{children}</Flex>
+    </Flex>
+  );
+};
 
 const RagChat = () => {
   const {
@@ -76,7 +84,15 @@ const RagChat = () => {
       >
         <Flex justify="center">
           <Flex style={{ width: "100%", maxWidth: 900 }}>
-            <ChatMessageController />
+            <Flex
+              vertical
+              align="center"
+              gap={16}
+              justify="center"
+              style={{ width: "100%" }}
+            >
+              <ChatMessageController />
+            </Flex>
           </Flex>
         </Flex>
       </Content>

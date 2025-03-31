@@ -39,7 +39,7 @@
 import { useContext, useEffect, useRef } from "react";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { Flex, Image, Typography } from "antd";
+import { Image, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
@@ -119,13 +119,7 @@ const ChatMessageController = () => {
       return <PendingRagOutputSkeleton question={search.question} />;
     }
     return (
-      <Flex
-        vertical
-        align="center"
-        gap={16}
-        justify="center"
-        style={{ width: "100%" }}
-      >
+      <>
         <Image
           src={Images.BrandTalking}
           alt="Machines Chatting"
@@ -137,12 +131,12 @@ const ChatMessageController = () => {
         </Typography.Title>
         <SuggestedQuestionsCards />
         <NoDataSourcesState />
-      </Flex>
+      </>
     );
   }
 
   return (
-    <div data-testid="chat-message-controller">
+    <div data-testid="chat-message-controller" style={{ width: "100%" }}>
       {chatHistory.map((historyMessage, index) => (
         <ChatMessage
           data={historyMessage}

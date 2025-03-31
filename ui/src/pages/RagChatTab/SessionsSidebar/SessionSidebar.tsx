@@ -39,6 +39,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Session } from "src/api/sessionApi.ts";
 import {
+  Button,
   ConfigProvider,
   Flex,
   Layout,
@@ -55,13 +56,12 @@ import {
 } from "src/cuix/variables.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { defaultSessionItems } from "pages/RagChatTab/SessionsSidebar/SidebarItems/DefaultSessionItems.tsx";
-import { newChatItem } from "pages/RagChatTab/SessionsSidebar/SidebarItems/NewChatItem.tsx";
 import { ItemType } from "antd/lib/menu/interface";
-import Images from "src/components/images/Images.ts";
 import "./index.css";
 import { ProjectsHeaderItem } from "pages/RagChatTab/SessionsSidebar/SidebarItems/ProjectsHeaderItem.tsx";
 import { getProjectItems } from "pages/RagChatTab/SessionsSidebar/SidebarItems/ProjectItems.tsx";
 import { useParams } from "@tanstack/react-router";
+import { MonitorOutlined, PlusCircleOutlined } from "@ant-design/icons";
 
 const { Sider } = Layout;
 
@@ -117,20 +117,30 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
   }, [activeSession, projectId]);
 
   const items: ItemType[] = [
-    ...newChatItem(18),
-    { type: "divider", key: "newChatDivider" },
     {
       type: "group",
       label: <ProjectsHeaderItem />,
     },
     { type: "divider", key: "projectHeaderDivider" },
     ...projectItems,
+    { type: "divider", key: "newChatDivider" },
     {
       type: "group",
       label: (
-        <Flex gap={6} style={{ paddingLeft: 12, paddingTop: 32 }}>
-          <Images.History style={{ fontSize: 18 }} />
-          <Typography.Text type="secondary">Chat History</Typography.Text>
+        <Flex
+          gap={6}
+          style={{ paddingLeft: 12, paddingTop: 32 }}
+          justify="space-between"
+          align="center"
+        >
+          <div>
+            <MonitorOutlined /> <Typography.Text>Chats</Typography.Text>
+          </div>
+          <Button
+            type="text"
+            icon={<PlusCircleOutlined />}
+            onClick={() => {}}
+          />
         </Flex>
       ),
     },

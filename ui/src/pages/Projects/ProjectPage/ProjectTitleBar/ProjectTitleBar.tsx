@@ -73,7 +73,7 @@ export const ProjectTitleBar = () => {
   };
 
   return (
-    <Flex justify="space-between" align="baseline">
+    <Flex justify="space-between" align="baseline" style={{ width: "100%" }}>
       <Flex align="baseline" style={{ height: 80 }}>
         <Typography.Title level={2}>
           <ProjectOutlined style={{ marginLeft: 16, marginRight: 8 }} />
