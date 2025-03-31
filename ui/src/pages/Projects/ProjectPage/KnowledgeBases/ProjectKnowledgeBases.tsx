@@ -64,6 +64,7 @@ import FormItem from "antd/es/form/FormItem";
 import { MinusCircleOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { bytesConversion } from "src/utils/bytesConversion.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
+import { cdlBlue600 } from "src/cuix/variables.ts";
 
 const SelectKnowledgeBaseForm = ({
   setPopoverVisible,
@@ -280,7 +281,7 @@ export const ProjectKnowledgeBases = () => {
           <Button
             type="text"
             disabled={unusedDataSources?.length === 0}
-            icon={<PlusCircleOutlined />}
+            icon={<PlusCircleOutlined style={{ color: cdlBlue600 }} />}
           />
         </Popover>
       </Flex>

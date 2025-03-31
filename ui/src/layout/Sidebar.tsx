@@ -39,8 +39,8 @@
 import React, { useRef, useState } from "react";
 import {
   CloudOutlined,
-  DatabaseFilled,
-  DesktopOutlined,
+  CommentOutlined,
+  DatabaseOutlined,
   LineChartOutlined,
 } from "@ant-design/icons";
 import {
@@ -158,13 +158,13 @@ const Sidebar: React.FC = () => {
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
       navToRagApp,
-      <DesktopOutlined />,
+      <CommentOutlined />,
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
       navToData,
-      <DatabaseFilled />,
+      <DatabaseOutlined />,
     ),
   ];
 

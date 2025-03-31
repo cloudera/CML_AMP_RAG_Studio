@@ -39,8 +39,8 @@
 import React from "react";
 import {
   CloudOutlined,
-  DatabaseFilled,
-  DesktopOutlined,
+  CommentOutlined,
+  DatabaseOutlined,
   LineChartOutlined,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
@@ -101,13 +101,13 @@ const TopNav: React.FC = () => {
       <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
       navigateTo("/chats"),
-      <DesktopOutlined />,
+      <CommentOutlined />,
     ),
     getItem(
       <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
       navigateTo("/data"),
-      <DatabaseFilled />,
+      <DatabaseOutlined />,
     ),
   ];
 

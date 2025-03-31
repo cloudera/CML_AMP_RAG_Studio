@@ -40,7 +40,7 @@ import { Button, Flex, Typography } from "antd";
 import { MenuItem } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
 import { useNavigate } from "@tanstack/react-router";
 import { CommentOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import { cdlGray700 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGray700 } from "src/cuix/variables.ts";
 
 export const newChatItem = (): MenuItem => {
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ export const newChatItem = (): MenuItem => {
           </Flex>
           <Button
             type="text"
-            icon={<PlusCircleOutlined style={{ color: "#1677ff" }} />}
+            icon={<PlusCircleOutlined style={{ color: cdlBlue600 }} />}
             onClick={() => {
               navigate({
                 to: "/chats",
