@@ -38,16 +38,15 @@
 import base64
 import json
 import logging
-from typing import Annotated, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Cookie, Header
+from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import (
     v2_chat,
-    direct_llm_chat,
     generate_dummy_suggested_questions,
 )
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
@@ -139,9 +138,11 @@ def feedback(
     session_id: int,
     response_id: str,
     request: ChatResponseFeedback,
-        remote_user: Optional[str] = Header(None),
+    remote_user: Optional[str] = Header(None),
 ) -> ChatResponseFeedback:
-    feedback_mlflow_log_table(request.feedback, response_id, session_id, user_name=remote_user)
+    feedback_mlflow_log_table(
+        request.feedback, response_id, session_id, user_name=remote_user
+    )
     return ChatResponseFeedback(feedback=request.feedback)
 
 
