@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Table, TableProps, Tooltip, Typography } from "antd";
+import { Flex, Table, TableProps, Tooltip } from "antd";
 import { Link } from "@tanstack/react-router";
 import { ConnectionType, DataSourceType } from "src/api/dataSourceApi.ts";
 import ProductDataFlowLg from "src/cuix/icons/ProductDataFlowLgIcon";
