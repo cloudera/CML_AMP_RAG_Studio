@@ -60,6 +60,7 @@ from llama_index.core.schema import (
     NodeRelationship,
     TextNode,
 )
+from llama_index.core.vector_stores import SimpleVectorStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.services import models
@@ -179,6 +180,35 @@ class SummaryIndexer(BaseTextIndexer):
         )
         return doc_summary_index
 
+    @classmethod
+    def get_all_data_source_summaries(cls) -> dict[str, str]:
+        storage_context = StorageContext.from_defaults(
+            persist_dir=cls.__persist_root_dir(),
+            vector_store=SimpleVectorStore(),
+        )
+        global_summary_store: DocumentSummaryIndex = cast(
+            DocumentSummaryIndex,
+            load_index_from_storage(
+                storage_context=storage_context,
+                **{
+                    "llm" : models.LLM.get_noop(),
+                    "response_synthesizer": models.LLM.get_noop(),
+                    "show_progress": True,
+                    "embed_model": models.Embedding.get_noop(),
+                    "embed_summaries": True,
+                    "summary_query": "None",
+                    "data_source_id": 0,
+                },
+            ),
+        )
+
+        summary_ids = list(global_summary_store.index_struct.doc_id_to_summary_id.values())
+        nodes = global_summary_store.docstore.get_nodes(summary_ids)
+        return {
+            node.relationships[NodeRelationship.SOURCE].node_id: node.get_content()
+            for node in nodes
+        }
+
     def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(f"Creating summary for file {file_path}")
 
@@ -289,12 +319,6 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             global_persist_dir = self.__persist_root_dir()
             global_summary_store = self.__summary_indexer(global_persist_dir)
-
-            summary_ids = list(global_summary_store.index_struct.doc_id_to_summary_id.values())
-            nodes = global_summary_store.docstore.get_nodes(summary_ids)
-            for node in nodes:
-                print(node.get_content())
-                print("\n\n")
 
             document_id = str(self.data_source_id)
             if (
