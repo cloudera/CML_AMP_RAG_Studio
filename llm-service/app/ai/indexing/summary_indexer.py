@@ -289,7 +289,13 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             global_persist_dir = self.__persist_root_dir()
             global_summary_store = self.__summary_indexer(global_persist_dir)
-            print(json.dumps(global_summary_store.index_struct.to_dict(), indent=2))
+
+            summary_ids = list(global_summary_store.index_struct.doc_id_to_summary_id.values())
+            nodes = global_summary_store.docstore.get_nodes(summary_ids)
+            for node in nodes:
+                print(node.get_content())
+                print("\n\n")
+
             document_id = str(self.data_source_id)
             if (
                 document_id
