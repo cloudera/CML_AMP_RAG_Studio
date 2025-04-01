@@ -176,6 +176,4 @@ def chat(
     session = session_metadata_api.get_session(session_id, user_name=remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
-    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return direct_llm_chat(session, request.query, user_name=remote_user)
     return v2_chat(session, request.query, configuration, user_name=remote_user)

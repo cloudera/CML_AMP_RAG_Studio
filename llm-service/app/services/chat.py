@@ -74,6 +74,21 @@ def v2_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
+
+    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+        return direct_llm_chat(session, query, user_name=user_name)
+
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if total_data_sources_size == 0:
+        return direct_llm_chat(
+            session, query, user_name
+        )
+
     response_id = str(uuid.uuid4())
 
     new_chat_message: RagStudioChatMessage = _run_chat(
@@ -245,7 +260,8 @@ def generate_suggested_questions(
         )
     )
     if total_data_sources_size == 0:
-        raise HTTPException(status_code=404, detail="Knowledge base not found.")
+        return _generate_suggested_questions_direct_llm(session)
+        # raise HTTPException(status_code=404, detail="Knowledge base not found.")
 
     chat_history = retrieve_chat_history(session_id)
     if total_data_sources_size == 0:
