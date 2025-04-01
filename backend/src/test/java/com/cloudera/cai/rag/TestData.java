@@ -45,6 +45,8 @@ import java.util.List;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 public class TestData {
+  public static final String TEST_USER_NAME = "fake-user";
+
   public static Types.Project createTestProjectInstance(String name, Boolean defaultProject) {
     return Types.Project.builder()
         .id(null)
@@ -52,8 +54,8 @@ public class TestData {
         .defaultProject(defaultProject)
         .timeCreated(null)
         .timeUpdated(null)
-        .createdById("fake-user")
-        .updatedById("fake-user")
+        .createdById(TEST_USER_NAME)
+        .updatedById(TEST_USER_NAME)
         .build();
   }
 
@@ -62,15 +64,20 @@ public class TestData {
   }
 
   public static Types.Session createTestSessionInstance(String sessionName) {
+    return createTestSessionInstance(sessionName, List.of(1L, 2L, 3L));
+  }
+
+  public static Types.Session createTestSessionInstance(
+      String sessionName, List<Long> dataSourceIds) {
     return new Types.Session(
         null,
         sessionName,
-        List.of(1L, 2L, 3L),
+        dataSourceIds,
         1L,
         null,
         null,
-        "fake-user",
-        "fake-user",
+        TEST_USER_NAME,
+        TEST_USER_NAME,
         null,
         "test-model",
         "test-rerank-model",

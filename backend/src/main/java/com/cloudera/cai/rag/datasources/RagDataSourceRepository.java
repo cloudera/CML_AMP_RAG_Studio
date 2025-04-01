@@ -173,7 +173,11 @@ public class RagDataSourceRepository {
 
   public void deleteDataSource(Long id) {
     jdbi.useTransaction(
-        handle -> handle.execute("UPDATE RAG_DATA_SOURCE SET DELETED = ? where ID = ?", true, id));
+        handle -> {
+          handle.execute("UPDATE RAG_DATA_SOURCE SET DELETED = ? where ID = ?", true, id);
+          handle.execute("DELETE FROM PROJECT_DATA_SOURCE WHERE DATA_SOURCE_ID = ?", id);
+          handle.execute("DELETE FROM CHAT_SESSION_DATA_SOURCE WHERE DATA_SOURCE_ID = ?", id);
+        });
   }
 
   public int getNumberOfDataSources() {

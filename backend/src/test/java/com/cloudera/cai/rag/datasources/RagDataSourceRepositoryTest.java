@@ -46,9 +46,12 @@ import static org.awaitility.Awaitility.await;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
+import com.cloudera.cai.rag.projects.ProjectRepository;
+import com.cloudera.cai.rag.sessions.SessionRepository;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class RagDataSourceRepositoryTest {
@@ -110,14 +113,34 @@ class RagDataSourceRepositoryTest {
   void delete() {
     RagDataSourceRepository repository =
         new RagDataSourceRepository(JdbiConfiguration.createNull());
-    var id =
+    SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
+    ProjectRepository projectRepository = new ProjectRepository(JdbiConfiguration.createNull());
+
+    var dataSourceId =
         repository.createRagDataSource(
             TestData.createTestDataSourceInstance("test-name", 512, 10, MANUAL)
                 .withCreatedById("abc")
                 .withUpdatedById("abc"));
-    assertThat(repository.getRagDataSourceById(id)).isNotNull();
+    assertThat(repository.getRagDataSourceById(dataSourceId)).isNotNull();
 
-    repository.deleteDataSource(id);
-    assertThatThrownBy(() -> repository.getRagDataSourceById(id)).isInstanceOf(NotFound.class);
+    var sessionId =
+        sessionRepository.create(
+            TestData.createTestSessionInstance("test-session", List.of(dataSourceId)));
+    Long projectId =
+        projectRepository.createProject(TestData.createTestProjectInstance("test-project", false));
+    projectRepository.addDataSourceToProject(dataSourceId, projectId);
+
+    assertThat(sessionRepository.getSessionById(sessionId, TestData.TEST_USER_NAME).dataSourceIds())
+        .containsExactly(dataSourceId);
+    assertThat(projectRepository.getDataSourceIdsForProject(projectId))
+        .containsExactly(dataSourceId);
+
+    repository.deleteDataSource(dataSourceId);
+    assertThatThrownBy(() -> repository.getRagDataSourceById(dataSourceId))
+        .isInstanceOf(NotFound.class);
+
+    assertThat(sessionRepository.getSessionById(sessionId, TestData.TEST_USER_NAME).dataSourceIds())
+        .isEmpty();
+    assertThat(projectRepository.getDataSourceIdsForProject(projectId)).isEmpty();
   }
 }
