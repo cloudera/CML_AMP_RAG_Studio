@@ -128,12 +128,15 @@ class RagDataSourceRepositoryTest {
             TestData.createTestSessionInstance("test-session", List.of(dataSourceId)));
     Long projectId =
         projectRepository.createProject(TestData.createTestProjectInstance("test-project", false));
-    projectRepository.addDataSourceToProject(dataSourceId, projectId);
+    projectRepository.addDataSourceToProject(projectId, dataSourceId);
 
     assertThat(sessionRepository.getSessionById(sessionId, TestData.TEST_USER_NAME).dataSourceIds())
         .containsExactly(dataSourceId);
-    assertThat(projectRepository.getDataSourceIdsForProject(projectId))
-        .containsExactly(dataSourceId);
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(projectRepository.getDataSourceIdsForProject(projectId))
+                    .containsExactly(dataSourceId));
 
     repository.deleteDataSource(dataSourceId);
     assertThatThrownBy(() -> repository.getRagDataSourceById(dataSourceId))
