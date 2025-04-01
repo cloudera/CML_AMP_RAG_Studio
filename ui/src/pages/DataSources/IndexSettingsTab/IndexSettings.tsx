@@ -185,7 +185,11 @@ const IndexSettings = () => {
         }}
       >
         <Typography>
-          Deleting a knowledge base is permanent and cannot be undone
+          Deleting a knowledge base is permanent and cannot be undone.
+          <br />
+          <br />
+          This will remove the knowledge base from any projects and chats with
+          which it is associated.
         </Typography>
         <Input
           style={{ marginTop: 15 }}
