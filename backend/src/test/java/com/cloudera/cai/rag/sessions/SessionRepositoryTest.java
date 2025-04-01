@@ -64,7 +64,7 @@ class SessionRepositoryTest {
 
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(input.name());
-    assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result.timeCreated()).isNotNull();
     assertThat(result.timeUpdated()).isNotNull();
     assertThat(result.createdById()).isEqualTo(username);

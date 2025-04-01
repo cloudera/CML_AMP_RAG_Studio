@@ -206,6 +206,7 @@ const DataSourcesForm = ({
         name="connectionType"
         label="Connection"
         initialValue={initialValues.connectionType}
+        hidden={!updateMode}
       >
         <Select options={connectionsOptions} />
       </Form.Item>
@@ -228,6 +229,7 @@ const DataSourcesForm = ({
         initialValue={initialValues.availableForDefaultProject}
         valuePropName="checked"
         tooltip="Allow this knowledge base to be used outside of the context of a project."
+        hidden={!updateMode}
       >
         <Switch style={{ marginLeft: 4 }} />
       </Form.Item>

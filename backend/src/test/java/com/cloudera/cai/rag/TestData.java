@@ -64,7 +64,7 @@ public class TestData {
   }
 
   public static Types.Session createTestSessionInstance(String sessionName) {
-    return createTestSessionInstance(sessionName, List.of(1L, 2L, 3L));
+    return createTestSessionInstance(sessionName, List.of());
   }
 
   public static Types.Session createTestSessionInstance(
@@ -86,7 +86,7 @@ public class TestData {
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
-    return createSessionInstance(sessionName, List.of(1L, 2L, 3L), 1L);
+    return createSessionInstance(sessionName, List.of(), 1L);
   }
 
   public static Types.CreateSession createSessionInstance(
