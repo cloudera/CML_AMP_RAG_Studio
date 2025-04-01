@@ -51,14 +51,14 @@ public class SessionService {
     this.sessionRepository = sessionRepository;
   }
 
-  public Types.Session create(Types.Session input) {
+  public Types.Session create(Types.Session input, String username) {
     var id = sessionRepository.create(cleanInputs(input));
-    return sessionRepository.getSessionById(id);
+    return sessionRepository.getSessionById(id, username);
   }
 
-  public Types.Session update(Types.Session input) {
+  public Types.Session update(Types.Session input, String username) {
     sessionRepository.update(cleanInputs(input));
-    return sessionRepository.getSessionById(input.id());
+    return sessionRepository.getSessionById(input.id(), username);
   }
 
   private Types.Session cleanInputs(Types.Session input) {
@@ -68,12 +68,16 @@ public class SessionService {
     return input;
   }
 
-  public List<Types.Session> getSessions() {
-    return sessionRepository.getSessions();
+  public List<Types.Session> getSessions(String username) {
+    return sessionRepository.getSessions(username);
   }
 
-  public Types.Session getSessionById(Long id) {
-    return sessionRepository.getSessionById(id);
+  public List<Types.Session> getSessionsByProjectId(Long projectId) {
+    return sessionRepository.getSessionsByProjectId(projectId);
+  }
+
+  public Types.Session getSessionById(Long id, String username) {
+    return sessionRepository.getSessionById(id, username);
   }
 
   public void delete(Long id) {

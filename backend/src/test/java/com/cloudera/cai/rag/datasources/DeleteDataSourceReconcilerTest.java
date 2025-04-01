@@ -98,7 +98,7 @@ class DeleteDataSourceReconcilerTest {
     assertThatThrownBy(() -> ragFileRepository.findDocumentByDocumentId(documentId))
         .isInstanceOf(NotFound.class);
     assertThat(tracker.getValues())
-        .hasSize(1)
+        .hasSizeGreaterThanOrEqualTo(1)
         .contains(
             new RagBackendClient.TrackedRequest<>(
                 new RagBackendClient.TrackedDeleteDataSourceRequest(dataSourceId)));

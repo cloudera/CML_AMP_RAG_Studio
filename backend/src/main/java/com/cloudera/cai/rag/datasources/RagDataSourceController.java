@@ -39,7 +39,7 @@
 package com.cloudera.cai.rag.datasources;
 
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
+import com.cloudera.cai.rag.util.UsernameExtractor;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/rag/dataSources")
 public class RagDataSourceController {
   private final RagDataSourceService dataSourceService;
-  private final UserTokenCookieDecoder userTokenCookieDecoder = new UserTokenCookieDecoder();
+  private final UsernameExtractor usernameExtractor = new UsernameExtractor();
 
   @Autowired
   public RagDataSourceController(RagDataSourceService dataSourceService) {
@@ -62,11 +62,11 @@ public class RagDataSourceController {
   @PostMapping(consumes = "application/json", produces = "application/json")
   public Types.RagDataSource create(
       @RequestBody Types.RagDataSource input, HttpServletRequest request) {
-    log.info("Creating RagDataSource: {}", input);
+    log.debug("Creating RagDataSource: {}", input);
     if (input.chunkSize() == null || input.chunkSize() < 1) {
       throw new BadRequest("chunkSize must be non-null and greater than 0");
     }
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     input = input.withCreatedById(username).withUpdatedById(username);
     return dataSourceService.createRagDataSource(input);
   }
@@ -74,11 +74,11 @@ public class RagDataSourceController {
   @PostMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
   public Types.RagDataSource update(
       @RequestBody Types.RagDataSource input, HttpServletRequest request) {
-    log.info("Updating RagDataSource: {}", input);
+    log.debug("Updating RagDataSource: {}", input);
     if (input.name() == null) {
       throw new BadRequest("name must be a non-empty string");
     }
-    String username = userTokenCookieDecoder.extractUsername(request.getCookies());
+    String username = usernameExtractor.extractUsername(request);
     input = input.withUpdatedById(username);
     return dataSourceService.updateRagDataSource(input);
   }
@@ -90,13 +90,13 @@ public class RagDataSourceController {
 
   @DeleteMapping(value = "/{id}")
   public void deleteDataSource(@PathVariable long id) {
-    log.info("Deleting DataSource with id: {}", id);
+    log.debug("Deleting DataSource with id: {}", id);
     dataSourceService.deleteDataSource(id);
   }
 
   @GetMapping(produces = "application/json")
   public List<Types.RagDataSource> getRagDataSources() {
-    log.info("Getting all RagDataSources");
+    log.debug("Getting all RagDataSources");
     return dataSourceService.getRagDataSources();
   }
 

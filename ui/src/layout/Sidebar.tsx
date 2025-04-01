@@ -38,10 +38,10 @@
 
 import React, { useRef, useState } from "react";
 import {
-  CloudOutlined,
-  DatabaseFilled,
-  DesktopOutlined,
+  CommentOutlined,
+  DatabaseOutlined,
   LineChartOutlined,
+  RobotFilled,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -87,7 +87,7 @@ const Sidebar: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
 
   const navToRagApp = () => {
-    navigate({ to: "/sessions" }).catch(() => null);
+    navigate({ to: "/chats" }).catch(() => null);
     return;
   };
 
@@ -158,13 +158,13 @@ const Sidebar: React.FC = () => {
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
       navToRagApp,
-      <DesktopOutlined />,
+      <CommentOutlined />,
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
       navToData,
-      <DatabaseFilled />,
+      <DatabaseOutlined />,
     ),
   ];
 
@@ -172,7 +172,7 @@ const Sidebar: React.FC = () => {
     <div data-testid="models-nav">Models</div>,
     "models",
     navToModels,
-    <CloudOutlined />,
+    <RobotFilled />,
   );
 
   const analyticsItem = getItem(
@@ -187,12 +187,14 @@ const Sidebar: React.FC = () => {
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
       return ["data"];
-    } else if (matchRoute({ to: "/sessions", fuzzy: true })) {
+    } else if (matchRoute({ to: "/chats", fuzzy: true })) {
       return ["chat"];
     } else if (matchRoute({ to: "/models", fuzzy: true })) {
       return ["models"];
     } else if (matchRoute({ to: "/analytics", fuzzy: true })) {
       return ["analytics"];
+    } else if (matchRoute({ to: "/projects", fuzzy: true })) {
+      return ["projects"];
     } else {
       return ["chat"];
     }

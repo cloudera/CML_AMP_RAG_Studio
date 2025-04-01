@@ -41,8 +41,8 @@ import { Button, Flex, Form, Select, Typography } from "antd";
 import { useContext, ReactNode } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
-import { formatDataSource } from "pages/RagChatTab/Sessions/CreateSessionForm.tsx";
 import { ArrowRightOutlined } from "@ant-design/icons";
+import { formatDataSource } from "src/utils/formatters.ts";
 
 const PlaceholderContainer = ({
   message,

@@ -36,17 +36,17 @@
  * DATA.
  ******************************************************************************/
 
-import { Divider, Flex, Layout } from "antd";
-import RagChat from "pages/RagChatTab/RagChat.tsx";
-import { SessionSidebar } from "pages/RagChatTab/Sessions/SessionSidebar.tsx";
-import { getSessionsQueryOptions, Session } from "src/api/sessionApi.ts";
-import { groupBy } from "lodash";
-import { format } from "date-fns";
-import { useParams } from "@tanstack/react-router";
+import { Divider, Layout } from "antd";
+import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
+import { Session, useGetSessions } from "src/api/sessionApi.ts";
+import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import {
+  getDefaultProjectQueryOptions,
+  useGetDataSourcesForProject,
+} from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
@@ -54,17 +54,29 @@ const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
 };
 
 function ChatLayout() {
-  const { data: sessions } = useSuspenseQuery(getSessionsQueryOptions);
+  const { data: allSessions } = useGetSessions();
+
+  const sessions = allSessions ?? [];
 
   const { sessionId } = useParams({ strict: false });
+  const { projectId: routeProjectId } = useParams({ strict: false });
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
+
+  const activeSession = getSessionForSessionId(sessionId, sessions);
+  const projectId: string =
+    routeProjectId ??
+    activeSession?.projectId.toString() ??
+    defaultProject.id.toString();
+
   const { data: dataSources, status: dataSourcesStatus } =
-    useGetDataSourcesQuery();
+    useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
   const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery(
     sessionId ? +sessionId : 0,
   );
 
-  const activeSession = getSessionForSessionId(sessionId, sessions);
   const dataSourceId = activeSession?.dataSourceIds[0];
 
   const dataSourceSize = useMemo(() => {
@@ -72,11 +84,6 @@ function ChatLayout() {
       dataSources?.find((ds) => ds.id === dataSourceId)?.totalDocSize ?? null
     );
   }, [dataSources, dataSourceId]);
-
-  const sessionsByDate = groupBy(sessions, (session) => {
-    const relevantTime = session.lastInteractionTime || session.timeUpdated;
-    return format(relevantTime * 1000, "yyyyMMdd");
-  });
 
   return (
     <RagChatContext.Provider
@@ -100,30 +107,29 @@ function ChatLayout() {
           height: "95vh",
           transition: "height 0.5s",
         }}
+        hasSider={true}
       >
-        <div style={{ paddingTop: 20 }}>
-          <SessionSidebar sessionsByDate={sessionsByDate} />
-        </div>
+        <SessionSidebar sessions={sessions} />
         <Divider
           key="chatLayoutDivider"
           type="vertical"
           style={{ height: "100%", padding: 0, margin: 0 }}
         />
-        <Flex style={{ width: "100%" }} justify="center">
-          <Flex
-            vertical
-            align="center"
-            justify="center"
-            style={{
-              maxWidth: 900,
-              width: "100%",
-              margin: 20,
-            }}
-            gap={20}
-          >
-            <RagChat />
-          </Flex>
-        </Flex>
+        {/*<Flex style={{ width: "100%" }} justify="center">*/}
+        {/*  <Flex*/}
+        {/*    vertical*/}
+        {/*    align="center"*/}
+        {/*    justify="center"*/}
+        {/*    style={{*/}
+        {/*      maxWidth: 900,*/}
+        {/*      width: "100%",*/}
+        {/*      margin: 20,*/}
+        {/*    }}*/}
+        {/*    gap={20}*/}
+        {/*  >*/}
+        <Outlet />
+        {/*  </Flex>*/}
+        {/*</Flex>*/}
       </Layout>
     </RagChatContext.Provider>
   );

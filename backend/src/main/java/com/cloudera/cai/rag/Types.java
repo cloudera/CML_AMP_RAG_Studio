@@ -98,7 +98,8 @@ public class Types {
       String updatedById,
       ConnectionType connectionType,
       @Nullable Integer documentCount,
-      @Nullable Long totalDocSize) {}
+      @Nullable Long totalDocSize,
+      boolean availableForDefaultProject) {}
 
   public record QueryConfiguration(boolean enableHyde, boolean enableSummaryFilter) {}
 
@@ -108,6 +109,7 @@ public class Types {
       Long id,
       String name,
       @Singular List<Long> dataSourceIds,
+      Long projectId,
       Instant timeCreated,
       Instant timeUpdated,
       String createdById,
@@ -123,6 +125,7 @@ public class Types {
           null,
           input.name(),
           input.dataSourceIds(),
+          input.projectId(),
           null,
           null,
           username,
@@ -142,7 +145,8 @@ public class Types {
       String inferenceModel,
       String rerankModel,
       Integer responseChunks,
-      QueryConfiguration queryConfiguration) {}
+      QueryConfiguration queryConfiguration,
+      Long projectId) {}
 
   public record MetadataMetrics(
       int numberOfDataSources, int numberOfSessions, int numberOfDocuments) {}
@@ -153,4 +157,22 @@ public class Types {
     AZURE_BLOB,
     S3
   }
+
+  @Builder
+  public record Project(
+      @With Long id,
+      @With String name,
+      boolean defaultProject,
+      Instant timeCreated,
+      Instant timeUpdated,
+      @With String createdById,
+      @With String updatedById) {
+
+    public static Project fromCreateRequest(CreateProject input, String username) {
+      return new Project(null, input.name(), false, null, null, username, username);
+    }
+  }
+
+  @With
+  public record CreateProject(String name) {}
 }

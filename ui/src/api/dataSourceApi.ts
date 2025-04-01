@@ -54,6 +54,7 @@ export interface CreateDataSourceType {
   chunkSize: number;
   chunkOverlapPercent: number;
   embeddingModel: string;
+  availableForDefaultProject: boolean;
 }
 
 export enum ConnectionType {
@@ -71,6 +72,7 @@ export interface DataSourceBaseType {
   connectionType: ConnectionType;
   embeddingModel: string;
   summarizationModel?: string;
+  availableForDefaultProject: boolean;
 }
 
 export type DataSourceType = DataSourceBaseType & {
@@ -119,33 +121,21 @@ const updateDataSourceMutation = async (
   );
 };
 
+const getDataSourcesQuery = async (): Promise<DataSourceType[]> => {
+  return await getRequest(`${ragPath}/${paths.dataSources}`);
+};
+
 export const useGetDataSourcesQuery = () => {
   return useQuery({
     queryKey: [QueryKeys.getDataSources],
-    queryFn: async () => {
-      const res = await getDataSourcesQuery();
-
-      return res
-        .map((source: DataSourceType) => ({ ...source, key: source.id }))
-        .reverse();
-    },
+    queryFn: getDataSourcesQuery,
   });
 };
 
 export const getDataSourcesQueryOptions = queryOptions({
   queryKey: [QueryKeys.getDataSources],
-  queryFn: async () => {
-    const res = await getDataSourcesQuery();
-
-    return res
-      .map((source: DataSourceType) => ({ ...source, key: source.id }))
-      .reverse();
-  },
+  queryFn: getDataSourcesQuery,
 });
-
-const getDataSourcesQuery = async (): Promise<DataSourceType[]> => {
-  return await getRequest(`${ragPath}/${paths.dataSources}`);
-};
 
 export const getDataSourceById = (dataSourceId: string) => {
   return queryOptions({

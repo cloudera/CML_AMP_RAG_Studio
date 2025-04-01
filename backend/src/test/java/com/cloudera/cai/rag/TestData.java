@@ -42,17 +42,42 @@ import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileRepository;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 public class TestData {
+  public static final String TEST_USER_NAME = "fake-user";
+
+  public static Types.Project createTestProjectInstance(String name, Boolean defaultProject) {
+    return Types.Project.builder()
+        .id(null)
+        .name(name)
+        .defaultProject(defaultProject)
+        .timeCreated(null)
+        .timeUpdated(null)
+        .createdById(TEST_USER_NAME)
+        .updatedById(TEST_USER_NAME)
+        .build();
+  }
+
+  public static Types.CreateProject createProjectRequest(String name) {
+    return new Types.CreateProject(name);
+  }
+
   public static Types.Session createTestSessionInstance(String sessionName) {
+    return createTestSessionInstance(sessionName, List.of(1L, 2L, 3L));
+  }
+
+  public static Types.Session createTestSessionInstance(
+      String sessionName, List<Long> dataSourceIds) {
     return new Types.Session(
         null,
         sessionName,
-        List.of(1L, 2L, 3L),
+        dataSourceIds,
+        1L,
         null,
         null,
-        "fake-user",
-        "fake-user",
+        TEST_USER_NAME,
+        TEST_USER_NAME,
         null,
         "test-model",
         "test-rerank-model",
@@ -61,18 +86,19 @@ public class TestData {
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
-    return createSessionInstance(sessionName, List.of(1L, 2L, 3L));
+    return createSessionInstance(sessionName, List.of(1L, 2L, 3L), 1L);
   }
 
   public static Types.CreateSession createSessionInstance(
-      String sessionName, List<Long> dataSourceIds) {
+      String sessionName, List<Long> dataSourceIds, Long projectId) {
     return new Types.CreateSession(
         sessionName,
         dataSourceIds,
         "test-model",
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false, true));
+        new Types.QueryConfiguration(false, true),
+        projectId);
   }
 
   public static Types.RagDataSource createTestDataSourceInstance(
@@ -93,7 +119,8 @@ public class TestData {
         null,
         connectionType,
         null,
-        null);
+        null,
+        true);
   }
 
   public static long createTestDataSource(RagDataSourceRepository dataSourceRepository) {
@@ -117,5 +144,13 @@ public class TestData {
             .updatedById("doesn't matter")
             .build();
     return ragFileRepository.insertDocumentMetadata(ragDocument);
+  }
+
+  public static void addUserToRequest(MockHttpServletRequest request) {
+    addUserToRequest(request, "test-user");
+  }
+
+  public static void addUserToRequest(MockHttpServletRequest request, String username) {
+    request.addHeader("remote-user", username);
   }
 }

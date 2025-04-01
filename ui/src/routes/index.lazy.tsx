@@ -49,7 +49,7 @@ const Home = () => {
   if (dataSources.data.length === 0 && sessions.data.length === 0) {
     return <GettingStarted />;
   }
-  return <Navigate to="/sessions" />;
+  return <Navigate to="/chats" />;
 };
 export const Route = createLazyFileRoute("/")({
   component: () => <Home />,

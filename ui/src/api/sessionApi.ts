@@ -39,6 +39,7 @@
 import {
   queryOptions,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -72,6 +73,7 @@ export interface Session {
   updatedById: string;
   lastInteractionTime: number;
   queryConfiguration: SessionQueryConfiguration;
+  projectId: number;
 }
 
 export type CreateSessionRequest = Pick<
@@ -82,6 +84,7 @@ export type CreateSessionRequest = Pick<
   | "rerankModel"
   | "responseChunks"
   | "queryConfiguration"
+  | "projectId"
 >;
 
 export type UpdateSessionRequest = Pick<
@@ -94,23 +97,42 @@ export type UpdateSessionRequest = Pick<
   | "dataSourceIds"
 >;
 
-export const getSessionsQueryOptions = queryOptions({
-  queryKey: [QueryKeys.getSessions],
-  queryFn: async () => await getSessionsQuery(),
-});
-
 export const getSessionsQuery = async (): Promise<Session[]> => {
   return await getRequest(`${ragPath}/${paths.sessions}`);
+};
+
+export const getSessionsQueryOptions = queryOptions({
+  queryKey: [QueryKeys.getSessions],
+  queryFn: getSessionsQuery,
+});
+
+export const useGetSessions = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getSessions],
+    queryFn: getSessionsQuery,
+  });
 };
 
 export const useCreateSessionMutation = ({
   onSuccess,
   onError,
 }: UseMutationType<Session>) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [MutationKeys.createSession],
     mutationFn: createSessionMutation,
-    onSuccess,
+    onSuccess: (session) => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getSessions],
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      if (onSuccess) {
+        onSuccess(session);
+      }
+    },
     onError,
   });
 };
@@ -192,7 +214,11 @@ export const useDeleteSessionMutation = ({
   return useMutation({
     mutationKey: [MutationKeys.deleteSession],
     mutationFn: deleteSessionMutation,
-    onSuccess,
+    onSuccess: (data, variables) => {
+      if (onSuccess) {
+        onSuccess(data, variables);
+      }
+    },
     onError,
   });
 };

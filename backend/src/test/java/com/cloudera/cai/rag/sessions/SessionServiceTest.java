@@ -42,18 +42,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.projects.ProjectService;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SessionServiceTest {
+  private static final String USERNAME = "test-user";
+
   @Test
   void create() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
     Types.Session result =
         sessionService.create(
             TestData.createTestSessionInstance("test")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(USERNAME)
+                .withUpdatedById(USERNAME),
+            USERNAME);
     assertThat(result).isNotNull();
   }
 
@@ -64,8 +69,9 @@ class SessionServiceTest {
         sessionService.create(
             TestData.createTestSessionInstance("test")
                 .withRerankModel("")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(USERNAME)
+                .withUpdatedById(USERNAME),
+            USERNAME);
     assertThat(result.rerankModel()).isNull();
     assertThat(result).isNotNull();
   }
@@ -76,10 +82,11 @@ class SessionServiceTest {
     Types.Session result =
         sessionService.create(
             TestData.createTestSessionInstance("test")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
+                .withCreatedById(USERNAME)
+                .withUpdatedById(USERNAME),
+            USERNAME);
     var updated = result.withRerankModel("").withDataSourceIds(List.of(4L));
-    var updatedResult = sessionService.update(updated);
+    var updatedResult = sessionService.update(updated, USERNAME);
     assertThat(updatedResult.rerankModel()).isNull();
     assertThat(updatedResult.dataSourceIds()).containsExactly(4L);
   }
@@ -88,24 +95,93 @@ class SessionServiceTest {
   void delete() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
-    var createdSession = sessionService.create(input);
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(USERNAME)
+            .withUpdatedById(USERNAME);
+    var createdSession = sessionService.create(input, USERNAME);
     sessionService.delete(createdSession.id());
-    assertThat(sessionService.getSessions()).doesNotContain(createdSession);
+    assertThat(sessionService.getSessions("fake-user")).doesNotContain(createdSession);
   }
 
   @Test
   void getSessions() {
     SessionService sessionService = new SessionService(SessionRepository.createNull());
+    String username1 = UUID.randomUUID().toString();
+    String username2 = UUID.randomUUID().toString();
+    String username3 = UUID.randomUUID().toString();
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(username1)
+            .withUpdatedById(username1);
     var input2 =
-        TestData.createTestSessionInstance("test2").withCreatedById("abc2").withUpdatedById("abc2");
-    sessionService.create(input);
-    sessionService.create(input2);
+        TestData.createTestSessionInstance("test2")
+            .withCreatedById(username2)
+            .withUpdatedById(username2);
+    sessionService.create(input, username1);
+    sessionService.create(input2, username2);
 
-    var result = sessionService.getSessions();
+    assertThat(sessionService.getSessions(username1)).hasSizeGreaterThanOrEqualTo(1);
+    assertThat(sessionService.getSessions(username2)).hasSizeGreaterThanOrEqualTo(1);
+    assertThat(sessionService.getSessions(username3)).hasSize(0);
+  }
 
-    assertThat(result).hasSizeGreaterThanOrEqualTo(2);
+  @Test
+  void getSessionsByProjectId() {
+    SessionService sessionService = new SessionService(SessionRepository.createNull());
+    ProjectService projectService = ProjectService.createNull();
+
+    var project =
+        projectService.createProject(TestData.createTestProjectInstance("test-project", false));
+    var project2 =
+        projectService.createProject(TestData.createTestProjectInstance("test-project2", false));
+
+    // Create sessions with different project IDs
+    String user1 = "user1";
+    var session1 =
+        TestData.createTestSessionInstance("test1")
+            .withProjectId(project.id())
+            .withCreatedById(user1)
+            .withUpdatedById(user1);
+
+    String user2 = "user2";
+    var session2 =
+        TestData.createTestSessionInstance("test2")
+            .withProjectId(project.id())
+            .withCreatedById(user2)
+            .withUpdatedById(user2);
+
+    String user3 = "user3";
+    var session3 =
+        TestData.createTestSessionInstance("test3")
+            .withProjectId(project2.id())
+            .withCreatedById(user3)
+            .withUpdatedById(user3);
+
+    // Save the sessions
+    sessionService.create(session1, user1);
+    sessionService.create(session2, user2);
+    sessionService.create(session3, user3);
+
+    // Get sessions for project ID 1
+    var projectOneSessions = sessionService.getSessionsByProjectId(project.id());
+
+    // Verify that sessions with project ID 1 are returned
+    assertThat(projectOneSessions).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(projectOneSessions).extracting("name").contains("test1", "test2");
+    assertThat(projectOneSessions).extracting("projectId").containsOnly(project.id());
+
+    // Get sessions for project ID 2
+    var projectTwoSessions = sessionService.getSessionsByProjectId(project2.id());
+
+    // Verify that only sessions with project ID 2 are returned
+    assertThat(projectTwoSessions).hasSize(1);
+    assertThat(projectTwoSessions).extracting("name").containsExactly("test3");
+    assertThat(projectTwoSessions).extracting("projectId").containsOnly(project2.id());
+
+    // Get sessions for non-existent project ID
+    var nonExistentProjectSessions = sessionService.getSessionsByProjectId(999L);
+
+    // Verify that no sessions are returned
+    assertThat(nonExistentProjectSessions).isEmpty();
   }
 }

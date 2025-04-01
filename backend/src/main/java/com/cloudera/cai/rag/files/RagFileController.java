@@ -40,7 +40,7 @@ package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocumentMetadata;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
+import com.cloudera.cai.rag.util.UsernameExtractor;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -54,7 +54,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/rag")
 public class RagFileController {
   private final RagFileService ragFileService;
-  private final UserTokenCookieDecoder userTokenCookieDecoder = new UserTokenCookieDecoder();
+  private final UsernameExtractor usernameExtractor = new UsernameExtractor();
 
   @Autowired
   public RagFileController(RagFileService ragFileService) {
@@ -73,7 +73,7 @@ public class RagFileController {
       throw new BadRequest("File is empty");
     }
     return ragFileService.saveRagFile(
-        file, dataSourceId, userTokenCookieDecoder.extractUsername(request.getCookies()));
+        file, dataSourceId, usernameExtractor.extractUsername(request));
   }
 
   @GetMapping(value = "/dataSources/{dataSourceId}/files", produces = "application/json")

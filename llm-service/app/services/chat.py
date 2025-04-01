@@ -63,7 +63,7 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session: Session, query: str, configuration: RagPredictConfiguration, user_name: str
+    session: Session, query: str, configuration: RagPredictConfiguration, user_name: Optional[str]
 ) -> RagStudioChatMessage:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -74,6 +74,21 @@ def v2_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
+
+    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+        return direct_llm_chat(session, query, user_name=user_name)
+
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if total_data_sources_size == 0:
+        return direct_llm_chat(
+            session, query, user_name
+        )
+
     response_id = str(uuid.uuid4())
 
     new_chat_message: RagStudioChatMessage = _run_chat(
@@ -89,7 +104,7 @@ def _run_chat(
     response_id: str,
     query: str,
     query_configuration: QueryConfiguration,
-    user_name: str,
+    user_name: Optional[str],
 ) -> RagStudioChatMessage:
     if len(session.data_source_ids) != 1:
         raise HTTPException(
@@ -224,10 +239,11 @@ def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
 
 def generate_suggested_questions(
     session_id: Optional[int],
+    user_name: Optional[str] = None,
 ) -> List[str]:
     if session_id is None:
         return generate_dummy_suggested_questions()
-    session = session_metadata_api.get_session(session_id)
+    session = session_metadata_api.get_session(session_id, user_name)
     if len(session.data_source_ids) == 0:
         return _generate_suggested_questions_direct_llm(session)
     if len(session.data_source_ids) != 1:
@@ -244,7 +260,8 @@ def generate_suggested_questions(
         )
     )
     if total_data_sources_size == 0:
-        raise HTTPException(status_code=404, detail="Knowledge base not found.")
+        return _generate_suggested_questions_direct_llm(session)
+        # raise HTTPException(status_code=404, detail="Knowledge base not found.")
 
     chat_history = retrieve_chat_history(session_id)
     if total_data_sources_size == 0:
@@ -305,7 +322,7 @@ def process_response(response: str | None) -> list[str]:
 
 
 def direct_llm_chat(
-    session: Session, query: str, user_name: str
+    session: Session, query: str, user_name: Optional[str]
 ) -> RagStudioChatMessage:
     response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
