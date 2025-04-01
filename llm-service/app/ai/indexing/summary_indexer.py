@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import json
 import logging
 import os
 import shutil
@@ -289,6 +289,7 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             global_persist_dir = self.__persist_root_dir()
             global_summary_store = self.__summary_indexer(global_persist_dir)
+            print(json.dumps(global_summary_store.index_struct.to_dict(), indent=2))
             document_id = str(self.data_source_id)
             if (
                 document_id
