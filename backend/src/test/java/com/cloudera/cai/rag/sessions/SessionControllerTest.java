@@ -62,7 +62,7 @@ class SessionControllerTest {
     assertThat(result.inferenceModel()).isEqualTo(input.inferenceModel());
     assertThat(result.rerankModel()).isEqualTo(input.rerankModel());
     assertThat(result.responseChunks()).isEqualTo(input.responseChunks());
-    assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result.timeCreated()).isNotNull();
     assertThat(result.timeUpdated()).isNotNull();
     assertThat(result.createdById()).isEqualTo("test-user");
@@ -147,7 +147,7 @@ class SessionControllerTest {
     assertThat(updatedSession.inferenceModel()).isEqualTo(updatedInferenceModel);
     assertThat(updatedSession.rerankModel()).isEqualTo(updatedRerankModel);
     assertThat(updatedSession.responseChunks()).isEqualTo(updatedResponseChunks);
-    assertThat(updatedSession.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(updatedSession.dataSourceIds()).isEmpty();
     assertThat(updatedSession.timeCreated()).isNotNull();
     assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");

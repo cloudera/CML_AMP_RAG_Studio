@@ -39,24 +39,44 @@
 package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.projects.ProjectRepository;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SessionService {
 
   private final SessionRepository sessionRepository;
+  private final ProjectRepository projectRepository;
 
-  public SessionService(SessionRepository sessionRepository) {
+  public SessionService(SessionRepository sessionRepository, ProjectRepository projectRepository) {
     this.sessionRepository = sessionRepository;
+    this.projectRepository = projectRepository;
   }
 
   public Types.Session create(Types.Session input, String username) {
+    validateDataSourceIds(input);
     var id = sessionRepository.create(cleanInputs(input));
     return sessionRepository.getSessionById(id, username);
   }
 
+  private void validateDataSourceIds(Types.Session input) {
+    List<Long> dataSourceIds = input.dataSourceIds();
+    if (dataSourceIds == null || dataSourceIds.isEmpty()) {
+      return;
+    }
+
+    Set<Long> validDataSourceIds =
+        new HashSet<>(projectRepository.getDataSourceIdsForProject(input.projectId()));
+    if (!validDataSourceIds.containsAll(dataSourceIds)) {
+      throw new IllegalArgumentException("Invalid data source IDs provided.");
+    }
+  }
+
   public Types.Session update(Types.Session input, String username) {
+    validateDataSourceIds(input);
     sessionRepository.update(cleanInputs(input));
     return sessionRepository.getSessionById(input.id(), username);
   }
@@ -85,6 +105,6 @@ public class SessionService {
   }
 
   public static SessionService createNull() {
-    return new SessionService(SessionRepository.createNull());
+    return new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
   }
 }
