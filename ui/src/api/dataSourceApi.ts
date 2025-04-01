@@ -78,6 +78,8 @@ export interface DataSourceBaseType {
 export type DataSourceType = DataSourceBaseType & {
   totalDocSize: number | null;
   documentCount: number;
+  createdById: string;
+  timeCreated: number;
 };
 
 export type Point2d = [[number, number], string];

@@ -36,17 +36,17 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Table, TableProps, Tooltip } from "antd";
+import { Flex, Table, TableProps, Tooltip, Typography } from "antd";
 import { Link } from "@tanstack/react-router";
 import { ConnectionType, DataSourceType } from "src/api/dataSourceApi.ts";
 import ProductDataFlowLg from "src/cuix/icons/ProductDataFlowLgIcon";
+import { format } from "date-fns";
 
 const columns: TableProps<DataSourceType>["columns"] = [
   {
     title: "ID",
     dataIndex: "id",
     key: "id",
-    width: 180,
   },
   {
     title: "Name",
@@ -64,6 +64,24 @@ const columns: TableProps<DataSourceType>["columns"] = [
     },
   },
   {
+    title: "Created By",
+    dataIndex: "createdById",
+    key: "createdById",
+  },
+  {
+    title: "Date Created",
+    dataIndex: "timeCreated",
+    key: "timeCreated",
+    render: (_, { timeCreated }) => {
+      return format(timeCreated * 1000, "MMM dd yyyy, pp");
+    },
+  },
+  {
+    title: "Documents",
+    dataIndex: "documentCount",
+    key: "documentCount",
+  },
+  {
     title: "Connection",
     dataIndex: "connectionType",
     key: "connectionType",
@@ -76,7 +94,6 @@ const columns: TableProps<DataSourceType>["columns"] = [
         </Flex>
       ) : null;
     },
-    width: 180,
   },
 ];
 
