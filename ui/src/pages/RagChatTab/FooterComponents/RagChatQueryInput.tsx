@@ -48,10 +48,12 @@ import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
-import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
-const RagChatQueryInput = () => {
-  const createSessionAndRedirect = useCreateSessionAndRedirect();
+const RagChatQueryInput = ({
+  newSessionCallback,
+}: {
+  newSessionCallback: (userInput: string) => void;
+}) => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { chatHistory },
@@ -91,7 +93,7 @@ const RagChatQueryInput = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        createSessionAndRedirect(userInput);
+        newSessionCallback(userInput);
       }
     }
   };

@@ -44,55 +44,76 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SessionRepositoryTest {
   @Test
   void create() {
     SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
+    String username = "abc";
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(username)
+            .withUpdatedById(username)
+            .withProjectId(2L);
     var id = sessionRepository.create(input);
     assertThat(id).isNotNull();
 
-    var result = sessionRepository.getSessionById(id);
+    var result = sessionRepository.getSessionById(id, username);
 
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(input.name());
-    assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result.timeCreated()).isNotNull();
     assertThat(result.timeUpdated()).isNotNull();
-    assertThat(result.createdById()).isEqualTo("abc");
-    assertThat(result.updatedById()).isEqualTo("abc");
+    assertThat(result.createdById()).isEqualTo(username);
+    assertThat(result.updatedById()).isEqualTo(username);
+    assertThat(result.projectId()).isEqualTo(2L);
     assertThat(result.lastInteractionTime()).isNull();
   }
 
   @Test
   void getSessions() {
     SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
+    String username1 = UUID.randomUUID().toString();
+    String username2 = UUID.randomUUID().toString();
+    String username3 = UUID.randomUUID().toString();
     var input =
-        TestData.createTestSessionInstance("test").withCreatedById("abc").withUpdatedById("abc");
+        TestData.createTestSessionInstance("test")
+            .withCreatedById(username1)
+            .withUpdatedById(username1);
     var input2 =
-        TestData.createTestSessionInstance("test2").withCreatedById("abc2").withUpdatedById("abc2");
+        TestData.createTestSessionInstance("test2")
+            .withCreatedById(username2)
+            .withUpdatedById(username2);
     var id = sessionRepository.create(input);
     var id2 = sessionRepository.create(input2);
 
-    var result = sessionRepository.getSessions();
-
-    assertThat(result).hasSizeGreaterThanOrEqualTo(2).extracting("id").containsSequence(id2, id);
+    assertThat(sessionRepository.getSessions(username1))
+        .hasSize(1)
+        .extracting("id")
+        .containsExactly(id);
+    assertThat(sessionRepository.getSessions(username2))
+        .hasSize(1)
+        .extracting("id")
+        .containsExactly(id2);
+    assertThat(sessionRepository.getSessions(username3)).hasSize(0);
   }
 
   @Test
   void delete() {
     SessionRepository sessionRepository = new SessionRepository(JdbiConfiguration.createNull());
+    String username = "abc";
     var id =
         sessionRepository.create(
             TestData.createTestSessionInstance("test")
-                .withCreatedById("abc")
-                .withUpdatedById("abc"));
-    assertThat(sessionRepository.getSessionById(id)).isNotNull();
+                .withCreatedById(username)
+                .withUpdatedById(username));
+    assertThat(sessionRepository.getSessionById(id, username)).isNotNull();
 
     sessionRepository.delete(id);
-    assertThatThrownBy(() -> sessionRepository.getSessionById(id)).isInstanceOf(NotFound.class);
+    assertThatThrownBy(() -> sessionRepository.getSessionById(id, username))
+        .isInstanceOf(NotFound.class);
   }
 }

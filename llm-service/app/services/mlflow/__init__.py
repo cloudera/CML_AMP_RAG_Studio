@@ -40,7 +40,7 @@ import os
 import re
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import mlflow
 from mlflow.entities import Experiment, Run
@@ -80,7 +80,7 @@ def chat_log_ml_flow_table(message: RagStudioChatMessage) -> dict[str, Any]:
 
 
 def chat_log_ml_flow_params(
-    session: Session, query_configuration: QueryConfiguration, user_name: str
+    session: Session, query_configuration: QueryConfiguration, user_name: Optional[str]
 ) -> dict[str, Any]:
     data_source_metadata = data_sources_metadata_api.get_metadata(
         session.data_source_ids[0]
@@ -108,7 +108,7 @@ def record_rag_mlflow_run(
     query_configuration: QueryConfiguration,
     response_id: str,
     session: Session,
-    user_name: str,
+    user_name: Optional[str],
 ) -> None:
     params = chat_log_ml_flow_params(session, query_configuration, user_name)
     source_nodes: list[RagPredictSourceNode] = new_chat_message.source_nodes
@@ -136,7 +136,7 @@ def record_rag_mlflow_run(
 
 
 def record_direct_llm_mlflow_run(
-    response_id: str, session: Session, user_name: str
+    response_id: str, session: Session, user_name: Optional[str]
 ) -> None:
     write_mlflow_run_json(
         f"session_{session.id}",
@@ -174,8 +174,10 @@ def write_mlflow_run_json(
         json.dump(contents, f)
 
 
-def rating_mlflow_log_metric(rating: bool, response_id: str, session_id: int) -> None:
-    session = session_metadata_api.get_session(session_id)
+def rating_mlflow_log_metric(
+    rating: bool, response_id: str, session_id: int, user_name: Optional[str]
+) -> None:
+    session = session_metadata_api.get_session(session_id, user_name=user_name)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )
@@ -190,8 +192,8 @@ def rating_mlflow_log_metric(rating: bool, response_id: str, session_id: int) ->
         mlflow.log_metric("rating", value, run_id=run.info.run_id)
 
 
-def feedback_mlflow_log_table(feedback: str, response_id: str, session_id: int) -> None:
-    session = session_metadata_api.get_session(session_id)
+def feedback_mlflow_log_table(feedback: str, response_id: str, session_id: int, user_name: Optional[str]) -> None:
+    session = session_metadata_api.get_session(session_id, user_name=user_name)
     experiment: Experiment = mlflow.set_experiment(
         experiment_name=f"session_{session.name}_{session.id}"
     )

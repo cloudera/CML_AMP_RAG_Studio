@@ -38,10 +38,10 @@
 
 import React from "react";
 import {
-  CloudOutlined,
-  DatabaseFilled,
-  DesktopOutlined,
+  CommentOutlined,
+  DatabaseOutlined,
   LineChartOutlined,
+  RobotFilled,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -100,14 +100,14 @@ const TopNav: React.FC = () => {
     getItem(
       <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
-      navigateTo("/sessions"),
-      <DesktopOutlined />,
+      navigateTo("/chats"),
+      <CommentOutlined />,
     ),
     getItem(
       <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
       navigateTo("/data"),
-      <DatabaseFilled />,
+      <DatabaseOutlined />,
     ),
   ];
 
@@ -115,7 +115,7 @@ const TopNav: React.FC = () => {
     <span data-testid="models-nav">Models</span>,
     "models",
     navigateTo("/models"),
-    <CloudOutlined />,
+    <RobotFilled />,
   );
 
   const analyticsItem = getItem(
@@ -130,12 +130,14 @@ const TopNav: React.FC = () => {
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
       return ["data"];
-    } else if (matchRoute({ to: "/sessions", fuzzy: true })) {
+    } else if (matchRoute({ to: "/chats", fuzzy: true })) {
       return ["chat"];
     } else if (matchRoute({ to: "/models", fuzzy: true })) {
       return ["models"];
     } else if (matchRoute({ to: "/analytics", fuzzy: true })) {
       return ["analytics"];
+    } else if (matchRoute({ to: "/projects", fuzzy: true })) {
+      return ["projects"];
     } else {
       return ["chat"];
     }

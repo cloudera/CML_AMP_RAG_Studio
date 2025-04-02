@@ -44,12 +44,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDataSource;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 class RagDataSourceControllerTest {
@@ -62,8 +60,7 @@ class RagDataSourceControllerTest {
         TestData.createTestDataSourceInstance("test-name", 512, 10, Types.ConnectionType.MANUAL)
             .withEmbeddingModel("test_embedding_model");
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var res = controller.create(dataSource, request);
     assertThat(res.id()).isNotNull();
     assertThat(res.name()).isEqualTo(dataSource.name());
@@ -101,7 +98,8 @@ class RagDataSourceControllerTest {
             newDataSource.updatedById(),
             newDataSource.connectionType(),
             0,
-            null);
+            null,
+            true);
     controller.update(expectedDataSource, new MockHttpServletRequest());
 
     // Retrieve the updated RagDataSource and verify the name change

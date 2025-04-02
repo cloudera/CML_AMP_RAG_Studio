@@ -50,7 +50,6 @@ import "./index.css";
 import { ApiError } from "./api/utils";
 import { Button, Flex, Result, Spin, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,39 +64,41 @@ const queryClient = new QueryClient({
   },
 });
 
+export const NotFoundComponent = () => {
+  const navigate = useNavigate();
+  return (
+    <Flex align="center" justify="center" style={{ height: "100vh" }}>
+      <Result
+        icon={
+          <img
+            src={Images.image404}
+            alt="Page not found"
+            height={300}
+            style={{ borderRadius: 20 }}
+          />
+        }
+        title="404"
+        subTitle="Sorry, the page you visited does not exist."
+        extra={
+          <Button
+            type="primary"
+            onClick={() => {
+              navigate({ to: "/" }).catch(() => null);
+            }}
+          >
+            Back Home
+          </Button>
+        }
+      />
+    </Flex>
+  );
+};
+
 const router = createRouter({
   routeTree,
   context: { queryClient: queryClient },
   defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
-  defaultNotFoundComponent: () => {
-    const navigate = useNavigate();
-    return (
-      <Flex align="center" justify="center" style={{ height: "100vh" }}>
-        <Result
-          icon={
-            <img
-              src={Images.image404}
-              alt="Page not found"
-              height={300}
-              style={{ borderRadius: 20 }}
-            />
-          }
-          title="404"
-          subTitle="Sorry, the page you visited does not exist."
-          extra={
-            <Button
-              type="primary"
-              onClick={() => {
-                navigate({ to: "/" }).catch(() => null);
-              }}
-            >
-              Back Home
-            </Button>
-          }
-        />
-      </Flex>
-    );
-  },
+  defaultNotFoundComponent: () => <NotFoundComponent />,
   defaultPendingComponent: () => (
     <Flex
       align="center"
@@ -121,7 +122,7 @@ declare module "@tanstack/react-router" {
 ReactDOM.createRoot(document.getElementById("root") as HTMLDivElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/*<ReactQueryDevtools initialIsOpen={false} />*/}
       <RouterProvider router={router} />
     </QueryClientProvider>
   </React.StrictMode>,

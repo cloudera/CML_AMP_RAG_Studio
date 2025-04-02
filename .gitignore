@@ -8,3 +8,4 @@ chat_store.json
 databases/
 **/docling-output.txt
 **/.DS_Store
+.history

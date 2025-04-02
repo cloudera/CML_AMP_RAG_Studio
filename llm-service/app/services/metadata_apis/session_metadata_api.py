@@ -39,7 +39,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Any
+from typing import List, Any, Optional
 
 import requests
 
@@ -57,6 +57,7 @@ class Session:
     id: int
     name: str
     data_source_ids: List[int]
+    project_id: int
     time_created: datetime
     time_updated: datetime
     created_by_id: str
@@ -72,6 +73,7 @@ class UpdatableSession:
     id: int
     name: str
     dataSourceIds: List[int]
+    projectId: int
     inferenceModel: str
     rerankModel: str
     responseChunks: int
@@ -82,8 +84,11 @@ BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
 url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
 
 
-def get_session(session_id: int) -> Session:
-    response = requests.get(url_template.format(session_id))
+def get_session(session_id: int, user_name: Optional[str]) -> Session:
+    headers = {"remote-user": user_name} if user_name else {}
+    response = requests.get(
+        url_template.format(session_id), headers=headers
+    )
     raise_for_http_error(response)
     data = body_to_json(response)
     return session_from_java_response(data)
@@ -94,6 +99,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
         id=data["id"],
         name=data["name"],
         data_source_ids=data["dataSourceIds"],
+        project_id=data["projectId"],
         time_created=datetime.fromtimestamp(data["timeCreated"]),
         time_updated=datetime.fromtimestamp(data["timeUpdated"]),
         created_by_id=data["createdById"],
@@ -108,11 +114,12 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
     )
 
 
-def update_session(session: Session) -> Session:
+def update_session(session: Session, user_name: Optional[str]) -> Session:
     updatable_session = UpdatableSession(
         id=session.id,
         name=session.name,
         dataSourceIds=session.data_source_ids or [],
+        projectId=session.project_id,
         inferenceModel=session.inference_model,
         rerankModel=session.rerank_model,
         responseChunks=session.response_chunks,
@@ -124,7 +131,7 @@ def update_session(session: Session) -> Session:
     response = requests.post(
         url_template.format(updatable_session.id),
         data=json.dumps(updatable_session.__dict__, default=str),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "remote-user": user_name},
         timeout=10,
     )
     raise_for_http_error(response)

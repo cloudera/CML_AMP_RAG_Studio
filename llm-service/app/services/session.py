@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import Optional
 
 from fastapi import HTTPException
 
@@ -77,12 +78,12 @@ Session Name:
 """
 
 
-def rename_session(session_id: int) -> str:
+def rename_session(session_id: int, user_name: Optional[str]) -> str:
     chat_history = ChatHistoryManager().retrieve_chat_history(session_id=session_id)
     if not chat_history:
         raise HTTPException(status_code=400, detail="No chat history found")
     first_interaction = chat_history[0].rag_message
-    session_metadata = session_metadata_api.get_session(session_id)
+    session_metadata = session_metadata_api.get_session(session_id, user_name)
     llm = models.LLM.get(session_metadata.inference_model)
     prompt = RENAME_SESSION_PROMPT_TEMPLATE.format(
         first_interaction.user,
@@ -92,5 +93,5 @@ def rename_session(session_id: int) -> str:
     response = llm.complete(prompt=prompt)
     session_name = response.text.strip()
     session_metadata.name = session_name
-    updated_session = session_metadata_api.update_session(session_metadata)
+    updated_session = session_metadata_api.update_session(session_metadata, user_name)
     return updated_session.name

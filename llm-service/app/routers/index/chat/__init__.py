@@ -38,7 +38,7 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
 from app import exceptions
@@ -55,6 +55,9 @@ class SuggestedQuestionsRequest(BaseModel):
 
 @router.post("/suggest-questions")
 @exceptions.propagates
-def suggest_questions(request: SuggestedQuestionsRequest) -> RagSuggestedQuestionsResponse:
-    return RagSuggestedQuestionsResponse(suggested_questions=generate_suggested_questions(request.session_id))
+def suggest_questions(
+    request: SuggestedQuestionsRequest, 
+    remote_user: Optional[str] = Header(None)
+) -> RagSuggestedQuestionsResponse:
 
+    return RagSuggestedQuestionsResponse(suggested_questions=generate_suggested_questions(request.session_id, remote_user))

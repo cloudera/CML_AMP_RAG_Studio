@@ -36,12 +36,14 @@
  * DATA.
  ******************************************************************************/
 
-import { Layout } from "antd";
+import { Flex, Layout } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
 import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { StyledChatLayoutWrapper } from "src/layout/StyledChatLayoutWrapper.tsx";
 
 const { Footer, Content } = Layout;
 
@@ -50,17 +52,19 @@ const RagChat = () => {
     dataSourcesQuery: { dataSources },
     activeSession,
   } = useContext(RagChatContext);
+  const createSessionAndRedirect = useCreateSessionAndRedirect();
 
   const currentDataSource = dataSources.find((dataSource) => {
     return dataSource.id === activeSession?.dataSourceIds[0];
   });
-
   return (
     <Layout style={{ height: "100%", width: "100%" }}>
-      <RagChatHeader
-        activeSession={activeSession}
-        currentDataSource={currentDataSource}
-      />
+      <StyledChatLayoutWrapper>
+        <RagChatHeader
+          activeSession={activeSession}
+          currentDataSource={currentDataSource}
+        />
+      </StyledChatLayoutWrapper>
       <Content
         style={{
           height: "20vh",
@@ -69,19 +73,36 @@ const RagChat = () => {
           paddingRight: 20,
         }}
       >
-        <ChatMessageController />
+        <StyledChatLayoutWrapper>
+          <Flex
+            vertical
+            align="center"
+            gap={16}
+            justify="center"
+            style={{ width: "100%" }}
+          >
+            <ChatMessageController />
+          </Flex>
+        </StyledChatLayoutWrapper>
       </Content>
-      <Footer
-        style={{
-          position: "sticky",
-          bottom: 0,
-          zIndex: 1,
-          width: "100%",
-          padding: "8px 8px 20px 8px",
-        }}
-      >
-        <RagChatQueryInput />
-      </Footer>
+      <Flex justify="center">
+        <Footer
+          style={{
+            position: "sticky",
+            bottom: 0,
+            zIndex: 1,
+            width: "100%",
+            padding: "8px 8px 20px 8px",
+            maxWidth: 900,
+          }}
+        >
+          <RagChatQueryInput
+            newSessionCallback={(userInput: string) => {
+              createSessionAndRedirect(userInput);
+            }}
+          />
+        </Footer>
+      </Flex>
     </Layout>
   );
 };

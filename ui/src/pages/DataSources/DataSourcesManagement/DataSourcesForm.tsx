@@ -38,19 +38,19 @@
 
 import {
   Collapse,
+  Divider,
   Form,
   FormInstance,
   Input,
   InputNumber,
   Select,
-  Tooltip,
+  Switch,
   Typography,
 } from "antd";
 import { ConnectionType, DataSourceBaseType } from "src/api/dataSourceApi";
 import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import { useEffect } from "react";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
-import { InfoCircleOutlined } from "@ant-design/icons";
 
 export const distanceMetricOptions = [
   {
@@ -122,6 +122,7 @@ export const dataSourceCreationInitialValues = {
   chunkOverlapPercent: 10,
   embeddingModel: "",
   summarizationModel: "",
+  availableForDefaultProject: true,
 };
 
 export interface DataSourcesFormProps {
@@ -205,19 +206,14 @@ const DataSourcesForm = ({
         name="connectionType"
         label="Connection"
         initialValue={initialValues.connectionType}
+        hidden={!updateMode}
       >
         <Select options={connectionsOptions} />
       </Form.Item>
       <Form.Item
         name="summarizationModel"
-        label={
-          <Typography>
-            Summarization model
-            <Tooltip title="Summarization relies on an response synthesizer model to generate summaries.  Leaving this field blank will disable summarization.">
-              <InfoCircleOutlined style={{ marginLeft: 4 }} />
-            </Tooltip>
-          </Typography>
-        }
+        tooltip="Summarization relies on an response synthesizer model to generate summaries.  Leaving this field blank will disable summarization."
+        label={<Typography>Summarization model</Typography>}
         initialValue={initialValues.summarizationModel}
       >
         <Select
@@ -225,6 +221,17 @@ const DataSourcesForm = ({
           allowClear
           loading={llmModels.isLoading}
         />
+      </Form.Item>
+      <Divider />
+      <Form.Item
+        name="availableForDefaultProject"
+        label="Available without project"
+        initialValue={initialValues.availableForDefaultProject}
+        valuePropName="checked"
+        tooltip="Allow this knowledge base to be used outside of the context of a project."
+        hidden={!updateMode}
+      >
+        <Switch style={{ marginLeft: 4 }} />
       </Form.Item>
       <Collapse items={advancedOptions(updateMode, initialValues)} />
     </Form>

@@ -43,21 +43,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
 import com.cloudera.cai.util.exceptions.NotFound;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 class SessionControllerTest {
   @Test
-  void create() throws JsonProcessingException {
+  void create() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var sessionName = "test";
     Types.CreateSession input = TestData.createSessionInstance(sessionName);
     Types.Session result = sessionController.create(input, request);
@@ -66,7 +62,7 @@ class SessionControllerTest {
     assertThat(result.inferenceModel()).isEqualTo(input.inferenceModel());
     assertThat(result.rerankModel()).isEqualTo(input.rerankModel());
     assertThat(result.responseChunks()).isEqualTo(input.responseChunks());
-    assertThat(result.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result.timeCreated()).isNotNull();
     assertThat(result.timeUpdated()).isNotNull();
     assertThat(result.createdById()).isEqualTo("test-user");
@@ -76,13 +72,12 @@ class SessionControllerTest {
   }
 
   @Test
-  void create_noDataSource() throws JsonProcessingException {
+  void create_noDataSource() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     var sessionName = "test";
-    Types.CreateSession input = TestData.createSessionInstance(sessionName, List.of());
+    Types.CreateSession input = TestData.createSessionInstance(sessionName, List.of(), 1L);
     Types.Session result = sessionController.create(input, request);
     assertThat(result.id()).isNotNull();
     assertThat(result.name()).isEqualTo(sessionName);
@@ -102,18 +97,32 @@ class SessionControllerTest {
   void get() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
     var input = TestData.createSessionInstance("test");
     var createdSession = sessionController.create(input, request);
-    var result = sessionController.getSession(createdSession.id());
+    var result = sessionController.getSession(createdSession.id(), request);
     assertThat(result).isEqualTo(createdSession);
   }
 
   @Test
-  void update() throws JsonProcessingException {
+  void get_otherUserSession() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
+    var input = TestData.createSessionInstance("test");
+    var createdSession = sessionController.create(input, request);
+
+    var request2 = new MockHttpServletRequest();
+    TestData.addUserToRequest(request2, "other-user");
+    assertThatThrownBy(() -> sessionController.getSession(createdSession.id(), request2))
+        .isInstanceOf(NotFound.class);
+  }
+
+  @Test
+  void update() {
+    SessionController sessionController = new SessionController(SessionService.createNull());
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
     var sessionName = "test";
     var input = TestData.createSessionInstance(sessionName);
     Types.Session insertedSession = sessionController.create(input, request);
@@ -122,11 +131,6 @@ class SessionControllerTest {
     var updatedInferenceModel = "new-model-name";
     var updatedName = "new-name";
     var updatedRerankModel = "new-rerank-model";
-
-    request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie(
-            "_basusertoken", UserTokenCookieDecoderTest.encodeCookie("update-test-user")));
 
     var updatedSession =
         sessionController.update(
@@ -143,22 +147,19 @@ class SessionControllerTest {
     assertThat(updatedSession.inferenceModel()).isEqualTo(updatedInferenceModel);
     assertThat(updatedSession.rerankModel()).isEqualTo(updatedRerankModel);
     assertThat(updatedSession.responseChunks()).isEqualTo(updatedResponseChunks);
-    assertThat(updatedSession.dataSourceIds()).containsExactlyInAnyOrder(1L, 2L, 3L);
+    assertThat(updatedSession.dataSourceIds()).isEmpty();
     assertThat(updatedSession.timeCreated()).isNotNull();
     assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
-    assertThat(updatedSession.updatedById()).isEqualTo("update-test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
     assertThat(updatedSession.queryConfiguration().enableHyde()).isTrue();
     assertThat(updatedSession.queryConfiguration().enableSummaryFilter()).isFalse();
   }
 
   @Test
-  void noQueryConfiguration_create() throws JsonProcessingException {
+  void noQueryConfiguration_create() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie("_basusertoken", UserTokenCookieDecoderTest.encodeCookie("test-user")));
     var sessionName = "test";
     Types.CreateSession input =
         TestData.createSessionInstance(sessionName).withQueryConfiguration(null);
@@ -172,11 +173,12 @@ class SessionControllerTest {
     SessionService sessionService = SessionService.createNull();
     SessionController sessionController = new SessionController(sessionService);
     var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request, "test-user");
 
     var input = TestData.createSessionInstance("test");
     var createdSession = sessionController.create(input, request);
     sessionController.delete(createdSession.id());
-    assertThatThrownBy(() -> sessionService.getSessionById(createdSession.id()))
+    assertThatThrownBy(() -> sessionService.getSessionById(createdSession.id(), "test-user"))
         .isInstanceOf(NotFound.class);
   }
 
@@ -184,13 +186,20 @@ class SessionControllerTest {
   void getSessions() {
     SessionController sessionController = new SessionController(SessionService.createNull());
     var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request, "user-one");
     var input = TestData.createSessionInstance("test");
     var input2 = TestData.createSessionInstance("test2");
     sessionController.create(input, request);
     sessionController.create(input2, request);
 
-    var result = sessionController.getSessions();
+    var request2 = new MockHttpServletRequest();
+    TestData.addUserToRequest(request2, "user-two");
+    var input3 = TestData.createSessionInstance("test");
+    var otherPersonsSession = sessionController.create(input3, request2);
+
+    var result = sessionController.getSessions(request);
 
     assertThat(result).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(result).doesNotContain(otherPersonsSession);
   }
 }

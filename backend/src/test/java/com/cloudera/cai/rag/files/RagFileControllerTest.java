@@ -47,14 +47,11 @@ import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoder;
-import com.cloudera.cai.rag.util.UserTokenCookieDecoderTest;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -70,10 +67,7 @@ class RagFileControllerTest {
     String contentType = "text/plain";
     byte[] bytes = "23243223423".getBytes();
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie(
-            UserTokenCookieDecoder.USER_TOKEN_COOKIE_NAME,
-            UserTokenCookieDecoderTest.encodeCookie("test-user")));
+    TestData.addUserToRequest(request);
     Types.RagDocumentMetadata metadata =
         ragFileController
             .uploadRagDocument(
@@ -99,10 +93,6 @@ class RagFileControllerTest {
     String contentType = "text/plain";
     byte[] bytes = "".getBytes();
     var request = new MockHttpServletRequest();
-    request.setCookies(
-        new MockCookie(
-            UserTokenCookieDecoder.USER_TOKEN_COOKIE_NAME,
-            UserTokenCookieDecoderTest.encodeCookie("test-user")));
     assertThatThrownBy(
             () ->
                 ragFileController.uploadRagDocument(
@@ -127,7 +117,8 @@ class RagFileControllerTest {
                 "test-id",
                 Types.ConnectionType.API,
                 null,
-                null));
+                null,
+                true));
 
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     String fileName = "test-get-rag-docs-" + new Random().nextLong();

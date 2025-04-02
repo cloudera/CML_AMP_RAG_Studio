@@ -89,7 +89,7 @@ const GettingStarted = () => {
             size="large"
             style={{ width: 113 }}
             onClick={() => {
-              navigate({ to: "/sessions" }).catch(() => null);
+              navigate({ to: "/chats" }).catch(() => null);
             }}
           >
             Get Started

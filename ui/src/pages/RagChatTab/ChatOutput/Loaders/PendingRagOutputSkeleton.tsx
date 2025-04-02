@@ -41,7 +41,7 @@ import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.
 
 const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   return (
-    <>
+    <div style={{ width: "100%" }}>
       <div>
         <UserQuestion question={question} />
         <Row>
@@ -51,7 +51,7 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
         </Row>
       </div>
       <Divider />
-    </>
+    </div>
   );
 };
 
