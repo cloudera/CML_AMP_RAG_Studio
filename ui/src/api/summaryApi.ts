@@ -84,3 +84,14 @@ const getDataSourceSummary = async (
 ): Promise<DocumentSummary> => {
   return getRequest(`${llmServicePath}/data_sources/${data_source_id}/summary`);
 };
+
+export const useGetDataSourcesSummaries = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getDataSourcesSummaries],
+    queryFn: () => getDataSourcesSummaries(),
+  });
+};
+
+const getDataSourcesSummaries = async (): Promise<DocumentSummary> => {
+  return getRequest(`${llmServicePath}/data_sources/summaries`);
+};

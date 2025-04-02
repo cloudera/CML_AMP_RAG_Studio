@@ -182,8 +182,11 @@ class SummaryIndexer(BaseTextIndexer):
 
     @classmethod
     def get_all_data_source_summaries(cls) -> dict[str, str]:
+        root_dir = cls.__persist_root_dir()
+        if not os.path.exists(root_dir):
+            return {}
         storage_context = StorageContext.from_defaults(
-            persist_dir=cls.__persist_root_dir(),
+            persist_dir=root_dir,
             vector_store=SimpleVectorStore(),
         )
         global_summary_store: DocumentSummaryIndex = cast(
