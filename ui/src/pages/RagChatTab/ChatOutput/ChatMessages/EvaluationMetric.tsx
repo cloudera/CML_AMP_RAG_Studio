@@ -38,9 +38,8 @@
 
 import { Evaluation } from "src/api/chatApi.ts";
 import { Flex, Popover, Typography } from "antd";
-import { cdlBlue600, cdlGray600, cdlGreen600 } from "src/cuix/variables.ts";
-import Images from "src/components/images/Images.ts";
-import Icon, { AuditOutlined, CheckSquareOutlined } from "@ant-design/icons";
+import { cdlGray600, cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
+import { AuditOutlined, CheckSquareOutlined } from "@ant-design/icons";
 
 const evaluationNames = {
   relevance: {
@@ -87,7 +86,11 @@ const EvaluationMetric = ({
         }
       >
         <Flex gap={2} align="center" style={{ height: 24 }}>
-          {evaluationNames[evaluation.name].icon}
+          <Typography
+            style={{ color: evaluation.value === 1 ? cdlGreen600 : cdlRed600 }}
+          >
+            {evaluationNames[evaluation.name].icon}
+          </Typography>
           <Typography.Text
             style={{ color: evaluationNames[evaluation.name].textColor }}
           >
