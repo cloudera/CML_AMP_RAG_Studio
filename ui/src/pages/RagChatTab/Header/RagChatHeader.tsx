@@ -74,7 +74,7 @@ export const RagChatHeader = ({
   };
 
   return (
-    <Header style={{ padding: 0, margin: 20, width: "100%" }}>
+    <Header style={{ padding: 0, margin: 20, width: "95%" }}>
       <Flex justify="space-between">
         <Typography.Title
           type="secondary"

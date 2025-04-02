@@ -44,6 +44,12 @@ export const DataSourceCard = ({
         <Flex vertical align="end">
           <Flex gap={4} align="baseline">
             <Typography.Text style={{ fontSize: 12 }} type="secondary">
+              Number of documents:
+            </Typography.Text>
+            <Typography>{dataSource.documentCount}</Typography>
+          </Flex>
+          <Flex gap={4} align="baseline">
+            <Typography.Text style={{ fontSize: 12 }} type="secondary">
               Total document size:
             </Typography.Text>
             <Typography>
@@ -51,12 +57,6 @@ export const DataSourceCard = ({
                 ? bytesConversion(dataSource.totalDocSize.toString())
                 : "N/A"}
             </Typography>
-          </Flex>
-          <Flex gap={4} align="baseline">
-            <Typography.Text style={{ fontSize: 12 }} type="secondary">
-              Total documents:
-            </Typography.Text>
-            <Typography>{dataSource.documentCount}</Typography>
           </Flex>
         </Flex>
       }
