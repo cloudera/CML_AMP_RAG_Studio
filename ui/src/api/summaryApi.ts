@@ -92,6 +92,6 @@ export const useGetDataSourcesSummaries = () => {
   });
 };
 
-const getDataSourcesSummaries = async (): Promise<DocumentSummary> => {
+const getDataSourcesSummaries = async (): Promise<Record<string, string>> => {
   return getRequest(`${llmServicePath}/data_sources/summaries`);
 };
