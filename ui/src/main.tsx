@@ -67,7 +67,11 @@ const queryClient = new QueryClient({
 export const NotFoundComponent = () => {
   const navigate = useNavigate();
   return (
-    <Flex align="center" justify="center" style={{ height: "100vh" }}>
+    <Flex
+      align="center"
+      justify="center"
+      style={{ height: "100vh", width: "100%" }}
+    >
       <Result
         icon={
           <img
