@@ -36,69 +36,32 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Table, TableProps, Tooltip } from "antd";
-import { Link } from "@tanstack/react-router";
-import { ConnectionType, DataSourceType } from "src/api/dataSourceApi.ts";
-import ProductDataFlowLg from "src/cuix/icons/ProductDataFlowLgIcon";
+import { Flex, Spin } from "antd";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
+import { useGetDataSourcesSummaries } from "src/api/summaryApi.ts";
+import { DataSourceCard } from "pages/DataSources/DataSourcesManagement/DataSourceCard.tsx";
 
-const columns: TableProps<DataSourceType>["columns"] = [
-  {
-    title: "ID",
-    dataIndex: "id",
-    key: "id",
-    width: 180,
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-    render: (_, { id, name }) => {
-      return (
-        <Link
-          to={"/data/$dataSourceId"}
-          params={{ dataSourceId: id.toString() }}
-        >
-          {name}
-        </Link>
-      );
-    },
-  },
-  {
-    title: "Connection",
-    dataIndex: "connectionType",
-    key: "connectionType",
-    render: (connectionType) => {
-      return connectionType === ConnectionType[ConnectionType.CDF] ? (
-        <Flex style={{ height: "100%" }}>
-          <Tooltip title="Cloudera DataFlow">
-            <ProductDataFlowLg fontSize={25} />
-          </Tooltip>
-        </Flex>
-      ) : null;
-    },
-    width: 180,
-  },
-];
-
-const DataSourcesTable = ({
+const DataSourcesList = ({
   dataSources,
   dataSourcesLoading,
 }: {
   dataSources?: DataSourceType[];
   dataSourcesLoading: boolean;
 }) => {
-  const dataSourcesWithKey = dataSources?.map((dataSource) => ({
-    ...dataSource,
-    key: dataSource.id,
-  }));
+  const dataSourcesSummaries = useGetDataSourcesSummaries();
+
   return (
-    <Table
-      dataSource={dataSourcesWithKey}
-      columns={columns}
-      style={{ width: "100%" }}
-      loading={dataSourcesLoading}
-    />
+    <Flex vertical style={{ width: "100%", paddingBottom: 40 }} gap={16}>
+      {dataSourcesLoading && <Spin />}
+      {dataSources?.map((dataSource) => (
+        <DataSourceCard
+          dataSource={dataSource}
+          dataSourcesSummaries={dataSourcesSummaries}
+          key={dataSource.id}
+        />
+      ))}
+    </Flex>
   );
 };
 
-export default DataSourcesTable;
+export default DataSourcesList;

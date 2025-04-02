@@ -95,6 +95,7 @@ export type UpdateSessionRequest = Pick<
   | "name"
   | "id"
   | "dataSourceIds"
+  | "projectId"
 >;
 
 export const getSessionsQuery = async (): Promise<Session[]> => {
