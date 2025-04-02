@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 import Chat from "./chat.png";
-import Clipboard from "./clipboard.svg?react";
+import Clipboard from "./clipboard.svg";
 import DB from "./DB.png";
 import Ghost from "./ghost.svg?react";
 import AiAssistant from "./ic-ai-assistant.svg";
