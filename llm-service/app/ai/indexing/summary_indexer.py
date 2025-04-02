@@ -58,6 +58,7 @@ from llama_index.core.schema import (
     Document,
     NodeRelationship,
     TextNode,
+    RelatedNodeInfo,
 )
 from llama_index.core.vector_stores import SimpleVectorStore
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -192,6 +193,7 @@ class SummaryIndexer(BaseTextIndexer):
             DocumentSummaryIndex,
             load_index_from_storage(
                 storage_context=storage_context,
+                index_id=None,
                 **{
                     "llm": models.LLM.get_noop(),
                     "response_synthesizer": models.LLM.get_noop(),
@@ -208,10 +210,21 @@ class SummaryIndexer(BaseTextIndexer):
             global_summary_store.index_struct.doc_id_to_summary_id.values()
         )
         nodes = global_summary_store.docstore.get_nodes(summary_ids)
-        return {
-            node.relationships[NodeRelationship.SOURCE].node_id: node.get_content()
-            for node in nodes
-        }
+
+        results: dict[str, str] = {}
+        for node in nodes:
+            sourcez = node.relationships.get(NodeRelationship.SOURCE)
+            sources: List[RelatedNodeInfo]
+            if type(sourcez) is RelatedNodeInfo:
+                sources = [sourcez]
+            elif type(sourcez) is list:
+                sources = sourcez
+            else:
+                sources = []
+            for source in sources:
+                results[source.node_id] = node.get_content()
+
+        return results
 
     def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(f"Creating summary for file {file_path}")
