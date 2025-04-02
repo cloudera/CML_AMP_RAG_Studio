@@ -36,73 +36,32 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Typography } from "antd";
-import { useEffect, useState } from "react";
-import DataSourcesList from "pages/DataSources/DataSourcesManagement/DataSourcesList.tsx";
-import CreateNewDataSourcesModal from "pages/DataSources/DataSourcesManagement/CreateNewDataSourcesModal.tsx";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import NoDataSources from "src/components/GettingStarted/NoDataSources.tsx";
+import { Flex, Spin } from "antd";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
+import { useGetDataSourcesSummaries } from "src/api/summaryApi.ts";
+import { DataSourceCard } from "pages/DataSources/DataSourcesManagement/DataSourceCard.tsx";
 
-const DataSourcesManagementPage = () => {
-  const navigate = useNavigate();
-  const dataSources = useSuspenseQuery(getDataSourcesQueryOptions);
-  const search: { create: boolean } = useSearch({
-    from: "/_layout/data/_layout-datasources",
-  });
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-    navigate({ to: "/data" }).catch(() => null);
-  };
-
-  useEffect(() => {
-    if (search.create) {
-      setIsModalOpen(true);
-    }
-  }, [search]);
-
-  if (dataSources.data.length === 0) {
-    return (
-      <Flex align="center" justify="center" style={{ height: "85vh" }}>
-        <NoDataSources />
-        <CreateNewDataSourcesModal
-          isModalOpen={isModalOpen}
-          handleCancel={handleCancel}
-          setIsModalOpen={setIsModalOpen}
-        />
-      </Flex>
-    );
-  }
+const DataSourcesList = ({
+  dataSources,
+  dataSourcesLoading,
+}: {
+  dataSources?: DataSourceType[];
+  dataSourcesLoading: boolean;
+}) => {
+  const dataSourcesSummaries = useGetDataSourcesSummaries();
 
   return (
-    <Flex vertical align="center">
-      <Typography.Title>RAG Knowledge Bases</Typography.Title>
-      <Flex
-        vertical
-        align="end"
-        style={{ width: "80%", maxWidth: 1000 }}
-        gap={20}
-      >
-        <Button onClick={showModal}>Create Knowledge Base</Button>
-
-        <DataSourcesList
-          dataSources={dataSources.data}
-          dataSourcesLoading={dataSources.isPending}
+    <Flex vertical style={{ width: "100%", paddingBottom: 40 }} gap={16}>
+      {dataSourcesLoading && <Spin />}
+      {dataSources?.map((dataSource) => (
+        <DataSourceCard
+          dataSource={dataSource}
+          dataSourcesSummaries={dataSourcesSummaries}
+          key={dataSource.id}
         />
-      </Flex>
-      <CreateNewDataSourcesModal
-        isModalOpen={isModalOpen}
-        handleCancel={handleCancel}
-        setIsModalOpen={setIsModalOpen}
-      />
+      ))}
     </Flex>
   );
 };
 
-export default DataSourcesManagementPage;
+export default DataSourcesList;
