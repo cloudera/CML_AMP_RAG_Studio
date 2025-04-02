@@ -42,6 +42,7 @@ from fastapi import APIRouter
 
 from . import data_source
 from . import sessions
+from . import summaries
 from . import amp_metadata
 from . import models
 from . import metrics
@@ -52,6 +53,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 router.include_router(chat.router)
+router.include_router(summaries.router)
 router.include_router(data_source.router)
 router.include_router(sessions.router)
 router.include_router(amp_metadata.router)

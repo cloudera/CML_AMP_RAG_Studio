@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
 import logging
 import os
 import shutil
@@ -59,7 +58,9 @@ from llama_index.core.schema import (
     Document,
     NodeRelationship,
     TextNode,
+    RelatedNodeInfo,
 )
+from llama_index.core.vector_stores import SimpleVectorStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.services import models
@@ -179,6 +180,52 @@ class SummaryIndexer(BaseTextIndexer):
         )
         return doc_summary_index
 
+    @classmethod
+    def get_all_data_source_summaries(cls) -> dict[str, str]:
+        root_dir = cls.__persist_root_dir()
+        if not os.path.exists(root_dir):
+            return {}
+        storage_context = StorageContext.from_defaults(
+            persist_dir=root_dir,
+            vector_store=SimpleVectorStore(),
+        )
+        global_summary_store: DocumentSummaryIndex = cast(
+            DocumentSummaryIndex,
+            load_index_from_storage(
+                storage_context=storage_context,
+                index_id=None,
+                **{
+                    "llm": models.LLM.get_noop(),
+                    "response_synthesizer": models.LLM.get_noop(),
+                    "show_progress": True,
+                    "embed_model": models.Embedding.get_noop(),
+                    "embed_summaries": True,
+                    "summary_query": "None",
+                    "data_source_id": 0,
+                },
+            ),
+        )
+
+        summary_ids = list(
+            global_summary_store.index_struct.doc_id_to_summary_id.values()
+        )
+        nodes = global_summary_store.docstore.get_nodes(summary_ids)
+
+        results: dict[str, str] = {}
+        for node in nodes:
+            sourcez = node.relationships.get(NodeRelationship.SOURCE)
+            sources: List[RelatedNodeInfo]
+            if type(sourcez) is RelatedNodeInfo:
+                sources = [sourcez]
+            elif type(sourcez) is list:
+                sources = sourcez
+            else:
+                sources = []
+            for source in sources:
+                results[source.node_id] = node.get_content()
+
+        return results
+
     def index_file(self, file_path: Path, document_id: str) -> None:
         logger.debug(f"Creating summary for file {file_path}")
 
@@ -289,6 +336,7 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             global_persist_dir = self.__persist_root_dir()
             global_summary_store = self.__summary_indexer(global_persist_dir)
+
             document_id = str(self.data_source_id)
             if (
                 document_id

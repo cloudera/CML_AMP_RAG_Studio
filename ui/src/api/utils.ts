@@ -92,6 +92,7 @@ export enum QueryKeys {
   "getAmpIsComposable" = "getAmpIsComposable",
   "getAmpUpdateJobStatus" = "getAmpUpdateJobStatus",
   "getDataSourceSummary" = "getDataSourceSummary",
+  "getDataSourcesSummaries" = "getDataSourcesSummaries",
   "getLlmModels" = "getLlmModels",
   "getEmbeddingModels" = "getEmbeddingModels",
   "getModelSource" = "getModelSource",
@@ -125,7 +126,7 @@ export interface CustomError {
 export class ApiError extends Error {
   constructor(
     message = "unknown",
-    public status: number
+    public status: number,
   ) {
     super(message);
     this.name = "CustomError";
@@ -135,7 +136,7 @@ export class ApiError extends Error {
 
 export const postRequest = async <T>(
   url: string,
-  body: Record<never, never>
+  body: Record<never, never>,
 ): Promise<T> => {
   const res = await fetch(url, {
     method: "POST",

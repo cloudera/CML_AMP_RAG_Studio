@@ -104,6 +104,7 @@ const ChatSettingsModal = ({
         const request: UpdateSessionRequest = {
           ...values,
           id: activeSession.id,
+          projectId: activeSession.projectId,
           dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
         };
         updateSession.mutate(request);

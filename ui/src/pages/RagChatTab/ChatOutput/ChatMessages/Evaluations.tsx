@@ -41,7 +41,7 @@ import EvaluationMetric from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluatio
 import { Flex } from "antd";
 
 export const Evaluations = (props: { evaluations: Evaluation[] }) => (
-  <Flex gap={4}>
+  <Flex gap={8}>
     {props.evaluations.map((evaluation, index) => {
       return (
         <EvaluationMetric

@@ -38,7 +38,7 @@
 
 import { Button, Flex, Typography } from "antd";
 import { useEffect, useState } from "react";
-import DataSourcesTable from "pages/DataSources/DataSourcesManagement/DataSourcesTable.tsx";
+import DataSourcesList from "pages/DataSources/DataSourcesManagement/DataSourcesList.tsx";
 import CreateNewDataSourcesModal from "pages/DataSources/DataSourcesManagement/CreateNewDataSourcesModal.tsx";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
@@ -91,7 +91,7 @@ const DataSourcesManagementPage = () => {
       >
         <Button onClick={showModal}>Create Knowledge Base</Button>
 
-        <DataSourcesTable
+        <DataSourcesList
           dataSources={dataSources.data}
           dataSourcesLoading={dataSources.isPending}
         />
