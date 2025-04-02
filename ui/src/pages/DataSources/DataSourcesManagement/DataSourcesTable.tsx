@@ -110,41 +110,37 @@ const DataSourceCard = ({
   const navigate = useNavigate();
   return (
     <Card
-      hoverable={true}
-      onClick={() => {
-        navigate({
-          to: "/data/$dataSourceId",
-          params: { dataSourceId: dataSource.id.toString() },
-        }).catch(() => {
-          messageQueue.error("Failed to navigate to data source.");
-        });
-      }}
       title={
-        <Flex vertical style={{ marginBottom: 8, marginTop: 14 }}>
+        <Flex
+          vertical
+          style={{ marginBottom: 8, marginTop: 14, cursor: "pointer" }}
+          onClick={() => {
+            navigate({
+              to: "/data/$dataSourceId",
+              params: { dataSourceId: dataSource.id.toString() },
+            }).catch(() => {
+              messageQueue.error("Failed to navigate to data source.");
+            });
+          }}
+        >
           <Typography.Title level={5} style={{ margin: 0 }}>
             {dataSource.name}
           </Typography.Title>
+        </Flex>
+      }
+      extra={
+        <Flex vertical align="end">
           <Flex gap={4} align="baseline">
             <Typography.Text style={{ fontSize: 12 }} type="secondary">
               ID:
             </Typography.Text>
             <Typography>{dataSource.id}</Typography>
           </Flex>
-        </Flex>
-      }
-      extra={
-        <Flex vertical>
           <Flex gap={4} align="baseline">
             <Typography.Text style={{ fontSize: 12 }} type="secondary">
-              Documents:
+              Total documents:
             </Typography.Text>
             <Typography>{dataSource.documentCount}</Typography>
-          </Flex>
-          <Flex gap={4} align="baseline">
-            <Typography.Text style={{ fontSize: 12 }} type="secondary">
-              Connection:
-            </Typography.Text>
-            <Typography>{dataSource.connectionType}</Typography>
           </Flex>
         </Flex>
       }
@@ -173,7 +169,7 @@ const DataSourceCard = ({
             </Typography.Text>
           )}
         </Flex>
-        <Flex justify="space-between">
+        <Flex vertical align="end">
           <Flex gap={4} align="baseline">
             <Typography.Text style={{ fontSize: 12 }} type="secondary">
               Created by:
