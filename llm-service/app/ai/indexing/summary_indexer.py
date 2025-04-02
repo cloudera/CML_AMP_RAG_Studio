@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
 import logging
 import os
 import shutil
@@ -194,7 +193,7 @@ class SummaryIndexer(BaseTextIndexer):
             load_index_from_storage(
                 storage_context=storage_context,
                 **{
-                    "llm" : models.LLM.get_noop(),
+                    "llm": models.LLM.get_noop(),
                     "response_synthesizer": models.LLM.get_noop(),
                     "show_progress": True,
                     "embed_model": models.Embedding.get_noop(),
@@ -205,7 +204,9 @@ class SummaryIndexer(BaseTextIndexer):
             ),
         )
 
-        summary_ids = list(global_summary_store.index_struct.doc_id_to_summary_id.values())
+        summary_ids = list(
+            global_summary_store.index_struct.doc_id_to_summary_id.values()
+        )
         nodes = global_summary_store.docstore.get_nodes(summary_ids)
         return {
             node.relationships[NodeRelationship.SOURCE].node_id: node.get_content()

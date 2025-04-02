@@ -1,18 +1,14 @@
 import logging
-from typing import cast
 
 from fastapi import APIRouter
-from llama_index.core import StorageContext, DocumentSummaryIndex, load_index_from_storage
-from llama_index.core.schema import NodeRelationship
-from llama_index.core.vector_stores import SimpleVectorStore
 
-from ....services import models
-from ....ai.indexing.summary_indexer import SummaryIndexer
 from .... import exceptions
+from ....ai.indexing.summary_indexer import SummaryIndexer
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/data_sources", tags=["Data Sources"])
+
 
 @router.get(
     "/summaries",
