@@ -146,11 +146,12 @@ const ProjectSelection = ({
   selectedProject?: number;
 }) => {
   const projectOptions = projects
-    ?.map((project) => ({
+    ?.filter((project) => !project.defaultProject)
+    .filter((project) => project.id !== session.projectId)
+    .map((project) => ({
       label: project.name,
       value: project.id,
-    }))
-    .filter((project) => project.value !== session.projectId);
+    }));
 
   return (
     <Card
