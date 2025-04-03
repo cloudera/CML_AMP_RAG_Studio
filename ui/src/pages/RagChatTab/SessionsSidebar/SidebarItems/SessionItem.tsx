@@ -56,7 +56,7 @@ import {
   MoreOutlined,
 } from "@ant-design/icons";
 import { MouseEvent, useState } from "react";
-import MoveSessionModal from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSessionModal.tsx";
+import MoveSessionModal from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionModal.tsx";
 
 const SessionItem = ({ session }: { session: Session }) => {
   const { sessionId: routeSessionId, projectId: routeProjectId } = useParams({

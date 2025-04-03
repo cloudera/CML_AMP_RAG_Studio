@@ -36,199 +36,23 @@
  * DATA.
  ******************************************************************************/
 
-import { Card, Flex, Modal, Select, Tag, Tooltip, Typography } from "antd";
-import {
-  CloseCircleFilled,
-  PlusCircleOutlined,
-  RightCircleOutlined,
-} from "@ant-design/icons";
-import { cdlGray300, cdlGray400, cdlGreen600 } from "src/cuix/variables.ts";
-import { Session, useUpdateSessionMutation } from "src/api/sessionApi.ts";
 import { ModalHook } from "src/utils/useModal.ts";
+import { Session, useUpdateSessionMutation } from "src/api/sessionApi.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import {
-  DataSourceType,
-  useGetDataSourcesQuery,
-} from "src/api/dataSourceApi.ts";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import {
-  Project,
   useAddDataSourceToProject,
   useGetDataSourcesForProject,
   useGetProjects,
 } from "src/api/projectsApi.ts";
-import messageQueue from "src/utils/messageQueue.ts";
-import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "src/api/utils.ts";
 import { useNavigate } from "@tanstack/react-router";
-
-const CurrentSession = ({
-  session,
-  dataSources,
-}: {
-  session: Session;
-  dataSources?: DataSourceType[];
-}) => {
-  return (
-    <Card title={`Selected session: ${session.name}`} style={{ width: 350 }}>
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in session:
-      </Typography>
-      {session.dataSourceIds.map((dataSourceId) => {
-        const dataSourceName = dataSources?.find(
-          (ds) => ds.id === dataSourceId,
-        );
-        return (
-          <Tag key={dataSourceId} color="blue">
-            {dataSourceName?.name}
-          </Tag>
-        );
-      })}
-    </Card>
-  );
-};
-
-const TransferItems = ({
-  dataSources,
-  dataSourcesToTransfer,
-  setDataSourcesToTransfer,
-  session,
-}: {
-  dataSources?: DataSourceType[];
-  dataSourcesToTransfer: number[];
-  setDataSourcesToTransfer: Dispatch<SetStateAction<number[]>>;
-  session: Session;
-}) => {
-  const removedDataSources = session.dataSourceIds.filter(
-    (sessionDataSource) => {
-      return !dataSourcesToTransfer.includes(sessionDataSource);
-    },
-  );
-  return (
-    <Flex
-      vertical
-      align="center"
-      justify="center"
-      style={{ width: 200 }}
-      gap={20}
-    >
-      <RightCircleOutlined style={{ fontSize: 20 }} />
-      {(dataSourcesToTransfer.length > 0 || removedDataSources.length > 0) && (
-        <Card title={<Typography>New knowledge base</Typography>}>
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-
-            const handleClose = () => {
-              setDataSourcesToTransfer((prev) =>
-                prev.filter((id) => id !== kb),
-              );
-            };
-
-            return (
-              <Tag
-                key={kb}
-                color={cdlGreen600}
-                onClose={handleClose}
-                closeIcon={
-                  <Tooltip title="Exclude from transfer">
-                    <CloseCircleFilled style={{ marginLeft: 8 }} />
-                  </Tooltip>
-                }
-              >
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-          {removedDataSources.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-
-            return (
-              <Tag
-                key={kb}
-                color={cdlGray400}
-                onClose={() => {
-                  setDataSourcesToTransfer((prev) => [...prev, kb]);
-                }}
-                closeIcon={
-                  <Tooltip title="Add to transfer">
-                    <PlusCircleOutlined style={{ marginLeft: 8 }} />
-                  </Tooltip>
-                }
-              >
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-        </Card>
-      )}
-    </Flex>
-  );
-};
-
-const ProjectSelection = ({
-  session,
-  projects,
-  setSelectedProject,
-  dataSourcesForProject,
-  dataSourcesToTransfer,
-  dataSources,
-  selectedProject,
-}: {
-  session: Session;
-  projects?: Project[];
-  setSelectedProject: (projectId: number) => void;
-  dataSourcesForProject?: DataSourceType[];
-  dataSourcesToTransfer: number[];
-  dataSources?: DataSourceType[];
-  selectedProject?: number;
-}) => {
-  const projectOptions = projects
-    ?.filter((project) => !project.defaultProject)
-    .filter((project) => project.id !== session.projectId)
-    .map((project) => ({
-      label: project.name,
-      value: project.id,
-    }));
-
-  return (
-    <Card
-      title="Move to:"
-      style={{ width: 350 }}
-      extra={
-        <>
-          Project:{" "}
-          <Select
-            style={{ width: 150 }}
-            options={projectOptions}
-            onSelect={setSelectedProject}
-          />
-        </>
-      }
-    >
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in project:
-      </Typography>
-      {selectedProject && (
-        <Flex>
-          {dataSourcesForProject?.map((ds) => {
-            return (
-              <Tag key={ds.id} color="blue">
-                {ds.name}
-              </Tag>
-            );
-          })}
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-            return (
-              <Tag key={kb} color={cdlGreen600}>
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-        </Flex>
-      )}
-    </Card>
-  );
-};
+import messageQueue from "src/utils/messageQueue.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import { useEffect, useState } from "react";
+import { Flex, Modal, Typography } from "antd";
+import CurrentSession from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/CurrentSession.tsx";
+import TransferItems from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/TransferItems.tsx";
+import ProjectSelection from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/ProjectSelection.tsx";
 
 const MoveSessionModal = ({
   moveModal,
@@ -287,8 +111,11 @@ const MoveSessionModal = ({
     },
   });
   const [selectedProject, setSelectedProject] = useState<number>();
-  const { data: dataSourcesForProject } =
-    useGetDataSourcesForProject(selectedProject);
+
+  const {
+    data: dataSourcesForProject,
+    isLoading: dataSourcesForProjectIsLoading,
+  } = useGetDataSourcesForProject(selectedProject);
   const [dataSourcesToTransfer, setDataSourcesToTransfer] = useState<number[]>(
     [],
   );
@@ -304,7 +131,7 @@ const MoveSessionModal = ({
     );
   }, [selectedProject, session.dataSourceIds, dataSourcesForProject]);
 
-  const handleMoveit = () => {
+  const handleMoveSession = () => {
     if (!selectedProject) {
       messageQueue.error("Please select a project");
       return;
@@ -335,7 +162,7 @@ const MoveSessionModal = ({
       open={moveModal.isModalOpen}
       onOk={(e) => {
         e.stopPropagation();
-        handleMoveit();
+        handleMoveSession();
       }}
       onCancel={(e) => {
         e.stopPropagation();
@@ -367,6 +194,9 @@ const MoveSessionModal = ({
             dataSources={dataSources}
             setDataSourcesToTransfer={setDataSourcesToTransfer}
             session={session}
+            selectedProject={selectedProject}
+            dataSourcesForProject={dataSourcesForProject}
+            dataSourcesForProjectIsLoading={dataSourcesForProjectIsLoading}
           />
           <ProjectSelection
             session={session}
@@ -386,5 +216,4 @@ const MoveSessionModal = ({
     </Modal>
   );
 };
-
 export default MoveSessionModal;
