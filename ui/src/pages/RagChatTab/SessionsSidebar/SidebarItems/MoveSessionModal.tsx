@@ -45,7 +45,7 @@ import {
   DataSourceType,
   useGetDataSourcesQuery,
 } from "src/api/dataSourceApi.ts";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   Project,
   useGetDataSourcesForProject,
@@ -211,13 +211,20 @@ const MoveSessionModal = ({
   const [selectedProject, setSelectedProject] = useState<number>();
   const { data: dataSourcesForProject } =
     useGetDataSourcesForProject(selectedProject);
-  const [knowledgeBasesNotInProject, setKnowledgeBasesNotInProject] = useState(
-    () =>
+  const [knowledgeBasesNotInProject, setKnowledgeBasesNotInProject] = useState<
+    number[]
+  >([]);
+
+  useEffect(() => {
+    setKnowledgeBasesNotInProject(
       session.dataSourceIds.filter(
-        (ds) =>
-          !dataSourcesForProject?.some((projectDs) => projectDs.id === ds),
+        (dataSourceId) =>
+          !dataSourcesForProject?.some(
+            (projectDs) => projectDs.id === dataSourceId,
+          ),
       ),
-  );
+    );
+  }, [selectedProject, session.dataSourceIds, dataSourcesForProject]);
 
   return (
     <Modal
