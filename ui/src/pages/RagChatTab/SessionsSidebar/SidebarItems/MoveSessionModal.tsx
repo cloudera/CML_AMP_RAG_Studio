@@ -37,8 +37,12 @@
  ******************************************************************************/
 
 import { Card, Flex, Modal, Select, Tag, Tooltip, Typography } from "antd";
-import { CloseCircleFilled, RightCircleOutlined } from "@ant-design/icons";
-import { cdlGreen600 } from "src/cuix/variables.ts";
+import {
+  CloseCircleFilled,
+  PlusCircleOutlined,
+  RightCircleOutlined,
+} from "@ant-design/icons";
+import { cdlGray300, cdlGray400, cdlGreen600 } from "src/cuix/variables.ts";
 import { Session, useUpdateSessionMutation } from "src/api/sessionApi.ts";
 import { ModalHook } from "src/utils/useModal.ts";
 import {
@@ -87,11 +91,18 @@ const TransferItems = ({
   dataSources,
   dataSourcesToTransfer,
   setDataSourcesToTransfer,
+  session,
 }: {
   dataSources?: DataSourceType[];
   dataSourcesToTransfer: number[];
   setDataSourcesToTransfer: Dispatch<SetStateAction<number[]>>;
+  session: Session;
 }) => {
+  const removedDataSources = session.dataSourceIds.filter(
+    (sessionDataSource) => {
+      return !dataSourcesToTransfer.includes(sessionDataSource);
+    },
+  );
   return (
     <Flex
       vertical
@@ -101,7 +112,7 @@ const TransferItems = ({
       gap={20}
     >
       <RightCircleOutlined style={{ fontSize: 20 }} />
-      {dataSourcesToTransfer.length > 0 && (
+      {(dataSourcesToTransfer.length > 0 || removedDataSources.length > 0) && (
         <Card title={<Typography>New knowledge base</Typography>}>
           {dataSourcesToTransfer.map((kb) => {
             const dataSource = dataSources?.find((ds) => ds.id === kb);
@@ -120,6 +131,26 @@ const TransferItems = ({
                 closeIcon={
                   <Tooltip title="Exclude from transfer">
                     <CloseCircleFilled style={{ marginLeft: 8 }} />
+                  </Tooltip>
+                }
+              >
+                {dataSource?.name}
+              </Tag>
+            );
+          })}
+          {removedDataSources.map((kb) => {
+            const dataSource = dataSources?.find((ds) => ds.id === kb);
+
+            return (
+              <Tag
+                key={kb}
+                color={cdlGray400}
+                onClose={() => {
+                  setDataSourcesToTransfer((prev) => [...prev, kb]);
+                }}
+                closeIcon={
+                  <Tooltip title="Add to transfer">
+                    <PlusCircleOutlined style={{ marginLeft: 8 }} />
                   </Tooltip>
                 }
               >
@@ -335,6 +366,7 @@ const MoveSessionModal = ({
             dataSourcesToTransfer={dataSourcesToTransfer}
             dataSources={dataSources}
             setDataSourcesToTransfer={setDataSourcesToTransfer}
+            session={session}
           />
           <ProjectSelection
             session={session}
