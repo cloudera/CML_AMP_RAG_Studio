@@ -215,6 +215,7 @@ const MoveSessionModal = ({
       if (selectedProject) {
         updateSession.mutate({
           ...session,
+          dataSourceIds: dataSourcesNotInProject,
           projectId: selectedProject,
         });
       }
@@ -271,6 +272,7 @@ const MoveSessionModal = ({
     } else {
       updateSession.mutate({
         ...session,
+        dataSourceIds: dataSourcesNotInProject,
         projectId: selectedProject,
       });
     }
