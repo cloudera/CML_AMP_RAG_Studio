@@ -42,6 +42,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast, List
 
+from app.services import models
 from llama_index.core import (
     DocumentSummaryIndex,
     StorageContext,
@@ -63,7 +64,6 @@ from llama_index.core.schema import (
 from llama_index.core.vector_stores import SimpleVectorStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
@@ -206,24 +206,17 @@ class SummaryIndexer(BaseTextIndexer):
             ),
         )
 
-        summary_ids = list(
-            global_summary_store.index_struct.doc_id_to_summary_id.values()
-        )
-        nodes = global_summary_store.docstore.get_nodes(summary_ids)
+        summary_ids = global_summary_store.index_struct.doc_id_to_summary_id.values()
+        nodes = global_summary_store.docstore.get_nodes(list(summary_ids))
 
-        results: dict[str, str] = {}
+        results: dict[str, str] = {}  # data source ID to summary
         for node in nodes:
-            sourcez = node.relationships.get(NodeRelationship.SOURCE)
-            sources: List[RelatedNodeInfo]
-            if type(sourcez) is RelatedNodeInfo:
-                sources = [sourcez]
-            elif type(sourcez) is list:
-                sources = sourcez
-            else:
-                sources = []
-            for source in sources:
-                results[source.node_id] = node.get_content()
-
+            match node.relationships.get(NodeRelationship.SOURCE):
+                case RelatedNodeInfo() as source:
+                    results[source.node_id] = node.get_content()
+                case list() as sources:
+                    for source in sources:
+                        results[source.node_id] = node.get_content()
         return results
 
     def index_file(self, file_path: Path, document_id: str) -> None:
