@@ -69,8 +69,6 @@ function ChatLayout() {
     activeSession?.projectId.toString() ??
     defaultProject.id.toString();
 
-  console.log({ projectId, sessionId });
-
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
