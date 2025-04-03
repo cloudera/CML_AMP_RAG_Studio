@@ -39,7 +39,7 @@
 import { Card, Flex, Modal, Select, Tag, Tooltip, Typography } from "antd";
 import { CloseCircleFilled, RightCircleOutlined } from "@ant-design/icons";
 import { cdlGreen600 } from "src/cuix/variables.ts";
-import { Session } from "src/api/sessionApi.ts";
+import { Session, useUpdateSessionMutation } from "src/api/sessionApi.ts";
 import { ModalHook } from "src/utils/useModal.ts";
 import {
   DataSourceType,
@@ -48,9 +48,11 @@ import {
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   Project,
+  useAddDataSourceToProject,
   useGetDataSourcesForProject,
   useGetProjects,
 } from "src/api/projectsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const CurrentSession = ({
   session,
@@ -80,12 +82,12 @@ const CurrentSession = ({
 
 const TransferItems = ({
   dataSources,
-  knowledgeBaseNotInProject,
-  setKnowledgeBaseNotInProject,
+  dataSourcesNotInProject,
+  setDataSourcesNotInProject,
 }: {
   dataSources?: DataSourceType[];
-  knowledgeBaseNotInProject: number[];
-  setKnowledgeBaseNotInProject: Dispatch<SetStateAction<number[]>>;
+  dataSourcesNotInProject: number[];
+  setDataSourcesNotInProject: Dispatch<SetStateAction<number[]>>;
 }) => {
   return (
     <Flex
@@ -96,13 +98,13 @@ const TransferItems = ({
       gap={20}
     >
       <RightCircleOutlined style={{ fontSize: 20 }} />
-      {knowledgeBaseNotInProject.length > 0 && (
+      {dataSourcesNotInProject.length > 0 && (
         <Card title={<Typography>New knowledge base</Typography>}>
-          {knowledgeBaseNotInProject.map((kb) => {
+          {dataSourcesNotInProject.map((kb) => {
             const dataSource = dataSources?.find((ds) => ds.id === kb);
 
             const handleClose = () => {
-              setKnowledgeBaseNotInProject((prev) =>
+              setDataSourcesNotInProject((prev) =>
                 prev.filter((id) => id !== kb),
               );
             };
@@ -133,7 +135,7 @@ const ProjectSelection = ({
   projects,
   setSelectedProject,
   dataSourcesForProject,
-  knowledgeBasesNotInProject,
+  dataSourcesNotInProject,
   dataSources,
   selectedProject,
 }: {
@@ -141,7 +143,7 @@ const ProjectSelection = ({
   projects?: Project[];
   setSelectedProject: (projectId: number) => void;
   dataSourcesForProject?: DataSourceType[];
-  knowledgeBasesNotInProject: number[];
+  dataSourcesNotInProject: number[];
   dataSources?: DataSourceType[];
   selectedProject?: number;
 }) => {
@@ -180,7 +182,7 @@ const ProjectSelection = ({
               </Tag>
             );
           })}
-          {knowledgeBasesNotInProject.map((kb) => {
+          {dataSourcesNotInProject.map((kb) => {
             const dataSource = dataSources?.find((ds) => ds.id === kb);
             return (
               <Tag
@@ -208,15 +210,31 @@ const MoveSessionModal = ({
 }) => {
   const { data: dataSources } = useGetDataSourcesQuery();
   const { data: projects } = useGetProjects();
+  const addDataSourceToProject = useAddDataSourceToProject({
+    onSuccess: () => {
+      messageQueue.success("Session updated successfully");
+    },
+    onError: () => {
+      messageQueue.error("Failed to add data source to project");
+    },
+  });
+  const updateSession = useUpdateSessionMutation({
+    onSuccess: () => {
+      messageQueue.success("Session updated successfully");
+    },
+    onError: () => {
+      messageQueue.error("Failed to update session");
+    },
+  });
   const [selectedProject, setSelectedProject] = useState<number>();
   const { data: dataSourcesForProject } =
     useGetDataSourcesForProject(selectedProject);
-  const [knowledgeBasesNotInProject, setKnowledgeBasesNotInProject] = useState<
+  const [dataSourcesNotInProject, setDataSourcesNotInProject] = useState<
     number[]
   >([]);
 
   useEffect(() => {
-    setKnowledgeBasesNotInProject(
+    setDataSourcesNotInProject(
       session.dataSourceIds.filter(
         (dataSourceId) =>
           !dataSourcesForProject?.some(
@@ -226,16 +244,25 @@ const MoveSessionModal = ({
     );
   }, [selectedProject, session.dataSourceIds, dataSourcesForProject]);
 
+  const handleMoveit = () => {
+    if (dataSourcesNotInProject.length > 0) {
+      dataSourcesNotInProject.forEach((dataSourceId) => {
+        addDataSourceToProject.mutate({
+          projectId: selectedProject,
+          dataSourceId: dataSourceId,
+        });
+      });
+    }
+  };
+
   return (
     <Modal
       title="Move session?"
       open={moveModal.isModalOpen}
-      // onOk={(event) => {
-      //   handleDeleteSession(event);
-      // }}
+      onOk={handleMoveit}
       onCancel={() => {
         setSelectedProject(undefined);
-        setKnowledgeBasesNotInProject([]);
+        setDataSourcesNotInProject([]);
         moveModal.handleCancel();
       }}
       okText={"Yes, move it!"}
@@ -246,16 +273,16 @@ const MoveSessionModal = ({
         <Flex gap={8} wrap={true}>
           <CurrentSession session={session} dataSources={dataSources} />
           <TransferItems
-            knowledgeBaseNotInProject={knowledgeBasesNotInProject}
+            dataSourcesNotInProject={dataSourcesNotInProject}
             dataSources={dataSources}
-            setKnowledgeBaseNotInProject={setKnowledgeBasesNotInProject}
+            setDataSourcesNotInProject={setDataSourcesNotInProject}
           />
           <ProjectSelection
             session={session}
             projects={projects}
             dataSourcesForProject={dataSourcesForProject}
             setSelectedProject={setSelectedProject}
-            knowledgeBasesNotInProject={knowledgeBasesNotInProject}
+            dataSourcesNotInProject={dataSourcesNotInProject}
             dataSources={dataSources}
             selectedProject={selectedProject}
           />
