@@ -292,16 +292,29 @@ const MoveSessionModal = ({
       title="Move session?"
       open={moveModal.isModalOpen}
       onOk={handleMoveit}
-      onCancel={() => {
+      onCancel={(e) => {
+        e.stopPropagation();
         setSelectedProject(undefined);
         setDataSourcesNotInProject([]);
         moveModal.handleCancel();
       }}
-      okText={"Yes, move it!"}
+      okButtonProps={{
+        disabled: !selectedProject,
+      }}
+      okText={"Move it"}
       destroyOnClose={true}
       width={1000}
     >
-      <Flex vertical gap={8} align={"center"} justify={"center"} wrap={true}>
+      <Flex
+        vertical
+        gap={8}
+        align={"center"}
+        justify={"center"}
+        wrap={true}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <Flex gap={8} wrap={true}>
           <CurrentSession session={session} dataSources={dataSources} />
           <TransferItems
