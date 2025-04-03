@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,26 +36,62 @@
  * DATA.
  ******************************************************************************/
 
-import { useState } from "react";
+import { Card, Flex, Modal, Select, Tag } from "antd";
+import { ArrowRightOutlined, CloseCircleFilled } from "@ant-design/icons";
+import { cdlGreen600 } from "src/cuix/variables.ts";
+import { Session } from "src/api/sessionApi.ts";
+import { ModalHook } from "src/utils/useModal.ts";
+import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { useContext } from "react";
 
-export interface ModalHook {
-  isModalOpen: boolean;
-  showModal: () => void;
-  handleCancel: () => void;
-  setIsModalOpen: (value: ((prevState: boolean) => boolean) | boolean) => void;
-}
-
-const useModal = (): ModalHook => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
-  return { isModalOpen, showModal, handleCancel, setIsModalOpen };
+const MoveSessionModal = ({
+  moveModal,
+  session,
+}: {
+  moveModal: ModalHook;
+  session: Session;
+}) => {
+  return (
+    <Modal
+      title="Move session?"
+      open={moveModal.isModalOpen}
+      // onOk={(event) => {
+      //   handleDeleteSession(event);
+      // }}
+      okText={"Yes, move it!"}
+      width={800}
+      onCancel={moveModal.handleCancel}
+    >
+      <Flex vertical gap={8} align={"center"} justify={"center"}>
+        <Flex gap={8}>
+          <Card title="Current Session">KB for current session</Card>
+          <Flex vertical align="center" justify="center">
+            <Tag icon={<CloseCircleFilled />} style={{ color: cdlGreen600 }}>
+              [Session KB 1]
+            </Tag>
+            <ArrowRightOutlined />
+          </Flex>
+          <Card
+            title="Move to:"
+            extra={
+              <>
+                Project: <Select style={{ width: 150 }} />
+              </>
+            }
+          >
+            <div>
+              [project name to move to]
+              <Tag>KB 1</Tag>
+              <Tag>KB 2</Tag>
+              <Tag>KB 3</Tag>
+            </div>
+          </Card>
+        </Flex>
+        Moving this session will add a new KB to the project unless excluded.
+        Session KB 1 will be removed from the session upon moving.
+      </Flex>
+    </Modal>
+  );
 };
 
-export default useModal;
+export default MoveSessionModal;

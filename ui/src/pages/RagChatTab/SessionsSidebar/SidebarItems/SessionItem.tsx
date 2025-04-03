@@ -47,27 +47,16 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { chatHistoryQueryKey } from "src/api/chatApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
+import { Flex, Menu, Modal, Popover, Tooltip, Typography } from "antd";
+import { cdlWhite } from "src/cuix/variables.ts";
 import {
-  Card,
-  Flex,
-  Menu,
-  Modal,
-  Popover,
-  Select,
-  Tag,
-  Tooltip,
-  Typography,
-} from "antd";
-import { cdlGreen600, cdlWhite } from "src/cuix/variables.ts";
-import {
-  ArrowRightOutlined,
   ClearOutlined,
-  CloseCircleFilled,
   DeleteOutlined,
   MergeOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-import { useState, MouseEvent } from "react";
+import { MouseEvent, useState } from "react";
+import MoveSessionModal from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSessionModal.tsx";
 
 const SessionItem = ({ session }: { session: Session }) => {
   const { sessionId: routeSessionId, projectId: routeProjectId } = useParams({
@@ -216,45 +205,7 @@ const SessionItem = ({ session }: { session: Session }) => {
         }}
         onCancel={deleteSessionModal.handleCancel}
       />
-      <Modal
-        title="Move session?"
-        open={moveModal.isModalOpen}
-        // onOk={(event) => {
-        //   handleDeleteSession(event);
-        // }}
-        okText={"Yes, move it!"}
-        width={800}
-        onCancel={moveModal.handleCancel}
-      >
-        <Flex vertical gap={8} align={"center"} justify={"center"}>
-          <Flex gap={8}>
-            <Card title="Current Session">KB for current session</Card>
-            <Flex vertical align="center" justify="center">
-              <Tag icon={<CloseCircleFilled />} style={{ color: cdlGreen600 }}>
-                [Session KB 1]
-              </Tag>
-              <ArrowRightOutlined />
-            </Flex>
-            <Card
-              title="Move to:"
-              extra={
-                <>
-                  Project: <Select style={{ width: 150 }} />
-                </>
-              }
-            >
-              <div>
-                [project name to move to]
-                <Tag>KB 1</Tag>
-                <Tag>KB 2</Tag>
-                <Tag>KB 3</Tag>
-              </div>
-            </Card>
-          </Flex>
-          Moving this session will add a new KB to the project unless excluded.
-          Session KB 1 will be removed from the session upon moving.
-        </Flex>
-      </Modal>
+      <MoveSessionModal moveModal={moveModal} session={session} />
     </Flex>
   );
 };
