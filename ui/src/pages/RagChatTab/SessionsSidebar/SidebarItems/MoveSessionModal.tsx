@@ -187,12 +187,7 @@ const ProjectSelection = ({
           {dataSourcesNotInProject.map((kb) => {
             const dataSource = dataSources?.find((ds) => ds.id === kb);
             return (
-              <Tag
-                key={kb}
-                color={cdlGreen600}
-                // onClose={() => console.log("remove from call")}
-                // closeIcon={<CloseCircleFilled />}
-              >
+              <Tag key={kb} color={cdlGreen600}>
                 {dataSource?.name}
               </Tag>
             );
@@ -214,15 +209,6 @@ const MoveSessionModal = ({
   const { data: dataSources } = useGetDataSourcesQuery();
   const { data: projects } = useGetProjects();
   const addDataSourceToProject = useAddDataSourceToProject({
-    onSuccess: () => {
-      if (selectedProject) {
-        updateSession.mutate({
-          ...session,
-          dataSourceIds: dataSourcesNotInProject,
-          projectId: selectedProject,
-        });
-      }
-    },
     onError: () => {
       messageQueue.error("Failed to add data source to project");
     },
@@ -283,12 +269,22 @@ const MoveSessionModal = ({
     }
     Promise.all(
       dataSourcesNotInProject.map((dataSourceId) => {
-        addDataSourceToProject.mutateAsync({
+        return addDataSourceToProject.mutateAsync({
           projectId: selectedProject,
           dataSourceId: dataSourceId,
         });
       }),
-    );
+    )
+      .then(() => {
+        updateSession.mutate({
+          ...session,
+          dataSourceIds: dataSourcesNotInProject,
+          projectId: selectedProject,
+        });
+      })
+      .catch(() => {
+        messageQueue.error("Failed to move session.");
+      });
   };
 
   return (
