@@ -36,13 +36,167 @@
  * DATA.
  ******************************************************************************/
 
-import { Card, Flex, Modal, Select, Tag } from "antd";
-import { ArrowRightOutlined, CloseCircleFilled } from "@ant-design/icons";
+import { Card, Flex, Modal, Select, Tag, Tooltip, Typography } from "antd";
+import { CloseCircleFilled, RightCircleOutlined } from "@ant-design/icons";
 import { cdlGreen600 } from "src/cuix/variables.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { ModalHook } from "src/utils/useModal.ts";
-import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
-import { useContext } from "react";
+import {
+  DataSourceType,
+  useGetDataSourcesQuery,
+} from "src/api/dataSourceApi.ts";
+import { Dispatch, SetStateAction, useState } from "react";
+import {
+  Project,
+  useGetDataSourcesForProject,
+  useGetProjects,
+} from "src/api/projectsApi.ts";
+
+const CurrentSession = ({
+  session,
+  dataSources,
+}: {
+  session: Session;
+  dataSources?: DataSourceType[];
+}) => {
+  return (
+    <Card title={`Selected session: ${session.name}`} style={{ width: 350 }}>
+      <Typography style={{ marginBottom: 20 }}>
+        Knowledge bases in session:
+      </Typography>
+      {session.dataSourceIds.map((dataSourceId) => {
+        const dataSourceName = dataSources?.find(
+          (ds) => ds.id === dataSourceId,
+        );
+        return (
+          <Tag key={dataSourceId} color="blue">
+            {dataSourceName?.name}
+          </Tag>
+        );
+      })}
+    </Card>
+  );
+};
+
+const TransferItems = ({
+  dataSources,
+  knowledgeBaseNotInProject,
+  setKnowledgeBaseNotInProject,
+}: {
+  dataSources?: DataSourceType[];
+  knowledgeBaseNotInProject: number[];
+  setKnowledgeBaseNotInProject: Dispatch<SetStateAction<number[]>>;
+}) => {
+  return (
+    <Flex
+      vertical
+      align="center"
+      justify="center"
+      style={{ width: 200 }}
+      gap={20}
+    >
+      <RightCircleOutlined style={{ fontSize: 20 }} />
+      {knowledgeBaseNotInProject.length > 0 && (
+        <Card title={<Typography>New knowledge base</Typography>}>
+          {knowledgeBaseNotInProject.map((kb) => {
+            const dataSource = dataSources?.find((ds) => ds.id === kb);
+
+            const handleClose = () => {
+              setKnowledgeBaseNotInProject((prev) =>
+                prev.filter((id) => id !== kb),
+              );
+            };
+
+            return (
+              <Tag
+                key={kb}
+                color={cdlGreen600}
+                onClose={handleClose}
+                closeIcon={
+                  <Tooltip title="Exclude from transfer">
+                    <CloseCircleFilled style={{ marginLeft: 8 }} />
+                  </Tooltip>
+                }
+              >
+                {dataSource?.name}
+              </Tag>
+            );
+          })}
+        </Card>
+      )}
+    </Flex>
+  );
+};
+
+const ProjectSelection = ({
+  session,
+  projects,
+  setSelectedProject,
+  dataSourcesForProject,
+  knowledgeBasesNotInProject,
+  dataSources,
+  selectedProject,
+}: {
+  session: Session;
+  projects?: Project[];
+  setSelectedProject: (projectId: number) => void;
+  dataSourcesForProject?: DataSourceType[];
+  knowledgeBasesNotInProject: number[];
+  dataSources?: DataSourceType[];
+  selectedProject?: number;
+}) => {
+  const projectOptions = projects
+    ?.map((project) => ({
+      label: project.name,
+      value: project.id,
+    }))
+    .filter((project) => project.value !== session.projectId);
+
+  return (
+    <Card
+      title="Move to:"
+      style={{ width: 350 }}
+      extra={
+        <>
+          Project:{" "}
+          <Select
+            style={{ width: 150 }}
+            options={projectOptions}
+            onSelect={setSelectedProject}
+          />
+        </>
+      }
+    >
+      <Typography style={{ marginBottom: 20 }}>
+        Knowledge bases in project:
+      </Typography>
+      {selectedProject && (
+        <Flex>
+          {dataSourcesForProject?.map((ds) => {
+            return (
+              <Tag key={ds.id} color="blue">
+                {ds.name}
+              </Tag>
+            );
+          })}
+          {knowledgeBasesNotInProject.map((kb) => {
+            const dataSource = dataSources?.find((ds) => ds.id === kb);
+            return (
+              <Tag
+                key={kb}
+                color={cdlGreen600}
+                // onClose={() => console.log("remove from call")}
+                // closeIcon={<CloseCircleFilled />}
+              >
+                {dataSource?.name}
+              </Tag>
+            );
+          })}
+        </Flex>
+      )}
+    </Card>
+  );
+};
 
 const MoveSessionModal = ({
   moveModal,
@@ -51,6 +205,19 @@ const MoveSessionModal = ({
   moveModal: ModalHook;
   session: Session;
 }) => {
+  const { data: dataSources } = useGetDataSourcesQuery();
+  const { data: projects } = useGetProjects();
+  const [selectedProject, setSelectedProject] = useState<number>();
+  const { data: dataSourcesForProject } =
+    useGetDataSourcesForProject(selectedProject);
+  const [knowledgeBasesNotInProject, setKnowledgeBasesNotInProject] = useState(
+    () =>
+      session.dataSourceIds.filter(
+        (ds) =>
+          !dataSourcesForProject?.some((projectDs) => projectDs.id === ds),
+      ),
+  );
+
   return (
     <Modal
       title="Move session?"
@@ -58,37 +225,37 @@ const MoveSessionModal = ({
       // onOk={(event) => {
       //   handleDeleteSession(event);
       // }}
+      onCancel={() => {
+        setSelectedProject(undefined);
+        setKnowledgeBasesNotInProject([]);
+        moveModal.handleCancel();
+      }}
       okText={"Yes, move it!"}
-      width={800}
-      onCancel={moveModal.handleCancel}
+      destroyOnClose={true}
+      width={1000}
     >
-      <Flex vertical gap={8} align={"center"} justify={"center"}>
-        <Flex gap={8}>
-          <Card title="Current Session">KB for current session</Card>
-          <Flex vertical align="center" justify="center">
-            <Tag icon={<CloseCircleFilled />} style={{ color: cdlGreen600 }}>
-              [Session KB 1]
-            </Tag>
-            <ArrowRightOutlined />
-          </Flex>
-          <Card
-            title="Move to:"
-            extra={
-              <>
-                Project: <Select style={{ width: 150 }} />
-              </>
-            }
-          >
-            <div>
-              [project name to move to]
-              <Tag>KB 1</Tag>
-              <Tag>KB 2</Tag>
-              <Tag>KB 3</Tag>
-            </div>
-          </Card>
+      <Flex vertical gap={8} align={"center"} justify={"center"} wrap={true}>
+        <Flex gap={8} wrap={true}>
+          <CurrentSession session={session} dataSources={dataSources} />
+          <TransferItems
+            knowledgeBaseNotInProject={knowledgeBasesNotInProject}
+            dataSources={dataSources}
+            setKnowledgeBaseNotInProject={setKnowledgeBasesNotInProject}
+          />
+          <ProjectSelection
+            session={session}
+            projects={projects}
+            dataSourcesForProject={dataSourcesForProject}
+            setSelectedProject={setSelectedProject}
+            knowledgeBasesNotInProject={knowledgeBasesNotInProject}
+            dataSources={dataSources}
+            selectedProject={selectedProject}
+          />
         </Flex>
-        Moving this session will add a new KB to the project unless excluded.
-        Session KB 1 will be removed from the session upon moving.
+        <Typography.Paragraph italic style={{ marginTop: 20 }}>
+          Moving this session will add a new knowledge base to the project
+          unless excluded.
+        </Typography.Paragraph>
       </Flex>
     </Modal>
   );
