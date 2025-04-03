@@ -85,12 +85,12 @@ const CurrentSession = ({
 
 const TransferItems = ({
   dataSources,
-  dataSourcesNotInProject,
-  setDataSourcesNotInProject,
+  dataSourcesToTransfer,
+  setDataSourcesToTransfer,
 }: {
   dataSources?: DataSourceType[];
-  dataSourcesNotInProject: number[];
-  setDataSourcesNotInProject: Dispatch<SetStateAction<number[]>>;
+  dataSourcesToTransfer: number[];
+  setDataSourcesToTransfer: Dispatch<SetStateAction<number[]>>;
 }) => {
   return (
     <Flex
@@ -101,13 +101,13 @@ const TransferItems = ({
       gap={20}
     >
       <RightCircleOutlined style={{ fontSize: 20 }} />
-      {dataSourcesNotInProject.length > 0 && (
+      {dataSourcesToTransfer.length > 0 && (
         <Card title={<Typography>New knowledge base</Typography>}>
-          {dataSourcesNotInProject.map((kb) => {
+          {dataSourcesToTransfer.map((kb) => {
             const dataSource = dataSources?.find((ds) => ds.id === kb);
 
             const handleClose = () => {
-              setDataSourcesNotInProject((prev) =>
+              setDataSourcesToTransfer((prev) =>
                 prev.filter((id) => id !== kb),
               );
             };
@@ -138,7 +138,7 @@ const ProjectSelection = ({
   projects,
   setSelectedProject,
   dataSourcesForProject,
-  dataSourcesNotInProject,
+  dataSourcesToTransfer,
   dataSources,
   selectedProject,
 }: {
@@ -146,7 +146,7 @@ const ProjectSelection = ({
   projects?: Project[];
   setSelectedProject: (projectId: number) => void;
   dataSourcesForProject?: DataSourceType[];
-  dataSourcesNotInProject: number[];
+  dataSourcesToTransfer: number[];
   dataSources?: DataSourceType[];
   selectedProject?: number;
 }) => {
@@ -185,7 +185,7 @@ const ProjectSelection = ({
               </Tag>
             );
           })}
-          {dataSourcesNotInProject.map((kb) => {
+          {dataSourcesToTransfer.map((kb) => {
             const dataSource = dataSources?.find((ds) => ds.id === kb);
             return (
               <Tag key={kb} color={cdlGreen600}>
@@ -258,12 +258,12 @@ const MoveSessionModal = ({
   const [selectedProject, setSelectedProject] = useState<number>();
   const { data: dataSourcesForProject } =
     useGetDataSourcesForProject(selectedProject);
-  const [dataSourcesNotInProject, setDataSourcesNotInProject] = useState<
-    number[]
-  >([]);
+  const [dataSourcesToTransfer, setDataSourcesToTransfer] = useState<number[]>(
+    [],
+  );
 
   useEffect(() => {
-    setDataSourcesNotInProject(
+    setDataSourcesToTransfer(
       session.dataSourceIds.filter(
         (dataSourceId) =>
           !dataSourcesForProject?.some(
@@ -279,7 +279,7 @@ const MoveSessionModal = ({
       return;
     }
     Promise.all(
-      dataSourcesNotInProject.map((dataSourceId) => {
+      dataSourcesToTransfer.map((dataSourceId) => {
         return addDataSourceToProject.mutateAsync({
           projectId: selectedProject,
           dataSourceId: dataSourceId,
@@ -289,7 +289,7 @@ const MoveSessionModal = ({
       .then(() => {
         updateSession.mutate({
           ...session,
-          dataSourceIds: dataSourcesNotInProject,
+          dataSourceIds: dataSourcesToTransfer,
           projectId: selectedProject,
         });
       })
@@ -309,7 +309,7 @@ const MoveSessionModal = ({
       onCancel={(e) => {
         e.stopPropagation();
         setSelectedProject(undefined);
-        setDataSourcesNotInProject([]);
+        setDataSourcesToTransfer([]);
         moveModal.handleCancel();
       }}
       okButtonProps={{
@@ -332,16 +332,16 @@ const MoveSessionModal = ({
         <Flex gap={8} wrap={true}>
           <CurrentSession session={session} dataSources={dataSources} />
           <TransferItems
-            dataSourcesNotInProject={dataSourcesNotInProject}
+            dataSourcesToTransfer={dataSourcesToTransfer}
             dataSources={dataSources}
-            setDataSourcesNotInProject={setDataSourcesNotInProject}
+            setDataSourcesToTransfer={setDataSourcesToTransfer}
           />
           <ProjectSelection
             session={session}
             projects={projects}
             dataSourcesForProject={dataSourcesForProject}
             setSelectedProject={setSelectedProject}
-            dataSourcesNotInProject={dataSourcesNotInProject}
+            dataSourcesToTransfer={dataSourcesToTransfer}
             dataSources={dataSources}
             selectedProject={selectedProject}
           />
