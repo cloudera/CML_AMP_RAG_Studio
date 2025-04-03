@@ -212,7 +212,12 @@ const MoveSessionModal = ({
   const { data: projects } = useGetProjects();
   const addDataSourceToProject = useAddDataSourceToProject({
     onSuccess: () => {
-      messageQueue.success("Session updated successfully");
+      if (selectedProject) {
+        updateSession.mutate({
+          ...session,
+          projectId: selectedProject,
+        });
+      }
     },
     onError: () => {
       messageQueue.error("Failed to add data source to project");
@@ -220,7 +225,14 @@ const MoveSessionModal = ({
   });
   const updateSession = useUpdateSessionMutation({
     onSuccess: () => {
-      messageQueue.success("Session updated successfully");
+      const project = projects?.find((proj) => proj.id === selectedProject);
+      if (!project) {
+        messageQueue.error("Failed to find project");
+        return;
+      }
+      messageQueue.success(
+        `Session ${session.name} moved to project ${project.name}`,
+      );
     },
     onError: () => {
       messageQueue.error("Failed to update session");
@@ -245,12 +257,21 @@ const MoveSessionModal = ({
   }, [selectedProject, session.dataSourceIds, dataSourcesForProject]);
 
   const handleMoveit = () => {
+    if (!selectedProject) {
+      messageQueue.error("Please select a project");
+      return;
+    }
     if (dataSourcesNotInProject.length > 0) {
       dataSourcesNotInProject.forEach((dataSourceId) => {
         addDataSourceToProject.mutate({
           projectId: selectedProject,
           dataSourceId: dataSourceId,
         });
+      });
+    } else {
+      updateSession.mutate({
+        ...session,
+        projectId: selectedProject,
       });
     }
   };
