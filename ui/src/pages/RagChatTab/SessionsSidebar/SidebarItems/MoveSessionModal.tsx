@@ -55,6 +55,7 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
+import { useNavigate } from "@tanstack/react-router";
 
 const CurrentSession = ({
   session,
@@ -208,6 +209,7 @@ const MoveSessionModal = ({
   const queryClient = useQueryClient();
   const { data: dataSources } = useGetDataSourcesQuery();
   const { data: projects } = useGetProjects();
+  const navigate = useNavigate();
   const addDataSourceToProject = useAddDataSourceToProject({
     onError: () => {
       messageQueue.error("Failed to add data source to project");
@@ -238,6 +240,15 @@ const MoveSessionModal = ({
         .catch(() => {
           messageQueue.error("Failed to refetch project");
         });
+      navigate({
+        to: "/chats/projects/$projectId/sessions/$sessionId",
+        params: {
+          projectId: project.id.toString(),
+          sessionId: session.id.toString(),
+        },
+      }).catch(() => {
+        messageQueue.error("Failed to navigate to session");
+      });
       moveModal.handleCancel();
     },
     onError: () => {
@@ -291,7 +302,10 @@ const MoveSessionModal = ({
     <Modal
       title="Move session?"
       open={moveModal.isModalOpen}
-      onOk={handleMoveit}
+      onOk={(e) => {
+        e.stopPropagation();
+        handleMoveit();
+      }}
       onCancel={(e) => {
         e.stopPropagation();
         setSelectedProject(undefined);
