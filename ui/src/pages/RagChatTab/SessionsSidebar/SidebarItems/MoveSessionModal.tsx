@@ -53,6 +53,8 @@ import {
   useGetProjects,
 } from "src/api/projectsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
 
 const CurrentSession = ({
   session,
@@ -208,6 +210,7 @@ const MoveSessionModal = ({
   moveModal: ModalHook;
   session: Session;
 }) => {
+  const queryClient = useQueryClient();
   const { data: dataSources } = useGetDataSourcesQuery();
   const { data: projects } = useGetProjects();
   const addDataSourceToProject = useAddDataSourceToProject({
@@ -234,6 +237,22 @@ const MoveSessionModal = ({
       messageQueue.success(
         `Session ${session.name} moved to project ${project.name}`,
       );
+      queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
+        .catch(() => {
+          messageQueue.error("Failed to refetch session");
+        });
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            QueryKeys.getDataSourcesForProject,
+            { projectId: project.id },
+          ],
+        })
+        .catch(() => {
+          messageQueue.error("Failed to refetch project");
+        });
+      moveModal.handleCancel();
     },
     onError: () => {
       messageQueue.error("Failed to update session");
@@ -262,20 +281,14 @@ const MoveSessionModal = ({
       messageQueue.error("Please select a project");
       return;
     }
-    if (dataSourcesNotInProject.length > 0) {
-      dataSourcesNotInProject.forEach((dataSourceId) => {
-        addDataSourceToProject.mutate({
+    Promise.all(
+      dataSourcesNotInProject.map((dataSourceId) => {
+        addDataSourceToProject.mutateAsync({
           projectId: selectedProject,
           dataSourceId: dataSourceId,
         });
-      });
-    } else {
-      updateSession.mutate({
-        ...session,
-        dataSourceIds: dataSourcesNotInProject,
-        projectId: selectedProject,
-      });
-    }
+      }),
+    );
   };
 
   return (
