@@ -256,21 +256,16 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                     assert run.data.params.get("rerank_model_name") is None
             elif key == "data_source_id":
                 assert run.data.params["data_source_ids"] == str([filter_value])
+            elif key == "rerank_model":
+                assert run.data.params["rerank_model_name"] == str(filter_value)
             else:
                 assert run.data.params[key] == str(filter_value)
-
-                # raise Exception
-                # run_copy: Run = copy.deepcopy(run)
-                # run_copy.data.params[key] = str(filter_value + 1)
-                # assert get_relevant_runs(metric_filter, [run_copy]) == []
-
-    # TODO: make sure there are no false negatives, i.e. we didn't miss any relevant runs
 
 @given(metric_filter=st_metric_filter())
 def test_conrado_idea(metric_filter: MetricFilter) -> None:
     hypothesis.assume(metric_filter.data_source_id is not None)
-    # if not metric_filter.has_rerank_model:
-    #     hypothesis.assume(metric_filter.rerank_model is None)
+    if not metric_filter.has_rerank_model:
+        hypothesis.assume(metric_filter.rerank_model is None)
 
     run = create_run_from_filter(metric_filter)
     assert get_relevant_runs(metric_filter, [run]) == [run]
@@ -285,8 +280,6 @@ def test_conrado_idea(metric_filter: MetricFilter) -> None:
 def create_run_from_filter(metric_filter: MetricFilter, key_to_jostle: Optional[str] = None) -> Run:
     run_data: dict[str, Any] = metric_filter.model_dump()
 
-    print(f"{metric_filter=}")
-    print(f"{key_to_jostle=}")
     if key_to_jostle is not None and key_to_jostle in run_data:
         if isinstance(run_data[key_to_jostle], bool):
             run_data[key_to_jostle] = not run_data[key_to_jostle]
@@ -299,7 +292,12 @@ def create_run_from_filter(metric_filter: MetricFilter, key_to_jostle: Optional[
     has_rerank_model = run_data.pop("has_rerank_model")
     if has_rerank_model and run_data["rerank_model_name"] is None:
         run_data["rerank_model_name"] = "rerank_model_1"
-    elif not has_rerank_model and run_data["rerank_model_name"] is not None:
-        run_data["rerank_model_name"] = None
+
+    if key_to_jostle == 'has_rerank_model':
+        if has_rerank_model:
+            run_data["rerank_model_name"] = run_data.get("rerank_model_name", "rerank_model_1")
+        else:
+            run_data["rerank_model_name"] = None
+
 
     return make_test_run(**run_data)
