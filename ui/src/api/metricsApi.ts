@@ -49,6 +49,7 @@ export interface MetricFilter {
   use_hyde?: boolean;
   use_question_condensing?: boolean;
   exclude_knowledge_base?: boolean;
+  project_id?: number;
 }
 
 export interface MetadataMetrics {
