@@ -83,6 +83,7 @@ class MetricFilter(BaseModel):
     use_hyde: Optional[bool] = None
     use_question_condensing: Optional[bool] = None
     exclude_knowledge_base: Optional[bool] = None
+    project_id: Optional[int] = None
 
 
 def filter_runs(metric_filter: MetricFilter) -> list[Run]:
@@ -110,6 +111,9 @@ def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]
 
         if metric_filter.data_source_id:
             if metric_filter.data_source_id not in json.loads(data_source_ids):
+                return False
+        if metric_filter.project_id:
+            if not metric_filter.project_id == r.data.params.get("project_id"):
                 return False
         if metric_filter.inference_model:
             if not metric_filter.inference_model == r.data.params.get(

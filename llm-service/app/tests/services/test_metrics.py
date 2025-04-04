@@ -56,6 +56,10 @@ class RunMetricsStrategies:
         return st.integers(min_value=1, max_value=3)
 
     @staticmethod
+    def project_id() -> st.SearchStrategy[int]:
+        return st.integers(min_value=1, max_value=3)
+
+    @staticmethod
     def inference_model() -> st.SearchStrategy[str]:
         return st.sampled_from(
             ["inference_model_1", "inference_model_2", "inference_model_3"]
@@ -126,6 +130,10 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
         MetricFilter,
         data_source_id=st_filter_value(
             RunMetricsStrategies.data_source_id(),
+            5,
+        ),
+        project_id=st_filter_value(
+            RunMetricsStrategies.project_id(),
             5,
         ),
         inference_model=st_filter_value(
@@ -200,6 +208,7 @@ def st_runs(
         use_hyde=draw(RunMetricsStrategies.use_hyde()),
         use_question_condensing=draw(RunMetricsStrategies.use_question_condensing()),
         exclude_knowledge_base=draw(RunMetricsStrategies.exclude_knowledge_base()),
+        project_id=draw(RunMetricsStrategies.project_id()),
     )
 
     generated_runs: list[Run] = []
@@ -245,6 +254,8 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                     assert run.data.params.get("rerank_model_name") is None
             elif key == "data_source_id":
                 assert run.data.params["data_source_ids"] == str([filter_value])
+            elif key == "project_id":
+                assert run.data.params["project_id"] == str(filter_value)
             else:
                 assert run.data.params[key] == str(filter_value)
 
