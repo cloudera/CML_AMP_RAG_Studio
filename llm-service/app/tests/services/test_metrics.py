@@ -41,6 +41,7 @@ import random
 import uuid
 from typing import Any, TypeVar, Optional
 
+import hypothesis
 from hypothesis import given, example
 from hypothesis import strategies as st
 from mlflow.entities import RunInfo, Run, RunData, Param
@@ -180,7 +181,7 @@ def make_test_run(**kwargs: Any) -> Run:
         lifecycle_stage="hello",
     )
     run_data: RunData = RunData(
-        params=[Param(key=key, value=str(value)) for key, value in kwargs.items()],
+        params=[Param(key=key, value=str(value)) for key, value in kwargs.items() if value is not None],
     )
     return Run(run_info=run_info, run_data=run_data)
 
@@ -218,7 +219,7 @@ def st_runs(
             really_make_test_run(
                 data_source_ids=[data_source_id],
                 inference_model=draw(RunMetricsStrategies.inference_model()),
-                rerank_model=draw(RunMetricsStrategies.rerank_model()),
+                rerank_model_name=draw(RunMetricsStrategies.rerank_model()),
             )
         )
     random.shuffle(generated_runs)
@@ -229,17 +230,13 @@ def st_runs(
     runs=st_runs(),
     metric_filter=st_metric_filter(),
 )
-# @example(
-#     runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
-#     metric_filter=MetricFilter(top_k=1),
-# )
-# @example(
-#     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
-#     metric_filter=MetricFilter(data_source_id=1),
-# )
 @example(
-    runs=[make_test_run(data_source_ids=[i], project_id=1) for i in [1, 2, 3]],
-    metric_filter=MetricFilter(project_id=1),
+    runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(top_k=1),
+)
+@example(
+    runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(data_source_id=1),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     relevant_runs = get_relevant_runs(metric_filter, runs)
@@ -262,9 +259,47 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
             else:
                 assert run.data.params[key] == str(filter_value)
 
-                raise Exception
-                run_copy: Run = copy.deepcopy(run)
-                run_copy.data.params[key] = str(filter_value + 1)
-                assert get_relevant_runs(metric_filter, [run_copy]) == []
+                # raise Exception
+                # run_copy: Run = copy.deepcopy(run)
+                # run_copy.data.params[key] = str(filter_value + 1)
+                # assert get_relevant_runs(metric_filter, [run_copy]) == []
 
     # TODO: make sure there are no false negatives, i.e. we didn't miss any relevant runs
+
+@given(metric_filter=st_metric_filter())
+def test_conrado_idea(metric_filter: MetricFilter) -> None:
+    hypothesis.assume(metric_filter.data_source_id is not None)
+    # if not metric_filter.has_rerank_model:
+    #     hypothesis.assume(metric_filter.rerank_model is None)
+
+    run = create_run_from_filter(metric_filter)
+    assert get_relevant_runs(metric_filter, [run]) == [run]
+
+    for key, value in metric_filter.model_dump().items():
+        if value is None:
+            continue
+        bad_run = create_run_from_filter(metric_filter, key)
+        assert get_relevant_runs(metric_filter, [bad_run]) == []
+
+
+def create_run_from_filter(metric_filter: MetricFilter, key_to_jostle: Optional[str] = None) -> Run:
+    run_data: dict[str, Any] = metric_filter.model_dump()
+
+    print(f"{metric_filter=}")
+    print(f"{key_to_jostle=}")
+    if key_to_jostle is not None and key_to_jostle in run_data:
+        if isinstance(run_data[key_to_jostle], bool):
+            run_data[key_to_jostle] = not run_data[key_to_jostle]
+        else:
+            run_data[key_to_jostle] *= 2
+
+    run_data["data_source_ids"] = [run_data.pop("data_source_id")]
+    run_data["rerank_model_name"] = run_data.pop("rerank_model")
+
+    has_rerank_model = run_data.pop("has_rerank_model")
+    if has_rerank_model and run_data["rerank_model_name"] is None:
+        run_data["rerank_model_name"] = "rerank_model_1"
+    elif not has_rerank_model and run_data["rerank_model_name"] is not None:
+        run_data["rerank_model_name"] = None
+
+    return make_test_run(**run_data)
