@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import copy
 import functools
 import random
 import uuid
@@ -228,13 +229,17 @@ def st_runs(
     runs=st_runs(),
     metric_filter=st_metric_filter(),
 )
+# @example(
+#     runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
+#     metric_filter=MetricFilter(top_k=1),
+# )
+# @example(
+#     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
+#     metric_filter=MetricFilter(data_source_id=1),
+# )
 @example(
-    runs=[make_test_run(data_source_ids=[5], top_k=i) for i in [1, 2, 3]],
-    metric_filter=MetricFilter(top_k=1),
-)
-@example(
-    runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
-    metric_filter=MetricFilter(data_source_id=1),
+    runs=[make_test_run(data_source_ids=[i], project_id=1) for i in [1, 2, 3]],
+    metric_filter=MetricFilter(project_id=1),
 )
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     relevant_runs = get_relevant_runs(metric_filter, runs)
@@ -257,5 +262,9 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
             else:
                 assert run.data.params[key] == str(filter_value)
 
+                raise Exception
+                run_copy: Run = copy.deepcopy(run)
+                run_copy.data.params[key] = str(filter_value + 1)
+                assert get_relevant_runs(metric_filter, [run_copy]) == []
 
     # TODO: make sure there are no false negatives, i.e. we didn't miss any relevant runs
