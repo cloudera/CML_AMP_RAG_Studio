@@ -57,7 +57,7 @@ class RunMetricsStrategies:
 
     @staticmethod
     def project_id() -> st.SearchStrategy[int]:
-        return st.integers(min_value=1, max_value=3)
+        return st.integers(min_value=6, max_value=13)
 
     @staticmethod
     def inference_model() -> st.SearchStrategy[str]:
@@ -254,8 +254,6 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                     assert run.data.params.get("rerank_model_name") is None
             elif key == "data_source_id":
                 assert run.data.params["data_source_ids"] == str([filter_value])
-            elif key == "project_id":
-                assert run.data.params["project_id"] == str(filter_value)
             else:
                 assert run.data.params[key] == str(filter_value)
 
