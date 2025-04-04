@@ -42,7 +42,7 @@ import uuid
 from typing import Any, TypeVar, Optional
 
 import hypothesis
-from hypothesis import given, example
+from hypothesis import given, example, settings
 from hypothesis import strategies as st
 from mlflow.entities import RunInfo, Run, RunData, Param
 
@@ -238,6 +238,7 @@ def st_runs(
     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
     metric_filter=MetricFilter(data_source_id=1),
 )
+@settings(max_examples=1000)
 def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     relevant_runs = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
@@ -262,6 +263,7 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                 assert run.data.params[key] == str(filter_value)
 
 @given(metric_filter=st_metric_filter())
+@settings(max_examples=1000)
 def test_conrado_idea(metric_filter: MetricFilter) -> None:
     hypothesis.assume(metric_filter.data_source_id is not None)
     if not metric_filter.has_rerank_model:
