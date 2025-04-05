@@ -132,28 +132,28 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
         MetricFilter,
         data_source_id=st_filter_value(
             RunMetricsStrategies.data_source_id(),
-            5,
+            99,
         ),
         project_id=st_filter_value(
             RunMetricsStrategies.project_id(),
-            5,
+            99,
         ),
         inference_model=st_filter_value(
             RunMetricsStrategies.inference_model(),
-            "unused_inference_model",
+            "inference_model_99",
         ),
         rerank_model=st_filter_value(
             RunMetricsStrategies.rerank_model(),
-            "unused_rerank_model",
+            "rerank_model_99",
         ),
         has_rerank_model=...,  # TODO: this clashes with rerank_model
         top_k=st_filter_value(
             RunMetricsStrategies.top_k(),
-            5,
+            99,
         ),
         session_id=st_filter_value(
             RunMetricsStrategies.session_id(),
-            5,
+            99,
         ),
         use_summary_filter=st_filter_value(
             RunMetricsStrategies.use_summary_filter(),
@@ -239,7 +239,7 @@ def st_runs(
     metric_filter=MetricFilter(data_source_id=1),
 )
 @settings(max_examples=1000)
-def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
+def test_filtered_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     relevant_runs = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
         assert relevant_runs == runs
@@ -280,6 +280,8 @@ def test_conrado_idea(metric_filter: MetricFilter) -> None:
 
 
 def create_run_from_filter(metric_filter: MetricFilter, key_to_jostle: Optional[str] = None) -> Run:
+    """Create a Run that passes `metric_filter`, or one that fails if `key_to_jostle` is set."""
+    # TODO: raise exception if key_to_jostle is not in metric_filter?
     run_data: dict[str, Any] = metric_filter.model_dump()
 
     if key_to_jostle is not None and key_to_jostle in run_data:
@@ -295,11 +297,7 @@ def create_run_from_filter(metric_filter: MetricFilter, key_to_jostle: Optional[
     if has_rerank_model and run_data["rerank_model_name"] is None:
         run_data["rerank_model_name"] = "rerank_model_1"
 
-    if key_to_jostle == 'has_rerank_model':
-        if has_rerank_model:
-            run_data["rerank_model_name"] = run_data.get("rerank_model_name", "rerank_model_1")
-        else:
-            run_data["rerank_model_name"] = None
-
+    if key_to_jostle == 'has_rerank_model' and not has_rerank_model:
+        run_data["rerank_model_name"] = None
 
     return make_test_run(**run_data)
