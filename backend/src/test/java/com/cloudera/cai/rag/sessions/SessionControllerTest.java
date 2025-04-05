@@ -131,6 +131,7 @@ class SessionControllerTest {
     var updatedInferenceModel = "new-model-name";
     var updatedName = "new-name";
     var updatedRerankModel = "new-rerank-model";
+    var updatedProjectId = insertedSession.id() + 1;
 
     var updatedSession =
         sessionController.update(
@@ -139,6 +140,7 @@ class SessionControllerTest {
                 .withResponseChunks(updatedResponseChunks)
                 .withRerankModel(updatedRerankModel)
                 .withName(updatedName)
+                .withProjectId(updatedProjectId)
                 .withQueryConfiguration(new Types.QueryConfiguration(true, false)),
             request);
 
@@ -148,6 +150,7 @@ class SessionControllerTest {
     assertThat(updatedSession.rerankModel()).isEqualTo(updatedRerankModel);
     assertThat(updatedSession.responseChunks()).isEqualTo(updatedResponseChunks);
     assertThat(updatedSession.dataSourceIds()).isEmpty();
+    assertThat(updatedSession.projectId()).isEqualTo(updatedProjectId);
     assertThat(updatedSession.timeCreated()).isNotNull();
     assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");

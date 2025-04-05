@@ -47,7 +47,6 @@ from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import (
     v2_chat,
-    generate_dummy_suggested_questions,
 )
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
@@ -60,14 +59,6 @@ router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
 class RagSuggestedQuestionsResponse(BaseModel):
     suggested_questions: list[str]
-
-
-@router.get("/suggest-questions")
-@exceptions.propagates
-def suggest_questions() -> RagSuggestedQuestionsResponse:
-    return RagSuggestedQuestionsResponse(
-        suggested_questions=generate_dummy_suggested_questions()
-    )
 
 
 @router.post(

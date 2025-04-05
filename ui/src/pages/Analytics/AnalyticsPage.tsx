@@ -49,6 +49,7 @@ import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
 import MetadataMetrics from "pages/Analytics/AppMetrics.tsx";
+import { Project, useGetProjects } from "src/api/projectsApi.ts";
 
 const BooleanFilterOption = ({
   name,
@@ -87,6 +88,16 @@ const SelectFilterOption = ({
   );
 };
 
+const transformProjectOptions = (projects?: Project[]) => {
+  if (!projects) {
+    return [];
+  }
+  return projects.map((project) => ({
+    value: project.id.toString(),
+    label: project.name,
+  }));
+};
+
 const MetricFilterOptions = ({
   metricFilterForm,
 }: {
@@ -94,6 +105,7 @@ const MetricFilterOptions = ({
 }) => {
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
+  const { data: projects } = useGetProjects();
 
   return (
     <Form
@@ -123,6 +135,11 @@ const MetricFilterOptions = ({
       <BooleanFilterOption
         name="exclude_knowledge_base"
         label="Knowledge base not used"
+      />
+      <SelectFilterOption
+        name="project_id"
+        label="Project"
+        options={transformProjectOptions(projects)}
       />
     </Form>
   );

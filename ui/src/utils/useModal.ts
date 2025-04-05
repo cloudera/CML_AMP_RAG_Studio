@@ -38,7 +38,14 @@
 
 import { useState } from "react";
 
-const useModal = () => {
+export interface ModalHook {
+  isModalOpen: boolean;
+  showModal: () => void;
+  handleCancel: () => void;
+  setIsModalOpen: (value: ((prevState: boolean) => boolean) | boolean) => void;
+}
+
+const useModal = (): ModalHook => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const showModal = () => {
     setIsModalOpen(true);

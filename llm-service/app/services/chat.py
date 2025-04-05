@@ -112,20 +112,6 @@ def _run_chat(
         )
 
     data_source_id: int = session.data_source_ids[0]
-    if QdrantVectorStore.for_chunks(data_source_id).size() == 0:
-        return RagStudioChatMessage(
-            id=response_id,
-            session_id=session.id,
-            source_nodes=[],
-            inference_model=None,
-            rag_message=RagMessage(
-                user=query,
-                assistant="I don't have any documents to answer your question.",
-            ),
-            evaluations=[],
-            timestamp=time.time(),
-            condensed_question=None,
-        )
     response, condensed_question = querier.query(
         data_source_id,
         query,
