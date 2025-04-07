@@ -172,6 +172,7 @@ const MoveSessionModal = ({
             dataSourcesToTransfer={dataSourcesToTransfer}
             dataSources={dataSources}
             selectedProject={selectedProject}
+            dataSourcesForProjectIsLoading={dataSourcesForProjectIsLoading}
           />
         </Flex>
         <Typography.Paragraph italic style={{ marginTop: 20 }}>

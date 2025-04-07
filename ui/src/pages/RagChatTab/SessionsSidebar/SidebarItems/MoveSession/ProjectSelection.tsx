@@ -39,7 +39,7 @@
 import { Session } from "src/api/sessionApi.ts";
 import { Project } from "src/api/projectsApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { Card, Flex, Select, Tag, Typography } from "antd";
+import { Card, Flex, Select, Skeleton, Tag, Typography } from "antd";
 import { cdlGreen600 } from "src/cuix/variables.ts";
 
 const getProjectOptions = (session: Session, projects?: Project[]) =>
@@ -59,6 +59,7 @@ const ProjectSelection = ({
   dataSourcesToTransfer,
   dataSources,
   selectedProject,
+  dataSourcesForProjectIsLoading,
 }: {
   session: Session;
   projects?: Project[];
@@ -67,6 +68,7 @@ const ProjectSelection = ({
   dataSourcesToTransfer: number[];
   dataSources?: DataSourceType[];
   selectedProject?: number;
+  dataSourcesForProjectIsLoading: boolean;
 }) => {
   const projectOptions = getProjectOptions(session, projects);
 
@@ -88,7 +90,10 @@ const ProjectSelection = ({
       <Typography style={{ marginBottom: 20 }}>
         Knowledge bases in project:
       </Typography>
-      {selectedProject && (
+      {dataSourcesForProjectIsLoading && (
+        <Skeleton active={true} paragraph={{ rows: 0 }} />
+      )}
+      {selectedProject && !dataSourcesForProjectIsLoading ? (
         <Flex>
           {dataSourcesForProject?.map((ds) => {
             return (
@@ -106,7 +111,7 @@ const ProjectSelection = ({
             );
           })}
         </Flex>
-      )}
+      ) : null}
     </Card>
   );
 };
