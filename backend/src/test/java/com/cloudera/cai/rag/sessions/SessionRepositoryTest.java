@@ -56,7 +56,7 @@ class SessionRepositoryTest {
         TestData.createTestSessionInstance("test")
             .withCreatedById(username)
             .withUpdatedById(username)
-            .withProjectId(2L);
+            .withProjectId(1L);
     var id = sessionRepository.create(input);
     assertThat(id).isNotNull();
 
@@ -69,7 +69,7 @@ class SessionRepositoryTest {
     assertThat(result.timeUpdated()).isNotNull();
     assertThat(result.createdById()).isEqualTo(username);
     assertThat(result.updatedById()).isEqualTo(username);
-    assertThat(result.projectId()).isEqualTo(2L);
+    assertThat(result.projectId()).isEqualTo(1L);
     assertThat(result.lastInteractionTime()).isNull();
   }
 

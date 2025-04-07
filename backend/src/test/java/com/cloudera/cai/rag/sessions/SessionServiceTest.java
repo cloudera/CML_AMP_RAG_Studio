@@ -192,18 +192,14 @@ class SessionServiceTest {
     sessionService.create(session2, user2);
     sessionService.create(session3, user3);
 
-    // Get sessions for project ID 1
     var projectOneSessions = sessionService.getSessionsByProjectId(project.id());
 
-    // Verify that sessions with project ID 1 are returned
     assertThat(projectOneSessions).hasSizeGreaterThanOrEqualTo(2);
     assertThat(projectOneSessions).extracting("name").contains("test1", "test2");
     assertThat(projectOneSessions).extracting("projectId").containsOnly(project.id());
 
-    // Get sessions for project ID 2
     var projectTwoSessions = sessionService.getSessionsByProjectId(project2.id());
 
-    // Verify that only sessions with project ID 2 are returned
     assertThat(projectTwoSessions).hasSize(1);
     assertThat(projectTwoSessions).extracting("name").containsExactly("test3");
     assertThat(projectTwoSessions).extracting("projectId").containsOnly(project2.id());
