@@ -36,79 +36,38 @@
  * DATA.
  ******************************************************************************/
 
-import { Session } from "src/api/sessionApi.ts";
-import { Project } from "src/api/projectsApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { Card, Flex, Select, Tag, Typography } from "antd";
-import { cdlGreen600 } from "src/cuix/variables.ts";
+import { ReactNode } from "react";
+import { Tag } from "antd";
 
-const getProjectOptions = (session: Session, projects?: Project[]) =>
-  projects
-    ?.filter((project) => !project.defaultProject)
-    .filter((project) => project.id !== session.projectId)
-    .map((project) => ({
-      label: project.name,
-      value: project.id,
-    }));
-
-const ProjectSelection = ({
-  session,
-  projects,
-  setSelectedProject,
-  dataSourcesForProject,
-  dataSourcesToTransfer,
+export const DataSourceTag = ({
+  handleClose,
   dataSources,
-  selectedProject,
+  dataSourceId,
+  color,
+  closeIcon,
 }: {
-  session: Session;
-  projects?: Project[];
-  setSelectedProject: (projectId: number) => void;
-  dataSourcesForProject?: DataSourceType[];
-  dataSourcesToTransfer: number[];
+  handleClose: (dataSourceId: number) => void;
   dataSources?: DataSourceType[];
-  selectedProject?: number;
+  dataSourceId: number;
+  color: string;
+  closeIcon: ReactNode;
 }) => {
-  const projectOptions = getProjectOptions(session, projects);
+  const dataSource = dataSources?.find((ds) => ds.id === dataSourceId);
+
+  if (!dataSource) {
+    return null;
+  }
 
   return (
-    <Card
-      title="Move to:"
-      style={{ width: 350, minHeight: 200 }}
-      extra={
-        <>
-          Project:{" "}
-          <Select
-            style={{ width: 150 }}
-            options={projectOptions}
-            onSelect={setSelectedProject}
-          />
-        </>
-      }
+    <Tag
+      color={color}
+      onClose={() => {
+        handleClose(dataSource.id);
+      }}
+      closeIcon={closeIcon}
     >
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in project:
-      </Typography>
-      {selectedProject && (
-        <Flex>
-          {dataSourcesForProject?.map((ds) => {
-            return (
-              <Tag key={ds.id} color="blue">
-                {ds.name}
-              </Tag>
-            );
-          })}
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-            return (
-              <Tag key={kb} color={cdlGreen600}>
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-        </Flex>
-      )}
-    </Card>
+      {dataSource.name}
+    </Tag>
   );
 };
-
-export default ProjectSelection;

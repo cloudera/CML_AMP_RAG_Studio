@@ -37,47 +37,16 @@
  ******************************************************************************/
 
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Session } from "src/api/sessionApi.ts";
-import { Card, Flex, Tag, Tooltip, Typography } from "antd";
+import { Card, Flex, Tooltip, Typography } from "antd";
 import {
   CloseCircleFilled,
   PlusCircleOutlined,
   RightCircleOutlined,
 } from "@ant-design/icons";
 import { cdlGray400, cdlGreen600 } from "src/cuix/variables.ts";
-
-const DataSourceTag = ({
-  handleClose,
-  dataSources,
-  dataSourceId,
-  color,
-  closeIcon,
-}: {
-  handleClose: (dataSourceId: number) => void;
-  dataSources?: DataSourceType[];
-  dataSourceId: number;
-  color: string;
-  closeIcon: ReactNode;
-}) => {
-  const dataSource = dataSources?.find((ds) => ds.id === dataSourceId);
-
-  if (!dataSource) {
-    return null;
-  }
-
-  return (
-    <Tag
-      color={color}
-      onClose={() => {
-        handleClose(dataSource.id);
-      }}
-      closeIcon={closeIcon}
-    >
-      {dataSource.name}
-    </Tag>
-  );
-};
+import { DataSourceTag } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/DataSourceTag.tsx";
 
 const TransferItems = ({
   dataSources,
@@ -125,16 +94,13 @@ const TransferItems = ({
     diff.length > 0;
 
   return (
-    <Flex
-      vertical
-      align="center"
-      justify="center"
-      style={{ width: 200 }}
-      gap={20}
-    >
-      <RightCircleOutlined style={{ fontSize: 20 }} />
-      {showDataSourceCard && (
-        <Card title={<Typography>New knowledge base</Typography>}>
+    <Flex vertical align="center" justify="center" style={{ width: 200 }}>
+      <RightCircleOutlined style={{ fontSize: 20, height: 56 }} />
+      {showDataSourceCard ? (
+        <Card
+          title={<Typography>New knowledge base</Typography>}
+          style={{ flex: 1 }}
+        >
           {dataSourcesToTransfer.map((dataSourceToTransfer) => (
             <DataSourceTag
               key={dataSourceToTransfer}
@@ -164,6 +130,8 @@ const TransferItems = ({
             />
           ))}
         </Card>
+      ) : (
+        <div style={{ flex: 1 }} />
       )}
     </Flex>
   );

@@ -36,79 +36,68 @@
  * DATA.
  ******************************************************************************/
 
-import { Session } from "src/api/sessionApi.ts";
+import { Session, useUpdateSessionMutation } from "src/api/sessionApi.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import messageQueue from "src/utils/messageQueue.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import { ModalHook } from "src/utils/useModal.ts";
 import { Project } from "src/api/projectsApi.ts";
-import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { Card, Flex, Select, Tag, Typography } from "antd";
-import { cdlGreen600 } from "src/cuix/variables.ts";
 
-const getProjectOptions = (session: Session, projects?: Project[]) =>
-  projects
-    ?.filter((project) => !project.defaultProject)
-    .filter((project) => project.id !== session.projectId)
-    .map((project) => ({
-      label: project.name,
-      value: project.id,
-    }));
-
-const ProjectSelection = ({
-  session,
-  projects,
-  setSelectedProject,
-  dataSourcesForProject,
-  dataSourcesToTransfer,
-  dataSources,
-  selectedProject,
-}: {
+interface UseMoveSessionProps {
   session: Session;
-  projects?: Project[];
-  setSelectedProject: (projectId: number) => void;
-  dataSourcesForProject?: DataSourceType[];
-  dataSourcesToTransfer: number[];
-  dataSources?: DataSourceType[];
   selectedProject?: number;
-}) => {
-  const projectOptions = getProjectOptions(session, projects);
+  projects?: Project[];
+  moveModal: ModalHook;
+}
 
-  return (
-    <Card
-      title="Move to:"
-      style={{ width: 350, minHeight: 200 }}
-      extra={
-        <>
-          Project:{" "}
-          <Select
-            style={{ width: 150 }}
-            options={projectOptions}
-            onSelect={setSelectedProject}
-          />
-        </>
+export const useMoveSession = ({
+  session,
+  selectedProject,
+  projects,
+  moveModal,
+}: UseMoveSessionProps) => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return useUpdateSessionMutation({
+    onSuccess: () => {
+      const project = projects?.find((proj) => proj.id === selectedProject);
+      if (!project) {
+        messageQueue.error("Failed to find project");
+        return;
       }
-    >
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in project:
-      </Typography>
-      {selectedProject && (
-        <Flex>
-          {dataSourcesForProject?.map((ds) => {
-            return (
-              <Tag key={ds.id} color="blue">
-                {ds.name}
-              </Tag>
-            );
-          })}
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-            return (
-              <Tag key={kb} color={cdlGreen600}>
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-        </Flex>
-      )}
-    </Card>
-  );
+      messageQueue.success(
+        `Session ${session.name} moved to project ${project.name}`,
+      );
+      queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
+        .catch(() => {
+          messageQueue.error("Failed to refetch session");
+        });
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            QueryKeys.getDataSourcesForProject,
+            { projectId: project.id },
+          ],
+        })
+        .catch(() => {
+          messageQueue.error("Failed to refetch project");
+        });
+      navigate({
+        to: "/chats/projects/$projectId/sessions/$sessionId",
+        params: {
+          projectId: project.id.toString(),
+          sessionId: session.id.toString(),
+        },
+      }).catch(() => {
+        messageQueue.error("Failed to navigate to session");
+      });
+      moveModal.handleCancel();
+    },
+    onError: () => {
+      messageQueue.error("Failed to update session");
+    },
+  });
 };
-
-export default ProjectSelection;

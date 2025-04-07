@@ -37,22 +37,20 @@
  ******************************************************************************/
 
 import { ModalHook } from "src/utils/useModal.ts";
-import { Session, useUpdateSessionMutation } from "src/api/sessionApi.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { Session } from "src/api/sessionApi.ts";
 import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
 import {
   useAddDataSourceToProject,
   useGetDataSourcesForProject,
   useGetProjects,
 } from "src/api/projectsApi.ts";
-import { useNavigate } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
-import { QueryKeys } from "src/api/utils.ts";
 import { useEffect, useState } from "react";
 import { Flex, Modal, Typography } from "antd";
 import CurrentSession from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/CurrentSession.tsx";
 import TransferItems from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/TransferItems.tsx";
 import ProjectSelection from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/ProjectSelection.tsx";
+import { useMoveSession } from "./useMoveSession.ts";
 
 const MoveSessionModal = ({
   moveModal,
@@ -61,57 +59,21 @@ const MoveSessionModal = ({
   moveModal: ModalHook;
   session: Session;
 }) => {
-  const queryClient = useQueryClient();
-  const { data: dataSources } = useGetDataSourcesQuery();
-  const { data: projects } = useGetProjects();
-  const navigate = useNavigate();
+  const { data: dataSources, isLoading: isDataSourcesLoading } =
+    useGetDataSourcesQuery();
+  const { data: projects, isLoading: isProjectsLoading } = useGetProjects();
   const addDataSourceToProject = useAddDataSourceToProject({
     onError: () => {
       messageQueue.error("Failed to add data source to project");
     },
   });
-  const updateSession = useUpdateSessionMutation({
-    onSuccess: () => {
-      const project = projects?.find((proj) => proj.id === selectedProject);
-      if (!project) {
-        messageQueue.error("Failed to find project");
-        return;
-      }
-      messageQueue.success(
-        `Session ${session.name} moved to project ${project.name}`,
-      );
-      queryClient
-        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
-        .catch(() => {
-          messageQueue.error("Failed to refetch session");
-        });
-      queryClient
-        .invalidateQueries({
-          queryKey: [
-            QueryKeys.getDataSourcesForProject,
-            { projectId: project.id },
-          ],
-        })
-        .catch(() => {
-          messageQueue.error("Failed to refetch project");
-        });
-      navigate({
-        to: "/chats/projects/$projectId/sessions/$sessionId",
-        params: {
-          projectId: project.id.toString(),
-          sessionId: session.id.toString(),
-        },
-      }).catch(() => {
-        messageQueue.error("Failed to navigate to session");
-      });
-      moveModal.handleCancel();
-    },
-    onError: () => {
-      messageQueue.error("Failed to update session");
-    },
-  });
   const [selectedProject, setSelectedProject] = useState<number>();
-
+  const updateSession = useMoveSession({
+    session,
+    selectedProject,
+    projects,
+    moveModal,
+  });
   const {
     data: dataSourcesForProject,
     isLoading: dataSourcesForProjectIsLoading,
@@ -159,11 +121,15 @@ const MoveSessionModal = ({
   return (
     <Modal
       title="Move session?"
+      loading={isDataSourcesLoading || isProjectsLoading}
       open={moveModal.isModalOpen}
       onOk={(e) => {
         e.stopPropagation();
         handleMoveSession();
       }}
+      confirmLoading={
+        addDataSourceToProject.isPending || updateSession.isPending
+      }
       onCancel={(e) => {
         e.stopPropagation();
         setSelectedProject(undefined);
