@@ -37,77 +37,30 @@
  ******************************************************************************/
 
 import { Session } from "src/api/sessionApi.ts";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 import { Project } from "src/api/projectsApi.ts";
-import { Card, Flex, Select, Skeleton, Tag, Typography } from "antd";
-import { cdlGreen600 } from "src/cuix/variables.ts";
-import { useContext } from "react";
+import { createContext, Dispatch, SetStateAction } from "react";
 
-import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
+export interface MoveSessionContextType {
+  session: Session;
+  dataSources?: DataSourceType[];
+  dataSourcesForProject?: DataSourceType[];
+  dataSourcesForProjectIsLoading: boolean;
+  projects?: Project[];
+  dataSourcesToTransfer: number[];
+  setDataSourcesToTransfer: Dispatch<SetStateAction<number[]>>;
+  setSelectedProject: Dispatch<SetStateAction<number | undefined>>;
+  selectedProject?: number;
+}
 
-const getProjectOptions = (session: Session, projects?: Project[]) =>
-  projects
-    ?.filter((project) => !project.defaultProject)
-    .filter((project) => project.id !== session.projectId)
-    .map((project) => ({
-      label: project.name,
-      value: project.id,
-    }));
-
-const ProjectSelection = () => {
-  const {
-    session,
-    projects,
-    dataSources,
-    selectedProject,
-    setSelectedProject,
-    dataSourcesForProjectIsLoading,
-    dataSourcesForProject,
-    dataSourcesToTransfer,
-  } = useContext(MoveSessionContext);
-  const projectOptions = getProjectOptions(session, projects);
-
-  return (
-    <Card
-      title="Move to:"
-      style={{ width: 350, minHeight: 200 }}
-      extra={
-        <>
-          Project:{" "}
-          <Select
-            style={{ width: 150 }}
-            options={projectOptions}
-            onSelect={setSelectedProject}
-          />
-        </>
-      }
-    >
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in project:
-      </Typography>
-      {dataSourcesForProjectIsLoading && (
-        <Skeleton active={true} paragraph={{ rows: 0 }} />
-      )}
-      {selectedProject && !dataSourcesForProjectIsLoading ? (
-        <Flex>
-          {dataSourcesForProject?.map((ds) => {
-            return (
-              <Tag key={ds.id} color="blue">
-                {ds.name}
-              </Tag>
-            );
-          })}
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-            return (
-              <Tag key={kb} color={cdlGreen600}>
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-        </Flex>
-      ) : null}
-    </Card>
-  );
-};
-
-export default ProjectSelection;
+export const MoveSessionContext = createContext<MoveSessionContextType>({
+  session: {} as Session,
+  dataSources: [],
+  dataSourcesForProject: [],
+  dataSourcesForProjectIsLoading: false,
+  projects: [],
+  dataSourcesToTransfer: [],
+  setDataSourcesToTransfer: () => null,
+  setSelectedProject: () => null,
+  selectedProject: undefined,
+});

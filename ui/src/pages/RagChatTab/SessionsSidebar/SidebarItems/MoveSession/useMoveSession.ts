@@ -48,14 +48,14 @@ interface UseMoveSessionProps {
   session: Session;
   selectedProject?: number;
   projects?: Project[];
-  moveModal: ModalHook;
+  handleCancel: ModalHook["handleCancel"];
 }
 
 export const useMoveSession = ({
   session,
   selectedProject,
   projects,
-  moveModal,
+  handleCancel,
 }: UseMoveSessionProps) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ export const useMoveSession = ({
       }).catch(() => {
         messageQueue.error("Failed to navigate to session");
       });
-      moveModal.handleCancel();
+      handleCancel();
     },
     onError: () => {
       messageQueue.error("Failed to update session");

@@ -148,7 +148,7 @@ describe("useMoveSession", () => {
           session: mockSession,
           selectedProject: 2,
           projects: mockProjects,
-          moveModal: mockModalHook,
+          handleCancel: mockModalHook.handleCancel,
         }),
       { wrapper },
     );
@@ -164,7 +164,7 @@ describe("useMoveSession", () => {
           session: mockSession,
           selectedProject: 2,
           projects: mockProjects,
-          moveModal: mockModalHook,
+          handleCancel: mockModalHook.handleCancel,
         }),
       { wrapper },
     );
@@ -184,7 +184,7 @@ describe("useMoveSession", () => {
           session: mockSession,
           selectedProject: 3, // Non-existent project ID
           projects: mockProjects,
-          moveModal: mockModalHook,
+          handleCancel: mockModalHook.handleCancel,
         }),
       { wrapper },
     );

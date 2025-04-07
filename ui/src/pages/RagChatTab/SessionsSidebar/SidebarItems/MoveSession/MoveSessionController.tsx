@@ -36,30 +36,32 @@
  * DATA.
  ******************************************************************************/
 
-import { Card, Tag, Typography } from "antd";
-import { useContext } from "react";
+import { Flex, Typography } from "antd";
+import CurrentSession from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/CurrentSession.tsx";
+import TransferItems from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/TransferItems.tsx";
+import ProjectSelection from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/ProjectSelection.tsx";
 
-import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
-
-const CurrentSession = () => {
-  const { session, dataSources } = useContext(MoveSessionContext);
+export const MoveSessionController = () => {
   return (
-    <Card title={`Selected session: ${session.name}`} style={{ width: 350 }}>
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in session:
-      </Typography>
-      {session.dataSourceIds.map((dataSourceId) => {
-        const dataSourceName = dataSources?.find(
-          (ds) => ds.id === dataSourceId,
-        );
-        return (
-          <Tag key={dataSourceId} color="blue">
-            {dataSourceName?.name}
-          </Tag>
-        );
-      })}
-    </Card>
+    <Flex
+      vertical
+      gap={8}
+      align={"center"}
+      justify={"center"}
+      wrap={true}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
+      <Flex gap={8} wrap={true}>
+        <CurrentSession />
+        <TransferItems />
+        <ProjectSelection />
+      </Flex>
+      <Typography.Paragraph italic style={{ marginTop: 20 }}>
+        Moving this session will add a new knowledge base to the project unless
+        excluded.
+      </Typography.Paragraph>
+    </Flex>
   );
 };
-
-export default CurrentSession;

@@ -46,17 +46,18 @@ import {
 } from "src/api/projectsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useEffect, useState } from "react";
-import { Flex, Modal, Typography } from "antd";
-import CurrentSession from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/CurrentSession.tsx";
-import TransferItems from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/TransferItems.tsx";
-import ProjectSelection from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/ProjectSelection.tsx";
+import { Modal } from "antd";
 import { useMoveSession } from "./useMoveSession.ts";
+import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
+import { MoveSessionController } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionController.tsx";
 
 const MoveSessionModal = ({
-  moveModal,
+  handleCancel,
+  isModalOpen,
   session,
 }: {
-  moveModal: ModalHook;
+  handleCancel: ModalHook["handleCancel"];
+  isModalOpen: boolean;
   session: Session;
 }) => {
   const { data: dataSources, isLoading: isDataSourcesLoading } =
@@ -72,7 +73,7 @@ const MoveSessionModal = ({
     session,
     selectedProject,
     projects,
-    moveModal,
+    handleCancel,
   });
   const {
     data: dataSourcesForProject,
@@ -81,7 +82,6 @@ const MoveSessionModal = ({
   const [dataSourcesToTransfer, setDataSourcesToTransfer] = useState<number[]>(
     [],
   );
-
   useEffect(() => {
     if (dataSourcesForProject) {
       setDataSourcesToTransfer(
@@ -124,7 +124,7 @@ const MoveSessionModal = ({
     <Modal
       title="Move session?"
       loading={isDataSourcesLoading || isProjectsLoading}
-      open={moveModal.isModalOpen}
+      open={isModalOpen}
       onOk={(e) => {
         e.stopPropagation();
         handleMoveSession();
@@ -136,7 +136,7 @@ const MoveSessionModal = ({
         e.stopPropagation();
         setSelectedProject(undefined);
         setDataSourcesToTransfer([]);
-        moveModal.handleCancel();
+        handleCancel();
       }}
       okButtonProps={{
         disabled: !selectedProject,
@@ -145,43 +145,21 @@ const MoveSessionModal = ({
       destroyOnClose={true}
       width={1000}
     >
-      <Flex
-        vertical
-        gap={8}
-        align={"center"}
-        justify={"center"}
-        wrap={true}
-        onClick={(e) => {
-          e.stopPropagation();
+      <MoveSessionContext.Provider
+        value={{
+          session,
+          dataSources,
+          dataSourcesForProject,
+          dataSourcesForProjectIsLoading,
+          projects,
+          dataSourcesToTransfer,
+          setDataSourcesToTransfer,
+          setSelectedProject,
+          selectedProject,
         }}
       >
-        <Flex gap={8} wrap={true}>
-          <CurrentSession session={session} dataSources={dataSources} />
-          <TransferItems
-            dataSourcesToTransfer={dataSourcesToTransfer}
-            dataSources={dataSources}
-            setDataSourcesToTransfer={setDataSourcesToTransfer}
-            session={session}
-            selectedProject={selectedProject}
-            dataSourcesForProject={dataSourcesForProject}
-            dataSourcesForProjectIsLoading={dataSourcesForProjectIsLoading}
-          />
-          <ProjectSelection
-            session={session}
-            projects={projects}
-            dataSourcesForProject={dataSourcesForProject}
-            setSelectedProject={setSelectedProject}
-            dataSourcesToTransfer={dataSourcesToTransfer}
-            dataSources={dataSources}
-            selectedProject={selectedProject}
-            dataSourcesForProjectIsLoading={dataSourcesForProjectIsLoading}
-          />
-        </Flex>
-        <Typography.Paragraph italic style={{ marginTop: 20 }}>
-          Moving this session will add a new knowledge base to the project
-          unless excluded.
-        </Typography.Paragraph>
-      </Flex>
+        <MoveSessionController />
+      </MoveSessionContext.Provider>
     </Modal>
   );
 };

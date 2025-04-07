@@ -36,9 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { Dispatch, SetStateAction } from "react";
-import { Session } from "src/api/sessionApi.ts";
+import { useContext } from "react";
 import { Card, Flex, Tooltip, Typography } from "antd";
 import {
   CloseCircleFilled,
@@ -48,23 +46,18 @@ import {
 import { cdlGray400, cdlGreen600 } from "src/cuix/variables.ts";
 import { DataSourceTag } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/DataSourceTag.tsx";
 
-const TransferItems = ({
-  dataSources,
-  dataSourcesToTransfer,
-  setDataSourcesToTransfer,
-  session,
-  selectedProject,
-  dataSourcesForProject,
-  dataSourcesForProjectIsLoading,
-}: {
-  dataSources?: DataSourceType[];
-  dataSourcesToTransfer: number[];
-  setDataSourcesToTransfer: Dispatch<SetStateAction<number[]>>;
-  session: Session;
-  selectedProject?: number;
-  dataSourcesForProject?: DataSourceType[];
-  dataSourcesForProjectIsLoading: boolean;
-}) => {
+import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
+
+const TransferItems = () => {
+  const {
+    session,
+    dataSources,
+    dataSourcesToTransfer,
+    setDataSourcesToTransfer,
+    dataSourcesForProject,
+    dataSourcesForProjectIsLoading,
+    selectedProject,
+  } = useContext(MoveSessionContext);
   const removedDataSources = session.dataSourceIds.filter(
     (sessionDataSource) => {
       return !dataSourcesToTransfer.includes(sessionDataSource);
