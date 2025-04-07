@@ -43,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.projects.ProjectService;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -126,12 +127,15 @@ class SessionControllerTest {
     var sessionName = "test";
     var input = TestData.createSessionInstance(sessionName);
     Types.Session insertedSession = sessionController.create(input, request);
+    ProjectService projectService = ProjectService.createNull();
+    var project =
+        projectService.createProject(TestData.createTestProjectInstance("test-project", false));
 
     var updatedResponseChunks = 1;
     var updatedInferenceModel = "new-model-name";
     var updatedName = "new-name";
     var updatedRerankModel = "new-rerank-model";
-    var updatedProjectId = insertedSession.id() + 1;
+    var updatedProjectId = project.id();
 
     var updatedSession =
         sessionController.update(
