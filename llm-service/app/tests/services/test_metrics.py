@@ -40,7 +40,8 @@ import random
 import uuid
 from typing import Any, TypeVar, Optional
 
-from hypothesis import given, example
+import hypothesis
+from hypothesis import given, example, settings
 from hypothesis import strategies as st
 from mlflow.entities import RunInfo, Run, RunData, Param
 
@@ -54,6 +55,10 @@ class RunMetricsStrategies:
     @staticmethod
     def data_source_id() -> st.SearchStrategy[int]:
         return st.integers(min_value=1, max_value=3)
+
+    @staticmethod
+    def project_id() -> st.SearchStrategy[int]:
+        return st.integers(min_value=6, max_value=13)
 
     @staticmethod
     def inference_model() -> st.SearchStrategy[str]:
@@ -126,24 +131,28 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
         MetricFilter,
         data_source_id=st_filter_value(
             RunMetricsStrategies.data_source_id(),
-            5,
+            99,
+        ),
+        project_id=st_filter_value(
+            RunMetricsStrategies.project_id(),
+            99,
         ),
         inference_model=st_filter_value(
             RunMetricsStrategies.inference_model(),
-            "unused_inference_model",
+            "inference_model_99",
         ),
         rerank_model=st_filter_value(
             RunMetricsStrategies.rerank_model(),
-            "unused_rerank_model",
+            "rerank_model_99",
         ),
         has_rerank_model=...,  # TODO: this clashes with rerank_model
         top_k=st_filter_value(
             RunMetricsStrategies.top_k(),
-            5,
+            99,
         ),
         session_id=st_filter_value(
             RunMetricsStrategies.session_id(),
-            5,
+            99,
         ),
         use_summary_filter=st_filter_value(
             RunMetricsStrategies.use_summary_filter(),
@@ -171,7 +180,11 @@ def make_test_run(**kwargs: Any) -> Run:
         lifecycle_stage="hello",
     )
     run_data: RunData = RunData(
-        params=[Param(key=key, value=str(value)) for key, value in kwargs.items()],
+        params=[
+            Param(key=key, value=str(value))
+            for key, value in kwargs.items()
+            if value is not None
+        ],
     )
     return Run(run_info=run_info, run_data=run_data)
 
@@ -200,6 +213,7 @@ def st_runs(
         use_hyde=draw(RunMetricsStrategies.use_hyde()),
         use_question_condensing=draw(RunMetricsStrategies.use_question_condensing()),
         exclude_knowledge_base=draw(RunMetricsStrategies.exclude_knowledge_base()),
+        project_id=draw(RunMetricsStrategies.project_id()),
     )
 
     generated_runs: list[Run] = []
@@ -208,7 +222,7 @@ def st_runs(
             really_make_test_run(
                 data_source_ids=[data_source_id],
                 inference_model=draw(RunMetricsStrategies.inference_model()),
-                rerank_model=draw(RunMetricsStrategies.rerank_model()),
+                rerank_model_name=draw(RunMetricsStrategies.rerank_model()),
             )
         )
     random.shuffle(generated_runs)
@@ -227,7 +241,8 @@ def st_runs(
     runs=[make_test_run(data_source_ids=[i]) for i in [1, 2, 3]],
     metric_filter=MetricFilter(data_source_id=1),
 )
-def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
+@settings(max_examples=1000)
+def test_filtered_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
     relevant_runs = get_relevant_runs(metric_filter, runs)
     if all(filter_value is None for _, filter_value in metric_filter):
         assert relevant_runs == runs
@@ -245,7 +260,50 @@ def test_filter_runs(runs: list[Run], metric_filter: MetricFilter) -> None:
                     assert run.data.params.get("rerank_model_name") is None
             elif key == "data_source_id":
                 assert run.data.params["data_source_ids"] == str([filter_value])
+            elif key == "rerank_model":
+                assert run.data.params["rerank_model_name"] == str(filter_value)
             else:
                 assert run.data.params[key] == str(filter_value)
 
-    # TODO: make sure there are no false negatives, i.e. we didn't miss any relevant runs
+
+@given(metric_filter=st_metric_filter())
+@settings(max_examples=1000)
+def test_conrado_idea(metric_filter: MetricFilter) -> None:
+    hypothesis.assume(metric_filter.data_source_id is not None)
+    if not metric_filter.has_rerank_model:
+        hypothesis.assume(metric_filter.rerank_model is None)
+
+    run = create_run_from_filter(metric_filter)
+    assert get_relevant_runs(metric_filter, [run]) == [run]
+
+    for key, value in metric_filter.model_dump().items():
+        if value is None:
+            continue
+        bad_run = create_run_from_filter(metric_filter, key)
+        assert get_relevant_runs(metric_filter, [bad_run]) == []
+
+
+def create_run_from_filter(
+    metric_filter: MetricFilter, key_to_jostle: Optional[str] = None
+) -> Run:
+    """Create a Run that passes `metric_filter`, or one that fails if `key_to_jostle` is set."""
+    # TODO: raise exception if key_to_jostle is not in metric_filter?
+    run_data: dict[str, Any] = metric_filter.model_dump()
+
+    if key_to_jostle is not None and key_to_jostle in run_data:
+        if isinstance(run_data[key_to_jostle], bool):
+            run_data[key_to_jostle] = not run_data[key_to_jostle]
+        else:
+            run_data[key_to_jostle] *= 2
+
+    run_data["data_source_ids"] = [run_data.pop("data_source_id")]
+    run_data["rerank_model_name"] = run_data.pop("rerank_model")
+
+    has_rerank_model = run_data.pop("has_rerank_model")
+    if has_rerank_model and run_data["rerank_model_name"] is None:
+        run_data["rerank_model_name"] = "rerank_model_1"
+
+    if key_to_jostle == "has_rerank_model" and not has_rerank_model:
+        run_data["rerank_model_name"] = None
+
+    return make_test_run(**run_data)

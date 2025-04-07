@@ -222,7 +222,7 @@ public class SessionRepository {
               """
                   UPDATE CHAT_SESSION
                   SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel, query_configuration = :queryConfiguration,
-                      response_chunks = :responseChunks, time_updated = :timeUpdated, rerank_model = :rerankModel
+                      response_chunks = :responseChunks, time_updated = :timeUpdated, rerank_model = :rerankModel, project_id = :projectId
                   WHERE id = :id
                 """;
           handle

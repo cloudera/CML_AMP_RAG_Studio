@@ -49,8 +49,14 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { Flex, Menu, Modal, Popover, Tooltip, Typography } from "antd";
 import { cdlWhite } from "src/cuix/variables.ts";
-import { ClearOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
-import { useState, MouseEvent } from "react";
+import {
+  ClearOutlined,
+  DeleteOutlined,
+  MergeOutlined,
+  MoreOutlined,
+} from "@ant-design/icons";
+import { MouseEvent, useState } from "react";
+import MoveSessionModal from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionModal.tsx";
 
 const SessionItem = ({ session }: { session: Session }) => {
   const { sessionId: routeSessionId, projectId: routeProjectId } = useParams({
@@ -58,6 +64,7 @@ const SessionItem = ({ session }: { session: Session }) => {
   });
   const deleteChatHistoryModal = useModal();
   const deleteSessionModal = useModal();
+  const moveModal = useModal();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
@@ -146,6 +153,15 @@ const SessionItem = ({ session }: { session: Session }) => {
                 },
               },
               {
+                key: "move",
+                label: "Move",
+                icon: <MergeOutlined />,
+                onClick: ({ domEvent }) => {
+                  domEvent.stopPropagation();
+                  moveModal.showModal();
+                },
+              },
+              {
                 key: "delete",
                 label: "Delete",
                 icon: <DeleteOutlined />,
@@ -189,6 +205,13 @@ const SessionItem = ({ session }: { session: Session }) => {
         }}
         onCancel={deleteSessionModal.handleCancel}
       />
+      {moveModal.isModalOpen && (
+        <MoveSessionModal
+          handleCancel={moveModal.handleCancel}
+          isModalOpen={moveModal.isModalOpen}
+          session={session}
+        />
+      )}
     </Flex>
   );
 };
