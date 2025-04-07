@@ -47,8 +47,8 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { useEffect, useState } from "react";
 import { Modal } from "antd";
-import { useMoveSession } from "./useMoveSession.ts";
-import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
+import { useMoveSession } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/useMoveSession.ts";
+import { MoveSessionContext } from "./MoveSessionContext";
 import { MoveSessionController } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionController.tsx";
 
 const MoveSessionModal = ({
@@ -109,9 +109,13 @@ const MoveSessionModal = ({
       }),
     )
       .then(() => {
+        const dataSourceIds = new Set([
+          ...session.dataSourceIds,
+          ...dataSourcesToTransfer,
+        ]);
         updateSession.mutate({
           ...session,
-          dataSourceIds: dataSourcesToTransfer,
+          dataSourceIds: [...dataSourceIds],
           projectId: selectedProject,
         });
       })
