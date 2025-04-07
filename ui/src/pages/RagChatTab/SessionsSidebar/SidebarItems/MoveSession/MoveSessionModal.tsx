@@ -83,15 +83,17 @@ const MoveSessionModal = ({
   );
 
   useEffect(() => {
-    setDataSourcesToTransfer(
-      session.dataSourceIds.filter(
-        (dataSourceId) =>
-          !dataSourcesForProject?.some(
-            (projectDs) => projectDs.id === dataSourceId,
-          ),
-      ),
-    );
-  }, [selectedProject, session.dataSourceIds, dataSourcesForProject]);
+    if (dataSourcesForProject) {
+      setDataSourcesToTransfer(
+        session.dataSourceIds.filter(
+          (dataSourceId) =>
+            !dataSourcesForProject.some(
+              (projectDs) => projectDs.id === dataSourceId,
+            ),
+        ),
+      );
+    }
+  }, [session.dataSourceIds, dataSourcesForProject, setDataSourcesToTransfer]);
 
   const handleMoveSession = () => {
     if (!selectedProject) {

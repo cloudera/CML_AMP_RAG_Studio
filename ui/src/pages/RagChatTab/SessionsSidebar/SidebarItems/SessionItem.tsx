@@ -205,7 +205,9 @@ const SessionItem = ({ session }: { session: Session }) => {
         }}
         onCancel={deleteSessionModal.handleCancel}
       />
-      <MoveSessionModal moveModal={moveModal} session={session} />
+      {moveModal.isModalOpen && (
+        <MoveSessionModal moveModal={moveModal} session={session} />
+      )}
     </Flex>
   );
 };
