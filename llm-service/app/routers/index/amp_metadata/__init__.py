@@ -50,7 +50,7 @@ from pydantic import BaseModel
 from .... import exceptions
 from ....services.amp_update import does_amp_need_updating
 
-router = APIRouter(prefix="/amp-update", tags=["AMP Update"])
+router = APIRouter(prefix="/amp", tags=["AMP"])
 
 root_dir = (
     "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
@@ -105,52 +105,43 @@ class AwsConfig(BaseModel):
     """
     Model to represent the AWS configuration.
     """
+
     region: Optional[str] = None
     document_bucket_name: Optional[str] = None
     bucket_prefix: Optional[str] = None
     access_key_id: Optional[str] = None
     secret_access_key: Optional[str] = None
 
+
 class AzureConfig(BaseModel):
     """
     Model to represent the Azure configuration.
     """
+
     openai_key: Optional[str] = None
     openai_endpoint: Optional[str] = None
     openai_api_version: Optional[str] = None
+
 
 class CaiiConfig(BaseModel):
     """
     Model to represent the CAII configuration.
     """
+
     caii_domain: Optional[str] = None
     cdp_token_override: Optional[str] = None
+
 
 class ProjectConfig(BaseModel):
     """
     Model to represent the project configuration.
     """
+
     use_enhanced_pdf_processing: bool
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
 
-
-
-project_env_vars = {
-    "AWS_DEFAULT_REGION": "us-west-2",
-    "S3_RAG_DOCUMENT_BUCKET": "",
-    "S3_RAG_BUCKET_PREFIX": "rag-studio",
-    "AWS_ACCESS_KEY_ID": "",
-    "AWS_SECRET_ACCESS_KEY": "",
-    "USE_ENHANCED_PDF_PROCESSING": "false",
-    "CAII_DOMAIN": "",
-    "CDP_TOKEN_OVERRIDE": "",
-    "AZURE_OPENAI_API_KEY": "",
-    "AZURE_OPENAI_ENDPOINT": "",
-    "OPENAI_API_VERSION": "",
-    "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
-}
 
 DEFAULT_CONFIGURATION = ProjectConfig(
     use_enhanced_pdf_processing=False,
@@ -175,12 +166,7 @@ def get_configuration(
             status_code=403,
             detail="You do not have permission to access these environment variables.",
         )
-    return DEFAULT_CONFIGURATION
-    # {
-    #     key: value
-    #     for key, value in env.items()
-    #     if key in project_env_vars.keys() and key not in ["PROJECT_OWNER"]
-    # }
+    return env_to_config(env)
 
 
 def get_project_environment() -> dict[str, str]:
@@ -192,7 +178,8 @@ def get_project_environment() -> dict[str, str]:
         project = client.get_project(project_id=project_id)
         return json.loads(project.environment)
     except ImportError:
-        return project_env_vars
+        return dict(os.environ)
+
 
 def env_to_config(env: dict[str, str]) -> ProjectConfig:
     """

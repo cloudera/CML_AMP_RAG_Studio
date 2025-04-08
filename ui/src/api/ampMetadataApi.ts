@@ -55,11 +55,11 @@ export const useGetAmpUpdateStatus = () => {
 };
 
 const getAmpUpdateStatus = async (): Promise<boolean> => {
-  return getRequest(`${llmServicePath}/amp-update`);
+  return getRequest(`${llmServicePath}/amp`);
 };
 
 const getAmpIsComposable = async (): Promise<boolean> => {
-  return getRequest(`${llmServicePath}/amp-update/is-composable`);
+  return getRequest(`${llmServicePath}/amp/is-composable`);
 };
 
 export const getAmpIsComposableQueryOptions = queryOptions({
@@ -92,7 +92,7 @@ export const useGetAmpUpdateJobStatus = (enabled: boolean) => {
 };
 
 const getAmpUpdateJobStatus = async (): Promise<JobStatus> => {
-  return getRequestJobStatus(`${llmServicePath}/amp-update/job-status`);
+  return getRequestJobStatus(`${llmServicePath}/amp/job-status`);
 };
 
 const getRequestJobStatus = async (url: string): Promise<JobStatus> => {
@@ -121,5 +121,5 @@ export const useUpdateAmpMutation = ({
 };
 
 const updateAmpMutation = async (): Promise<string> => {
-  return await postRequest(`${llmServicePath}/amp-update`, {});
+  return await postRequest(`${llmServicePath}/amp`, {});
 };
