@@ -35,12 +35,17 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
+import { Form } from "antd";
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import SettingsPage from "pages/Settings/SettingsPage.tsx";
+const SettingsPage = () => {
+  const [form] = Form.useForm<>();
 
-export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
-  {
-    component: () => <SettingsPage />,
-  },
-);
+  return (
+    <div>
+      <h1>Settings Page</h1>
+      <p>This is the settings page.</p>
+    </div>
+  );
+};
+
+export default SettingsPage;

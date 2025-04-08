@@ -146,6 +146,8 @@ const TopNav: React.FC = () => {
       return ["analytics"];
     } else if (matchRoute({ to: "/projects", fuzzy: true })) {
       return ["projects"];
+    } else if (matchRoute({ to: "/settings", fuzzy: true })) {
+      return ["settings"];
     } else {
       return ["chat"];
     }

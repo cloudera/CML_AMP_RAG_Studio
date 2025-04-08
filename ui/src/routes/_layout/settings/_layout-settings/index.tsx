@@ -36,10 +36,6 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from '@tanstack/react-router'
-import { getDataSourcesQueryOptions } from 'src/api/dataSourceApi.ts'
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/_layout/settings/_layout-settings/')({
-  loader: async ({ context }) =>
-    await context.queryClient.ensureQueryData(getDataSourcesQueryOptions),
-})
+export const Route = createFileRoute("/_layout/settings/_layout-settings/")({});
