@@ -35,16 +35,91 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex, Form, Input, Radio, Switch } from "antd";
+import { Flex, Form, Input, Radio, Switch, Tabs, TabsProps } from "antd";
 import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 import { useState } from "react";
+import { useGetModelSource } from "src/api/modelsApi.ts";
 
 const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
-  const [modelProvider, setModelProvider] = useState("CAII");
-  console.log(projectConfig);
-  return (
+  const { data: currentModelSource } = useGetModelSource();
+  const [selectedFileStorage, setSelectedFileStorage] = useState(
+    projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
+  );
+  const [modelProvider, setModelProvider] = useState(
+    currentModelSource as string,
+  );
+
+  const FileStorageContent = () => (
+    <Flex>
+      <Form form={form}>
+        <Radio.Group
+          onChange={(e) => {
+            if (e.target.value) {
+              setSelectedFileStorage(e.target.value as string);
+            }
+          }}
+          value={selectedFileStorage}
+          options={[
+            { value: "AWS", label: "AWS S3" },
+            { value: "Local", label: "CML Filesystem" },
+          ]}
+        />
+        {selectedFileStorage === "AWS" && (
+          <>
+            <Form.Item
+              label={"AWS Region"}
+              initialValue={projectConfig?.aws_config.region}
+              name="region"
+              required
+              tooltip="AWS Region"
+            >
+              <Input placeholder="AWS Region" />
+            </Form.Item>
+            <Form.Item
+              label={"Document Bucket Name"}
+              initialValue={projectConfig?.aws_config.document_bucket_name}
+              name="document_bucket_name"
+              required
+              tooltip="Document Bucket Name"
+            >
+              <Input placeholder="Document Bucket Name" />
+            </Form.Item>
+            <Form.Item
+              label={"Bucket Prefix"}
+              initialValue={projectConfig?.aws_config.bucket_prefix}
+              name="bucket_prefix"
+              required
+              tooltip="Bucket Prefix"
+            >
+              <Input placeholder="Bucket Prefix" />
+            </Form.Item>
+            <Form.Item
+              label={"Access Key ID"}
+              initialValue={projectConfig?.aws_config.access_key_id}
+              name="access_key_id"
+              required
+              tooltip="Access Key ID"
+            >
+              <Input placeholder="Access Key ID" />
+            </Form.Item>
+            <Form.Item
+              label={"Secret Access Key"}
+              initialValue={projectConfig?.aws_config.secret_access_key}
+              name="secret_access_key"
+              required
+              tooltip="Secret Access Key"
+            >
+              <Input placeholder="Secret Access Key" />
+            </Form.Item>
+          </>
+        )}
+      </Form>
+    </Flex>
+  );
+
+  const ModelProviderContent = () => (
     <Flex>
       <Form form={form}>
         <Form.Item
@@ -75,7 +150,7 @@ const SettingsPage = () => {
           <>
             <Form.Item
               label={"CAII Domain"}
-              initialValue={projectConfig?.caii_config?.caii_domain}
+              initialValue={projectConfig?.caii_config.caii_domain}
               name={["caii_config", "caii_domain"]}
               required
               tooltip="Domain for CAII"
@@ -103,24 +178,6 @@ const SettingsPage = () => {
               tooltip="AWS Region"
             >
               <Input placeholder="AWS Region" />
-            </Form.Item>
-            <Form.Item
-              label={"Document Bucket Name"}
-              initialValue={projectConfig?.aws_config.document_bucket_name}
-              name="document_bucket_name"
-              required
-              tooltip="Document Bucket Name"
-            >
-              <Input placeholder="Document Bucket Name" />
-            </Form.Item>
-            <Form.Item
-              label={"Bucket Prefix"}
-              initialValue={projectConfig?.aws_config.bucket_prefix}
-              name="bucket_prefix"
-              required
-              tooltip="Bucket Prefix"
-            >
-              <Input placeholder="Bucket Prefix" />
             </Form.Item>
             <Form.Item
               label={"Access Key ID"}
@@ -173,6 +230,21 @@ const SettingsPage = () => {
       </Form>
     </Flex>
   );
+
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "File Storage",
+      children: <FileStorageContent />,
+    },
+    {
+      key: "2",
+      label: "Model Provider",
+      children: <ModelProviderContent />,
+    },
+  ];
+
+  return <Tabs items={items} defaultActiveKey="1" />;
 };
 
 export default SettingsPage;

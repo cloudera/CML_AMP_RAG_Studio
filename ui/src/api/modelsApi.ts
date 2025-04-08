@@ -115,6 +115,15 @@ const getRerankingModels = async (): Promise<Model[]> => {
 
 export type ModelSource = "CAII" | "Bedrock" | "Azure";
 
+export const useGetModelSource = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getModelSource],
+    queryFn: async () => {
+      return await getModelSource();
+    },
+  });
+};
+
 export const getModelSourceQueryOptions = queryOptions({
   queryKey: [QueryKeys.getModelSource],
   queryFn: async () => {

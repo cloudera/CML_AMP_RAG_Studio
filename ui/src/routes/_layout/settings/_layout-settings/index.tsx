@@ -38,8 +38,12 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
+import { getModelSourceQueryOptions } from "src/api/modelsApi.ts";
 
 export const Route = createFileRoute("/_layout/settings/_layout-settings/")({
   loader: async ({ context }) =>
-    await context.queryClient.ensureQueryData(getAmpConfigQueryOptions),
+    await Promise.all([
+      context.queryClient.ensureQueryData(getAmpConfigQueryOptions),
+      context.queryClient.ensureQueryData(getModelSourceQueryOptions),
+    ]),
 });
