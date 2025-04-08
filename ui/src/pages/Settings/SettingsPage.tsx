@@ -43,13 +43,13 @@ const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
   const [modelProvider, setModelProvider] = useState("CAII");
-
+  console.log(projectConfig);
   return (
     <Flex>
       <Form form={form}>
         <Form.Item
           label="Enhanced PDF Processing"
-          name={"use_enhanced_pdf_processing"}
+          name={["use_enhanced_pdf_processing"]}
           initialValue={projectConfig?.use_enhanced_pdf_processing}
           valuePropName="checked"
           tooltip={

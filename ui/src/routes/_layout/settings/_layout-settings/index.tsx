@@ -37,5 +37,9 @@
  ******************************************************************************/
 
 import { createFileRoute } from "@tanstack/react-router";
+import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
-export const Route = createFileRoute("/_layout/settings/_layout-settings/")({});
+export const Route = createFileRoute("/_layout/settings/_layout-settings/")({
+  loader: async ({ context }) =>
+    await context.queryClient.ensureQueryData(getAmpConfigQueryOptions),
+});

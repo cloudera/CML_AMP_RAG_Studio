@@ -157,6 +157,11 @@ export interface ProjectConfig {
   caii_config: CaiiConfig;
 }
 
-const getAmpConfig = async (): Promise<ProjectConfig> => {
+export const getAmpConfig = async (): Promise<ProjectConfig> => {
   return await getRequest(`${llmServicePath}/amp/config`);
 };
+
+export const getAmpConfigQueryOptions = queryOptions({
+  queryKey: [QueryKeys.getAmpConfig],
+  queryFn: getAmpConfig,
+});
