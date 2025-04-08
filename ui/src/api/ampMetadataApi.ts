@@ -123,3 +123,14 @@ export const useUpdateAmpMutation = ({
 const updateAmpMutation = async (): Promise<string> => {
   return await postRequest(`${llmServicePath}/amp`, {});
 };
+
+export const useGetAmpConfig = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getAmpConfig],
+    queryFn: getAmpConfig,
+  });
+};
+
+const getAmpConfig = async (): Promise<string> => {
+  return await getRequest(`${llmServicePath}/amp/config`);
+};

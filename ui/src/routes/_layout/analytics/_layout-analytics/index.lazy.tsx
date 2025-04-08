@@ -36,10 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from '@tanstack/react-router'
-import { getDataSourcesQueryOptions } from 'src/api/dataSourceApi.ts'
+import { createLazyFileRoute } from '@tanstack/react-router'
+import AnalyticsPage from 'pages/Analytics/AnalyticsPage.tsx'
 
-export const Route = createFileRoute('/_layout/analytics/_layout-models/')({
-  loader: async ({ context }) =>
-    await context.queryClient.ensureQueryData(getDataSourcesQueryOptions),
+export const Route = createLazyFileRoute(
+  '/_layout/analytics/_layout-analytics/',
+)({
+  component: () => <AnalyticsPage />,
 })

@@ -42,6 +42,7 @@ import {
   DatabaseOutlined,
   LineChartOutlined,
   RobotFilled,
+  SettingOutlined,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -98,6 +99,10 @@ const Sidebar: React.FC = () => {
 
   const navToAnalytics = () => {
     navigate({ to: "/analytics" }).catch(() => null);
+  };
+
+  const navToSettings = () => {
+    navigate({ to: "/settings" }).catch(() => null);
   };
 
   const navToModels = () => {
@@ -182,7 +187,14 @@ const Sidebar: React.FC = () => {
     <LineChartOutlined />,
   );
 
-  const items = [...baseItems, models, analyticsItem];
+  const settingsItem = getItem(
+    <div data-testid="settings-nav">Settings</div>,
+    "settings",
+    navToSettings,
+    <SettingOutlined />,
+  );
+
+  const items = [...baseItems, models, analyticsItem, settingsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {

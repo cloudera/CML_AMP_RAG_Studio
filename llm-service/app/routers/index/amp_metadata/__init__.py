@@ -154,7 +154,7 @@ DEFAULT_CONFIGURATION = ProjectConfig(
 )
 
 
-@router.get("/configuration", summary="Returns application configuration.")
+@router.get("/config", summary="Returns application configuration.")
 @exceptions.propagates
 def get_configuration(
     remote_user: Annotated[str | None, Header()] = None,

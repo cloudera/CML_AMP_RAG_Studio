@@ -36,9 +36,31 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import AnalyticsPage from "pages/Analytics/AnalyticsPage.tsx";
+import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { Flex, Layout, Typography } from 'antd'
+import { cdlGray300 } from 'src/cuix/variables.ts'
 
-export const Route = createLazyFileRoute("/_layout/analytics/_layout-models/")({
-  component: () => <AnalyticsPage />,
-});
+const { Content, Header } = Layout
+
+export const Route = createFileRoute('/_layout/analytics/_layout-analytics')({
+  component: () => (
+    <Layout
+      style={{
+        minHeight: '100%',
+        width: '100%',
+        margin: 0,
+      }}
+    >
+      <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
+        <Flex align="center" style={{ height: '100%' }}>
+          <Typography.Title level={4} style={{ margin: 0 }}>
+            Analytics
+          </Typography.Title>
+        </Flex>
+      </Header>
+      <Content style={{ margin: '0', overflowY: 'auto' }}>
+        <Outlet />
+      </Content>
+    </Layout>
+  ),
+})

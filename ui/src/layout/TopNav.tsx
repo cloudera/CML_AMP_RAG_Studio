@@ -42,6 +42,7 @@ import {
   DatabaseOutlined,
   LineChartOutlined,
   RobotFilled,
+  SettingOutlined,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -125,7 +126,14 @@ const TopNav: React.FC = () => {
     <LineChartOutlined />,
   );
 
-  const items = [...baseItems, models, analyticsItem];
+  const settingsItem = getItem(
+    <span data-testid="settings-nav">Settings</span>,
+    "settings",
+    navigateTo("/settings"),
+    <SettingOutlined />,
+  );
+
+  const items = [...baseItems, models, analyticsItem, settingsItem];
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {

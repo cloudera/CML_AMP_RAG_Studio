@@ -42,7 +42,7 @@ import { cdlGray300 } from "src/cuix/variables.ts";
 
 const { Content, Header } = Layout;
 
-export const Route = createFileRoute("/_layout/analytics/_layout-models")({
+export const Route = createFileRoute("/_layout/settings/_layout-settings")({
   component: () => (
     <Layout
       style={{
@@ -54,7 +54,7 @@ export const Route = createFileRoute("/_layout/analytics/_layout-models")({
       <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
         <Flex align="center" style={{ height: "100%" }}>
           <Typography.Title level={4} style={{ margin: 0 }}>
-            Analytics
+            Settings
           </Typography.Title>
         </Flex>
       </Header>
