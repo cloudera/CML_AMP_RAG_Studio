@@ -91,6 +91,7 @@ const Feedback = ({
       setShowFeedbackOptions(true);
       setShowCustomFeedbackInput(false);
     }
+    setFeedbackSubmitted(false);
   }, [isGood, setShowFeedbackOptions, setShowCustomFeedbackInput]);
 
   const handleSubmitFeedbackInput = (value: string) => {
@@ -155,7 +156,11 @@ const Feedback = ({
       ) : null}
       {showCustomFeedbackInput ? (
         <Input
-          placeholder="Please provide feedback"
+          placeholder={
+            isGood
+              ? "What did you like about the response?"
+              : "What can we do better?"
+          }
           style={{ width: 400 }}
           onPressEnter={(e) => {
             handleSubmitCustomFeedbackInput(e.currentTarget.value);
