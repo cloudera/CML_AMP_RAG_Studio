@@ -100,16 +100,45 @@ def amp_is_composed() -> bool:
     return os.getenv("IS_COMPOSABLE", "") != "" or False
 
 
+project_env_keys = [
+    "AWS_DEFAULT_REGION",
+    "S3_RAG_DOCUMENT_BUCKET",
+    "S3_RAG_BUCKET_PREFIX",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "USE_ENHANCED_PDF_PROCESSING",
+    "CAII_DOMAIN",
+    "CDP_TOKEN_OVERRIDE",
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_ENDPOINT",
+    "OPENAI_API_VERSION",
+]
+
+
 @router.get("/cml-env-vars", summary="Returns the environment variables.")
 @exceptions.propagates
 def get_cml_env_vars(
     remote_user: Annotated[str | None, Header()] = None,
 ) -> dict[str, str]:
+    env = get_project_environment(remote_user)
+    return {key: value for key, value in env.items() if key in project_env_keys}
+
+
+def get_project_environment(remote_user):
     try:
         import cmlapi
-
+        client = cmlapi.default_client()
+        project_id = os.environ["CDSW_PROJECT_ID"]
+        project = client.get_project(project_id=project_id)
+        env: dict[str, str] = json.loads(project.environment)
+        project_owner = env["PROJECT_OWNER"]
+        if remote_user != project_owner:
+            raise fastapi.HTTPException(
+                status_code=403,
+                detail="You do not have permission to access these environment variables.",
+            )
     except ImportError:
-        return {
+        env = {
             "AWS_DEFAULT_REGION": "us-west-2",
             "S3_RAG_DOCUMENT_BUCKET": "",
             "S3_RAG_BUCKET_PREFIX": "rag-studio",
@@ -121,16 +150,6 @@ def get_cml_env_vars(
             "AZURE_OPENAI_API_KEY": "",
             "AZURE_OPENAI_ENDPOINT": "",
             "OPENAI_API_VERSION": "",
-            "PROJECT_OWNER": "",
+            "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
         }
-
-    client = cmlapi.default_client()
-    project_id = os.environ["CDSW_PROJECT_ID"]
-    project = client.get_project(project_id=project_id)
-    env = json.loads(project.environment)
-    project_owner = env["PROJECT_OWNER"]
-    if remote_user != project_owner:
-        raise fastapi.HTTPException(
-            status_code=403,
-            detail="You do not have permission to access these environment variables.",
-        )
+    return env
