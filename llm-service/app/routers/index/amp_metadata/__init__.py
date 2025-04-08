@@ -38,7 +38,7 @@
 import json
 import subprocess
 import os
-from typing import Annotated
+from typing import Annotated, Literal
 
 import fastapi
 from fastapi import APIRouter, FastAPI
@@ -116,15 +116,50 @@ project_env_vars = {
     "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
 }
 
-class AwsEnvVars(BaseModel):
+
+foo = {
+    "s3_bucket": { "value": "foo", "hidden": False, "type": "string" }
+}
+
+
+class BaseConfigStructure(BaseModel):
+    value: str
+    hidden: bool
+    type: Literal["string" , "int" , "bool"]
+
+class AwsConfig(BaseModel):
     """
-    Model to represent the AWS environment variables.
+    Model to represent the AWS configuration.
     """
-    AWS_DEFAULT_REGION: str
-    S3_RAG_DOCUMENT_BUCKET: str
-    S3_RAG_BUCKET_PREFIX: str
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+    region : BaseConfigStructure
+    document_bucket_name: BaseConfigStructure
+    bucket_prefix: BaseConfigStructure
+    access_key_id: BaseConfigStructure
+    secret_access_key: BaseConfigStructure
+
+class AzureConfig(BaseModel):
+    """
+    Model to represent the Azure configuration.
+    """
+    openai_key: BaseConfigStructure
+    openai_endpoint: BaseConfigStructure
+    openai_api_version: BaseConfigStructure
+
+class CaiiConfig(BaseModel):
+    """
+    Model to represent the CAII configuration.
+    """
+    caii_domain: BaseConfigStructure
+    cdp_token_override: BaseConfigStructure
+
+class ProjectConfig(BaseModel):
+    """
+    Model to represent the project configuration.
+    """
+    use_enhanced_pdf_processing: BaseConfigStructure
+    aws_config: AwsConfig
+    azure_config: AzureConfig
+    caii_config: CaiiConfig
 
 class ProjectEnvVars(BaseModel):
     """
