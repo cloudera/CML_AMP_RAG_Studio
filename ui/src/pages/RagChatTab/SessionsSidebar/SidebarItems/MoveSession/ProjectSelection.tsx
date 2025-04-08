@@ -39,7 +39,7 @@
 import { Session } from "src/api/sessionApi.ts";
 import { Project } from "src/api/projectsApi.ts";
 import { Card, Flex, Select, Skeleton, Tag, Typography } from "antd";
-import { cdlGreen600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGreen600 } from "src/cuix/variables.ts";
 import { useContext } from "react";
 
 import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
@@ -65,6 +65,17 @@ const ProjectSelection = () => {
     dataSourcesToTransfer,
   } = useContext(MoveSessionContext);
   const projectOptions = getProjectOptions(session, projects);
+  const dataSourcesToDisplay = !dataSourcesForProject
+    ? []
+    : dataSourcesForProject.map((ds) => {
+        return { ...ds, color: cdlBlue600 };
+      });
+  dataSourcesToTransfer.forEach((kb) => {
+    const dataSource = dataSources?.find((ds) => ds.id === kb);
+    if (dataSource) {
+      dataSourcesToDisplay.push({ ...dataSource, color: cdlGreen600 });
+    }
+  });
 
   return (
     <Card
@@ -89,23 +100,17 @@ const ProjectSelection = () => {
       )}
       {selectedProject && !dataSourcesForProjectIsLoading ? (
         <Flex>
-          {dataSourcesForProject?.map((ds) => {
+          {dataSourcesToDisplay.map((ds) => {
             return (
-              <Tag key={ds.id} color="blue">
+              <Tag key={ds.id} color={ds.color}>
                 {ds.name}
               </Tag>
             );
           })}
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-            return (
-              <Tag key={kb} color={cdlGreen600}>
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
         </Flex>
-      ) : null}
+      ) : (
+        <Typography.Paragraph> No knowledge bases present</Typography.Paragraph>
+      )}
     </Card>
   );
 };
