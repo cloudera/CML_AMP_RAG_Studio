@@ -45,18 +45,21 @@ import {
 } from "@ant-design/icons";
 import { useRatingMutation } from "src/api/chatApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { Dispatch, SetStateAction, useContext, useState } from "react";
+import { Dispatch, SetStateAction, useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const Rating = ({
   responseId,
   setShowFeedbackInput,
+  setIsGood,
+  isGood,
 }: {
   responseId: string;
   setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
+  setIsGood: Dispatch<SetStateAction<boolean | null>>;
+  isGood: boolean | null;
 }) => {
   const session = useContext(RagChatContext).activeSession;
-  const [isGood, setIsGood] = useState<boolean | null>(null);
 
   const { mutate: ratingMutate } = useRatingMutation({
     onSuccess: (data) => {

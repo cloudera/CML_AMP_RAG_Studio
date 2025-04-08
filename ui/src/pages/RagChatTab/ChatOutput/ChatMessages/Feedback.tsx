@@ -53,13 +53,16 @@ const Feedback = ({
   responseId,
   showFeedbackInput,
   setShowFeedbackInput,
+  isGood,
 }: {
   responseId: string;
   showFeedbackInput: boolean;
   setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
+  isGood: boolean | null;
 }) => {
   const session = useContext(RagChatContext).activeSession;
-  const [showCustomFeedbackInput, setShowCustomFeedbackInput] = useState(false);
+  const [showCustomFeedbackInput, setShowCustomFeedbackInput] =
+    useState(isGood);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const { mutate: feedbackMutate } = useFeedbackMutation({
