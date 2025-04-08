@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import json
 import subprocess
 import os
 from typing import Annotated
@@ -109,11 +109,28 @@ def get_cml_env_vars(
         import cmlapi
 
     except ImportError:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail="CML API is not available. Please check your environment.",
-        )
+        return {
+            "AWS_DEFAULT_REGION": "us-west-2",
+            "S3_RAG_DOCUMENT_BUCKET": "",
+            "S3_RAG_BUCKET_PREFIX": "rag-studio",
+            "AWS_ACCESS_KEY_ID": "",
+            "AWS_SECRET_ACCESS_KEY": "",
+            "USE_ENHANCED_PDF_PROCESSING": "false",
+            "CAII_DOMAIN": "",
+            "CDP_TOKEN_OVERRIDE": "",
+            "AZURE_OPENAI_API_KEY": "",
+            "AZURE_OPENAI_ENDPOINT": "",
+            "OPENAI_API_VERSION": "",
+            "PROJECT_OWNER": "",
+        }
 
     client = cmlapi.default_client()
     project_id = os.environ["CDSW_PROJECT_ID"]
-    user = os.environ["CDSW_USER"]
+    project = client.get_project(project_id=project_id)
+    env = json.loads(project.environment)
+    project_owner = env["PROJECT_OWNER"]
+    if remote_user != project_owner:
+        raise fastapi.HTTPException(
+            status_code=403,
+            detail="You do not have permission to access these environment variables.",
+        )
