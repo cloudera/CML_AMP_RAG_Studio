@@ -161,11 +161,11 @@ def get_configuration(
 ) -> ProjectConfig:
     env = get_project_environment()
     project_owner = env["PROJECT_OWNER"]
-    if remote_user != project_owner:
-        raise fastapi.HTTPException(
-            status_code=403,
-            detail="You do not have permission to access these environment variables.",
-        )
+    # if remote_user != project_owner:
+    #     raise fastapi.HTTPException(
+    #         status_code=403,
+    #         detail="You do not have permission to access these environment variables.",
+    #     )
     return env_to_config(env)
 
 

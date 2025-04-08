@@ -35,16 +35,118 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Form } from "antd";
+import { Flex, Form, Input, Radio, RadioChangeEvent, Switch } from "antd";
+import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { useState } from "react";
+import { ModelSource } from "src/api/modelsApi.ts";
 
 const SettingsPage = () => {
-  const [form] = Form.useForm<>();
+  const [form] = Form.useForm<ProjectConfig>();
+  const { data: projectConfig } = useGetAmpConfig();
+  const [modelProvider, setModelProvider] = useState<ModelSource>("CAII");
 
+  console.log(projectConfig);
+  console.log(form);
   return (
-    <div>
-      <h1>Settings Page</h1>
-      <p>This is the settings page.</p>
-    </div>
+    <Flex>
+      <Form>
+        <Form.Item
+          label="Enhanced PDF Processing"
+          name="use_enhanced_pdf_processing"
+          initialValue={projectConfig?.use_enhanced_pdf_processing}
+          valuePropName="checked"
+          tooltip={
+            "Enable enhanced PDF processing for enhanced PDF processing."
+          }
+        >
+          <Switch checkedChildren="ENHANCE" />
+        </Form.Item>
+        <Radio.Group
+          onChange={(e) => {
+            if (e.target.value instanceof ModelSource) {
+              setModelProvider(e.target.value);
+            }
+          }}
+          value={modelProvider}
+          options={[
+            { value: "CAII", label: "CAII" },
+            { value: "Bedrock", label: "AWS Bedrock" },
+            { value: "Azure", label: "Azure OpenAI" },
+          ]}
+        />
+        {modelProvider === "CAII" && (
+          <>
+            <Form.Item
+              label={"CAII Domain"}
+              initialValue={projectConfig?.caii_config.caii_domain}
+              name="caii_domain"
+              required
+              tooltip="Domain for CAII"
+            >
+              <Input placeholder="CAII Domain" />
+            </Form.Item>
+            <Form.Item
+              label={"CDP Token Override"}
+              initialValue={projectConfig?.caii_config.cdp_token_override}
+              name="cdp_token_override"
+              required
+              tooltip="Token override for CDP"
+            >
+              <Input placeholder="CDP Token Override" />
+            </Form.Item>
+          </>
+        )}
+        {modelProvider === "Bedrock" && (
+          <>
+            <Form.Item
+              label={"AWS Region"}
+              initialValue={projectConfig?.aws_config.region}
+              name="region"
+              required
+              tooltip="AWS Region"
+            >
+              <Input placeholder="AWS Region" />
+            </Form.Item>
+            <Form.Item
+              label={"Document Bucket Name"}
+              initialValue={projectConfig?.aws_config.document_bucket_name}
+              name="document_bucket_name"
+              required
+              tooltip="Document Bucket Name"
+            >
+              <Input placeholder="Document Bucket Name" />
+            </Form.Item>
+            <Form.Item
+              label={"Bucket Prefix"}
+              initialValue={projectConfig?.aws_config.bucket_prefix}
+              name="bucket_prefix"
+              required
+              tooltip="Bucket Prefix"
+            >
+              <Input placeholder="Bucket Prefix" />
+            </Form.Item>
+            <Form.Item
+              label={"Access Key ID"}
+              initialValue={projectConfig?.aws_config.access_key_id}
+              name="access_key_id"
+              required
+              tooltip="Access Key ID"
+            >
+              <Input placeholder="Access Key ID" />
+            </Form.Item>
+            <Form.Item
+              label={"Secret Access Key"}
+              initialValue={projectConfig?.aws_config.secret_access_key}
+              name="secret_access_key"
+              required
+              tooltip="Secret Access Key"
+            >
+              <Input placeholder="Secret Access Key" />
+            </Form.Item>
+          </>
+        )}
+      </Form>
+    </Flex>
   );
 };
 

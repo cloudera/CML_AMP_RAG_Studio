@@ -131,6 +131,32 @@ export const useGetAmpConfig = () => {
   });
 };
 
-const getAmpConfig = async (): Promise<string> => {
+export interface AwsConfig {
+  region?: string;
+  document_bucket_name?: string;
+  bucket_prefix?: string;
+  access_key_id?: string;
+  secret_access_key?: string;
+}
+
+export interface AzureConfig {
+  openai_key?: string;
+  openai_endpoint?: string;
+  openai_api_version?: string;
+}
+
+export interface CaiiConfig {
+  caii_domain?: string;
+  cdp_token_override?: string;
+}
+
+export interface ProjectConfig {
+  use_enhanced_pdf_processing: boolean;
+  aws_config: AwsConfig;
+  azure_config: AzureConfig;
+  caii_config: CaiiConfig;
+}
+
+const getAmpConfig = async (): Promise<ProjectConfig> => {
   return await getRequest(`${llmServicePath}/amp/config`);
 };
