@@ -38,7 +38,7 @@
 import json
 import subprocess
 import os
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional
 
 import fastapi
 from fastapi import APIRouter, FastAPI
@@ -101,6 +101,42 @@ def amp_is_composed() -> bool:
     return os.getenv("IS_COMPOSABLE", "") != "" or False
 
 
+class AwsConfig(BaseModel):
+    """
+    Model to represent the AWS configuration.
+    """
+    region: Optional[str] = None
+    document_bucket_name: Optional[str] = None
+    bucket_prefix: Optional[str] = None
+    access_key_id: Optional[str] = None
+    secret_access_key: Optional[str] = None
+
+class AzureConfig(BaseModel):
+    """
+    Model to represent the Azure configuration.
+    """
+    openai_key: Optional[str] = None
+    openai_endpoint: Optional[str] = None
+    openai_api_version: Optional[str] = None
+
+class CaiiConfig(BaseModel):
+    """
+    Model to represent the CAII configuration.
+    """
+    caii_domain: Optional[str] = None
+    cdp_token_override: Optional[str] = None
+
+class ProjectConfig(BaseModel):
+    """
+    Model to represent the project configuration.
+    """
+    use_enhanced_pdf_processing: bool
+    aws_config: AwsConfig
+    azure_config: AzureConfig
+    caii_config: CaiiConfig
+
+
+
 project_env_vars = {
     "AWS_DEFAULT_REGION": "us-west-2",
     "S3_RAG_DOCUMENT_BUCKET": "",
@@ -116,73 +152,22 @@ project_env_vars = {
     "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
 }
 
-
-foo = {
-    "s3_bucket": { "value": "foo", "hidden": False, "type": "string" }
-}
-
-
-class BaseConfigStructure(BaseModel):
-    value: str
-    hidden: bool
-    type: Literal["string" , "int" , "bool"]
-
-class AwsConfig(BaseModel):
-    """
-    Model to represent the AWS configuration.
-    """
-    region : BaseConfigStructure
-    document_bucket_name: BaseConfigStructure
-    bucket_prefix: BaseConfigStructure
-    access_key_id: BaseConfigStructure
-    secret_access_key: BaseConfigStructure
-
-class AzureConfig(BaseModel):
-    """
-    Model to represent the Azure configuration.
-    """
-    openai_key: BaseConfigStructure
-    openai_endpoint: BaseConfigStructure
-    openai_api_version: BaseConfigStructure
-
-class CaiiConfig(BaseModel):
-    """
-    Model to represent the CAII configuration.
-    """
-    caii_domain: BaseConfigStructure
-    cdp_token_override: BaseConfigStructure
-
-class ProjectConfig(BaseModel):
-    """
-    Model to represent the project configuration.
-    """
-    use_enhanced_pdf_processing: BaseConfigStructure
-    aws_config: AwsConfig
-    azure_config: AzureConfig
-    caii_config: CaiiConfig
-
-class ProjectEnvVars(BaseModel):
-    """
-    Model to represent the environment variables for the project.
-    """
-    AWS_DEFAULT_REGION: str
-    S3_RAG_DOCUMENT_BUCKET: str
-    S3_RAG_BUCKET_PREFIX: str
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
-    USE_ENHANCED_PDF_PROCESSING: str
-    CAII_DOMAIN: str
-    CDP_TOKEN_OVERRIDE: str
-    AZURE_OPENAI_API_KEY: str
-    AZURE_OPENAI_ENDPOINT: str
-    OPENAI_API_VERSION: str
+DEFAULT_CONFIGURATION = ProjectConfig(
+    use_enhanced_pdf_processing=False,
+    aws_config=AwsConfig(
+        region="us-west-2",
+        bucket_prefix="rag-studio",
+    ),
+    azure_config=AzureConfig(),
+    caii_config=CaiiConfig(),
+)
 
 
-@router.get("/cml-env-vars", summary="Returns the environment variables.")
+@router.get("/configuration", summary="Returns application configuration.")
 @exceptions.propagates
-def get_cml_env_vars(
+def get_configuration(
     remote_user: Annotated[str | None, Header()] = None,
-) -> dict[str, str]:
+) -> ProjectConfig:
     env = get_project_environment()
     project_owner = env["PROJECT_OWNER"]
     if remote_user != project_owner:
@@ -190,11 +175,12 @@ def get_cml_env_vars(
             status_code=403,
             detail="You do not have permission to access these environment variables.",
         )
-    return {
-        key: value
-        for key, value in env.items()
-        if key in project_env_vars.keys() and key not in ["PROJECT_OWNER"]
-    }
+    return DEFAULT_CONFIGURATION
+    # {
+    #     key: value
+    #     for key, value in env.items()
+    #     if key in project_env_vars.keys() and key not in ["PROJECT_OWNER"]
+    # }
 
 
 def get_project_environment() -> dict[str, str]:
@@ -207,3 +193,30 @@ def get_project_environment() -> dict[str, str]:
         return json.loads(project.environment)
     except ImportError:
         return project_env_vars
+
+def env_to_config(env: dict[str, str]) -> ProjectConfig:
+    """
+    Converts environment variables to a ProjectConfig object.
+    """
+    aws_config = AwsConfig(
+        region=env.get("AWS_DEFAULT_REGION"),
+        document_bucket_name=env.get("S3_RAG_DOCUMENT_BUCKET"),
+        bucket_prefix=env.get("S3_RAG_BUCKET_PREFIX"),
+        access_key_id=env.get("AWS_ACCESS_KEY_ID"),
+        secret_access_key=env.get("AWS_SECRET_ACCESS_KEY"),
+    )
+    azure_config = AzureConfig(
+        openai_key=env.get("AZURE_OPENAI_API_KEY"),
+        openai_endpoint=env.get("AZURE_OPENAI_ENDPOINT"),
+        openai_api_version=env.get("OPENAI_API_VERSION"),
+    )
+    caii_config = CaiiConfig(
+        caii_domain=env.get("CAII_DOMAIN"),
+        cdp_token_override=env.get("CDP_TOKEN_OVERRIDE"),
+    )
+    return ProjectConfig(
+        use_enhanced_pdf_processing=env.get("USE_ENHANCED_PDF_PROCESSING", False),
+        aws_config=aws_config,
+        azure_config=azure_config,
+        caii_config=caii_config,
+    )
