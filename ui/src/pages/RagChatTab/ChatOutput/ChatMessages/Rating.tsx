@@ -50,12 +50,10 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const Rating = ({
   responseId,
-  setShowFeedbackInput,
   setIsGood,
   isGood,
 }: {
   responseId: string;
-  setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
   setIsGood: Dispatch<SetStateAction<boolean | null>>;
   isGood: boolean | null;
 }) => {
@@ -64,7 +62,6 @@ const Rating = ({
   const { mutate: ratingMutate } = useRatingMutation({
     onSuccess: (data) => {
       setIsGood(data.rating);
-      setShowFeedbackInput(true);
     },
     onError: () => {
       setIsGood(null);

@@ -41,23 +41,12 @@ import Feedback from "pages/RagChatTab/ChatOutput/ChatMessages/Feedback.tsx";
 import Rating from "pages/RagChatTab/ChatOutput/ChatMessages/Rating.tsx";
 
 const RatingFeedbackWrapper = ({ responseId }: { responseId: string }) => {
-  const [showFeedbackInput, setShowFeedbackInput] = useState(false);
   const [isGood, setIsGood] = useState<boolean | null>(null);
 
   return (
     <Flex align="center" style={{ height: 32 }}>
-      <Rating
-        responseId={responseId}
-        setShowFeedbackInput={setShowFeedbackInput}
-        setIsGood={setIsGood}
-        isGood={isGood}
-      />
-      <Feedback
-        responseId={responseId}
-        showFeedbackInput={showFeedbackInput}
-        setShowFeedbackInput={setShowFeedbackInput}
-        isGood={isGood}
-      />
+      <Rating responseId={responseId} setIsGood={setIsGood} isGood={isGood} />
+      <Feedback responseId={responseId} isGood={isGood} />
     </Flex>
   );
 };
