@@ -53,7 +53,7 @@ const SettingsPage = () => {
 
   const FileStorageContent = () => (
     <Flex>
-      <Form form={form}>
+      <Form form={form} style={{ width: "100%" }}>
         <Radio.Group
           onChange={(e) => {
             if (e.target.value) {
@@ -111,7 +111,7 @@ const SettingsPage = () => {
               required
               tooltip="Secret Access Key"
             >
-              <Input placeholder="Secret Access Key" />
+              <Input placeholder="Secret Access Key" type="password" />
             </Form.Item>
           </>
         )}
@@ -121,7 +121,7 @@ const SettingsPage = () => {
 
   const ModelProviderContent = () => (
     <Flex>
-      <Form form={form}>
+      <Form form={form} style={{ width: "100%" }}>
         <Form.Item
           label="Enhanced PDF Processing"
           name={["use_enhanced_pdf_processing"]}
@@ -164,7 +164,7 @@ const SettingsPage = () => {
               required
               tooltip="Token override for CDP"
             >
-              <Input placeholder="CDP Token Override" />
+              <Input placeholder="CDP Token Override" type="password" />
             </Form.Item>
           </>
         )}
@@ -195,7 +195,7 @@ const SettingsPage = () => {
               required
               tooltip="Secret Access Key"
             >
-              <Input placeholder="Secret Access Key" />
+              <Input placeholder="Secret Access Key" type="password" />
             </Form.Item>
           </>
         )}
@@ -215,7 +215,7 @@ const SettingsPage = () => {
               name="openai_key"
               required
             >
-              <Input placeholder="Azure OpenAI Key" />
+              <Input placeholder="Azure OpenAI Key" type="password" />
             </Form.Item>
             <Form.Item
               label={"API Version"}
@@ -244,7 +244,13 @@ const SettingsPage = () => {
     },
   ];
 
-  return <Tabs items={items} defaultActiveKey="1" />;
+  return (
+    <Tabs
+      items={items}
+      defaultActiveKey="1"
+      style={{ marginLeft: 150, width: 600 }}
+    />
+  );
 };
 
 export default SettingsPage;
