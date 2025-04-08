@@ -38,9 +38,14 @@
 
 import subprocess
 import os
+from typing import Annotated
 
-from fastapi import APIRouter
+import fastapi
+from fastapi import APIRouter, FastAPI
 from subprocess import CompletedProcess
+
+from fastapi.params import Header
+
 from .... import exceptions
 from ....services.amp_update import does_amp_need_updating
 
@@ -93,3 +98,22 @@ def get_amp_status() -> str:
 @exceptions.propagates
 def amp_is_composed() -> bool:
     return os.getenv("IS_COMPOSABLE", "") != "" or False
+
+
+@router.get("/cml-env-vars", summary="Returns the environment variables.")
+@exceptions.propagates
+def get_cml_env_vars(
+    remote_user: Annotated[str | None, Header()] = None,
+) -> dict[str, str]:
+    try:
+        import cmlapi
+
+    except ImportError:
+        raise fastapi.HTTPException(
+            status_code=500,
+            detail="CML API is not available. Please check your environment.",
+        )
+
+    client = cmlapi.default_client()
+    project_id = os.environ["CDSW_PROJECT_ID"]
+    user = os.environ["CDSW_USER"]
