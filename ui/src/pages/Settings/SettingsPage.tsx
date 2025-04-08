@@ -35,24 +35,21 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex, Form, Input, Radio, RadioChangeEvent, Switch } from "antd";
+import { Flex, Form, Input, Radio, Switch } from "antd";
 import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 import { useState } from "react";
-import { ModelSource } from "src/api/modelsApi.ts";
 
 const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
-  const [modelProvider, setModelProvider] = useState<ModelSource>("CAII");
+  const [modelProvider, setModelProvider] = useState("CAII");
 
-  console.log(projectConfig);
-  console.log(form);
   return (
     <Flex>
-      <Form>
+      <Form form={form}>
         <Form.Item
           label="Enhanced PDF Processing"
-          name="use_enhanced_pdf_processing"
+          name={"use_enhanced_pdf_processing"}
           initialValue={projectConfig?.use_enhanced_pdf_processing}
           valuePropName="checked"
           tooltip={
@@ -63,8 +60,8 @@ const SettingsPage = () => {
         </Form.Item>
         <Radio.Group
           onChange={(e) => {
-            if (e.target.value instanceof ModelSource) {
-              setModelProvider(e.target.value);
+            if (e.target.value) {
+              setModelProvider(e.target.value as string);
             }
           }}
           value={modelProvider}
@@ -78,8 +75,8 @@ const SettingsPage = () => {
           <>
             <Form.Item
               label={"CAII Domain"}
-              initialValue={projectConfig?.caii_config.caii_domain}
-              name="caii_domain"
+              initialValue={projectConfig?.caii_config?.caii_domain}
+              name={["caii_config", "caii_domain"]}
               required
               tooltip="Domain for CAII"
             >
@@ -142,6 +139,34 @@ const SettingsPage = () => {
               tooltip="Secret Access Key"
             >
               <Input placeholder="Secret Access Key" />
+            </Form.Item>
+          </>
+        )}
+        {modelProvider === "Azure" && (
+          <>
+            <Form.Item
+              label={"Azure OpenAI Endpoint"}
+              initialValue={projectConfig?.azure_config.openai_endpoint}
+              name="openai_endpoint"
+              required
+            >
+              <Input placeholder="Azure OpenAI Endpoint" />
+            </Form.Item>
+            <Form.Item
+              label={"Azure OpenAI Key"}
+              initialValue={projectConfig?.azure_config.openai_key}
+              name="openai_key"
+              required
+            >
+              <Input placeholder="Azure OpenAI Key" />
+            </Form.Item>
+            <Form.Item
+              label={"API Version"}
+              initialValue={projectConfig?.azure_config.openai_api_version}
+              name="openai_model"
+              required
+            >
+              <Input placeholder="API Version" />
             </Form.Item>
           </>
         )}
