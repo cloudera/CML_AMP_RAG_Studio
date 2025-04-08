@@ -39,10 +39,11 @@
 import { Session } from "src/api/sessionApi.ts";
 import { Project } from "src/api/projectsApi.ts";
 import { Card, Flex, Select, Skeleton, Tag, Typography } from "antd";
-import { cdlGreen600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGreen600 } from "src/cuix/variables.ts";
 import { useContext } from "react";
 
 import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 const getProjectOptions = (session: Session, projects?: Project[]) =>
   projects
@@ -52,6 +53,42 @@ const getProjectOptions = (session: Session, projects?: Project[]) =>
       label: project.name,
       value: project.id,
     }));
+
+const ProjectKnowledgeBases = ({
+  dataSourcesForProjectIsLoading,
+  selectedProject,
+  dataSourcesToDisplay,
+}: {
+  dataSourcesForProjectIsLoading: boolean;
+  selectedProject: number;
+  dataSourcesToDisplay: (DataSourceType & { color: string })[];
+}) => {
+  return (
+    <>
+      <Typography style={{ marginBottom: 20 }}>
+        Knowledge bases in project:
+      </Typography>
+      {dataSourcesForProjectIsLoading && (
+        <Skeleton active={true} paragraph={{ rows: 0 }} />
+      )}
+      {selectedProject && !dataSourcesForProjectIsLoading ? (
+        <Flex>
+          {dataSourcesToDisplay.map((ds) => {
+            return (
+              <Tag key={ds.id} color={ds.color}>
+                {ds.name}
+              </Tag>
+            );
+          })}
+        </Flex>
+      ) : (
+        <Typography.Paragraph italic>
+          No knowledge bases present
+        </Typography.Paragraph>
+      )}
+    </>
+  );
+};
 
 const ProjectSelection = () => {
   const {
@@ -65,6 +102,17 @@ const ProjectSelection = () => {
     dataSourcesToTransfer,
   } = useContext(MoveSessionContext);
   const projectOptions = getProjectOptions(session, projects);
+  const dataSourcesToDisplay = !dataSourcesForProject
+    ? []
+    : dataSourcesForProject.map((ds) => {
+        return { ...ds, color: cdlBlue600 };
+      });
+  dataSourcesToTransfer.forEach((kb) => {
+    const dataSource = dataSources?.find((ds) => ds.id === kb);
+    if (dataSource) {
+      dataSourcesToDisplay.push({ ...dataSource, color: cdlGreen600 });
+    }
+  });
 
   return (
     <Card
@@ -81,30 +129,12 @@ const ProjectSelection = () => {
         </>
       }
     >
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in project:
-      </Typography>
-      {dataSourcesForProjectIsLoading && (
-        <Skeleton active={true} paragraph={{ rows: 0 }} />
-      )}
-      {selectedProject && !dataSourcesForProjectIsLoading ? (
-        <Flex>
-          {dataSourcesForProject?.map((ds) => {
-            return (
-              <Tag key={ds.id} color="blue">
-                {ds.name}
-              </Tag>
-            );
-          })}
-          {dataSourcesToTransfer.map((kb) => {
-            const dataSource = dataSources?.find((ds) => ds.id === kb);
-            return (
-              <Tag key={kb} color={cdlGreen600}>
-                {dataSource?.name}
-              </Tag>
-            );
-          })}
-        </Flex>
+      {selectedProject ? (
+        <ProjectKnowledgeBases
+          dataSourcesForProjectIsLoading={dataSourcesForProjectIsLoading}
+          selectedProject={selectedProject}
+          dataSourcesToDisplay={dataSourcesToDisplay}
+        />
       ) : null}
     </Card>
   );

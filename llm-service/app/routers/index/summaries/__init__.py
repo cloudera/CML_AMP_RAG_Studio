@@ -12,7 +12,7 @@ router = APIRouter(prefix="/data_sources", tags=["Data Sources"])
 
 @router.get(
     "/summaries",
-    summary="Returns all summaries of all data sources, keyed by data source ID. That's all, folks 🥕.",
+    summary="Returns all summaries of all data sources, keyed by data source ID.",
     response_model=None,
 )
 @exceptions.propagates

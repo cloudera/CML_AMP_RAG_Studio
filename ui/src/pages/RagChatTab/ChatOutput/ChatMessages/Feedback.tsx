@@ -38,33 +38,29 @@
 import { Button, Flex, Input, Select, Typography } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useFeedbackMutation } from "src/api/chatApi.ts";
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { useContext, useEffect, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 import { cdlGreen700 } from "src/cuix/variables.ts";
 
 const Feedback = ({
   responseId,
-  showFeedbackInput,
-  setShowFeedbackInput,
+  isGood,
 }: {
   responseId: string;
-  showFeedbackInput: boolean;
-  setShowFeedbackInput: Dispatch<SetStateAction<boolean>>;
+  isGood: boolean | null;
 }) => {
   const session = useContext(RagChatContext).activeSession;
-  const [showCustomFeedbackInput, setShowCustomFeedbackInput] = useState(false);
+  const [showFeedbackOptions, setShowFeedbackOptions] = useState(
+    isGood !== null,
+  );
+  const [showCustomFeedbackInput, setShowCustomFeedbackInput] =
+    useState(isGood);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const { mutate: feedbackMutate } = useFeedbackMutation({
     onSuccess: () => {
-      setShowFeedbackInput(false);
+      setShowFeedbackOptions(false);
       setShowCustomFeedbackInput(false);
       setFeedbackSubmitted(true);
     },
@@ -84,12 +80,26 @@ const Feedback = ({
     }
   }, [feedbackSubmitted, setFeedbackSubmitted]);
 
+  useEffect(() => {
+    if (isGood === null) {
+      setShowFeedbackOptions(false);
+      setShowCustomFeedbackInput(false);
+    } else if (isGood) {
+      setShowFeedbackOptions(false);
+      setShowCustomFeedbackInput(true);
+    } else {
+      setShowFeedbackOptions(true);
+      setShowCustomFeedbackInput(false);
+    }
+    setFeedbackSubmitted(false);
+  }, [isGood, setShowFeedbackOptions, setShowCustomFeedbackInput]);
+
   const handleSubmitFeedbackInput = (value: string) => {
     if (!session) {
       return;
     }
     if (value === "Other") {
-      setShowFeedbackInput(false);
+      setShowFeedbackOptions(false);
       setShowCustomFeedbackInput(true);
     } else {
       feedbackMutate({
@@ -97,7 +107,7 @@ const Feedback = ({
         responseId,
         feedback: value,
       });
-      setShowFeedbackInput(false);
+      setShowFeedbackOptions(false);
     }
   };
 
@@ -114,13 +124,13 @@ const Feedback = ({
   };
 
   const handleClickBackOnCustomFeedbackInput = () => {
-    setShowFeedbackInput(true);
+    setShowFeedbackOptions(true);
     setShowCustomFeedbackInput(false);
   };
 
   return (
     <Flex style={{ marginLeft: 16 }} align="center" gap={8}>
-      {showCustomFeedbackInput ? (
+      {showCustomFeedbackInput && !isGood ? (
         <Button
           icon={<ArrowLeftOutlined />}
           type="text"
@@ -130,7 +140,7 @@ const Feedback = ({
       ) : (
         <div style={{ width: 24 }} />
       )}
-      {showFeedbackInput ? (
+      {showFeedbackOptions && !isGood ? (
         <Select
           placeholder="What can be improved (optional)?"
           onChange={handleSubmitFeedbackInput}
@@ -146,7 +156,11 @@ const Feedback = ({
       ) : null}
       {showCustomFeedbackInput ? (
         <Input
-          placeholder="Please provide feedback"
+          placeholder={
+            isGood
+              ? "What did you like about the response?"
+              : "What can we do better?"
+          }
           style={{ width: 400 }}
           onPressEnter={(e) => {
             handleSubmitCustomFeedbackInput(e.currentTarget.value);
