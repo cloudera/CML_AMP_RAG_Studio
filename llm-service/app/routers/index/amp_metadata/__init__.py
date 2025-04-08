@@ -120,25 +120,25 @@ project_env_keys = [
 def get_cml_env_vars(
     remote_user: Annotated[str | None, Header()] = None,
 ) -> dict[str, str]:
-    env = get_project_environment(remote_user)
+    env = get_project_environment()
+    project_owner = env["PROJECT_OWNER"]
+    if remote_user != project_owner:
+        raise fastapi.HTTPException(
+            status_code=403,
+            detail="You do not have permission to access these environment variables.",
+        )
     return {key: value for key, value in env.items() if key in project_env_keys}
 
 
-def get_project_environment(remote_user):
+def get_project_environment() -> dict[str, str]:
     try:
         import cmlapi
         client = cmlapi.default_client()
         project_id = os.environ["CDSW_PROJECT_ID"]
         project = client.get_project(project_id=project_id)
-        env: dict[str, str] = json.loads(project.environment)
-        project_owner = env["PROJECT_OWNER"]
-        if remote_user != project_owner:
-            raise fastapi.HTTPException(
-                status_code=403,
-                detail="You do not have permission to access these environment variables.",
-            )
+        return json.loads(project.environment)
     except ImportError:
-        env = {
+        return {
             "AWS_DEFAULT_REGION": "us-west-2",
             "S3_RAG_DOCUMENT_BUCKET": "",
             "S3_RAG_BUCKET_PREFIX": "rag-studio",
@@ -152,4 +152,3 @@ def get_project_environment(remote_user):
             "OPENAI_API_VERSION": "",
             "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
         }
-    return env
