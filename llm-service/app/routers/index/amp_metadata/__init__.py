@@ -45,6 +45,7 @@ from fastapi import APIRouter, FastAPI
 from subprocess import CompletedProcess
 
 from fastapi.params import Header
+from pydantic import BaseModel
 
 from .... import exceptions
 from ....services.amp_update import does_amp_need_updating
@@ -100,19 +101,46 @@ def amp_is_composed() -> bool:
     return os.getenv("IS_COMPOSABLE", "") != "" or False
 
 
-project_env_keys = [
-    "AWS_DEFAULT_REGION",
-    "S3_RAG_DOCUMENT_BUCKET",
-    "S3_RAG_BUCKET_PREFIX",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "USE_ENHANCED_PDF_PROCESSING",
-    "CAII_DOMAIN",
-    "CDP_TOKEN_OVERRIDE",
-    "AZURE_OPENAI_API_KEY",
-    "AZURE_OPENAI_ENDPOINT",
-    "OPENAI_API_VERSION",
-]
+project_env_vars = {
+    "AWS_DEFAULT_REGION": "us-west-2",
+    "S3_RAG_DOCUMENT_BUCKET": "",
+    "S3_RAG_BUCKET_PREFIX": "rag-studio",
+    "AWS_ACCESS_KEY_ID": "",
+    "AWS_SECRET_ACCESS_KEY": "",
+    "USE_ENHANCED_PDF_PROCESSING": "false",
+    "CAII_DOMAIN": "",
+    "CDP_TOKEN_OVERRIDE": "",
+    "AZURE_OPENAI_API_KEY": "",
+    "AZURE_OPENAI_ENDPOINT": "",
+    "OPENAI_API_VERSION": "",
+    "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
+}
+
+class AwsEnvVars(BaseModel):
+    """
+    Model to represent the AWS environment variables.
+    """
+    AWS_DEFAULT_REGION: str
+    S3_RAG_DOCUMENT_BUCKET: str
+    S3_RAG_BUCKET_PREFIX: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+
+class ProjectEnvVars(BaseModel):
+    """
+    Model to represent the environment variables for the project.
+    """
+    AWS_DEFAULT_REGION: str
+    S3_RAG_DOCUMENT_BUCKET: str
+    S3_RAG_BUCKET_PREFIX: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    USE_ENHANCED_PDF_PROCESSING: str
+    CAII_DOMAIN: str
+    CDP_TOKEN_OVERRIDE: str
+    AZURE_OPENAI_API_KEY: str
+    AZURE_OPENAI_ENDPOINT: str
+    OPENAI_API_VERSION: str
 
 
 @router.get("/cml-env-vars", summary="Returns the environment variables.")
@@ -127,28 +155,20 @@ def get_cml_env_vars(
             status_code=403,
             detail="You do not have permission to access these environment variables.",
         )
-    return {key: value for key, value in env.items() if key in project_env_keys}
+    return {
+        key: value
+        for key, value in env.items()
+        if key in project_env_vars.keys() and key not in ["PROJECT_OWNER"]
+    }
 
 
 def get_project_environment() -> dict[str, str]:
     try:
         import cmlapi
+
         client = cmlapi.default_client()
         project_id = os.environ["CDSW_PROJECT_ID"]
         project = client.get_project(project_id=project_id)
         return json.loads(project.environment)
     except ImportError:
-        return {
-            "AWS_DEFAULT_REGION": "us-west-2",
-            "S3_RAG_DOCUMENT_BUCKET": "",
-            "S3_RAG_BUCKET_PREFIX": "rag-studio",
-            "AWS_ACCESS_KEY_ID": "",
-            "AWS_SECRET_ACCESS_KEY": "",
-            "USE_ENHANCED_PDF_PROCESSING": "false",
-            "CAII_DOMAIN": "",
-            "CDP_TOKEN_OVERRIDE": "",
-            "AZURE_OPENAI_API_KEY": "",
-            "AZURE_OPENAI_ENDPOINT": "",
-            "OPENAI_API_VERSION": "",
-            "PROJECT_OWNER": os.environ.get("PROJECT_OWNER"),
-        }
+        return project_env_vars
