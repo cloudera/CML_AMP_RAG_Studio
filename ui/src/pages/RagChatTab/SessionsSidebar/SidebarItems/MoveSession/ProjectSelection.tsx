@@ -43,6 +43,7 @@ import { cdlBlue600, cdlGreen600 } from "src/cuix/variables.ts";
 import { useContext } from "react";
 
 import { MoveSessionContext } from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/MoveSessionContext.tsx";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 const getProjectOptions = (session: Session, projects?: Project[]) =>
   projects
@@ -52,6 +53,42 @@ const getProjectOptions = (session: Session, projects?: Project[]) =>
       label: project.name,
       value: project.id,
     }));
+
+const ProjectKnowledgeBases = ({
+  dataSourcesForProjectIsLoading,
+  selectedProject,
+  dataSourcesToDisplay,
+}: {
+  dataSourcesForProjectIsLoading: boolean;
+  selectedProject: number;
+  dataSourcesToDisplay: (DataSourceType & { color: string })[];
+}) => {
+  return (
+    <>
+      <Typography style={{ marginBottom: 20 }}>
+        Knowledge bases in project:
+      </Typography>
+      {dataSourcesForProjectIsLoading && (
+        <Skeleton active={true} paragraph={{ rows: 0 }} />
+      )}
+      {selectedProject && !dataSourcesForProjectIsLoading ? (
+        <Flex>
+          {dataSourcesToDisplay.map((ds) => {
+            return (
+              <Tag key={ds.id} color={ds.color}>
+                {ds.name}
+              </Tag>
+            );
+          })}
+        </Flex>
+      ) : (
+        <Typography.Paragraph italic>
+          No knowledge bases present
+        </Typography.Paragraph>
+      )}
+    </>
+  );
+};
 
 const ProjectSelection = () => {
   const {
@@ -92,25 +129,13 @@ const ProjectSelection = () => {
         </>
       }
     >
-      <Typography style={{ marginBottom: 20 }}>
-        Knowledge bases in project:
-      </Typography>
-      {dataSourcesForProjectIsLoading && (
-        <Skeleton active={true} paragraph={{ rows: 0 }} />
-      )}
-      {selectedProject && !dataSourcesForProjectIsLoading ? (
-        <Flex>
-          {dataSourcesToDisplay.map((ds) => {
-            return (
-              <Tag key={ds.id} color={ds.color}>
-                {ds.name}
-              </Tag>
-            );
-          })}
-        </Flex>
-      ) : (
-        <Typography.Paragraph> No knowledge bases present</Typography.Paragraph>
-      )}
+      {selectedProject ? (
+        <ProjectKnowledgeBases
+          dataSourcesForProjectIsLoading={dataSourcesForProjectIsLoading}
+          selectedProject={selectedProject}
+          dataSourcesToDisplay={dataSourcesToDisplay}
+        />
+      ) : null}
     </Card>
   );
 };

@@ -48,16 +48,22 @@ const CurrentSession = () => {
       <Typography style={{ marginBottom: 20 }}>
         Knowledge bases in session:
       </Typography>
-      {session.dataSourceIds.map((dataSourceId) => {
-        const dataSourceName = dataSources?.find(
-          (ds) => ds.id === dataSourceId,
-        );
-        return (
-          <Tag key={dataSourceId} color="blue">
-            {dataSourceName?.name}
-          </Tag>
-        );
-      })}
+      {session.dataSourceIds.length ? (
+        session.dataSourceIds.map((dataSourceId) => {
+          const dataSourceName = dataSources?.find(
+            (ds) => ds.id === dataSourceId,
+          );
+          return (
+            <Tag key={dataSourceId} color="blue">
+              {dataSourceName?.name}
+            </Tag>
+          );
+        })
+      ) : (
+        <Typography.Paragraph italic>
+          No knowledge bases in session
+        </Typography.Paragraph>
+      )}
     </Card>
   );
 };
