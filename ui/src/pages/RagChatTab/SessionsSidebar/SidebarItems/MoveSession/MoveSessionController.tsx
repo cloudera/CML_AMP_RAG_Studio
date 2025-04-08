@@ -35,53 +35,33 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useQuery } from "@tanstack/react-query";
-import { llmServicePath, postRequest, QueryKeys } from "src/api/utils.ts";
 
-export interface MetricFilter {
-  data_source_id?: number;
-  inference_model?: string;
-  rerank_model?: string;
-  has_rerank_model?: boolean;
-  top_k?: number;
-  session_id?: number;
-  use_summary_filter?: boolean;
-  use_hyde?: boolean;
-  use_question_condensing?: boolean;
-  exclude_knowledge_base?: boolean;
-  project_id?: number;
-}
+import { Flex, Typography } from "antd";
+import CurrentSession from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/CurrentSession.tsx";
+import TransferItems from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/TransferItems.tsx";
+import ProjectSelection from "pages/RagChatTab/SessionsSidebar/SidebarItems/MoveSession/ProjectSelection.tsx";
 
-export interface MetadataMetrics {
-  number_of_data_sources: number;
-  number_of_sessions: number;
-  number_of_documents: number;
-}
-
-export interface AppMetrics {
-  positive_ratings: number;
-  negative_ratings: number;
-  no_ratings: number;
-  count_of_interactions: number;
-  count_of_direct_interactions: number;
-  aggregated_feedback: Record<string, number>;
-  unique_users: number;
-  max_score_over_time: [number, number][];
-  input_word_count_over_time: [number, number][];
-  output_word_count_over_time: [number, number][];
-  evaluation_averages: Record<string, number>;
-  metadata_metrics: MetadataMetrics;
-}
-
-export const useGetMetrics = (metricFilter: MetricFilter) => {
-  return useQuery({
-    queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
-    queryFn: () => getMetricsQuery(metricFilter),
-  });
-};
-
-const getMetricsQuery = async (
-  metricFilter: MetricFilter,
-): Promise<AppMetrics> => {
-  return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);
+export const MoveSessionController = () => {
+  return (
+    <Flex
+      vertical
+      gap={8}
+      align={"center"}
+      justify={"center"}
+      wrap={true}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
+      <Flex gap={8} wrap={true}>
+        <CurrentSession />
+        <TransferItems />
+        <ProjectSelection />
+      </Flex>
+      <Typography.Paragraph italic style={{ marginTop: 20 }}>
+        Moving this session will add a new knowledge base to the project unless
+        excluded.
+      </Typography.Paragraph>
+    </Flex>
+  );
 };

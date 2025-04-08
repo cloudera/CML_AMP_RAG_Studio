@@ -35,53 +35,32 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { useQuery } from "@tanstack/react-query";
-import { llmServicePath, postRequest, QueryKeys } from "src/api/utils.ts";
 
-export interface MetricFilter {
-  data_source_id?: number;
-  inference_model?: string;
-  rerank_model?: string;
-  has_rerank_model?: boolean;
-  top_k?: number;
-  session_id?: number;
-  use_summary_filter?: boolean;
-  use_hyde?: boolean;
-  use_question_condensing?: boolean;
-  exclude_knowledge_base?: boolean;
-  project_id?: number;
+import { Session } from "src/api/sessionApi.ts";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
+import { Project } from "src/api/projectsApi.ts";
+import { createContext, Dispatch, SetStateAction } from "react";
+
+export interface MoveSessionContextType {
+  session: Session;
+  dataSources?: DataSourceType[];
+  dataSourcesForProject?: DataSourceType[];
+  dataSourcesForProjectIsLoading: boolean;
+  projects?: Project[];
+  dataSourcesToTransfer: number[];
+  setDataSourcesToTransfer: Dispatch<SetStateAction<number[]>>;
+  setSelectedProject: Dispatch<SetStateAction<number | undefined>>;
+  selectedProject?: number;
 }
 
-export interface MetadataMetrics {
-  number_of_data_sources: number;
-  number_of_sessions: number;
-  number_of_documents: number;
-}
-
-export interface AppMetrics {
-  positive_ratings: number;
-  negative_ratings: number;
-  no_ratings: number;
-  count_of_interactions: number;
-  count_of_direct_interactions: number;
-  aggregated_feedback: Record<string, number>;
-  unique_users: number;
-  max_score_over_time: [number, number][];
-  input_word_count_over_time: [number, number][];
-  output_word_count_over_time: [number, number][];
-  evaluation_averages: Record<string, number>;
-  metadata_metrics: MetadataMetrics;
-}
-
-export const useGetMetrics = (metricFilter: MetricFilter) => {
-  return useQuery({
-    queryKey: [QueryKeys.getMetricsByDataSource, metricFilter],
-    queryFn: () => getMetricsQuery(metricFilter),
-  });
-};
-
-const getMetricsQuery = async (
-  metricFilter: MetricFilter,
-): Promise<AppMetrics> => {
-  return await postRequest(`${llmServicePath}/app-metrics`, metricFilter);
-};
+export const MoveSessionContext = createContext<MoveSessionContextType>({
+  session: {} as Session,
+  dataSources: [],
+  dataSourcesForProject: [],
+  dataSourcesForProjectIsLoading: false,
+  projects: [],
+  dataSourcesToTransfer: [],
+  setDataSourcesToTransfer: () => null,
+  setSelectedProject: () => null,
+  selectedProject: undefined,
+});

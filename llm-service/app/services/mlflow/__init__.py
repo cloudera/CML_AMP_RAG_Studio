@@ -94,6 +94,7 @@ def chat_log_ml_flow_params(
         "use_hyde": query_configuration.use_hyde,
         "use_summary_filter": query_configuration.use_summary_filter,
         "session_id": session.id,
+        "project_id": session.project_id,
         "data_source_ids": session.data_source_ids,
         "user_name": user_name,
         "embedding_model": data_source_metadata.embedding_model,

@@ -58,8 +58,7 @@ function ChatLayout() {
 
   const sessions = allSessions ?? [];
 
-  const { sessionId } = useParams({ strict: false });
-  const { projectId: routeProjectId } = useParams({ strict: false });
+  const { projectId: routeProjectId, sessionId } = useParams({ strict: false });
   const { data: defaultProject } = useSuspenseQuery(
     getDefaultProjectQueryOptions,
   );

@@ -163,6 +163,11 @@ const RemoveKnowledgeBaseConfirmation = ({
         .catch(() => {
           messageQueue.error("Error re-fetching Knowledge Bases for project");
         });
+      queryClient
+        .invalidateQueries({ queryKey: [QueryKeys.getSessions] })
+        .catch(() => {
+          messageQueue.error("Error re-fetching sessions");
+        });
       messageQueue.success("Knowledge Base removed from project");
     },
   });
