@@ -69,14 +69,14 @@ const RestartAppModal = ({
     },
   });
   useRestartApplication(startPolling);
-  const { data: projectConfig, error: projectConfigError } =
+  const { data: projectConfig, isError: isProjectConfigError } =
     useGetAmpConfig(startPolling);
 
   useEffect(() => {
-    if (projectConfigError) {
+    if (isProjectConfigError) {
       setHasSeenRestarting(true);
     }
-  }, [projectConfigError, setHasSeenRestarting]);
+  }, [isProjectConfigError, setHasSeenRestarting]);
 
   const handleSubmit = () => {
     form
@@ -116,7 +116,7 @@ const RestartAppModal = ({
         {updateAmpConfig.isSuccess ? (
           <JobStatusTracker
             jobStatus={
-              projectConfigError ? JobStatus.RESTARTING : JobStatus.SUCCEEDED
+              isProjectConfigError ? JobStatus.RESTARTING : JobStatus.SUCCEEDED
             }
           />
         ) : null}
