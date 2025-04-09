@@ -101,8 +101,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"Document Bucket Name"}
         initialValue={projectConfig?.aws_config.document_bucket_name}
-        name="document_bucket_name"
-        required
+        name={["aws_config", "document_bucket_name"]}
+        required={selectedFileStorage === "AWS"}
         tooltip="Document Bucket Name"
         hidden={selectedFileStorage !== "AWS"}
       >
@@ -111,8 +111,7 @@ const SettingsPage = () => {
       <Form.Item
         label={"Bucket Prefix"}
         initialValue={projectConfig?.aws_config.bucket_prefix}
-        name="bucket_prefix"
-        required
+        name={["aws_config", "bucket_prefix"]}
         tooltip="Bucket Prefix"
         hidden={selectedFileStorage !== "AWS"}
       >
@@ -148,7 +147,7 @@ const SettingsPage = () => {
         label={"CAII Domain"}
         initialValue={projectConfig?.caii_config.caii_domain}
         name={["caii_config", "caii_domain"]}
-        required
+        required={modelProvider === "CAII"}
         tooltip="Domain for CAII"
         hidden={modelProvider !== "CAII"}
       >
@@ -157,8 +156,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"Azure OpenAI Endpoint"}
         initialValue={projectConfig?.azure_config.openai_endpoint}
-        name="openai_endpoint"
-        required
+        name={["azure_config", "openai_endpoint"]}
+        required={modelProvider === "Azure"}
         hidden={modelProvider !== "Azure"}
       >
         <Input placeholder="Azure OpenAI Endpoint" />
@@ -166,8 +165,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"API Version"}
         initialValue={projectConfig?.azure_config.openai_api_version}
-        name="openai_model"
-        required
+        name={["azure_config", "openai_api_version"]}
+        required={modelProvider === "Azure"}
         hidden={modelProvider !== "Azure"}
       >
         <Input placeholder="API Version" />
@@ -185,8 +184,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"AWS Region"}
         initialValue={projectConfig?.aws_config.region}
-        name="region"
-        required
+        name={["aws_config", "region"]}
+        required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
         tooltip="AWS Region"
         hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
       >
@@ -195,8 +194,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"Access Key ID"}
         initialValue={projectConfig?.aws_config.access_key_id}
-        name="access_key_id"
-        required
+        name={["aws_config", "access_key_id"]}
+        required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
         tooltip="Access Key ID"
         hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
       >
@@ -205,8 +204,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"Secret Access Key"}
         initialValue={projectConfig?.aws_config.secret_access_key}
-        name="secret_access_key"
-        required
+        name={["aws_config", "secret_access_key"]}
+        required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
         tooltip="Secret Access Key"
         hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
       >
@@ -215,8 +214,8 @@ const SettingsPage = () => {
       <Form.Item
         label={"Azure OpenAI Key"}
         initialValue={projectConfig?.azure_config.openai_key}
-        name="openai_key"
-        required
+        name={["azure_config", "openai_key"]}
+        required={modelProvider === "Azure"}
         hidden={modelProvider !== "Azure"}
       >
         <Input placeholder="Azure OpenAI Key" type="password" />
@@ -242,9 +241,14 @@ const SettingsPage = () => {
     );
   };
 
-  const handleSubmit = async () => {
-    const values = await form.validateFields();
-    console.log(values);
+  const handleSubmit = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        console.log(values);
+      })
+      .catch(() => null);
+
     // if (selectedFileStorage === "AWS") {
     //   values.aws_config = {
     //     ...values.aws_config,
@@ -266,8 +270,10 @@ const SettingsPage = () => {
       <Form
         form={form}
         labelCol={{ offset: 1 }}
-        disabled={true}
-        onFinish={() => handleSubmit()}
+        disabled={false}
+        onFinish={() => {
+          handleSubmit();
+        }}
       >
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields />
