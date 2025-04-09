@@ -50,9 +50,9 @@ const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
   const { data: currentModelSource } = useGetModelSource();
-  const [selectedFileStorage, setSelectedFileStorage] = useState<
-    "AWS" | "Local"
-  >(projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local");
+  const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
+    projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
+  );
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
