@@ -35,21 +35,25 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, Form, Input, Radio, Switch, Typography } from "antd";
+import { Button, Flex, Form, Typography } from "antd";
 import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 import { ReactNode, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
 import RestartAppModal from "pages/Settings/RestartAppModal.tsx";
+import { ProcessingFields } from "pages/Settings/ProcessingFields.tsx";
+import { FileStorageFields } from "pages/Settings/FileStorageFields.tsx";
+import { ModelProviderFields } from "pages/Settings/ModelProviderFields.tsx";
+import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
 
-const isModelSource = (value: string): value is ModelSource => {
+export const isModelSource = (value: string): value is ModelSource => {
   return value === "CAII" || value === "Bedrock" || value === "Azure";
 };
 
-type FileStorage = "AWS" | "Local";
+export type FileStorage = "AWS" | "Local";
 
-const StyledHelperText = ({ children }: { children: ReactNode }) => {
+export const StyledHelperText = ({ children }: { children: ReactNode }) => {
   return (
     <Typography.Paragraph italic style={{ marginLeft: 24 }}>
       {children}
@@ -69,217 +73,39 @@ const SettingsPage = () => {
     currentModelSource,
   );
 
-  const FileStorageFields = () => (
-    <Flex vertical style={{ maxWidth: 600 }}>
-      <Radio.Group
-        style={{ marginBottom: 20 }}
-        optionType="button"
-        buttonStyle="solid"
-        onChange={(e) => {
-          if (e.target.value === "AWS" || e.target.value === "Local") {
-            setSelectedFileStorage(e.target.value as FileStorage);
-          }
-        }}
-        value={selectedFileStorage}
-        options={[
-          { value: "Local", label: "Project Filesystem" },
-          { value: "AWS", label: "AWS S3" },
-        ]}
-      />
-      {selectedFileStorage === "Local" && (
-        <StyledHelperText>
-          CAI Project file system will be used for file storage.
-        </StyledHelperText>
-      )}
-      <Form.Item
-        label={"Document Bucket Name"}
-        initialValue={projectConfig?.aws_config.document_bucket_name}
-        name={["aws_config", "document_bucket_name"]}
-        required={selectedFileStorage === "AWS"}
-        tooltip="The S3 bucket where uploaded documents are stored."
-        rules={[{ required: selectedFileStorage === "AWS" }]}
-        hidden={selectedFileStorage !== "AWS"}
-      >
-        <Input placeholder="document-bucket-name" />
-      </Form.Item>
-      <Form.Item
-        label={"Bucket Prefix"}
-        initialValue={projectConfig?.aws_config.bucket_prefix}
-        name={["aws_config", "bucket_prefix"]}
-        tooltip="A prefix added to all S3 paths used by RAG Studio."
-        hidden={selectedFileStorage !== "AWS"}
-      >
-        <Input placeholder="example-prefix" />
-      </Form.Item>
-    </Flex>
-  );
-
-  const ModelProviderContent = () => (
-    <Flex vertical style={{ maxWidth: 600 }}>
-      <Radio.Group
-        style={{ marginBottom: 20 }}
-        optionType="button"
-        buttonStyle="solid"
-        onChange={(e) => {
-          if (e.target.value && isModelSource(e.target.value as string)) {
-            setModelProvider(e.target.value as ModelSource);
-          }
-        }}
-        value={modelProvider}
-        options={[
-          { value: "CAII", label: "CAII" },
-          { value: "Bedrock", label: "AWS Bedrock" },
-          { value: "Azure", label: "Azure OpenAI" },
-        ]}
-      />
-      {modelProvider === "Bedrock" && (
-        <StyledHelperText>
-          Please provide the AWS region and credentials for Bedrock below.
-        </StyledHelperText>
-      )}
-      <Form.Item
-        label={"CAII Domain"}
-        initialValue={projectConfig?.caii_config.caii_domain}
-        name={["caii_config", "caii_domain"]}
-        required={modelProvider === "CAII"}
-        rules={[{ required: modelProvider === "CAII" }]}
-        tooltip="The domain of the CAII service. Choosing this option will make CAII the only source of models for RAG Studio. This can be found ...... somewhere."
-        hidden={modelProvider !== "CAII"}
-      >
-        <Input placeholder="CAII Domain" />
-      </Form.Item>
-      <Form.Item
-        label={"Azure OpenAI Endpoint"}
-        initialValue={projectConfig?.azure_config.openai_endpoint}
-        name={["azure_config", "openai_endpoint"]}
-        required={modelProvider === "Azure"}
-        rules={[{ required: modelProvider === "Azure" }]}
-        tooltip="The endpoint of the Azure OpenAI service. This can be found in the Azure portal."
-        hidden={modelProvider !== "Azure"}
-      >
-        <Input placeholder="https://myendpoint.openai.azure.com/" />
-      </Form.Item>
-      <Form.Item
-        label={"API Version"}
-        initialValue={projectConfig?.azure_config.openai_api_version}
-        name={["azure_config", "openai_api_version"]}
-        required={modelProvider === "Azure"}
-        rules={[{ required: modelProvider === "Azure" }]}
-        tooltip="The API version of the Azure OpenAI service. This can be found in the Azure portal."
-        hidden={modelProvider !== "Azure"}
-      >
-        <Input placeholder="2024-05-01-preview" />
-      </Form.Item>
-    </Flex>
-  );
-
-  const AuthenticationFields = () => (
-    <Flex vertical style={{ maxWidth: 600 }}>
-      {modelProvider === "CAII" && selectedFileStorage === "Local" && (
-        <StyledHelperText>
-          No additional authentication needed.
-        </StyledHelperText>
-      )}
-      <Form.Item
-        label={"AWS Region"}
-        initialValue={projectConfig?.aws_config.region}
-        name={["aws_config", "region"]}
-        required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-        rules={[
-          {
-            required:
-              modelProvider === "Bedrock" || selectedFileStorage === "AWS",
-          },
-        ]}
-        tooltip="AWS Region where Bedrock is configured and/or the S3 bucket is located."
-        hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
-      >
-        <Input placeholder="us-west-2" />
-      </Form.Item>
-      <Form.Item
-        label={"Access Key ID"}
-        initialValue={projectConfig?.aws_config.access_key_id}
-        name={["aws_config", "access_key_id"]}
-        required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-        rules={[
-          {
-            required:
-              modelProvider === "Bedrock" || selectedFileStorage === "AWS",
-          },
-        ]}
-        tooltip="Access Key ID"
-        hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
-      >
-        <Input placeholder="access-key-id" />
-      </Form.Item>
-      <Form.Item
-        label={"Secret Access Key"}
-        initialValue={projectConfig?.aws_config.secret_access_key}
-        name={["aws_config", "secret_access_key"]}
-        required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-        rules={[
-          {
-            required:
-              modelProvider === "Bedrock" || selectedFileStorage === "AWS",
-          },
-        ]}
-        tooltip="AWS Secret Access Key"
-        hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
-      >
-        <Input placeholder="secret-access-key" type="password" />
-      </Form.Item>
-      <Form.Item
-        label={"Azure OpenAI Key"}
-        initialValue={projectConfig?.azure_config.openai_key}
-        name={["azure_config", "openai_key"]}
-        required={modelProvider === "Azure"}
-        rules={[{ required: modelProvider === "Azure" }]}
-        hidden={modelProvider !== "Azure"}
-      >
-        <Input placeholder="azure-openai-key" type="password" />
-      </Form.Item>
-    </Flex>
-  );
-
-  const ProcessingFields = () => {
-    return (
-      <Flex vertical style={{ maxWidth: 600 }}>
-        <Form.Item
-          label="Enhanced PDF Processing"
-          name={["use_enhanced_pdf_processing"]}
-          initialValue={projectConfig?.use_enhanced_pdf_processing}
-          valuePropName="checked"
-          tooltip={
-            "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16G of RAM is required for this option."
-          }
-        >
-          <Switch />
-        </Form.Item>
-      </Flex>
-    );
-  };
-
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
       <Form form={form} labelCol={{ offset: 1 }}>
         <Typography.Title level={4}>Processing Settings</Typography.Title>
-        <ProcessingFields />
+        <ProcessingFields projectConfig={projectConfig} />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>File Storage</Typography.Title>
           <Typography.Text type="secondary">
             (Choose one option)
           </Typography.Text>
         </Flex>
-        <FileStorageFields />
+        <FileStorageFields
+          selectedFileStorage={selectedFileStorage}
+          setSelectedFileStorage={setSelectedFileStorage}
+          projectConfig={projectConfig}
+        />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>Model Provider</Typography.Title>
           <Typography.Text type="secondary">
             (Choose one option)
           </Typography.Text>
         </Flex>
-        <ModelProviderContent />
+        <ModelProviderFields
+          modelProvider={modelProvider}
+          setModelProvider={setModelProvider}
+          projectConfig={projectConfig}
+        />
         <Typography.Title level={4}>Authentication</Typography.Title>
-        <AuthenticationFields />
+        <AuthenticationFields
+          projectConfig={projectConfig}
+          modelProvider={modelProvider}
+          selectedFileStorage={selectedFileStorage}
+        />
         <Form.Item label={null} style={{ marginTop: 20 }}>
           <Button
             type="primary"
