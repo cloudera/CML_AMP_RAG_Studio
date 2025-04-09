@@ -129,7 +129,6 @@ class CaiiConfig(BaseModel):
     """
 
     caii_domain: Optional[str] = None
-    cdp_token_override: Optional[str] = None
 
 
 class ProjectConfig(BaseModel):
@@ -199,7 +198,6 @@ def env_to_config(env: dict[str, str]) -> ProjectConfig:
     )
     caii_config = CaiiConfig(
         caii_domain=env.get("CAII_DOMAIN"),
-        cdp_token_override=env.get("CDP_TOKEN_OVERRIDE"),
     )
     return ProjectConfig(
         use_enhanced_pdf_processing=env.get("USE_ENHANCED_PDF_PROCESSING", False),

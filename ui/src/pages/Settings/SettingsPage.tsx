@@ -35,93 +35,179 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Flex, Form, Input, Radio, Switch, Tabs, TabsProps } from "antd";
+import { Divider, Flex, Form, Input, Radio, Switch, Typography } from "antd";
 import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 import { useState } from "react";
-import { useGetModelSource } from "src/api/modelsApi.ts";
+import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
+
+const isModelSource = (value: string): value is ModelSource => {
+  return value === "CAII" || value === "Bedrock" || value === "Azure";
+};
+
+type FileStorage = "AWS" | "Local";
 
 const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
   const { data: currentModelSource } = useGetModelSource();
-  const [selectedFileStorage, setSelectedFileStorage] = useState(
-    projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
-  );
-  const [modelProvider, setModelProvider] = useState(
-    currentModelSource as string,
+  const [selectedFileStorage, setSelectedFileStorage] = useState<
+    "AWS" | "Local"
+  >(projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local");
+  const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
+    currentModelSource,
   );
 
-  const FileStorageContent = () => (
-    <Flex>
-      <Form form={form} style={{ width: "100%" }}>
-        <Radio.Group
-          onChange={(e) => {
-            if (e.target.value) {
-              setSelectedFileStorage(e.target.value as string);
-            }
-          }}
-          value={selectedFileStorage}
-          options={[
-            { value: "AWS", label: "AWS S3" },
-            { value: "Local", label: "CML Filesystem" },
-          ]}
-        />
-        {selectedFileStorage === "AWS" && (
-          <>
-            <Form.Item
-              label={"AWS Region"}
-              initialValue={projectConfig?.aws_config.region}
-              name="region"
-              required
-              tooltip="AWS Region"
-            >
-              <Input placeholder="AWS Region" />
-            </Form.Item>
-            <Form.Item
-              label={"Document Bucket Name"}
-              initialValue={projectConfig?.aws_config.document_bucket_name}
-              name="document_bucket_name"
-              required
-              tooltip="Document Bucket Name"
-            >
-              <Input placeholder="Document Bucket Name" />
-            </Form.Item>
-            <Form.Item
-              label={"Bucket Prefix"}
-              initialValue={projectConfig?.aws_config.bucket_prefix}
-              name="bucket_prefix"
-              required
-              tooltip="Bucket Prefix"
-            >
-              <Input placeholder="Bucket Prefix" />
-            </Form.Item>
-            <Form.Item
-              label={"Access Key ID"}
-              initialValue={projectConfig?.aws_config.access_key_id}
-              name="access_key_id"
-              required
-              tooltip="Access Key ID"
-            >
-              <Input placeholder="Access Key ID" />
-            </Form.Item>
-            <Form.Item
-              label={"Secret Access Key"}
-              initialValue={projectConfig?.aws_config.secret_access_key}
-              name="secret_access_key"
-              required
-              tooltip="Secret Access Key"
-            >
-              <Input placeholder="Secret Access Key" type="password" />
-            </Form.Item>
-          </>
-        )}
-      </Form>
+  const FileStorageFields = () => (
+    <Flex vertical style={{ maxWidth: 600 }}>
+      <Radio.Group
+        style={{ marginBottom: 20 }}
+        optionType="button"
+        buttonStyle="solid"
+        onChange={(e) => {
+          if (e.target.value === "AWS" || e.target.value === "Local") {
+            setSelectedFileStorage(e.target.value as FileStorage);
+          }
+        }}
+        value={selectedFileStorage}
+        options={[
+          { value: "Local", label: "CML Filesystem" },
+          { value: "AWS", label: "AWS S3" },
+        ]}
+      />
+      {selectedFileStorage === "Local" && (
+        <Typography.Paragraph italic>
+          CAI Project file system will be used for file storage.
+        </Typography.Paragraph>
+      )}
+      <Form.Item
+        label={"Document Bucket Name"}
+        initialValue={projectConfig?.aws_config.document_bucket_name}
+        name="document_bucket_name"
+        required
+        tooltip="Document Bucket Name"
+        hidden={selectedFileStorage !== "AWS"}
+      >
+        <Input placeholder="Document Bucket Name" />
+      </Form.Item>
+      <Form.Item
+        label={"Bucket Prefix"}
+        initialValue={projectConfig?.aws_config.bucket_prefix}
+        name="bucket_prefix"
+        required
+        tooltip="Bucket Prefix"
+        hidden={selectedFileStorage !== "AWS"}
+      >
+        <Input placeholder="Bucket Prefix" />
+      </Form.Item>
     </Flex>
   );
 
   const ModelProviderContent = () => (
-    <Flex>
-      <Form form={form} style={{ width: "100%" }}>
+    <Flex vertical style={{ maxWidth: 600 }}>
+      <Radio.Group
+        style={{ marginBottom: 20 }}
+        optionType="button"
+        buttonStyle="solid"
+        onChange={(e) => {
+          if (e.target.value && isModelSource(e.target.value as string)) {
+            setModelProvider(e.target.value as ModelSource);
+          }
+        }}
+        value={modelProvider}
+        options={[
+          { value: "CAII", label: "CAII" },
+          { value: "Bedrock", label: "AWS Bedrock" },
+          { value: "Azure", label: "Azure OpenAI" },
+        ]}
+      />
+      {modelProvider === "Bedrock" && (
+        <Typography.Paragraph italic>
+          Please provide the AWS region and credentials for Bedrock below.
+        </Typography.Paragraph>
+      )}
+      <Form.Item
+        label={"CAII Domain"}
+        initialValue={projectConfig?.caii_config.caii_domain}
+        name={["caii_config", "caii_domain"]}
+        required
+        tooltip="Domain for CAII"
+        hidden={modelProvider !== "CAII"}
+      >
+        <Input placeholder="CAII Domain" />
+      </Form.Item>
+      <Form.Item
+        label={"Azure OpenAI Endpoint"}
+        initialValue={projectConfig?.azure_config.openai_endpoint}
+        name="openai_endpoint"
+        required
+        hidden={modelProvider !== "Azure"}
+      >
+        <Input placeholder="Azure OpenAI Endpoint" />
+      </Form.Item>
+      <Form.Item
+        label={"API Version"}
+        initialValue={projectConfig?.azure_config.openai_api_version}
+        name="openai_model"
+        required
+        hidden={modelProvider !== "Azure"}
+      >
+        <Input placeholder="API Version" />
+      </Form.Item>
+    </Flex>
+  );
+
+  const AuthenticationFields = () => (
+    <Flex vertical style={{ maxWidth: 600 }}>
+      {modelProvider === "CAII" && selectedFileStorage === "Local" && (
+        <Typography.Paragraph italic>
+          No authentication needed
+        </Typography.Paragraph>
+      )}
+      <Form.Item
+        label={"AWS Region"}
+        initialValue={projectConfig?.aws_config.region}
+        name="region"
+        required
+        tooltip="AWS Region"
+        hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
+      >
+        <Input placeholder="AWS Region" />
+      </Form.Item>
+      <Form.Item
+        label={"Access Key ID"}
+        initialValue={projectConfig?.aws_config.access_key_id}
+        name="access_key_id"
+        required
+        tooltip="Access Key ID"
+        hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
+      >
+        <Input placeholder="Access Key ID" />
+      </Form.Item>
+      <Form.Item
+        label={"Secret Access Key"}
+        initialValue={projectConfig?.aws_config.secret_access_key}
+        name="secret_access_key"
+        required
+        tooltip="Secret Access Key"
+        hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
+      >
+        <Input placeholder="Secret Access Key" type="password" />
+      </Form.Item>
+      <Form.Item
+        label={"Azure OpenAI Key"}
+        initialValue={projectConfig?.azure_config.openai_key}
+        name="openai_key"
+        required
+        hidden={modelProvider !== "Azure"}
+      >
+        <Input placeholder="Azure OpenAI Key" type="password" />
+      </Form.Item>
+    </Flex>
+  );
+
+  const ProcessingFields = () => {
+    return (
+      <Flex vertical style={{ maxWidth: 600 }}>
         <Form.Item
           label="Enhanced PDF Processing"
           name={["use_enhanced_pdf_processing"]}
@@ -131,125 +217,26 @@ const SettingsPage = () => {
             "Enable enhanced PDF processing for enhanced PDF processing."
           }
         >
-          <Switch checkedChildren="ENHANCE" />
+          <Switch />
         </Form.Item>
-        <Radio.Group
-          onChange={(e) => {
-            if (e.target.value) {
-              setModelProvider(e.target.value as string);
-            }
-          }}
-          value={modelProvider}
-          options={[
-            { value: "CAII", label: "CAII" },
-            { value: "Bedrock", label: "AWS Bedrock" },
-            { value: "Azure", label: "Azure OpenAI" },
-          ]}
-        />
-        {modelProvider === "CAII" && (
-          <>
-            <Form.Item
-              label={"CAII Domain"}
-              initialValue={projectConfig?.caii_config.caii_domain}
-              name={["caii_config", "caii_domain"]}
-              required
-              tooltip="Domain for CAII"
-            >
-              <Input placeholder="CAII Domain" />
-            </Form.Item>
-            <Form.Item
-              label={"CDP Token Override"}
-              initialValue={projectConfig?.caii_config.cdp_token_override}
-              name="cdp_token_override"
-              required
-              tooltip="Token override for CDP"
-            >
-              <Input placeholder="CDP Token Override" type="password" />
-            </Form.Item>
-          </>
-        )}
-        {modelProvider === "Bedrock" && (
-          <>
-            <Form.Item
-              label={"AWS Region"}
-              initialValue={projectConfig?.aws_config.region}
-              name="region"
-              required
-              tooltip="AWS Region"
-            >
-              <Input placeholder="AWS Region" />
-            </Form.Item>
-            <Form.Item
-              label={"Access Key ID"}
-              initialValue={projectConfig?.aws_config.access_key_id}
-              name="access_key_id"
-              required
-              tooltip="Access Key ID"
-            >
-              <Input placeholder="Access Key ID" />
-            </Form.Item>
-            <Form.Item
-              label={"Secret Access Key"}
-              initialValue={projectConfig?.aws_config.secret_access_key}
-              name="secret_access_key"
-              required
-              tooltip="Secret Access Key"
-            >
-              <Input placeholder="Secret Access Key" type="password" />
-            </Form.Item>
-          </>
-        )}
-        {modelProvider === "Azure" && (
-          <>
-            <Form.Item
-              label={"Azure OpenAI Endpoint"}
-              initialValue={projectConfig?.azure_config.openai_endpoint}
-              name="openai_endpoint"
-              required
-            >
-              <Input placeholder="Azure OpenAI Endpoint" />
-            </Form.Item>
-            <Form.Item
-              label={"Azure OpenAI Key"}
-              initialValue={projectConfig?.azure_config.openai_key}
-              name="openai_key"
-              required
-            >
-              <Input placeholder="Azure OpenAI Key" type="password" />
-            </Form.Item>
-            <Form.Item
-              label={"API Version"}
-              initialValue={projectConfig?.azure_config.openai_api_version}
-              name="openai_model"
-              required
-            >
-              <Input placeholder="API Version" />
-            </Form.Item>
-          </>
-        )}
-      </Form>
-    </Flex>
-  );
-
-  const items: TabsProps["items"] = [
-    {
-      key: "1",
-      label: "File Storage",
-      children: <FileStorageContent />,
-    },
-    {
-      key: "2",
-      label: "Model Provider",
-      children: <ModelProviderContent />,
-    },
-  ];
+      </Flex>
+    );
+  };
 
   return (
-    <Tabs
-      items={items}
-      defaultActiveKey="1"
-      style={{ marginLeft: 150, width: 600 }}
-    />
+    <Flex style={{ marginLeft: 60 }} vertical>
+      <Form form={form} labelCol={{ offset: 1 }} disabled={true}>
+        <Typography.Title level={4}>Processing Settings</Typography.Title>
+        <ProcessingFields />
+        <Divider />
+        <Typography.Title level={4}>File Storage</Typography.Title>
+        <FileStorageFields />
+        <Typography.Title level={4}>Model Provider</Typography.Title>
+        <ModelProviderContent />
+        <Typography.Title level={4}>Authentication</Typography.Title>
+        <AuthenticationFields />
+      </Form>
+    </Flex>
   );
 };
 

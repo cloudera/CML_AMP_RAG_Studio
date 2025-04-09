@@ -147,7 +147,6 @@ export interface AzureConfig {
 
 export interface CaiiConfig {
   caii_domain?: string;
-  cdp_token_override?: string;
 }
 
 export interface ProjectConfig {
