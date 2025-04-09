@@ -35,28 +35,13 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import {
-  Button,
-  Flex,
-  Form,
-  Input,
-  Modal,
-  Radio,
-  Switch,
-  Typography,
-} from "antd";
-import {
-  JobStatus,
-  ProjectConfig,
-  useGetAmpConfig,
-  useRestartApplication,
-  useUpdateAmpConfig,
-} from "src/api/ampMetadataApi.ts";
-import { ReactNode, useEffect, useState } from "react";
+import { Button, Flex, Form, Input, Radio, Switch, Typography } from "antd";
+import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { ReactNode, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
-import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
+import RestartAppModal from "pages/Settings/RestartAppModal.tsx";
 
 const isModelSource = (value: string): value is ModelSource => {
   return value === "CAII" || value === "Bedrock" || value === "Azure";
@@ -76,34 +61,13 @@ const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: currentModelSource } = useGetModelSource();
   const confirmationModal = useModal();
-  const [startPolling, setStartPolling] = useState(false);
-  const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
-  const updateAmpConfig = useUpdateAmpConfig({
-    onError: (err) => {
-      messageQueue.error(err.message);
-    },
-    onSuccess: () => {
-      messageQueue.success(
-        "Settings updated successfully.  Restarting the application.",
-      );
-      setStartPolling(true);
-    },
-  });
-  useRestartApplication(startPolling);
-  const { data: projectConfig, error: projectConfigError } =
-    useGetAmpConfig(startPolling);
+  const { data: projectConfig } = useGetAmpConfig();
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
-
-  useEffect(() => {
-    if (projectConfigError) {
-      setHasSeenRestarting(true);
-    }
-  }, [projectConfigError, setHasSeenRestarting]);
 
   const FileStorageFields = () => (
     <Flex vertical style={{ maxWidth: 600 }}>
@@ -295,27 +259,9 @@ const SettingsPage = () => {
     );
   };
 
-  const handleSubmit = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        updateAmpConfig.mutate(values);
-      })
-      .catch(() => {
-        messageQueue.error("Please fill all required fields");
-      });
-  };
-
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      <Form
-        form={form}
-        labelCol={{ offset: 1 }}
-        disabled={false}
-        onFinish={() => {
-          handleSubmit();
-        }}
-      >
+      <Form form={form} labelCol={{ offset: 1 }}>
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields />
         <Flex align={"baseline"} gap={8}>
@@ -352,54 +298,7 @@ const SettingsPage = () => {
           </Button>
         </Form.Item>
       </Form>
-      <Modal
-        title="Update settings"
-        okButtonProps={{ style: { display: "none" } }}
-        open={confirmationModal.isModalOpen}
-        destroyOnClose={true}
-        loading={updateAmpConfig.isPending}
-        onCancel={() => {
-          confirmationModal.setIsModalOpen(false);
-        }}
-      >
-        <Flex align="center" justify="center" vertical gap={20}>
-          <Typography>
-            Are you sure you want to update the settings? This will restart the
-            application and may take a few minutes.
-          </Typography>
-          <Button
-            type="primary"
-            onClick={handleSubmit}
-            loading={updateAmpConfig.isPending}
-            disabled={updateAmpConfig.isSuccess}
-          >
-            Update Settings
-          </Button>
-          {updateAmpConfig.isSuccess ? (
-            <JobStatusTracker
-              jobStatus={
-                projectConfigError ? JobStatus.RESTARTING : JobStatus.SUCCEEDED
-              }
-            />
-          ) : null}
-          {hasSeenRestarting && projectConfig ? (
-            <>
-              <Typography.Text>
-                RAG Studio has been updated successfully. Please refresh the
-                page to use the latest configuration.
-              </Typography.Text>
-              <Button
-                type="primary"
-                onClick={() => {
-                  location.reload();
-                }}
-              >
-                Refresh
-              </Button>
-            </>
-          ) : null}
-        </Flex>
-      </Modal>
+      <RestartAppModal confirmationModal={confirmationModal} form={form} />
     </Flex>
   );
 };
