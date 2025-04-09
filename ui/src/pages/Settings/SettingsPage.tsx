@@ -35,20 +35,11 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import {
-  Button,
-  Divider,
-  Flex,
-  Form,
-  Input,
-  Radio,
-  Switch,
-  Typography,
-} from "antd";
+import { Button, Flex, Form, Input, Radio, Switch, Typography } from "antd";
 import {
   ProjectConfig,
   useGetAmpConfig,
-  useUpdateAmpMutation,
+  useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
 import { useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
@@ -64,7 +55,7 @@ const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
   const { data: currentModelSource } = useGetModelSource();
-  const updateAmpConfig = useUpdateAmpMutation({
+  const updateAmpConfig = useUpdateAmpConfig({
     onError: (err) => {
       messageQueue.error(err.message);
     },
@@ -94,7 +85,7 @@ const SettingsPage = () => {
         ]}
       />
       {selectedFileStorage === "Local" && (
-        <Typography.Paragraph italic>
+        <Typography.Paragraph italic style={{ marginLeft: 24 }}>
           CAI Project file system will be used for file storage.
         </Typography.Paragraph>
       )}
@@ -103,19 +94,20 @@ const SettingsPage = () => {
         initialValue={projectConfig?.aws_config.document_bucket_name}
         name={["aws_config", "document_bucket_name"]}
         required={selectedFileStorage === "AWS"}
-        tooltip="Document Bucket Name"
+        tooltip="The S3 bucket where uploaded documents are stored."
+        rules={[{ required: selectedFileStorage === "AWS" }]}
         hidden={selectedFileStorage !== "AWS"}
       >
-        <Input placeholder="Document Bucket Name" />
+        <Input placeholder="document-bucket-name" />
       </Form.Item>
       <Form.Item
         label={"Bucket Prefix"}
         initialValue={projectConfig?.aws_config.bucket_prefix}
         name={["aws_config", "bucket_prefix"]}
-        tooltip="Bucket Prefix"
+        tooltip="A prefix added to all S3 paths used by RAG Studio."
         hidden={selectedFileStorage !== "AWS"}
       >
-        <Input placeholder="Bucket Prefix" />
+        <Input placeholder="example-prefix" />
       </Form.Item>
     </Flex>
   );
@@ -148,7 +140,8 @@ const SettingsPage = () => {
         initialValue={projectConfig?.caii_config.caii_domain}
         name={["caii_config", "caii_domain"]}
         required={modelProvider === "CAII"}
-        tooltip="Domain for CAII"
+        rules={[{ required: modelProvider === "CAII" }]}
+        tooltip="The domain of the CAII service. Choosing this option will make CAII the only source of models for RAG Studio. This can be found ...... somewhere."
         hidden={modelProvider !== "CAII"}
       >
         <Input placeholder="CAII Domain" />
@@ -158,18 +151,22 @@ const SettingsPage = () => {
         initialValue={projectConfig?.azure_config.openai_endpoint}
         name={["azure_config", "openai_endpoint"]}
         required={modelProvider === "Azure"}
+        rules={[{ required: modelProvider === "Azure" }]}
+        tooltip="The endpoint of the Azure OpenAI service. This can be found in the Azure portal."
         hidden={modelProvider !== "Azure"}
       >
-        <Input placeholder="Azure OpenAI Endpoint" />
+        <Input placeholder="https://myendpoint.openai.azure.com/" />
       </Form.Item>
       <Form.Item
         label={"API Version"}
         initialValue={projectConfig?.azure_config.openai_api_version}
         name={["azure_config", "openai_api_version"]}
         required={modelProvider === "Azure"}
+        rules={[{ required: modelProvider === "Azure" }]}
+        tooltip="The API version of the Azure OpenAI service. This can be found in the Azure portal."
         hidden={modelProvider !== "Azure"}
       >
-        <Input placeholder="API Version" />
+        <Input placeholder="2024-05-01-preview" />
       </Form.Item>
     </Flex>
   );
@@ -177,8 +174,8 @@ const SettingsPage = () => {
   const AuthenticationFields = () => (
     <Flex vertical style={{ maxWidth: 600 }}>
       {modelProvider === "CAII" && selectedFileStorage === "Local" && (
-        <Typography.Paragraph italic>
-          No authentication needed
+        <Typography.Paragraph italic style={{ marginLeft: 24 }}>
+          No additional authentication needed.
         </Typography.Paragraph>
       )}
       <Form.Item
@@ -186,39 +183,58 @@ const SettingsPage = () => {
         initialValue={projectConfig?.aws_config.region}
         name={["aws_config", "region"]}
         required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-        tooltip="AWS Region"
+        rules={[
+          {
+            required:
+              modelProvider === "Bedrock" || selectedFileStorage === "AWS",
+          },
+        ]}
+        tooltip="AWS Region where Bedrock is configured and/or the S3 bucket is located."
         hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
       >
-        <Input placeholder="AWS Region" />
+        <Input placeholder="us-west-2" />
       </Form.Item>
       <Form.Item
         label={"Access Key ID"}
         initialValue={projectConfig?.aws_config.access_key_id}
         name={["aws_config", "access_key_id"]}
         required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
+        rules={[
+          {
+            required:
+              modelProvider === "Bedrock" || selectedFileStorage === "AWS",
+          },
+        ]}
         tooltip="Access Key ID"
         hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
       >
-        <Input placeholder="Access Key ID" />
+        <Input placeholder="access-key-id" />
       </Form.Item>
       <Form.Item
         label={"Secret Access Key"}
         initialValue={projectConfig?.aws_config.secret_access_key}
         name={["aws_config", "secret_access_key"]}
         required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-        tooltip="Secret Access Key"
+        rules={[
+          {
+            required:
+              modelProvider === "Bedrock" || selectedFileStorage === "AWS",
+          },
+        ]}
+        tooltip="AWS Secret Access Key"
         hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
       >
-        <Input placeholder="Secret Access Key" type="password" />
+        <Input placeholder="secret-access-key" type="password" />
       </Form.Item>
       <Form.Item
         label={"Azure OpenAI Key"}
         initialValue={projectConfig?.azure_config.openai_key}
         name={["azure_config", "openai_key"]}
         required={modelProvider === "Azure"}
+        rules={[{ required: modelProvider === "Azure" }]}
         hidden={modelProvider !== "Azure"}
       >
-        <Input placeholder="Azure OpenAI Key" type="password" />
+        <Input placeholder="azure-openai-key" type="password" />
       </Form.Item>
     </Flex>
   );
@@ -232,7 +248,7 @@ const SettingsPage = () => {
           initialValue={projectConfig?.use_enhanced_pdf_processing}
           valuePropName="checked"
           tooltip={
-            "Enable enhanced PDF processing for enhanced PDF processing."
+            "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16G of RAM is required for this option."
           }
         >
           <Switch />
@@ -246,23 +262,11 @@ const SettingsPage = () => {
       .validateFields()
       .then((values) => {
         console.log(values);
+        updateAmpConfig.mutate(values);
       })
-      .catch(() => null);
-
-    // if (selectedFileStorage === "AWS") {
-    //   values.aws_config = {
-    //     ...values.aws_config,
-    //     document_bucket_name: values.document_bucket_name,
-    //     bucket_prefix: values.bucket_prefix,
-    //   };
-    // } else {
-    //   values.aws_config = {
-    //     ...values.aws_config,
-    //     document_bucket_name: undefined,
-    //     bucket_prefix: undefined,
-    //   };
-    // }
-    // updateAmpConfig.mutate(values);
+      .catch(() => {
+        messageQueue.error("Please fill all required fields");
+      });
   };
 
   return (
@@ -277,14 +281,23 @@ const SettingsPage = () => {
       >
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields />
-        <Divider />
-        <Typography.Title level={4}>File Storage</Typography.Title>
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>File Storage</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
         <FileStorageFields />
-        <Typography.Title level={4}>Model Provider</Typography.Title>
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>Model Provider</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
         <ModelProviderContent />
         <Typography.Title level={4}>Authentication</Typography.Title>
         <AuthenticationFields />
-        <Form.Item label={null}>
+        <Form.Item label={null} style={{ marginTop: 20 }}>
           <Button type="primary" htmlType="submit">
             Submit
           </Button>

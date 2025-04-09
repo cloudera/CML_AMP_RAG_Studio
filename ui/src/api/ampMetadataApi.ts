@@ -165,14 +165,19 @@ export const getAmpConfigQueryOptions = queryOptions({
   queryFn: getAmpConfig,
 });
 
-const useUpdateAmpConfig = () => {
+export const useUpdateAmpConfig = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ProjectConfig>) => {
   return useMutation({
     mutationKey: [MutationKeys.updateAmpConfig],
     mutationFn: updateAmpConfig,
+    onSuccess,
+    onError,
   });
 };
 
-export const updateAmpConfig = async (
+const updateAmpConfig = async (
   config: ProjectConfig,
 ): Promise<ProjectConfig> => {
   return await postRequest(`${llmServicePath}/amp/config`, config);
