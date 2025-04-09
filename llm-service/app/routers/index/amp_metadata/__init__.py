@@ -195,6 +195,14 @@ def update_configuration(
         env_to_save = existing_env | updated_env
         update_project_environment(env_to_save)
 
+        print(
+            subprocess.run(
+                [f"python {root_dir}/scripts/refresh_project.py"],
+                shell=True,
+                check=True,
+            )
+        )
+
         return env_to_config(get_project_environment())
 
     raise fastapi.HTTPException(

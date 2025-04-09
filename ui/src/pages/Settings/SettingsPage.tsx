@@ -35,15 +35,28 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, Form, Input, Radio, Switch, Typography } from "antd";
 import {
+  Button,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Radio,
+  Switch,
+  Typography,
+} from "antd";
+import {
+  JobStatus,
   ProjectConfig,
   useGetAmpConfig,
+  useGetAmpUpdateJobStatus,
   useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
-import { useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
+import useModal from "src/utils/useModal.ts";
+import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
 
 const isModelSource = (value: string): value is ModelSource => {
   return value === "CAII" || value === "Bedrock" || value === "Azure";
@@ -51,21 +64,45 @@ const isModelSource = (value: string): value is ModelSource => {
 
 type FileStorage = "AWS" | "Local";
 
+const StyledHelperText = ({ children }: { children: ReactNode }) => {
+  return (
+    <Typography.Paragraph italic style={{ marginLeft: 24 }}>
+      {children}
+    </Typography.Paragraph>
+  );
+};
+
 const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
-  const { data: projectConfig } = useGetAmpConfig();
   const { data: currentModelSource } = useGetModelSource();
+  const confirmationModal = useModal();
+  const [startPolling, setStartPolling] = useState(false);
+  const ampUpdateJobStatus = useGetAmpUpdateJobStatus(
+    confirmationModal.isModalOpen,
+  );
+  const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
   const updateAmpConfig = useUpdateAmpConfig({
     onError: (err) => {
       messageQueue.error(err.message);
     },
+    onSuccess: () => {
+      messageQueue.success("Settings updated successfully");
+      setStartPolling(true);
+    },
   });
+  const { data: projectConfig } = useGetAmpConfig(startPolling);
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
+
+  useEffect(() => {
+    if (ampUpdateJobStatus.data === JobStatus.RESTARTING) {
+      setHasSeenRestarting(true);
+    }
+  }, [ampUpdateJobStatus.data, setHasSeenRestarting]);
 
   const FileStorageFields = () => (
     <Flex vertical style={{ maxWidth: 600 }}>
@@ -85,9 +122,9 @@ const SettingsPage = () => {
         ]}
       />
       {selectedFileStorage === "Local" && (
-        <Typography.Paragraph italic style={{ marginLeft: 24 }}>
+        <StyledHelperText>
           CAI Project file system will be used for file storage.
-        </Typography.Paragraph>
+        </StyledHelperText>
       )}
       <Form.Item
         label={"Document Bucket Name"}
@@ -131,9 +168,9 @@ const SettingsPage = () => {
         ]}
       />
       {modelProvider === "Bedrock" && (
-        <Typography.Paragraph italic>
+        <StyledHelperText>
           Please provide the AWS region and credentials for Bedrock below.
-        </Typography.Paragraph>
+        </StyledHelperText>
       )}
       <Form.Item
         label={"CAII Domain"}
@@ -174,9 +211,9 @@ const SettingsPage = () => {
   const AuthenticationFields = () => (
     <Flex vertical style={{ maxWidth: 600 }}>
       {modelProvider === "CAII" && selectedFileStorage === "Local" && (
-        <Typography.Paragraph italic style={{ marginLeft: 24 }}>
+        <StyledHelperText>
           No additional authentication needed.
-        </Typography.Paragraph>
+        </StyledHelperText>
       )}
       <Form.Item
         label={"AWS Region"}
@@ -261,7 +298,6 @@ const SettingsPage = () => {
     form
       .validateFields()
       .then((values) => {
-        console.log(values);
         updateAmpConfig.mutate(values);
       })
       .catch(() => {
@@ -298,11 +334,71 @@ const SettingsPage = () => {
         <Typography.Title level={4}>Authentication</Typography.Title>
         <AuthenticationFields />
         <Form.Item label={null} style={{ marginTop: 20 }}>
-          <Button type="primary" htmlType="submit">
+          <Button
+            type="primary"
+            onClick={() => {
+              form
+                .validateFields()
+                .then(() => {
+                  confirmationModal.setIsModalOpen(true);
+                })
+                .catch(() => {
+                  messageQueue.error("Please fill all required fields");
+                });
+            }}
+          >
             Submit
           </Button>
         </Form.Item>
       </Form>
+      <Modal
+        title="Update settings"
+        okButtonProps={{ style: { display: "none" } }}
+        open={confirmationModal.isModalOpen}
+        destroyOnClose={true}
+        onOk={handleSubmit}
+        loading={updateAmpConfig.isPending}
+        okText={"Yes, update it!"}
+        onCancel={() => {
+          confirmationModal.setIsModalOpen(false);
+        }}
+      >
+        <Typography>
+          Are you sure you want to update the settings? This will restart the
+          application and may take a few minutes.
+        </Typography>
+        <Flex align="center" justify="center" vertical gap={20}>
+          <Button
+            danger
+            type="primary"
+            onClick={handleSubmit}
+            loading={updateAmpConfig.isPending}
+            disabled={updateAmpConfig.isSuccess}
+          >
+            Start Update
+          </Button>
+          {updateAmpConfig.isSuccess ? (
+            <JobStatusTracker jobStatus={ampUpdateJobStatus.data} />
+          ) : null}
+          {hasSeenRestarting &&
+          ampUpdateJobStatus.data === JobStatus.SUCCEEDED ? (
+            <>
+              <Typography.Text>
+                RAG Studio has been updated successfully. Please refresh the
+                page to use the latest configuration.
+              </Typography.Text>
+              <Button
+                type="primary"
+                onClick={() => {
+                  location.reload();
+                }}
+              >
+                Refresh
+              </Button>
+            </>
+          ) : null}
+        </Flex>
+      </Modal>
     </Flex>
   );
 };

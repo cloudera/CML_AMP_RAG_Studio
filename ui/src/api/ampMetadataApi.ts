@@ -124,13 +124,6 @@ const updateAmpMutation = async (): Promise<string> => {
   return await postRequest(`${llmServicePath}/amp`, {});
 };
 
-export const useGetAmpConfig = () => {
-  return useQuery({
-    queryKey: [QueryKeys.getAmpConfig],
-    queryFn: getAmpConfig,
-  });
-};
-
 export interface AwsConfig {
   region?: string;
   document_bucket_name?: string;
@@ -155,6 +148,19 @@ export interface ProjectConfig {
   azure_config: AzureConfig;
   caii_config: CaiiConfig;
 }
+
+export const useGetAmpConfig = (poll?: boolean) => {
+  return useQuery({
+    queryKey: [QueryKeys.getAmpConfig],
+    queryFn: getAmpConfig,
+    refetchInterval: () => {
+      if (poll) {
+        return 1000;
+      }
+      return false;
+    },
+  });
+};
 
 export const getAmpConfig = async (): Promise<ProjectConfig> => {
   return await getRequest(`${llmServicePath}/amp/config`);
