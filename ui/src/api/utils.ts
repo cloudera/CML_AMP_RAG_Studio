@@ -108,6 +108,7 @@ export enum QueryKeys {
   "getDataSourcesForProject" = "getDataSourcesForProject",
   "getSessionsForProject" = "getSessionsForProject",
   "getAmpConfig" = "getAmpConfig",
+  "restartApplication" = "restartApplication",
 }
 
 export const commonHeaders = {

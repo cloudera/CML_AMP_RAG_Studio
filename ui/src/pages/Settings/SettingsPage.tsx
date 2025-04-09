@@ -49,6 +49,7 @@ import {
   JobStatus,
   ProjectConfig,
   useGetAmpConfig,
+  useRestartApplication,
   useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
 import { ReactNode, useEffect, useState } from "react";
@@ -82,10 +83,13 @@ const SettingsPage = () => {
       messageQueue.error(err.message);
     },
     onSuccess: () => {
-      messageQueue.success("Settings updated successfully");
+      messageQueue.success(
+        "Settings updated successfully.  Restarting the application.",
+      );
       setStartPolling(true);
     },
   });
+  useRestartApplication(startPolling);
   const { data: projectConfig, error: projectConfigError } =
     useGetAmpConfig(startPolling);
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(

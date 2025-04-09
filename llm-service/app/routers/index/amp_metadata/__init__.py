@@ -195,20 +195,25 @@ def update_configuration(
         env_to_save = existing_env | updated_env
         update_project_environment(env_to_save)
 
-        print(
-            subprocess.run(
-                [f"python {root_dir}/scripts/refresh_project.py"],
-                shell=True,
-                check=True,
-            )
-        )
-
         return env_to_config(get_project_environment())
 
     raise fastapi.HTTPException(
         status_code=403,
         detail="You do not have permission to access application configuration.",
     )
+
+
+@router.post("/restart-application", summary="Restarts the application.")
+@exceptions.propagates
+def restart_application() -> str:
+    print(
+        subprocess.run(
+            [f"python {root_dir}/scripts/refresh_project.py"],
+            shell=True,
+            check=True,
+        )
+    )
+    return "OK"
 
 
 def update_project_environment(new_env: dict[str, str]) -> None:

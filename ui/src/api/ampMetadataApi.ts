@@ -188,3 +188,15 @@ const updateAmpConfig = async (
 ): Promise<ProjectConfig> => {
   return await postRequest(`${llmServicePath}/amp/config`, config);
 };
+
+export const useRestartApplication = (enabled?: boolean) => {
+  return useQuery({
+    queryKey: [QueryKeys.restartApplication],
+    queryFn: restartApplication,
+    enabled: enabled,
+  });
+};
+
+const restartApplication = async (): Promise<string> => {
+  return await postRequest(`${llmServicePath}/amp/restart-application`, {});
+};
