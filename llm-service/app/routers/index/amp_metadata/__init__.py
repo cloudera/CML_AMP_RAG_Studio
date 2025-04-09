@@ -157,7 +157,9 @@ DEFAULT_CONFIGURATION = ProjectConfig(
 @exceptions.propagates
 def get_configuration(
     remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfig:
+    print("---", remote_user_perm)
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
     if remote_user != project_owner:
