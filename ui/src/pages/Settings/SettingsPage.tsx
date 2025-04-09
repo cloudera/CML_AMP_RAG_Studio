@@ -70,7 +70,7 @@ const SettingsPage = () => {
         }}
         value={selectedFileStorage}
         options={[
-          { value: "Local", label: "CML Filesystem" },
+          { value: "Local", label: "Project Filesystem" },
           { value: "AWS", label: "AWS S3" },
         ]}
       />
