@@ -51,10 +51,12 @@ import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
+import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
+  const { data: config } = useGetAmpConfig();
 
   const navigateTo = (path: string) => () => {
     navigate({ to: path }).catch(() => null);
@@ -133,7 +135,10 @@ const TopNav: React.FC = () => {
     <SettingOutlined />,
   );
 
-  const items = [...baseItems, models, analyticsItem, settingsItem];
+  const items = [...baseItems, models, analyticsItem];
+  if (config) {
+    items.push(settingsItem);
+  }
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {

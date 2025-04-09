@@ -60,6 +60,7 @@ import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import "./style.css";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
+import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 
 const { Sider } = Layout;
 
@@ -86,6 +87,7 @@ const Sidebar: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
+  const { data: config } = useGetAmpConfig();
 
   const navToRagApp = () => {
     navigate({ to: "/chats" }).catch(() => null);
@@ -194,7 +196,11 @@ const Sidebar: React.FC = () => {
     <SettingOutlined />,
   );
 
-  const items = [...baseItems, models, analyticsItem, settingsItem];
+  const items = [...baseItems, models, analyticsItem];
+
+  if (config) {
+    items.push(settingsItem);
+  }
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
