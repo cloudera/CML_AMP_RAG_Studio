@@ -178,6 +178,36 @@ def get_configuration(
         detail="You do not have permission to access application configuration.",
     )
 
+@router.post("/config", summary="Updates application configuration.")
+@exceptions.propagates
+def update_configuration(config: ProjectConfig,    remote_user: Annotated[str | None, Header()] = None,
+                             remote_user_perm: Annotated[str, Header()] = None,
+                             ) -> ProjectConfig:
+    existing_env = get_project_environment()
+    project_owner = existing_env.get("PROJECT_OWNER", "unknown")
+
+    if remote_user == project_owner or remote_user_perm == "RW":
+        # merge the new configuration with the existing one
+        updated_env = config_to_env(config)
+        env_to_save = existing_env | updated_env
+        
+
+    raise fastapi.HTTPException(
+        status_code=403,
+        detail="You do not have permission to access application configuration.",
+    )
+
+def update_project_environment(new_env: dict[str, str]) -> None :
+    try:
+        import cmlapi
+        client = cmlapi.default_client()
+        project_id = os.environ["CDSW_PROJECT_ID"]
+        project = client.get_project(project_id=project_id)
+        project.environment = json.dumps(new_env)
+        client.update_project(project_id=project_id, body=project)
+    except ImportError:
+        pass
+
 
 def get_project_environment() -> dict[str, str]:
     try:
@@ -189,6 +219,23 @@ def get_project_environment() -> dict[str, str]:
         return json.loads(project.environment)
     except ImportError:
         return dict(os.environ)
+
+def config_to_env(config: ProjectConfig) -> dict[str, str]:
+    """
+    Converts a ProjectConfig object to a dictionary of environment variables.
+    """
+    return {
+        "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
+        "AWS_DEFAULT_REGION": config.aws_config.region or "",
+        "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
+        "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
+        "AWS_ACCESS_KEY_ID": config.aws_config.access_key_id or "",
+        "AWS_SECRET_ACCESS_KEY": config.aws_config.secret_access_key or "",
+        "AZURE_OPENAI_API_KEY": config.azure_config.openai_key or "",
+        "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
+        "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
+        "CAII_DOMAIN": config.caii_config.caii_domain or "",
+    }
 
 
 def env_to_config(env: dict[str, str]) -> ProjectConfig:
