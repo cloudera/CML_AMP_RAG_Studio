@@ -49,7 +49,6 @@ import {
   JobStatus,
   ProjectConfig,
   useGetAmpConfig,
-  useGetAmpUpdateJobStatus,
   useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
 import { ReactNode, useEffect, useState } from "react";
@@ -77,9 +76,6 @@ const SettingsPage = () => {
   const { data: currentModelSource } = useGetModelSource();
   const confirmationModal = useModal();
   const [startPolling, setStartPolling] = useState(false);
-  const ampUpdateJobStatus = useGetAmpUpdateJobStatus(
-    confirmationModal.isModalOpen,
-  );
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
   const updateAmpConfig = useUpdateAmpConfig({
     onError: (err) => {
@@ -90,7 +86,8 @@ const SettingsPage = () => {
       setStartPolling(true);
     },
   });
-  const { data: projectConfig } = useGetAmpConfig(startPolling);
+  const { data: projectConfig, error: projectConfigError } =
+    useGetAmpConfig(startPolling);
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
@@ -99,10 +96,10 @@ const SettingsPage = () => {
   );
 
   useEffect(() => {
-    if (ampUpdateJobStatus.data === JobStatus.RESTARTING) {
+    if (projectConfigError) {
       setHasSeenRestarting(true);
     }
-  }, [ampUpdateJobStatus.data, setHasSeenRestarting]);
+  }, [projectConfigError, setHasSeenRestarting]);
 
   const FileStorageFields = () => (
     <Flex vertical style={{ maxWidth: 600 }}>
@@ -356,32 +353,32 @@ const SettingsPage = () => {
         okButtonProps={{ style: { display: "none" } }}
         open={confirmationModal.isModalOpen}
         destroyOnClose={true}
-        onOk={handleSubmit}
         loading={updateAmpConfig.isPending}
-        okText={"Yes, update it!"}
         onCancel={() => {
           confirmationModal.setIsModalOpen(false);
         }}
       >
-        <Typography>
-          Are you sure you want to update the settings? This will restart the
-          application and may take a few minutes.
-        </Typography>
         <Flex align="center" justify="center" vertical gap={20}>
+          <Typography>
+            Are you sure you want to update the settings? This will restart the
+            application and may take a few minutes.
+          </Typography>
           <Button
-            danger
             type="primary"
             onClick={handleSubmit}
             loading={updateAmpConfig.isPending}
             disabled={updateAmpConfig.isSuccess}
           >
-            Start Update
+            Update Settings
           </Button>
           {updateAmpConfig.isSuccess ? (
-            <JobStatusTracker jobStatus={ampUpdateJobStatus.data} />
+            <JobStatusTracker
+              jobStatus={
+                projectConfigError ? JobStatus.RESTARTING : JobStatus.SUCCEEDED
+              }
+            />
           ) : null}
-          {hasSeenRestarting &&
-          ampUpdateJobStatus.data === JobStatus.SUCCEEDED ? (
+          {hasSeenRestarting && projectConfig ? (
             <>
               <Typography.Text>
                 RAG Studio has been updated successfully. Please refresh the
