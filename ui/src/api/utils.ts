@@ -78,6 +78,7 @@ export enum MutationKeys {
   "deleteProject" = "deleteProject",
   "addDataSourceToProject" = "addDataSourceToProject",
   "removeDataSourceFromProject" = "removeDataSourceFromProject",
+  "updateAmpConfig" = "updateAmpConfig",
 }
 
 export enum QueryKeys {

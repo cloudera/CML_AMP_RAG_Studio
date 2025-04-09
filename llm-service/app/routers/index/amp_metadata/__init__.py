@@ -178,11 +178,14 @@ def get_configuration(
         detail="You do not have permission to access application configuration.",
     )
 
+
 @router.post("/config", summary="Updates application configuration.")
 @exceptions.propagates
-def update_configuration(config: ProjectConfig,    remote_user: Annotated[str | None, Header()] = None,
-                             remote_user_perm: Annotated[str, Header()] = None,
-                             ) -> ProjectConfig:
+def update_configuration(
+    config: ProjectConfig,
+    remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> ProjectConfig:
     existing_env = get_project_environment()
     project_owner = existing_env.get("PROJECT_OWNER", "unknown")
 
@@ -190,16 +193,20 @@ def update_configuration(config: ProjectConfig,    remote_user: Annotated[str | 
         # merge the new configuration with the existing one
         updated_env = config_to_env(config)
         env_to_save = existing_env | updated_env
-        
+        update_project_environment(env_to_save)
+
+        return env_to_config(get_project_environment())
 
     raise fastapi.HTTPException(
         status_code=403,
         detail="You do not have permission to access application configuration.",
     )
 
-def update_project_environment(new_env: dict[str, str]) -> None :
+
+def update_project_environment(new_env: dict[str, str]) -> None:
     try:
         import cmlapi
+
         client = cmlapi.default_client()
         project_id = os.environ["CDSW_PROJECT_ID"]
         project = client.get_project(project_id=project_id)
@@ -219,6 +226,7 @@ def get_project_environment() -> dict[str, str]:
         return json.loads(project.environment)
     except ImportError:
         return dict(os.environ)
+
 
 def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """

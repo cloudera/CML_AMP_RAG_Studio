@@ -35,10 +35,24 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Divider, Flex, Form, Input, Radio, Switch, Typography } from "antd";
-import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import {
+  Button,
+  Divider,
+  Flex,
+  Form,
+  Input,
+  Radio,
+  Switch,
+  Typography,
+} from "antd";
+import {
+  ProjectConfig,
+  useGetAmpConfig,
+  useUpdateAmpMutation,
+} from "src/api/ampMetadataApi.ts";
 import { useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const isModelSource = (value: string): value is ModelSource => {
   return value === "CAII" || value === "Bedrock" || value === "Azure";
@@ -50,6 +64,11 @@ const SettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: projectConfig } = useGetAmpConfig();
   const { data: currentModelSource } = useGetModelSource();
+  const updateAmpConfig = useUpdateAmpMutation({
+    onError: (err) => {
+      messageQueue.error(err.message);
+    },
+  });
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
@@ -223,9 +242,33 @@ const SettingsPage = () => {
     );
   };
 
+  const handleSubmit = async () => {
+    const values = await form.validateFields();
+    console.log(values);
+    // if (selectedFileStorage === "AWS") {
+    //   values.aws_config = {
+    //     ...values.aws_config,
+    //     document_bucket_name: values.document_bucket_name,
+    //     bucket_prefix: values.bucket_prefix,
+    //   };
+    // } else {
+    //   values.aws_config = {
+    //     ...values.aws_config,
+    //     document_bucket_name: undefined,
+    //     bucket_prefix: undefined,
+    //   };
+    // }
+    // updateAmpConfig.mutate(values);
+  };
+
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      <Form form={form} labelCol={{ offset: 1 }} disabled={true}>
+      <Form
+        form={form}
+        labelCol={{ offset: 1 }}
+        disabled={true}
+        onFinish={() => handleSubmit()}
+      >
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields />
         <Divider />
@@ -235,6 +278,11 @@ const SettingsPage = () => {
         <ModelProviderContent />
         <Typography.Title level={4}>Authentication</Typography.Title>
         <AuthenticationFields />
+        <Form.Item label={null}>
+          <Button type="primary" htmlType="submit">
+            Submit
+          </Button>
+        </Form.Item>
       </Form>
     </Flex>
   );
