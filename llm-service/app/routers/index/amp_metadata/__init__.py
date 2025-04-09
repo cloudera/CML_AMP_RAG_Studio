@@ -36,14 +36,13 @@
 #  DATA.
 # ##############################################################################
 import json
-import subprocess
 import os
-from typing import Annotated, Literal, Optional
+import subprocess
+from subprocess import CompletedProcess
+from typing import Annotated, Optional
 
 import fastapi
-from fastapi import APIRouter, FastAPI
-from subprocess import CompletedProcess
-
+from fastapi import APIRouter
 from fastapi.params import Header
 from pydantic import BaseModel
 
