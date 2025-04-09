@@ -59,12 +59,21 @@ root_dir = (
 
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
-def amp_up_to_date_status() -> bool:
-    # noinspection PyBroadException
-    try:
-        return does_amp_need_updating()
-    except Exception:
-        return False
+def amp_up_to_date_status(
+    remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> bool:
+    env = get_project_environment()
+    project_owner = env.get("PROJECT_OWNER", "unknown")
+
+    if remote_user == project_owner or remote_user_perm == "RW":
+        # noinspection PyBroadException
+        try:
+            return does_amp_need_updating()
+        except Exception:
+            return False
+
+    return False
 
 
 @router.post("", summary="Updates AMP.")
@@ -159,15 +168,16 @@ def get_configuration(
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfig:
-    print("---", remote_user_perm)
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
-    if remote_user != project_owner:
-        raise fastapi.HTTPException(
-            status_code=403,
-            detail="You do not have permission to access application configuration.",
-        )
-    return env_to_config(env)
+
+    if remote_user == project_owner or remote_user_perm == "RW":
+        return env_to_config(env)
+
+    raise fastapi.HTTPException(
+        status_code=403,
+        detail="You do not have permission to access application configuration.",
+    )
 
 
 def get_project_environment() -> dict[str, str]:
