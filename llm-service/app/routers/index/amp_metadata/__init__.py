@@ -151,15 +151,11 @@ class ProjectConfig(BaseModel):
     caii_config: CaiiConfig
 
 
-class ProjectConfigWithValidation(BaseModel):
+class ProjectConfigWithValidation(ProjectConfig):
     """
     Model to represent the project configuration.
     """
 
-    use_enhanced_pdf_processing: bool
-    aws_config: AwsConfig
-    azure_config: AzureConfig
-    caii_config: CaiiConfig
     is_valid_config: bool
 
 
