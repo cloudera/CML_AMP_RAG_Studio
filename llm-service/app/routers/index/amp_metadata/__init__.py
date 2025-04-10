@@ -208,12 +208,10 @@ def update_configuration(
 @router.post("/restart-application", summary="Restarts the application.")
 @exceptions.propagates
 def restart_application() -> str:
-    print(
-        subprocess.run(
-            [f"python {root_dir}/scripts/refresh_project.py"],
-            shell=True,
-            check=True,
-        )
+    subprocess.Popen(
+        [f"python {root_dir}/scripts/restart_app.py"],
+        shell=True,
+        start_new_session=True,
     )
     return "OK"
 
