@@ -52,4 +52,4 @@ print(
     "Project refresh complete. Restarting the RagStudio Application to pick up changes, if this isn't the initial deployment."
 )
 
-print(subprocess.run("bash scripts/restart_app.sh", shell=True, check=True))
+print(subprocess.run("bash scripts/restart_app.py", shell=True, check=True))
