@@ -39,10 +39,11 @@
 import { ModelSource } from "src/api/modelsApi.ts";
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
 import { Flex, Form, Input, Radio } from "antd";
-import {
-  isModelSource,
-  StyledHelperText,
-} from "pages/Settings/SettingsPage.tsx";
+import { StyledHelperText } from "pages/Settings/SettingsPage.tsx";
+
+const isModelSource = (value: string): value is ModelSource => {
+  return value === "CAII" || value === "Bedrock" || value === "Azure";
+};
 
 export const ModelProviderFields = ({
   setModelProvider,

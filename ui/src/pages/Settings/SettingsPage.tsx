@@ -47,10 +47,6 @@ import { FileStorageFields } from "pages/Settings/FileStorageFields.tsx";
 import { ModelProviderFields } from "pages/Settings/ModelProviderFields.tsx";
 import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
 
-export const isModelSource = (value: string): value is ModelSource => {
-  return value === "CAII" || value === "Bedrock" || value === "Azure";
-};
-
 export type FileStorage = "AWS" | "Local";
 
 export const StyledHelperText = ({ children }: { children: ReactNode }) => {
