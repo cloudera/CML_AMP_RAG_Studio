@@ -39,12 +39,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context: { queryClient } }) => {
     return await Promise.all([
       queryClient.ensureQueryData(getDataSourcesQueryOptions),
       queryClient.ensureQueryData(getSessionsQueryOptions),
+      queryClient.ensureQueryData(getAmpConfigQueryOptions),
     ]);
   },
 });

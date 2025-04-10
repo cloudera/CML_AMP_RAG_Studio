@@ -93,16 +93,7 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const {
-    data: projectConfig,
-    isSuccess: isProjectConfigSuccess,
-    isError: isProjectConfigError,
-  } = useGetAmpConfig(polling);
-  console.log({
-    projectConfig,
-    isProjectConfigSuccess,
-    isProjectConfigError,
-  });
+  const { isError: isProjectConfigError } = useGetAmpConfig(polling);
 
   const isRestarting = isProjectConfigError && polling;
   useEffect(() => {

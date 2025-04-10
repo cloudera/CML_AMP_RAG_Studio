@@ -168,7 +168,6 @@ export const getAmpConfig = async (): Promise<ProjectConfig | undefined> => {
     method: "GET",
     headers: { ...commonHeaders },
   });
-  console.log({ res });
   if (!res.ok) {
     return Promise.resolve(undefined);
   }

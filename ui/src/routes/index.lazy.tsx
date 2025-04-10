@@ -41,13 +41,19 @@ import GettingStarted from "src/components/GettingStarted/GettingStarted.tsx";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
 const Home = () => {
   const dataSources = useSuspenseQuery(getDataSourcesQueryOptions);
   const sessions = useSuspenseQuery(getSessionsQueryOptions);
+  const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
   if (dataSources.data.length === 0 && sessions.data.length === 0) {
     return <GettingStarted />;
+  }
+  console.log({ config });
+  if (!config?.is_valid_config) {
+    return <Navigate to={"/settings"} />;
   }
   return <Navigate to="/chats" />;
 };

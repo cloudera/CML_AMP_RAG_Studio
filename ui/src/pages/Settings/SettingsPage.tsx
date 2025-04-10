@@ -71,7 +71,7 @@ const SettingsPage = () => {
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      {!!projectConfig?.is_valid_config && (
+      {!projectConfig?.is_valid_config && (
         <Alert
           message="Please provide a valid model provider configuration."
           type="warning"
