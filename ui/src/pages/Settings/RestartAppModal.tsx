@@ -49,12 +49,12 @@ import { cdlAmber400, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
 
 const PROGRESS_STATES = {
   WAITING: {
-    percent: 10,
+    percent: 33,
     color: cdlAmber400,
     text: "Waiting",
   },
   RESTARTING: {
-    percent: 50,
+    percent: 67,
     color: cdlAmber400,
     text: "Restarting",
   },
@@ -162,7 +162,7 @@ const RestartAppModal = ({
           <Progress
             type="circle"
             percent={currentProgress.percent}
-            steps={2}
+            steps={3}
             trailColor={cdlGray200}
             strokeColor={currentProgress.color}
             strokeWidth={10}
