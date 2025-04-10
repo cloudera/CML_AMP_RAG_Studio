@@ -255,13 +255,23 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
-def validate(environ: dict[str, str]) -> bool:
-    print("Validating environment variables...")
-    #  aws
+def validate_storage_config(environ: dict[str, str]) -> bool:
     access_key_id = environ.get("AWS_ACCESS_KEY_ID") or None
     secret_key_id = environ.get("AWS_SECRET_ACCESS_KEY") or None
     default_region = environ.get("AWS_DEFAULT_REGION") or None
     document_bucket = environ.get("S3_RAG_DOCUMENT_BUCKET") or None
+
+    if document_bucket is not None:
+        if access_key_id is None or secret_key_id is None or default_region is None:
+            print("ERROR: Using S3 for document storage; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION")
+            return False
+    return True
+
+def validate_model_config(environ: dict[str, str]) -> bool:
+    #  aws
+    access_key_id = environ.get("AWS_ACCESS_KEY_ID") or None
+    secret_key_id = environ.get("AWS_SECRET_ACCESS_KEY") or None
+    default_region = environ.get("AWS_DEFAULT_REGION") or None
 
     # azure
     azure_openai_api_key = environ.get("AZURE_OPENAI_API_KEY") or None
@@ -271,51 +281,43 @@ def validate(environ: dict[str, str]) -> bool:
     # caii
     caii_domain = environ.get("CAII_DOMAIN") or None
 
+    valid_model_config_exists = False
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is not None:
         print("Using CAII for LLMs/embeddings; CAII_DOMAIN is set")
         try:
             socket.gethostbyname(caii_domain)
             print(f"CAII domain {caii_domain} can be resolved")
+            valid_model_config_exists = True
         except socket.error:
             print(f"ERROR: CAII domain {caii_domain} can not be resolved")
-            return False
-    elif any([access_key_id, secret_key_id, default_region]):
+
+    if any([access_key_id, secret_key_id, default_region]):
         if all([access_key_id, secret_key_id, default_region]):
-            print(
-                "Using Bedrock for LLMs/embeddings; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are set"
-            )
-
-        # 2. if you have a document_bucket, you _must_ have an access key, secret key, and default region
-        if document_bucket is not None:
-            if access_key_id is None or secret_key_id is None or default_region is None:
-                print(
-                    "ERROR: Using S3 for document storage; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION"
-                )
-                return False
-
-        if document_bucket is not None:
-            print("Using S3 for document storage (S3_RAG_DOCUMENT_BUCKET is set)")
+            valid_model_config_exists = True
         else:
             print(
-                "Using the project filesystem for document storage (S3_RAG_DOCUMENT_BUCKET is not set)"
+                "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
             )
-            # TODO: verify that the bucket prefix is always optional
-    elif all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
-        print(
-            "Using Azure for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are set"
-        )
-    else:
-        print("ERROR: Missing required environment variables for modeling serving")
-        print(
-            "ERROR: If using Bedrock for LLMs/embeddings; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION"
-        )
-        print(
-            "ERROR: If using Azure for LLMs/embeddings; missing required environment variables: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, OPENAI_API_VERSION"
-        )
-        print(
-            "ERROR: If using CAII for LLMs/embeddings; missing required environment variables: CAII_DOMAIN"
-        )
+
+    if any([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
+        if all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
+            valid_model_config_exists = True
+        else:
+            print(
+                "Azure config is not valid for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
+            )
+
+    return valid_model_config_exists
+
+
+def validate(environ: dict[str, str]) -> bool:
+    print("Validating environment variables...")
+    storage_options_valid = validate_storage_config(environ)
+    valid_model_options = validate_model_config(environ)
+
+    if not valid_model_options or not storage_options_valid:
+        print("ERROR: Invalid configuration options")
         return False
     return True
 
