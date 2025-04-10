@@ -39,7 +39,7 @@ import json
 import os
 import subprocess
 from subprocess import CompletedProcess
-from typing import Annotated, Optional
+from typing import Annotated, Optional, cast
 
 import fastapi
 from fastapi import APIRouter
@@ -236,7 +236,7 @@ def get_project_environment() -> dict[str, str]:
         client = cmlapi.default_client()
         project_id = os.environ["CDSW_PROJECT_ID"]
         project = client.get_project(project_id=project_id)
-        return json.loads(project.environment)
+        return cast(dict[str, str], json.loads(project.environment))
     except ImportError:
         return dict(os.environ)
 
@@ -279,7 +279,9 @@ def env_to_config(env: dict[str, str]) -> ProjectConfig:
         caii_domain=env.get("CAII_DOMAIN"),
     )
     return ProjectConfig(
-        use_enhanced_pdf_processing=env.get("USE_ENHANCED_PDF_PROCESSING", False),
+        use_enhanced_pdf_processing=cast(
+            bool, env.get("USE_ENHANCED_PDF_PROCESSING", False)
+        ),
         aws_config=aws_config,
         azure_config=azure_config,
         caii_config=caii_config,
