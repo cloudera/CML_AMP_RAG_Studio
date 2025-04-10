@@ -189,11 +189,15 @@ const updateAmpConfig = async (
   return await postRequest(`${llmServicePath}/amp/config`, config);
 };
 
-export const useRestartApplication = (enabled?: boolean) => {
-  return useQuery({
-    queryKey: [QueryKeys.restartApplication],
-    queryFn: restartApplication,
-    enabled: enabled,
+export const useRestartApplication = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.restartApplication],
+    mutationFn: restartApplication,
+    onSuccess,
+    onError,
   });
 };
 

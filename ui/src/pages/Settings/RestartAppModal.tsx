@@ -35,10 +35,8 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, FormInstance, Modal, Typography } from "antd";
-import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
+import { Button, Flex, FormInstance, Modal, Progress, Typography } from "antd";
 import {
-  JobStatus,
   ProjectConfig,
   useGetAmpConfig,
   useRestartApplication,
@@ -47,6 +45,7 @@ import {
 import { useEffect, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { ModalHook } from "src/utils/useModal.ts";
+import { cdlAmber400, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
 
 const RestartAppModal = ({
   confirmationModal,
@@ -57,6 +56,11 @@ const RestartAppModal = ({
 }) => {
   const [startPolling, setStartPolling] = useState(false);
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
+  const restartApplication = useRestartApplication({
+    onError: () => {
+      messageQueue.error("Failed to restart application");
+    },
+  });
   const updateAmpConfig = useUpdateAmpConfig({
     onError: (err) => {
       messageQueue.error(err.message);
@@ -66,9 +70,9 @@ const RestartAppModal = ({
         "Settings updated successfully.  Restarting the application.",
       );
       setStartPolling(true);
+      restartApplication.mutate({});
     },
   });
-  useRestartApplication(startPolling);
   const { data: projectConfig, isError: isProjectConfigError } =
     useGetAmpConfig(startPolling);
 
@@ -114,10 +118,20 @@ const RestartAppModal = ({
           Update Settings
         </Button>
         {updateAmpConfig.isSuccess ? (
-          <JobStatusTracker
-            jobStatus={
-              isProjectConfigError ? JobStatus.RESTARTING : JobStatus.SUCCEEDED
-            }
+          <Progress
+            type="circle"
+            percent={isProjectConfigError ? 10 : 100}
+            steps={2}
+            trailColor={cdlGray200}
+            strokeColor={isProjectConfigError ? cdlAmber400 : cdlGreen600}
+            strokeWidth={10}
+            format={() => (
+              <Flex align="center" justify="center">
+                <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
+                  {isProjectConfigError ? "Restarting" : "Ready"}
+                </Typography.Text>
+              </Flex>
+            )}
           />
         ) : null}
         {hasSeenRestarting && projectConfig ? (
