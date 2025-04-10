@@ -105,18 +105,18 @@ const RestartAppModal = ({
   };
 
   const currentProgress = () => {
+    if (polling && !hasSeenRestarting) {
+      return {
+        percent: 10,
+        color: cdlAmber400,
+        text: "Waiting",
+      };
+    }
     if (isRestarting) {
       return {
         percent: 50,
         color: cdlAmber400,
         text: "Restarting",
-      };
-    }
-    if (polling) {
-      return {
-        percent: 10,
-        color: cdlAmber400,
-        text: "Waiting",
       };
     }
     return {
