@@ -46,6 +46,8 @@ import { useEffect, useMemo, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { ModalHook } from "src/utils/useModal.ts";
 import { cdlBlue600, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
+import { ModelSource } from "src/api/modelsApi.ts";
+import { FileStorage } from "pages/Settings/SettingsPage.tsx";
 
 const PROGRESS_STATES = {
   WAITING: {
@@ -68,9 +70,13 @@ const PROGRESS_STATES = {
 const RestartAppModal = ({
   confirmationModal,
   form,
+  selectedFileStorage,
+  modelProvider,
 }: {
   confirmationModal: ModalHook;
   form: FormInstance<ProjectConfig>;
+  selectedFileStorage: FileStorage;
+  modelProvider?: ModelSource;
 }) => {
   const [polling, setPolling] = useState(false);
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
@@ -106,6 +112,14 @@ const RestartAppModal = ({
     form
       .validateFields()
       .then((values) => {
+        if (modelProvider === "CAII") {
+          values.azure_config = {};
+        } else if (modelProvider === "Bedrock") {
+          values.azure_config = {};
+          values.caii_config = {};
+        } else if (modelProvider === "Azure") {
+          values.caii_config = {};
+        }
         updateAmpConfig.mutate(values);
       })
       .catch(() => {

@@ -128,7 +128,12 @@ const SettingsPage = () => {
           </Button>
         </Form.Item>
       </Form>
-      <RestartAppModal confirmationModal={confirmationModal} form={form} />
+      <RestartAppModal
+        confirmationModal={confirmationModal}
+        form={form}
+        selectedFileStorage={selectedFileStorage}
+        modelProvider={modelProvider}
+      />
     </Flex>
   );
 };
