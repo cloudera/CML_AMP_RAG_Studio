@@ -54,11 +54,11 @@ const RestartAppModal = ({
   confirmationModal: ModalHook;
   form: FormInstance<ProjectConfig>;
 }) => {
-  const [startPolling, setStartPolling] = useState(false);
+  const [polling, setPolling] = useState(false);
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
   const restartApplication = useRestartApplication({
     onSuccess: () => {
-      setStartPolling(true);
+      setPolling(true);
     },
     onError: () => {
       messageQueue.error("Failed to restart application");
@@ -79,19 +79,19 @@ const RestartAppModal = ({
     data: projectConfig,
     isSuccess: isProjectConfigSuccess,
     isError: isProjectConfigError,
-  } = useGetAmpConfig(startPolling);
+  } = useGetAmpConfig(polling);
   console.log({
     projectConfig,
     isProjectConfigSuccess,
     isProjectConfigError,
   });
 
-  const inPollingMode = isProjectConfigError && !projectConfig;
+  const isRestarting = isProjectConfigError && polling;
   useEffect(() => {
-    if (inPollingMode) {
+    if (isRestarting) {
       setHasSeenRestarting(true);
     }
-  }, [inPollingMode, setHasSeenRestarting]);
+  }, [isRestarting, setHasSeenRestarting]);
 
   const handleSubmit = () => {
     form
@@ -102,6 +102,28 @@ const RestartAppModal = ({
       .catch(() => {
         messageQueue.error("Please fill all required fields");
       });
+  };
+
+  const currentProgress = () => {
+    if (isRestarting) {
+      return {
+        percent: 50,
+        color: cdlAmber400,
+        text: "Restarting",
+      };
+    }
+    if (polling) {
+      return {
+        percent: 10,
+        color: cdlAmber400,
+        text: "Waiting",
+      };
+    }
+    return {
+      percent: 100,
+      color: cdlGreen600,
+      text: "Ready",
+    };
   };
 
   return (
@@ -131,15 +153,15 @@ const RestartAppModal = ({
         {updateAmpConfig.isSuccess ? (
           <Progress
             type="circle"
-            percent={inPollingMode ? 10 : 100}
+            percent={currentProgress().percent}
             steps={2}
             trailColor={cdlGray200}
-            strokeColor={inPollingMode ? cdlAmber400 : cdlGreen600}
+            strokeColor={currentProgress().color}
             strokeWidth={10}
             format={() => (
               <Flex align="center" justify="center">
                 <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
-                  {inPollingMode ? "Restarting" : "Ready"}
+                  {currentProgress().text}
                 </Typography.Text>
               </Flex>
             )}
