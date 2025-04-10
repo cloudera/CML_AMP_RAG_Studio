@@ -35,7 +35,7 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, Form, Typography } from "antd";
+import { Alert, Button, Flex, Form, Typography } from "antd";
 import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 import { ReactNode, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
@@ -71,6 +71,14 @@ const SettingsPage = () => {
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
+      {!!projectConfig?.is_valid_config && (
+        <Alert
+          message="Please provide a valid model provider configuration."
+          type="warning"
+          showIcon
+          style={{ marginTop: 40, width: 600 }}
+        />
+      )}
       <Form form={form} labelCol={{ offset: 1 }}>
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields projectConfig={projectConfig} />
