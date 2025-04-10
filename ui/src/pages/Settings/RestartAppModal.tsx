@@ -73,14 +73,15 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const { data: projectConfig, isError: isProjectConfigError } =
+  const { data: projectConfig, isSuccess: isProjectConfigSuccess } =
     useGetAmpConfig(startPolling);
 
+  const inPollingMode = isProjectConfigSuccess && !projectConfig;
   useEffect(() => {
-    if (isProjectConfigError) {
+    if (inPollingMode) {
       setHasSeenRestarting(true);
     }
-  }, [isProjectConfigError, setHasSeenRestarting]);
+  }, [inPollingMode, setHasSeenRestarting]);
 
   const handleSubmit = () => {
     form
@@ -120,15 +121,15 @@ const RestartAppModal = ({
         {updateAmpConfig.isSuccess ? (
           <Progress
             type="circle"
-            percent={isProjectConfigError ? 10 : 100}
+            percent={inPollingMode ? 10 : 100}
             steps={2}
             trailColor={cdlGray200}
-            strokeColor={isProjectConfigError ? cdlAmber400 : cdlGreen600}
+            strokeColor={inPollingMode ? cdlAmber400 : cdlGreen600}
             strokeWidth={10}
             format={() => (
               <Flex align="center" justify="center">
                 <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
-                  {isProjectConfigError ? "Restarting" : "Ready"}
+                  {inPollingMode ? "Restarting" : "Ready"}
                 </Typography.Text>
               </Flex>
             )}
