@@ -71,7 +71,7 @@ export const AuthenticationFields = ({
       <Input placeholder="us-west-2" />
     </Form.Item>
     <Form.Item
-      label={"Access Key ID"}
+      label={"AWS Access Key ID"}
       initialValue={projectConfig?.aws_config.access_key_id}
       name={["aws_config", "access_key_id"]}
       required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
@@ -81,13 +81,12 @@ export const AuthenticationFields = ({
             modelProvider === "Bedrock" || selectedFileStorage === "AWS",
         },
       ]}
-      tooltip="Access Key ID"
       hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
     >
       <Input placeholder="access-key-id" />
     </Form.Item>
     <Form.Item
-      label={"Secret Access Key"}
+      label={"AWS Secret Access Key"}
       initialValue={projectConfig?.aws_config.secret_access_key}
       name={["aws_config", "secret_access_key"]}
       required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
@@ -97,7 +96,6 @@ export const AuthenticationFields = ({
             modelProvider === "Bedrock" || selectedFileStorage === "AWS",
         },
       ]}
-      tooltip="AWS Secret Access Key"
       hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
     >
       <Input placeholder="secret-access-key" type="password" />

@@ -45,17 +45,17 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { ModalHook } from "src/utils/useModal.ts";
-import { cdlAmber400, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
 
 const PROGRESS_STATES = {
   WAITING: {
     percent: 33,
-    color: cdlAmber400,
+    color: cdlBlue600,
     text: "Waiting",
   },
   RESTARTING: {
     percent: 67,
-    color: cdlAmber400,
+    color: cdlBlue600,
     text: "Restarting",
   },
   READY: {
