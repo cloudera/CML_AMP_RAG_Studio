@@ -48,12 +48,12 @@ const Home = () => {
   const sessions = useSuspenseQuery(getSessionsQueryOptions);
   const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
-  if (dataSources.data.length === 0 && sessions.data.length === 0) {
-    return <GettingStarted />;
-  }
   console.log({ config });
   if (!config?.is_valid_config) {
     return <Navigate to={"/settings"} />;
+  }
+  if (dataSources.data.length === 0 && sessions.data.length === 0) {
+    return <GettingStarted />;
   }
   return <Navigate to="/chats" />;
 };
