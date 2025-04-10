@@ -152,17 +152,6 @@ class ProjectConfig(BaseModel):
     is_valid_config: bool
 
 
-DEFAULT_CONFIGURATION = ProjectConfig(
-    use_enhanced_pdf_processing=False,
-    aws_config=AwsConfig(
-        region="us-west-2",
-        bucket_prefix="rag-studio",
-    ),
-    azure_config=AzureConfig(),
-    caii_config=CaiiConfig(),
-)
-
-
 @router.get("/config", summary="Returns application configuration.")
 @exceptions.propagates
 def get_configuration(
