@@ -120,6 +120,12 @@ const RestartAppModal = ({
         } else if (modelProvider === "Azure") {
           values.caii_config = {};
         }
+
+        if (selectedFileStorage === "Local") {
+          values.aws_config.document_bucket_name = undefined;
+          values.aws_config.bucket_prefix = undefined;
+        }
+
         updateAmpConfig.mutate(values);
       })
       .catch(() => {
@@ -147,6 +153,7 @@ const RestartAppModal = ({
       destroyOnClose={true}
       loading={updateAmpConfig.isPending}
       onCancel={() => {
+        setPolling(false);
         confirmationModal.setIsModalOpen(false);
       }}
     >

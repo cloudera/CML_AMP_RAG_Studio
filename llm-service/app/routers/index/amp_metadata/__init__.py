@@ -184,6 +184,7 @@ def update_configuration(
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigWithValidation:
+    print(f"{config=}")
     existing_env = get_project_environment()
     project_owner = existing_env.get("PROJECT_OWNER", "unknown")
 
