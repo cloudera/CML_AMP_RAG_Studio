@@ -37,6 +37,7 @@
 # ##############################################################################
 import json
 import os
+import socket
 import subprocess
 from subprocess import CompletedProcess
 from typing import Annotated, Optional, cast
@@ -148,6 +149,7 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
+    is_valid_config: bool
 
 
 DEFAULT_CONFIGURATION = ProjectConfig(
@@ -259,6 +261,71 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
+def validate(environ: dict[str, str]):
+    print("Validating environment variables...")
+    #  aws
+    access_key_id = environ.get("AWS_ACCESS_KEY_ID") or None
+    secret_key_id = environ.get("AWS_SECRET_ACCESS_KEY") or None
+    default_region = environ.get("AWS_DEFAULT_REGION") or None
+    document_bucket = environ.get("S3_RAG_DOCUMENT_BUCKET") or None
+
+    # azure
+    azure_openai_api_key = environ.get("AZURE_OPENAI_API_KEY") or None
+    azure_openai_endpoint = environ.get("AZURE_OPENAI_ENDPOINT") or None
+    openai_api_version = environ.get("OPENAI_API_VERSION") or None
+
+    # caii
+    caii_domain = environ.get("CAII_DOMAIN") or None
+
+    # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
+    if caii_domain is not None:
+        print("Using CAII for LLMs/embeddings; CAII_DOMAIN is set")
+        try:
+            socket.gethostbyname(caii_domain)
+            print(f"CAII domain {caii_domain} can be resolved")
+        except socket.error:
+            print(f"ERROR: CAII domain {caii_domain} can not be resolved")
+            return False
+    elif any([access_key_id, secret_key_id, default_region]):
+        if all([access_key_id, secret_key_id, default_region]):
+            print(
+                "Using Bedrock for LLMs/embeddings; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are set"
+            )
+
+        # 2. if you have a document_bucket, you _must_ have an access key, secret key, and default region
+        if document_bucket is not None:
+            if access_key_id is None or secret_key_id is None or default_region is None:
+                print(
+                    "ERROR: Using S3 for document storage; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION"
+                )
+                return False
+
+        if document_bucket is not None:
+            print("Using S3 for document storage (S3_RAG_DOCUMENT_BUCKET is set)")
+        else:
+            print(
+                "Using the project filesystem for document storage (S3_RAG_DOCUMENT_BUCKET is not set)"
+            )
+            # TODO: verify that the bucket prefix is always optional
+    elif all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
+        print(
+            "Using Azure for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are set"
+        )
+    else:
+        print("ERROR: Missing required environment variables for modeling serving")
+        print(
+            "ERROR: If using Bedrock for LLMs/embeddings; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION"
+        )
+        print(
+            "ERROR: If using Azure for LLMs/embeddings; missing required environment variables: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, OPENAI_API_VERSION"
+        )
+        print(
+            "ERROR: If using CAII for LLMs/embeddings; missing required environment variables: CAII_DOMAIN"
+        )
+        return False
+    return True
+
+
 def env_to_config(env: dict[str, str]) -> ProjectConfig:
     """
     Converts environment variables to a ProjectConfig object.
@@ -285,4 +352,5 @@ def env_to_config(env: dict[str, str]) -> ProjectConfig:
         aws_config=aws_config,
         azure_config=azure_config,
         caii_config=caii_config,
+        is_valid_config=validate(env),
     )

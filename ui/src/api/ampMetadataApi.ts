@@ -147,6 +147,7 @@ export interface ProjectConfig {
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   caii_config: CaiiConfig;
+  is_valid_config: boolean;
 }
 
 export const useGetAmpConfig = (poll?: boolean) => {
