@@ -149,6 +149,17 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
+
+
+class ProjectConfigWithValidation(BaseModel):
+    """
+    Model to represent the project configuration.
+    """
+
+    use_enhanced_pdf_processing: bool
+    aws_config: AwsConfig
+    azure_config: AzureConfig
+    caii_config: CaiiConfig
     is_valid_config: bool
 
 
@@ -157,7 +168,7 @@ class ProjectConfig(BaseModel):
 def get_configuration(
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
-) -> ProjectConfig:
+) -> ProjectConfigWithValidation:
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
 
@@ -176,7 +187,7 @@ def update_configuration(
     config: ProjectConfig,
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
-) -> ProjectConfig:
+) -> ProjectConfigWithValidation:
     existing_env = get_project_environment()
     project_owner = existing_env.get("PROJECT_OWNER", "unknown")
 
@@ -250,7 +261,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
-def validate(environ: dict[str, str]):
+def validate(environ: dict[str, str]) -> bool:
     print("Validating environment variables...")
     #  aws
     access_key_id = environ.get("AWS_ACCESS_KEY_ID") or None
@@ -315,7 +326,7 @@ def validate(environ: dict[str, str]):
     return True
 
 
-def env_to_config(env: dict[str, str]) -> ProjectConfig:
+def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
     """
     Converts environment variables to a ProjectConfig object.
     """
@@ -334,7 +345,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfig:
     caii_config = CaiiConfig(
         caii_domain=env.get("CAII_DOMAIN"),
     )
-    return ProjectConfig(
+    return ProjectConfigWithValidation(
         use_enhanced_pdf_processing=cast(
             bool, env.get("USE_ENHANCED_PDF_PROCESSING", False)
         ),
