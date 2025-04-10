@@ -42,10 +42,28 @@ import {
   useRestartApplication,
   useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { ModalHook } from "src/utils/useModal.ts";
 import { cdlAmber400, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
+
+const PROGRESS_STATES = {
+  WAITING: {
+    percent: 10,
+    color: cdlAmber400,
+    text: "Waiting",
+  },
+  RESTARTING: {
+    percent: 50,
+    color: cdlAmber400,
+    text: "Restarting",
+  },
+  READY: {
+    percent: 100,
+    color: cdlGreen600,
+    text: "Ready",
+  },
+};
 
 const RestartAppModal = ({
   confirmationModal,
@@ -105,27 +123,16 @@ const RestartAppModal = ({
   };
 
   const waitingToRestart = polling && !hasSeenRestarting;
-  const currentProgress = () => {
+
+  const currentProgress = useMemo(() => {
     if (waitingToRestart) {
-      return {
-        percent: 10,
-        color: cdlAmber400,
-        text: "Waiting",
-      };
+      return PROGRESS_STATES.WAITING;
     }
     if (isRestarting) {
-      return {
-        percent: 50,
-        color: cdlAmber400,
-        text: "Restarting",
-      };
+      return PROGRESS_STATES.RESTARTING;
     }
-    return {
-      percent: 100,
-      color: cdlGreen600,
-      text: "Ready",
-    };
-  };
+    return PROGRESS_STATES.READY;
+  }, [waitingToRestart, isRestarting]);
 
   return (
     <Modal
@@ -154,21 +161,21 @@ const RestartAppModal = ({
         {updateAmpConfig.isSuccess ? (
           <Progress
             type="circle"
-            percent={currentProgress().percent}
+            percent={currentProgress.percent}
             steps={2}
             trailColor={cdlGray200}
-            strokeColor={currentProgress().color}
+            strokeColor={currentProgress.color}
             strokeWidth={10}
             format={() => (
               <Flex align="center" justify="center">
                 <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
-                  {currentProgress().text}
+                  {currentProgress.text}
                 </Typography.Text>
               </Flex>
             )}
           />
         ) : null}
-        {!waitingToRestart && !isRestarting ? (
+        {updateAmpConfig.isSuccess && !waitingToRestart && !isRestarting ? (
           <>
             <Typography.Text>
               RAG Studio has been updated successfully. Please refresh the page
