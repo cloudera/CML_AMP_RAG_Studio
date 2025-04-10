@@ -57,6 +57,9 @@ const RestartAppModal = ({
   const [startPolling, setStartPolling] = useState(false);
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
   const restartApplication = useRestartApplication({
+    onSuccess: () => {
+      setStartPolling(true);
+    },
     onError: () => {
       messageQueue.error("Failed to restart application");
     },
@@ -69,14 +72,21 @@ const RestartAppModal = ({
       messageQueue.success(
         "Settings updated successfully.  Restarting the application.",
       );
-      setStartPolling(true);
       restartApplication.mutate({});
     },
   });
-  const { data: projectConfig, isSuccess: isProjectConfigSuccess } =
-    useGetAmpConfig(startPolling);
+  const {
+    data: projectConfig,
+    isSuccess: isProjectConfigSuccess,
+    isError: isProjectConfigError,
+  } = useGetAmpConfig(startPolling);
+  console.log({
+    projectConfig,
+    isProjectConfigSuccess,
+    isProjectConfigError,
+  });
 
-  const inPollingMode = isProjectConfigSuccess && !projectConfig;
+  const inPollingMode = isProjectConfigError && !projectConfig;
   useEffect(() => {
     if (inPollingMode) {
       setHasSeenRestarting(true);
