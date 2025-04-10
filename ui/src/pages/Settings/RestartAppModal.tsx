@@ -104,8 +104,9 @@ const RestartAppModal = ({
       });
   };
 
+  const waitingToRestart = polling && !hasSeenRestarting;
   const currentProgress = () => {
-    if (polling && !hasSeenRestarting) {
+    if (waitingToRestart) {
       return {
         percent: 10,
         color: cdlAmber400,
@@ -167,7 +168,7 @@ const RestartAppModal = ({
             )}
           />
         ) : null}
-        {hasSeenRestarting && projectConfig ? (
+        {!waitingToRestart && !isRestarting ? (
           <>
             <Typography.Text>
               RAG Studio has been updated successfully. Please refresh the page
