@@ -1,7 +1,6 @@
 name: RAG Studio
 description: | 
-  "Build a RAG application to ask questions about your documents. \n\n
-  \n\n Configuration for access to models will be available inside the application itself once it has been deployed."
+  "Build a RAG application to ask questions about your documents.  Configuration for access to models will be available inside the application itself once it has been deployed."
 author: "Cloudera"
 date: "2024-09-10"
 specification_version: 1.0
