@@ -156,7 +156,7 @@ const RestartAppModal = ({
       open={confirmationModal.isModalOpen}
       destroyOnClose={true}
       loading={updateAmpConfig.isPending}
-      maskClosable={updateInProgress}
+      maskClosable={!updateInProgress}
       onCancel={() => {
         setPolling(false);
         confirmationModal.setIsModalOpen(false);

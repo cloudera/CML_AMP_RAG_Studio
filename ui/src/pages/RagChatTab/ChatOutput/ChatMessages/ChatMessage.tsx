@@ -53,10 +53,20 @@ import "../tableMarkdown.css";
 const ChatMessage = ({
   data,
   isLast,
+  error,
 }: {
   data: ChatMessageType;
   isLast: boolean;
+  error?: null | Error;
 }) => {
+  console.log({ isLast, error, isPlaceholder: isPlaceholder(data) });
+  if (error && isLast) {
+    return (
+      <div>
+        <Typography.Text type="danger">{error.message}</Typography.Text>
+      </div>
+    );
+  }
   if (isPlaceholder(data)) {
     return <PendingRagOutputSkeleton question={data.rag_message.user} />;
   }

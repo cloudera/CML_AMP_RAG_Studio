@@ -39,7 +39,13 @@
 import { Divider, Row, Skeleton } from "antd";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 
-const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
+const PendingRagOutputSkeleton = ({
+  question,
+  error,
+}: {
+  question: string;
+  error?: null | Error;
+}) => {
   return (
     <div style={{ width: "100%" }}>
       <div>

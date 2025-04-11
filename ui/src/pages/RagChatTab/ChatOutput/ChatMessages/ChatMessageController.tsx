@@ -68,7 +68,7 @@ const ChatMessageController = () => {
       messageQueue.error(err.message);
     },
   });
-  const { mutate: chatMutation } = useChatMutation({
+  const { mutate: chatMutation, error: chatError } = useChatMutation({
     onError: (err) => {
       messageQueue.error(err.message);
     },
@@ -116,7 +116,12 @@ const ChatMessageController = () => {
   }
   if (chatHistory.length === 0) {
     if (search.question) {
-      return <PendingRagOutputSkeleton question={search.question} />;
+      return (
+        <PendingRagOutputSkeleton
+          question={search.question}
+          error={chatError}
+        />
+      );
     }
     return (
       <>
@@ -142,6 +147,7 @@ const ChatMessageController = () => {
           data={historyMessage}
           key={historyMessage.id}
           isLast={index === history.length - 1}
+          error={chatError}
         />
       ))}
       <div ref={scrollEl} />
