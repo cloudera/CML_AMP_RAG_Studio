@@ -44,16 +44,10 @@ import {
   RobotFilled,
   SettingOutlined,
 } from "@ant-design/icons";
-import {Flex, Menu, MenuProps, Tag, Tooltip, Typography} from "antd";
+import { Flex, Menu, MenuProps, Tag, Tooltip, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
-import {
-  cdlAmber200,
-  cdlAmber900,
-  cdlBlue200,
-  cdlGray200,
-  cdlSlate800,
-} from "src/cuix/variables.ts";
+import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
@@ -193,13 +187,16 @@ function getItem(
   icon?: React.ReactNode,
   children?: MenuItem[],
 ): MenuItem {
+  const toolTipLabel = (
+    <Tooltip title="A valid config is required">{label}</Tooltip>
+  );
   return {
     key,
     icon,
     children,
-   <Tooltip>{label}</Tooltip>,
+    label: disabled ? toolTipLabel : label,
     onClick,
-    disabled: disabled,
+    disabled,
   } as MenuItem;
 }
 

@@ -74,11 +74,15 @@ function getItem(
   icon?: React.ReactNode,
   children?: MenuItem[],
 ): MenuItem {
+  const toolTipLabel = (
+    <Tooltip title="A valid config is required">{label}</Tooltip>
+  );
+
   return {
     key,
     icon,
     children,
-    label,
+    label: disabled ? toolTipLabel : label,
     onClick,
     disabled: disabled,
   } as MenuItem;
