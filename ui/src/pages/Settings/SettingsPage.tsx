@@ -96,7 +96,7 @@ const SettingsPage = () => {
       )}
       {!enableSettingsModification && (
         <Alert
-          message="Storage and model provider settings cannot be modified while there are active chats or knowledge bases."
+          message="Storage and model provider settings cannot be modified if there are any chats or knowledge bases."
           type="warning"
           showIcon
           style={{ marginTop: 40, width: "fit-content" }}
