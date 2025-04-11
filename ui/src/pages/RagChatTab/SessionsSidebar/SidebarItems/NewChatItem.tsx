@@ -38,12 +38,14 @@
 
 import { Button, Flex, Typography } from "antd";
 import { MenuItem } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.tsx";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { CommentOutlined, PlusCircleOutlined } from "@ant-design/icons";
-import { cdlBlue600, cdlGray700 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGray300, cdlGray700 } from "src/cuix/variables.ts";
 
 export const newChatItem = (): MenuItem => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const disableNewChat = location.pathname === "/chats";
   return [
     {
       key: "new",
@@ -63,12 +65,17 @@ export const newChatItem = (): MenuItem => {
           </Flex>
           <Button
             type="text"
-            icon={<PlusCircleOutlined style={{ color: cdlBlue600 }} />}
+            icon={
+              <PlusCircleOutlined
+                style={{ color: disableNewChat ? cdlGray300 : cdlBlue600 }}
+              />
+            }
             onClick={() => {
               navigate({
                 to: "/chats",
               }).catch(() => null);
             }}
+            disabled={disableNewChat}
           />
         </Flex>
       ),

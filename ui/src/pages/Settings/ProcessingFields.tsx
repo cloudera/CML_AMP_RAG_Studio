@@ -36,9 +36,27 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import AnalyticsPage from "pages/Analytics/AnalyticsPage.tsx";
+import { ProjectConfig } from "src/api/ampMetadataApi.ts";
+import { Flex, Form, Switch } from "antd";
 
-export const Route = createLazyFileRoute("/_layout/analytics/_layout-models/")({
-  component: () => <AnalyticsPage />,
-});
+export const ProcessingFields = ({
+  projectConfig,
+}: {
+  projectConfig?: ProjectConfig;
+}) => {
+  return (
+    <Flex vertical style={{ maxWidth: 600 }}>
+      <Form.Item
+        label="Enhanced PDF Processing"
+        name={["use_enhanced_pdf_processing"]}
+        initialValue={projectConfig?.use_enhanced_pdf_processing}
+        valuePropName="checked"
+        tooltip={
+          "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16G of RAM is required for this option."
+        }
+      >
+        <Switch />
+      </Form.Item>
+    </Flex>
+  );
+};

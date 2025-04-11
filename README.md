@@ -74,6 +74,24 @@ Cloudera for assistance. Additionally, further details on the AMP status can be 
 
 - TBD
 
+## CDP Token Override
+
+If you are using CAII and would like to override the default CDP token used within RAG Studio, you can do so by providing the `CDP_TOKEN_OVERRIDE` environment variable.
+This variable can be set from the project settings for the AMP in CML.
+
+## Air-gapped Environments
+
+If you are using an air-gapped environment, you will need to whitelist at the minimum the following domains in order to use the AMP.
+There may be other domains that need to be whitelisted depending on your environment and the model service provider you select. 
+
+- `https://github.com`
+- `https://raw.githubusercontent.com`
+- `https://pypi.org`
+- `https://files.pythonhosted.org`
+- `http://registry.npmjs.org/`
+- `http://services.gradle.org`
+- `https://corretto.aws/downloads/latest/`
+
 ## Developer Information
 
 Ignore this section unless you are working on developing or enhancing this AMP.

@@ -113,7 +113,16 @@ const getRerankingModels = async (): Promise<Model[]> => {
   return await getRequest(`${llmServicePath}/models/reranking`);
 };
 
-type ModelSource = "CAII" | "Bedrock" | "Azure";
+export type ModelSource = "CAII" | "Bedrock" | "Azure";
+
+export const useGetModelSource = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getModelSource],
+    queryFn: async () => {
+      return await getModelSource();
+    },
+  });
+};
 
 export const getModelSourceQueryOptions = queryOptions({
   queryKey: [QueryKeys.getModelSource],
