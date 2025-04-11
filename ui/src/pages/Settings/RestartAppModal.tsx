@@ -149,6 +149,8 @@ const RestartAppModal = ({
     <Modal
       title="Update settings"
       okButtonProps={{ style: { display: "none" } }}
+      cancelButtonProps={{ disabled: updateAmpConfig.isSuccess && polling }}
+      closable={false}
       open={confirmationModal.isModalOpen}
       destroyOnClose={true}
       loading={updateAmpConfig.isPending}
