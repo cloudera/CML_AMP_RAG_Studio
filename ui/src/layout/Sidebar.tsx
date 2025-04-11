@@ -70,6 +70,7 @@ function getItem(
   label: React.ReactNode,
   key: React.Key,
   onClick: () => void,
+  disabled: boolean,
   icon?: React.ReactNode,
   children?: MenuItem[],
 ): MenuItem {
@@ -79,6 +80,7 @@ function getItem(
     children,
     label,
     onClick,
+    disabled: disabled,
   } as MenuItem;
 }
 
@@ -165,12 +167,14 @@ const Sidebar: React.FC = () => {
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
       navToRagApp,
+      !config?.is_valid_config,
       <CommentOutlined />,
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
       navToData,
+      !config?.is_valid_config,
       <DatabaseOutlined />,
     ),
   ];
@@ -179,6 +183,7 @@ const Sidebar: React.FC = () => {
     <div data-testid="models-nav">Models</div>,
     "models",
     navToModels,
+    !config?.is_valid_config,
     <RobotFilled />,
   );
 
@@ -186,6 +191,7 @@ const Sidebar: React.FC = () => {
     <div data-testid="analytics-nav">Analytics</div>,
     "analytics",
     navToAnalytics,
+    !config?.is_valid_config,
     <LineChartOutlined />,
   );
 
@@ -193,6 +199,7 @@ const Sidebar: React.FC = () => {
     <div data-testid="settings-nav">Settings</div>,
     "settings",
     navToSettings,
+    !config?.is_valid_config,
     <SettingOutlined />,
   );
 

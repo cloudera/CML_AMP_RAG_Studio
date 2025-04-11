@@ -103,12 +103,14 @@ const TopNav: React.FC = () => {
     getItem(
       <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
+      !config?.is_valid_config,
       navigateTo("/chats"),
       <CommentOutlined />,
     ),
     getItem(
       <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
+      !config?.is_valid_config,
       navigateTo("/data"),
       <DatabaseOutlined />,
     ),
@@ -117,6 +119,7 @@ const TopNav: React.FC = () => {
   const models = getItem(
     <span data-testid="models-nav">Models</span>,
     "models",
+    !config?.is_valid_config,
     navigateTo("/models"),
     <RobotFilled />,
   );
@@ -124,6 +127,7 @@ const TopNav: React.FC = () => {
   const analyticsItem = getItem(
     <span data-testid="analytics-nav">Analytics</span>,
     "analytics",
+    !config?.is_valid_config,
     navigateTo("/analytics"),
     <LineChartOutlined />,
   );
@@ -131,6 +135,7 @@ const TopNav: React.FC = () => {
   const settingsItem = getItem(
     <span data-testid="settings-nav">Settings</span>,
     "settings",
+    false,
     navigateTo("/settings"),
     <SettingOutlined />,
   );
@@ -177,6 +182,7 @@ type MenuItem = Required<MenuProps>["items"][number];
 function getItem(
   label: React.ReactNode,
   key: React.Key,
+  disabled: boolean,
   onClick: () => void,
   icon?: React.ReactNode,
   children?: MenuItem[],
@@ -187,6 +193,7 @@ function getItem(
     children,
     label,
     onClick,
+    disabled: disabled,
   } as MenuItem;
 }
 
