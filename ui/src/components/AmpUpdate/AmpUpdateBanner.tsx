@@ -48,24 +48,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import JobStatusTracker from "src/components/AmpUpdate/JobStatusTracker.tsx";
 import { cdlSlate800 } from "src/cuix/variables.ts";
-
-const RefreshButton = () => {
-  return (
-    <>
-      <Typography.Text>
-        Job complete. Refresh page to see the latest features.
-      </Typography.Text>
-      <Button
-        type="primary"
-        onClick={() => {
-          location.reload();
-        }}
-      >
-        Refresh
-      </Button>
-    </>
-  );
-};
+import { RefreshButton } from "src/components/AmpUpdate/RefreshButton.tsx";
 
 const UpdateButton = ({
   setIsModalOpen,

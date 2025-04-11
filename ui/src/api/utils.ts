@@ -78,6 +78,8 @@ export enum MutationKeys {
   "deleteProject" = "deleteProject",
   "addDataSourceToProject" = "addDataSourceToProject",
   "removeDataSourceFromProject" = "removeDataSourceFromProject",
+  "updateAmpConfig" = "updateAmpConfig",
+  "restartApplication" = "restartApplication",
 }
 
 export enum QueryKeys {
@@ -106,6 +108,7 @@ export enum QueryKeys {
   "getDefaultProject" = "getDefaultProject",
   "getDataSourcesForProject" = "getDataSourcesForProject",
   "getSessionsForProject" = "getSessionsForProject",
+  "getAmpConfig" = "getAmpConfig",
 }
 
 export const commonHeaders = {

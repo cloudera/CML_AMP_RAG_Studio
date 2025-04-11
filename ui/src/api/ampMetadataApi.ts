@@ -55,11 +55,11 @@ export const useGetAmpUpdateStatus = () => {
 };
 
 const getAmpUpdateStatus = async (): Promise<boolean> => {
-  return getRequest(`${llmServicePath}/amp-update`);
+  return getRequest(`${llmServicePath}/amp`);
 };
 
 const getAmpIsComposable = async (): Promise<boolean> => {
-  return getRequest(`${llmServicePath}/amp-update/is-composable`);
+  return getRequest(`${llmServicePath}/amp/is-composable`);
 };
 
 export const getAmpIsComposableQueryOptions = queryOptions({
@@ -92,7 +92,7 @@ export const useGetAmpUpdateJobStatus = (enabled: boolean) => {
 };
 
 const getAmpUpdateJobStatus = async (): Promise<JobStatus> => {
-  return getRequestJobStatus(`${llmServicePath}/amp-update/job-status`);
+  return getRequestJobStatus(`${llmServicePath}/amp/job-status`);
 };
 
 const getRequestJobStatus = async (url: string): Promise<JobStatus> => {
@@ -121,5 +121,95 @@ export const useUpdateAmpMutation = ({
 };
 
 const updateAmpMutation = async (): Promise<string> => {
-  return await postRequest(`${llmServicePath}/amp-update`, {});
+  return await postRequest(`${llmServicePath}/amp`, {});
+};
+
+export interface AwsConfig {
+  region?: string;
+  document_bucket_name?: string;
+  bucket_prefix?: string;
+  access_key_id?: string;
+  secret_access_key?: string;
+}
+
+export interface AzureConfig {
+  openai_key?: string;
+  openai_endpoint?: string;
+  openai_api_version?: string;
+}
+
+export interface CaiiConfig {
+  caii_domain?: string;
+}
+
+export interface ProjectConfig {
+  use_enhanced_pdf_processing: boolean;
+  aws_config: AwsConfig;
+  azure_config: AzureConfig;
+  caii_config: CaiiConfig;
+  is_valid_config: boolean;
+}
+
+export const useGetAmpConfig = (poll?: boolean) => {
+  return useQuery({
+    queryKey: [QueryKeys.getAmpConfig],
+    queryFn: getAmpConfig,
+    refetchInterval: () => {
+      if (poll) {
+        return 1000;
+      }
+      return false;
+    },
+  });
+};
+
+export const getAmpConfig = async (): Promise<ProjectConfig | undefined> => {
+  const res = await fetch(`${llmServicePath}/amp/config`, {
+    method: "GET",
+    headers: { ...commonHeaders },
+  });
+  if (!res.ok) {
+    return Promise.resolve(undefined);
+  }
+
+  return (await res.json()) as ProjectConfig;
+};
+
+export const getAmpConfigQueryOptions = queryOptions({
+  queryKey: [QueryKeys.getAmpConfig],
+  queryFn: getAmpConfig,
+});
+
+export const useUpdateAmpConfig = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ProjectConfig>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.updateAmpConfig],
+    mutationFn: updateAmpConfig,
+    onSuccess,
+    onError,
+  });
+};
+
+const updateAmpConfig = async (
+  config: ProjectConfig,
+): Promise<ProjectConfig> => {
+  return await postRequest(`${llmServicePath}/amp/config`, config);
+};
+
+export const useRestartApplication = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.restartApplication],
+    mutationFn: restartApplication,
+    onSuccess,
+    onError,
+  });
+};
+
+const restartApplication = async (): Promise<string> => {
+  return await postRequest(`${llmServicePath}/amp/restart-application`, {});
 };

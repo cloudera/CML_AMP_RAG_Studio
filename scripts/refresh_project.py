@@ -39,9 +39,9 @@
 import os
 import subprocess
 
-import cmlapi
-
-root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+root_dir = (
+    "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+)
 os.chdir(root_dir)
 
 print(subprocess.run(["git", "stash"], check=True))
@@ -52,21 +52,4 @@ print(
     "Project refresh complete. Restarting the RagStudio Application to pick up changes, if this isn't the initial deployment."
 )
 
-client = cmlapi.default_client()
-project_id = os.environ["CDSW_PROJECT_ID"]
-apps = client.list_applications(project_id=project_id)
-if len(apps.applications) > 0:
-    # find the application named "RagStudio" and restart it
-    ragstudio_app = next((app for app in apps.applications if app.name == "RagStudio"), None)
-    if ragstudio_app:
-        app_id = ragstudio_app.id
-        print("Restarting app with ID: ", app_id)
-        client.restart_application(application_id=app_id, project_id=project_id)
-    else:
-        print("No RagStudio application found to restart. This can happen if someone renamed the application.")
-        if os.getenv("IS_COMPOSABLE", "") != "":
-            print("Composable environment. This is likely the initial deployment.")
-        else:
-            raise ValueError("RagStudio application not found to restart")
-else:
-    print("No applications found to restart. This is likely the initial deployment.")
+print(subprocess.run("python scripts/restart_app.py", shell=True, check=True))

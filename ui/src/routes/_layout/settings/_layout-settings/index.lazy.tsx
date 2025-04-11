@@ -36,27 +36,36 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute, Navigate } from "@tanstack/react-router";
-import GettingStarted from "src/components/GettingStarted/GettingStarted.tsx";
-import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
+import { createLazyFileRoute } from "@tanstack/react-router";
+import SettingsPage from "pages/Settings/SettingsPage.tsx";
+import { NotFoundComponent } from "src/main.tsx";
+import { Flex, Layout, Typography } from "antd";
+import { cdlGray300 } from "src/cuix/variables.ts";
 
-const Home = () => {
-  const dataSources = useSuspenseQuery(getDataSourcesQueryOptions);
-  const sessions = useSuspenseQuery(getSessionsQueryOptions);
-  const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
+const { Content, Header } = Layout;
 
-  console.log({ config });
-  if (!config?.is_valid_config) {
-    return <Navigate to={"/settings"} />;
-  }
-  if (dataSources.data.length === 0 && sessions.data.length === 0) {
-    return <GettingStarted />;
-  }
-  return <Navigate to="/chats" />;
-};
-export const Route = createLazyFileRoute("/")({
-  component: () => <Home />,
-});
+export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
+  {
+    component: () => (
+      <Layout
+        style={{
+          minHeight: "100%",
+          width: "100%",
+          margin: 0,
+        }}
+      >
+        <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
+          <Flex align="center" style={{ height: "100%" }}>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              Settings
+            </Typography.Title>
+          </Flex>
+        </Header>
+        <Content style={{ margin: "0", overflowY: "auto" }}>
+          <SettingsPage />
+        </Content>
+      </Layout>
+    ),
+    errorComponent: () => <NotFoundComponent />,
+  },
+);

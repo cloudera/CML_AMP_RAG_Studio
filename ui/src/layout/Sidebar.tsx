@@ -42,6 +42,7 @@ import {
   DatabaseOutlined,
   LineChartOutlined,
   RobotFilled,
+  SettingOutlined,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -59,32 +60,19 @@ import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import "./style.css";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
+import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { getItem } from "./TopNav";
 
 const { Sider } = Layout;
 
 type MenuItem = Required<MenuProps>["items"][number];
-
-function getItem(
-  label: React.ReactNode,
-  key: React.Key,
-  onClick: () => void,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
-): MenuItem {
-  return {
-    key,
-    icon,
-    children,
-    label,
-    onClick,
-  } as MenuItem;
-}
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
+  const { data: config } = useGetAmpConfig();
 
   const navToRagApp = () => {
     navigate({ to: "/chats" }).catch(() => null);
@@ -98,6 +86,10 @@ const Sidebar: React.FC = () => {
 
   const navToAnalytics = () => {
     navigate({ to: "/analytics" }).catch(() => null);
+  };
+
+  const navToSettings = () => {
+    navigate({ to: "/settings" }).catch(() => null);
   };
 
   const navToModels = () => {
@@ -157,12 +149,14 @@ const Sidebar: React.FC = () => {
     getItem(
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
+      !config?.is_valid_config,
       navToRagApp,
       <CommentOutlined />,
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
+      !config?.is_valid_config,
       navToData,
       <DatabaseOutlined />,
     ),
@@ -171,6 +165,7 @@ const Sidebar: React.FC = () => {
   const models = getItem(
     <div data-testid="models-nav">Models</div>,
     "models",
+    !config?.is_valid_config,
     navToModels,
     <RobotFilled />,
   );
@@ -178,11 +173,24 @@ const Sidebar: React.FC = () => {
   const analyticsItem = getItem(
     <div data-testid="analytics-nav">Analytics</div>,
     "analytics",
+    !config?.is_valid_config,
     navToAnalytics,
     <LineChartOutlined />,
   );
 
+  const settingsItem = getItem(
+    <div data-testid="settings-nav">Settings</div>,
+    "settings",
+    !config?.is_valid_config,
+    navToSettings,
+    <SettingOutlined />,
+  );
+
   const items = [...baseItems, models, analyticsItem];
+
+  if (config) {
+    items.push(settingsItem);
+  }
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -195,6 +203,8 @@ const Sidebar: React.FC = () => {
       return ["analytics"];
     } else if (matchRoute({ to: "/projects", fuzzy: true })) {
       return ["projects"];
+    } else if (matchRoute({ to: "/settings", fuzzy: true })) {
+      return ["settings"];
     } else {
       return ["chat"];
     }

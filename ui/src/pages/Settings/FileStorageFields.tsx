@@ -36,31 +36,65 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Flex, Layout, Typography } from "antd";
-import { cdlGray300 } from "src/cuix/variables.ts";
+import { ProjectConfig } from "src/api/ampMetadataApi.ts";
+import { Flex, Form, Input, Radio } from "antd";
+import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
 
-const { Content, Header } = Layout;
-
-export const Route = createFileRoute("/_layout/analytics/_layout-models")({
-  component: () => (
-    <Layout
-      style={{
-        minHeight: "100%",
-        width: "100%",
-        margin: 0,
+export const FileStorageFields = ({
+  projectConfig,
+  setSelectedFileStorage,
+  selectedFileStorage,
+  enableModification,
+}: {
+  projectConfig?: ProjectConfig;
+  setSelectedFileStorage: (value: FileStorage) => void;
+  selectedFileStorage: FileStorage;
+  enableModification?: boolean;
+}) => (
+  <Flex vertical style={{ maxWidth: 600 }}>
+    <Radio.Group
+      style={{ marginBottom: 20 }}
+      optionType="button"
+      buttonStyle="solid"
+      onChange={(e) => {
+        if (e.target.value === "AWS" || e.target.value === "Local") {
+          setSelectedFileStorage(e.target.value as FileStorage);
+        }
       }}
+      value={selectedFileStorage}
+      options={[
+        { value: "Local", label: "Project Filesystem" },
+        { value: "AWS", label: "AWS S3" },
+      ]}
+      disabled={!enableModification}
+    />
+    {selectedFileStorage === "Local" && (
+      <StyledHelperText>
+        CAI Project file system will be used for file storage.
+      </StyledHelperText>
+    )}
+    <Form.Item
+      label={"Document Bucket Name"}
+      initialValue={projectConfig?.aws_config.document_bucket_name}
+      name={["aws_config", "document_bucket_name"]}
+      required={selectedFileStorage === "AWS"}
+      tooltip="The S3 bucket where uploaded documents are stored."
+      rules={[{ required: selectedFileStorage === "AWS" }]}
+      hidden={selectedFileStorage !== "AWS"}
     >
-      <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
-        <Flex align="center" style={{ height: "100%" }}>
-          <Typography.Title level={4} style={{ margin: 0 }}>
-            Analytics
-          </Typography.Title>
-        </Flex>
-      </Header>
-      <Content style={{ margin: "0", overflowY: "auto" }}>
-        <Outlet />
-      </Content>
-    </Layout>
-  ),
-});
+      <Input
+        placeholder="document-bucket-name"
+        disabled={!enableModification}
+      />
+    </Form.Item>
+    <Form.Item
+      label={"Bucket Prefix"}
+      initialValue={projectConfig?.aws_config.bucket_prefix}
+      name={["aws_config", "bucket_prefix"]}
+      tooltip="A prefix added to all S3 paths used by RAG Studio."
+      hidden={selectedFileStorage !== "AWS"}
+    >
+      <Input placeholder="example-prefix" disabled={!enableModification} />
+    </Form.Item>
+  </Flex>
+);

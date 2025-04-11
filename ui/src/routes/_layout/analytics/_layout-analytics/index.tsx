@@ -36,27 +36,10 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute, Navigate } from "@tanstack/react-router";
-import GettingStarted from "src/components/GettingStarted/GettingStarted.tsx";
-import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
+import { createFileRoute } from '@tanstack/react-router'
+import { getDataSourcesQueryOptions } from 'src/api/dataSourceApi.ts'
 
-const Home = () => {
-  const dataSources = useSuspenseQuery(getDataSourcesQueryOptions);
-  const sessions = useSuspenseQuery(getSessionsQueryOptions);
-  const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
-
-  console.log({ config });
-  if (!config?.is_valid_config) {
-    return <Navigate to={"/settings"} />;
-  }
-  if (dataSources.data.length === 0 && sessions.data.length === 0) {
-    return <GettingStarted />;
-  }
-  return <Navigate to="/chats" />;
-};
-export const Route = createLazyFileRoute("/")({
-  component: () => <Home />,
-});
+export const Route = createFileRoute('/_layout/analytics/_layout-analytics/')({
+  loader: async ({ context }) =>
+    await context.queryClient.ensureQueryData(getDataSourcesQueryOptions),
+})

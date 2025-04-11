@@ -43,6 +43,7 @@ import { QueryClient } from "@tanstack/react-query";
 import {
   cdlBlue600,
   cdlGray400,
+  cdlGray700,
   cdlGreen500,
   cdlSlate800,
   cdlWhite,
@@ -81,12 +82,14 @@ const customLightTheme = {
       itemBg: cdlSlate800,
       itemColor: cdlGray400,
       itemSelectedColor: cdlGreen500,
+      itemDisabledColor: cdlGray700,
 
       horizontalItemSelectedBg: cdlSlate800,
       horizontalItemActiveBg: cdlSlate800,
       horizontalItemBg: cdlSlate800,
       horizontalItemColor: cdlGray400,
       horizontalItemSelectedColor: cdlGreen500,
+      horizontalItemDisabledColor: cdlGray700,
     },
     Layout: {
       triggerBg: cdlSlate800,
