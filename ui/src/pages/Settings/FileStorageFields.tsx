@@ -44,10 +44,12 @@ export const FileStorageFields = ({
   projectConfig,
   setSelectedFileStorage,
   selectedFileStorage,
+  enableModification,
 }: {
   projectConfig?: ProjectConfig;
   setSelectedFileStorage: (value: FileStorage) => void;
   selectedFileStorage: FileStorage;
+  enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
     <Radio.Group
@@ -64,6 +66,7 @@ export const FileStorageFields = ({
         { value: "Local", label: "Project Filesystem" },
         { value: "AWS", label: "AWS S3" },
       ]}
+      disabled={!enableModification}
     />
     {selectedFileStorage === "Local" && (
       <StyledHelperText>
@@ -79,7 +82,10 @@ export const FileStorageFields = ({
       rules={[{ required: selectedFileStorage === "AWS" }]}
       hidden={selectedFileStorage !== "AWS"}
     >
-      <Input placeholder="document-bucket-name" />
+      <Input
+        placeholder="document-bucket-name"
+        disabled={!enableModification}
+      />
     </Form.Item>
     <Form.Item
       label={"Bucket Prefix"}
@@ -88,7 +94,7 @@ export const FileStorageFields = ({
       tooltip="A prefix added to all S3 paths used by RAG Studio."
       hidden={selectedFileStorage !== "AWS"}
     >
-      <Input placeholder="example-prefix" />
+      <Input placeholder="example-prefix" disabled={!enableModification} />
     </Form.Item>
   </Flex>
 );

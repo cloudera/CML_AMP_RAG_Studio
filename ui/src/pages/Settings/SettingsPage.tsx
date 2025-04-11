@@ -46,6 +46,9 @@ import { ProcessingFields } from "pages/Settings/ProcessingFields.tsx";
 import { FileStorageFields } from "pages/Settings/FileStorageFields.tsx";
 import { ModelProviderFields } from "pages/Settings/ModelProviderFields.tsx";
 import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
+import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -68,6 +71,11 @@ const SettingsPage = () => {
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
+  const dataSourcesQuery = useSuspenseQuery(getDataSourcesQueryOptions);
+  const sessionsQuery = useSuspenseQuery(getSessionsQueryOptions);
+
+  const enableSettingsModification =
+    dataSourcesQuery.data.length === 0 && sessionsQuery.data.length === 0;
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
@@ -92,6 +100,7 @@ const SettingsPage = () => {
           selectedFileStorage={selectedFileStorage}
           setSelectedFileStorage={setSelectedFileStorage}
           projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
         />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>Model Provider</Typography.Title>
@@ -103,12 +112,14 @@ const SettingsPage = () => {
           modelProvider={modelProvider}
           setModelProvider={setModelProvider}
           projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
         />
         <Typography.Title level={4}>Authentication</Typography.Title>
         <AuthenticationFields
           projectConfig={projectConfig}
           modelProvider={modelProvider}
           selectedFileStorage={selectedFileStorage}
+          enableModification={enableSettingsModification}
         />
         <Form.Item label={null} style={{ marginTop: 20 }}>
           <Button

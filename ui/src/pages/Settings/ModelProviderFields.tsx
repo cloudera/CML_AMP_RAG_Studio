@@ -49,10 +49,12 @@ export const ModelProviderFields = ({
   setModelProvider,
   modelProvider,
   projectConfig,
+  enableModification,
 }: {
   setModelProvider: (value: ModelSource) => void;
   modelProvider?: ModelSource;
   projectConfig?: ProjectConfig;
+  enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
     <Radio.Group
@@ -70,6 +72,7 @@ export const ModelProviderFields = ({
         { value: "Bedrock", label: "AWS Bedrock" },
         { value: "Azure", label: "Azure OpenAI" },
       ]}
+      disabled={!enableModification}
     />
     {modelProvider === "Bedrock" && (
       <StyledHelperText>
@@ -85,7 +88,7 @@ export const ModelProviderFields = ({
       tooltip="The domain of the CAII service. Choosing this option will make CAII the only source of models for RAG Studio. This can be found ...... somewhere."
       hidden={modelProvider !== "CAII"}
     >
-      <Input placeholder="CAII Domain" />
+      <Input placeholder="CAII Domain" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"Azure OpenAI Endpoint"}
@@ -96,7 +99,10 @@ export const ModelProviderFields = ({
       tooltip="The endpoint of the Azure OpenAI service. This can be found in the Azure portal."
       hidden={modelProvider !== "Azure"}
     >
-      <Input placeholder="https://myendpoint.openai.azure.com/" />
+      <Input
+        placeholder="https://myendpoint.openai.azure.com/"
+        disabled={!enableModification}
+      />
     </Form.Item>
     <Form.Item
       label={"API Version"}
@@ -107,7 +113,7 @@ export const ModelProviderFields = ({
       tooltip="The API version of the Azure OpenAI service. This can be found in the Azure portal."
       hidden={modelProvider !== "Azure"}
     >
-      <Input placeholder="2024-05-01-preview" />
+      <Input placeholder="2024-05-01-preview" disabled={!enableModification} />
     </Form.Item>
   </Flex>
 );

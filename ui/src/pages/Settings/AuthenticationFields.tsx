@@ -45,10 +45,12 @@ export const AuthenticationFields = ({
   modelProvider,
   selectedFileStorage,
   projectConfig,
+  enableModification,
 }: {
   modelProvider?: ModelSource;
   selectedFileStorage?: FileStorage;
   projectConfig?: ProjectConfig;
+  enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
     {modelProvider === "CAII" && selectedFileStorage === "Local" && (
@@ -68,7 +70,7 @@ export const AuthenticationFields = ({
       tooltip="AWS Region where Bedrock is configured and/or the S3 bucket is located."
       hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
     >
-      <Input placeholder="us-west-2" />
+      <Input placeholder="us-west-2" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"AWS Access Key ID"}
@@ -83,7 +85,7 @@ export const AuthenticationFields = ({
       ]}
       hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
     >
-      <Input placeholder="access-key-id" />
+      <Input placeholder="access-key-id" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"AWS Secret Access Key"}
@@ -98,7 +100,11 @@ export const AuthenticationFields = ({
       ]}
       hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
     >
-      <Input placeholder="secret-access-key" type="password" />
+      <Input
+        placeholder="secret-access-key"
+        type="password"
+        disabled={!enableModification}
+      />
     </Form.Item>
     <Form.Item
       label={"Azure OpenAI Key"}
@@ -108,7 +114,11 @@ export const AuthenticationFields = ({
       rules={[{ required: modelProvider === "Azure" }]}
       hidden={modelProvider !== "Azure"}
     >
-      <Input placeholder="azure-openai-key" type="password" />
+      <Input
+        placeholder="azure-openai-key"
+        type="password"
+        disabled={!enableModification}
+      />
     </Form.Item>
   </Flex>
 );
