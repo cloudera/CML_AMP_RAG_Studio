@@ -84,9 +84,18 @@ const SettingsPage = () => {
           message="Please provide a valid model provider configuration."
           type="warning"
           showIcon
-          style={{ marginTop: 40, width: 600 }}
+          style={{ marginTop: 40, width: "fit-content" }}
         />
       )}
+      {!enableSettingsModification && (
+        <Alert
+          message="Storage and model provider settings cannot be modified while there are active chats or knowledge bases."
+          type="warning"
+          showIcon
+          style={{ marginTop: 40, width: "fit-content" }}
+        />
+      )}
+
       <Form form={form} labelCol={{ offset: 1 }}>
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields projectConfig={projectConfig} />
