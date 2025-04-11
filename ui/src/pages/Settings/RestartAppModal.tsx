@@ -145,15 +145,18 @@ const RestartAppModal = ({
     return PROGRESS_STATES.READY;
   }, [waitingToRestart, isRestarting]);
 
+  const updateInProgress = updateAmpConfig.isSuccess && polling;
+
   return (
     <Modal
       title="Update settings"
       okButtonProps={{ style: { display: "none" } }}
-      cancelButtonProps={{ disabled: updateAmpConfig.isSuccess && polling }}
+      cancelButtonProps={{ disabled: updateInProgress }}
       closable={false}
       open={confirmationModal.isModalOpen}
       destroyOnClose={true}
       loading={updateAmpConfig.isPending}
+      maskClosable={updateInProgress}
       onCancel={() => {
         setPolling(false);
         confirmationModal.setIsModalOpen(false);
@@ -172,7 +175,7 @@ const RestartAppModal = ({
         >
           Update Settings
         </Button>
-        {updateAmpConfig.isSuccess && polling ? (
+        {updateInProgress ? (
           <Progress
             type="circle"
             percent={currentProgress.percent}
