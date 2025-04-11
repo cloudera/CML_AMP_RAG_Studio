@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Divider, Row, Skeleton, Typography } from "antd";
+import { Divider, Row, Skeleton } from "antd";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 
 const PendingRagOutputSkeleton = ({
@@ -50,15 +50,11 @@ const PendingRagOutputSkeleton = ({
     <div style={{ width: "100%" }}>
       <div>
         <UserQuestion question={question} />
-        {error ? (
-          <Alert message={error.message} type="warning" />
-        ) : (
-          <Row>
-            <Skeleton active />
-            <Skeleton active />
-            <Skeleton active />
-          </Row>
-        )}
+        <Row>
+          <Skeleton active />
+          <Skeleton active />
+          <Skeleton active />
+        </Row>
       </div>
       <Divider />
     </div>

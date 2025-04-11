@@ -146,7 +146,7 @@ const ChatMessageController = () => {
         <ChatMessage
           data={historyMessage}
           key={historyMessage.id}
-          isLast={index === chatHistory.length - 1}
+          isLast={index === history.length - 1}
           error={chatError}
         />
       ))}
