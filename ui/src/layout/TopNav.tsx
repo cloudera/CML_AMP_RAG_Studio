@@ -179,7 +179,7 @@ const TopNav: React.FC = () => {
 
 type MenuItem = Required<MenuProps>["items"][number];
 
-function getItem(
+export function getItem(
   label: React.ReactNode,
   key: React.Key,
   disabled: boolean,
@@ -188,7 +188,7 @@ function getItem(
   children?: MenuItem[],
 ): MenuItem {
   const toolTipLabel = (
-    <Tooltip title="A valid config is required">{label}</Tooltip>
+    <Tooltip title="Valid settings are required">{label}</Tooltip>
   );
   return {
     key,

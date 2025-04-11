@@ -61,32 +61,11 @@ import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import "./style.css";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { getItem } from "./TopNav";
 
 const { Sider } = Layout;
 
 type MenuItem = Required<MenuProps>["items"][number];
-
-function getItem(
-  label: React.ReactNode,
-  key: React.Key,
-  onClick: () => void,
-  disabled: boolean,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
-): MenuItem {
-  const toolTipLabel = (
-    <Tooltip title="A valid config is required">{label}</Tooltip>
-  );
-
-  return {
-    key,
-    icon,
-    children,
-    label: disabled ? toolTipLabel : label,
-    onClick,
-    disabled: disabled,
-  } as MenuItem;
-}
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -170,15 +149,15 @@ const Sidebar: React.FC = () => {
     getItem(
       <div data-testid="rag-apps-nav">Chats</div>,
       "chat",
-      navToRagApp,
       !config?.is_valid_config,
+      navToRagApp,
       <CommentOutlined />,
     ),
     getItem(
       <div data-testid="data-management-nav">Knowledge Bases</div>,
       "data",
-      navToData,
       !config?.is_valid_config,
+      navToData,
       <DatabaseOutlined />,
     ),
   ];
@@ -186,24 +165,24 @@ const Sidebar: React.FC = () => {
   const models = getItem(
     <div data-testid="models-nav">Models</div>,
     "models",
-    navToModels,
     !config?.is_valid_config,
+    navToModels,
     <RobotFilled />,
   );
 
   const analyticsItem = getItem(
     <div data-testid="analytics-nav">Analytics</div>,
     "analytics",
-    navToAnalytics,
     !config?.is_valid_config,
+    navToAnalytics,
     <LineChartOutlined />,
   );
 
   const settingsItem = getItem(
     <div data-testid="settings-nav">Settings</div>,
     "settings",
-    navToSettings,
     !config?.is_valid_config,
+    navToSettings,
     <SettingOutlined />,
   );
 

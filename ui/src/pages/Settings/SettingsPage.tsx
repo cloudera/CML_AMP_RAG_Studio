@@ -81,7 +81,14 @@ const SettingsPage = () => {
     <Flex style={{ marginLeft: 60 }} vertical>
       {!projectConfig?.is_valid_config && (
         <Alert
-          message="Please provide a valid model provider configuration."
+          message={
+            <div>
+              <Typography.Text>
+                For initial configuration of RAG Studio, please provide valid
+                credentials for CAII, AWS Bedrock, or Azure OpenAI.
+              </Typography.Text>
+            </div>
+          }
           type="warning"
           showIcon
           style={{ marginTop: 40, width: "fit-content" }}
