@@ -44,10 +44,16 @@ import {
   RobotFilled,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
+import {Flex, Menu, MenuProps, Tag, Tooltip, Typography} from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
-import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
+import {
+  cdlAmber200,
+  cdlAmber900,
+  cdlBlue200,
+  cdlGray200,
+  cdlSlate800,
+} from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
@@ -191,7 +197,7 @@ function getItem(
     key,
     icon,
     children,
-    label,
+   <Tooltip>{label}</Tooltip>,
     onClick,
     disabled: disabled,
   } as MenuItem;
