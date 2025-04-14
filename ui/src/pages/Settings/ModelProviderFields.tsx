@@ -88,7 +88,10 @@ export const ModelProviderFields = ({
       tooltip="The domain of the Cloudera AI Inference service. This can be found within Cloudera AI > Administration > AI Inference Service."
       hidden={modelProvider !== "CAII"}
     >
-      <Input placeholder="CAII Domain" disabled={!enableModification} />
+      <Input
+        placeholder="Cloudera AI Inference Domain"
+        disabled={!enableModification}
+      />
     </Form.Item>
     <Form.Item
       label={"Azure OpenAI Endpoint"}
