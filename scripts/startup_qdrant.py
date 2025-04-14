@@ -35,13 +35,33 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import json
 import subprocess
 import os
+from typing import Dict
 
-root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+import cmlapi
+
+root_dir = (
+    "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+)
 os.chdir(root_dir)
 
 while True:
     print(subprocess.run(["bash scripts/startup_qdrant.sh"], shell=True))
+    client = cmlapi.default_client()
+    project_id = os.environ["CDSW_PROJECT_ID"]
+    proj: cmlapi.Project = client.get_project(project_id)
+    proj_env: Dict = json.loads(proj.environment)
+    proj_env.update(
+        {
+            "QDRANT_HOST": os.environ["CDSW_IP_ADDRESS"],
+            # what should the qdrant_port be?
+            # "QDRANT_PORT": os.environ["QDRANT_PORT"],
+        }
+    )
+    updated_project: cmlapi.Project = cmlapi.Project(environment=json.dumps(proj_env))
+    out: cmlapi.Project = client.update_project(updated_project, project_id=project_id)
+    print(out)
+
     print("Qdrant Restarting")
