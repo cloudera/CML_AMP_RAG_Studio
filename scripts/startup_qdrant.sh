@@ -54,4 +54,4 @@ trap cleanup EXIT
 echo "Starting Qdrant vector DB... on port ${CDSW_APP_PORT}"
 
 # start Qdrant vector DB
-QDRANT__SERVICE__GRPC_PORT=${CDSW_APP_PORT} qdrant/qdrant & 2>&1
+QDRANT__SERVICE__GRPC_PORT=${CDSW_APP_PORT} qdrant/qdrant
