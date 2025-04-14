@@ -19,13 +19,13 @@ If you do not want to use the catalog-entry, then you should specify the release
 
 ### LLM Model Options
 
-RAG Studio can be used with Cloudera Inference (CAII), AWS Bedrock, or Azure OpenAI for selecting LLM and embedding models.
+RAG Studio can be used with Cloudera AI Inference (CAII), AWS Bedrock, or Azure OpenAI for selecting LLM and embedding models.
 
-#### Cloudera Inference (CAII) Setup:
+#### Cloudera AI Inference (CAII) Setup:
 
 To use CAII, you must provide the following environment variables:
 
-- `CAII_DOMAIN` - The domain of the CAII instance
+- `CAII_DOMAIN` - The domain of the Cloudera AI Inference instance
 
 #### AWS Bedrock Setup:
 
@@ -76,7 +76,7 @@ Cloudera for assistance. Additionally, further details on the AMP status can be 
 
 ## CDP Token Override
 
-If you are using CAII and would like to override the default CDP token used within RAG Studio, you can do so by providing the `CDP_TOKEN_OVERRIDE` environment variable.
+If you are using Cloudera AI Inference and would like to override the default CDP token used within RAG Studio, you can do so by providing the `CDP_TOKEN_OVERRIDE` environment variable.
 This variable can be set from the project settings for the AMP in CML.
 
 ## Air-gapped Environments
