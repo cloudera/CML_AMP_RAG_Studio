@@ -56,7 +56,7 @@ while True:
         {
             "QDRANT_HOST": os.environ["CDSW_IP_ADDRESS"],
             # what should the qdrant_port be?
-            "QDRANT_PORT": 6333,
+            "QDRANT_PORT": "6333",
         }
     )
     updated_project: cmlapi.Project = cmlapi.Project(environment=json.dumps(proj_env))
