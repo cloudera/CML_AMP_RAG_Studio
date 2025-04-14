@@ -68,7 +68,7 @@ export const ModelProviderFields = ({
       }}
       value={modelProvider}
       options={[
-        { value: "CAII", label: "CAII" },
+        { value: "CAII", label: "Cloudera AI" },
         { value: "Bedrock", label: "AWS Bedrock" },
         { value: "Azure", label: "Azure OpenAI" },
       ]}
@@ -80,12 +80,12 @@ export const ModelProviderFields = ({
       </StyledHelperText>
     )}
     <Form.Item
-      label={"CAII Domain"}
+      label={"Cloudera AI Inference Domain"}
       initialValue={projectConfig?.caii_config.caii_domain}
       name={["caii_config", "caii_domain"]}
       required={modelProvider === "CAII"}
       rules={[{ required: modelProvider === "CAII" }]}
-      tooltip="The domain of the CAII service. Choosing this option will make CAII the only source of models for RAG Studio. This can be found ...... somewhere."
+      tooltip="The domain of the Cloudera AI Inference service. This can be found within Cloudera AI > Administration > AI Inference Service."
       hidden={modelProvider !== "CAII"}
     >
       <Input placeholder="CAII Domain" disabled={!enableModification} />
