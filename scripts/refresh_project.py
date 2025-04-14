@@ -38,6 +38,8 @@
 
 import os
 import subprocess
+import time
+
 import cmlapi
 
 root_dir = (
@@ -61,8 +63,6 @@ if len(apps.applications) > 0:
     if ragstudio_qdrant:
         # if ragstudio_qdrant.status != "APPLICATION_RUNNING":
         app_id = ragstudio_qdrant.id
-        print("Restarting app with ID: ", app_id)
-        client.restart_application(application_id=app_id, project_id=project_id)
     else:
         application = client.create_application(
             project_id=project_id,
@@ -81,7 +81,16 @@ if len(apps.applications) > 0:
                 },
             },
         )
-        client.restart_application(application_id=application.id, project_id=project_id)
+        app_id = application.id
+    print("Restarting app with ID: ", app_id)
+    client.restart_application(application_id=app_id, project_id=project_id)
+
+    while True:
+        ragstudio_app = client.get_application(project_id=project_id, application_id=app_id)
+        if ragstudio_app.status == "APPLICATION_RUNNING":
+            break
+        print("Waiting for RagStudio Qdrant to start...")
+        time.sleep(5)
 
 print(
     "Project refresh complete. Restarting the RagStudio Application to pick up changes, if this isn't the initial deployment."
