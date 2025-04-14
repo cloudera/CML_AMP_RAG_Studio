@@ -41,4 +41,4 @@ set -eox pipefail
 echo "Starting Qdrant vector DB... on port ${CDSW_APP_PORT}"
 
 # start Qdrant vector DB
-QDRANT__SERVICE__GRPC_PORT=${CDSW_APP_PORT} QDRANT__SERVICE__HOST=127.0.0.1 qdrant/qdrant
+QDRANT__SERVICE__HTTP_PORT=${CDSW_APP_PORT} QDRANT__SERVICE__HOST=127.0.0.1 qdrant/qdrant
