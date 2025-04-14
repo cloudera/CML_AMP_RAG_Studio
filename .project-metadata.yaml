@@ -46,6 +46,19 @@ tasks:
     short_summary: Run job to refresh the project from source and rebuilding.
 
   - type: start_application
+    name: RagStudioQdrant
+    subdomain: ragstudioqdrant
+    bypass_authentication: false
+    static_subdomain: false
+    script: scripts/startup_qdrant.py
+    short_summary: Create and start RagStudio's Qdrant instance.
+    long_summary: Create and start RagStudio Qdrant instance.
+    cpu: 2
+    memory: 4
+    environment_variables:
+      TASK_TYPE: START_APPLICATION
+
+  - type: start_application
     name: RagStudio
     subdomain: ragstudio
     bypass_authentication: false
