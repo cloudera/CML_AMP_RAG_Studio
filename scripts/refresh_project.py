@@ -59,10 +59,10 @@ if len(apps.applications) > 0:
         (app for app in apps.applications if app.name == "RagStudioQdrant"), None
     )
     if ragstudio_qdrant:
-        if ragstudio_qdrant.status != "APPLICATION_RUNNING":
-            app_id = ragstudio_qdrant.id
-            print("Restarting app with ID: ", app_id)
-            client.restart_application(application_id=app_id, project_id=project_id)
+        # if ragstudio_qdrant.status != "APPLICATION_RUNNING":
+        app_id = ragstudio_qdrant.id
+        print("Restarting app with ID: ", app_id)
+        client.restart_application(application_id=app_id, project_id=project_id)
     else:
         application = client.create_application(
             project_id=project_id,
