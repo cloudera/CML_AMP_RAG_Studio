@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 def new_qdrant_client() -> qdrant_client.QdrantClient:
     host = os.environ.get("QDRANT_HOST", "localhost")
-    port = 6333
+    port = os.environ.get("QDRANT_PORT", "6333")
     return qdrant_client.QdrantClient(host=host, port=port)
 
 
