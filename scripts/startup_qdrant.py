@@ -48,7 +48,6 @@ root_dir = (
 os.chdir(root_dir)
 
 while True:
-    print(subprocess.run(["bash scripts/startup_qdrant.sh"], shell=True))
     client = cmlapi.default_client()
     project_id = os.environ["CDSW_PROJECT_ID"]
     proj: cmlapi.Project = client.get_project(project_id)
@@ -63,5 +62,6 @@ while True:
     updated_project: cmlapi.Project = cmlapi.Project(environment=json.dumps(proj_env))
     out: cmlapi.Project = client.update_project(updated_project, project_id=project_id)
     print(out)
+    print(subprocess.run(["bash scripts/startup_qdrant.sh"], shell=True))
 
     print("Qdrant Restarting")
