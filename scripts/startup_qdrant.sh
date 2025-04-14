@@ -38,19 +38,6 @@
 
 set -eox pipefail
 
-cleanup() {
-    # kill all processes whose parent is this process
-    pkill -P $$
-}
-
-for sig in INT QUIT HUP TERM; do
-  trap "
-    cleanup
-    trap - $sig EXIT
-    kill -s $sig "'"$$"' "$sig"
-done
-trap cleanup EXIT
-
 echo "Starting Qdrant vector DB... on port ${CDSW_APP_PORT}"
 
 # start Qdrant vector DB
