@@ -38,11 +38,9 @@
 import json
 import os
 import socket
-import typing
 from typing import Optional, cast, Literal
 
 from pydantic import BaseModel
-
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 

@@ -60,10 +60,10 @@ from llama_index.core.schema import (
     TextNode,
     RelatedNodeInfo,
 )
-from llama_index.core.storage.docstore import BaseDocumentStore
 from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore
 from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.vector_stores import SimpleVectorStore
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
@@ -191,7 +191,7 @@ class SummaryIndexer(BaseTextIndexer):
         return doc_summary_index
 
     @staticmethod
-    def create_storage_context(persist_dir, vector_store):
+    def create_storage_context(persist_dir: str, vector_store: BasePydanticVectorStore) -> StorageContext:
         if settings.is_s3_summary_storage_configured():
             summary_path = f"{settings.document_bucket_prefix}/{persist_dir}"
             s3_store = S3DBKVStore.from_s3_location(
