@@ -59,10 +59,15 @@ logger = logging.getLogger(__name__)
 def new_qdrant_client() -> qdrant_client.QdrantClient:
     host = os.environ.get("QDRANT_HOST", "localhost")
     port = os.environ.get("QDRANT_PORT", "6333")
-    def auth_token_provider() -> str:
-        return os.environ.get("CDSW_APIV2_KEY", "")
 
-    return qdrant_client.QdrantClient(host=host, port=port, auth_token_provider=auth_token_provider)
+    def auth_token_provider() -> str:
+        return os.environ.get("CDSW_APIV2_KEY", None)
+
+    return qdrant_client.QdrantClient(
+        host=host,
+        port=port,
+        auth_token_provider=auth_token_provider,
+    )
 
 
 class QdrantVectorStore(VectorStore):
