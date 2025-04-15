@@ -130,7 +130,6 @@ export interface AwsConfig {
   bucket_prefix?: string;
   access_key_id?: string;
   secret_access_key?: string;
-  store_summaries_in_s3?: string;
 }
 
 export interface AzureConfig {
@@ -145,6 +144,7 @@ export interface CaiiConfig {
 
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
+  summary_storage_provider: "local" | "s3";
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   caii_config: CaiiConfig;

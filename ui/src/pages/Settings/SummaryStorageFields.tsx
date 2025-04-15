@@ -37,46 +37,45 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio } from "antd";
-import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
+import { Flex, Form, FormInstance, Radio } from "antd";
+import { StyledHelperText } from "pages/Settings/SettingsPage.tsx";
 
 export const SummaryStorageFields = ({
   projectConfig,
-  setSelectedFileStorage,
-  selectedFileStorage,
   enableModification,
+  form,
 }: {
   projectConfig?: ProjectConfig;
-  setSelectedFileStorage: (value: FileStorage) => void;
-  selectedFileStorage: FileStorage;
   enableModification?: boolean;
+  form: FormInstance<ProjectConfig>;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
     <Form.Item
-      name={["aws_config", "store_summaries_in_s3"]}
-      initialValue={projectConfig?.aws_config.store_summaries_in_s3}
+      name={"summary_storage_provider"}
+      initialValue={projectConfig?.summary_storage_provider}
+      valuePropName="radio"
     >
       <Radio.Group
         style={{ marginBottom: 20 }}
         optionType="button"
         buttonStyle="solid"
-        onChange={(e) => {
-          if (e.target.value === "AWS" || e.target.value === "Local") {
-            setSelectedFileStorage(e.target.value as FileStorage);
-          }
-        }}
-        value={selectedFileStorage}
+        // onChange={(e) => {
+        //   if (e.target.value === "s3" || e.target.value === "local") {
+        //     setSelectedFileStorage(e.target.value as FileStorage);
+        //   }
+        // }}
+        // value={selectedFileStorage}
         options={[
-          { value: "Local", label: "Project Filesystem" },
-          { value: "AWS", label: "AWS S3" },
+          { value: "local", label: "Project Filesystem" },
+          { value: "s3", label: "AWS S3" },
         ]}
         disabled={!enableModification}
       />
     </Form.Item>
-    {selectedFileStorage === "Local" && (
-      <StyledHelperText>
-        CAI Project file system will be used for file storage.
-      </StyledHelperText>
-    )}
+    <StyledHelperText>
+      {form.getFieldValue("summary_storage_provider") === "local"
+        ? "CAI Project file system will be used for file storage."
+        : "AWS S3 will be used for file storage."}
+    </StyledHelperText>
   </Flex>
 );

@@ -126,8 +126,7 @@ const SettingsPage = () => {
           </Typography.Text>
         </Flex>
         <SummaryStorageFields
-          selectedFileStorage={selectedFileStorage}
-          setSelectedFileStorage={setSelectedFileStorage}
+          form={form}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
         />
