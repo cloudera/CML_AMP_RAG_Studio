@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import json
 import logging
 import os
 import shutil
@@ -42,7 +43,9 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast, List
 
-from app.services import models
+import boto3
+from botocore.exceptions import ClientError
+
 from llama_index.core import (
     DocumentSummaryIndex,
     StorageContext,
@@ -50,6 +53,8 @@ from llama_index.core import (
     load_index_from_storage,
     PromptHelper,
 )
+from llama_index.core.storage.kvstore.types import BaseKVStore, DEFAULT_COLLECTION
+from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
@@ -62,8 +67,10 @@ from llama_index.core.schema import (
     RelatedNodeInfo,
 )
 from llama_index.core.vector_stores import SimpleVectorStore
+from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
+from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
@@ -165,12 +172,9 @@ class SummaryIndexer(BaseTextIndexer):
         persist_dir: str, index_configuration: Dict[str, Any]
     ) -> DocumentSummaryIndex:
         data_source_id: int = index_configuration.get("data_source_id")
-        storage_context = StorageContext.from_defaults(
-            persist_dir=persist_dir,
-            vector_store=QdrantVectorStore.for_summaries(
-                data_source_id
-            ).llama_vector_store(),
-        )
+        storage_context = SummaryIndexer.create_storage_context(persist_dir, QdrantVectorStore.for_summaries(
+            data_source_id
+        ).llama_vector_store())
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
             load_index_from_storage(
@@ -180,12 +184,29 @@ class SummaryIndexer(BaseTextIndexer):
         )
         return doc_summary_index
 
+    @staticmethod
+    def create_storage_context(persist_dir, vector_store):
+        bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET")
+        if bucket:
+            persist_dir=None
+            summary_path = os.environ.get("S3_RAG_BUCKET_PREFIX")
+            s3_store = S3DBKVStore.from_s3_location(bucket, summary_path)
+            index_store = KVIndexStore(s3_store)
+        else:
+            index_store = None
+
+        return StorageContext.from_defaults(
+                index_store=index_store,
+                persist_dir=persist_dir,
+                vector_store=vector_store,
+            )
+
     @classmethod
     def get_all_data_source_summaries(cls) -> dict[str, str]:
         root_dir = cls.__persist_root_dir()
         if not os.path.exists(root_dir):
             return {}
-        storage_context = StorageContext.from_defaults(
+        storage_context = SummaryIndexer.create_storage_context(
             persist_dir=root_dir,
             vector_store=SimpleVectorStore(),
         )
