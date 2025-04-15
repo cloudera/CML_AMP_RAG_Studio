@@ -123,17 +123,6 @@ const SettingsPage = () => {
           enableModification={enableSettingsModification}
         />
         <Flex align={"baseline"} gap={8}>
-          <Typography.Title level={4}>Summary Storage</Typography.Title>
-          <Typography.Text type="secondary">
-            (Choose one option)
-          </Typography.Text>
-        </Flex>
-        <SummaryStorageFields
-          summaryStorageProvider={summaryStorageProvider}
-          projectConfig={projectConfig}
-          enableModification={enableSettingsModification}
-        />
-        <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>Model Provider</Typography.Title>
           <Typography.Text type="secondary">
             (Choose one option)

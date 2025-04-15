@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio } from "antd";
+import { Checkbox, Flex, Form, Input, Radio } from "antd";
 import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
 
 export const FileStorageFields = ({
@@ -95,6 +95,21 @@ export const FileStorageFields = ({
       hidden={selectedFileStorage !== "AWS"}
     >
       <Input placeholder="example-prefix" disabled={!enableModification} />
+    </Form.Item>
+    <Form.Item
+      label={"Store document summaries in S3"}
+      name={["summary_storage_provider"]}
+      initialValue={projectConfig?.summary_storage_provider === "S3"}
+      valuePropName={"checked"}
+      hidden={selectedFileStorage !== "AWS"}
+    >
+      <Checkbox
+        onChange={(e) => {
+          if (e.target.value) {
+            setSelectedSummaryStorage("S3");
+          }
+        }}
+      />
     </Form.Item>
   </Flex>
 );
