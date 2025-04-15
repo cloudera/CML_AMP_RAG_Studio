@@ -99,30 +99,15 @@ export const FileStorageFields = ({
     <Form.Item
       label={"Store document summaries in S3"}
       name={["summary_storage_provider"]}
-      initialValue={projectConfig?.summary_storage_provider === "S3"}
+      initialValue={projectConfig?.summary_storage_provider}
       valuePropName={"checked"}
       hidden={selectedFileStorage !== "AWS"}
-      getValueFromEvent={(event) => {
-        if (event.target.checked) {
-          return "S3";
-        }
-        return "Local";
-      }}
-      // getValueProps={(value) => {
-      //   console.log(value);
-      //   if (value) {
-      //     return { value: "S3" };
-      //   }
-      //   return { value: "Local" };
-      // }}
+      getValueProps={(value) =>
+        value === "S3" ? { checked: true } : { checked: false }
+      }
+      normalize={(value) => (value ? "S3" : "Local")}
     >
-      <Checkbox
-      // onChange={(e) => {
-      //   if (e.target.value) {
-      //     setSelectedSummaryStorage("S3");
-      //   }
-      // }}
-      />
+      <Checkbox />
     </Form.Item>
   </Flex>
 );
