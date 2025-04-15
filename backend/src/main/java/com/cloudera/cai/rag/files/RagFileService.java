@@ -117,10 +117,15 @@ public class RagFileService {
         if (entry.isDirectory()) {
           continue;
         }
-        Path tempFile = Files.createTempFile(entry.getName(), null);
-        Files.copy(zipInputStream, tempFile);
+        String name = entry.getName();
+        Path tempFile = Files.createTempFile(name, null);
+        Files.copy(zipInputStream, tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         results.add(
-            processFile(dataSourceId, actorCrn, new ZipEntryUploadableFile(entry, Files.newInputStream(tempFile), Files.size(tempFile))));
+            processFile(
+                dataSourceId,
+                actorCrn,
+                new ZipEntryUploadableFile(
+                    entry, Files.newInputStream(tempFile), Files.size(tempFile))));
         zipInputStream.closeEntry();
       }
     } catch (IOException e) {
