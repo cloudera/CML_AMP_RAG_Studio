@@ -120,7 +120,7 @@ class AwsConfig(BaseModel):
     bucket_prefix: Optional[str] = None
     access_key_id: Optional[str] = None
     secret_access_key: Optional[str] = None
-
+    store_summaries_in_s3: Optional[str] = None
 
 class AzureConfig(BaseModel):
     """
@@ -333,6 +333,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
         bucket_prefix=env.get("S3_RAG_BUCKET_PREFIX"),
         access_key_id=env.get("AWS_ACCESS_KEY_ID"),
         secret_access_key=env.get("AWS_SECRET_ACCESS_KEY"),
+        store_summaries_in_s3=env.get("STORE_SUMMARIES_IN_S3"),
     )
     azure_config = AzureConfig(
         openai_key=env.get("AZURE_OPENAI_API_KEY"),

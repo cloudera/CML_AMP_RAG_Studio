@@ -38,6 +38,8 @@
 
 package com.cloudera.cai.rag.files;
 
+import static java.nio.file.StandardCopyOption.*;
+
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.Types.RagDocumentMetadata;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
@@ -51,6 +53,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -117,9 +120,8 @@ public class RagFileService {
         if (entry.isDirectory()) {
           continue;
         }
-        String name = entry.getName();
-        Path tempFile = Files.createTempFile(name, null);
-        Files.copy(zipInputStream, tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), null);
+        Files.copy(zipInputStream, tempFile, REPLACE_EXISTING);
         results.add(
             processFile(
                 dataSourceId,
