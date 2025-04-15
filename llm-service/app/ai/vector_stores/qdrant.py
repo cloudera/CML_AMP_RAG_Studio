@@ -63,7 +63,7 @@ def new_qdrant_client() -> qdrant_client.QdrantClient:
     auth_token = os.environ.get("CDSW_APIV2_KEY", None)
 
     def auth_token_provider() -> str:
-        return auth_token
+        return auth_token or "None"
 
     return qdrant_client.QdrantClient(
         host=host,
