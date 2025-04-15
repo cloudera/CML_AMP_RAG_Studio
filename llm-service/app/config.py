@@ -55,3 +55,8 @@ class Settings(BaseSettings):
 
     rag_log_level: int = logging.INFO
     rag_databases_dir: str = os.path.join("..", "databases")
+    document_bucket: str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
+    document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
+
+    def is_s3_configured(self) -> bool:
+        return self.document_bucket != ""
