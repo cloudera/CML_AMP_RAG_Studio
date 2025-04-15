@@ -130,6 +130,7 @@ export interface AwsConfig {
   bucket_prefix?: string;
   access_key_id?: string;
   secret_access_key?: string;
+  store_summaries_in_s3?: string;
 }
 
 export interface AzureConfig {

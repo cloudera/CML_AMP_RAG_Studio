@@ -49,6 +49,7 @@ import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { SummaryStorageFields } from "pages/Settings/SummaryStorageFields.tsx";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -113,6 +114,18 @@ const SettingsPage = () => {
           </Typography.Text>
         </Flex>
         <FileStorageFields
+          selectedFileStorage={selectedFileStorage}
+          setSelectedFileStorage={setSelectedFileStorage}
+          projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
+        />
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>Summary Storage</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
+        <SummaryStorageFields
           selectedFileStorage={selectedFileStorage}
           setSelectedFileStorage={setSelectedFileStorage}
           projectConfig={projectConfig}
