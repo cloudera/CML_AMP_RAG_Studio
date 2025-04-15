@@ -38,7 +38,7 @@
 import json
 import os
 import socket
-from typing import Optional, cast
+from typing import Optional, cast, Literal
 
 from pydantic import BaseModel
 
@@ -53,7 +53,6 @@ class AwsConfig(BaseModel):
     bucket_prefix: Optional[str] = None
     access_key_id: Optional[str] = None
     secret_access_key: Optional[str] = None
-    store_summaries_in_s3: Optional[str] = None
 
 
 class AzureConfig(BaseModel):
@@ -80,6 +79,7 @@ class ProjectConfig(BaseModel):
     """
 
     use_enhanced_pdf_processing: bool
+    summary_storage_provider: Literal["local", "s3"] = "Local"
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -172,7 +172,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
         "AWS_ACCESS_KEY_ID": config.aws_config.access_key_id or "",
         "AWS_SECRET_ACCESS_KEY": config.aws_config.secret_access_key or "",
-        "STORE_SUMMARIES_IN_S3" : config.store_summaries_in_s3 or "",
+        "STORE_SUMMARIES_IN_S3" : config.summary_storage_provider or "",
         "AZURE_OPENAI_API_KEY": config.azure_config.openai_key or "",
         "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
         "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
@@ -190,7 +190,6 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
         bucket_prefix=env.get("S3_RAG_BUCKET_PREFIX"),
         access_key_id=env.get("AWS_ACCESS_KEY_ID"),
         secret_access_key=env.get("AWS_SECRET_ACCESS_KEY"),
-        store_summaries_in_s3=env.get("STORE_SUMMARIES_IN_S3"),
     )
     azure_config = AzureConfig(
         openai_key=env.get("AZURE_OPENAI_API_KEY"),

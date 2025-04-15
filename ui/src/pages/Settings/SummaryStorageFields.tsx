@@ -52,49 +52,31 @@ export const SummaryStorageFields = ({
   enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
-    <Radio.Group
-      style={{ marginBottom: 20 }}
-      optionType="button"
-      buttonStyle="solid"
-      onChange={(e) => {
-        if (e.target.value === "AWS" || e.target.value === "Local") {
-          setSelectedFileStorage(e.target.value as FileStorage);
-        }
-      }}
-      value={selectedFileStorage}
-      options={[
-        { value: "Local", label: "Project Filesystem" },
-        { value: "AWS", label: "AWS S3" },
-      ]}
-      disabled={!enableModification}
-    />
+    <Form.Item
+      name={["aws_config", "store_summaries_in_s3"]}
+      initialValue={projectConfig?.aws_config.store_summaries_in_s3}
+    >
+      <Radio.Group
+        style={{ marginBottom: 20 }}
+        optionType="button"
+        buttonStyle="solid"
+        onChange={(e) => {
+          if (e.target.value === "AWS" || e.target.value === "Local") {
+            setSelectedFileStorage(e.target.value as FileStorage);
+          }
+        }}
+        value={selectedFileStorage}
+        options={[
+          { value: "Local", label: "Project Filesystem" },
+          { value: "AWS", label: "AWS S3" },
+        ]}
+        disabled={!enableModification}
+      />
+    </Form.Item>
     {selectedFileStorage === "Local" && (
       <StyledHelperText>
         CAI Project file system will be used for file storage.
       </StyledHelperText>
     )}
-    <Form.Item
-      label={"Document Bucket Name"}
-      initialValue={projectConfig?.aws_config.document_bucket_name}
-      name={["aws_config", "document_bucket_name"]}
-      required={selectedFileStorage === "AWS"}
-      tooltip="The S3 bucket where uploaded documents are stored."
-      rules={[{ required: selectedFileStorage === "AWS" }]}
-      hidden={selectedFileStorage !== "AWS"}
-    >
-      <Input
-        placeholder="document-bucket-name"
-        disabled={!enableModification}
-      />
-    </Form.Item>
-    <Form.Item
-      label={"Bucket Prefix"}
-      initialValue={projectConfig?.aws_config.bucket_prefix}
-      name={["aws_config", "bucket_prefix"]}
-      tooltip="A prefix added to all S3 paths used by RAG Studio."
-      hidden={selectedFileStorage !== "AWS"}
-    >
-      <Input placeholder="example-prefix" disabled={!enableModification} />
-    </Form.Item>
   </Flex>
 );
