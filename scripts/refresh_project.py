@@ -86,8 +86,8 @@ if len(apps.applications) > 0:
     client.restart_application(application_id=app_id, project_id=project_id)
 
     while True:
-        ragstudio_app = client.get_application(project_id=project_id, application_id=app_id)
-        if ragstudio_app.status == "APPLICATION_RUNNING":
+        qdrant_app = client.get_application(project_id=project_id, application_id=app_id)
+        if qdrant_app.status == "APPLICATION_RUNNING":
             break
         print("Waiting for RagStudio Qdrant to start...")
         time.sleep(5)
