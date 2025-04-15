@@ -60,6 +60,8 @@ from llama_index.core.schema import (
     TextNode,
     RelatedNodeInfo,
 )
+from llama_index.core.storage.docstore import BaseDocumentStore
+from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore
 from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.storage.kvstore.s3 import S3DBKVStore
@@ -145,6 +147,7 @@ class SummaryIndexer(BaseTextIndexer):
     def __init_summary_store(self, persist_dir: str) -> DocumentSummaryIndex:
         doc_summary_index = DocumentSummaryIndex.from_documents(
             [],
+            storage_context=self.create_storage_context(persist_dir, SimpleVectorStore()),
             **self.__index_kwargs(),
         )
         doc_summary_index.storage_context.persist(persist_dir=persist_dir)
@@ -183,16 +186,17 @@ class SummaryIndexer(BaseTextIndexer):
     def create_storage_context(persist_dir, vector_store):
         bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET")
         if bucket:
-            persist_dir=None
-            summary_path = os.environ.get("S3_RAG_BUCKET_PREFIX")
+            summary_path = f"{os.environ.get('S3_RAG_BUCKET_PREFIX')}/{persist_dir}"
             s3_store = S3DBKVStore.from_s3_location(bucket, summary_path)
             index_store = KVIndexStore(s3_store)
-
+            doc_store = KVDocumentStore(s3_store)
         else:
             index_store = None
+            doc_store = None
 
         return StorageContext.from_defaults(
                 index_store=index_store,
+                docstore=doc_store,
                 persist_dir=persist_dir,
                 vector_store=vector_store,
             )

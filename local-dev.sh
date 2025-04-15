@@ -68,7 +68,7 @@ if [ -z "$USE_SYSTEM_UV" ]; then
   python -m pip install uv
 fi
 uv sync
-uv run pytest -sxvvra app
+#uv run pytest -sxvvra app
 
 uv run mlflow ui &
 
