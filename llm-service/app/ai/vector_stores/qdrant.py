@@ -60,13 +60,15 @@ def new_qdrant_client() -> qdrant_client.QdrantClient:
     host = os.environ.get("QDRANT_HOST", "localhost")
     port = int(os.environ.get("QDRANT_PORT", "6333"))
 
-    def auth_token_provider() -> str | None:
-        return os.environ.get("CDSW_APIV2_KEY", None)
+    auth_token = os.environ.get("CDSW_APIV2_KEY", None)
+
+    def auth_token_provider() -> str:
+        return auth_token
 
     return qdrant_client.QdrantClient(
         host=host,
         port=port,
-        auth_token_provider=auth_token_provider,
+        auth_token_provider=auth_token_provider if auth_token else None,
     )
 
 
