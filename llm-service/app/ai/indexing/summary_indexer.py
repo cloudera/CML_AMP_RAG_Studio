@@ -35,16 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
 import logging
 import os
 import shutil
 from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast, List
-
-import boto3
-from botocore.exceptions import ClientError
 
 from llama_index.core import (
     DocumentSummaryIndex,
@@ -53,8 +49,6 @@ from llama_index.core import (
     load_index_from_storage,
     PromptHelper,
 )
-from llama_index.core.storage.kvstore.types import BaseKVStore, DEFAULT_COLLECTION
-from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
@@ -66,6 +60,7 @@ from llama_index.core.schema import (
     TextNode,
     RelatedNodeInfo,
 )
+from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -163,7 +158,7 @@ class SummaryIndexer(BaseTextIndexer):
                 persist_dir=persist_dir,
                 index_configuration=self.__index_kwargs(embed_summaries),
             )
-        except FileNotFoundError:
+        except (ValueError, FileNotFoundError):
             doc_summary_index = self.__init_summary_store(persist_dir)
             return doc_summary_index
 
@@ -192,6 +187,7 @@ class SummaryIndexer(BaseTextIndexer):
             summary_path = os.environ.get("S3_RAG_BUCKET_PREFIX")
             s3_store = S3DBKVStore.from_s3_location(bucket, summary_path)
             index_store = KVIndexStore(s3_store)
+
         else:
             index_store = None
 
@@ -342,8 +338,8 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             persist_dir = self.__persist_dir()
             summary_store = self.__summary_indexer(persist_dir)
-            if document_id not in summary_store.index_struct.doc_id_to_summary_id:
-                return None
+            # if document_id not in summary_store.index_struct.doc_id_to_summary_id:
+            #     return None
             return summary_store.get_document_summary(document_id)
 
     def get_full_summary(self) -> Optional[str]:
