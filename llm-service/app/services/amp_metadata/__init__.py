@@ -44,7 +44,7 @@ from typing import Optional, cast, Literal
 from pydantic import BaseModel
 
 
-SummaryStorageProviderType = Literal["local", "s3"]
+SummaryStorageProviderType = Literal["Local", "S3"]
 
 
 class AwsConfig(BaseModel):
@@ -171,7 +171,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     return {
         "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
-        "SUMMARY_STORAGE_PROVIDER" : config.summary_storage_provider or "local",
+        "SUMMARY_STORAGE_PROVIDER" : config.summary_storage_provider or "Local",
         "AWS_DEFAULT_REGION": config.aws_config.region or "",
         "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
         "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -210,7 +210,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
         ),
         summary_storage_provider=cast(
             SummaryStorageProviderType,
-            env.get("SUMMARY_STORAGE_PROVIDER", "local"),
+            env.get("SUMMARY_STORAGE_PROVIDER", "Local"),
         ),
         aws_config=aws_config,
         azure_config=azure_config,

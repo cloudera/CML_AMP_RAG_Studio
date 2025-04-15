@@ -52,6 +52,7 @@ export const SummaryStorageFields = ({
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
       <Form.Item
+        style={{ margin: 0 }}
         name="summary_storage_provider"
         initialValue={projectConfig?.summary_storage_provider}
       >
