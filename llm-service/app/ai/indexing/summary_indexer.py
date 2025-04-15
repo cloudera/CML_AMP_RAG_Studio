@@ -107,13 +107,13 @@ class SummaryIndexer(BaseTextIndexer):
         )
 
     def __persist_dir(self) -> str:
-        if settings.is_s3_configured():
+        if settings.is_s3_summary_storage_configured():
             return f"summaries/{self.data_source_id}"
         return SummaryIndexer.__database_dir(self.data_source_id)
 
     @staticmethod
     def __persist_root_dir() -> str:
-        if settings.is_s3_configured():
+        if settings.is_s3_summary_storage_configured():
             return "summaries/doc_summary_index_global"
         return os.path.join(settings.rag_databases_dir, "doc_summary_index_global")
 
@@ -192,7 +192,7 @@ class SummaryIndexer(BaseTextIndexer):
 
     @staticmethod
     def create_storage_context(persist_dir, vector_store):
-        if settings.is_s3_configured():
+        if settings.is_s3_summary_storage_configured():
             summary_path = f"{settings.document_bucket_prefix}/{persist_dir}"
             s3_store = S3DBKVStore.from_s3_location(
                 settings.document_bucket, summary_path

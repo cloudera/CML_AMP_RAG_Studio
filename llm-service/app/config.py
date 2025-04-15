@@ -46,8 +46,11 @@ simply the field name in all capital letters.
 
 import logging
 import os.path
+from typing import cast
 
 from pydantic_settings import BaseSettings
+
+from app.services.amp_metadata import SummaryStorageProviderType
 
 
 class Settings(BaseSettings):
@@ -57,6 +60,10 @@ class Settings(BaseSettings):
     rag_databases_dir: str = os.path.join("..", "databases")
     document_bucket: str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
     document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
+    summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
 
-    def is_s3_configured(self) -> bool:
+    def _is_s3_configured(self) -> bool:
         return self.document_bucket != ""
+
+    def is_s3_summary_storage_configured(self) -> bool:
+        return self.summary_storage_provider == "S3" and self._is_s3_configured()
