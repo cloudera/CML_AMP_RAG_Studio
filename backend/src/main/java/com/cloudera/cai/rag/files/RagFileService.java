@@ -46,6 +46,8 @@ import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,8 +117,10 @@ public class RagFileService {
         if (entry.isDirectory()) {
           continue;
         }
+        Path tempFile = Files.createTempFile(entry.getName(), null);
+        Files.copy(zipInputStream, tempFile);
         results.add(
-            processFile(dataSourceId, actorCrn, new ZipEntryUploadableFile(entry, zipInputStream)));
+            processFile(dataSourceId, actorCrn, new ZipEntryUploadableFile(entry, Files.newInputStream(tempFile), Files.size(tempFile))));
         zipInputStream.closeEntry();
       }
     } catch (IOException e) {
@@ -230,7 +234,7 @@ public class RagFileService {
     }
   }
 
-  private record ZipEntryUploadableFile(ZipEntry entry, ZipInputStream zipInputStream)
+  private record ZipEntryUploadableFile(ZipEntry entry, InputStream inputStream, long size)
       implements UploadableFile {
 
     @Override
@@ -240,12 +244,12 @@ public class RagFileService {
 
     @Override
     public InputStream getInputStream() {
-      return zipInputStream;
+      return inputStream;
     }
 
     @Override
     public long getSize() {
-      return entry.getSize();
+      return size;
     }
   }
 }
