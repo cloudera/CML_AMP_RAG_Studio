@@ -48,34 +48,33 @@ export const SummaryStorageFields = ({
   projectConfig?: ProjectConfig;
   enableModification?: boolean;
   form: FormInstance<ProjectConfig>;
-}) => (
-  <Flex vertical style={{ maxWidth: 600 }}>
-    <Form.Item
-      name={"summary_storage_provider"}
-      initialValue={projectConfig?.summary_storage_provider}
-      valuePropName="radio"
-    >
-      <Radio.Group
-        style={{ marginBottom: 20 }}
-        optionType="button"
-        buttonStyle="solid"
-        // onChange={(e) => {
-        //   if (e.target.value === "s3" || e.target.value === "local") {
-        //     setSelectedFileStorage(e.target.value as FileStorage);
-        //   }
-        // }}
-        // value={selectedFileStorage}
-        options={[
-          { value: "local", label: "Project Filesystem" },
-          { value: "s3", label: "AWS S3" },
-        ]}
-        disabled={!enableModification}
-      />
-    </Form.Item>
-    <StyledHelperText>
-      {form.getFieldValue("summary_storage_provider") === "local"
-        ? "CAI Project file system will be used for file storage."
-        : "AWS S3 will be used for file storage."}
-    </StyledHelperText>
-  </Flex>
-);
+}) => {
+  const summary_storage_provider = Form.useWatch(
+    "summary_storage_provider",
+    form,
+  );
+  return (
+    <Flex vertical style={{ maxWidth: 600 }}>
+      <Form.Item
+        name="summary_storage_provider"
+        initialValue={projectConfig?.summary_storage_provider}
+      >
+        <Radio.Group
+          style={{ marginBottom: 20 }}
+          optionType="button"
+          buttonStyle="solid"
+          options={[
+            { value: "local", label: "Project Filesystem" },
+            { value: "s3", label: "AWS S3" },
+          ]}
+          disabled={!enableModification}
+        />
+      </Form.Item>
+      <StyledHelperText>
+        {summary_storage_provider === "local"
+          ? "CAI Project file system will be used for file storage."
+          : "AWS S3 will be used for file storage."}
+      </StyledHelperText>
+    </Flex>
+  );
+};
