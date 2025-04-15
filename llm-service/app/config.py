@@ -58,12 +58,12 @@ class Settings(BaseSettings):
 
     rag_log_level: int = logging.INFO
     rag_databases_dir: str = os.path.join("..", "databases")
-    document_bucket: str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
     document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
     summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
 
     def _is_s3_configured(self) -> bool:
-        return self.document_bucket != ""
+        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "") == ""
 
     def is_s3_summary_storage_configured(self) -> bool:
         return self.summary_storage_provider == "S3" and self._is_s3_configured()
+

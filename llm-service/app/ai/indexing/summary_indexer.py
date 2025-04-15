@@ -150,11 +150,14 @@ class SummaryIndexer(BaseTextIndexer):
         }
 
     def __init_summary_store(self, persist_dir: str) -> DocumentSummaryIndex:
+        storage_context : Optional[StorageContext] = None
+        if settings.is_s3_summary_storage_configured():
+            storage_context = self.create_storage_context(
+                persist_dir, SimpleVectorStore()
+            )
         doc_summary_index = DocumentSummaryIndex.from_documents(
             [],
-            storage_context=self.create_storage_context(
-                persist_dir, SimpleVectorStore()
-            ),
+            storage_context=storage_context,
             **self.__index_kwargs(),
         )
         doc_summary_index.storage_context.persist(persist_dir=persist_dir)
