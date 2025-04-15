@@ -37,22 +37,18 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, FormInstance, Radio } from "antd";
+import { Flex, Form, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/SettingsPage.tsx";
 
 export const SummaryStorageFields = ({
   projectConfig,
   enableModification,
-  form,
+  summaryStorageProvider,
 }: {
   projectConfig?: ProjectConfig;
   enableModification?: boolean;
-  form: FormInstance<ProjectConfig>;
+  summaryStorageProvider: ProjectConfig["summary_storage_provider"];
 }) => {
-  const summary_storage_provider = Form.useWatch(
-    "summary_storage_provider",
-    form,
-  );
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
       <Form.Item
@@ -64,14 +60,14 @@ export const SummaryStorageFields = ({
           optionType="button"
           buttonStyle="solid"
           options={[
-            { value: "local", label: "Project Filesystem" },
-            { value: "s3", label: "AWS S3" },
+            { value: "Local", label: "Project Filesystem" },
+            { value: "S3", label: "AWS S3" },
           ]}
           disabled={!enableModification}
         />
       </Form.Item>
       <StyledHelperText>
-        {summary_storage_provider === "local"
+        {summaryStorageProvider === "Local"
           ? "CAI Project file system will be used for file storage."
           : "AWS S3 will be used for file storage."}
       </StyledHelperText>
