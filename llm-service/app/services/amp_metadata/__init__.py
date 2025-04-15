@@ -38,9 +38,13 @@
 import json
 import os
 import socket
+import typing
 from typing import Optional, cast, Literal
 
 from pydantic import BaseModel
+
+
+SummaryStorageProviderType = Literal["local", "s3"]
 
 
 class AwsConfig(BaseModel):
@@ -79,7 +83,7 @@ class ProjectConfig(BaseModel):
     """
 
     use_enhanced_pdf_processing: bool
-    summary_storage_provider: Literal["local", "s3"] = "Local"
+    summary_storage_provider: SummaryStorageProviderType
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -167,12 +171,12 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     return {
         "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
+        "SUMMARY_STORAGE_PROVIDER" : config.summary_storage_provider or "local",
         "AWS_DEFAULT_REGION": config.aws_config.region or "",
         "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
         "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
         "AWS_ACCESS_KEY_ID": config.aws_config.access_key_id or "",
         "AWS_SECRET_ACCESS_KEY": config.aws_config.secret_access_key or "",
-        "STORE_SUMMARIES_IN_S3" : config.summary_storage_provider or "",
         "AZURE_OPENAI_API_KEY": config.azure_config.openai_key or "",
         "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
         "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
@@ -201,7 +205,12 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
     )
     return ProjectConfigWithValidation(
         use_enhanced_pdf_processing=cast(
-            bool, env.get("USE_ENHANCED_PDF_PROCESSING", False)
+            bool,
+            env.get("USE_ENHANCED_PDF_PROCESSING", False),
+        ),
+        summary_storage_provider=cast(
+            SummaryStorageProviderType,
+            env.get("SUMMARY_STORAGE_PROVIDER", "local"),
         ),
         aws_config=aws_config,
         azure_config=azure_config,
