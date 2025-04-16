@@ -80,7 +80,6 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore
 
-from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models
 from app.services.chat_store import RagContext
 from app.services.query.query_configuration import QueryConfiguration
@@ -88,6 +87,7 @@ from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
 from ..metadata_apis.data_sources_metadata_api import get_metadata
+from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ def query(
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[AgentChatResponse, str | None]:
-    qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
+    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(

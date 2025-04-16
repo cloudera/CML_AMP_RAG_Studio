@@ -70,7 +70,7 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
-from ..vector_stores.qdrant import QdrantVectorStore
+from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import Settings
 from ...services.models.providers import CAIIModelProvider
 
@@ -182,7 +182,7 @@ class SummaryIndexer(BaseTextIndexer):
         data_source_id: int = index_configuration.get("data_source_id")
         storage_context = SummaryIndexer.create_storage_context(
             persist_dir,
-            QdrantVectorStore.for_summaries(data_source_id).llama_vector_store(),
+            VectorStoreFactory.for_summaries(data_source_id).llama_vector_store(),
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
@@ -395,7 +395,7 @@ class SummaryIndexer(BaseTextIndexer):
     @staticmethod
     def delete_data_source_by_id(data_source_id: int) -> None:
         with _write_lock:
-            vector_store = QdrantVectorStore.for_summaries(data_source_id)
+            vector_store = VectorStoreFactory.for_summaries(data_source_id)
             vector_store.delete()
             # TODO: figure out a less explosive way to do this.
             shutil.rmtree(
