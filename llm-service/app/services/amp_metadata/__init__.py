@@ -85,14 +85,14 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
-    release_version: str
 
 
-class ProjectConfigWithValidation(ProjectConfig):
+class ProjectConfigPlus(ProjectConfig):
     """
     Model to represent the project configuration.
     """
 
+    release_version: Optional[str] = None
     is_valid_config: bool
 
 
@@ -185,7 +185,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
-def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
+def env_to_config(env: dict[str, str]) -> ProjectConfigPlus:
     """
     Converts environment variables to a ProjectConfig object.
     """
@@ -204,7 +204,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
     caii_config = CaiiConfig(
         caii_domain=env.get("CAII_DOMAIN"),
     )
-    return ProjectConfigWithValidation(
+    return ProjectConfigPlus(
         use_enhanced_pdf_processing=cast(
             bool,
             env.get("USE_ENHANCED_PDF_PROCESSING", False),
