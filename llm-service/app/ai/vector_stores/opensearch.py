@@ -102,9 +102,9 @@ class OpenSearch(VectorStore, ABC):
         os_client = OpensearchClient(
             os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
         )
-        count = os_client.count({"index": self.table_name})
+        count = os_client.count(index=self.table_name)
         print(f"{count=}")
-        return count
+        return count["count"]
 
     def delete(self) -> None:
         os_client = OpensearchClient(

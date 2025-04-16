@@ -48,6 +48,8 @@ cleanup() {
     # kill all processes whose parent is this process
     pkill -P $$
     docker stop qdrant_dev || true
+    cd ../..
+    docker compose -f opensearch/docker-compose.yaml down
 }
 
 for sig in INT QUIT HUP TERM; do
