@@ -56,7 +56,7 @@ from .vector_store import VectorStore
 logger = logging.getLogger(__name__)
 
 
-def new_qdrant_client() -> qdrant_client.QdrantClient:
+def _new_qdrant_client() -> qdrant_client.QdrantClient:
     host = os.environ.get("QDRANT_HOST", "localhost")
     port = int(os.environ.get("QDRANT_PORT", "6333"))
 
@@ -99,7 +99,7 @@ class QdrantVectorStore(VectorStore):
         data_source_id: int,
         client: Optional[qdrant_client.QdrantClient] = None,
     ):
-        self.client = client or new_qdrant_client()
+        self.client = client or _new_qdrant_client()
         self.table_name = table_name
         self.data_source_id = data_source_id
 
