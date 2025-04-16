@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
 
     def _is_s3_configured(self) -> bool:
-        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "") == ""
+        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "") != ""
 
     def is_s3_summary_storage_configured(self) -> bool:
         return self.summary_storage_provider == "S3" and self._is_s3_configured()
