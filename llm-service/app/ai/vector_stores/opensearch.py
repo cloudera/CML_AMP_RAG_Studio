@@ -55,7 +55,6 @@ from opensearchpy.client import OpenSearch as OpensearchClient
 
 
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
-
     return OpensearchVectorClient(
         # username=os.environ.get("OPENSEARCH_USERNAME", "admin"),
         # password=os.environ.get("OPENSEARCH_INITIAL_ADMIN_PASSWORD"),
@@ -63,6 +62,12 @@ def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
         index=index,
         dim=dim,
     )
+
+def _get_low_level_client():
+    os_client = OpensearchClient(
+        os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
+    )
+    return os_client
 
 
 class OpenSearch(VectorStore, ABC):
@@ -89,6 +94,7 @@ class OpenSearch(VectorStore, ABC):
     ):
         self.table_name = table_name
         self.data_source_id = data_source_id
+        self._low_level_client = _get_low_level_client()
 
     @staticmethod
     @functools.cache
@@ -99,17 +105,13 @@ class OpenSearch(VectorStore, ABC):
         return len(vector)
 
     def size(self) -> Optional[int]:
-        os_client = OpensearchClient(
-            os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
-        )
+        os_client = self._low_level_client
         count = os_client.count(index=self.table_name)
         print(f"{count=}")
         return count["count"]
 
     def delete(self) -> None:
-        os_client = OpensearchClient(
-            os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
-        )
+        os_client = self._low_level_client
         os_client.indices.delete(index=self.table_name)
 
     def delete_document(self, document_id: str) -> None:
@@ -127,9 +129,7 @@ class OpenSearch(VectorStore, ABC):
         )
 
     def exists(self) -> bool:
-        os_client = OpensearchClient(
-            os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
-        )
+        os_client = self._low_level_client
         exists = os_client.indices.exists(index=self.table_name)
         print(f"{exists=}")
         return exists
@@ -137,8 +137,17 @@ class OpenSearch(VectorStore, ABC):
     def visualize(
         self, user_query: Optional[str] = None
     ) -> list[tuple[tuple[float, float], str]]:
-        # todo: implement this
-        pass
+        search_results = self._low_level_client.search(index=self.table_name, params={"size": 500})
+        vectors = []
+        if search_results["hits"]["total"]["value"] > 0:
+            hits = search_results["hits"]["hits"]
+            for hit in hits:
+                vector = hit["_source"]["embedding"]
+                document_id = hit["_id"]
+                vectors.append((vector, document_id))
+        print(f"{len(vectors)=}")
+
+        return []
 
     def get_embedding_model(self) -> BaseEmbedding:
         datasource_metadata = data_sources_metadata_api.get_metadata(
