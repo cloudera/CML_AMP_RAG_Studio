@@ -38,6 +38,8 @@
 
 package com.cloudera.cai.rag.files;
 
+import static java.nio.file.StandardCopyOption.*;
+
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.Types.RagDocumentMetadata;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
@@ -46,9 +48,12 @@ import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -115,8 +120,14 @@ public class RagFileService {
         if (entry.isDirectory()) {
           continue;
         }
+        Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), null);
+        Files.copy(zipInputStream, tempFile, REPLACE_EXISTING);
         results.add(
-            processFile(dataSourceId, actorCrn, new ZipEntryUploadableFile(entry, zipInputStream)));
+            processFile(
+                dataSourceId,
+                actorCrn,
+                new ZipEntryUploadableFile(
+                    entry, Files.newInputStream(tempFile), Files.size(tempFile))));
         zipInputStream.closeEntry();
       }
     } catch (IOException e) {
@@ -230,7 +241,7 @@ public class RagFileService {
     }
   }
 
-  private record ZipEntryUploadableFile(ZipEntry entry, ZipInputStream zipInputStream)
+  private record ZipEntryUploadableFile(ZipEntry entry, InputStream inputStream, long size)
       implements UploadableFile {
 
     @Override
@@ -240,12 +251,12 @@ public class RagFileService {
 
     @Override
     public InputStream getInputStream() {
-      return zipInputStream;
+      return inputStream;
     }
 
     @Override
     public long getSize() {
-      return entry.getSize();
+      return size;
     }
   }
 }

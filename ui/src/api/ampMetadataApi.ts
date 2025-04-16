@@ -144,10 +144,12 @@ export interface CaiiConfig {
 
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
+  summary_storage_provider: "Local" | "S3";
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   caii_config: CaiiConfig;
   is_valid_config: boolean;
+  release_version: string;
 }
 
 export const useGetAmpConfig = (poll?: boolean) => {

@@ -1,11 +1,3 @@
-"""
-RAG app configuration.
-
-All configuration values can be set as environment variables; the variable name is
-simply the field name in all capital letters.
-
-"""
-
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -43,30 +35,33 @@ simply the field name in all capital letters.
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import json
+import subprocess
+import os
+from typing import Dict
 
-import logging
-import os.path
-from typing import cast
+import cmlapi
 
-from pydantic_settings import BaseSettings
+root_dir = (
+    "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+)
+os.chdir(root_dir)
 
-from app.services.amp_metadata import SummaryStorageProviderType
+while True:
+    client = cmlapi.default_client()
+    project_id = os.environ["CDSW_PROJECT_ID"]
+    proj: cmlapi.Project = client.get_project(project_id)
+    proj_env: Dict = json.loads(proj.environment)
+    proj_env.update(
+        {
+            "QDRANT_HOST": os.environ["CDSW_IP_ADDRESS"],
+            # what should the qdrant_port be?
+            "QDRANT_PORT": os.environ["CDSW_APP_PORT"],
+        }
+    )
+    updated_project: cmlapi.Project = cmlapi.Project(environment=json.dumps(proj_env))
+    out: cmlapi.Project = client.update_project(updated_project, project_id=project_id)
+    print(out)
+    print(subprocess.run(["bash scripts/startup_qdrant.sh"], shell=True))
 
-
-class Settings(BaseSettings):
-    """RAG configuration."""
-
-    rag_log_level: int = logging.INFO
-    document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
-    summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
-    document_bucket : str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
-    @property
-    def rag_databases_dir(self) -> str:
-        return os.environ.get("RAG_DATABASES_DIR", os.path.join("..", "databases"))
-
-    def _is_s3_configured(self) -> bool:
-        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "") != ""
-
-    def is_s3_summary_storage_configured(self) -> bool:
-        return self.summary_storage_provider == "S3" and self._is_s3_configured()
-
+    print("Qdrant Restarting")

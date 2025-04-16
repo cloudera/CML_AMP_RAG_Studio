@@ -2000,6 +2000,19 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-storage-kvstore-s3"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "boto3" },
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d6/cb/1b9fb92fccef755331298458b5f8d3b94da9845e802227b66596b45e803f/llama_index_storage_kvstore_s3-0.3.0.tar.gz", hash = "sha256:8747e2b274ace8969a806800a900a415fe707d0e2d5750fb8b571b67eb6b4dff", size = 2522 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/dc/b60d230f56b2c85df5c611a64582e02cf206a244e213a2f958f3fd5b707f/llama_index_storage_kvstore_s3-0.3.0-py3-none-any.whl", hash = "sha256:caf70e2f543a21b14a7a31f15c3103bfc9038e1409aa42b9ee0595fa2ca9027f", size = 2795 },
+]
+
+[[package]]
 name = "llama-index-vector-stores-qdrant"
 version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2036,6 +2049,7 @@ dependencies = [
     { name = "llama-index-postprocessor-bedrock-rerank" },
     { name = "llama-index-postprocessor-nvidia-rerank" },
     { name = "llama-index-readers-file" },
+    { name = "llama-index-storage-kvstore-s3" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
     { name = "mlflow" },
@@ -2081,6 +2095,7 @@ requires-dist = [
     { name = "llama-index-postprocessor-bedrock-rerank", specifier = ">=0.3.1" },
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
+    { name = "llama-index-storage-kvstore-s3", specifier = ">=0.3.0" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },
     { name = "mlflow", specifier = ">=2.20.1" },
@@ -4634,6 +4649,9 @@ dependencies = [
     { name = "torch" },
 ]
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/20/72eb0b5b08fa293f20fc41c374e37cf899f0033076f0144d2cdc48f9faee/torchvision-0.21.0-1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:5568c5a1ff1b2ec33127b629403adb530fab81378d9018ca4ed6508293f76e2b", size = 2327643 },
+    { url = "https://files.pythonhosted.org/packages/4e/3d/b7241abfa3e6651c6e00796f5de2bd1ce4d500bf5159bcbfeea47e711b93/torchvision-0.21.0-1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ff96666b94a55e802ea6796cabe788541719e6f4905fc59c380fed3517b6a64d", size = 2329320 },
+    { url = "https://files.pythonhosted.org/packages/52/5b/76ca113a853b19c7b1da761f8a72cb6429b3bd0bf932537d8df4657f47c3/torchvision-0.21.0-1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:ffa2a16499508fe6798323e455f312c7c55f2a88901c9a7c0fb1efa86cf7e327", size = 2329878 },
     { url = "https://files.pythonhosted.org/packages/8e/0d/143bd264876fad17c82096b6c2d433f1ac9b29cdc69ee45023096976ee3d/torchvision-0.21.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:044ea420b8c6c3162a234cada8e2025b9076fa82504758cd11ec5d0f8cd9fa37", size = 1784140 },
     { url = "https://files.pythonhosted.org/packages/5e/44/32e2d2d174391374d5ff3c4691b802e8efda9ae27ab9062eca2255b006af/torchvision-0.21.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:b0c0b264b89ab572888244f2e0bad5b7eaf5b696068fc0b93e96f7c3c198953f", size = 7237187 },
     { url = "https://files.pythonhosted.org/packages/0e/6b/4fca9373eda42c1b04096758306b7bd55f7d8f78ba273446490855a0f25d/torchvision-0.21.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:54815e0a56dde95cc6ec952577f67e0dc151eadd928e8d9f6a7f821d69a4a734", size = 14699067 },

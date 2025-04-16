@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio } from "antd";
+import { Flex, Form, Input, Radio, Switch } from "antd";
 import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
 
 export const FileStorageFields = ({
@@ -95,6 +95,20 @@ export const FileStorageFields = ({
       hidden={selectedFileStorage !== "AWS"}
     >
       <Input placeholder="example-prefix" disabled={!enableModification} />
+    </Form.Item>
+    <Form.Item
+      label={"Store Document Summaries in S3"}
+      name={["summary_storage_provider"]}
+      tooltip="Only applies if document summarization is enabled for a knowledge base."
+      initialValue={projectConfig?.summary_storage_provider}
+      valuePropName={"checked"}
+      hidden={selectedFileStorage !== "AWS"}
+      getValueProps={(value) =>
+        value === "S3" ? { checked: true } : { checked: false }
+      }
+      normalize={(value) => (value ? "S3" : "Local")}
+    >
+      <Switch disabled={!enableModification} />
     </Form.Item>
   </Flex>
 );

@@ -73,7 +73,10 @@ const SettingsPage = () => {
   );
   const dataSourcesQuery = useSuspenseQuery(getDataSourcesQueryOptions);
   const sessionsQuery = useSuspenseQuery(getSessionsQueryOptions);
-
+  const summaryStorageProvider = Form.useWatch(
+    "summary_storage_provider",
+    form,
+  );
   const enableSettingsModification =
     dataSourcesQuery.data.length === 0 && sessionsQuery.data.length === 0;
 
@@ -133,6 +136,7 @@ const SettingsPage = () => {
         <Typography.Title level={4}>Authentication</Typography.Title>
         <AuthenticationFields
           projectConfig={projectConfig}
+          summaryStorageProvider={summaryStorageProvider}
           modelProvider={modelProvider}
           selectedFileStorage={selectedFileStorage}
           enableModification={enableSettingsModification}

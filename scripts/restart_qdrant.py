@@ -1,12 +1,4 @@
-"""
-RAG app configuration.
-
-All configuration values can be set as environment variables; the variable name is
-simply the field name in all capital letters.
-
-"""
-
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -28,7 +20,7 @@ simply the field name in all capital letters.
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -42,31 +34,33 @@ simply the field name in all capital letters.
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
-import logging
-import os.path
-from typing import cast
+import os
+import time
 
-from pydantic_settings import BaseSettings
+import cmlapi
 
-from app.services.amp_metadata import SummaryStorageProviderType
-
-
-class Settings(BaseSettings):
-    """RAG configuration."""
-
-    rag_log_level: int = logging.INFO
-    document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
-    summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
-    document_bucket : str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
-    @property
-    def rag_databases_dir(self) -> str:
-        return os.environ.get("RAG_DATABASES_DIR", os.path.join("..", "databases"))
-
-    def _is_s3_configured(self) -> bool:
-        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "") != ""
-
-    def is_s3_summary_storage_configured(self) -> bool:
-        return self.summary_storage_provider == "S3" and self._is_s3_configured()
-
+time.sleep(0.1)
+client = cmlapi.default_client()
+project_id = os.environ["CDSW_PROJECT_ID"]
+apps = client.list_applications(project_id=project_id)
+if len(apps.applications) > 0:
+    # find the application named "RagStudioQdrant" and restart it
+    ragstudio_qdrant = next(
+        (app for app in apps.applications if app.name == "RagStudioQdrant"), None
+    )
+    if ragstudio_qdrant:
+        app_id = ragstudio_qdrant.id
+        print("Restarting app with ID: ", app_id)
+        client.restart_application(application_id=app_id, project_id=project_id)
+    else:
+        print(
+            "No RagStudio Qdrant instance found to restart. This can happen if someone renamed the application."
+        )
+        if os.getenv("IS_COMPOSABLE", "") != "":
+            print("Composable environment. This is likely the initial deployment.")
+        else:
+            raise ValueError("RagStudio Qdrant instance not found to restart")
+else:
+    print("No applications found to restart. This is likely the initial deployment.")

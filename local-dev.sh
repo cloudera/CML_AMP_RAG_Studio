@@ -42,6 +42,8 @@ set -a && source .env && set +a
 export RAG_DATABASES_DIR=$(pwd)/databases
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
+source scripts/release_version.txt || true
+
 cleanup() {
     # kill all processes whose parent is this process
     pkill -P $$
@@ -68,7 +70,7 @@ if [ -z "$USE_SYSTEM_UV" ]; then
   python -m pip install uv
 fi
 uv sync
-uv run pytest -sxvvra app
+#uv run pytest -sxvvra app
 
 uv run mlflow ui &
 

@@ -41,31 +41,46 @@ import SettingsPage from "pages/Settings/SettingsPage.tsx";
 import { NotFoundComponent } from "src/main.tsx";
 import { Flex, Layout, Typography } from "antd";
 import { cdlGray300 } from "src/cuix/variables.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
 const { Content, Header } = Layout;
 
 export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
   {
-    component: () => (
-      <Layout
-        style={{
-          minHeight: "100%",
-          width: "100%",
-          margin: 0,
-        }}
-      >
-        <Header style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}>
-          <Flex align="center" style={{ height: "100%" }}>
-            <Typography.Title level={4} style={{ margin: 0 }}>
-              Settings
-            </Typography.Title>
-          </Flex>
-        </Header>
-        <Content style={{ margin: "0", overflowY: "auto" }}>
-          <SettingsPage />
-        </Content>
-      </Layout>
-    ),
+    component: () => {
+      const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
+
+      return (
+        <Layout
+          style={{
+            minHeight: "100%",
+            width: "100%",
+            margin: 0,
+          }}
+        >
+          <Header
+            style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}
+          >
+            <Flex
+              align="center"
+              justify={"space-between"}
+              style={{ height: "100%" }}
+            >
+              <Typography.Title level={4} style={{ margin: 0 }}>
+                Settings
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                version: {config?.release_version}
+              </Typography.Text>
+            </Flex>
+          </Header>
+          <Content style={{ margin: "0", overflowY: "auto" }}>
+            <SettingsPage />
+          </Content>
+        </Layout>
+      );
+    },
     errorComponent: () => <NotFoundComponent />,
   },
 );

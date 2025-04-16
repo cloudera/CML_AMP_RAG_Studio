@@ -42,7 +42,6 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast, List
 
-from app.services import models
 from llama_index.core import (
     DocumentSummaryIndex,
     StorageContext,
@@ -61,9 +60,14 @@ from llama_index.core.schema import (
     TextNode,
     RelatedNodeInfo,
 )
+from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore
+from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.vector_stores import SimpleVectorStore
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
+from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
+from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
@@ -79,6 +83,7 @@ SUMMARY_PROMPT = "Summarize the contents into less than 100 words."
 # Basically filesystems aren't ACID, so don't pretend that they are.
 # We could have a lock per data source, but this is simpler.
 _write_lock = Lock()
+settings = Settings()
 
 
 class SummaryIndexer(BaseTextIndexer):
@@ -98,15 +103,19 @@ class SummaryIndexer(BaseTextIndexer):
     @staticmethod
     def __database_dir(data_source_id: int) -> str:
         return os.path.join(
-            Settings().rag_databases_dir, f"doc_summary_index_{data_source_id}"
+            settings.rag_databases_dir, f"doc_summary_index_{data_source_id}"
         )
 
     def __persist_dir(self) -> str:
+        if settings.is_s3_summary_storage_configured():
+            return f"summaries/{self.data_source_id}"
         return SummaryIndexer.__database_dir(self.data_source_id)
 
     @staticmethod
     def __persist_root_dir() -> str:
-        return os.path.join(Settings().rag_databases_dir, "doc_summary_index_global")
+        if settings.is_s3_summary_storage_configured():
+            return "summaries/doc_summary_index_global"
+        return os.path.join(settings.rag_databases_dir, "doc_summary_index_global")
 
     def __index_kwargs(self, embed_summaries: bool = True) -> Dict[str, Any]:
         return SummaryIndexer.__index_configuration(
@@ -141,8 +150,14 @@ class SummaryIndexer(BaseTextIndexer):
         }
 
     def __init_summary_store(self, persist_dir: str) -> DocumentSummaryIndex:
+        storage_context : Optional[StorageContext] = None
+        if settings.is_s3_summary_storage_configured():
+            storage_context = self.create_storage_context(
+                persist_dir, SimpleVectorStore()
+            )
         doc_summary_index = DocumentSummaryIndex.from_documents(
             [],
+            storage_context=storage_context,
             **self.__index_kwargs(),
         )
         doc_summary_index.storage_context.persist(persist_dir=persist_dir)
@@ -156,7 +171,7 @@ class SummaryIndexer(BaseTextIndexer):
                 persist_dir=persist_dir,
                 index_configuration=self.__index_kwargs(embed_summaries),
             )
-        except FileNotFoundError:
+        except (ValueError, FileNotFoundError):
             doc_summary_index = self.__init_summary_store(persist_dir)
             return doc_summary_index
 
@@ -165,11 +180,9 @@ class SummaryIndexer(BaseTextIndexer):
         persist_dir: str, index_configuration: Dict[str, Any]
     ) -> DocumentSummaryIndex:
         data_source_id: int = index_configuration.get("data_source_id")
-        storage_context = StorageContext.from_defaults(
-            persist_dir=persist_dir,
-            vector_store=QdrantVectorStore.for_summaries(
-                data_source_id
-            ).llama_vector_store(),
+        storage_context = SummaryIndexer.create_storage_context(
+            persist_dir,
+            QdrantVectorStore.for_summaries(data_source_id).llama_vector_store(),
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
@@ -180,12 +193,32 @@ class SummaryIndexer(BaseTextIndexer):
         )
         return doc_summary_index
 
+    @staticmethod
+    def create_storage_context(persist_dir: str, vector_store: BasePydanticVectorStore) -> StorageContext:
+        if settings.is_s3_summary_storage_configured():
+            summary_path = f"{settings.document_bucket_prefix}/{persist_dir}"
+            s3_store = S3DBKVStore.from_s3_location(
+                settings.document_bucket, summary_path
+            )
+            index_store = KVIndexStore(s3_store)
+            doc_store = KVDocumentStore(s3_store)
+        else:
+            index_store = None
+            doc_store = None
+
+        return StorageContext.from_defaults(
+            index_store=index_store,
+            docstore=doc_store,
+            persist_dir=persist_dir,
+            vector_store=vector_store,
+        )
+
     @classmethod
     def get_all_data_source_summaries(cls) -> dict[str, str]:
         root_dir = cls.__persist_root_dir()
         if not os.path.exists(root_dir):
             return {}
-        storage_context = StorageContext.from_defaults(
+        storage_context = SummaryIndexer.create_storage_context(
             persist_dir=root_dir,
             vector_store=SimpleVectorStore(),
         )
