@@ -42,18 +42,21 @@ import {
   DatabaseOutlined,
   LineChartOutlined,
   RobotFilled,
+  SettingOutlined,
 } from "@ant-design/icons";
-import { Flex, Menu, MenuProps, Tag, Typography } from "antd";
+import { Flex, Menu, MenuProps, Tag, Tooltip, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
+import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
+  const { data: config } = useGetAmpConfig();
 
   const navigateTo = (path: string) => () => {
     navigate({ to: path }).catch(() => null);
@@ -100,12 +103,14 @@ const TopNav: React.FC = () => {
     getItem(
       <span data-testid="rag-apps-nav">Chats</span>,
       "chat",
+      !config?.is_valid_config,
       navigateTo("/chats"),
       <CommentOutlined />,
     ),
     getItem(
       <span data-testid="data-management-nav">Knowledge Bases</span>,
       "data",
+      !config?.is_valid_config,
       navigateTo("/data"),
       <DatabaseOutlined />,
     ),
@@ -114,6 +119,7 @@ const TopNav: React.FC = () => {
   const models = getItem(
     <span data-testid="models-nav">Models</span>,
     "models",
+    !config?.is_valid_config,
     navigateTo("/models"),
     <RobotFilled />,
   );
@@ -121,11 +127,23 @@ const TopNav: React.FC = () => {
   const analyticsItem = getItem(
     <span data-testid="analytics-nav">Analytics</span>,
     "analytics",
+    !config?.is_valid_config,
     navigateTo("/analytics"),
     <LineChartOutlined />,
   );
 
+  const settingsItem = getItem(
+    <span data-testid="settings-nav">Settings</span>,
+    "settings",
+    false,
+    navigateTo("/settings"),
+    <SettingOutlined />,
+  );
+
   const items = [...baseItems, models, analyticsItem];
+  if (config) {
+    items.push(settingsItem);
+  }
 
   function chooseRoute() {
     if (matchRoute({ to: "/data", fuzzy: true })) {
@@ -138,6 +156,8 @@ const TopNav: React.FC = () => {
       return ["analytics"];
     } else if (matchRoute({ to: "/projects", fuzzy: true })) {
       return ["projects"];
+    } else if (matchRoute({ to: "/settings", fuzzy: true })) {
+      return ["settings"];
     } else {
       return ["chat"];
     }
@@ -159,19 +179,24 @@ const TopNav: React.FC = () => {
 
 type MenuItem = Required<MenuProps>["items"][number];
 
-function getItem(
+export function getItem(
   label: React.ReactNode,
   key: React.Key,
+  disabled: boolean,
   onClick: () => void,
   icon?: React.ReactNode,
   children?: MenuItem[],
 ): MenuItem {
+  const toolTipLabel = (
+    <Tooltip title="Valid settings are required">{label}</Tooltip>
+  );
   return {
     key,
     icon,
     children,
-    label,
+    label: disabled ? toolTipLabel : label,
     onClick,
+    disabled,
   } as MenuItem;
 }
 

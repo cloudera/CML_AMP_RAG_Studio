@@ -39,8 +39,6 @@
 set -exo pipefail
 set -a && source .env && set +a
 
-python3.12 scripts/validator/validate_env.py
-
 export RAG_DATABASES_DIR=$(pwd)/databases
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
@@ -78,7 +76,7 @@ mkdir -p $MLFLOW_RECONCILER_DATA_PATH
 uv run fastapi dev --port=8081 &
 
 # wait for the python backend to be ready
-while ! curl --output /dev/null --silent --fail http://localhost:8081/amp-update; do
+while ! curl --output /dev/null --silent --fail http://localhost:8081/amp; do
     echo "Waiting for the Python backend to be ready..."
     sleep 4
 done
