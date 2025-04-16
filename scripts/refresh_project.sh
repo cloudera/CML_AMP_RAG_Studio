@@ -84,3 +84,5 @@ wget "${RELEASE_URL}/fe-dist.tar.gz" -O artifacts/fe-dist.tar.gz
 # unzip the frontend tarball
 cd ui
 tar -xzf ../artifacts/fe-dist.tar.gz
+
+python install_qdrant_app.py
