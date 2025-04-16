@@ -56,16 +56,30 @@ from app.services.amp_metadata import SummaryStorageProviderType
 class _Settings(BaseSettings):
     """RAG configuration."""
 
-    rag_log_level: int = logging.INFO
-    document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
-    summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
-    document_bucket : str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
+
+    @property
+    def rag_log_level(self) -> int:
+        return int(os.environ.get("RAG_LOG_LEVEL", logging.INFO))
+
     @property
     def rag_databases_dir(self) -> str:
         return os.environ.get("RAG_DATABASES_DIR", os.path.join("..", "databases"))
 
+    @property
+    def document_bucket_prefix(self) -> str:
+        return os.environ.get("S3_RAG_BUCKET_PREFIX", "")
+
+    @property
+    def summary_storage_provider(self) -> SummaryStorageProviderType:
+        # TODO: check value of env var, and raise if not SummaryStorageProviderType
+        return cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
+
+    @property
+    def document_bucket(self) -> str:
+        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
+
     def _is_s3_configured(self) -> bool:
-        return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "") != ""
+        return self.document_bucket != ""
 
     def is_s3_summary_storage_configured(self) -> bool:
         return self.summary_storage_provider == "S3" and self._is_s3_configured()
