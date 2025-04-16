@@ -36,7 +36,6 @@
 #  DATA.
 #
 
-import os
 from typing import Callable, List, Sequence
 
 import requests

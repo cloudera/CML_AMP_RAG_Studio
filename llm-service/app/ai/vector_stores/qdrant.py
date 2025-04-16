@@ -36,7 +36,6 @@
 #  DATA.
 #
 import logging
-import os
 from typing import List, Optional, cast
 
 import qdrant_client

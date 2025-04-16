@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 
 from .base import DocumentStorage
 from .file_storage import FileSystemDocumentStorage

@@ -36,7 +36,6 @@
 #  DATA.
 #
 import json
-import os
 import re
 import uuid
 from datetime import datetime
@@ -50,6 +49,7 @@ from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.query.query_configuration import QueryConfiguration
+
 
 # mypy: disable-error-code="no-untyped-call"
 

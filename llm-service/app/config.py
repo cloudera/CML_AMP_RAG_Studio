@@ -48,7 +48,6 @@ import logging
 import os.path
 from typing import cast, Optional
 
-from pydantic_settings import BaseSettings
 
 from app.services.amp_metadata import SummaryStorageProviderType
 

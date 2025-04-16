@@ -36,7 +36,6 @@
 #  DATA.
 #
 import json
-import os
 from typing import Dict
 
 from app.config import settings
