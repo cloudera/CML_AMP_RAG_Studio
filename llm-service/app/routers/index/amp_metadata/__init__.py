@@ -46,8 +46,12 @@ from fastapi.params import Header
 
 from .... import exceptions
 from ....services.amp_metadata import (
-    ProjectConfig, ProjectConfigWithValidation, config_to_env, env_to_config,
-    update_project_environment, get_project_environment,
+    ProjectConfig,
+    ProjectConfigPlus,
+    config_to_env,
+    env_to_config,
+    update_project_environment,
+    get_project_environment,
 )
 from ....services.amp_update import does_amp_need_updating
 
@@ -116,7 +120,7 @@ def amp_is_composed() -> bool:
 def get_configuration(
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
-) -> ProjectConfigWithValidation:
+) -> ProjectConfigPlus:
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
 
@@ -135,8 +139,7 @@ def update_configuration(
     config: ProjectConfig,
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
-) -> ProjectConfigWithValidation:
-    print(f"{config=}")
+) -> ProjectConfigPlus:
     existing_env = get_project_environment()
     project_owner = existing_env.get("PROJECT_OWNER", "unknown")
 
@@ -163,5 +166,3 @@ def restart_application() -> str:
         start_new_session=True,
     )
     return "OK"
-
-
