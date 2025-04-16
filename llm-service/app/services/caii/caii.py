@@ -56,12 +56,14 @@ from ..utils import raise_for_http_error, body_to_json
 from ..llama_utils import completion_to_prompt, messages_to_prompt
 import logging
 
+from ...config import settings
+
 DEFAULT_NAMESPACE = "serving-default"
 
 logger = logging.getLogger(__name__)
 
 def describe_endpoint(endpoint_name: str) -> Endpoint:
-    domain = os.environ["CAII_DOMAIN"]
+    domain = settings.caii_domain
     headers = build_auth_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
     desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
@@ -72,7 +74,7 @@ def describe_endpoint(endpoint_name: str) -> Endpoint:
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
-    domain = os.environ["CAII_DOMAIN"]
+    domain = settings.caii_domain
     try:
         headers = build_auth_headers()
         describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"

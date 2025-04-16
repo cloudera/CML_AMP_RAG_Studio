@@ -46,16 +46,15 @@ simply the field name in all capital letters.
 
 import logging
 import os.path
-from typing import cast
+from typing import cast, Optional
 
 from pydantic_settings import BaseSettings
 
 from app.services.amp_metadata import SummaryStorageProviderType
 
 
-class _Settings(BaseSettings):
+class _Settings:
     """RAG configuration."""
-
 
     @property
     def rag_log_level(self) -> int:
@@ -64,6 +63,34 @@ class _Settings(BaseSettings):
     @property
     def rag_databases_dir(self) -> str:
         return os.environ.get("RAG_DATABASES_DIR", os.path.join("..", "databases"))
+
+    @property
+    def caii_domain(self) -> str:
+        return os.environ["CAII_DOMAIN"]
+
+    @property
+    def cdsw_project_id(self) -> str:
+        return os.environ["CDSW_PROJECT_ID"]
+
+    @property
+    def cdp_token_override(self) -> Optional[str]:
+        return os.environ.get("CDP_TOKEN_OVERRIDE")
+
+    @property
+    def cdsw_apiv2_key(self) -> Optional[str]:
+        return os.environ.get("CDSW_APIV2_KEY")
+
+    @property
+    def qdrant_host(self) -> str:
+        return os.environ.get("QDRANT_HOST", "localhost")
+
+    @property
+    def qdrant_port(self) -> int:
+        return int(os.environ.get("QDRANT_PORT", "6333"))
+
+    @property
+    def mlflow_reconciler_data_path(self) -> str:
+        return os.environ["MLFLOW_RECONCILER_DATA_PATH"]
 
     @property
     def document_bucket_prefix(self) -> str:
@@ -78,11 +105,19 @@ class _Settings(BaseSettings):
     def document_bucket(self) -> str:
         return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
 
+    @property
+    def aws_default_region(self) -> Optional[str]:
+        return os.environ.get("AWS_DEFAULT_REGION") or None
+
     def _is_s3_configured(self) -> bool:
         return self.document_bucket != ""
 
     def is_s3_summary_storage_configured(self) -> bool:
         return self.summary_storage_provider == "S3" and self._is_s3_configured()
+
+    @property
+    def azure_openai_api_key(self) -> Optional[str]:
+        return os.environ.get("AZURE_OPENAI_API_KEY")
 
 
 settings = _Settings()

@@ -45,6 +45,7 @@ from typing import Any, Optional
 import mlflow
 from mlflow.entities import Experiment, Run
 
+from app.config import settings
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.session_metadata_api import Session
@@ -169,7 +170,7 @@ def write_mlflow_run_json(
         **data,
     }
     with open(
-        f"{os.environ['MLFLOW_RECONCILER_DATA_PATH']}/{str(uuid.uuid4())}.json",
+        f"{settings.mlflow_reconciler_data_path}/{str(uuid.uuid4())}.json",
         "w",
     ) as f:
         json.dump(contents, f)

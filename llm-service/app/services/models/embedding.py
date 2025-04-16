@@ -51,6 +51,7 @@ from .providers import (
 )
 from ..caii.caii import get_embedding_model as caii_embedding
 from ..caii.types import ModelResponse
+from ...config import settings
 
 
 class Embedding(_model_type.ModelType[BaseEmbedding]):
@@ -63,8 +64,8 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
             return AzureOpenAIEmbedding(
                 model_name=model_name,
                 deployment_name=model_name,
-                # AZURE_OPENAI_API_KEY does not properly map via env var otherwise OPENAI_API_KEY is also required.
-                api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                # must be passed manually otherwise AzureOpenAIEmbedding checks OPENAI_API_KEY
+                api_key=settings.azure_openai_api_key,
             )
 
         if CAIIModelProvider.is_enabled():

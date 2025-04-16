@@ -40,12 +40,12 @@ import os
 from .base import DocumentStorage
 from .file_storage import FileSystemDocumentStorage
 from .s3 import S3DocumentStorage
+from ...config import settings
 
 
 def from_environment() -> DocumentStorage:
     # todo: move this to config, remove bucket_name from download api signature
-    bucket = os.environ.get("S3_RAG_DOCUMENT_BUCKET")
-    if bucket:
+    if settings.document_bucket:
         return S3DocumentStorage()
     else:
         return FileSystemDocumentStorage()

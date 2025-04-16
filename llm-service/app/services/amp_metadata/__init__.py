@@ -42,6 +42,8 @@ from typing import Optional, cast, Literal
 
 from pydantic import BaseModel
 
+from app.config import settings
+
 SummaryStorageProviderType = Literal["Local", "S3"]
 
 
@@ -226,7 +228,7 @@ def update_project_environment(new_env: dict[str, str]) -> None:
         import cmlapi
 
         client = cmlapi.default_client()
-        project_id = os.environ["CDSW_PROJECT_ID"]
+        project_id = settings.cdsw_project_id
         project = client.get_project(project_id=project_id)
         project.environment = json.dumps(new_env)
         client.update_project(project_id=project_id, body=project)
@@ -239,7 +241,7 @@ def get_project_environment() -> dict[str, str]:
         import cmlapi
 
         client = cmlapi.default_client()
-        project_id = os.environ["CDSW_PROJECT_ID"]
+        project_id = settings.cdsw_project_id
         project = client.get_project(project_id=project_id)
         return cast(dict[str, str], json.loads(project.environment))
     except ImportError:

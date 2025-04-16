@@ -40,6 +40,7 @@ from typing import List, Optional, cast
 
 import boto3
 
+from app.config import settings
 from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
 
@@ -103,8 +104,7 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def _get_model_arns() -> List[dict[str, str]]:
-        default_region = os.environ.get("AWS_DEFAULT_REGION") or None
-        bedrock_client = boto3.client("bedrock", region_name=default_region)
+        bedrock_client = boto3.client("bedrock", region_name=settings.aws_default_region)
         profiles = bedrock_client.list_inference_profiles()["inferenceProfileSummaries"]
         return cast(List[dict[str, str]], profiles)
 
