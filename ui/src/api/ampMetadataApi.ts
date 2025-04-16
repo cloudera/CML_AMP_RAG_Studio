@@ -149,6 +149,7 @@ export interface ProjectConfig {
   azure_config: AzureConfig;
   caii_config: CaiiConfig;
   is_valid_config: boolean;
+  release_version: string;
 }
 
 export const useGetAmpConfig = (poll?: boolean) => {

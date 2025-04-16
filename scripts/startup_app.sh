@@ -43,6 +43,9 @@ cleanup() {
     pkill -P $$
 }
 
+## set the RELEASE_TAG env var from the file, if it exists
+source scripts/release_version.txt || true
+
 for sig in INT QUIT HUP TERM; do
   trap "
     cleanup

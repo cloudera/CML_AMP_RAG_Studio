@@ -85,6 +85,7 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
+    release_version: str
 
 
 class ProjectConfigWithValidation(ProjectConfig):
@@ -103,7 +104,9 @@ def validate_storage_config(environ: dict[str, str]) -> bool:
 
     if document_bucket is not None:
         if access_key_id is None or secret_key_id is None or default_region is None:
-            print("ERROR: Using S3 for document storage; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION")
+            print(
+                "ERROR: Using S3 for document storage; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION"
+            )
             return False
     return True
 
@@ -169,7 +172,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     return {
         "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
-        "SUMMARY_STORAGE_PROVIDER" : config.summary_storage_provider or "Local",
+        "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
         "AWS_DEFAULT_REGION": config.aws_config.region or "",
         "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
         "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -214,6 +217,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigWithValidation:
         azure_config=azure_config,
         caii_config=caii_config,
         is_valid_config=validate(env),
+        release_version=env.get("RELEASE_TAG", "unknown"),
     )
 
 
