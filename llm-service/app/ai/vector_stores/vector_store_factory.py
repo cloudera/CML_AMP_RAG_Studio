@@ -37,21 +37,24 @@
 #
 import os
 
+from app.ai.vector_stores.opensearch import OpenSearch
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.ai.vector_stores.vector_store import VectorStore
-from app.ai.vector_stores.opensearch import OpensearchVectorStore
 
 
 class VectorStoreFactory:
     @staticmethod
     def for_chunks(data_source_id: int) -> VectorStore:
-        if os.environ.get("VECTOR_STORE_TYPE") == "OPENSEARCH":
-            return OpensearchVectorStore.for_chunks(data_source_id)
+        vector_db_provider = os.environ.get("VECTOR_DB_PROVIDER")
+        print(f"Vector DB provider: {vector_db_provider}")
+        if vector_db_provider == "OPENSEARCH":
+            print("Using OpenSearch for chunks")
+            return OpenSearch.for_chunks(data_source_id)
+        print("Using Qdrant for chunks")
         return QdrantVectorStore.for_chunks(data_source_id)
 
     @staticmethod
     def for_summaries(data_source_id: int) -> VectorStore:
-        if os.environ.get("VECTOR_STORE_TYPE") == "OPENSEARCH":
-            return OpensearchVectorStore.for_summaries(data_source_id)
+        if os.environ.get("VECTOR_DB_PROVIDER") == "OPENSEARCH":
+            return OpenSearch.for_summaries(data_source_id)
         return QdrantVectorStore.for_summaries(data_source_id)
-

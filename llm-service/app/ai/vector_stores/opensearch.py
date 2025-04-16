@@ -68,6 +68,20 @@ def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
 class OpenSearch(VectorStore, ABC):
     """OpenSearch Vector Store."""
 
+    @staticmethod
+    def for_chunks(data_source_id: int) -> "OpenSearch":
+        return OpenSearch(
+            data_source_id=data_source_id,
+            table_name=f"index_{data_source_id}",
+        )
+
+    @staticmethod
+    def for_summaries(data_source_id: int) -> "OpenSearch":
+        return OpenSearch(
+            data_source_id=data_source_id,
+            table_name=f"summary_index_{data_source_id}",
+        )
+
     def __init__(
         self,
         table_name: str,
@@ -85,13 +99,17 @@ class OpenSearch(VectorStore, ABC):
         return len(vector)
 
     def size(self) -> Optional[int]:
-        os_client = OpensearchClient(os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"))
+        os_client = OpensearchClient(
+            os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
+        )
         count = os_client.count({"index": self.table_name})
         print(f"{count=}")
         return count
 
     def delete(self) -> None:
-        os_client = OpensearchClient(os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"))
+        os_client = OpensearchClient(
+            os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
+        )
         os_client.indices.delete(index=self.table_name)
 
     def delete_document(self, document_id: str) -> None:
@@ -109,7 +127,9 @@ class OpenSearch(VectorStore, ABC):
         )
 
     def exists(self) -> bool:
-        os_client = OpensearchClient(os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"))
+        os_client = OpensearchClient(
+            os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
+        )
         exists = os_client.indices.exists(index=self.table_name)
         print(f"{exists=}")
         return exists
