@@ -217,7 +217,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigPlus:
         azure_config=azure_config,
         caii_config=caii_config,
         is_valid_config=validate(env),
-        release_version=env.get("RELEASE_TAG", "unknown"),
+        release_version=os.environ.get("RELEASE_TAG", "unknown"),
     )
 
 
