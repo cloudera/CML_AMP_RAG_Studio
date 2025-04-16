@@ -85,4 +85,5 @@ wget "${RELEASE_URL}/fe-dist.tar.gz" -O artifacts/fe-dist.tar.gz
 cd ui
 tar -xzf ../artifacts/fe-dist.tar.gz
 
+cd ../scripts
 python install_qdrant_app.py
