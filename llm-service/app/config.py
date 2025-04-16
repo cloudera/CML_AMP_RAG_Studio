@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     rag_log_level: int = logging.INFO
     document_bucket_prefix: str = os.environ.get("S3_RAG_BUCKET_PREFIX", "")
     summary_storage_provider: SummaryStorageProviderType = cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
-
+    document_bucket : str = os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
     @property
     def rag_databases_dir(self) -> str:
         return os.environ.get("RAG_DATABASES_DIR", os.path.join("..", "databases"))

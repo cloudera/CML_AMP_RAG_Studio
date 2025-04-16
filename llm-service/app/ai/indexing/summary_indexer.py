@@ -354,8 +354,8 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             persist_dir = self.__persist_dir()
             summary_store = self.__summary_indexer(persist_dir)
-            # if document_id not in summary_store.index_struct.doc_id_to_summary_id:
-            #     return None
+            if document_id not in summary_store.index_struct.doc_id_to_summary_id:
+                return None
             return summary_store.get_document_summary(document_id)
 
     def get_full_summary(self) -> Optional[str]:
