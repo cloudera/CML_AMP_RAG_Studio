@@ -38,13 +38,11 @@
 import json
 import os
 import socket
-from typing import Optional, cast, Literal
+from typing import Optional, cast
 
 from pydantic import BaseModel
 
-from app.config import settings
-
-SummaryStorageProviderType = Literal["Local", "S3"]
+from app.config import settings, SummaryStorageProviderType
 
 
 class AwsConfig(BaseModel):

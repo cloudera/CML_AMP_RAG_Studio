@@ -46,10 +46,10 @@ simply the field name in all capital letters.
 
 import logging
 import os.path
-from typing import cast, Optional
+from typing import cast, Optional, Literal
 
 
-from app.services.amp_metadata import SummaryStorageProviderType
+SummaryStorageProviderType = Literal["Local", "S3"]
 
 
 class _Settings:
