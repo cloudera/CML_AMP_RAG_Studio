@@ -51,7 +51,7 @@ from llama_index.vector_stores.opensearch import (
 
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services.models import Embedding
-from app.tests.conftest import datasource_metadata
+from opensearchpy.client import OpenSearch as OpensearchClient
 
 
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
@@ -85,13 +85,17 @@ class OpenSearch(VectorStore, ABC):
         return len(vector)
 
     def size(self) -> Optional[int]:
-        self._get_client()
+        os_client = OpensearchClient(os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"))
+        count = os_client.count({"index": self.table_name})
+        print(f"{count=}")
+        return count
 
     def delete(self) -> None:
-        pass
+        os_client = OpensearchClient(os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"))
+        os_client.indices.delete(index=self.table_name)
 
     def delete_document(self, document_id: str) -> None:
-        pass
+        self._get_client().delete_by_doc_id(document_id)
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
         return OpensearchVectorStore(
@@ -105,11 +109,15 @@ class OpenSearch(VectorStore, ABC):
         )
 
     def exists(self) -> bool:
-        return True
+        os_client = OpensearchClient(os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"))
+        exists = os_client.indices.exists(index=self.table_name)
+        print(f"{exists=}")
+        return exists
 
     def visualize(
         self, user_query: Optional[str] = None
     ) -> list[tuple[tuple[float, float], str]]:
+        # todo: implement this
         pass
 
     def get_embedding_model(self) -> BaseEmbedding:
