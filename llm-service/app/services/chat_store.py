@@ -43,7 +43,7 @@ from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from pydantic import BaseModel
 
-from ..config import Settings
+from ..config import settings
 
 
 class RagPredictSourceNode(BaseModel):
@@ -81,7 +81,7 @@ class RagStudioChatMessage(BaseModel):
 
 
 class ChatHistoryManager:
-    def __init__(self, store_path: str = Settings().rag_databases_dir):
+    def __init__(self, store_path: str = settings.rag_databases_dir):
         self.store_path = store_path
 
     # note: needs pagination in the future

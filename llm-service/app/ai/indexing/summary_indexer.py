@@ -71,7 +71,7 @@ from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.qdrant import QdrantVectorStore
-from ...config import Settings
+from ...config import settings
 from ...services.models.providers import CAIIModelProvider
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,6 @@ SUMMARY_PROMPT = "Summarize the contents into less than 100 words."
 # Basically filesystems aren't ACID, so don't pretend that they are.
 # We could have a lock per data source, but this is simpler.
 _write_lock = Lock()
-settings = Settings()
 
 
 class SummaryIndexer(BaseTextIndexer):

@@ -53,7 +53,7 @@ from pydantic_settings import BaseSettings
 from app.services.amp_metadata import SummaryStorageProviderType
 
 
-class Settings(BaseSettings):
+class _Settings(BaseSettings):
     """RAG configuration."""
 
     rag_log_level: int = logging.INFO
@@ -70,3 +70,5 @@ class Settings(BaseSettings):
     def is_s3_summary_storage_configured(self) -> bool:
         return self.summary_storage_provider == "S3" and self._is_s3_configured()
 
+
+settings = _Settings()
