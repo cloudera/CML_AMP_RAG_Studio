@@ -63,7 +63,8 @@ def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
         dim=dim,
     )
 
-def _get_low_level_client():
+
+def _get_low_level_client() -> OpensearchClient:
     os_client = OpensearchClient(
         os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
     )
@@ -122,7 +123,7 @@ class OpenSearch(VectorStore, ABC):
             self._get_client(),
         )
 
-    def _get_client(self):
+    def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(
             dim=self._find_dim(self.data_source_id),
             index=self.table_name,
@@ -137,7 +138,9 @@ class OpenSearch(VectorStore, ABC):
     def visualize(
         self, user_query: Optional[str] = None
     ) -> list[tuple[tuple[float, float], str]]:
-        search_results = self._low_level_client.search(index=self.table_name, params={"size": 500})
+        search_results = self._low_level_client.search(
+            index=self.table_name, params={"size": 500}
+        )
         vectors = []
         if search_results["hits"]["total"]["value"] > 0:
             hits = search_results["hits"]["hits"]
