@@ -36,10 +36,9 @@
 #  DATA.
 #
 import logging
-from typing import List, Optional, cast
+from typing import List, Optional
 
 import qdrant_client
-import umap
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
