@@ -36,6 +36,7 @@
 #  DATA.
 #
 import functools
+import logging
 from abc import ABC
 from typing import Optional, List
 
@@ -52,6 +53,7 @@ from app.config import settings
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services.models import Embedding
 
+logger = logging.getLogger(__name__)
 
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
     return OpensearchVectorClient(
@@ -108,7 +110,9 @@ class OpenSearch(VectorStore, ABC):
 
     def delete(self) -> None:
         os_client = self._low_level_client
-        os_client.indices.delete(index=self.table_name)
+        result = os_client.indices.delete(index=self.table_name)
+        print(f"{result=}")
+        logger.info(f"Deleted index {self.table_name}")
 
     def delete_document(self, document_id: str) -> None:
         self._get_client().delete_by_doc_id(document_id)
