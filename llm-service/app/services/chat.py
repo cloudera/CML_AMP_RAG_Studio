@@ -58,7 +58,7 @@ from .metadata_apis.session_metadata_api import Session
 from .mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
 from .query import querier
 from .query.query_configuration import QueryConfiguration
-from ..ai.vector_stores.qdrant import QdrantVectorStore
+from ..ai.vector_stores.vector_store_factory import VectorStoreFactory
 from ..rag_types import RagPredictConfiguration
 
 
@@ -80,7 +80,7 @@ def v2_chat(
 
     total_data_sources_size: int = sum(
         map(
-            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
             session.data_source_ids,
         )
     )
@@ -241,7 +241,7 @@ def generate_suggested_questions(
 
     total_data_sources_size: int = sum(
         map(
-            lambda ds_id: QdrantVectorStore.for_chunks(ds_id).size() or 0,
+            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
             session.data_source_ids,
         )
     )

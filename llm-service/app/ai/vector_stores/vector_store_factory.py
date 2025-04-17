@@ -36,15 +36,22 @@
 #  DATA.
 #
 
-from .base import DocumentStorage
-from .file_storage import FileSystemDocumentStorage
-from .s3 import S3DocumentStorage
-from ...config import settings
+from app.ai.vector_stores.opensearch import OpenSearch
+from app.ai.vector_stores.qdrant import QdrantVectorStore
+from app.ai.vector_stores.vector_store import VectorStore
+from app.config import settings
 
 
-def from_environment() -> DocumentStorage:
-    # todo: move this to config, remove bucket_name from download api signature
-    if settings.document_bucket:
-        return S3DocumentStorage()
-    else:
-        return FileSystemDocumentStorage()
+class VectorStoreFactory:
+    @staticmethod
+    def for_chunks(data_source_id: int) -> VectorStore:
+        vector_db_provider = settings.vector_db_provider
+        if vector_db_provider == "OPENSEARCH":
+            return OpenSearch.for_chunks(data_source_id)
+        return QdrantVectorStore.for_chunks(data_source_id)
+
+    @staticmethod
+    def for_summaries(data_source_id: int) -> VectorStore:
+        if settings.vector_db_provider == "OPENSEARCH":
+            return OpenSearch.for_summaries(data_source_id)
+        return QdrantVectorStore.for_summaries(data_source_id)
