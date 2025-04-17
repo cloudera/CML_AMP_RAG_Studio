@@ -46,11 +46,8 @@ class VectorStoreFactory:
     @staticmethod
     def for_chunks(data_source_id: int) -> VectorStore:
         vector_db_provider = settings.vector_db_provider
-        print(f"Vector DB provider: {vector_db_provider}")
         if vector_db_provider == "OPENSEARCH":
-            print("Using OpenSearch for chunks")
             return OpenSearch.for_chunks(data_source_id)
-        print("Using Qdrant for chunks")
         return QdrantVectorStore.for_chunks(data_source_id)
 
     @staticmethod

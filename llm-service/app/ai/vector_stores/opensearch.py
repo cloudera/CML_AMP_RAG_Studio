@@ -110,9 +110,7 @@ class OpenSearch(VectorStore, ABC):
 
     def delete(self) -> None:
         os_client = self._low_level_client
-        result = os_client.indices.delete(index=self.table_name)
-        print(f"{result=}")
-        logger.info(f"Deleted index {self.table_name}")
+        os_client.indices.delete(index=self.table_name)
 
     def delete_document(self, document_id: str) -> None:
         self._get_client().delete_by_doc_id(document_id)
