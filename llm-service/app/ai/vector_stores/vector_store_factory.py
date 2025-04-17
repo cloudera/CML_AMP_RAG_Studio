@@ -1,4 +1,4 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,24 +34,27 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
-
+#
 import os
-import subprocess
+
+from app.ai.vector_stores.opensearch import OpenSearch
+from app.ai.vector_stores.qdrant import QdrantVectorStore
+from app.ai.vector_stores.vector_store import VectorStore
 
 
-root_dir = (
-    "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
-)
-os.chdir(root_dir)
+class VectorStoreFactory:
+    @staticmethod
+    def for_chunks(data_source_id: int) -> VectorStore:
+        vector_db_provider = os.environ.get("VECTOR_DB_PROVIDER")
+        print(f"Vector DB provider: {vector_db_provider}")
+        if vector_db_provider == "OPENSEARCH":
+            print("Using OpenSearch for chunks")
+            return OpenSearch.for_chunks(data_source_id)
+        print("Using Qdrant for chunks")
+        return QdrantVectorStore.for_chunks(data_source_id)
 
-print(subprocess.run(["git", "stash"], check=True))
-print(subprocess.run(["git", "pull", "--rebase"], check=True))
-print(subprocess.run(["bash", "scripts/refresh_project.sh"], check=True))
-
-
-print(
-    "Project refresh complete. Restarting the RagStudio Application to pick up changes, if this isn't the initial deployment."
-)
-
-print(subprocess.run("python scripts/restart_app.py", shell=True, check=True))
+    @staticmethod
+    def for_summaries(data_source_id: int) -> VectorStore:
+        if os.environ.get("VECTOR_DB_PROVIDER") == "OPENSEARCH":
+            return OpenSearch.for_summaries(data_source_id)
+        return QdrantVectorStore.for_summaries(data_source_id)

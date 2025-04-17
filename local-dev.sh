@@ -47,7 +47,9 @@ source scripts/release_version.txt || true
 cleanup() {
     # kill all processes whose parent is this process
     pkill -P $$
-    docker stop qdrant_dev
+    docker stop qdrant_dev || true
+    cd ../..
+    docker compose -f opensearch/docker-compose.yaml down
 }
 
 for sig in INT QUIT HUP TERM; do
@@ -58,10 +60,24 @@ for sig in INT QUIT HUP TERM; do
 done
 trap cleanup EXIT
 
+# Stop any running vector db containers
 docker stop qdrant_dev || true
+docker compose -f opensearch/docker-compose.yaml down
 
+# Create the databases directory if it doesn't exist
 mkdir -p databases
-docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
+
+# Check the VECTOR_DB_PROVIDER environment variable
+if [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "QDRANT" ]; then
+  echo "Using Qdrant as the vector database provider..."
+  docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
+elif [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "OPENSEARCH" ]; then
+  echo "Using OpenSearch as the vector database provider..."
+  docker compose -f opensearch/docker-compose.yaml up --detach
+else
+  echo "Unsupported VECTOR_DB_PROVIDER: ${VECTOR_DB_PROVIDER}. Supported values are QDRANT or OPENSEARCH."
+  exit 1
+fi
 
 cd llm-service
 if [ -z "$USE_SYSTEM_UV" ]; then
