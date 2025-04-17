@@ -80,6 +80,10 @@ class _Settings:
         return os.environ.get("CDSW_APIV2_KEY")
 
     @property
+    def mlflow_reconciler_data_path(self) -> str:
+        return os.environ["MLFLOW_RECONCILER_DATA_PATH"]
+
+    @property
     def qdrant_host(self) -> str:
         return os.environ.get("QDRANT_HOST", "localhost")
 
@@ -88,8 +92,12 @@ class _Settings:
         return int(os.environ.get("QDRANT_PORT", "6333"))
 
     @property
-    def mlflow_reconciler_data_path(self) -> str:
-        return os.environ["MLFLOW_RECONCILER_DATA_PATH"]
+    def vector_db_provider(self) -> Optional[str]:
+        return os.environ.get("VECTOR_DB_PROVIDER")
+
+    @property
+    def opensearch_endpoint(self) -> str:
+        return os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
 
     @property
     def document_bucket_prefix(self) -> str:
@@ -98,7 +106,10 @@ class _Settings:
     @property
     def summary_storage_provider(self) -> SummaryStorageProviderType:
         # TODO: check value of env var, and raise if not SummaryStorageProviderType
-        return cast(SummaryStorageProviderType, os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"))
+        return cast(
+            SummaryStorageProviderType,
+            os.environ.get("SUMMARY_STORAGE_PROVIDER", "Local"),
+        )
 
     @property
     def document_bucket(self) -> str:
