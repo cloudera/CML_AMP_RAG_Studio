@@ -36,8 +36,9 @@
 #  DATA.
 #
 import json
-import os
 from typing import Dict
+
+from app.config import settings
 
 
 def build_auth_headers() -> Dict[str, str]:
@@ -47,7 +48,7 @@ def build_auth_headers() -> Dict[str, str]:
 
 
 def get_caii_access_token() -> str:
-    if token_override := os.environ.get("CDP_TOKEN_OVERRIDE"):
+    if token_override := settings.cdp_token_override:
         return token_override
 
     with open("/tmp/jwt", "r") as file:

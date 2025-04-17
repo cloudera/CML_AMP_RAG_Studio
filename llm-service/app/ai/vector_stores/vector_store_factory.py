@@ -35,17 +35,17 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 
 from app.ai.vector_stores.opensearch import OpenSearch
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.ai.vector_stores.vector_store import VectorStore
+from app.config import settings
 
 
 class VectorStoreFactory:
     @staticmethod
     def for_chunks(data_source_id: int) -> VectorStore:
-        vector_db_provider = os.environ.get("VECTOR_DB_PROVIDER")
+        vector_db_provider = settings.vector_db_provider
         print(f"Vector DB provider: {vector_db_provider}")
         if vector_db_provider == "OPENSEARCH":
             print("Using OpenSearch for chunks")
@@ -55,6 +55,6 @@ class VectorStoreFactory:
 
     @staticmethod
     def for_summaries(data_source_id: int) -> VectorStore:
-        if os.environ.get("VECTOR_DB_PROVIDER") == "OPENSEARCH":
+        if settings.vector_db_provider == "OPENSEARCH":
             return OpenSearch.for_summaries(data_source_id)
         return QdrantVectorStore.for_summaries(data_source_id)

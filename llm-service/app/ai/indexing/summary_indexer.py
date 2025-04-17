@@ -71,7 +71,7 @@ from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
-from ...config import Settings
+from ...config import settings
 from ...services.models.providers import CAIIModelProvider
 
 logger = logging.getLogger(__name__)
@@ -83,7 +83,6 @@ SUMMARY_PROMPT = "Summarize the contents into less than 100 words."
 # Basically filesystems aren't ACID, so don't pretend that they are.
 # We could have a lock per data source, but this is simpler.
 _write_lock = Lock()
-settings = Settings()
 
 
 class SummaryIndexer(BaseTextIndexer):
@@ -150,7 +149,7 @@ class SummaryIndexer(BaseTextIndexer):
         }
 
     def __init_summary_store(self, persist_dir: str) -> DocumentSummaryIndex:
-        storage_context : Optional[StorageContext] = None
+        storage_context: Optional[StorageContext] = None
         if settings.is_s3_summary_storage_configured():
             storage_context = self.create_storage_context(
                 persist_dir, SimpleVectorStore()
@@ -194,7 +193,9 @@ class SummaryIndexer(BaseTextIndexer):
         return doc_summary_index
 
     @staticmethod
-    def create_storage_context(persist_dir: str, vector_store: BasePydanticVectorStore) -> StorageContext:
+    def create_storage_context(
+        persist_dir: str, vector_store: BasePydanticVectorStore
+    ) -> StorageContext:
         if settings.is_s3_summary_storage_configured():
             summary_path = f"{settings.document_bucket_prefix}/{persist_dir}"
             s3_store = S3DBKVStore.from_s3_location(

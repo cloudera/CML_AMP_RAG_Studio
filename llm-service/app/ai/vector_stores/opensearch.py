@@ -36,38 +36,35 @@
 #  DATA.
 #
 import functools
-import os
 from abc import ABC
 from typing import Optional
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
-
-from app.ai.vector_stores.vector_store import VectorStore
 from llama_index.vector_stores.opensearch import (
     OpensearchVectorStore,
     OpensearchVectorClient,
 )
+from opensearchpy.client import OpenSearch as OpensearchClient
 
+from app.ai.vector_stores.vector_store import VectorStore
+from app.config import settings
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services.models import Embedding
-from opensearchpy.client import OpenSearch as OpensearchClient
 
 
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
     return OpensearchVectorClient(
         # username=os.environ.get("OPENSEARCH_USERNAME", "admin"),
         # password=os.environ.get("OPENSEARCH_INITIAL_ADMIN_PASSWORD"),
-        endpoint=os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200"),
+        endpoint=settings.opensearch_endpoint,
         index=index,
         dim=dim,
     )
 
 
 def _get_low_level_client() -> OpensearchClient:
-    os_client = OpensearchClient(
-        os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
-    )
+    os_client = OpensearchClient(settings.opensearch_endpoint)
     return os_client
 
 

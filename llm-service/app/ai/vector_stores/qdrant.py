@@ -36,7 +36,6 @@
 #  DATA.
 #
 import logging
-import os
 from typing import List, Optional, cast
 
 import qdrant_client
@@ -49,25 +48,23 @@ from llama_index.vector_stores.qdrant import (
 )
 from qdrant_client.http.models import CountResult, Record
 
-from ...services.metadata_apis import data_sources_metadata_api
-from ...services import models
 from .vector_store import VectorStore
+from ...config import settings
+from ...services import models
+from ...services.metadata_apis import data_sources_metadata_api
 
 logger = logging.getLogger(__name__)
 
 
 def _new_qdrant_client() -> qdrant_client.QdrantClient:
-    host = os.environ.get("QDRANT_HOST", "localhost")
-    port = int(os.environ.get("QDRANT_PORT", "6333"))
-
-    auth_token = os.environ.get("CDSW_APIV2_KEY", None)
+    auth_token: str | None = settings.cdsw_apiv2_key
 
     def auth_token_provider() -> str:
-        return auth_token or "None"
+        return auth_token or "You should never see this"
 
     return qdrant_client.QdrantClient(
-        host=host,
-        port=port,
+        host=settings.qdrant_host,
+        port=settings.qdrant_port,
         auth_token_provider=auth_token_provider if auth_token else None,
     )
 
