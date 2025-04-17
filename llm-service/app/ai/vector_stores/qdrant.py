@@ -36,7 +36,7 @@
 #  DATA.
 #
 import logging
-from typing import Optional
+from typing import Optional, cast
 
 import qdrant_client
 from llama_index.core.base.embeddings.base import BaseEmbedding
