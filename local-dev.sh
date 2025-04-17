@@ -47,6 +47,22 @@ source scripts/release_version.txt || true
 cleanup() {
     # kill all processes whose parent is this process
     pkill -P $$
+
+    # Ensure Python processes are terminated
+    # Find and kill any remaining Python processes started by uv
+    killall -f "uv run" || true
+
+    # Kill any Python processes that might have been started by the script
+    killall -f "python.*mlflow" || true
+    killall -f "python.*fastapi" || true
+    killall -f "python.*reconciler" || true
+
+    # As a last resort, try to find any Python processes in our virtual environment
+    if [ -d "llm-service/venv" ]; then
+        killall -f "llm-service/venv/bin/python" || true
+    fi
+
+    # Stop Docker containers
     docker stop qdrant_dev || true
     cd ../..
     docker compose -f opensearch/docker-compose.yaml down
