@@ -106,7 +106,7 @@ class OpenSearch(VectorStore, ABC):
 
     def size(self) -> Optional[int]:
         os_client = self._low_level_client
-        return os_client.count(index=self.table_name)["count"]
+        return int(os_client.count(index=self.table_name)["count"])
 
     def delete(self) -> None:
         os_client = self._low_level_client
@@ -128,7 +128,7 @@ class OpenSearch(VectorStore, ABC):
 
     def exists(self) -> bool:
         os_client = self._low_level_client
-        return os_client.indices.exists(index=self.table_name)
+        return bool(os_client.indices.exists(index=self.table_name))
 
     def visualize(
         self, user_query: Optional[str] = None
@@ -136,7 +136,7 @@ class OpenSearch(VectorStore, ABC):
         search_results = self._low_level_client.search(
             index=self.table_name, params={"size": 500}
         )
-        embeddings = []
+        embeddings: List[List[float]] = []
         filenames: List[str] = []
         if search_results["hits"]["total"]["value"] > 0:
             hits = search_results["hits"]["hits"]

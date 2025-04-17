@@ -36,7 +36,7 @@
 #  DATA.
 #
 import logging
-from typing import List, Optional
+from typing import Optional
 
 import qdrant_client
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -134,20 +134,20 @@ class QdrantVectorStore(VectorStore):
     def visualize(
         self, user_query: Optional[str] = None
     ) -> list[tuple[tuple[float, float], str]]:
-        records: list[Record]
         if not self.exists():
             return []
+        records: list[Record]
         records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
-        # trap an edge case where there are no records and umap blows up
 
+        embeddings: list[list[float]] = []
+        filenames: list[str] = []
         record: Record
-        filenames: List[str] = []
         for record in records:
             payload = record.payload
             if payload:
                 filename = payload.get("file_name")
                 if filename:
                     filenames.append(filename)
+                    embeddings.append(cast(list[float], record.vector))
 
-        embeddings = [record.vector for record in records]
         return self.visualize_embeddings(embeddings, filenames, user_query)

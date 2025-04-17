@@ -87,6 +87,7 @@ class VectorStore(metaclass=ABCMeta):
         filenames: list[str],
         user_query: Optional[str] = None,
     ) -> list[tuple[tuple[float, float], str]]:
+        # trap an edge case where there are no records and umap blows up
         if len(embeddings) <= 2:
             return []
         if user_query:
