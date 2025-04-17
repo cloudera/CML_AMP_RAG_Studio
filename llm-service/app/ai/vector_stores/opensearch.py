@@ -37,7 +37,7 @@
 #
 import functools
 from abc import ABC
-from typing import Optional
+from typing import Optional, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
@@ -104,9 +104,7 @@ class OpenSearch(VectorStore, ABC):
 
     def size(self) -> Optional[int]:
         os_client = self._low_level_client
-        count = os_client.count(index=self.table_name)
-        print(f"{count=}")
-        return count["count"]
+        return os_client.count(index=self.table_name)["count"]
 
     def delete(self) -> None:
         os_client = self._low_level_client
@@ -128,9 +126,7 @@ class OpenSearch(VectorStore, ABC):
 
     def exists(self) -> bool:
         os_client = self._low_level_client
-        exists = os_client.indices.exists(index=self.table_name)
-        print(f"{exists=}")
-        return exists
+        return os_client.indices.exists(index=self.table_name)
 
     def visualize(
         self, user_query: Optional[str] = None
@@ -138,16 +134,18 @@ class OpenSearch(VectorStore, ABC):
         search_results = self._low_level_client.search(
             index=self.table_name, params={"size": 500}
         )
-        vectors = []
+        embeddings = []
+        filenames: List[str] = []
         if search_results["hits"]["total"]["value"] > 0:
             hits = search_results["hits"]["hits"]
             for hit in hits:
-                vector = hit["_source"]["embedding"]
-                document_id = hit["_id"]
-                vectors.append((vector, document_id))
-        print(f"{len(vectors)=}")
+                filename = hit["_source"]["metadata"]["file_name"]
+                if filename:
+                    vector = hit["_source"]["embedding"]
+                    filenames.append(filename)
+                    embeddings.append(vector)
 
-        return []
+        return self.visualize_embeddings(embeddings, filenames, user_query)
 
     def get_embedding_model(self) -> BaseEmbedding:
         datasource_metadata = data_sources_metadata_api.get_metadata(
