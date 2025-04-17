@@ -63,7 +63,7 @@ def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
     )
 
 
-def _get_low_level_client():
+def _get_low_level_client() -> OpensearchClient:
     os_client = OpensearchClient(settings.opensearch_endpoint)
     return os_client
 
@@ -120,7 +120,7 @@ class OpenSearch(VectorStore, ABC):
             self._get_client(),
         )
 
-    def _get_client(self):
+    def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(
             dim=self._find_dim(self.data_source_id),
             index=self.table_name,
