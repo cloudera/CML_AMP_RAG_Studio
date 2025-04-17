@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 
 from app.ai.vector_stores.opensearch import OpenSearch
 from app.ai.vector_stores.qdrant import QdrantVectorStore
