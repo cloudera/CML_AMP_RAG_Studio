@@ -38,7 +38,7 @@
 import json
 import os
 import socket
-from typing import Optional, cast
+from typing import Optional, cast, Protocol
 
 from pydantic import BaseModel
 
@@ -259,7 +259,7 @@ def get_project_environment() -> dict[str, str]:
         return dict(os.environ)
 
 
-class CMLApplication:
+class CMLApplication(Protocol):
     name: str
     nvidia_gpu: int
     memory: float
