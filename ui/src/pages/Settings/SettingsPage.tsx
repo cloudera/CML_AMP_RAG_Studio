@@ -88,7 +88,8 @@ const SettingsPage = () => {
             <div>
               <Typography.Text>
                 For initial configuration of RAG Studio, please provide valid
-                credentials for CAII, AWS Bedrock, or Azure OpenAI.
+                credentials for the Cloudera AI Inference service, AWS Bedrock,
+                or Azure OpenAI.
               </Typography.Text>
             </div>
           }

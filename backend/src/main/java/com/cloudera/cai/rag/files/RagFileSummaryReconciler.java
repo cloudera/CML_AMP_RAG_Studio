@@ -92,6 +92,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
          JOIN rag_data_source rds ON rdsd.data_source_id = rds.id
          WHERE rdsd.summary_creation_timestamp IS NULL
            AND rdsd.VECTOR_UPLOAD_TIMESTAMP IS NOT NULL
+           AND (rdsd.deleted IS NULL OR rdsd.deleted = :deleted)
            AND (rdsd.time_created > :yesterday OR rds.time_updated > :yesterday)
            AND rds.summarization_model IS NOT NULL AND rds.summarization_model != ''
         """;
@@ -100,7 +101,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
           handle.registerRowMapper(ConstructorMapper.factory(RagDocument.class));
 
           try (Query query = handle.createQuery(sql)) {
-            query.bind("yesterday", Instant.now().minus(1, ChronoUnit.DAYS));
+            query.bind("yesterday", Instant.now().minus(1, ChronoUnit.DAYS)).bind("deleted", false);
             query.mapTo(RagDocument.class).forEach(this::submit);
           }
         });

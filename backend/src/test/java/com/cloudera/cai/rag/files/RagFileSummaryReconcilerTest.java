@@ -280,6 +280,39 @@ class RagFileSummaryReconcilerTest {
     assertThat(relevantSummarizationRequests).isEqualTo(0);
   }
 
+  @Test
+  void reconcile_deletionInProgress() {
+    Tracker<RagBackendClient.TrackedRequest<?>> requestTracker = new Tracker<>();
+    RagFileSummaryReconciler reconciler = createTestInstance(requestTracker);
+
+    var dataSourceId = createDataSource("summarizationModel");
+    String documentId = UUID.randomUUID().toString();
+    var document =
+        createTestDoc(documentId, dataSourceId, "path_in_s3_deletion_in_progress")
+            .withVectorUploadTimestamp(Instant.now());
+    var id = ragFileRepository.insertDocumentMetadata(document);
+
+    ragFileRepository.deleteById(id);
+    var ragDocument = ragFileRepository.getRagDocumentById(id);
+    assertThat(ragDocument.summaryCreationTimestamp()).isNull();
+
+    reconciler.resync();
+    await().until(reconciler::isEmpty);
+
+    RagDocument updatedDocument = ragFileRepository.getRagDocumentById(id);
+    assertThat(updatedDocument.summaryCreationTimestamp()).isNull();
+    List<RagBackendClient.TrackedRequest<?>> values = requestTracker.getValues();
+    var relevantSummarizationRequests =
+        values.stream()
+            .filter(
+                r -> {
+                  var summaryRequest = (RagBackendClient.SummaryRequest) r.detail();
+                  return summaryRequest.s3DocumentKey().equals("path_in_s3_deletion_in_progress");
+                })
+            .count();
+    assertThat(relevantSummarizationRequests).isEqualTo(0);
+  }
+
   private RagFileSummaryReconciler createTestInstance(
       Tracker<RagBackendClient.TrackedRequest<?>> tracker, RuntimeException... exceptions) {
     return createTestInstance(

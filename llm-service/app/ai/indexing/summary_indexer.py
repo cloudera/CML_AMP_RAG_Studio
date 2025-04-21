@@ -48,6 +48,7 @@ from llama_index.core import (
     get_response_synthesizer,
     load_index_from_storage,
     PromptHelper,
+    load_indices_from_storage,
 )
 from llama_index.core.base.base_query_engine import BaseQueryEngine
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -217,28 +218,27 @@ class SummaryIndexer(BaseTextIndexer):
     @classmethod
     def get_all_data_source_summaries(cls) -> dict[str, str]:
         root_dir = cls.__persist_root_dir()
-        if not os.path.exists(root_dir):
-            return {}
+        # if not os.path.exists(root_dir):
+        #     return {}
         storage_context = SummaryIndexer.create_storage_context(
             persist_dir=root_dir,
             vector_store=SimpleVectorStore(),
         )
-        global_summary_store: DocumentSummaryIndex = cast(
-            DocumentSummaryIndex,
-            load_index_from_storage(
-                storage_context=storage_context,
-                index_id=None,
-                **{
-                    "llm": models.LLM.get_noop(),
-                    "response_synthesizer": models.LLM.get_noop(),
-                    "show_progress": True,
-                    "embed_model": models.Embedding.get_noop(),
-                    "embed_summaries": True,
-                    "summary_query": "None",
-                    "data_source_id": 0,
-                },
-            ),
-        )
+        indices = load_indices_from_storage(storage_context=storage_context, index_ids=None,
+            **{
+                "llm": models.LLM.get_noop(),
+                "response_synthesizer": models.LLM.get_noop(),
+                "show_progress": True,
+                "embed_model": models.Embedding.get_noop(),
+                "embed_summaries": True,
+                "summary_query": "None",
+                "data_source_id": 0,
+            },
+                                            )
+        if len(indices) == 0:
+            return {}
+
+        global_summary_store: DocumentSummaryIndex = cast(DocumentSummaryIndex, indices[0])
 
         summary_ids = global_summary_store.index_struct.doc_id_to_summary_id.values()
         nodes = global_summary_store.docstore.get_nodes(list(summary_ids))

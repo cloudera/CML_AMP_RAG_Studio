@@ -38,7 +38,7 @@
 import json
 import os
 import socket
-from typing import Optional, cast
+from typing import Optional, cast, Protocol
 
 from pydantic import BaseModel
 
@@ -87,6 +87,15 @@ class ProjectConfig(BaseModel):
     caii_config: CaiiConfig
 
 
+class ApplicationConfig(BaseModel):
+    """
+    Model to represent the application configuration.
+    """
+
+    num_of_gpus: int
+    memory_size_gb: float
+
+
 class ProjectConfigPlus(ProjectConfig):
     """
     Model to represent the project configuration.
@@ -94,6 +103,7 @@ class ProjectConfigPlus(ProjectConfig):
 
     release_version: Optional[str] = None
     is_valid_config: bool
+    application_config: ApplicationConfig
 
 
 def validate_storage_config(environ: dict[str, str]) -> bool:
@@ -185,7 +195,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
-def env_to_config(env: dict[str, str]) -> ProjectConfigPlus:
+def build_configuration(
+    env: dict[str, str], application_config: ApplicationConfig
+) -> ProjectConfigPlus:
     """
     Converts environment variables to a ProjectConfig object.
     """
@@ -218,6 +230,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigPlus:
         caii_config=caii_config,
         is_valid_config=validate(env),
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
+        application_config=application_config,
     )
 
 
@@ -244,3 +257,35 @@ def get_project_environment() -> dict[str, str]:
         return cast(dict[str, str], json.loads(project.environment))
     except ImportError:
         return dict(os.environ)
+
+
+class CMLApplication(Protocol):
+    name: str
+    nvidia_gpu: int
+    memory: float
+
+
+def get_application_config() -> ApplicationConfig:
+    """
+    Returns the number of GPUs available in the environment.
+    """
+    try:
+        import cmlapi
+
+        client = cmlapi.default_client()
+        project_id = settings.cdsw_project_id
+        apps = client.list_applications(project_id=project_id)
+        ragstudio_app: CMLApplication | None = next(
+            (app for app in apps.applications if app.name == "RagStudio"), None
+        )
+        if ragstudio_app is not None:
+            return ApplicationConfig(
+                num_of_gpus=ragstudio_app.nvidia_gpu,
+                memory_size_gb=ragstudio_app.memory,
+            )
+    except ImportError:
+        pass
+    return ApplicationConfig(
+        num_of_gpus=0,
+        memory_size_gb=0,
+    )
