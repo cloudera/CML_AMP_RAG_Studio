@@ -93,7 +93,7 @@ class ApplicationConfig(BaseModel):
     """
 
     num_of_gpus: int
-    memory_size_gb: int
+    memory_size_gb: float
 
 
 class ProjectConfigPlus(ProjectConfig):
@@ -103,7 +103,7 @@ class ProjectConfigPlus(ProjectConfig):
 
     release_version: Optional[str] = None
     is_valid_config: bool
-    ApplicationConfig: ApplicationConfig
+    application_config: ApplicationConfig
 
 
 def validate_storage_config(environ: dict[str, str]) -> bool:
@@ -195,7 +195,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
-def build_configuration(env: dict[str, str], num_of_gpus: int) -> ProjectConfigPlus:
+def build_configuration(
+    env: dict[str, str], application_config: ApplicationConfig
+) -> ProjectConfigPlus:
     """
     Converts environment variables to a ProjectConfig object.
     """
@@ -228,7 +230,7 @@ def build_configuration(env: dict[str, str], num_of_gpus: int) -> ProjectConfigP
         caii_config=caii_config,
         is_valid_config=validate(env),
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
-        num_of_gpus=num_of_gpus,
+        application_config=application_config,
     )
 
 
@@ -257,7 +259,7 @@ def get_project_environment() -> dict[str, str]:
         return dict(os.environ)
 
 
-def get_num_of_gpus() -> ApplicationConfig:
+def get_application_config() -> ApplicationConfig:
     """
     Returns the number of GPUs available in the environment.
     """
@@ -270,6 +272,12 @@ def get_num_of_gpus() -> ApplicationConfig:
         ragstudio_app = next(
             (app for app in apps.applications if app.name == "RagStudio"), None
         )
-        return ragstudio_app.nvidia_gpu
+        return ApplicationConfig(
+            num_of_gpus=ragstudio_app.nvidia_gpu,
+            memory_size_gb=ragstudio_app.memory,
+        )
     except ImportError:
-        return 0
+        return ApplicationConfig(
+            num_of_gpus=0,
+            memory_size_gb=0,
+        )

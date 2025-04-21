@@ -142,6 +142,11 @@ export interface CaiiConfig {
   caii_domain?: string;
 }
 
+export interface ApplicationConfig {
+  num_of_gpus: number;
+  memory_size_gb: number;
+}
+
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
   summary_storage_provider: "Local" | "S3";
@@ -150,7 +155,7 @@ export interface ProjectConfig {
   caii_config: CaiiConfig;
   is_valid_config: boolean;
   release_version: string;
-  num_of_gpus: number;
+  application_config: ApplicationConfig;
 }
 
 export const useGetAmpConfig = (poll?: boolean) => {
