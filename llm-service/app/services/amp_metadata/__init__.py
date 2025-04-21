@@ -94,6 +94,7 @@ class ProjectConfigPlus(ProjectConfig):
 
     release_version: Optional[str] = None
     is_valid_config: bool
+    num_of_gpus: int
 
 
 def validate_storage_config(environ: dict[str, str]) -> bool:
@@ -185,7 +186,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     }
 
 
-def env_to_config(env: dict[str, str]) -> ProjectConfigPlus:
+def build_configuration(env: dict[str, str], num_of_gpus: int) -> ProjectConfigPlus:
     """
     Converts environment variables to a ProjectConfig object.
     """
@@ -218,6 +219,7 @@ def env_to_config(env: dict[str, str]) -> ProjectConfigPlus:
         caii_config=caii_config,
         is_valid_config=validate(env),
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
+        num_of_gpus=num_of_gpus,
     )
 
 
@@ -244,3 +246,21 @@ def get_project_environment() -> dict[str, str]:
         return cast(dict[str, str], json.loads(project.environment))
     except ImportError:
         return dict(os.environ)
+
+
+def get_num_of_gpus() -> int:
+    """
+    Returns the number of GPUs available in the environment.
+    """
+    try:
+        import cmlapi
+
+        client = cmlapi.default_client()
+        project_id = settings.cdsw_project_id
+        apps = client.list_applications(project_id=project_id)
+        ragstudio_app = next(
+            (app for app in apps.applications if app.name == "RagStudio"), None
+        )
+        return ragstudio_app.nvidia_gpu
+    except ImportError:
+        return 0

@@ -49,9 +49,10 @@ from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
     config_to_env,
-    env_to_config,
+    build_configuration,
     update_project_environment,
     get_project_environment,
+    get_num_of_gpus,
 )
 from ....services.amp_update import does_amp_need_updating
 
@@ -123,9 +124,10 @@ def get_configuration(
 ) -> ProjectConfigPlus:
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
+    num_of_gpus = get_num_of_gpus()
 
     if remote_user == project_owner or remote_user_perm == "RW":
-        return env_to_config(env)
+        return build_configuration(env, num_of_gpus)
 
     raise fastapi.HTTPException(
         status_code=403,
@@ -149,7 +151,7 @@ def update_configuration(
         env_to_save = existing_env | updated_env
         update_project_environment(env_to_save)
 
-        return env_to_config(get_project_environment())
+        return build_configuration(get_project_environment())
 
     raise fastapi.HTTPException(
         status_code=403,
