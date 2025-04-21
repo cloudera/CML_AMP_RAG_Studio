@@ -259,6 +259,12 @@ def get_project_environment() -> dict[str, str]:
         return dict(os.environ)
 
 
+class CMLApplication:
+    name: str
+    nvidia_gpu: int
+    memory: float
+
+
 def get_application_config() -> ApplicationConfig:
     """
     Returns the number of GPUs available in the environment.
@@ -269,15 +275,17 @@ def get_application_config() -> ApplicationConfig:
         client = cmlapi.default_client()
         project_id = settings.cdsw_project_id
         apps = client.list_applications(project_id=project_id)
-        ragstudio_app = next(
+        ragstudio_app: CMLApplication | None = next(
             (app for app in apps.applications if app.name == "RagStudio"), None
         )
-        return ApplicationConfig(
-            num_of_gpus=ragstudio_app.nvidia_gpu,
-            memory_size_gb=ragstudio_app.memory,
-        )
+        if ragstudio_app is not None:
+            return ApplicationConfig(
+                num_of_gpus=ragstudio_app.nvidia_gpu,
+                memory_size_gb=ragstudio_app.memory,
+            )
     except ImportError:
-        return ApplicationConfig(
-            num_of_gpus=0,
-            memory_size_gb=0,
-        )
+        pass
+    return ApplicationConfig(
+        num_of_gpus=0,
+        memory_size_gb=0,
+    )
