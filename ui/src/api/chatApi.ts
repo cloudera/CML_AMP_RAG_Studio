@@ -190,7 +190,27 @@ export const useChatMutation = ({
         });
       onSuccess?.(data);
     },
-    onError: (error: Error) => onError?.(error),
+    onError: (error: Error, variables) => {
+      const uuid = crypto.randomUUID();
+      const errorMessage: ChatMessageType = {
+        id: `error-${uuid}`,
+        session_id: variables.session_id,
+        source_nodes: [],
+        rag_message: {
+          user: variables.query,
+          assistant: error.message,
+        },
+        evaluations: [],
+        timestamp: Date.now(),
+      };
+      queryClient.setQueryData<ChatMessageType[]>(
+        chatHistoryQueryKey(variables.session_id),
+        (cachedData) =>
+          replacePlaceholderInChatHistory(errorMessage, cachedData),
+      );
+
+      onError?.(error);
+    },
   });
 };
 
