@@ -87,6 +87,15 @@ class ProjectConfig(BaseModel):
     caii_config: CaiiConfig
 
 
+class ApplicationConfig(BaseModel):
+    """
+    Model to represent the application configuration.
+    """
+
+    num_of_gpus: int
+    memory_size_gb: int
+
+
 class ProjectConfigPlus(ProjectConfig):
     """
     Model to represent the project configuration.
@@ -94,7 +103,7 @@ class ProjectConfigPlus(ProjectConfig):
 
     release_version: Optional[str] = None
     is_valid_config: bool
-    num_of_gpus: int
+    ApplicationConfig: ApplicationConfig
 
 
 def validate_storage_config(environ: dict[str, str]) -> bool:
@@ -248,7 +257,7 @@ def get_project_environment() -> dict[str, str]:
         return dict(os.environ)
 
 
-def get_num_of_gpus() -> int:
+def get_num_of_gpus() -> ApplicationConfig:
     """
     Returns the number of GPUs available in the environment.
     """
