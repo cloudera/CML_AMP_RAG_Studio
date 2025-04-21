@@ -150,6 +150,7 @@ export interface ProjectConfig {
   caii_config: CaiiConfig;
   is_valid_config: boolean;
   release_version: string;
+  num_of_gpus: number;
 }
 
 export const useGetAmpConfig = (poll?: boolean) => {

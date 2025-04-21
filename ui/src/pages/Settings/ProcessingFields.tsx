@@ -54,6 +54,27 @@ export const ProcessingFields = ({
         tooltip={
           "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16G of RAM is required for this option."
         }
+        rules={[
+          ({ getFieldValue }) => ({
+            validator() {
+              if (
+                (projectConfig?.num_of_gpus && projectConfig.num_of_gpus > 0) ||
+                getFieldValue("use_enhanced_pdf_processing") !== "checked"
+              ) {
+                return Promise.resolve();
+              }
+              return Promise.reject(
+                new Error("No GPUs available; performance may be degraded!"),
+              );
+            },
+          }),
+          // {
+          //   validator: () => {
+          //     projectConfig?.num_of_gpus === 0;
+          //   },
+          //   message: "Continue input to exceed 6 chars",
+          // },
+        ]}
       >
         <Switch />
       </Form.Item>
