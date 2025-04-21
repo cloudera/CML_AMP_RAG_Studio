@@ -40,7 +40,7 @@ import { Alert, Divider, Flex, Typography } from "antd";
 import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
-import { cdlBlue500, cdlGray200, cdlRed600 } from "src/cuix/variables.ts";
+import { cdlBlue500, cdlGray200, cdlRed400 } from "src/cuix/variables.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import Images from "src/components/images/Images.ts";
@@ -74,7 +74,10 @@ const ChatMessage = ({
             gap={8}
           >
             <div style={{ flex: 1 }}>
-              <ExclamationCircleTwoTone size={40} twoToneColor={cdlRed600} />
+              <ExclamationCircleTwoTone
+                twoToneColor={cdlRed400}
+                style={{ fontSize: 22 }}
+              />
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
@@ -85,6 +88,7 @@ const ChatMessage = ({
               </Typography.Text>
             </Flex>
           </Flex>
+          <Divider />
         </div>
       </div>
     );
