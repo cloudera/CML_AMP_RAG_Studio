@@ -126,7 +126,11 @@ class DataSourceController:
         self.chunks_vector_store.delete_document(doc_id)
         summary_indexer = self._get_summary_indexer(data_source_id)
         if summary_indexer:
-            summary_indexer.delete_document(doc_id)
+            try:
+                summary_indexer.delete_document(doc_id)
+            except Exception as e:
+                # ignore, since it might just be because the summary index doesn't exist yet
+                logger.info("Failed to delete document %s: %s", doc_id, e)
 
     @router.post(
         "/documents/{doc_id}/index",
