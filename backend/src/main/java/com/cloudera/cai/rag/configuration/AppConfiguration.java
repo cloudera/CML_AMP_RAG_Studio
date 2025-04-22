@@ -121,6 +121,8 @@ public class AppConfiguration {
           Files.readString(Path.of("addresses/llm_service_address.txt"))
               .lines()
               .findFirst()
+              .map(String::trim)
+              .map(s -> s + "/llm-service")
               .orElse("http://localhost:8081");
     } catch (IOException e) {
       llmServiceUrl = "http://localhost:8081";
