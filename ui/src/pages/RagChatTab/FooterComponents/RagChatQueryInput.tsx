@@ -41,7 +41,6 @@ import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/Suggeste
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import { useParams } from "@tanstack/react-router";
@@ -75,9 +74,6 @@ const RagChatQueryInput = ({
   const chatMutation = useChatMutation({
     onSuccess: () => {
       setUserInput("");
-    },
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
     },
   });
 
