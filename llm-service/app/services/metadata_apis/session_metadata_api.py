@@ -86,6 +86,8 @@ def url_template() -> str:
 
 def get_session(session_id: int, user_name: Optional[str]) -> Session:
     headers = {"remote-user": user_name} if user_name else {}
+    headers["Authorization"] = f"Bearer {settings.cdsw_apiv2_key}"
+
     response = requests.get(url_template().format(session_id), headers=headers)
     raise_for_http_error(response)
     data = body_to_json(response)
@@ -126,10 +128,16 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
         },
     )
+    headers = {
+        "Content-Type": "application/json",
+        "remote-user": user_name,
+        "Authorization": f"Bearer {settings.cdsw_apiv2_key}",
+    }
+
     response = requests.post(
         url_template().format(updatable_session.id),
         data=json.dumps(updatable_session.__dict__, default=str),
-        headers={"Content-Type": "application/json", "remote-user": user_name},
+        headers=headers,
         timeout=10,
     )
     raise_for_http_error(response)
