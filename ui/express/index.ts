@@ -28,9 +28,6 @@ const apiProxy: Options = {
   router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
-  headers: {
-    Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
-  },
 };
 
 const llmServiceProxy: Options = {
