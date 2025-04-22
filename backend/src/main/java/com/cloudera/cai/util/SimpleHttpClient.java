@@ -103,9 +103,8 @@ public class SimpleHttpClient {
   }
 
   public void delete(String path, String... headers) {
-    HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(path)).DELETE()
-            .headers(headers).build();
+    HttpRequest request =
+        HttpRequest.newBuilder().uri(URI.create(path)).DELETE().headers(headers).build();
     try {
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString());

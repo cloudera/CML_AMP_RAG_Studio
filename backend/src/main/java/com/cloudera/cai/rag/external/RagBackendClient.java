@@ -81,7 +81,8 @@ public class RagBackendClient {
               + ragDocument.documentId()
               + "/index",
           new IndexRequest(bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration),
-          "Authorization: Bearer " + AUTH_TOKEN);
+          "Authorization",
+          "Bearer " + AUTH_TOKEN);
     } catch (HttpError e) {
       throw convertError(e);
     } catch (IOException e) {
@@ -114,7 +115,8 @@ public class RagBackendClient {
               + ragDocument.documentId()
               + "/summary",
           new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()),
-          "Authorization: Bearer " + AUTH_TOKEN);
+          "Authorization",
+          "Bearer " + AUTH_TOKEN);
     } catch (HttpError e) {
       throw convertError(e);
     } catch (IOException e) {
@@ -125,18 +127,20 @@ public class RagBackendClient {
   public void deleteDataSource(Long dataSourceId) {
     client.delete(
         getLlmServiceUrl() + "/data_sources/" + dataSourceId,
-        "Authorization: Bearer " + AUTH_TOKEN);
+        "Authorization",
+        "Bearer " + AUTH_TOKEN);
   }
 
   public void deleteDocument(long dataSourceId, String documentId) {
     client.delete(
         getLlmServiceUrl() + "/data_sources/" + dataSourceId + "/documents/" + documentId,
-        "Authorization: Bearer " + AUTH_TOKEN);
+        "Authorization",
+        "Bearer " + AUTH_TOKEN);
   }
 
   public void deleteSession(Long sessionId) {
     client.delete(
-        getLlmServiceUrl() + "/sessions/" + sessionId, "Authorization: Bearer " + AUTH_TOKEN);
+        getLlmServiceUrl() + "/sessions/" + sessionId, "Authorization", "Bearer " + AUTH_TOKEN);
   }
 
   record IndexRequest(
