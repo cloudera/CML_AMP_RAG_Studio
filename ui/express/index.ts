@@ -8,7 +8,7 @@ const app = express();
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
-const lookupUrl = (fileLocation: string, fallback: string) => {
+const lookupUrl = (fileLocation: string, fallback: string): string => {
   try {
     const fileContents = fs.readFileSync(
       `../addresses/${fileLocation}`,
@@ -24,7 +24,8 @@ const lookupUrl = (fileLocation: string, fallback: string) => {
 };
 
 const apiProxy: Options = {
-  target: lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
+  target: "http://localhost:8080",
+  router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
   headers: {
@@ -33,7 +34,8 @@ const apiProxy: Options = {
 };
 
 const llmServiceProxy: Options = {
-  target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
+  target: "http://localhost:8081",
+  router: () => lookupUrl("llm_service_address.txt", "http://localhost:8081"),
   changeOrigin: true,
   pathFilter: ["/llm-service/**"],
   pathRewrite: {

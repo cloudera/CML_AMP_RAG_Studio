@@ -2,7 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b, _c;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = require("path");
@@ -24,7 +24,8 @@ const lookupUrl = (fileLocation, fallback) => {
     return fallback;
 };
 const apiProxy = {
-    target: lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
+    target: "http://localhost:8080",
+    router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
     changeOrigin: true,
     pathFilter: ["/api/**"],
     headers: {
@@ -32,7 +33,8 @@ const apiProxy = {
     },
 };
 const llmServiceProxy = {
-    target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
+    target: "http://localhost:8081",
+    router: () => lookupUrl("llm_service_address.txt", "http://localhost:8081"),
     changeOrigin: true,
     pathFilter: ["/llm-service/**"],
     pathRewrite: {
