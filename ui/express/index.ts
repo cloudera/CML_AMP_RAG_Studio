@@ -7,36 +7,8 @@ const app = express();
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
-const lookupUrl = async (fallback: string) => {
-  try {
-    const res = await fetch(
-      process.env.CDSW_DOMAIN +
-        "/api/v2/projects/" +
-        process.env.CDSW_PROJECT_ID +
-        "/applications",
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const application = data.find(
-        (item: any) => item.name === "RagStudioMetadata",
-      )?.subdomain;
-      if (application) {
-        return application.subdomain + "." + process.env.CDSW_DOMAIN;
-      } else {
-        return fallback;
-      }
-    } else {
-      console.error("Error fetching metadata API address:", res.statusText);
-      return fallback;
-    }
-  } catch (error) {
-    console.error("Error during fetch:", error);
-    return fallback;
-  }
-};
-
 const apiProxy: Options = {
-  target: async () => await lookupUrl("http://localhost:8080"),
+  target: process.env.API_URL,
   changeOrigin: true,
   pathFilter: ["/api/**"],
 };

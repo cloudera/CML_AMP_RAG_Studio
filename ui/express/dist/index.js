@@ -7,30 +7,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = require("path");
 const http_proxy_middleware_1 = require("http-proxy-middleware");
-const fs_1 = __importDefault(require("fs"));
 const app = (0, express_1.default)();
 const port = parseInt((_a = process.env.CDSW_APP_PORT) !== null && _a !== void 0 ? _a : "3000", 10);
 const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.0.0.1";
-const lookupUrl = (fileLocation, fallback) => {
-    try {
-        const fileContents = fs_1.default.readFileSync(`../addresses/${fileLocation}`, "utf8");
-        if (fileContents) {
-            return fileContents.trim();
-        }
-    }
-    catch (err) {
-        console.error("Error reading file:", err);
-    }
-    return fallback;
-};
 const apiProxy = {
-    target: "http://localhost:8080",
-    router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
+    target: process.env.API_URL,
     changeOrigin: true,
     pathFilter: ["/api/**"],
-    headers: {
-        Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
-    },
 };
 const llmServiceProxy = {
     target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
