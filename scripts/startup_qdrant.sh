@@ -40,5 +40,11 @@ set -eox pipefail
 
 echo "Starting Qdrant vector DB... on port ${CDSW_APP_PORT}"
 
+ip_address=${CDSW_IP_ADDRESS}
+port=${CDSW_APP_PORT}
+mkdir -p ${RAG_STUDIO_INSTALL_DIR}/addresses
+echo "http://${ip_address}:${port}" > ${RAG_STUDIO_INSTALL_DIR}/addresses/qdrant_address.txt
+
+
 # start Qdrant vector DB
 QDRANT__SERVICE__HTTP_PORT=${CDSW_APP_PORT} QDRANT__SERVICE__HOST=127.0.0.1 qdrant/qdrant

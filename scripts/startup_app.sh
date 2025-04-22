@@ -57,25 +57,11 @@ trap cleanup EXIT
 export RAG_DATABASES_DIR=$(pwd)/databases
 export LLM_SERVICE_URL="http://localhost:8081"
 
-# todo: this will need to be configured.. something like this
+ip_address=${CDSW_IP_ADDRESS}
+port=${CDSW_APP_PORT}
+mkdir -p ${RAG_STUDIO_INSTALL_DIR}/addresses
+echo "http://${ip_address}:${port}" > ${RAG_STUDIO_INSTALL_DIR}/addresses/llm_service_address.txt
 
-#import requests
-#
-## The API endpoint
-#url = os.environ['CDSW_API_URL']
-#project_id = os.environ["CDSW_PROJECT_ID"]
-#access_token = os.environ['CDSW_APIV2_KEY']
-#domain = os.environ['CDSW_DOMAIN']
-#print(url)
-#headers = {
-#    "Authorization": f"Bearer {access_token}",
-#}
-#print(headers)
-## A GET request to the API
-#response = requests.get(f"https://{domain}/api/v2/projects/{project_id}", headers=headers)
-#
-## Print the response
-#print(response.json())
 export API_URL="http://localhost:8080"
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data

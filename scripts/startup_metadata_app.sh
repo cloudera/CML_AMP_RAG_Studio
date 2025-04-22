@@ -38,22 +38,29 @@
 
 set -eox pipefail
 
-cleanup() {
-    # kill all processes whose parent is this process
-    pkill -P $$
-}
-
-for sig in INT QUIT HUP TERM; do
-  trap "
-    cleanup
-    trap - $sig EXIT
-    kill -s $sig "'"$$"' "$sig"
-done
-trap cleanup EXIT
-
 export RAG_DATABASES_DIR=$(pwd)/databases
 export API_URL="http://localhost:8080"
 
-# start up the jarva
-scripts/startup_java.sh & 2>&1
+RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+  DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
+fi
+
+ip_address=${CDSW_IP_ADDRESS}
+port=${CDSW_APP_PORT}
+mkdir -p ${RAG_STUDIO_INSTALL_DIR}/addresses
+echo "http://${ip_address}:${port}" > ${RAG_STUDIO_INSTALL_DIR}/addresses/metadata_api_address.txt
+
+export DB_URL=$DB_URL_LOCATION
+export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
+export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
+
+for i in {1..3}; do
+  echo "Starting Java application..."
+  "$JAVA_HOME"/bin/java -jar artifacts/rag-api.jar
+  echo "Java application crashed, retrying ($i/3)..."
+  sleep 5
+done
 
