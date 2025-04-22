@@ -2,7 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b, _c;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = require("path");
@@ -14,9 +14,12 @@ const apiProxy = {
     target: process.env.API_URL,
     changeOrigin: true,
     pathFilter: ["/api/**"],
+    cookieDomainRewrite: process.env.API_URL,
 };
 const llmServiceProxy = {
-    target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
+    target: process.env.LLM_SERVICE_URL
+        ? `https://${process.env.LLM_SERVICE_URL}`
+        : "http://localhost:8081",
     changeOrigin: true,
     pathFilter: ["/llm-service/**"],
     pathRewrite: {

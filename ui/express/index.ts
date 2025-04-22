@@ -15,7 +15,9 @@ const apiProxy: Options = {
 };
 
 const llmServiceProxy: Options = {
-  target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
+  target: process.env.LLM_SERVICE_URL
+    ? `https://${process.env.LLM_SERVICE_URL}`
+    : "http://localhost:8081",
   changeOrigin: true,
   pathFilter: ["/llm-service/**"],
   pathRewrite: {
