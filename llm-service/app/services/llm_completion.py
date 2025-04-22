@@ -36,6 +36,7 @@
 #  DATA.
 #
 import itertools
+from typing import Generator
 
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.llms import LLM
@@ -61,6 +62,20 @@ def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
     )
     messages.append(ChatMessage.from_str(question, role="user"))
     return model.chat(messages)
+
+
+def completion_streaming(
+    session_id: int, question: str, model_name: str
+) -> Generator[ChatResponse, None, None]:
+    model = models.LLM.get(model_name)
+    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
+    messages = list(
+        itertools.chain.from_iterable(
+            map(lambda x: make_chat_messages(x), chat_history)
+        )
+    )
+    messages.append(ChatMessage.from_str(question, role="user"))
+    return model.stream_chat(messages)
 
 
 def hypothetical(question: str, configuration: QueryConfiguration) -> str:

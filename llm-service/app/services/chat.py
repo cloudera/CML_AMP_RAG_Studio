@@ -38,10 +38,10 @@
 import time
 import uuid
 from random import shuffle
-from typing import List, Iterable, Optional
+from typing import List, Iterable, Optional, Generator
 
 from fastapi import HTTPException
-from llama_index.core.base.llms.types import MessageRole
+from llama_index.core.base.llms.types import MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import AgentChatResponse
 
 from . import evaluators, llm_completion
@@ -63,7 +63,10 @@ from ..rag_types import RagPredictConfiguration
 
 
 def v2_chat(
-    session: Session, query: str, configuration: RagPredictConfiguration, user_name: Optional[str]
+    session: Session,
+    query: str,
+    configuration: RagPredictConfiguration,
+    user_name: Optional[str],
 ) -> RagStudioChatMessage:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -85,9 +88,7 @@ def v2_chat(
         )
     )
     if total_data_sources_size == 0:
-        return direct_llm_chat(
-            session, query, user_name
-        )
+        return direct_llm_chat(session, query, user_name)
 
     response_id = str(uuid.uuid4())
 
@@ -331,3 +332,38 @@ def direct_llm_chat(
     )
     ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
+
+
+def direct_llm_chat_streaming(
+    session: Session, query: str, user_name: Optional[str]
+) -> Generator[ChatResponse, None, None]:
+    response_id = str(uuid.uuid4())
+    record_direct_llm_mlflow_run(response_id, session, user_name)
+
+    chat_response_generator = llm_completion.completion_streaming(
+        session.id, query, session.inference_model
+    )
+
+    # Collect the full response to save to history
+    full_response = ""
+
+    # Yield each chunk as it becomes available
+    for chat_response in chat_response_generator:
+        full_response += str(chat_response.message.content)
+        yield chat_response
+
+    # After streaming is complete, save the full response to chat history
+    new_chat_message = RagStudioChatMessage(
+        id=response_id,
+        session_id=session.id,
+        source_nodes=[],
+        inference_model=session.inference_model,
+        evaluations=[],
+        rag_message=RagMessage(
+            user=query,
+            assistant=full_response,
+        ),
+        timestamp=time.time(),
+        condensed_question=None,
+    )
+    ChatHistoryManager().append_to_history(session.id, [new_chat_message])

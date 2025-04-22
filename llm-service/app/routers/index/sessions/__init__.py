@@ -41,12 +41,15 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Header
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import (
     v2_chat,
+    direct_llm_chat,
+    direct_llm_chat_streaming,
 )
 from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
 from ....services.metadata_apis import session_metadata_api
@@ -169,3 +172,36 @@ def chat(
 
     configuration = request.configuration or RagPredictConfiguration()
     return v2_chat(session, request.query, configuration, user_name=remote_user)
+
+
+def stream_chat_response_to_json(session, query, user_name):
+    """
+    Convert each ChatResponse from the streaming function to a JSON string.
+    """
+    for chat_response in direct_llm_chat_streaming(session, query, user_name=user_name):
+        # Convert the ChatResponse to a dictionary
+        response_dict = {
+            "content": str(chat_response.message.content),
+            "role": chat_response.message.role.value,
+        }
+        # Yield the dictionary as a JSON string with a data prefix for SSE
+        yield f"data: {json.dumps(response_dict)}\n\n"
+
+
+@router.post(
+    "/chat-stream",
+    summary="Chat with your documents in the requested datasource with streaming",
+)
+@exceptions.propagates
+def chat_stream(
+    session_id: int,
+    request: RagStudioChatRequest,
+    remote_user: Optional[str] = Header(None),
+):
+    session = session_metadata_api.get_session(session_id, user_name=remote_user)
+
+    # Use StreamingResponse to stream the chat responses as JSON
+    return StreamingResponse(
+        stream_chat_response_to_json(session, request.query, remote_user),
+        media_type="text/event-stream",
+    )
