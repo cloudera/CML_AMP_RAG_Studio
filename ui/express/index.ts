@@ -24,13 +24,16 @@ const lookupUrl = (fileLocation: string, fallback: string) => {
 };
 
 const apiProxy: Options = {
-  target: lookupUrl("metadata_api_address.txt", "localhost:8080"),
+  target: lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
+  headers: {
+    Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
+  },
 };
 
 const llmServiceProxy: Options = {
-  target: lookupUrl("llm_service_address.txt", "http://localhost:8081"),
+  target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
   changeOrigin: true,
   pathFilter: ["/llm-service/**"],
   pathRewrite: {
