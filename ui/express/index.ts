@@ -1,37 +1,44 @@
 import express, { Request, Response } from "express";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import fs from "fs";
 
 const app = express();
 
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
-const lookupUrl = (fileLocation: string, fallback: string): string => {
+const lookupUrl = async (fallback: string) => {
   try {
-    const fileContents = fs.readFileSync(
-      `../addresses/${fileLocation}`,
-      "utf8",
+    const res = await fetch(
+      process.env.CDSW_DOMAIN +
+        "/api/v2/projects/" +
+        process.env.CDSW_PROJECT_ID +
+        "/applications",
     );
-    if (fileContents) {
-      return fileContents.trim();
+    if (res.ok) {
+      const data = await res.json();
+      const application = data.find(
+        (item: any) => item.name === "RagStudioMetadata",
+      )?.subdomain;
+      if (application) {
+        return application.subdomain + "." + process.env.CDSW_DOMAIN;
+      } else {
+        return fallback;
+      }
+    } else {
+      console.error("Error fetching metadata API address:", res.statusText);
+      return fallback;
     }
-  } catch (err) {
-    console.error("Error reading file:", err);
+  } catch (error) {
+    console.error("Error during fetch:", error);
+    return fallback;
   }
-  return fallback;
 };
 
 const apiProxy: Options = {
-  target: "http://localhost:8080",
-  router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
+  target: async () => await lookupUrl("http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
-  cookieDomainRewrite: lookupUrl(
-    "metadata_api_address.txt",
-    "http://localhost:8080",
-  ),
 };
 
 const llmServiceProxy: Options = {
