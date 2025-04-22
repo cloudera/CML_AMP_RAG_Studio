@@ -52,7 +52,7 @@ root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else 
 os.chdir(root_dir)
 
 env = os.environ.copy()
-env["API_URL"] = metadata_base_url
+env["API_URL"] = f"https://{metadata_base_url}"
 
 print("Starting application with metadata base URL: ", metadata_base_url)
 

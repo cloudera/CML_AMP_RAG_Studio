@@ -8,16 +8,14 @@ const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
 const apiProxy: Options = {
-  target: process.env.API_URL,
+  target: process.env.API_URL ?? "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**"],
   cookieDomainRewrite: process.env.API_URL,
 };
 
 const llmServiceProxy: Options = {
-  target: process.env.LLM_SERVICE_URL
-    ? `https://${process.env.LLM_SERVICE_URL}`
-    : "http://localhost:8081",
+  target: process.env.LLM_SERVICE_URL ?? "http://localhost:8081",
   changeOrigin: true,
   pathFilter: ["/llm-service/**"],
   pathRewrite: {
