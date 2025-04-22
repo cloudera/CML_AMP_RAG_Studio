@@ -45,6 +45,8 @@ source scripts/release_version.txt || true
 
 set +e
 source scripts/load_nvm.sh > /dev/null
+
+# Need to install node for legacy installations before node was used
 nvm use 22
 return_code=$?
 set -e
@@ -55,8 +57,6 @@ if [ $return_code -ne 0 ]; then
 
     nvm use 22
 fi
-cd ui/express
-npm install
 
 cd ../../llm-service
 
@@ -80,11 +80,16 @@ fi
 echo "Downloading release artifacts from ${RELEASE_URL}"
 wget "${RELEASE_URL}/rag-api.jar" -O artifacts/rag-api.jar
 wget "${RELEASE_URL}/fe-dist.tar.gz" -O artifacts/fe-dist.tar.gz
+wget "${RELEASE_URL}/node-dist.tar.gz" -O artifacts/node-dist.tar.gz
 
 # unzip the frontend tarball
 cd ui
 tar -xzf ../artifacts/fe-dist.tar.gz
 
-cd ../scripts
+# unzip the node tarball
+cd express
+tar -xzf ../../artifacts/node-dist.tar.gz
+
+cd ../../scripts
 python install_qdrant_app.py
 python install_metadata_app.py

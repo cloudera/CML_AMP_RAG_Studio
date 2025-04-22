@@ -74,6 +74,16 @@ jobs:
           tar --no-xattrs -czvf fe-dist.tar.gz dist
         working-directory: ui
 
+      - name: Install Node Dependencies
+        run: pnpm install --prod --no-frozen-lockfile
+        working-directory: ui/express
+
+      - name: Build with PNPM
+        run: |
+          pnpm build
+          tar --no-xattrs -czvf node-dist.tar.gz dist
+        working-directory: ui/express
+
       - name: release
         uses: softprops/action-gh-release@v2
         id: create_release
@@ -86,6 +96,7 @@ jobs:
           files: |
             backend/build/libs/rag-api.jar
             ui/fe-dist.tar.gz
+            ui/express/node-dist.tar.gz
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
