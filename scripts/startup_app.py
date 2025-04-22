@@ -54,6 +54,8 @@ os.chdir(root_dir)
 env = os.environ.copy()
 env["API_URL"] = metadata_base_url
 
+print("Starting application with metadata base URL: ", metadata_base_url)
+
 while True:
     print(subprocess.run(["bash scripts/startup_app.sh"], shell=True, env=env))
     print("Application Restarting")
