@@ -56,6 +56,15 @@ class _Settings:
     """RAG configuration."""
 
     @property
+    def metadata_api_url(self) -> str:
+        try:
+            file_path = os.path.join("..", "addresses", "metadata_api_address.txt")
+            with open(file_path, "r") as file:
+                return file.read().strip()
+        except FileNotFoundError:
+            return "http://localhost:8080"
+
+    @property
     def rag_log_level(self) -> int:
         return int(os.environ.get("RAG_LOG_LEVEL", logging.INFO))
 
