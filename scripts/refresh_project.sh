@@ -58,7 +58,7 @@ if [ $return_code -ne 0 ]; then
     nvm use 22
 fi
 
-cd ../../llm-service
+cd llm-service
 
 set +e
 uv --version
