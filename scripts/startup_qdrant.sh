@@ -38,6 +38,11 @@
 
 set -eox pipefail
 
+RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+fi
+
 echo "Starting Qdrant vector DB... on port ${CDSW_APP_PORT}"
 
 ip_address=${CDSW_IP_ADDRESS}
