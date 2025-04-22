@@ -28,6 +28,10 @@ const apiProxy: Options = {
   router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
+  cookieDomainRewrite: lookupUrl(
+    "metadata_api_address.txt",
+    "http://localhost:8080",
+  ),
 };
 
 const llmServiceProxy: Options = {
