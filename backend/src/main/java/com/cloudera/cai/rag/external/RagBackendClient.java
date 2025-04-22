@@ -38,8 +38,9 @@
 
 package com.cloudera.cai.rag.external;
 
+import static com.cloudera.cai.rag.configuration.AppConfiguration.getLlmServiceUrl;
+
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.configuration.AppConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.ClientError;
@@ -58,7 +59,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class RagBackendClient {
   private final SimpleHttpClient client;
-  private final String indexUrl;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   private record FastApiError(String detail) {}
@@ -66,7 +66,6 @@ public class RagBackendClient {
   @Autowired
   public RagBackendClient(SimpleHttpClient client) {
     this.client = client;
-    indexUrl = AppConfiguration.getRagIndexUrl();
   }
 
   @WithSpan
@@ -74,7 +73,7 @@ public class RagBackendClient {
       Types.RagDocument ragDocument, String bucketName, IndexConfiguration configuration) {
     try {
       client.post(
-          indexUrl
+          getLlmServiceUrl()
               + "/data_sources/"
               + ragDocument.dataSourceId()
               + "/documents/"
@@ -107,7 +106,7 @@ public class RagBackendClient {
   public String createSummary(Types.RagDocument ragDocument, String bucketName) {
     try {
       return client.post(
-          indexUrl
+          getLlmServiceUrl()
               + "/data_sources/"
               + ragDocument.dataSourceId()
               + "/documents/"
@@ -122,15 +121,16 @@ public class RagBackendClient {
   }
 
   public void deleteDataSource(Long dataSourceId) {
-    client.delete(indexUrl + "/data_sources/" + dataSourceId);
+    client.delete(getLlmServiceUrl() + "/data_sources/" + dataSourceId);
   }
 
   public void deleteDocument(long dataSourceId, String documentId) {
-    client.delete(indexUrl + "/data_sources/" + dataSourceId + "/documents/" + documentId);
+    client.delete(
+        getLlmServiceUrl() + "/data_sources/" + dataSourceId + "/documents/" + documentId);
   }
 
   public void deleteSession(Long sessionId) {
-    client.delete(indexUrl + "/sessions/" + sessionId);
+    client.delete(getLlmServiceUrl() + "/sessions/" + sessionId);
   }
 
   record IndexRequest(

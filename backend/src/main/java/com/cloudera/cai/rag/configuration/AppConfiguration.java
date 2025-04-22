@@ -114,7 +114,7 @@ public class AppConfiguration {
     return new S3RagFileUploader(s3Client, configuration.getBucketName());
   }
 
-  public static String getRagIndexUrl() {
+  public static String getLlmServiceUrl() {
     String llmServiceUrl;
     try {
       llmServiceUrl =
