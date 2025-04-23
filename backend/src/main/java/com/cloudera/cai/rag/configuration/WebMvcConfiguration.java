@@ -96,9 +96,6 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
-        System.out.println("************** CORS configuration ****************");
-        //        String domain = System.getenv("CDSW_DOMAIN");
-        //        if (domain != null) {
         registry
             .addMapping("/*")
             .allowCredentials(true)

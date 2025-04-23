@@ -38,12 +38,23 @@
 
 import subprocess
 import os
+import cmlapi
 
-root_dir = (
-    "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
-)
+client = cmlapi.default_client()
+applications = client.list_applications(project_id=os.environ['CDSW_PROJECT_ID'])
+llm_service_base_url: str = "http://localhost:8081"
+if len(applications.applications) > 0:
+    for app in applications.applications:
+        if app.name == "RagStudio":
+            llm_service_base_url = f"{app.subdomain}.{os.environ['CDSW_DOMAIN']}"
+
+root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
 os.chdir(root_dir)
 
+env = os.environ.copy()
+env["LLM_SERVICE_URL"] = f"https://{llm_service_base_url}"
+
+
 while True:
-    print(subprocess.run(["bash scripts/startup_metadata_app.sh"], shell=True))
+    print(subprocess.run(["bash scripts/startup_metadata_app.sh"], shell=True, env=env))
     print("Metadata API Application Restarting")

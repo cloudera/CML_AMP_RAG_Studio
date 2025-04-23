@@ -115,18 +115,8 @@ public class AppConfiguration {
   }
 
   public static String getLlmServiceUrl() {
-    String llmServiceUrl;
-    try {
-      llmServiceUrl =
-          Files.readString(Path.of("addresses/llm_service_address.txt"))
-              .lines()
-              .findFirst()
-              .map(String::trim)
-              .map(s -> s + "/llm-service")
-              .orElse("http://localhost:8081");
-    } catch (IOException e) {
-      llmServiceUrl = "http://localhost:8081";
-    }
+    var llmServiceUrl =
+            Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://localhost:8081");
     log.info("LLM Service URL: {}", llmServiceUrl);
     return llmServiceUrl;
   }
