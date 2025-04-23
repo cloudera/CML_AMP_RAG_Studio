@@ -35,14 +35,23 @@ app.use(
 );
 
 const apiProxy: Options = {
-  // target: "http://localhost:8080",
   router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,
-  protocolRewrite: "http",
   logger: console,
   followRedirects: true,
+  headers: {
+    Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
+  },
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      proxyReq.setHeader(
+        "origin-remote-user",
+        req.headers["remote-user"] || "unknown",
+      );
+    },
+  },
 };
 
 const llmServiceProxy: Options = {
