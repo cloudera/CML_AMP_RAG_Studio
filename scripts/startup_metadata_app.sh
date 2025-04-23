@@ -48,11 +48,6 @@ if [ -z "$IS_COMPOSABLE" ]; then
   DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
 fi
 
-ip_address=${CDSW_IP_ADDRESS}
-port=${CDSW_APP_PORT}
-mkdir -p ${RAG_STUDIO_INSTALL_DIR}/addresses
-echo "http://${ip_address}:${port}" > ${RAG_STUDIO_INSTALL_DIR}/addresses/metadata_api_address.txt
-
 export DB_URL=$DB_URL_LOCATION
 export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"

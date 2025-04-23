@@ -63,11 +63,6 @@ fi
 export RAG_DATABASES_DIR=$(pwd)/databases
 export LLM_SERVICE_URL="http://localhost:8081"
 
-ip_address=${CDSW_IP_ADDRESS}
-port=${CDSW_APP_PORT}
-mkdir -p ${RAG_STUDIO_INSTALL_DIR}/addresses
-echo "http://${ip_address}:${port}" > ${RAG_STUDIO_INSTALL_DIR}/addresses/llm_service_address.txt
-
 #export API_URL="http://localhost:8080"
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
