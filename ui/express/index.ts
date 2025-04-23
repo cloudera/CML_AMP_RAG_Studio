@@ -14,6 +14,7 @@ app.use(
     exposedHeaders: ["*"],
     credentials: true,
     preflightContinue: true,
+    origin: ["*"],
   }),
 );
 
