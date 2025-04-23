@@ -66,13 +66,13 @@ root_dir = (
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
 def amp_up_to_date_status(
-    remote_user: Annotated[str | None, Header()] = None,
+    origin_remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> bool:
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
 
-    if remote_user == project_owner or remote_user_perm == "RW":
+    if origin_remote_user == project_owner or remote_user_perm == "RW":
         # noinspection PyBroadException
         try:
             return does_amp_need_updating()
@@ -119,14 +119,14 @@ def amp_is_composed() -> bool:
 @router.get("/config", summary="Returns application configuration.")
 @exceptions.propagates
 def get_configuration(
-    remote_user: Annotated[str | None, Header()] = None,
+    origin_remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigPlus:
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
     application_config = get_application_config()
 
-    if remote_user == project_owner or remote_user_perm == "RW":
+    if origin_remote_user == project_owner or remote_user_perm == "RW":
         return build_configuration(env, application_config)
 
     raise fastapi.HTTPException(
@@ -139,14 +139,14 @@ def get_configuration(
 @exceptions.propagates
 def update_configuration(
     config: ProjectConfig,
-    remote_user: Annotated[str | None, Header()] = None,
+    origin_remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigPlus:
     existing_env = get_project_environment()
     project_owner = existing_env.get("PROJECT_OWNER", "unknown")
     application_config = get_application_config()
 
-    if remote_user == project_owner or remote_user_perm == "RW":
+    if origin_remote_user == project_owner or remote_user_perm == "RW":
         # merge the new configuration with the existing one
         updated_env = config_to_env(config)
         env_to_save = existing_env | updated_env

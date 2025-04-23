@@ -45,7 +45,7 @@ const apiProxy: Options = {
     Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
   },
   on: {
-    proxyReq: (proxyReq, req, res) => {
+    proxyReq: (proxyReq, req) => {
       proxyReq.setHeader(
         "origin-remote-user",
         req.headers["remote-user"] || "unknown",
@@ -60,6 +60,14 @@ const llmServiceProxy: Options = {
   pathFilter: ["/llm-service/**"],
   pathRewrite: {
     "^/llm-service": "",
+  },
+  on: {
+    proxyReq: (proxyReq, req) => {
+      proxyReq.setHeader(
+        "origin-remote-user",
+        req.headers["remote-user"] || "unknown",
+      );
+    },
   },
 };
 
