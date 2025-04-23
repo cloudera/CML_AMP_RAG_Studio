@@ -37,6 +37,7 @@ const apiProxy = {
     changeOrigin: true,
     pathFilter: ["/api/**"],
     secure: false,
+    protocolRewrite: "http",
     logger: console,
     followRedirects: true,
 };

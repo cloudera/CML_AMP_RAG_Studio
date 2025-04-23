@@ -40,6 +40,7 @@ const apiProxy: Options = {
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,
+  protocolRewrite: "http",
   logger: console,
   followRedirects: true,
 };
