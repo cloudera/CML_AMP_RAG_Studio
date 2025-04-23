@@ -16,6 +16,7 @@ app.use((0, cors_1.default)({
     exposedHeaders: ["*"],
     credentials: true,
     preflightContinue: true,
+    origin: ["*"],
 }));
 const apiProxy = {
     target: (_c = process.env.API_URL) !== null && _c !== void 0 ? _c : "http://localhost:8080",
