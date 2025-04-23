@@ -13,6 +13,7 @@ const apiProxy: Options = {
   pathFilter: ["/api/**"],
   secure: false,
   logger: console,
+  followRedirects: true,
 };
 
 const llmServiceProxy: Options = {
