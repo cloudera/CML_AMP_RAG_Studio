@@ -36,7 +36,7 @@ app.use(
 );
 
 const apiProxy: Options = {
-  router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
+  target: process.env.API_URL,
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,
@@ -47,6 +47,7 @@ const apiProxy: Options = {
   },
   on: {
     proxyReq: (proxyReq, req) => {
+      console.log("proxyReq:", proxyReq);
       proxyReq.setHeader(
         "origin-remote-user",
         req.headers["remote-user"] || "unknown",
