@@ -124,9 +124,7 @@ const updateDataSourceMutation = async (
 };
 
 const getDataSourcesQuery = async (): Promise<DataSourceType[]> => {
-  return await getRequest(
-    "https://ragstudiometadata-1zm84r.ml-73ded0b5-f16.eng-ml-i.svbr-nqvp.int.cldr.work/api/v1/rag/dataSources",
-  );
+  return await getRequest(`${ragPath}/${paths.dataSources}`);
 };
 
 export const useGetDataSourcesQuery = () => {

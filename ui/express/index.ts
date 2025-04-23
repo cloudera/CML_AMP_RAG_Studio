@@ -2,11 +2,27 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
+import fs from "fs";
 
 const app = express();
 
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
+
+const lookupUrl = (fileLocation: string, fallback: string): string => {
+  try {
+    const fileContents = fs.readFileSync(
+      `../addresses/${fileLocation}`,
+      "utf8",
+    );
+    if (fileContents) {
+      return fileContents.trim();
+    }
+  } catch (err) {
+    console.error("Error reading file:", err);
+  }
+  return fallback;
+};
 
 app.use(
   cors({
@@ -19,7 +35,8 @@ app.use(
 );
 
 const apiProxy: Options = {
-  target: process.env.API_URL ?? "http://localhost:8080",
+  // target: "http://localhost:8080",
+  router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,

@@ -2,15 +2,28 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b, _c, _d;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = require("path");
 const http_proxy_middleware_1 = require("http-proxy-middleware");
+const fs_1 = __importDefault(require("fs"));
 const app = (0, express_1.default)();
 const port = parseInt((_a = process.env.CDSW_APP_PORT) !== null && _a !== void 0 ? _a : "3000", 10);
 const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.0.0.1";
+const lookupUrl = (fileLocation, fallback) => {
+    try {
+        const fileContents = fs_1.default.readFileSync(`../addresses/${fileLocation}`, "utf8");
+        if (fileContents) {
+            return fileContents.trim();
+        }
+    }
+    catch (err) {
+        console.error("Error reading file:", err);
+    }
+    return fallback;
+};
 app.use((0, cors_1.default)({
     allowedHeaders: ["*"],
     exposedHeaders: ["*"],
@@ -19,7 +32,8 @@ app.use((0, cors_1.default)({
     origin: ["*"],
 }));
 const apiProxy = {
-    target: (_c = process.env.API_URL) !== null && _c !== void 0 ? _c : "http://localhost:8080",
+    // target: "http://localhost:8080",
+    router: () => lookupUrl("metadata_api_address.txt", "http://localhost:8080"),
     changeOrigin: true,
     pathFilter: ["/api/**"],
     secure: false,
@@ -27,7 +41,7 @@ const apiProxy = {
     followRedirects: true,
 };
 const llmServiceProxy = {
-    target: (_d = process.env.LLM_SERVICE_URL) !== null && _d !== void 0 ? _d : "http://localhost:8081",
+    target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
     changeOrigin: true,
     pathFilter: ["/llm-service/**"],
     pathRewrite: {
