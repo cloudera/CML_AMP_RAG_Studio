@@ -26,12 +26,7 @@ const llmServiceProxy: Options = {
 
 app.use(express.static(join(__dirname, "../..", "dist")));
 app.use(createProxyMiddleware(llmServiceProxy));
-app.use((req, res) => {
-  if (req.url?.includes("api/")) {
-    console.log(req);
-  }
-  createProxyMiddleware(apiProxy);
-});
+app.use(createProxyMiddleware(apiProxy));
 
 app.get("*", (req: Request, res: Response) => {
   console.log("Serving up req.url: ", req.url);
