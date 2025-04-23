@@ -55,5 +55,4 @@ public class UsernameExtractor {
     String header = request.getHeader("remote-user");
     return null == header ? "unknown" : header;
   }
-
 }
