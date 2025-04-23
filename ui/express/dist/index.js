@@ -42,7 +42,7 @@ const apiProxy = {
         Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
     },
     on: {
-        proxyReq: (proxyReq, req, res) => {
+        proxyReq: (proxyReq, req) => {
             proxyReq.setHeader("origin-remote-user", req.headers["remote-user"] || "unknown");
         },
     },
@@ -53,6 +53,11 @@ const llmServiceProxy = {
     pathFilter: ["/llm-service/**"],
     pathRewrite: {
         "^/llm-service": "",
+    },
+    on: {
+        proxyReq: (proxyReq, req) => {
+            proxyReq.setHeader("origin-remote-user", req.headers["remote-user"] || "unknown");
+        },
     },
 };
 app.use(express_1.default.static((0, path_1.join)(__dirname, "../..", "dist")));
