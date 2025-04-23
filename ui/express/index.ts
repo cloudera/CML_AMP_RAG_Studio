@@ -11,7 +11,6 @@ const apiProxy: Options = {
   target: process.env.API_URL ?? "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**"],
-  cookieDomainRewrite: process.env.API_URL,
 };
 
 const llmServiceProxy: Options = {

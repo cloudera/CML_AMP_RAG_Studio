@@ -2,7 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const path_1 = require("path");
@@ -11,15 +11,12 @@ const app = (0, express_1.default)();
 const port = parseInt((_a = process.env.CDSW_APP_PORT) !== null && _a !== void 0 ? _a : "3000", 10);
 const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.0.0.1";
 const apiProxy = {
-    target: process.env.API_URL,
+    target: (_c = process.env.API_URL) !== null && _c !== void 0 ? _c : "http://localhost:8080",
     changeOrigin: true,
     pathFilter: ["/api/**"],
-    cookieDomainRewrite: process.env.API_URL,
 };
 const llmServiceProxy = {
-    target: process.env.LLM_SERVICE_URL
-        ? `https://${process.env.LLM_SERVICE_URL}`
-        : "http://localhost:8081",
+    target: (_d = process.env.LLM_SERVICE_URL) !== null && _d !== void 0 ? _d : "http://localhost:8081",
     changeOrigin: true,
     pathFilter: ["/llm-service/**"],
     pathRewrite: {
