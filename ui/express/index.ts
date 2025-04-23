@@ -11,6 +11,8 @@ const apiProxy: Options = {
   target: process.env.API_URL ?? "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**"],
+  secure: false,
+  logger: console,
 };
 
 const llmServiceProxy: Options = {
@@ -24,7 +26,12 @@ const llmServiceProxy: Options = {
 
 app.use(express.static(join(__dirname, "../..", "dist")));
 app.use(createProxyMiddleware(llmServiceProxy));
-app.use(createProxyMiddleware(apiProxy));
+app.use((req, res) => {
+  if (req.url?.includes("api/")) {
+    console.log(req);
+  }
+  createProxyMiddleware(apiProxy);
+});
 
 app.get("*", (req: Request, res: Response) => {
   console.log("Serving up req.url: ", req.url);
