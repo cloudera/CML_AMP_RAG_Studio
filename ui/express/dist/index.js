@@ -8,23 +8,9 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = require("path");
 const http_proxy_middleware_1 = require("http-proxy-middleware");
-const fs_1 = __importDefault(require("fs"));
 const app = (0, express_1.default)();
 const port = parseInt((_a = process.env.CDSW_APP_PORT) !== null && _a !== void 0 ? _a : "3000", 10);
 const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.0.0.1";
-const lookupUrl = (fileLocation, fallback) => {
-    try {
-        const fileContents = fs_1.default.readFileSync(`../addresses/${fileLocation}`, "utf8");
-        console.log("router file contents:", fileContents);
-        if (fileContents) {
-            return fileContents.trim();
-        }
-    }
-    catch (err) {
-        console.error("Error reading file:", err);
-    }
-    return fallback;
-};
 app.use((0, cors_1.default)({
     allowedHeaders: ["*"],
     exposedHeaders: ["*"],
@@ -44,7 +30,6 @@ const apiProxy = {
     },
     on: {
         proxyReq: (proxyReq, req) => {
-            console.log("proxyReq:", proxyReq);
             proxyReq.setHeader("origin-remote-user", req.headers["remote-user"] || "unknown");
         },
     },

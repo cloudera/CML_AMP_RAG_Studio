@@ -2,28 +2,11 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import fs from "fs";
 
 const app = express();
 
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
-
-const lookupUrl = (fileLocation: string, fallback: string): string => {
-  try {
-    const fileContents = fs.readFileSync(
-      `../addresses/${fileLocation}`,
-      "utf8",
-    );
-    console.log("router file contents:", fileContents);
-    if (fileContents) {
-      return fileContents.trim();
-    }
-  } catch (err) {
-    console.error("Error reading file:", err);
-  }
-  return fallback;
-};
 
 app.use(
   cors({
@@ -47,7 +30,6 @@ const apiProxy: Options = {
   },
   on: {
     proxyReq: (proxyReq, req) => {
-      console.log("proxyReq:", proxyReq);
       proxyReq.setHeader(
         "origin-remote-user",
         req.headers["remote-user"] || "unknown",
