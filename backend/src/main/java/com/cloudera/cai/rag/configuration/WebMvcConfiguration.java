@@ -103,7 +103,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
               .allowCredentials(true)
               .allowedMethods("*")
               .allowedHeaders("*")
-              .allowedOriginPatterns("https://*." + domain);
+              .allowedOrigins("*");
         }
       }
     };
