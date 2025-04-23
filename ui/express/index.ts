@@ -15,6 +15,7 @@ const lookupUrl = (fileLocation: string, fallback: string): string => {
       `../addresses/${fileLocation}`,
       "utf8",
     );
+    console.log("router file contents:", fileContents);
     if (fileContents) {
       return fileContents.trim();
     }

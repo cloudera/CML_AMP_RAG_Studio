@@ -15,6 +15,7 @@ const host = (_b = process.env.NODE_HOST) !== null && _b !== void 0 ? _b : "127.
 const lookupUrl = (fileLocation, fallback) => {
     try {
         const fileContents = fs_1.default.readFileSync(`../addresses/${fileLocation}`, "utf8");
+        console.log("router file contents:", fileContents);
         if (fileContents) {
             return fileContents.trim();
         }
