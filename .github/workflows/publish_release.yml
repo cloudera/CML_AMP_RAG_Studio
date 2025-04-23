@@ -81,7 +81,7 @@ jobs:
       - name: Build Node
         run: |
           pnpm build
-          tar --no-xattrs -czvf node-dist.tar.gz dist
+          tar --no-xattrs -czvf node-dist.tar.gz dist node_modules
         working-directory: ui/express
 
       - name: release
