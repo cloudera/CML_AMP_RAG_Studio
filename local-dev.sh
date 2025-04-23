@@ -130,4 +130,5 @@ pnpm dev &
 
 # start the proxy
 cd express
+pnpm install
 pnpm run dev
