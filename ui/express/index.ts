@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 
@@ -6,6 +7,15 @@ const app = express();
 
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
+
+app.use(
+  cors({
+    allowedHeaders: ["*"],
+    exposedHeaders: ["*"],
+    credentials: true,
+    preflightContinue: true,
+  }),
+);
 
 const apiProxy: Options = {
   target: process.env.API_URL ?? "http://localhost:8080",
