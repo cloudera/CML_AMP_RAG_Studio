@@ -46,8 +46,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springdoc.core.customizers.ServerBaseUrlCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -137,5 +139,14 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         }
       }
     };
+  }
+
+  @Component
+  public static class CustomServerBaseUrlCustomizer implements ServerBaseUrlCustomizer {
+    @Override
+    public String customize(String serverBaseUrl) {
+      var llmServiceUrl = System.getenv("LLM_SERVICE_URL");
+      return llmServiceUrl == null ? serverBaseUrl : llmServiceUrl;
+    }
   }
 }
