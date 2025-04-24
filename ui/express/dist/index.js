@@ -20,7 +20,6 @@ const apiProxy = {
     changeOrigin: true,
     pathFilter: ["/api/**"],
     secure: false,
-    followRedirects: true,
     headers: {
         Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
     },
