@@ -49,7 +49,7 @@ const SwaggerComponent = () => {
   const [selectedSwagger, setSelectedSwagger] = useState(metadataApiLink);
   return (
     <Flex vertical align="center">
-      <Flex vertical style={{ maxWidth: 1200, minWidth: 1000, marginTop: 20 }}>
+      <Flex vertical style={{ maxWidth: 1200, minWidth: 1200, marginTop: 20 }}>
         <Flex align="center" gap={8} style={{ marginLeft: 20 }}>
           <Typography.Title level={3} style={{ margin: 0 }}>
             API Service

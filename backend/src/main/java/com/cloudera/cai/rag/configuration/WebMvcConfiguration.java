@@ -145,8 +145,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
   public static class CustomServerBaseUrlCustomizer implements ServerBaseUrlCustomizer {
     @Override
     public String customize(String serverBaseUrl) {
-      var llmServiceUrl = System.getenv("LLM_SERVICE_URL");
-      return llmServiceUrl == null ? serverBaseUrl : llmServiceUrl;
+      return "/";
     }
   }
 }
