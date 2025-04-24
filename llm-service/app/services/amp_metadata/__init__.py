@@ -292,4 +292,4 @@ def get_application_config() -> ApplicationConfig:
         memory_size_gb=0,
     )
 
-print('services/amp_metadata/__init__.py took {time.time() - start_time} seconds to import')
+print(f'services/amp_metadata/__init__.py took {time.time() - start_time} seconds to import')

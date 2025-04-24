@@ -105,4 +105,4 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
 # ensure interface is implemented
 _ = Embedding()
 
-print('services/models/embedding.py took {time.time() - start_time} seconds to import')
+print(f'services/models/embedding.py took {time.time() - start_time} seconds to import')

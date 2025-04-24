@@ -136,4 +136,4 @@ class EmbeddingIndexer(BaseTextIndexer):
                     chunk.embedding = embedding
                 yield batched_chunks[i]
 
-print('ai/indexing/embedding_indexer.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/embedding_indexer.py took {time.time() - start_time} seconds to import')

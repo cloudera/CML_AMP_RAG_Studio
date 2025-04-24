@@ -89,4 +89,4 @@ def embedding_model_test(model_name: str) -> str:
 def reranking_model_test(model_name: str) -> str:
     return models.Reranking.test(model_name)
 
-print('routers/index/models/__init__.py took {time.time() - start_time} seconds to import')
+print(f'routers/index/models/__init__.py took {time.time() - start_time} seconds to import')

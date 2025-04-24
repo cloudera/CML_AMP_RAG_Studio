@@ -115,4 +115,4 @@ class ModelResponse:
     available: Optional[bool] = None
     replica_count: Optional[int] = None
 
-print('services/caii/types.py took {time.time() - start_time} seconds to import')
+print(f'services/caii/types.py took {time.time() - start_time} seconds to import')

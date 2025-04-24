@@ -89,4 +89,4 @@ class MdReader(BaseReader):
         ret.chunks = results
         return ret
 
-print('ai/indexing/readers/markdown.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/markdown.py took {time.time() - start_time} seconds to import')

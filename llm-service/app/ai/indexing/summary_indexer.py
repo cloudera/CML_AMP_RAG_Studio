@@ -428,4 +428,4 @@ class SummaryIndexer(BaseTextIndexer):
             except Exception as e:
                 logger.debug(f"Error deleting data source {data_source_id}: {e}")
 
-print('ai/indexing/summary_indexer.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/summary_indexer.py took {time.time() - start_time} seconds to import')

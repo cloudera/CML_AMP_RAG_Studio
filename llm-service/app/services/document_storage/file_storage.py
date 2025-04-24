@@ -59,4 +59,4 @@ class FileSystemDocumentStorage(DocumentStorage):
         shutil.copy(source_file, target_file)
         return target_file
 
-print('services/document_storage/file_storage.py took {time.time() - start_time} seconds to import')
+print(f'services/document_storage/file_storage.py took {time.time() - start_time} seconds to import')

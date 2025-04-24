@@ -60,4 +60,4 @@ class QueryConfiguration(BaseModel):
     use_summary_filter: Optional[bool] = True
     use_postprocessor: Optional[bool] = True
 
-print('services/query/query_configuration.py took {time.time() - start_time} seconds to import')
+print(f'services/query/query_configuration.py took {time.time() - start_time} seconds to import')

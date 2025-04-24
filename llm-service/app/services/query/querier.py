@@ -219,4 +219,4 @@ def _build_flexible_chat_engine(
     chat_engine._configuration = configuration
     return chat_engine
 
-print('services/query/querier.py took {time.time() - start_time} seconds to import')
+print(f'services/query/querier.py took {time.time() - start_time} seconds to import')

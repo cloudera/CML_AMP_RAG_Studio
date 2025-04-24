@@ -76,4 +76,4 @@ class DocxReader(BaseReader):
         ret.chunks = self._chunks_in_document(document)
         return ret
 
-print('ai/indexing/readers/docx.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/docx.py took {time.time() - start_time} seconds to import')

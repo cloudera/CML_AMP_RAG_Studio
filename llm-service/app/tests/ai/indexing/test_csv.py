@@ -47,4 +47,4 @@ def test_csv_indexing() -> None:
     )
     assert len(vectors.nodes or []) == 0
 
-print('tests/ai/indexing/test_csv.py took {time.time() - start_time} seconds to import')
+print(f'tests/ai/indexing/test_csv.py took {time.time() - start_time} seconds to import')

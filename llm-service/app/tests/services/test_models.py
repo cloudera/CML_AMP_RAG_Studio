@@ -126,4 +126,4 @@ class TestGetAvailableModels:
             == EnabledModelProvider.get_reranking_models()
         )
 
-print('tests/services/test_models.py took {time.time() - start_time} seconds to import')
+print(f'tests/services/test_models.py took {time.time() - start_time} seconds to import')

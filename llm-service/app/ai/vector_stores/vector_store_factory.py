@@ -58,4 +58,4 @@ class VectorStoreFactory:
             return OpenSearch.for_summaries(data_source_id)
         return QdrantVectorStore.for_summaries(data_source_id)
 
-print('ai/vector_stores/vector_store_factory.py took {time.time() - start_time} seconds to import')
+print(f'ai/vector_stores/vector_store_factory.py took {time.time() - start_time} seconds to import')

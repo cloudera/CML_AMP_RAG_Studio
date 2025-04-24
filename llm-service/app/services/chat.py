@@ -334,4 +334,4 @@ def direct_llm_chat(
     ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
-print('services/chat.py took {time.time() - start_time} seconds to import')
+print(f'services/chat.py took {time.time() - start_time} seconds to import')

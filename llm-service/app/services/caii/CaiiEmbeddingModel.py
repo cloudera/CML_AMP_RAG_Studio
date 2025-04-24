@@ -121,4 +121,4 @@ class CaiiEmbeddingModel(BaseEmbedding):
 
         return embeddings
 
-print('services/caii/CaiiEmbeddingModel.py took {time.time() - start_time} seconds to import')
+print(f'services/caii/CaiiEmbeddingModel.py took {time.time() - start_time} seconds to import')

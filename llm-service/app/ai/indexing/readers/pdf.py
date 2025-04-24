@@ -139,4 +139,4 @@ class PDFReader(BaseReader):
         ret.chunks = chunks
         return ret
 
-print('ai/indexing/readers/pdf.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/pdf.py took {time.time() - start_time} seconds to import')

@@ -21,4 +21,4 @@ router = APIRouter(prefix="/data_sources", tags=["Data Sources"])
 def summaries() -> dict[str, str]:
     return SummaryIndexer.get_all_data_source_summaries()
 
-print('routers/index/summaries/__init__.py took {time.time() - start_time} seconds to import')
+print(f'routers/index/summaries/__init__.py took {time.time() - start_time} seconds to import')

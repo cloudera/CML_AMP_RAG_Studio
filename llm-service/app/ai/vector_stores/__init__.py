@@ -38,4 +38,4 @@ start_time = time.time()
 #  DATA.
 #
 
-print('ai/vector_stores/__init__.py took {time.time() - start_time} seconds to import')
+print(f'ai/vector_stores/__init__.py took {time.time() - start_time} seconds to import')

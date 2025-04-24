@@ -139,4 +139,4 @@ class BedrockModelProvider(ModelProvider):
 # ensure interface is implemented
 _ = BedrockModelProvider()
 
-print('services/models/providers/bedrock.py took {time.time() - start_time} seconds to import')
+print(f'services/models/providers/bedrock.py took {time.time() - start_time} seconds to import')

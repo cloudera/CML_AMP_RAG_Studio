@@ -74,4 +74,4 @@ class ModelProvider(abc.ABC):
         """Return available reranking models."""
         raise NotImplementedError
 
-print('services/models/providers/_model_provider.py took {time.time() - start_time} seconds to import')
+print(f'services/models/providers/_model_provider.py took {time.time() - start_time} seconds to import')

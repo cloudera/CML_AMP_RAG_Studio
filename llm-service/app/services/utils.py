@@ -183,4 +183,4 @@ def raise_for_http_error(response: requests.Response) -> None:
             message = f"{response.status_code} {cause} Error: {reason} for url: {response.url}"
             raise requests.HTTPError(message, response=response)
 
-print('services/utils.py took {time.time() - start_time} seconds to import')
+print(f'services/utils.py took {time.time() - start_time} seconds to import')

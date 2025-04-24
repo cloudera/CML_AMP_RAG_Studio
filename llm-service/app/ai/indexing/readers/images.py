@@ -59,4 +59,4 @@ class ImagesReader(BaseReader):
         # todo: handle PII & secrets
         return ChunksResult(chunks=chunks)
 
-print('ai/indexing/readers/images.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/images.py took {time.time() - start_time} seconds to import')

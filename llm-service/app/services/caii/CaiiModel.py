@@ -110,4 +110,4 @@ class DeepseekModel(CaiiModel):
         raw_response.message.content = content.split("</think>")[-1]
         return raw_response
 
-print('services/caii/CaiiModel.py took {time.time() - start_time} seconds to import')
+print(f'services/caii/CaiiModel.py took {time.time() - start_time} seconds to import')

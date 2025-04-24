@@ -78,4 +78,4 @@ class PptxReader(BaseReader):
         ret.chunks = self._chunks_in_document(document)
         return ret
 
-print('ai/indexing/readers/pptx.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/pptx.py took {time.time() - start_time} seconds to import')

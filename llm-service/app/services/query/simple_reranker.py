@@ -53,4 +53,4 @@ class SimpleReranker(BaseNodePostprocessor):
         nodes.sort(key=lambda node: node.score or 0, reverse=True)
         return nodes[: self.top_n]
 
-print('services/query/simple_reranker.py took {time.time() - start_time} seconds to import')
+print(f'services/query/simple_reranker.py took {time.time() - start_time} seconds to import')

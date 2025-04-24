@@ -120,4 +120,4 @@ class DummyLlm(LLM):
     ) -> CompletionResponseAsyncGen:
         raise NotImplementedError("Not implemented")
 
-print('services/models/_noop.py took {time.time() - start_time} seconds to import')
+print(f'services/models/_noop.py took {time.time() - start_time} seconds to import')

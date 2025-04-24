@@ -194,4 +194,4 @@ class TestDocumentIndexing:
         assert response.status_code == 200
         assert response.json() > 0
 
-print('tests/routers/index/test_data_source.py took {time.time() - start_time} seconds to import')
+print(f'tests/routers/index/test_data_source.py took {time.time() - start_time} seconds to import')

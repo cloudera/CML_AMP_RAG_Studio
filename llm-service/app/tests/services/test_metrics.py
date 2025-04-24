@@ -310,4 +310,4 @@ def create_run_from_filter(
 
     return make_test_run(**run_data)
 
-print('tests/services/test_metrics.py took {time.time() - start_time} seconds to import')
+print(f'tests/services/test_metrics.py took {time.time() - start_time} seconds to import')

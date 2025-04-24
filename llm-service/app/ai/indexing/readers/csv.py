@@ -113,4 +113,4 @@ class CSVReader(BaseReader):
         ret.chunks = converted_rows
         return ret
 
-print('ai/indexing/readers/csv.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/csv.py took {time.time() - start_time} seconds to import')

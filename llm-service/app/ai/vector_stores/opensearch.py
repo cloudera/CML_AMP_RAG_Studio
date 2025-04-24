@@ -157,4 +157,4 @@ class OpenSearch(VectorStore, ABC):
         )
         return Embedding.get(datasource_metadata.embedding_model)
 
-print('ai/vector_stores/opensearch.py took {time.time() - start_time} seconds to import')
+print(f'ai/vector_stores/opensearch.py took {time.time() - start_time} seconds to import')

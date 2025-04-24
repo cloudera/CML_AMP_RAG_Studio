@@ -58,4 +58,4 @@ def get_caii_access_token() -> str:
     access_token: str = jwt_contents["access_token"]
     return access_token
 
-print('services/caii/utils.py took {time.time() - start_time} seconds to import')
+print(f'services/caii/utils.py took {time.time() - start_time} seconds to import')

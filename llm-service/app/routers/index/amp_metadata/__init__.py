@@ -172,4 +172,4 @@ def restart_application() -> str:
     )
     return "OK"
 
-print('routers/index/amp_metadata/__init__.py took {time.time() - start_time} seconds to import')
+print(f'routers/index/amp_metadata/__init__.py took {time.time() - start_time} seconds to import')

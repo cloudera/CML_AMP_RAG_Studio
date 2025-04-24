@@ -64,4 +64,4 @@ def suggest_questions(
 
     return RagSuggestedQuestionsResponse(suggested_questions=generate_suggested_questions(request.session_id, remote_user))
 
-print('routers/index/chat/__init__.py took {time.time() - start_time} seconds to import')
+print(f'routers/index/chat/__init__.py took {time.time() - start_time} seconds to import')

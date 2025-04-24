@@ -67,4 +67,4 @@ def get_model_source() -> ModelSource:
         return ModelSource.AZURE
     return ModelSource.BEDROCK
 
-print('services/models/__init__.py took {time.time() - start_time} seconds to import')
+print(f'services/models/__init__.py took {time.time() - start_time} seconds to import')

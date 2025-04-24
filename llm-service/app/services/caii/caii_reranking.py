@@ -81,4 +81,4 @@ class CaiiRerankingModel(NVIDIARerank):
 
     def _validate_model(self, model_name: str) -> None:
         pass
-print('services/caii/caii_reranking.py took {time.time() - start_time} seconds to import')
+print(f'services/caii/caii_reranking.py took {time.time() - start_time} seconds to import')

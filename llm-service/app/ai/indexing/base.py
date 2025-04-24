@@ -67,4 +67,4 @@ def get_reader_class(file_path: Path) -> Type[BaseReader]:
 
     return reader_cls
 
-print('ai/indexing/base.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/base.py took {time.time() - start_time} seconds to import')

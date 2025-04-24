@@ -51,4 +51,4 @@ def from_environment() -> DocumentStorage:
     else:
         return FileSystemDocumentStorage()
 
-print('services/document_storage/__init__.py took {time.time() - start_time} seconds to import')
+print(f'services/document_storage/__init__.py took {time.time() - start_time} seconds to import')
