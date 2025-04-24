@@ -23,6 +23,7 @@ const apiProxy: Options = {
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,
+  xfwd: true,
   headers: {
     Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
   },
