@@ -135,14 +135,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 #  App
 ###################################
 
-params = {
-    "urls": [
-        {"url": "/api/api-docs", "name": "RAG Metadata API"},
-        {"url": "/llm-service/openapi.json", "name": "RAG Python APIs"},
-    ]
-}
-
-app = FastAPI(lifespan=lifespan, root_path="/llm-service", swagger_ui_parameters=params)
+app = FastAPI(lifespan=lifespan, root_path="/llm-service")
 
 
 ###################################

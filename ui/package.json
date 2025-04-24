@@ -33,6 +33,7 @@
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
+    "swagger-ui-react": "^5.21.0",
     "uuid": "^11.0.5"
   },
   "devDependencies": {
@@ -49,6 +50,7 @@
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/swagger-ui-react": "^5.18.0",
     "@typescript-eslint/eslint-plugin": "^8.14.0",
     "@typescript-eslint/parser": "^8.14.0",
     "@vitejs/plugin-react": "^4.3.3",
@@ -77,5 +79,8 @@
       "eslint --fix --no-warn-ignored",
       "prettier --write"
     ]
+  },
+  "scarfSettings": {
+    "enabled": false
   }
 }
