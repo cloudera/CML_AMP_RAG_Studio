@@ -57,10 +57,8 @@ if [ $return_code -ne 0 ]; then
 
     nvm use 22
 fi
-cd ui/express
-npm install
 
-cd ../../llm-service
+cd llm-service
 
 set +e
 uv --version
