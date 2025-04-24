@@ -50,6 +50,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -116,5 +117,23 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
               })
           .run();
     }
+  }
+
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        String domain = System.getenv("CDSW_DOMAIN");
+        if (domain != null) {
+          registry
+                  .addMapping("/*")
+                  .allowCredentials(true)
+                  .allowedMethods("*")
+                  .allowedHeaders("*")
+                  .allowedOriginPatterns("https://*." + domain);
+        }
+      }
+    };
   }
 }
