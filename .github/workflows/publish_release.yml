@@ -57,7 +57,7 @@ jobs:
           cache-dependency-path: ui/pnpm-lock.yaml
 
       - name: Install UI Dependencies
-        run: pnpm install --prod
+        run: pnpm install
         working-directory: ui
 
       - name: Lint with PNPM
@@ -70,6 +70,7 @@ jobs:
 
       - name: Install and build with pnpm
         run: |
+          pnpm install --prod
           pnpm build
           tar --no-xattrs -czvf fe-dist.tar.gz dist
         working-directory: ui
