@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -136,3 +138,5 @@ class BedrockModelProvider(ModelProvider):
 
 # ensure interface is implemented
 _ = BedrockModelProvider()
+
+print('services/models/providers/bedrock.py took {time.time() - start_time} seconds to import')

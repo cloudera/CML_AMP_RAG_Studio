@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -136,3 +138,5 @@ class PDFReader(BaseReader):
 
         ret.chunks = chunks
         return ret
+
+print('ai/indexing/readers/pdf.py took {time.time() - start_time} seconds to import')

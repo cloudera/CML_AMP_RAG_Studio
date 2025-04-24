@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -44,3 +46,5 @@ from pydantic import BaseModel
 class RagPredictConfiguration(BaseModel):
     exclude_knowledge_base: Optional[bool] = False
     use_question_condensing: Optional[bool] = True
+
+print('rag_types.py took {time.time() - start_time} seconds to import')

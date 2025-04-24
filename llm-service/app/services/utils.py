@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -180,3 +182,5 @@ def raise_for_http_error(response: requests.Response) -> None:
                 cause = "Unexpected"
             message = f"{response.status_code} {cause} Error: {reason} for url: {response.url}"
             raise requests.HTTPError(message, response=response)
+
+print('services/utils.py took {time.time() - start_time} seconds to import')

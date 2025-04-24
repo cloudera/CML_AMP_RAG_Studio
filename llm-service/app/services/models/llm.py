@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -118,3 +120,5 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
 # ensure interface is implemented
 _ = LLM()
+
+print('services/models/llm.py took {time.time() - start_time} seconds to import')

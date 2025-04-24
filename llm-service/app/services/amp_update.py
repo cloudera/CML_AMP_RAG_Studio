@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -119,3 +121,5 @@ def does_amp_need_updating() -> bool:
                 return True
 
     return False
+
+print('services/amp_update.py took {time.time() - start_time} seconds to import')

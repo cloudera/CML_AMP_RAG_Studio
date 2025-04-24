@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -54,3 +56,5 @@ for dirpath, _, filenames in os.walk(os.path.dirname(__file__)):
             code = f.read()
             f.seek(0)
             f.write(PROLOGUE + code + F_EPILOGUE.format(file_loc))
+
+print('super_profiler.py took {time.time() - start_time} seconds to import')

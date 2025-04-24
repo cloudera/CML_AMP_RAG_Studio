@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -105,3 +107,5 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
 
 # ensure interface is implemented
 _ = Reranking()
+
+print('services/models/reranking.py took {time.time() - start_time} seconds to import')

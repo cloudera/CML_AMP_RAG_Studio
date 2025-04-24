@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -56,3 +58,5 @@ class ImagesReader(BaseReader):
         # todo: what should we do if there are no chunks?
         # todo: handle PII & secrets
         return ChunksResult(chunks=chunks)
+
+print('ai/indexing/readers/images.py took {time.time() - start_time} seconds to import')

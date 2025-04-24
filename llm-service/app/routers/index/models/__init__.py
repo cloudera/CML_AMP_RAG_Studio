@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -86,3 +88,5 @@ def embedding_model_test(model_name: str) -> str:
 @exceptions.propagates
 def reranking_model_test(model_name: str) -> str:
     return models.Reranking.test(model_name)
+
+print('routers/index/models/__init__.py took {time.time() - start_time} seconds to import')

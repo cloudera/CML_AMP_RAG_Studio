@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -64,3 +66,5 @@ def get_model_source() -> ModelSource:
     if AzureModelProvider.is_enabled():
         return ModelSource.AZURE
     return ModelSource.BEDROCK
+
+print('services/models/__init__.py took {time.time() - start_time} seconds to import')

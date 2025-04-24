@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -86,3 +88,5 @@ class MdReader(BaseReader):
                 results.append(text_node)
         ret.chunks = results
         return ret
+
+print('ai/indexing/readers/markdown.py took {time.time() - start_time} seconds to import')

@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -85,3 +87,5 @@ def get_metadata(data_source_id: int) -> RagDataSource:
         document_count=data.get("documentCount"),
         total_doc_size=data.get("totalDocSize"),
     )
+
+print('services/metadata_apis/data_sources_metadata_api.py took {time.time() - start_time} seconds to import')

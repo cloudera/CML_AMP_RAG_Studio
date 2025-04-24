@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 import os
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -64,3 +66,5 @@ def get_reader_class(file_path: Path) -> Type[BaseReader]:
         raise NotSupportedFileExtensionError(file_extension)
 
     return reader_cls
+
+print('ai/indexing/base.py took {time.time() - start_time} seconds to import')

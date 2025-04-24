@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -133,3 +135,5 @@ class EmbeddingIndexer(BaseTextIndexer):
                 for chunk, embedding in zip(batched_chunks[i], batch_embeddings):
                     chunk.embedding = embedding
                 yield batched_chunks[i]
+
+print('ai/indexing/embedding_indexer.py took {time.time() - start_time} seconds to import')

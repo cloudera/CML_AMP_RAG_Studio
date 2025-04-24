@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -137,3 +139,5 @@ def _download(
             document_key,
         )
         raise
+
+print('services/document_storage/s3.py took {time.time() - start_time} seconds to import')

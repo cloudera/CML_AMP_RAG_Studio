@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -44,3 +46,5 @@ __all__ = [
     "BedrockModelProvider",
     "CAIIModelProvider",
 ]
+
+print('services/models/providers/__init__.py took {time.time() - start_time} seconds to import')

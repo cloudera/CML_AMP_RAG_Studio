@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -57,3 +59,5 @@ class QueryConfiguration(BaseModel):
     use_hyde: Optional[bool] = False
     use_summary_filter: Optional[bool] = True
     use_postprocessor: Optional[bool] = True
+
+print('services/query/query_configuration.py took {time.time() - start_time} seconds to import')

@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -79,3 +81,4 @@ class CaiiRerankingModel(NVIDIARerank):
 
     def _validate_model(self, model_name: str) -> None:
         pass
+print('services/caii/caii_reranking.py took {time.time() - start_time} seconds to import')

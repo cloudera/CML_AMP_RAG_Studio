@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -95,3 +97,5 @@ def rename_session(session_id: int, user_name: Optional[str]) -> str:
     session_metadata.name = session_name
     updated_session = session_metadata_api.update_session(session_metadata, user_name)
     return updated_session.name
+
+print('services/session.py took {time.time() - start_time} seconds to import')

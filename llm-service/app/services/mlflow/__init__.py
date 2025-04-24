@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -210,3 +212,5 @@ def feedback_mlflow_log_table(feedback: str, response_id: str, session_id: int, 
             artifact_file="feedback.json",
             run_id=run.info.run_id,
         )
+
+print('services/mlflow/__init__.py took {time.time() - start_time} seconds to import')

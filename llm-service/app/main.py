@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -173,3 +175,5 @@ async def log_request_received(
 
 
 app.include_router(index.router)
+
+print('main.py took {time.time() - start_time} seconds to import')

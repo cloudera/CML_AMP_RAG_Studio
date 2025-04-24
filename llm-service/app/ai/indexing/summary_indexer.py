@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -425,3 +427,5 @@ class SummaryIndexer(BaseTextIndexer):
                 )
             except Exception as e:
                 logger.debug(f"Error deleting data source {data_source_id}: {e}")
+
+print('ai/indexing/summary_indexer.py took {time.time() - start_time} seconds to import')

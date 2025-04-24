@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -70,3 +72,5 @@ def hypothetical(question: str, configuration: QueryConfiguration) -> str:
         "Produce a brief document that would hypothetically answer this question."
     )
     return model.complete(prompt).text
+
+print('services/llm_completion.py took {time.time() - start_time} seconds to import')

@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -169,3 +171,5 @@ def chat(
 
     configuration = request.configuration or RagPredictConfiguration()
     return v2_chat(session, request.query, configuration, user_name=remote_user)
+
+print('routers/index/sessions/__init__.py took {time.time() - start_time} seconds to import')

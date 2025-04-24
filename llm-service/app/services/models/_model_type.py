@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -66,3 +68,5 @@ class ModelType(abc.ABC, Generic[T]):
     @abc.abstractmethod
     def test(cls, model_name: str) -> str:
         raise NotImplementedError
+
+print('services/models/_model_type.py took {time.time() - start_time} seconds to import')

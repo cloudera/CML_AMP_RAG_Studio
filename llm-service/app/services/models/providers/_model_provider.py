@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -71,3 +73,5 @@ class ModelProvider(abc.ABC):
     def get_reranking_models() -> List[ModelResponse]:
         """Return available reranking models."""
         raise NotImplementedError
+
+print('services/models/providers/_model_provider.py took {time.time() - start_time} seconds to import')

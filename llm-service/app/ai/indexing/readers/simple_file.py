@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -65,3 +67,5 @@ class SimpleFileReader(BaseReader):
 
         ret.chunks = self._chunks_in_document(document)
         return ret
+
+print('ai/indexing/readers/simple_file.py took {time.time() - start_time} seconds to import')

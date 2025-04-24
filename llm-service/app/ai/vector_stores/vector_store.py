@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -109,3 +111,5 @@ class VectorStore(metaclass=ABCMeta):
             # Log the error
             logger.error(f"Error during UMAP transformation: {e}")
             return []
+
+print('ai/vector_stores/vector_store.py took {time.time() - start_time} seconds to import')

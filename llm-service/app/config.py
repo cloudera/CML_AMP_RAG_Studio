@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 """
 RAG app configuration.
 
@@ -131,3 +133,5 @@ class _Settings:
 
 
 settings = _Settings()
+
+print('config.py took {time.time() - start_time} seconds to import')

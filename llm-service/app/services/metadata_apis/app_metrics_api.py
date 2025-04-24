@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -61,3 +63,5 @@ def get_metadata_metrics() -> MetadataMetrics:
         number_of_documents=data["numberOfDocuments"],
         number_of_sessions=data["numberOfSessions"],
     )
+
+print('services/metadata_apis/app_metrics_api.py took {time.time() - start_time} seconds to import')

@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -56,3 +58,5 @@ class FileSystemDocumentStorage(DocumentStorage):
         target_file = Path(temp_dir, original_filename)
         shutil.copy(source_file, target_file)
         return target_file
+
+print('services/document_storage/file_storage.py took {time.time() - start_time} seconds to import')

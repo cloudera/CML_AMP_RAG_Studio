@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -75,3 +77,5 @@ class PptxReader(BaseReader):
         self._add_document_metadata(document, file_path)
         ret.chunks = self._chunks_in_document(document)
         return ret
+
+print('ai/indexing/readers/pptx.py took {time.time() - start_time} seconds to import')

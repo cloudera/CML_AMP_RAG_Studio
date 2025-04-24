@@ -1,3 +1,5 @@
+import time
+start_time = time.time()
 import os
 import tempfile
 from abc import ABC, abstractmethod
@@ -109,3 +111,5 @@ class BaseReader(ABC):
             return None
 
         return anonymized_text.text
+
+print('ai/indexing/readers/base_reader.py took {time.time() - start_time} seconds to import')
