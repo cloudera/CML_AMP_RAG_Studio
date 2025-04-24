@@ -29,7 +29,7 @@ if len(apps.applications) > 0:
                 "environment_variables": {
                     "TASK_TYPE": "START_APPLICATION",
                 },
-                "kernel": "python 3.10",
+                "kernel": "python3",
             },
         )
         app_id = application.id
