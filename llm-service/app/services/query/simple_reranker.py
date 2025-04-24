@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -52,5 +50,3 @@ class SimpleReranker(BaseNodePostprocessor):
     ) -> list[NodeWithScore]:
         nodes.sort(key=lambda node: node.score or 0, reverse=True)
         return nodes[: self.top_n]
-
-print(f'services/query/simple_reranker.py took {time.time() - start_time:.3f} seconds to import')

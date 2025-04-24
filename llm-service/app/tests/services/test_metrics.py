@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -309,5 +307,3 @@ def create_run_from_filter(
         run_data["rerank_model_name"] = None
 
     return make_test_run(**run_data)
-
-print(f'tests/services/test_metrics.py took {time.time() - start_time:.3f} seconds to import')

@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -98,5 +96,3 @@ class TestProcessResponse:
 
             assert suggested_question != "Empty Response"
             assert suggested_question != ""
-
-print(f'tests/services/test_chat.py took {time.time() - start_time:.3f} seconds to import')

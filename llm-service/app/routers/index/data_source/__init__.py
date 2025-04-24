@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -300,5 +298,3 @@ class DataSourceController:
         self, request: VisualizationRequest
     ) -> list[tuple[tuple[float, float], str]]:
         return self.chunks_vector_store.visualize(request.user_query)
-
-print(f'routers/index/data_source/__init__.py took {time.time() - start_time:.3f} seconds to import')

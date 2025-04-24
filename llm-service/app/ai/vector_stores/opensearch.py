@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -156,5 +154,3 @@ class OpenSearch(VectorStore, ABC):
             self.data_source_id
         )
         return Embedding.get(datasource_metadata.embedding_model)
-
-print(f'ai/vector_stores/opensearch.py took {time.time() - start_time:.3f} seconds to import')

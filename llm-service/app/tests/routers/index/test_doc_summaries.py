@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -126,5 +124,3 @@ class TestDocumentSummaries:
 
         assert get_summary_response.text == '"No summary found for this document."'
         assert get_summary_response.status_code == 200
-
-print(f'tests/routers/index/test_doc_summaries.py took {time.time() - start_time:.3f} seconds to import')

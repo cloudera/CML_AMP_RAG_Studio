@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -291,5 +289,3 @@ def get_application_config() -> ApplicationConfig:
         num_of_gpus=0,
         memory_size_gb=0,
     )
-
-print(f'services/amp_metadata/__init__.py took {time.time() - start_time:.3f} seconds to import')

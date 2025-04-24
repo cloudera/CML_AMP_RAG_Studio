@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -171,5 +169,3 @@ def restart_application() -> str:
         start_new_session=True,
     )
     return "OK"
-
-print(f'routers/index/amp_metadata/__init__.py took {time.time() - start_time:.3f} seconds to import')

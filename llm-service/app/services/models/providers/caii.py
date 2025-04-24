@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -68,5 +66,3 @@ class CAIIModelProvider(ModelProvider):
 
 # ensure interface is implemented
 _ = CAIIModelProvider()
-
-print(f'services/models/providers/caii.py took {time.time() - start_time:.3f} seconds to import')

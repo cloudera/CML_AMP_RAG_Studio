@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -193,5 +191,3 @@ class TestDocumentIndexing:
         response = client.get(f"/data_sources/{data_source_id}/size")
         assert response.status_code == 200
         assert response.json() > 0
-
-print(f'tests/routers/index/test_data_source.py took {time.time() - start_time:.3f} seconds to import')

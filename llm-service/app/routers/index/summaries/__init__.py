@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 import logging
 
 from fastapi import APIRouter
@@ -20,5 +18,3 @@ router = APIRouter(prefix="/data_sources", tags=["Data Sources"])
 @exceptions.propagates
 def summaries() -> dict[str, str]:
     return SummaryIndexer.get_all_data_source_summaries()
-
-print(f'routers/index/summaries/__init__.py took {time.time() - start_time:.3f} seconds to import')

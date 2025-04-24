@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 """
 RAG app configuration.
 
@@ -133,5 +131,3 @@ class _Settings:
 
 
 settings = _Settings()
-
-print(f'config.py took {time.time() - start_time:.3f} seconds to import')

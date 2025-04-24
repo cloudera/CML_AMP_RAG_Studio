@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -127,5 +125,3 @@ class FlexibleRetriever(BaseRetriever):
         except Exception as e:
             logger.debug(f"Failed to retrieve document ids from summary index: {e}")
             return None
-
-print(f'services/query/flexible_retriever.py took {time.time() - start_time:.3f} seconds to import')

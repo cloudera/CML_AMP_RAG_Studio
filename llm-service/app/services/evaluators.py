@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -87,5 +85,3 @@ async def _evaluate_relevancy(chat_response: AgentChatResponse, evaluator_llm: L
             metadata=chat_response.metadata,
         ),
     )
-
-print(f'services/evaluators.py took {time.time() - start_time:.3f} seconds to import')

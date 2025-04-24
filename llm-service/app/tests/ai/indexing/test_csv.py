@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 import tempfile
 import uuid
 from pathlib import Path
@@ -46,5 +44,3 @@ def test_csv_indexing() -> None:
         VectorStoreQuery(query_embedding=[0.66] * 1024, similarity_top_k=3)
     )
     assert len(vectors.nodes or []) == 0
-
-print(f'tests/ai/indexing/test_csv.py took {time.time() - start_time:.3f} seconds to import')

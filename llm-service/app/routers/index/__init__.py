@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -63,5 +61,3 @@ router.include_router(amp_metadata.router)
 router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
 router.include_router(models.router)
 router.include_router(metrics.router)
-
-print(f'routers/index/__init__.py took {time.time() - start_time:.3f} seconds to import')

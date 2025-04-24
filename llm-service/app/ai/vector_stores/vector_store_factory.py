@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -57,5 +55,3 @@ class VectorStoreFactory:
         if settings.vector_db_provider == "OPENSEARCH":
             return OpenSearch.for_summaries(data_source_id)
         return QdrantVectorStore.for_summaries(data_source_id)
-
-print(f'ai/vector_stores/vector_store_factory.py took {time.time() - start_time:.3f} seconds to import')

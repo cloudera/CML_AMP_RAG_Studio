@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -190,5 +188,3 @@ def build_model_response(endpoint: Endpoint) -> ModelResponse:
         available=endpoint.replica_count > 0,
         replica_count=endpoint.replica_count,
     )
-
-print(f'services/caii/caii.py took {time.time() - start_time:.3f} seconds to import')

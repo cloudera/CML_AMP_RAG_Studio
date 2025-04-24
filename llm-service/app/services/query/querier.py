@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -218,5 +216,3 @@ def _build_flexible_chat_engine(
     )
     chat_engine._configuration = configuration
     return chat_engine
-
-print(f'services/query/querier.py took {time.time() - start_time:.3f} seconds to import')

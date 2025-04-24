@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -57,5 +55,3 @@ def get_caii_access_token() -> str:
         jwt_contents = json.load(file)
     access_token: str = jwt_contents["access_token"]
     return access_token
-
-print(f'services/caii/utils.py took {time.time() - start_time:.3f} seconds to import')

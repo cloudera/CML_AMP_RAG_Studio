@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 import pytest
 from llama_index.core import Document
 from llama_index.core.schema import TextNode
@@ -68,5 +66,3 @@ class TestPageTracker:
         chunks = [TextNode(start_char_idx=0)]
         page_counter.populate_chunk_page_numbers(chunks)
         assert chunks[0].metadata["page_number"] == "1"
-
-print(f'tests/ai/indexing/test_pdf_page_tracker.py took {time.time() - start_time:.3f} seconds to import')

@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -153,5 +151,3 @@ class QdrantVectorStore(VectorStore):
                     embeddings.append(cast(list[float], record.vector))
 
         return self.visualize_embeddings(embeddings, filenames, user_query)
-
-print(f'ai/vector_stores/qdrant.py took {time.time() - start_time:.3f} seconds to import')

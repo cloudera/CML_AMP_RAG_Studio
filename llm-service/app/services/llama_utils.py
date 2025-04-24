@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -159,5 +157,3 @@ def mistralv2_messages_to_prompt(messages: Sequence[ChatMessage]) -> str:
             conversation += " " + content.strip() + " " + eos_token
 
     return conversation
-
-print(f'services/llama_utils.py took {time.time() - start_time:.3f} seconds to import')

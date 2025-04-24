@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -333,5 +331,3 @@ def direct_llm_chat(
     )
     ChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
-
-print(f'services/chat.py took {time.time() - start_time:.3f} seconds to import')

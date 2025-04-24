@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -50,5 +48,3 @@ def from_environment() -> DocumentStorage:
         return S3DocumentStorage()
     else:
         return FileSystemDocumentStorage()
-
-print(f'services/document_storage/__init__.py took {time.time() - start_time:.3f} seconds to import')

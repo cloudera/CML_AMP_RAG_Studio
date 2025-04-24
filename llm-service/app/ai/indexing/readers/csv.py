@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -112,5 +110,3 @@ class CSVReader(BaseReader):
 
         ret.chunks = converted_rows
         return ret
-
-print(f'ai/indexing/readers/csv.py took {time.time() - start_time:.3f} seconds to import')

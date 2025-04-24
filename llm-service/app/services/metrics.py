@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -268,5 +266,3 @@ def load_dataframe_from_artifact(uri: str, name: str) -> pd.DataFrame:
     artifact_loc = uri + "/" + name
     data = mlflow.artifacts.load_text(artifact_loc)
     return pd.read_json(data, orient="split")
-
-print(f'services/metrics.py took {time.time() - start_time:.3f} seconds to import')

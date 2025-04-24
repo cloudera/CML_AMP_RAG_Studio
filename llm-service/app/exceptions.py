@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 """This module contains exceptions and related utilities."""
 
 # ##############################################################################
@@ -141,5 +139,3 @@ def propagates(f: Callable[P, T]) -> Union[Callable[P, T], Callable[P, Awaitable
                 return f(*args, **kwargs)
 
     return exception_propagation_wrapper
-
-print(f'exceptions.py took {time.time() - start_time:.3f} seconds to import')

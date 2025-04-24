@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -138,5 +136,3 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
     )
     raise_for_http_error(response)
     return session_from_java_response(body_to_json(response))
-
-print(f'services/metadata_apis/session_metadata_api.py took {time.time() - start_time:.3f} seconds to import')

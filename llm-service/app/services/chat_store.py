@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 # ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -185,5 +183,3 @@ class ChatHistoryManager:
     @staticmethod
     def build_chat_key(session_id: int) -> str:
         return "session_" + str(session_id)
-
-print(f'services/chat_store.py took {time.time() - start_time:.3f} seconds to import')

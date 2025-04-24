@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -120,5 +118,3 @@ class CaiiEmbeddingModel(BaseEmbedding):
         assert all(all(isinstance(y, float) for y in x) for x in embeddings)
 
         return embeddings
-
-print(f'services/caii/CaiiEmbeddingModel.py took {time.time() - start_time:.3f} seconds to import')

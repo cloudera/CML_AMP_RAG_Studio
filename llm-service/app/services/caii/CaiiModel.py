@@ -1,5 +1,3 @@
-import time
-start_time = time.time()
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
@@ -109,5 +107,3 @@ class DeepseekModel(CaiiModel):
         content: str = raw_response.message.content or ""
         raw_response.message.content = content.split("</think>")[-1]
         return raw_response
-
-print(f'services/caii/CaiiModel.py took {time.time() - start_time:.3f} seconds to import')
