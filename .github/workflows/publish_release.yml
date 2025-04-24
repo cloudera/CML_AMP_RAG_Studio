@@ -76,8 +76,7 @@ jobs:
 
       - name: Install and build with pnpm
         run: |
-          cd express
-          pnpm install --prod
+          pnpm install
           pnpm build
           tar --no-xattrs -czvf node-dist.tar.gz dist node_modules package.json pnpm-lock.yaml
         working-directory: ui/express
