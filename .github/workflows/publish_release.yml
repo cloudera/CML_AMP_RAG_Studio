@@ -70,7 +70,6 @@ jobs:
 
       - name: Install and build with pnpm
         run: |
-          pnpm install --prod
           pnpm build
           tar --no-xattrs -czvf fe-dist.tar.gz dist
         working-directory: ui
