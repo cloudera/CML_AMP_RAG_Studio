@@ -87,6 +87,7 @@ cd ui
 tar -xzf ../artifacts/fe-dist.tar.gz
 
 cd express
+rm -rf node_modules
 tar -xzf ../../artifacts/node-dist.tar.gz
 
 cd ../../scripts
