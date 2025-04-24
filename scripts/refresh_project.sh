@@ -87,7 +87,7 @@ cd ui
 tar -xzf ../artifacts/fe-dist.tar.gz
 
 cd express
-tar -xzf artifacts/node-dist.tar.gz
+tar -xzf ../../artifacts/node-dist.tar.gz
 
 cd ../../scripts
 python install_qdrant_app.py
