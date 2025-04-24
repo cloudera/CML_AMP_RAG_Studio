@@ -7,6 +7,16 @@ client = cmlapi.default_client()
 project_id = os.environ["CDSW_PROJECT_ID"]
 apps = client.list_applications(project_id=project_id)
 if len(apps.applications) > 0:
+    ragstudio_app = next(
+        (app for app in apps.applications if app.name == "RagStudio"), None
+    )
+    if ragstudio_app:
+        runtime_image = ragstudio_app.runtime_image
+    else:
+        raise ValueError(
+            "RagStudio application not found. Please install the RagStudio application first."
+        )
+
     # find the application named "RagStudio" and restart it
     ragstudio_qdrant = next(
         (app for app in apps.applications if app.name == "RagStudioQdrant"), None
@@ -31,6 +41,7 @@ if len(apps.applications) > 0:
                     "TASK_TYPE": "START_APPLICATION",
                 },
                 "kernel": "python3",
+                "runtime_image": runtime_image,
             },
         )
         app_id = application.id
