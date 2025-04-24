@@ -22,8 +22,6 @@ const apiProxy: Options = {
   target: process.env.API_URL ?? "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**"],
-  secure: false,
-  followRedirects: true,
   headers: {
     Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
   },
