@@ -2,64 +2,64 @@ import time
 
 pre_time = time.time()
 import os
-print(f'import os took {time.time() - start_time:.3f} seconds')
+print(f'import os took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 import tempfile
-print(f'import tempfile took {time.time() - start_time:.3f} seconds')
+print(f'import tempfile took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from abc import ABC, abstractmethod
-print(f'from abc import ABC, abstractmethod took {time.time() - start_time:.3f} seconds')
+print(f'from abc import ABC, abstractmethod took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from dataclasses import dataclass, field
-print(f'from dataclasses import dataclass, field took {time.time() - start_time:.3f} seconds')
+print(f'from dataclasses import dataclass, field took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from pathlib import Path
-print(f'from pathlib import Path took {time.time() - start_time:.3f} seconds')
+print(f'from pathlib import Path took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from typing import List, Optional, Set
-print(f'from typing import List, Optional, Set took {time.time() - start_time:.3f} seconds')
+print(f'from typing import List, Optional, Set took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from detect_secrets.core.secrets_collection import SecretsCollection
-print(f'from detect_secrets.core.secrets_collection import SecretsCollection took {time.time() - start_time:.3f} seconds')
+print(f'from detect_secrets.core.secrets_collection import SecretsCollection took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from detect_secrets.settings import default_settings
-print(f'from detect_secrets.settings import default_settings took {time.time() - start_time:.3f} seconds')
+print(f'from detect_secrets.settings import default_settings took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.node_parser import SentenceSplitter
-print(f'from llama_index.core.node_parser import SentenceSplitter took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.node_parser import SentenceSplitter took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.schema import Document, TextNode, BaseNode
-print(f'from llama_index.core.schema import Document, TextNode, BaseNode took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.schema import Document, TextNode, BaseNode took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from presidio_analyzer import AnalyzerEngine
-print(f'from presidio_analyzer import AnalyzerEngine took {time.time() - start_time:.3f} seconds')
+print(f'from presidio_analyzer import AnalyzerEngine took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from presidio_anonymizer import AnonymizerEngine
-print(f'from presidio_anonymizer import AnonymizerEngine took {time.time() - start_time:.3f} seconds')
+print(f'from presidio_anonymizer import AnonymizerEngine took {time.time() - pre_time:.3f} seconds')
 
 
 

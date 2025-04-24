@@ -78,93 +78,93 @@ import time
 
 pre_time = time.time()
 from typing import Callable, List, Sequence
-print(f'from typing import Callable, List, Sequence took {time.time() - start_time:.3f} seconds')
+print(f'from typing import Callable, List, Sequence took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 import requests
-print(f'import requests took {time.time() - start_time:.3f} seconds')
+print(f'import requests took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from fastapi import HTTPException
-print(f'from fastapi import HTTPException took {time.time() - start_time:.3f} seconds')
+print(f'from fastapi import HTTPException took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.base.embeddings.base import BaseEmbedding
-print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.base.llms.types import ChatMessage
-print(f'from llama_index.core.base.llms.types import ChatMessage took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.base.llms.types import ChatMessage took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.llms import LLM
-print(f'from llama_index.core.llms import LLM took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.llms import LLM took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-print(f'from llama_index.core.postprocessor.types import BaseNodePostprocessor took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.postprocessor.types import BaseNodePostprocessor took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.llms.nvidia import NVIDIA
-print(f'from llama_index.llms.nvidia import NVIDIA took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.llms.nvidia import NVIDIA took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
-print(f'from .CaiiEmbeddingModel import CaiiEmbeddingModel took {time.time() - start_time:.3f} seconds')
+print(f'from .CaiiEmbeddingModel import CaiiEmbeddingModel took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from .CaiiModel import DeepseekModel
-print(f'from .CaiiModel import DeepseekModel took {time.time() - start_time:.3f} seconds')
+print(f'from .CaiiModel import DeepseekModel took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from .caii_reranking import CaiiRerankingModel
-print(f'from .caii_reranking import CaiiRerankingModel took {time.time() - start_time:.3f} seconds')
+print(f'from .caii_reranking import CaiiRerankingModel took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from .types import Endpoint, ListEndpointEntry, ModelResponse
-print(f'from .types import Endpoint, ListEndpointEntry, ModelResponse took {time.time() - start_time:.3f} seconds')
+print(f'from .types import Endpoint, ListEndpointEntry, ModelResponse took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from .utils import build_auth_headers, get_caii_access_token
-print(f'from .utils import build_auth_headers, get_caii_access_token took {time.time() - start_time:.3f} seconds')
+print(f'from .utils import build_auth_headers, get_caii_access_token took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ..utils import raise_for_http_error, body_to_json
-print(f'from ..utils import raise_for_http_error, body_to_json took {time.time() - start_time:.3f} seconds')
+print(f'from ..utils import raise_for_http_error, body_to_json took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ..llama_utils import completion_to_prompt, messages_to_prompt
-print(f'from ..llama_utils import completion_to_prompt, messages_to_prompt took {time.time() - start_time:.3f} seconds')
+print(f'from ..llama_utils import completion_to_prompt, messages_to_prompt took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 import logging
-print(f'import logging took {time.time() - start_time:.3f} seconds')
+print(f'import logging took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from ...config import settings
-print(f'from ...config import settings took {time.time() - start_time:.3f} seconds')
+print(f'from ...config import settings took {time.time() - pre_time:.3f} seconds')
 
 
 

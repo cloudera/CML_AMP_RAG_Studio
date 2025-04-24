@@ -76,32 +76,32 @@ import time
 
 pre_time = time.time()
 import logging
-print(f'import logging took {time.time() - start_time:.3f} seconds')
+print(f'import logging took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 import os
-print(f'import os took {time.time() - start_time:.3f} seconds')
+print(f'import os took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 import shutil
-print(f'import shutil took {time.time() - start_time:.3f} seconds')
+print(f'import shutil took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from pathlib import Path
-print(f'from pathlib import Path took {time.time() - start_time:.3f} seconds')
+print(f'from pathlib import Path took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from threading import Lock
-print(f'from threading import Lock took {time.time() - start_time:.3f} seconds')
+print(f'from threading import Lock took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from typing import Any, Dict, Optional, cast, List
-print(f'from typing import Any, Dict, Optional, cast, List took {time.time() - start_time:.3f} seconds')
+print(f'from typing import Any, Dict, Optional, cast, List took {time.time() - pre_time:.3f} seconds')
 
 
 
@@ -124,27 +124,27 @@ from llama_index.core import (
 
 pre_time = time.time()
 from llama_index.core.base.base_query_engine import BaseQueryEngine
-print(f'from llama_index.core.base.base_query_engine import BaseQueryEngine took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.base.base_query_engine import BaseQueryEngine took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.base.embeddings.base import BaseEmbedding
-print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.llms import LLM
-print(f'from llama_index.core.llms import LLM took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.llms import LLM took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.node_parser import SentenceSplitter
-print(f'from llama_index.core.node_parser import SentenceSplitter took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.node_parser import SentenceSplitter took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.response_synthesizers import ResponseMode
-print(f'from llama_index.core.response_synthesizers import ResponseMode took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.response_synthesizers import ResponseMode took {time.time() - pre_time:.3f} seconds')
 
 from llama_index.core.schema import (
 
@@ -161,64 +161,64 @@ from llama_index.core.schema import (
 
 pre_time = time.time()
 from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore
-print(f'from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
-print(f'from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.vector_stores import SimpleVectorStore
-print(f'from llama_index.core.vector_stores import SimpleVectorStore took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.vector_stores import SimpleVectorStore took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
-print(f'from llama_index.core.vector_stores.types import BasePydanticVectorStore took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.vector_stores.types import BasePydanticVectorStore took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.storage.kvstore.s3 import S3DBKVStore
-print(f'from llama_index.storage.kvstore.s3 import S3DBKVStore took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.storage.kvstore.s3 import S3DBKVStore took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from qdrant_client.http.exceptions import UnexpectedResponse
-print(f'from qdrant_client.http.exceptions import UnexpectedResponse took {time.time() - start_time:.3f} seconds')
+print(f'from qdrant_client.http.exceptions import UnexpectedResponse took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from app.services import models
-print(f'from app.services import models took {time.time() - start_time:.3f} seconds')
+print(f'from app.services import models took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from .base import BaseTextIndexer
-print(f'from .base import BaseTextIndexer took {time.time() - start_time:.3f} seconds')
+print(f'from .base import BaseTextIndexer took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from .readers.base_reader import ReaderConfig, ChunksResult
-print(f'from .readers.base_reader import ReaderConfig, ChunksResult took {time.time() - start_time:.3f} seconds')
+print(f'from .readers.base_reader import ReaderConfig, ChunksResult took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ..vector_stores.vector_store_factory import VectorStoreFactory
-print(f'from ..vector_stores.vector_store_factory import VectorStoreFactory took {time.time() - start_time:.3f} seconds')
+print(f'from ..vector_stores.vector_store_factory import VectorStoreFactory took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ...config import settings
-print(f'from ...config import settings took {time.time() - start_time:.3f} seconds')
+print(f'from ...config import settings took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ...services.models.providers import CAIIModelProvider
-print(f'from ...services.models.providers import CAIIModelProvider took {time.time() - start_time:.3f} seconds')
+print(f'from ...services.models.providers import CAIIModelProvider took {time.time() - pre_time:.3f} seconds')
 
 
 

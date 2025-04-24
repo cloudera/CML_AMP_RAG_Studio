@@ -76,34 +76,34 @@ import time
 
 pre_time = time.time()
 import logging
-print(f'import logging took {time.time() - start_time:.3f} seconds')
+print(f'import logging took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from abc import abstractmethod, ABCMeta
-print(f'from abc import abstractmethod, ABCMeta took {time.time() - start_time:.3f} seconds')
+print(f'from abc import abstractmethod, ABCMeta took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from typing import Optional, List, cast
-print(f'from typing import Optional, List, cast took {time.time() - start_time:.3f} seconds')
+print(f'from typing import Optional, List, cast took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 import umap
-print(f'import umap took {time.time() - start_time:.3f} seconds')
+print(f'import umap took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.base.embeddings.base import BaseEmbedding
-print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
-print(f'from llama_index.core.vector_stores.types import BasePydanticVectorStore took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.vector_stores.types import BasePydanticVectorStore took {time.time() - pre_time:.3f} seconds')
 
 
 

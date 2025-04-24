@@ -76,66 +76,66 @@ import time
 
 pre_time = time.time()
 import json
-print(f'import json took {time.time() - start_time:.3f} seconds')
+print(f'import json took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 import re
-print(f'import re took {time.time() - start_time:.3f} seconds')
+print(f'import re took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 import uuid
-print(f'import uuid took {time.time() - start_time:.3f} seconds')
+print(f'import uuid took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from datetime import datetime
-print(f'from datetime import datetime took {time.time() - start_time:.3f} seconds')
+print(f'from datetime import datetime took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from typing import Any, Optional
-print(f'from typing import Any, Optional took {time.time() - start_time:.3f} seconds')
+print(f'from typing import Any, Optional took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 import mlflow
-print(f'import mlflow took {time.time() - start_time:.3f} seconds')
+print(f'import mlflow took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from mlflow.entities import Experiment, Run
-print(f'from mlflow.entities import Experiment, Run took {time.time() - start_time:.3f} seconds')
+print(f'from mlflow.entities import Experiment, Run took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from app.config import settings
-print(f'from app.config import settings took {time.time() - start_time:.3f} seconds')
+print(f'from app.config import settings took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
-print(f'from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode took {time.time() - start_time:.3f} seconds')
+print(f'from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
-print(f'from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api took {time.time() - start_time:.3f} seconds')
+print(f'from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from app.services.metadata_apis.session_metadata_api import Session
-print(f'from app.services.metadata_apis.session_metadata_api import Session took {time.time() - start_time:.3f} seconds')
+print(f'from app.services.metadata_apis.session_metadata_api import Session took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from app.services.query.query_configuration import QueryConfiguration
-print(f'from app.services.query.query_configuration import QueryConfiguration took {time.time() - start_time:.3f} seconds')
+print(f'from app.services.query.query_configuration import QueryConfiguration took {time.time() - pre_time:.3f} seconds')
 
 
 

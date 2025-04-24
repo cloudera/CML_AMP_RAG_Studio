@@ -49,7 +49,7 @@ PROFILE_FILES = [
 
 PROLOGUE = "import time\n"
 PRE = "\npre_time = time.time()\n"
-F_POST = "\nprint(f'{} took {{time.time() - start_time:.3f}} seconds')\n"
+F_POST = "\nprint(f'{} took {{time.time() - pre_time:.3f}} seconds')\n"
 
 for relpath in PROFILE_FILES:
     filepath = os.path.join(os.path.dirname(__file__), relpath)

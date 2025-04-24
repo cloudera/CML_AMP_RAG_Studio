@@ -76,36 +76,36 @@ import time
 
 pre_time = time.time()
 from typing import Optional
-print(f'from typing import Optional took {time.time() - start_time:.3f} seconds')
+print(f'from typing import Optional took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from fastapi import HTTPException
-print(f'from fastapi import HTTPException took {time.time() - start_time:.3f} seconds')
+print(f'from fastapi import HTTPException took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.core.base.embeddings.base import BaseEmbedding
-print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.core.base.embeddings.base import BaseEmbedding took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
-print(f'from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from llama_index.embeddings.bedrock import BedrockEmbedding
-print(f'from llama_index.embeddings.bedrock import BedrockEmbedding took {time.time() - start_time:.3f} seconds')
+print(f'from llama_index.embeddings.bedrock import BedrockEmbedding took {time.time() - pre_time:.3f} seconds')
 
 
 
 
 pre_time = time.time()
 from . import _model_type, _noop
-print(f'from . import _model_type, _noop took {time.time() - start_time:.3f} seconds')
+print(f'from . import _model_type, _noop took {time.time() - pre_time:.3f} seconds')
 
 from .providers import (
 
@@ -120,17 +120,17 @@ from .providers import (
 
 pre_time = time.time()
 from ..caii.caii import get_embedding_model as caii_embedding
-print(f'from ..caii.caii import get_embedding_model as caii_embedding took {time.time() - start_time:.3f} seconds')
+print(f'from ..caii.caii import get_embedding_model as caii_embedding took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ..caii.types import ModelResponse
-print(f'from ..caii.types import ModelResponse took {time.time() - start_time:.3f} seconds')
+print(f'from ..caii.types import ModelResponse took {time.time() - pre_time:.3f} seconds')
 
 
 pre_time = time.time()
 from ...config import settings
-print(f'from ...config import settings took {time.time() - start_time:.3f} seconds')
+print(f'from ...config import settings took {time.time() - pre_time:.3f} seconds')
 
 
 
