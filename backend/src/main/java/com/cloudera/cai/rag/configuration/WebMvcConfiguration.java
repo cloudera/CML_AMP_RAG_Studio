@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -127,11 +127,11 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         String domain = System.getenv("CDSW_DOMAIN");
         if (domain != null) {
           registry
-                  .addMapping("/*")
-                  .allowCredentials(true)
-                  .allowedMethods("*")
-                  .allowedHeaders("*")
-                  .allowedOriginPatterns("https://*." + domain);
+              .addMapping("/*")
+              .allowCredentials(true)
+              .allowedMethods("*")
+              .allowedHeaders("*")
+              .allowedOriginPatterns("https://*." + domain);
         }
       }
     };
