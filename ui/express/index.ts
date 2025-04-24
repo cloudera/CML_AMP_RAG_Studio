@@ -19,7 +19,7 @@ const proxyReq = (proxyReq: ClientRequest, req: IncomingMessage) => {
 };
 
 const apiProxy: Options = {
-  target: process.env.API_URL || "http://localhost:8080",
+  target: process.env.API_URL ?? "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,

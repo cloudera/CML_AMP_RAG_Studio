@@ -2,7 +2,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b, _c;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
@@ -16,7 +16,7 @@ const proxyReq = (proxyReq, req) => {
     proxyReq.setHeader("origin-remote-user", req.headers["remote-user"] || "unknown");
 };
 const apiProxy = {
-    target: process.env.API_URL || "http://localhost:8080",
+    target: (_c = process.env.API_URL) !== null && _c !== void 0 ? _c : "http://localhost:8080",
     changeOrigin: true,
     pathFilter: ["/api/**"],
     secure: false,
@@ -29,7 +29,7 @@ const apiProxy = {
     },
 };
 const llmServiceProxy = {
-    target: (_c = process.env.LLM_SERVICE_URL) !== null && _c !== void 0 ? _c : "http://localhost:8081",
+    target: (_d = process.env.LLM_SERVICE_URL) !== null && _d !== void 0 ? _d : "http://localhost:8081",
     changeOrigin: true,
     pathFilter: ["/llm-service/**"],
     pathRewrite: {
