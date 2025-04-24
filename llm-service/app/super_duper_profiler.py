@@ -62,4 +62,4 @@ for relpath in PROFILE_FILES:
                 lines[i] = PRE + line.strip() + F_POST.format(line.strip())
 
         f.seek(0)
-        f.write("\n".join(lines))
+        f.write(PROLOGUE + "\n".join(lines))

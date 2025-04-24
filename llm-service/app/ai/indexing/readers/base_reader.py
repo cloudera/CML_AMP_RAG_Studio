@@ -1,3 +1,4 @@
+import time
 
 pre_time = time.time()
 import os
