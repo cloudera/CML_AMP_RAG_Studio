@@ -11,7 +11,7 @@ if len(apps.applications) > 0:
         (app for app in apps.applications if app.name == "RagStudio"), None
     )
     if ragstudio_app:
-        runtime_image = ragstudio_app.runtime_image
+        runtime_image = ragstudio_app.runtime_identifier
     else:
         raise ValueError(
             "RagStudio application not found. Please install the RagStudio application first."
@@ -41,7 +41,7 @@ if len(apps.applications) > 0:
                     "TASK_TYPE": "START_APPLICATION",
                 },
                 "kernel": "python3",
-                "runtime_image": runtime_image,
+                "runtime_identifier": runtime_image,
             },
         )
         app_id = application.id
