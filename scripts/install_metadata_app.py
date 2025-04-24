@@ -24,6 +24,11 @@ if len(apps.applications) > 0:
     if ragstudio_metadata:
         app_id = ragstudio_metadata.id
     else:
+        client.stop_application(
+            project_id=project_id,
+            application_id=ragstudio_app.id,
+        )
+
         application = client.create_application(
             project_id=project_id,
             body={
