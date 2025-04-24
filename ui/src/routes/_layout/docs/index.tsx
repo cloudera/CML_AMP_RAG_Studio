@@ -41,8 +41,9 @@ import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 import { Flex, Select, Typography } from "antd";
 import { useState } from "react";
+import { ragPath } from "src/api/utils.ts";
 
-const metadataApiLink = "/api/api-docs";
+const metadataApiLink = `${ragPath}/api-docs`;
 const llmServiceLink = "/llm-service/openapi.json";
 
 const SwaggerComponent = () => {

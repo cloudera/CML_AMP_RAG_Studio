@@ -11,7 +11,7 @@ const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
 app.use(
   cors({
-    origin: process.env.API_URL ?? "http://localhost:8080",
+    origin: "*",
   }),
 );
 
