@@ -46,10 +46,7 @@ import com.cloudera.cai.util.s3.AmazonS3Client;
 import com.cloudera.cai.util.s3.S3Config;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
-import java.io.IOException;
 import java.net.http.HttpClient;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -116,7 +113,7 @@ public class AppConfiguration {
 
   public static String getLlmServiceUrl() {
     var llmServiceUrl =
-            Optional.ofNullable(System.getenv("LLM_SERVICE_URL"))
+        Optional.ofNullable(System.getenv("LLM_SERVICE_URL"))
                     .map(url -> url + "/llm-service")
                     .orElse("http://localhost:8081");
     log.info("LLM Service URL: {}", llmServiceUrl);

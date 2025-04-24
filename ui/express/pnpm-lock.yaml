@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.17
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -21,6 +18,9 @@ importers:
         specifier: ^3.0.3
         version: 3.0.5
     devDependencies:
+      '@types/cors':
+        specifier: ^2.8.17
+        version: 2.8.17
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.0

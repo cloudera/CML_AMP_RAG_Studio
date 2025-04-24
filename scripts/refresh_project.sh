@@ -82,11 +82,15 @@ fi
 echo "Downloading release artifacts from ${RELEASE_URL}"
 wget "${RELEASE_URL}/rag-api.jar" -O artifacts/rag-api.jar
 wget "${RELEASE_URL}/fe-dist.tar.gz" -O artifacts/fe-dist.tar.gz
+wget "${RELEASE_URL}/node-dist.tar.gz" -O artifacts/node-dist.tar.gz
 
 # unzip the frontend tarball
 cd ui
 tar -xzf ../artifacts/fe-dist.tar.gz
 
-cd ../scripts
+cd express
+tar -xzf artifacts/node-dist.tar.gz
+
+cd ../../scripts
 python install_qdrant_app.py
 python install_metadata_app.py

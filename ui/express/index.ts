@@ -2,39 +2,33 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
+import { ClientRequest, IncomingMessage } from "node:http";
 
 const app = express();
 
 const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
-app.use(
-  cors({
-    allowedHeaders: ["*"],
-    exposedHeaders: ["*"],
-    credentials: true,
-    preflightContinue: true,
-    origin: ["*"],
-  }),
-);
+app.use(cors());
+
+const proxyReq = (proxyReq: ClientRequest, req: IncomingMessage) => {
+  proxyReq.setHeader(
+    "origin-remote-user",
+    req.headers["remote-user"] || "unknown",
+  );
+};
 
 const apiProxy: Options = {
-  target: process.env.API_URL,
+  target: process.env.API_URL || "http://localhost:8080",
   changeOrigin: true,
   pathFilter: ["/api/**"],
   secure: false,
-  logger: console,
   followRedirects: true,
   headers: {
     Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
   },
   on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader(
-        "origin-remote-user",
-        req.headers["remote-user"] || "unknown",
-      );
-    },
+    proxyReq,
   },
 };
 
@@ -46,12 +40,7 @@ const llmServiceProxy: Options = {
     "^/llm-service": "",
   },
   on: {
-    proxyReq: (proxyReq, req) => {
-      proxyReq.setHeader(
-        "origin-remote-user",
-        req.headers["remote-user"] || "unknown",
-      );
-    },
+    proxyReq,
   },
 };
 

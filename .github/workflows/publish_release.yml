@@ -57,7 +57,7 @@ jobs:
           cache-dependency-path: ui/pnpm-lock.yaml
 
       - name: Install UI Dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --prod
         working-directory: ui
 
       - name: Lint with PNPM
@@ -73,6 +73,14 @@ jobs:
           pnpm build
           tar --no-xattrs -czvf fe-dist.tar.gz dist
         working-directory: ui
+
+      - name: Install and build with pnpm
+        run: |
+          cd express
+          pnpm install --prod
+          pnpm build
+          tar --no-xattrs -czvf node-dist.tar.gz dist node_modules package.json pnpm-lock.yaml
+        working-directory: ui/express
 
       - name: release
         uses: softprops/action-gh-release@v2
