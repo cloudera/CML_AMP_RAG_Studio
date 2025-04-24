@@ -131,6 +131,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
               .allowCredentials(true)
               .allowedMethods("*")
               .allowedHeaders("*")
+                  .allowedOrigins(domain)
               .allowedOriginPatterns("https://*." + domain);
         }
       }
