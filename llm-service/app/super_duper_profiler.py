@@ -38,21 +38,28 @@
 
 import os
 
-PROLOGUE = "import time\nstart_time = time.time()\n"
-F_EPILOGUE = "\nprint(f'{} took {{time.time() - start_time:.3f}} seconds to import')\n"
+PROFILE_FILES = [
+    "ai/indexing/readers/base_reader.py",
+    "ai/indexing/summary_indexer.py",
+    "ai/vector_stores/vector_store.py",
+    "services/caii/caii.py",
+    "services/mlflow/__init__.py",
+    "services/models/embedding.py",
+]
 
-for dirpath, dirnames, filenames in os.walk(os.path.dirname(__file__)):
-    dirnames.remove("__pycache__")
-    dirnames.remove("tests")
+PROLOGUE = "import time\n"
+PRE = "\npre_time = time.time()\n"
+F_POST = "\nprint(f'{} took {{time.time() - start_time:.3f}} seconds')\n"
 
-    for filepath in map(lambda filename: os.path.join(dirpath, filename), filenames):
-        if not filepath.endswith(".py"):
-            continue
-        if filepath.endswith("_profiler.py"):
-            continue
+for relpath in PROFILE_FILES:
+    filepath = os.path.join(os.path.dirname(__file__), relpath)
+    with open(filepath, "r+") as f:
+        lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith(("import", "from")):
+                if "(" in line:  # idk how to handle these lol
+                    continue
+                lines[i] = PRE + line.strip() + F_POST.format(line.strip())
 
-        file_loc = os.path.relpath(filepath, os.path.dirname(__file__))
-        with open(filepath, "r+") as f:
-            code = f.read()
-            f.seek(0)
-            f.write(PROLOGUE + code + F_EPILOGUE.format(file_loc))
+        f.seek(0)
+        f.write("\n".join(lines))
