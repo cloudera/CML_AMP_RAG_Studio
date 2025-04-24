@@ -142,4 +142,4 @@ def propagates(f: Callable[P, T]) -> Union[Callable[P, T], Callable[P, Awaitable
 
     return exception_propagation_wrapper
 
-print(f'exceptions.py took {time.time() - start_time} seconds to import')
+print(f'exceptions.py took {time.time() - start_time:.3f} seconds to import')

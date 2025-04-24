@@ -108,4 +108,4 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
 # ensure interface is implemented
 _ = Reranking()
 
-print(f'services/models/reranking.py took {time.time() - start_time} seconds to import')
+print(f'services/models/reranking.py took {time.time() - start_time:.3f} seconds to import')

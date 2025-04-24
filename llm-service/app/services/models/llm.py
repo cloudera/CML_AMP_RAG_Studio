@@ -121,4 +121,4 @@ class LLM(_model_type.ModelType[llms.LLM]):
 # ensure interface is implemented
 _ = LLM()
 
-print(f'services/models/llm.py took {time.time() - start_time} seconds to import')
+print(f'services/models/llm.py took {time.time() - start_time:.3f} seconds to import')

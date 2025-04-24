@@ -53,4 +53,4 @@ def app_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
     metrics = generate_metrics(metric_filter)
     return metrics
 
-print(f'routers/index/metrics/__init__.py took {time.time() - start_time} seconds to import')
+print(f'routers/index/metrics/__init__.py took {time.time() - start_time:.3f} seconds to import')

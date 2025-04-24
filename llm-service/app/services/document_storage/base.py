@@ -43,4 +43,4 @@ class DocumentStorage(ABC):
         Copy file from storage into the temp directory
         """
 
-print(f'services/document_storage/base.py took {time.time() - start_time} seconds to import')
+print(f'services/document_storage/base.py took {time.time() - start_time:.3f} seconds to import')

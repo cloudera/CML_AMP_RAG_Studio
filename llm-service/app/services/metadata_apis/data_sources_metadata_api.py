@@ -88,4 +88,4 @@ def get_metadata(data_source_id: int) -> RagDataSource:
         total_doc_size=data.get("totalDocSize"),
     )
 
-print(f'services/metadata_apis/data_sources_metadata_api.py took {time.time() - start_time} seconds to import')
+print(f'services/metadata_apis/data_sources_metadata_api.py took {time.time() - start_time:.3f} seconds to import')

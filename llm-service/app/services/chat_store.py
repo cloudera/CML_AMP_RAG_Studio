@@ -186,4 +186,4 @@ class ChatHistoryManager:
     def build_chat_key(session_id: int) -> str:
         return "session_" + str(session_id)
 
-print(f'services/chat_store.py took {time.time() - start_time} seconds to import')
+print(f'services/chat_store.py took {time.time() - start_time:.3f} seconds to import')

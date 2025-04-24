@@ -73,4 +73,4 @@ def hypothetical(question: str, configuration: QueryConfiguration) -> str:
     )
     return model.complete(prompt).text
 
-print(f'services/llm_completion.py took {time.time() - start_time} seconds to import')
+print(f'services/llm_completion.py took {time.time() - start_time:.3f} seconds to import')

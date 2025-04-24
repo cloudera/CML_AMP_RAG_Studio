@@ -38,4 +38,4 @@ start_time = time.time()
 #  DATA.
 # ##############################################################################
 
-print(f'routers/__init__.py took {time.time() - start_time} seconds to import')
+print(f'routers/__init__.py took {time.time() - start_time:.3f} seconds to import')

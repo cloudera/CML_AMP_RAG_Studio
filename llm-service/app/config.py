@@ -134,4 +134,4 @@ class _Settings:
 
 settings = _Settings()
 
-print(f'config.py took {time.time() - start_time} seconds to import')
+print(f'config.py took {time.time() - start_time:.3f} seconds to import')

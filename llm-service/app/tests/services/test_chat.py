@@ -99,4 +99,4 @@ class TestProcessResponse:
             assert suggested_question != "Empty Response"
             assert suggested_question != ""
 
-print(f'tests/services/test_chat.py took {time.time() - start_time} seconds to import')
+print(f'tests/services/test_chat.py took {time.time() - start_time:.3f} seconds to import')

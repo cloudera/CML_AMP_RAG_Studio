@@ -191,4 +191,4 @@ def build_model_response(endpoint: Endpoint) -> ModelResponse:
         replica_count=endpoint.replica_count,
     )
 
-print(f'services/caii/caii.py took {time.time() - start_time} seconds to import')
+print(f'services/caii/caii.py took {time.time() - start_time:.3f} seconds to import')

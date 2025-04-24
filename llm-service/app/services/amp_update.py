@@ -122,4 +122,4 @@ def does_amp_need_updating() -> bool:
 
     return False
 
-print(f'services/amp_update.py took {time.time() - start_time} seconds to import')
+print(f'services/amp_update.py took {time.time() - start_time:.3f} seconds to import')

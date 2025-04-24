@@ -47,4 +47,4 @@ class RagPredictConfiguration(BaseModel):
     exclude_knowledge_base: Optional[bool] = False
     use_question_condensing: Optional[bool] = True
 
-print(f'rag_types.py took {time.time() - start_time} seconds to import')
+print(f'rag_types.py took {time.time() - start_time:.3f} seconds to import')

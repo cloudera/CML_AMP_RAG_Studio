@@ -64,4 +64,4 @@ def get_metadata_metrics() -> MetadataMetrics:
         number_of_sessions=data["numberOfSessions"],
     )
 
-print(f'services/metadata_apis/app_metrics_api.py took {time.time() - start_time} seconds to import')
+print(f'services/metadata_apis/app_metrics_api.py took {time.time() - start_time:.3f} seconds to import')

@@ -69,4 +69,4 @@ class ModelType(abc.ABC, Generic[T]):
     def test(cls, model_name: str) -> str:
         raise NotImplementedError
 
-print(f'services/models/_model_type.py took {time.time() - start_time} seconds to import')
+print(f'services/models/_model_type.py took {time.time() - start_time:.3f} seconds to import')

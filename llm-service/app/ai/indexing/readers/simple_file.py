@@ -68,4 +68,4 @@ class SimpleFileReader(BaseReader):
         ret.chunks = self._chunks_in_document(document)
         return ret
 
-print(f'ai/indexing/readers/simple_file.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/simple_file.py took {time.time() - start_time:.3f} seconds to import')

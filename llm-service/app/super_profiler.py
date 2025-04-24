@@ -39,7 +39,7 @@
 import os
 
 PROLOGUE = "import time\nstart_time = time.time()\n"
-F_EPILOGUE = "\nprint(f'{} took {{time.time() - start_time}} seconds to import')\n"
+F_EPILOGUE = "\nprint(f'{} took {{time.time() - start_time:.3f}} seconds to import')\n"
 
 for dirpath, _, filenames in os.walk(os.path.dirname(__file__)):
     if dirpath.endswith(("__pycache__", "tests")):

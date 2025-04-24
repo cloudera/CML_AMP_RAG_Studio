@@ -83,4 +83,4 @@ class AzureModelProvider(ModelProvider):
 # ensure interface is implemented
 _ = AzureModelProvider()
 
-print(f'services/models/providers/azure.py took {time.time() - start_time} seconds to import')
+print(f'services/models/providers/azure.py took {time.time() - start_time:.3f} seconds to import')

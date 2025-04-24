@@ -154,4 +154,4 @@ class QdrantVectorStore(VectorStore):
 
         return self.visualize_embeddings(embeddings, filenames, user_query)
 
-print(f'ai/vector_stores/qdrant.py took {time.time() - start_time} seconds to import')
+print(f'ai/vector_stores/qdrant.py took {time.time() - start_time:.3f} seconds to import')

@@ -69,4 +69,4 @@ class CAIIModelProvider(ModelProvider):
 # ensure interface is implemented
 _ = CAIIModelProvider()
 
-print(f'services/models/providers/caii.py took {time.time() - start_time} seconds to import')
+print(f'services/models/providers/caii.py took {time.time() - start_time:.3f} seconds to import')

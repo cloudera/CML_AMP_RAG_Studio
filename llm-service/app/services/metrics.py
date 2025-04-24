@@ -269,4 +269,4 @@ def load_dataframe_from_artifact(uri: str, name: str) -> pd.DataFrame:
     data = mlflow.artifacts.load_text(artifact_loc)
     return pd.read_json(data, orient="split")
 
-print(f'services/metrics.py took {time.time() - start_time} seconds to import')
+print(f'services/metrics.py took {time.time() - start_time:.3f} seconds to import')

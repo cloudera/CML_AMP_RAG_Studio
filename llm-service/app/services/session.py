@@ -98,4 +98,4 @@ def rename_session(session_id: int, user_name: Optional[str]) -> str:
     updated_session = session_metadata_api.update_session(session_metadata, user_name)
     return updated_session.name
 
-print(f'services/session.py took {time.time() - start_time} seconds to import')
+print(f'services/session.py took {time.time() - start_time:.3f} seconds to import')

@@ -140,4 +140,4 @@ def _download(
         )
         raise
 
-print(f'services/document_storage/s3.py took {time.time() - start_time} seconds to import')
+print(f'services/document_storage/s3.py took {time.time() - start_time:.3f} seconds to import')

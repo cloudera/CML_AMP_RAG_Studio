@@ -112,4 +112,4 @@ class BaseReader(ABC):
 
         return anonymized_text.text
 
-print(f'ai/indexing/readers/base_reader.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/base_reader.py took {time.time() - start_time:.3f} seconds to import')

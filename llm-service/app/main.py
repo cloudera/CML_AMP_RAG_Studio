@@ -176,4 +176,4 @@ async def log_request_received(
 
 app.include_router(index.router)
 
-print(f'main.py took {time.time() - start_time} seconds to import')
+print(f'main.py took {time.time() - start_time:.3f} seconds to import')

@@ -213,4 +213,4 @@ def feedback_mlflow_log_table(feedback: str, response_id: str, session_id: int, 
             run_id=run.info.run_id,
         )
 
-print(f'services/mlflow/__init__.py took {time.time() - start_time} seconds to import')
+print(f'services/mlflow/__init__.py took {time.time() - start_time:.3f} seconds to import')

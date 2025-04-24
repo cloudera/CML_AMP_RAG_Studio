@@ -128,4 +128,4 @@ class FlexibleRetriever(BaseRetriever):
             logger.debug(f"Failed to retrieve document ids from summary index: {e}")
             return None
 
-print(f'services/query/flexible_retriever.py took {time.time() - start_time} seconds to import')
+print(f'services/query/flexible_retriever.py took {time.time() - start_time:.3f} seconds to import')

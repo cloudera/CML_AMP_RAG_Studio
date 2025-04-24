@@ -69,4 +69,4 @@ class TestPageTracker:
         page_counter.populate_chunk_page_numbers(chunks)
         assert chunks[0].metadata["page_number"] == "1"
 
-print(f'tests/ai/indexing/test_pdf_page_tracker.py took {time.time() - start_time} seconds to import')
+print(f'tests/ai/indexing/test_pdf_page_tracker.py took {time.time() - start_time:.3f} seconds to import')

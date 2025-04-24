@@ -105,4 +105,4 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 
         return response_synthesizer, context_source, context_nodes
 
-print(f'services/query/chat_engine.py took {time.time() - start_time} seconds to import')
+print(f'services/query/chat_engine.py took {time.time() - start_time:.3f} seconds to import')

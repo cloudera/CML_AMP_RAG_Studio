@@ -160,4 +160,4 @@ def mistralv2_messages_to_prompt(messages: Sequence[ChatMessage]) -> str:
 
     return conversation
 
-print(f'services/llama_utils.py took {time.time() - start_time} seconds to import')
+print(f'services/llama_utils.py took {time.time() - start_time:.3f} seconds to import')

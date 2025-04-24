@@ -82,4 +82,4 @@ def load_chunks(markdown_reader: MdReader, file_path: Path) -> list[TextNode] | 
         f"docling failed to process {file_path} with return code {process.returncode}"
     )
 
-print(f'ai/indexing/readers/docling.py took {time.time() - start_time} seconds to import')
+print(f'ai/indexing/readers/docling.py took {time.time() - start_time:.3f} seconds to import')
