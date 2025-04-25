@@ -33,8 +33,6 @@ from typing import Optional, Literal
 
 from pydantic import BaseModel
 
-from app.services.chat_history.chat_store import SimpleChatHistoryManager
-
 
 class RagPredictSourceNode(BaseModel):
     node_id: str
@@ -84,4 +82,6 @@ class ChatHistoryManager(metaclass=ABCMeta):
 
 
 def create() -> ChatHistoryManager:
+    from app.services.chat_history.chat_store import SimpleChatHistoryManager
+
     return SimpleChatHistoryManager()

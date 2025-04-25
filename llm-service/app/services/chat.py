@@ -51,7 +51,7 @@ from .chat_history.chat_history_manager import (
     Evaluation,
     RagMessage,
     RagStudioChatMessage,
-    ChatHistoryManager,
+    create,
 )
 from .metadata_apis import session_metadata_api
 from .metadata_apis.session_metadata_api import Session
@@ -101,7 +101,7 @@ def v2_chat(
         session, response_id, query, query_configuration, user_name
     )
 
-    ChatHistoryManager.create().append_to_history(session.id, [new_chat_message])
+    create().append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
 
@@ -154,7 +154,7 @@ def _run_chat(
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = ChatHistoryManager.create().retrieve_chat_history(session_id)[:10]
+    chat_history = create().retrieve_chat_history(session_id)[:10]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(
@@ -335,5 +335,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    ChatHistoryManager.create().append_to_history(session.id, [new_chat_message])
+    create().append_to_history(session.id, [new_chat_message])
     return new_chat_message

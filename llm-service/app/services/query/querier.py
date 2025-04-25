@@ -65,6 +65,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+from __future__ import annotations
 import logging
 from typing import List, Optional
 
@@ -85,7 +86,6 @@ from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
-from ..chat import RagContext
 from ..metadata_apis.data_sources_metadata_api import get_metadata
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
