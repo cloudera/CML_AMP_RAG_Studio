@@ -163,9 +163,9 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
-    remote_user: Optional[str] = Header(None),
+    origin_remote_user: Optional[str] = Header(None),
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id, user_name=remote_user)
+    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
-    return v2_chat(session, request.query, configuration, user_name=remote_user)
+    return v2_chat(session, request.query, configuration, user_name=origin_remote_user)
