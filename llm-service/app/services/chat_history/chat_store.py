@@ -38,10 +38,10 @@
 
 
 import os
-from typing import List, Optional
+from typing import List, Optional, Any
 
-from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.storage.chat_store import SimpleChatStore
 
 from app.config import settings
 from app.services.chat_history.chat_history_manager import (
@@ -54,7 +54,7 @@ from app.services.chat_history.chat_history_manager import (
 class MyChatStore(SimpleChatStore):
     """Custom chat store that uses a file system to persist data."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
     def get_messages(self, key: str) -> List[ChatMessage]:

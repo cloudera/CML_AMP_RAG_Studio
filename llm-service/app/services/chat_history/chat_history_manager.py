@@ -65,19 +65,19 @@ class RagStudioChatMessage(BaseModel):
 
 class ChatHistoryManager(metaclass=ABCMeta):
     @abstractmethod
-    def retrieve_chat_history(self, session_id):
+    def retrieve_chat_history(self, session_id: int) -> list[RagStudioChatMessage]:
         pass
 
     @abstractmethod
-    def clear_chat_history(self, session_id):
+    def clear_chat_history(self, session_id: int) -> None:
         pass
 
     @abstractmethod
-    def delete_chat_history(self, session_id):
+    def delete_chat_history(self, session_id: int) -> None:
         pass
 
     @abstractmethod
-    def append_to_history(self, session_id, messages: list[RagStudioChatMessage]):
+    def append_to_history(self, session_id: int, messages: list[RagStudioChatMessage]) -> None:
         pass
 
 
