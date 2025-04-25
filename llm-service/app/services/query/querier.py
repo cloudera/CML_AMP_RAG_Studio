@@ -81,7 +81,7 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore
 
 from app.services import models
-from app.services.chat_store import RagContext
+from ..chat_history.chat_history_manager import RagContext
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever

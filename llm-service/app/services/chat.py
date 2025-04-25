@@ -45,14 +45,11 @@ from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 
 from . import evaluators, llm_completion
-from .chat_store import (
-    ChatHistoryManager,
-    Evaluation,
-    RagContext,
-    RagPredictSourceNode,
-    RagStudioChatMessage,
-    RagMessage,
+from app.services.chat_history.chat_store import (
+    SimpleChatHistoryManager,
 )
+from .chat_history.chat_history_manager import RagPredictSourceNode, Evaluation, RagContext, RagMessage, \
+    RagStudioChatMessage
 from .metadata_apis import session_metadata_api
 from .metadata_apis.session_metadata_api import Session
 from .mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
@@ -95,7 +92,7 @@ def v2_chat(
         session, response_id, query, query_configuration, user_name
     )
 
-    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
+    SimpleChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
 
@@ -148,7 +145,7 @@ def _run_chat(
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
+    chat_history = SimpleChatHistoryManager().retrieve_chat_history(session_id)[:10]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(
@@ -329,5 +326,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
+    SimpleChatHistoryManager().append_to_history(session.id, [new_chat_message])
     return new_chat_message

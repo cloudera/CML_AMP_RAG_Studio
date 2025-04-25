@@ -45,7 +45,7 @@ import mlflow
 from mlflow.entities import Experiment, Run
 
 from app.config import settings
-from app.services.chat_store import RagStudioChatMessage, RagPredictSourceNode
+from app.services.chat_history.chat_history_manager import RagPredictSourceNode, RagStudioChatMessage
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.query.query_configuration import QueryConfiguration
