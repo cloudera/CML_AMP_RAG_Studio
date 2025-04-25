@@ -89,8 +89,9 @@ class MyChatStore(SimpleChatStore):
 
 
 class SimpleChatHistoryManager(ChatHistoryManager):
-    def __init__(self, store_path: str = settings.rag_databases_dir):
-        self.store_path = store_path
+    @property
+    def store_path(self) -> str:
+        return settings.rag_databases_dir
 
     # note: needs pagination in the future
     def retrieve_chat_history(self, session_id: int) -> List[RagStudioChatMessage]:
