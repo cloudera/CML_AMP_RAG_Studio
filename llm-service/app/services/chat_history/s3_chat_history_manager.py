@@ -99,7 +99,7 @@ class S3ChatHistoryManager(ChatHistoryManager):
             return results
 
         except ClientError as e:
-            if e.response["Error"]["Code"] == "NoSuchKey":
+            if e.response["Error"]["Code"] == "404":
                 # If the file doesn't exist, return an empty list
                 logger.info(f"No chat history found for session {session_id}")
                 return []
@@ -164,7 +164,7 @@ class S3ChatHistoryManager(ChatHistoryManager):
                 with open(temp_path, "r") as f:
                     chat_history_data = json.load(f)
             except ClientError as e:
-                if e.response["Error"]["Code"] == "NoSuchKey":
+                if e.response["Error"]["Code"] == "404":
                     # If the file doesn't exist, create a new empty chat history
                     chat_history_data = []
                 else:
