@@ -85,7 +85,10 @@ class ChatHistoryManager(metaclass=ABCMeta):
         pass
 
 
-def create_chat_history_manager() -> ChatHistoryManager:
+def _create_chat_history_manager() -> ChatHistoryManager:
     from app.services.chat_history.chat_store import SimpleChatHistoryManager
 
     return SimpleChatHistoryManager()
+
+
+chat_history_manager = _create_chat_history_manager()
