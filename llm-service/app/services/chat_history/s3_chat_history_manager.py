@@ -38,10 +38,10 @@
 
 import json
 import logging
-import tempfile
 from typing import List
 
 import boto3
+from botocore.client import BaseClient
 from botocore.exceptions import ClientError
 
 from app.config import settings
@@ -62,7 +62,7 @@ class S3ChatHistoryManager(ChatHistoryManager):
         self._s3_client = None
 
     @property
-    def s3_client(self):
+    def s3_client(self) -> BaseClient:
         """Lazy initialization of S3 client."""
         if self._s3_client is None:
             session = boto3.session.Session()
@@ -80,18 +80,10 @@ class S3ChatHistoryManager(ChatHistoryManager):
         s3_key = self._get_s3_key(session_id)
 
         try:
-            # Create a temporary file to download the chat history
-            with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-                temp_path = temp_file.name
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=s3_key)
 
-            # Download the chat history from S3
-            self.s3_client.download_file(self.bucket_name, s3_key, temp_path)
+            chat_history_data = json.loads(response["Body"].read().decode("utf-8"))
 
-            # Load the chat history from the temporary file
-            with open(temp_path, "r") as f:
-                chat_history_data = json.load(f)
-
-            # Convert the JSON data to RagStudioChatMessage objects
             results: list[RagStudioChatMessage] = []
             for message_data in chat_history_data:
                 results.append(RagStudioChatMessage(**message_data))
@@ -99,9 +91,9 @@ class S3ChatHistoryManager(ChatHistoryManager):
             return results
 
         except ClientError as e:
-            if e.response["Error"]["Code"] == "404":
+            if e.response["Error"]["Code"] == "NoSuchKey":
                 # If the file doesn't exist, return an empty list
-                logger.info(f"No chat history found for session {session_id}")
+                logger.debug(f"No chat history found for session {session_id}")
                 return []
             else:
                 # Re-raise other client errors
@@ -115,32 +107,16 @@ class S3ChatHistoryManager(ChatHistoryManager):
 
     def clear_chat_history(self, session_id: int) -> None:
         """Clear chat history for a session."""
-        # Create an empty list for chat history
-        empty_chat_history = []
 
-        # Create a temporary file to save the empty chat history
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-            temp_path = temp_file.name
-            json.dump(empty_chat_history, temp_file)
-
-        # Upload the empty chat history to S3
         s3_key = self._get_s3_key(session_id)
-        self.s3_client.upload_file(temp_path, self.bucket_name, s3_key)
+        self.s3_client.put_object(Bucket=self.bucket_name, Key=s3_key, Body="[]")
 
     def delete_chat_history(self, session_id: int) -> None:
         """Delete chat history for a session."""
         s3_key = self._get_s3_key(session_id)
 
         try:
-            # Delete the chat history from S3
             self.s3_client.delete_object(Bucket=self.bucket_name, Key=s3_key)
-        except ClientError as e:
-            if e.response["Error"]["Code"] != "NoSuchKey":
-                # Only log and re-raise if it's not a "file not found" error
-                logger.error(
-                    f"Error deleting chat history for session {session_id}: {e}"
-                )
-                raise
         except Exception as e:
             logger.error(f"Error deleting chat history for session {session_id}: {e}")
             raise
@@ -152,35 +128,18 @@ class S3ChatHistoryManager(ChatHistoryManager):
         s3_key = self._get_s3_key(session_id)
 
         try:
-            # Create a temporary file to download the existing chat history
-            with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-                temp_path = temp_file.name
+            chat_history_data = self.retrieve_chat_history(session_id=session_id)
 
-            try:
-                # Try to download the existing chat history from S3
-                self.s3_client.download_file(self.bucket_name, s3_key, temp_path)
-
-                # Load the existing chat history
-                with open(temp_path, "r") as f:
-                    chat_history_data = json.load(f)
-            except ClientError as e:
-                if e.response["Error"]["Code"] == "404":
-                    # If the file doesn't exist, create a new empty chat history
-                    chat_history_data = []
-                else:
-                    # Re-raise other client errors
-                    raise
-
-            # Append the new messages to the chat history
             for message in messages:
-                chat_history_data.append(message.model_dump())
+                chat_history_data.append(message)
 
-            # Write the updated chat history to the temporary file
-            with open(temp_path, "w") as f:
-                json.dump(chat_history_data, f)
+            chat_history_json = json.dumps(
+                [message.model_dump() for message in chat_history_data]
+            )
 
-            # Upload the updated chat history to S3
-            self.s3_client.upload_file(temp_path, self.bucket_name, s3_key)
+            self.s3_client.put_object(
+                Bucket=self.bucket_name, Key=s3_key, Body=chat_history_json
+            )
 
         except Exception as e:
             logger.error(
