@@ -89,6 +89,7 @@ def _create_chat_history_manager() -> ChatHistoryManager:
     from app.services.chat_history.chat_store import SimpleChatHistoryManager
     from app.config import settings
 
+    # todo: let's use a different setting than summary storage for this.
     if settings.is_s3_summary_storage_configured():
         from app.services.chat_history.s3_chat_history_manager import S3ChatHistoryManager
         return S3ChatHistoryManager()
