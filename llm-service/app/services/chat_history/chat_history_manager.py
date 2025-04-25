@@ -87,8 +87,13 @@ class ChatHistoryManager(metaclass=ABCMeta):
 
 def _create_chat_history_manager() -> ChatHistoryManager:
     from app.services.chat_history.chat_store import SimpleChatHistoryManager
+    from app.config import settings
 
-    return SimpleChatHistoryManager()
+    if settings.is_s3_summary_storage_configured():
+        from app.services.chat_history.s3_chat_history_manager import S3ChatHistoryManager
+        return S3ChatHistoryManager()
+    else:
+        return SimpleChatHistoryManager()
 
 
 chat_history_manager = _create_chat_history_manager()
