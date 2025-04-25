@@ -48,10 +48,6 @@ public class UsernameExtractor {
   //  remote-user-perm
 
   public String extractUsername(HttpServletRequest request) {
-    request
-        .getHeaderNames()
-        .asIterator()
-        .forEachRemaining(header -> log.info("Header: {} = {}", header, request.getHeader(header)));
     String originUserName = request.getHeader("origin-remote-user");
     if (originUserName != null) {
       return originUserName;
