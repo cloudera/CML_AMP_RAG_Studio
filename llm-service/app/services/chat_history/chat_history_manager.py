@@ -77,11 +77,15 @@ class ChatHistoryManager(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def append_to_history(self, session_id: int, messages: list[RagStudioChatMessage]) -> None:
+    def append_to_history(
+        self,
+        session_id: int,
+        messages: list[RagStudioChatMessage],
+    ) -> None:
         pass
 
 
-def create() -> ChatHistoryManager:
+def create_chat_history_manager() -> ChatHistoryManager:
     from app.services.chat_history.chat_store import SimpleChatHistoryManager
 
     return SimpleChatHistoryManager()

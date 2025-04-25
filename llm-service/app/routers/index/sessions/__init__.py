@@ -50,7 +50,7 @@ from ....services.chat import (
 )
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
-    create,
+    create_chat_history_manager,
 )
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
@@ -81,7 +81,7 @@ def post_rename_session(
 )
 @exceptions.propagates
 def chat_history(session_id: int) -> list[RagStudioChatMessage]:
-    return create().retrieve_chat_history(session_id=session_id)
+    return create_chat_history_manager().retrieve_chat_history(session_id=session_id)
 
 
 @router.delete(
@@ -89,14 +89,14 @@ def chat_history(session_id: int) -> list[RagStudioChatMessage]:
 )
 @exceptions.propagates
 def clear_chat_history(session_id: int) -> str:
-    create().clear_chat_history(session_id=session_id)
+    create_chat_history_manager().clear_chat_history(session_id=session_id)
     return "Chat history cleared."
 
 
 @router.delete("", summary="Deletes the requested session.")
 @exceptions.propagates
 def delete_session(session_id: int) -> str:
-    create().delete_chat_history(session_id=session_id)
+    create_chat_history_manager().delete_chat_history(session_id=session_id)
     return "Chat history deleted."
 
 
