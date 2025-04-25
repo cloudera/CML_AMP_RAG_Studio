@@ -63,82 +63,99 @@ router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 class RagSuggestedQuestionsResponse(BaseModel):
     suggested_questions: list[str]
 
-
-@router.post(
-    "/rename-session",
-    summary="Rename the session using AI",
-)
-@exceptions.propagates
-def post_rename_session(
-    session_id: int, origin_remote_user: Optional[str] = Header(None)
-) -> str:
-    return rename_session(session_id, user_name=origin_remote_user)
-
-
-@router.get(
-    "/chat-history",
-    summary="Returns an array of chat messages for the provided session.",
-)
-@exceptions.propagates
-def chat_history(session_id: int) -> list[RagStudioChatMessage]:
-    return create_chat_history_manager().retrieve_chat_history(session_id=session_id)
-
-
-@router.delete(
-    "/chat-history", summary="Deletes the chat history for the provided session."
-)
-@exceptions.propagates
-def clear_chat_history(session_id: int) -> str:
-    create_chat_history_manager().clear_chat_history(session_id=session_id)
-    return "Chat history cleared."
-
-
-@router.delete("", summary="Deletes the requested session.")
-@exceptions.propagates
-def delete_session(session_id: int) -> str:
-    create_chat_history_manager().delete_chat_history(session_id=session_id)
-    return "Chat history deleted."
-
-
-class ChatResponseRating(BaseModel):
-    rating: bool
-
-
-@router.post(
-    "/responses/{response_id}/rating", summary="Provide a rating on a chat response."
-)
-@exceptions.propagates
-def rating(
-    session_id: int,
-    response_id: str,
-    request: ChatResponseRating,
-    origin_remote_user: Optional[str] = Header(None),
-) -> ChatResponseRating:
-    rating_mlflow_log_metric(
-        request.rating, response_id, session_id, user_name=origin_remote_user
+@cbv(router)
+class DataSourceController:
+    chunks_vector_store: VectorStore = Depends(
+        lambda data_source_id: VectorStoreFactory.for_chunks(data_source_id)
     )
-    return ChatResponseRating(rating=request.rating)
 
-
-class ChatResponseFeedback(BaseModel):
-    feedback: str
-
-
-@router.post(
-    "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
-)
-@exceptions.propagates
-def feedback(
-    session_id: int,
-    response_id: str,
-    request: ChatResponseFeedback,
-    origin_remote_user: Optional[str] = Header(None),
-) -> ChatResponseFeedback:
-    feedback_mlflow_log_table(
-        request.feedback, response_id, session_id, user_name=origin_remote_user
+    @router.post(
+        "/rename-session",
+        summary="Rename the session using AI",
     )
-    return ChatResponseFeedback(feedback=request.feedback)
+    @exceptions.propagates
+    def post_rename_session(
+        session_id: int, origin_remote_user: Optional[str] = Header(None)
+    ) -> str:
+        return rename_session(session_id, user_name=origin_remote_user)
 
+
+    @router.get(
+        "/chat-history",
+        summary="Returns an array of chat messages for the provided session.",
+    )
+    @exceptions.propagates
+    def chat_history(session_id: int) -> list[RagStudioChatMessage]:
+        return create_chat_history_manager().retrieve_chat_history(session_id=session_id)
+
+
+    @router.delete(
+        "/chat-history", summary="Deletes the chat history for the provided session."
+    )
+    @exceptions.propagates
+    def clear_chat_history(session_id: int) -> str:
+        create_chat_history_manager().clear_chat_history(session_id=session_id)
+        return "Chat history cleared."
+
+
+    @router.delete("", summary="Deletes the requested session.")
+    @exceptions.propagates
+    def delete_session(session_id: int) -> str:
+        create_chat_history_manager().delete_chat_history(session_id=session_id)
+        return "Chat history deleted."
+
+
+    class ChatResponseRating(BaseModel):
+        rating: bool
+
+
+    @router.post(
+        "/responses/{response_id}/rating", summary="Provide a rating on a chat response."
+    )
+    @exceptions.propagates
+    def rating(
+        session_id: int,
+        response_id: str,
+        request: ChatResponseRating,
+        origin_remote_user: Optional[str] = Header(None),
+    ) -> ChatResponseRating:
+        rating_mlflow_log_metric(
+            request.rating, response_id, session_id, user_name=origin_remote_user
+        )
+        return ChatResponseRating(rating=request.rating)
+
+
+    class ChatResponseFeedback(BaseModel):
+        feedback: str
+
+
+    @router.post(
+        "/responses/{response_id}/feedback", summary="Provide feedback on a chat response."
+    )
+    @exceptions.propagates
+    def feedback(
+        session_id: int,
+        response_id: str,
+        request: ChatResponseFeedback,
+        origin_remote_user: Optional[str] = Header(None),
+    ) -> ChatResponseFeedback:
+        feedback_mlflow_log_table(
+            request.feedback, response_id, session_id, user_name=origin_remote_user
+        )
+        return ChatResponseFeedback(feedback=request.feedback)
+
+
+    @router.post("/chat", summary="Chat with your documents in the requested datasource")
+    @exceptions.propagates
+    def chat(
+        session_id: int,
+        request: RagStudioChatRequest,
+        origin_remote_user: Optional[str] = Header(None),
+    ) -> RagStudioChatMessage:
+        session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
+
+        configuration = request.configuration or RagPredictConfiguration()
+        return v2_chat(session, request.query, configuration, user_name=origin_remote_user)
 
 class RagStudioChatRequest(BaseModel):
     query: str
@@ -159,16 +176,3 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
     except Exception:
         logger.exception("Failed to parse JWT cookie")
         return "unknown"
-
-
-@router.post("/chat", summary="Chat with your documents in the requested datasource")
-@exceptions.propagates
-def chat(
-    session_id: int,
-    request: RagStudioChatRequest,
-    origin_remote_user: Optional[str] = Header(None),
-) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
-
-    configuration = request.configuration or RagPredictConfiguration()
-    return v2_chat(session, request.query, configuration, user_name=origin_remote_user)
