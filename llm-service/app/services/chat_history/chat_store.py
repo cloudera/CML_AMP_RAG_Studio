@@ -36,35 +36,6 @@
 #  DATA.
 #
 
-# ##############################################################################
-#  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
-#  All rights reserved.
-#
-#  Applicable Open Source License: Apache 2.0
-#
-#
-#  This code is provided to you pursuant a written agreement with
-#  (i) Cloudera, Inc. or (ii) a third-party authorized to distribute
-#  this code. If you do not have a written agreement with Cloudera nor
-#  with an authorized and properly licensed third party, you do not
-#  have any rights to access nor to use this code.
-#
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
-#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
-#  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
-#  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
-#  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
-#  FITNESS FOR A PARTICULAR PURPOSE; (C) CLOUDERA IS NOT LIABLE TO YOU,
-#  AND WILL NOT DEFEND, INDEMNIFY, NOR HOLD YOU HARMLESS FOR ANY CLAIMS
-#  ARISING FROM OR RELATED TO THE CODE; AND (D)WITH RESPECT TO YOUR EXERCISE
-#  OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
-#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR
-#  CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO, DAMAGES
-#  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
-#  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
-#  DATA.
-# ##############################################################################
 
 import os
 from typing import List, Optional
@@ -73,7 +44,11 @@ from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 
 from app.config import settings
-from app.services.chat_history.chat_history_manager import ChatHistoryManager, RagMessage, RagStudioChatMessage
+from app.services.chat_history.chat_history_manager import (
+    ChatHistoryManager,
+    RagMessage,
+    RagStudioChatMessage,
+)
 
 
 class MyChatStore(SimpleChatStore):
@@ -87,7 +62,7 @@ class MyChatStore(SimpleChatStore):
         return super().get_messages(key)
 
     def add_message(
-            self, key: str, message: ChatMessage, idx: Optional[int] = None
+        self, key: str, message: ChatMessage, idx: Optional[int] = None
     ) -> None:
         print(f"add_message {key=}, {message=}, {idx=}")
         super().add_message(key, message, idx)
@@ -95,8 +70,6 @@ class MyChatStore(SimpleChatStore):
     def delete_messages(self, key: str) -> Optional[List[ChatMessage]]:
         print(f"delete_messages {key=}")
         return super().delete_messages(key)
-
-
 
     def set_messages(self, key: str, messages: List[ChatMessage]) -> None:
         print(f"set_messages {key=}, {messages=}")
@@ -164,11 +137,8 @@ class SimpleChatHistoryManager(ChatHistoryManager):
 
         return results
 
-
     def _store_for_session(self, session_id: int) -> SimpleChatStore:
-        store = MyChatStore.from_persist_path(
-            persist_path=self._store_file(session_id)
-        )
+        store = MyChatStore.from_persist_path(persist_path=self._store_file(session_id))
         return store
 
     def clear_chat_history(self, session_id: int) -> None:

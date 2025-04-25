@@ -81,11 +81,11 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore
 
 from app.services import models
-from ..chat_history.chat_history_manager import RagContext
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
+from ..chat import RagContext
 from ..metadata_apis.data_sources_metadata_api import get_metadata
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
