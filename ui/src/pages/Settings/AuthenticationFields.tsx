@@ -50,7 +50,7 @@ export const AuthenticationFields = ({
 }: {
   modelProvider?: ModelSource;
   selectedFileStorage?: FileStorage;
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
   summaryStorageProvider?: ProjectConfig["summary_storage_provider"];
 }) => {

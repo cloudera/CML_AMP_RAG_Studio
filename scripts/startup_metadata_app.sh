@@ -20,7 +20,7 @@
 # with an authorized and properly licensed third party, you do not
 # have any rights to access nor to use this code.
 #
-# Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+# Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
 # contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 # KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 # WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -35,7 +35,11 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
-set -ox pipefail
+
+set -eox pipefail
+
+export RAG_DATABASES_DIR=$(pwd)/databases
+export API_URL="http://localhost:8080"
 
 RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
 DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
@@ -54,7 +58,4 @@ for i in {1..3}; do
   echo "Java application crashed, retrying ($i/3)..."
   sleep 5
 done
-#while ! curl --output /dev/null --silent --fail http://localhost:8080/api/v1/rag/dataSources; do
-#    echo "Waiting for the Java backend to be ready..."
-#    sleep 4
-#done
+

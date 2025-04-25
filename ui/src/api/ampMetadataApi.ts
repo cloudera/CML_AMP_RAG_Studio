@@ -171,13 +171,13 @@ export const useGetAmpConfig = (poll?: boolean) => {
   });
 };
 
-export const getAmpConfig = async (): Promise<ProjectConfig | undefined> => {
+export const getAmpConfig = async (): Promise<ProjectConfig | null> => {
   const res = await fetch(`${llmServicePath}/amp/config`, {
     method: "GET",
     headers: { ...commonHeaders },
   });
   if (!res.ok) {
-    return Promise.resolve(undefined);
+    return Promise.resolve(null);
   }
 
   return (await res.json()) as ProjectConfig;

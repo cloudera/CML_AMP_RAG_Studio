@@ -48,8 +48,7 @@ const Home = () => {
   const sessions = useSuspenseQuery(getSessionsQueryOptions);
   const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
-  console.log({ config });
-  if (!config?.is_valid_config) {
+  if (config && !config.is_valid_config) {
     return <Navigate to={"/settings"} />;
   }
   if (dataSources.data.length === 0 && sessions.data.length === 0) {

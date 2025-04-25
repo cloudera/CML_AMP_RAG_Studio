@@ -56,6 +56,10 @@ class _Settings:
     """RAG configuration."""
 
     @property
+    def metadata_api_url(self) -> str:
+        return os.environ.get("API_URL", "http://localhost:8080")
+
+    @property
     def rag_log_level(self) -> int:
         return int(os.environ.get("RAG_LOG_LEVEL", logging.INFO))
 

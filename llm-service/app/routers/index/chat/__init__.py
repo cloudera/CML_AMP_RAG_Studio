@@ -47,17 +47,23 @@ from app.services.chat import generate_suggested_questions
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
+
 class RagSuggestedQuestionsResponse(BaseModel):
     suggested_questions: list[str]
+
 
 class SuggestedQuestionsRequest(BaseModel):
     session_id: Optional[int] = None
 
+
 @router.post("/suggest-questions")
 @exceptions.propagates
 def suggest_questions(
-    request: SuggestedQuestionsRequest, 
-    remote_user: Optional[str] = Header(None)
+    request: SuggestedQuestionsRequest, origin_remote_user: Optional[str] = Header(None)
 ) -> RagSuggestedQuestionsResponse:
 
-    return RagSuggestedQuestionsResponse(suggested_questions=generate_suggested_questions(request.session_id, remote_user))
+    return RagSuggestedQuestionsResponse(
+        suggested_questions=generate_suggested_questions(
+            request.session_id, user_name=origin_remote_user
+        )
+    )

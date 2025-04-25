@@ -46,8 +46,17 @@ import com.cloudera.cai.util.s3.AmazonS3Client;
 import com.cloudera.cai.util.s3.S3Config;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
+import java.net.Socket;
 import java.net.http.HttpClient;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -96,10 +105,52 @@ public class AppConfiguration {
   }
 
   @Bean
-  public HttpClient httpClient(OpenTelemetry openTelemetry) {
+  public HttpClient httpClient(OpenTelemetry openTelemetry)
+      throws NoSuchAlgorithmException, KeyManagementException {
+    var trustManager =
+        new X509ExtendedTrustManager() {
+          @Override
+          public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[] {};
+          }
+
+          @Override
+          public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+          @Override
+          public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+          @Override
+          public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {}
+
+          @Override
+          public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {}
+
+          @Override
+          public void checkClientTrusted(
+              X509Certificate[] chain, String authType, SSLEngine engine) {}
+
+          @Override
+          public void checkServerTrusted(
+              X509Certificate[] chain, String authType, SSLEngine engine) {}
+        };
+    var sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(null, new TrustManager[] {trustManager}, new SecureRandom());
+
+    var httpClientBuilder = HttpClient.newBuilder();
+
+    if (isDevEnv()) {
+      httpClientBuilder.sslContext(sslContext);
+    }
+
     return JavaHttpClientTelemetry.builder(openTelemetry)
         .build()
-        .newHttpClient(HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build());
+        .newHttpClient(httpClientBuilder.followRedirects(HttpClient.Redirect.NORMAL).build());
+  }
+
+  private boolean isDevEnv() {
+    // todo: how can we detect that we're in an env with a self-signed cert?
+    return true;
   }
 
   @Bean
@@ -111,9 +162,11 @@ public class AppConfiguration {
     return new S3RagFileUploader(s3Client, configuration.getBucketName());
   }
 
-  public static String getRagIndexUrl() {
+  public static String getLlmServiceUrl() {
     var llmServiceUrl =
-        Optional.ofNullable(System.getenv("LLM_SERVICE_URL")).orElse("http://localhost:8081");
+        Optional.ofNullable(System.getenv("LLM_SERVICE_URL"))
+            .map(url -> url + "/llm-service")
+            .orElse("http://localhost:8081");
     log.info("LLM Service URL: {}", llmServiceUrl);
     return llmServiceUrl;
   }

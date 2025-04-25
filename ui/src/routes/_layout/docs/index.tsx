@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,44 +36,43 @@
  * DATA.
  ******************************************************************************/
 
-package com.cloudera.cai.rag.util;
+import { createFileRoute } from "@tanstack/react-router";
+import SwaggerUI from "swagger-ui-react";
+import "swagger-ui-react/swagger-ui.css";
+import { Flex, Select, Typography } from "antd";
+import { useState } from "react";
 
-import static org.assertj.core.api.Assertions.assertThat;
+const metadataApiLink = "api/api-docs";
+const llmServiceLink = "/llm-service/openapi.json";
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
+const SwaggerComponent = () => {
+  const [selectedSwagger, setSelectedSwagger] = useState(metadataApiLink);
+  return (
+    <Flex vertical align="center">
+      <Flex vertical style={{ maxWidth: 1200, minWidth: 1200, marginTop: 20 }}>
+        <Flex align="center" gap={8} style={{ marginLeft: 20 }}>
+          <Typography.Title level={3} style={{ margin: 0 }}>
+            API Service
+          </Typography.Title>
+          <Select
+            defaultValue={selectedSwagger}
+            options={[
+              { label: "Metadata API", value: metadataApiLink },
+              { label: "LLM Service API", value: llmServiceLink },
+            ]}
+            onSelect={(value) => {
+              setSelectedSwagger(value);
+            }}
+            title="API Service"
+            style={{ width: 200 }}
+          />
+        </Flex>
+        <SwaggerUI url={selectedSwagger} />
+      </Flex>
+    </Flex>
+  );
+};
 
-public class UsernameExtractorTest {
-
-  @Test
-  void extract() {
-    String userName = "johnson";
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null, userName));
-    assertThat(extractedUsername).isEqualTo(userName);
-  }
-
-  @Test
-  void extract_fallback_header() {
-    String userName = "johnson";
-    var extractedUsername = new UsernameExtractor().extractUsername(request(userName, null));
-    assertThat(extractedUsername).isEqualTo(userName);
-  }
-
-  private HttpServletRequest request(String fallbackUsername, String originUsername) {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    if (fallbackUsername != null) {
-      request.addHeader("remote-user", fallbackUsername);
-    }
-    if (originUsername != null) {
-      request.addHeader("origin-remote-user", originUsername);
-    }
-    return request;
-  }
-
-  @Test
-  void decode_noHeaders() {
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null, null));
-    assertThat(extractedUsername).isEqualTo("unknown");
-  }
-}
+export const Route = createFileRoute("/_layout/docs/")({
+  component: SwaggerComponent,
+});

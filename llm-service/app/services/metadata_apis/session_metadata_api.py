@@ -36,13 +36,13 @@
 #  DATA.
 #
 import json
-import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Any, Optional
 
 import requests
 
+from app.config import settings
 from app.services.utils import raise_for_http_error, body_to_json
 
 
@@ -80,15 +80,17 @@ class UpdatableSession:
     queryConfiguration: dict[str, bool]
 
 
-BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
-url_template = BACKEND_BASE_URL + "/api/v1/rag/sessions/{}"
+def url_template() -> str:
+    return settings.metadata_api_url + "/api/v1/rag/sessions/{}"
 
 
 def get_session(session_id: int, user_name: Optional[str]) -> Session:
-    headers = {"remote-user": user_name} if user_name else {}
-    response = requests.get(
-        url_template.format(session_id), headers=headers
+    headers = (
+        {"remote-user": user_name, "origin-remote-user": user_name} if user_name else {}
     )
+    headers["Authorization"] = f"Bearer {settings.cdsw_apiv2_key}"
+
+    response = requests.get(url_template().format(session_id), headers=headers)
     raise_for_http_error(response)
     data = body_to_json(response)
     return session_from_java_response(data)
@@ -128,10 +130,17 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
         },
     )
+    headers = {
+        "Content-Type": "application/json",
+        "remote-user": user_name,
+        "origin-remote-user": user_name,
+        "Authorization": f"Bearer {settings.cdsw_apiv2_key}",
+    }
+
     response = requests.post(
-        url_template.format(updatable_session.id),
+        url_template().format(updatable_session.id),
         data=json.dumps(updatable_session.__dict__, default=str),
-        headers={"Content-Type": "application/json", "remote-user": user_name},
+        headers=headers,
         timeout=10,
     )
     raise_for_http_error(response)

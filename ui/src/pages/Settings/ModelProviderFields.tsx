@@ -53,7 +53,7 @@ export const ModelProviderFields = ({
 }: {
   setModelProvider: (value: ModelSource) => void;
   modelProvider?: ModelSource;
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>

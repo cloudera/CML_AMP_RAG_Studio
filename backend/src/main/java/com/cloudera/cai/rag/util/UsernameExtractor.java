@@ -48,9 +48,11 @@ public class UsernameExtractor {
   //  remote-user-perm
 
   public String extractUsername(HttpServletRequest request) {
+    String originUserName = request.getHeader("origin-remote-user");
+    if (originUserName != null) {
+      return originUserName;
+    }
     String header = request.getHeader("remote-user");
     return null == header ? "unknown" : header;
   }
-
-  record JwtCookie(String username) {}
 }

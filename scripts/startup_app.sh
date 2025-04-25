@@ -54,17 +54,18 @@ for sig in INT QUIT HUP TERM; do
 done
 trap cleanup EXIT
 
+
+RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+fi
+
 export RAG_DATABASES_DIR=$(pwd)/databases
 export LLM_SERVICE_URL="http://localhost:8081"
-export API_URL="http://localhost:8080"
+
+#export API_URL="http://localhost:8080"
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
-
-# start Qdrant vector DB
-#qdrant/qdrant & 2>&1
-
-# start up the jarva
-scripts/startup_java.sh & 2>&1
 
 # start Python backend
 cd llm-service

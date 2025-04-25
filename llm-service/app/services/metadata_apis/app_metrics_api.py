@@ -35,15 +35,16 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 
 import requests
 from pydantic import BaseModel
 
+from app.config import settings
 from app.services.utils import raise_for_http_error, body_to_json
 
-BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
-metrics_url = BACKEND_BASE_URL + "/api/v1/rag/metrics"
+
+def url_template() -> str:
+    return settings.metadata_api_url + "/api/v1/rag/metrics"
 
 
 class MetadataMetrics(BaseModel):
@@ -53,7 +54,9 @@ class MetadataMetrics(BaseModel):
 
 
 def get_metadata_metrics() -> MetadataMetrics:
-    response = requests.get(metrics_url)
+    headers = {"Authorization": f"Bearer {settings.cdsw_apiv2_key}"}
+
+    response = requests.get(url_template(), headers=headers)
     raise_for_http_error(response)
     data = body_to_json(response)
     return MetadataMetrics(

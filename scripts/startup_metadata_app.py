@@ -1,4 +1,4 @@
-#
+# ##############################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,33 +34,27 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-#
+# ##############################################################################
 
+import subprocess
 import os
-import time
-
 import cmlapi
 
-time.sleep(0.1)
 client = cmlapi.default_client()
-project_id = os.environ["CDSW_PROJECT_ID"]
-apps = client.list_applications(project_id=project_id)
-if len(apps.applications) > 0:
-    # find the application named "RagStudioQdrant" and restart it
-    ragstudio_qdrant = next(
-        (app for app in apps.applications if app.name == "RagStudioQdrant"), None
-    )
-    if ragstudio_qdrant:
-        app_id = ragstudio_qdrant.id
-        print("Restarting app with ID: ", app_id)
-        client.restart_application(application_id=app_id, project_id=project_id)
-    else:
-        print(
-            "No RagStudio Qdrant instance found to restart. This can happen if someone renamed the application."
-        )
-        if os.getenv("IS_COMPOSABLE", "") != "":
-            print("Composable environment. This is likely the initial deployment.")
-        else:
-            raise ValueError("RagStudio Qdrant instance not found to restart")
-else:
-    print("No applications found to restart. This is likely the initial deployment.")
+applications = client.list_applications(project_id=os.environ['CDSW_PROJECT_ID'])
+llm_service_base_url: str = "http://localhost:8081"
+if len(applications.applications) > 0:
+    for app in applications.applications:
+        if app.name == "RagStudio":
+            llm_service_base_url = f"{app.subdomain}.{os.environ['CDSW_DOMAIN']}"
+
+root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
+os.chdir(root_dir)
+
+env = os.environ.copy()
+env["LLM_SERVICE_URL"] = f"https://{llm_service_base_url}"
+
+
+while True:
+    print(subprocess.run(["bash scripts/startup_metadata_app.sh"], shell=True, env=env))
+    print("Metadata API Application Restarting")

@@ -59,6 +59,19 @@ tasks:
       TASK_TYPE: START_APPLICATION
 
   - type: start_application
+    name: RagStudioMetadata
+    subdomain: ragstudiometadata
+    bypass_authentication: false
+    static_subdomain: false
+    script: scripts/startup_metadata_app.py
+    short_summary: Create and start RagStudio's Metadata API instance.
+    long_summary: Create and start RagStudio Metadata API instance.
+    cpu: 2
+    memory: 4
+    environment_variables:
+      TASK_TYPE: START_APPLICATION
+
+  - type: start_application
     name: RagStudio
     subdomain: ragstudio
     bypass_authentication: false

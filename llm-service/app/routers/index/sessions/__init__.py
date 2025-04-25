@@ -67,9 +67,9 @@ class RagSuggestedQuestionsResponse(BaseModel):
 )
 @exceptions.propagates
 def post_rename_session(
-    session_id: int, remote_user: Optional[str] = Header(None)
+    session_id: int, origin_remote_user: Optional[str] = Header(None)
 ) -> str:
-    return rename_session(session_id, user_name=remote_user)
+    return rename_session(session_id, user_name=origin_remote_user)
 
 
 @router.get(
@@ -109,10 +109,10 @@ def rating(
     session_id: int,
     response_id: str,
     request: ChatResponseRating,
-    remote_user: Optional[str] = Header(None),
+    origin_remote_user: Optional[str] = Header(None),
 ) -> ChatResponseRating:
     rating_mlflow_log_metric(
-        request.rating, response_id, session_id, user_name=remote_user
+        request.rating, response_id, session_id, user_name=origin_remote_user
     )
     return ChatResponseRating(rating=request.rating)
 
@@ -129,10 +129,10 @@ def feedback(
     session_id: int,
     response_id: str,
     request: ChatResponseFeedback,
-    remote_user: Optional[str] = Header(None),
+    origin_remote_user: Optional[str] = Header(None),
 ) -> ChatResponseFeedback:
     feedback_mlflow_log_table(
-        request.feedback, response_id, session_id, user_name=remote_user
+        request.feedback, response_id, session_id, user_name=origin_remote_user
     )
     return ChatResponseFeedback(feedback=request.feedback)
 

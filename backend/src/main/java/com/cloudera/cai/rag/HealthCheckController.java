@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,46 +34,19 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-package com.cloudera.cai.rag.util;
+package com.cloudera.cai.rag;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
-
-public class UsernameExtractorTest {
-
-  @Test
-  void extract() {
-    String userName = "johnson";
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null, userName));
-    assertThat(extractedUsername).isEqualTo(userName);
-  }
-
-  @Test
-  void extract_fallback_header() {
-    String userName = "johnson";
-    var extractedUsername = new UsernameExtractor().extractUsername(request(userName, null));
-    assertThat(extractedUsername).isEqualTo(userName);
-  }
-
-  private HttpServletRequest request(String fallbackUsername, String originUsername) {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    if (fallbackUsername != null) {
-      request.addHeader("remote-user", fallbackUsername);
-    }
-    if (originUsername != null) {
-      request.addHeader("origin-remote-user", originUsername);
-    }
-    return request;
-  }
-
-  @Test
-  void decode_noHeaders() {
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null, null));
-    assertThat(extractedUsername).isEqualTo("unknown");
+@RestController
+@RequestMapping("/")
+public class HealthCheckController {
+  @GetMapping()
+  public String healthCheck() {
+    return "OK";
   }
 }

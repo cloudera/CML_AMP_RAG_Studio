@@ -38,7 +38,13 @@
 
 set -eox pipefail
 
+RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+fi
+
 echo "Starting Qdrant vector DB... on port ${CDSW_APP_PORT}"
+
 
 # start Qdrant vector DB
 QDRANT__SERVICE__HTTP_PORT=${CDSW_APP_PORT} QDRANT__SERVICE__HOST=127.0.0.1 qdrant/qdrant

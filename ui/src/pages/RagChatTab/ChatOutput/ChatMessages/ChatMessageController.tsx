@@ -69,9 +69,6 @@ const ChatMessageController = () => {
     },
   });
   const { mutate: chatMutation } = useChatMutation({
-    onError: (err) => {
-      messageQueue.error(err.message);
-    },
     onSuccess: () => {
       const url = new URL(window.location.href);
       url.searchParams.delete("question");

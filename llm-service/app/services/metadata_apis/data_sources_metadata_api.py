@@ -35,13 +35,13 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 import requests
 
+from app.config import settings
 from app.services.utils import raise_for_http_error, body_to_json
 
 
@@ -62,12 +62,14 @@ class RagDataSource:
     total_doc_size: Optional[int] = None
 
 
-BACKEND_BASE_URL = os.getenv("API_URL", "http://localhost:8080")
-url_template = BACKEND_BASE_URL + "/api/v1/rag/dataSources/{}"
+def url_template() -> str:
+    return settings.metadata_api_url + "/api/v1/rag/dataSources/{}"
 
 
 def get_metadata(data_source_id: int) -> RagDataSource:
-    response = requests.get(url_template.format(data_source_id))
+    headers = {"Authorization": f"Bearer {settings.cdsw_apiv2_key}"}
+
+    response = requests.get(url_template().format(data_source_id), headers=headers)
     raise_for_http_error(response)
     data = body_to_json(response)
     return RagDataSource(

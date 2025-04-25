@@ -135,7 +135,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 #  App
 ###################################
 
-
 app = FastAPI(lifespan=lifespan, root_path="/llm-service")
 
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -63,14 +63,14 @@ public class SimpleHttpClient {
     this.objectMapper = objectMapper;
   }
 
-  public <T> String post(String url, T bodyObject) throws IOException {
+  public <T> String post(String url, T bodyObject, String... headers) throws IOException {
     String body = marshalBody(bodyObject);
     HttpRequest request =
         HttpRequest.newBuilder()
             .uri(URI.create(url))
-            // todo: put nginx in front of the rag-backend
             .version(HttpClient.Version.HTTP_1_1)
             .POST(HttpRequest.BodyPublishers.ofString(body))
+            .headers(headers)
             .build();
     try {
       HttpResponse<String> response =
@@ -102,8 +102,9 @@ public class SimpleHttpClient {
     }
   }
 
-  public void delete(String path) {
-    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(path)).DELETE().build();
+  public void delete(String path, String... headers) {
+    HttpRequest request =
+        HttpRequest.newBuilder().uri(URI.create(path)).DELETE().headers(headers).build();
     try {
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -136,14 +137,14 @@ public class SimpleHttpClient {
       }
 
       @Override
-      public <T> String post(String url, T bodyObject) {
+      public <T> String post(String url, T bodyObject, String... headers) {
         tracker.track(new TrackedHttpRequest<>(HttpMethod.POST, url, bodyObject));
         checkForException();
         return "";
       }
 
       @Override
-      public void delete(String path) {
+      public void delete(String path, String... headers) {
         tracker.track(new TrackedHttpRequest<>(HttpMethod.DELETE, path, null));
         checkForException();
         // no-op
