@@ -46,7 +46,7 @@ export const FileStorageFields = ({
   selectedFileStorage,
   enableModification,
 }: {
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig | null;
   setSelectedFileStorage: (value: FileStorage) => void;
   selectedFileStorage: FileStorage;
   enableModification?: boolean;

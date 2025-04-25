@@ -96,6 +96,9 @@ const Sidebar: React.FC = () => {
     navigate({ to: "/models" }).catch(() => null);
   };
 
+  const isValidConfig = Boolean(config && !config.is_valid_config);
+  const enableFullUsage = Boolean(!config?.is_valid_config);
+
   const baseItems: MenuItem[] = [
     {
       label: collapsed ? (
@@ -146,45 +149,50 @@ const Sidebar: React.FC = () => {
       key: "tech-preview",
       type: "group",
     },
-    getItem(
-      <div data-testid="rag-apps-nav">Chats</div>,
-      "chat",
-      !config?.is_valid_config,
-      navToRagApp,
-      <CommentOutlined />,
-    ),
-    getItem(
-      <div data-testid="data-management-nav">Knowledge Bases</div>,
-      "data",
-      !config?.is_valid_config,
-      navToData,
-      <DatabaseOutlined />,
-    ),
+    getItem({
+      label: <div data-testid="rag-apps-nav">Chats</div>,
+      key: "chat",
+      disabled: isValidConfig,
+      onClick: navToRagApp,
+      icon: <CommentOutlined />,
+      config,
+    }),
+    getItem({
+      label: <div data-testid="data-management-nav">Knowledge Bases</div>,
+      key: "data",
+      disabled: enableFullUsage,
+      onClick: navToData,
+      icon: <DatabaseOutlined />,
+      config,
+    }),
   ];
 
-  const models = getItem(
-    <div data-testid="models-nav">Models</div>,
-    "models",
-    !config?.is_valid_config,
-    navToModels,
-    <RobotFilled />,
-  );
+  const models = getItem({
+    label: <div data-testid="models-nav">Models</div>,
+    key: "models",
+    disabled: enableFullUsage,
+    onClick: navToModels,
+    icon: <RobotFilled />,
+    config,
+  });
 
-  const analyticsItem = getItem(
-    <div data-testid="analytics-nav">Analytics</div>,
-    "analytics",
-    !config?.is_valid_config,
-    navToAnalytics,
-    <LineChartOutlined />,
-  );
+  const analyticsItem = getItem({
+    label: <div data-testid="analytics-nav">Analytics</div>,
+    key: "analytics",
+    disabled: enableFullUsage,
+    onClick: navToAnalytics,
+    icon: <LineChartOutlined />,
+    config,
+  });
 
-  const settingsItem = getItem(
-    <div data-testid="settings-nav">Settings</div>,
-    "settings",
-    !config?.is_valid_config,
-    navToSettings,
-    <SettingOutlined />,
-  );
+  const settingsItem = getItem({
+    label: <div data-testid="settings-nav">Settings</div>,
+    key: "settings",
+    disabled: enableFullUsage,
+    onClick: navToSettings,
+    icon: <SettingOutlined />,
+    config,
+  });
 
   const items = [...baseItems, models, analyticsItem];
 

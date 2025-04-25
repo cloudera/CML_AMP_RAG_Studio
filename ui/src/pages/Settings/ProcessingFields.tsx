@@ -42,7 +42,7 @@ import { Flex, Form, Switch } from "antd";
 export const ProcessingFields = ({
   projectConfig,
 }: {
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig | null;
 }) => {
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
