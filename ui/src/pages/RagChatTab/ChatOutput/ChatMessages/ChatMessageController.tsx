@@ -77,12 +77,7 @@ export const flattenChatHistory = (
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: {
-      chatHistory,
-      chatHistoryStatus,
-      fetchNextPage,
-      fetchPreviousPage,
-    },
+    chatHistoryQuery: { chatHistory, chatHistoryStatus, fetchNextPage },
     activeSession,
   } = useContext(RagChatContext);
   const { ref, inView } = useInView({ threshold: 0 });
@@ -131,7 +126,7 @@ const ChatMessageController = () => {
 
   useEffect(() => {
     if (inView) {
-      fetchPreviousPage().catch((err: unknown) => {
+      fetchNextPage().catch((err: unknown) => {
         console.log(err);
       });
     }

@@ -57,7 +57,6 @@ function ChatLayout() {
   const { data: allSessions } = useGetSessions();
 
   const sessions = allSessions ?? [];
-  const [page, setPage] = useState(0);
 
   const { projectId: routeProjectId, sessionId } = useParams({ strict: false });
   const { data: defaultProject } = useSuspenseQuery(
@@ -80,7 +79,6 @@ function ChatLayout() {
     fetchPreviousPage,
   } = useChatHistoryQuery({
     session_id: sessionId ? +sessionId : 0,
-    offset: page,
   });
 
   const dataSourceId = activeSession?.dataSourceIds[0];
@@ -109,7 +107,6 @@ function ChatLayout() {
           dataSources: dataSources ?? [],
           dataSourcesStatus: dataSourcesStatus,
         },
-        setPage,
         activeSession,
       }}
     >

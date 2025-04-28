@@ -148,7 +148,7 @@ export const useChatHistoryQuery = ({
   };
   return useInfiniteQuery({
     queryKey: chatHistoryQueryKey(request),
-    queryFn: () => chatHistoryQuery(request),
+    queryFn: ({ pageParam }) => chatHistoryQuery(request, pageParam),
     enabled: !!request.session_id,
     placeholderData: keepPreviousData,
     initialPageParam: 0,
@@ -165,13 +165,14 @@ export interface ChatHistoryResponse {
 
 export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
+  pageParam: number | undefined,
 ): Promise<ChatHistoryResponse> => {
   const params = new URLSearchParams();
-  if (request.limit) {
+  if (request.limit !== undefined) {
     params.append("limit", request.limit.toString());
   }
-  if (request.offset != undefined) {
-    params.append("offset", request.offset.toString());
+  if (pageParam !== undefined) {
+    params.append("offset", pageParam.toString());
   }
 
   return await getRequest(
