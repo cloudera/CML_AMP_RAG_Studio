@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { Image, Typography } from "antd";
@@ -49,6 +49,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
   isPlaceholder,
+  useChatHistoryQuery,
   useChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
@@ -76,6 +77,11 @@ const ChatMessageController = () => {
       window.history.pushState(null, "", url.toString());
     },
   });
+  const [page, setPage] = useState(0);
+  const { isPlaceholderData } = useChatHistoryQuery({
+    session_id: activeSession?.id ?? 0,
+    offset: page,
+  });
 
   useEffect(() => {
     if (activeSession?.name === "") {
@@ -98,6 +104,22 @@ const ChatMessageController = () => {
       });
     }
   }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
+
+  useEffect(() => {
+    console.log(topElement.current?.getBoundingClientRect());
+    window.addEventListener("scroll", () => {
+      if (topElement.current) {
+        const { top } = topElement.current.getBoundingClientRect();
+        if (top > 50) {
+          setPage((prev) => prev + 1);
+        }
+        console.log(top);
+      }
+    });
+    return () => {
+      window.removeEventListener("scroll", () => {});
+    };
+  }, []);
 
   useEffect(() => {
     if (chatHistory.length > 0) {
@@ -132,14 +154,6 @@ const ChatMessageController = () => {
       </>
     );
   }
-
-  console.log(topElement.current?.getBoundingClientRect());
-  window.addEventListener("scroll", () => {
-    if (topElement.current) {
-      const { top } = topElement.current.getBoundingClientRect();
-      console.log(top);
-    }
-  });
 
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
