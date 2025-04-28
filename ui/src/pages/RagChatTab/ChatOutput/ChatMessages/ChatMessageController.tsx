@@ -57,7 +57,8 @@ import {
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 import { InfiniteData } from "@tanstack/react-query";
-const flattenChatHistory = (
+
+export const flattenChatHistory = (
   chatHistory?: InfiniteData<ChatHistoryResponse>,
 ): ChatMessageType[] => {
   const history: ChatMessageType[] = [];
@@ -76,14 +77,8 @@ const flattenChatHistory = (
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: {
-      chatHistory,
-      chatHistoryStatus,
-      fetchNextPage,
-      fetchPreviousPage,
-    },
+    chatHistoryQuery: { chatHistory, chatHistoryStatus, fetchNextPage },
     activeSession,
-    setPage,
   } = useContext(RagChatContext);
   const { ref, inView } = useInView({ threshold: 0 });
   const bottomElement = useRef<HTMLDivElement>(null);
