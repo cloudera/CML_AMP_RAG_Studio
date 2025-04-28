@@ -42,7 +42,7 @@ from typing import Optional, cast, Protocol
 
 from pydantic import BaseModel
 
-from app.config import settings, SummaryStorageProviderType
+from app.config import settings, SummaryStorageProviderType, ChatStoreProviderType
 
 
 class AwsConfig(BaseModel):
@@ -82,6 +82,7 @@ class ProjectConfig(BaseModel):
 
     use_enhanced_pdf_processing: bool
     summary_storage_provider: SummaryStorageProviderType
+    chat_store_provider: ChatStoreProviderType
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -183,6 +184,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     return {
         "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
         "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
+        "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
         "AWS_DEFAULT_REGION": config.aws_config.region or "",
         "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
         "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -224,6 +226,10 @@ def build_configuration(
         summary_storage_provider=cast(
             SummaryStorageProviderType,
             env.get("SUMMARY_STORAGE_PROVIDER", "Local"),
+        ),
+        chat_store_provider=cast(
+            ChatStoreProviderType,
+            env.get("CHAT_STORE_PROVIDER", "Local"),
         ),
         aws_config=aws_config,
         azure_config=azure_config,
