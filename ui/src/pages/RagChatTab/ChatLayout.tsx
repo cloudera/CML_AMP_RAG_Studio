@@ -72,7 +72,11 @@ function ChatLayout() {
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
-  const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery({
+  const {
+    status: chatHistoryStatus,
+    data: chatHistory,
+    isPlaceholderData,
+  } = useChatHistoryQuery({
     session_id: sessionId ? +sessionId : 0,
     offset: 0,
     limit: 10,

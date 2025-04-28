@@ -44,7 +44,12 @@ import {
   QueryKeys,
   UseMutationType,
 } from "src/api/utils.ts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 
 export interface SourceNode {
@@ -126,6 +131,7 @@ export const useChatHistoryQuery = (request: ChatHistoryRequestType) => {
     queryKey: chatHistoryQueryKey(request),
     queryFn: () => chatHistoryQuery(request),
     enabled: !!request.session_id,
+    placeholderData: keepPreviousData,
     initialData: [],
   });
 };
