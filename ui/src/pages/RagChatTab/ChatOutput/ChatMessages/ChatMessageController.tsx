@@ -157,14 +157,26 @@ const ChatMessageController = () => {
 
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
-      <div ref={topElement} />
-      {chatHistory.map((historyMessage, index) => (
-        <ChatMessage
-          data={historyMessage}
-          key={historyMessage.id}
-          isLast={index === history.length - 1}
-        />
-      ))}
+      {chatHistory.map((historyMessage, index) => {
+        if (index === 1) {
+          return (
+            <div ref={topElement} key={historyMessage.id}>
+              <ChatMessage
+                data={historyMessage}
+                isLast={index === history.length - 1}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <ChatMessage
+            data={historyMessage}
+            key={historyMessage.id}
+            isLast={index === history.length - 1}
+          />
+        );
+      })}
       <div ref={bottomElement} />
     </div>
   );
