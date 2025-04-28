@@ -76,7 +76,14 @@ class S3ChatHistoryManager(ChatHistoryManager):
         return f"chat_history/chat_store-{session_id}.json"
 
     def retrieve_chat_history(self, session_id: int) -> List[RagStudioChatMessage]:
-        """Retrieve chat history from S3."""
+        """Retrieve chat history from S3.
+
+        Args:
+            session_id: The ID of the session to retrieve chat history for.
+
+        Returns:
+            A list of chat messages, optionally paginated.
+        """
         s3_key = self._get_s3_key(session_id)
 
         try:

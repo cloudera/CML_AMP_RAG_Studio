@@ -38,7 +38,7 @@
 
 
 import os
-from typing import List, Optional, Any
+from typing import List
 
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.storage.chat_store import SimpleChatStore
@@ -51,50 +51,20 @@ from app.services.chat_history.chat_history_manager import (
 )
 
 
-class MyChatStore(SimpleChatStore):
-    """Custom chat store that uses a file system to persist data."""
-
-    def __init__(self, **kwargs: Any):
-        super().__init__(**kwargs)
-
-    def get_messages(self, key: str) -> List[ChatMessage]:
-        print(f"get_messages {key=}")
-        return super().get_messages(key)
-
-    def add_message(
-        self, key: str, message: ChatMessage, idx: Optional[int] = None
-    ) -> None:
-        print(f"add_message {key=}, {message=}, {idx=}")
-        super().add_message(key, message, idx)
-
-    def delete_messages(self, key: str) -> Optional[List[ChatMessage]]:
-        print(f"delete_messages {key=}")
-        return super().delete_messages(key)
-
-    def set_messages(self, key: str, messages: List[ChatMessage]) -> None:
-        print(f"set_messages {key=}, {messages=}")
-        super().set_messages(key, messages)
-
-    def delete_message(self, key: str, idx: int) -> Optional[ChatMessage]:
-        print(f"delete_message {key=}, {idx=}")
-        return super().delete_message(key, idx)
-
-    def delete_last_message(self, key: str) -> Optional[ChatMessage]:
-        print(f"delete_last_message {key=}")
-        return super().delete_last_message(key)
-
-    def get_keys(self) -> List[str]:
-        print("get_keys")
-        return super().get_keys()
-
-
 class SimpleChatHistoryManager(ChatHistoryManager):
     @property
     def store_path(self) -> str:
         return settings.rag_databases_dir
 
-    # note: needs pagination in the future
     def retrieve_chat_history(self, session_id: int) -> List[RagStudioChatMessage]:
+        """Retrieve chat history for a session.
+
+        Args:
+            session_id: The ID of the session to retrieve chat history for.
+
+        Returns:
+            A list of chat messages, optionally paginated.
+        """
         store = self._store_for_session(session_id)
 
         messages: list[ChatMessage] = store.get_messages(
@@ -139,7 +109,9 @@ class SimpleChatHistoryManager(ChatHistoryManager):
         return results
 
     def _store_for_session(self, session_id: int) -> SimpleChatStore:
-        store = MyChatStore.from_persist_path(persist_path=self._store_file(session_id))
+        store = SimpleChatStore.from_persist_path(
+            persist_path=self._store_file(session_id)
+        )
         return store
 
     def clear_chat_history(self, session_id: int) -> None:

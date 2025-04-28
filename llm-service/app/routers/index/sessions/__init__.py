@@ -52,6 +52,7 @@ from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     chat_history_manager,
 )
+from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
@@ -77,11 +78,15 @@ def post_rename_session(
 
 @router.get(
     "/chat-history",
-    summary="Returns an array of chat messages for the provided session.",
+    summary="Returns an array of chat messages for the provided session, with optional pagination.",
 )
 @exceptions.propagates
-def chat_history(session_id: int) -> list[RagStudioChatMessage]:
-    return chat_history_manager.retrieve_chat_history(session_id=session_id)
+def chat_history(
+    session_id: int, limit: Optional[int] = None, offset: Optional[int] = None
+) -> list[RagStudioChatMessage]:
+    results = chat_history_manager.retrieve_chat_history(session_id=session_id)
+
+    return paginate(results, limit, offset)
 
 
 @router.delete(
