@@ -99,7 +99,7 @@ function ChatLayout() {
           setExcludeKnowledgeBase,
         ],
         chatHistoryQuery: {
-          chatHistory: chatHistory ?? [],
+          chatHistory,
           chatHistoryStatus,
           fetchNextPage,
           fetchPreviousPage,

@@ -37,12 +37,10 @@
  ******************************************************************************/
 
 import { Button, Flex, Input, Switch, Tooltip } from "antd";
-import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
-import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
@@ -55,7 +53,7 @@ const RagChatQueryInput = ({
 }) => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    chatHistoryQuery: { chatHistory },
+    // chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
   } = useContext(RagChatContext);
@@ -63,13 +61,13 @@ const RagChatQueryInput = ({
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
-  const {
-    data: sampleQuestions,
-    isPending: sampleQuestionsIsPending,
-    isFetching: sampleQuestionsIsFetching,
-  } = useSuggestQuestions({
-    session_id: sessionId ? +sessionId : undefined,
-  });
+  // const {
+  //   data: sampleQuestions,
+  //   isPending: sampleQuestionsIsPending,
+  //   isFetching: sampleQuestionsIsFetching,
+  // } = useSuggestQuestions({
+  //   session_id: sessionId ? +sessionId : undefined,
+  // });
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
@@ -101,18 +99,18 @@ const RagChatQueryInput = ({
   return (
     <div>
       <Flex vertical align="center" gap={10}>
-        {chatHistory.length > 0 ? (
-          <SuggestedQuestionsFooter
-            questions={sampleQuestions?.suggested_questions ?? []}
-            isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
-            handleChat={handleChat}
-            condensedQuestion={
-              chatHistory.length > 0
-                ? chatHistory[chatHistory.length - 1].condensed_question
-                : undefined
-            }
-          />
-        ) : null}
+        {/*{chatHistory?.pages.length > 0 ? (*/}
+        {/*  <SuggestedQuestionsFooter*/}
+        {/*    questions={sampleQuestions?.suggested_questions ?? []}*/}
+        {/*    isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}*/}
+        {/*    handleChat={handleChat}*/}
+        {/*    condensedQuestion={*/}
+        {/*      chatHistory.length > 0*/}
+        {/*        ? chatHistory[chatHistory.length - 1].condensed_question*/}
+        {/*        : undefined*/}
+        {/*    }*/}
+        {/*  />*/}
+        {/*) : null}*/}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <Input
             autoFocus

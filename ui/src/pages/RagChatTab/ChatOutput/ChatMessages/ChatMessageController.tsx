@@ -48,12 +48,31 @@ import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/Su
 import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
+  ChatHistoryResponse,
+  ChatMessageType,
   createQueryConfiguration,
   isPlaceholder,
   useChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
+import { InfiniteData } from "@tanstack/react-query";
+const flattenChatHistory = (
+  chatHistory?: InfiniteData<ChatHistoryResponse>,
+): ChatMessageType[] => {
+  const history: ChatMessageType[] = [];
+
+  if (!chatHistory) {
+    return history;
+  }
+
+  chatHistory.pages.forEach((page: ChatHistoryResponse) => {
+    page.data.forEach((message: ChatMessageType) => {
+      history.push(message);
+    });
+  });
+  return history;
+};
 
 const ChatMessageController = () => {
   const {
@@ -66,11 +85,12 @@ const ChatMessageController = () => {
     activeSession,
     setPage,
   } = useContext(RagChatContext);
-  const { ref, inView } = useInView();
+  const { ref, inView } = useInView({ threshold: 0 });
   const bottomElement = useRef<HTMLDivElement>(null);
   const search: { question?: string } = useSearch({
     strict: false,
   });
+
   const { mutate: renameMutation } = useRenameNameMutation({
     onError: (err) => {
       messageQueue.error(err.message);
@@ -85,9 +105,12 @@ const ChatMessageController = () => {
   });
 
   useEffect(() => {
+    const flatChatHistory = flattenChatHistory(chatHistory);
     if (activeSession?.name === "") {
       const lastMessage =
-        chatHistory?.pages > 0 ? chatHistory[chatHistory.length - 1] : null;
+        flatChatHistory.length > 0
+          ? flatChatHistory[flatChatHistory.length - 1]
+          : null;
       if (lastMessage && !isPlaceholder(lastMessage)) {
         renameMutation(activeSession.id.toString());
       }
@@ -114,20 +137,21 @@ const ChatMessageController = () => {
     }
   }, [fetchNextPage, inView]);
 
+  const flatChatHistory = flattenChatHistory(chatHistory);
   useEffect(() => {
-    if (chatHistory.length > 0) {
+    if (flatChatHistory.length > 0) {
       setTimeout(() => {
         if (bottomElement.current) {
           bottomElement.current.scrollIntoView({ behavior: "auto" });
         }
       }, 50);
     }
-  }, [bottomElement.current, chatHistory.length, activeSession?.id]);
+  }, [bottomElement.current, flatChatHistory.length, activeSession?.id]);
 
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;
   }
-  if (chatHistory.length === 0) {
+  if (flatChatHistory.length === 0) {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;
     }
@@ -150,7 +174,7 @@ const ChatMessageController = () => {
 
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
-      {chatHistory.map((historyMessage, index) => {
+      {flatChatHistory.map((historyMessage, index) => {
         if (index === 1) {
           return (
             <div ref={ref} key={historyMessage.id}>
