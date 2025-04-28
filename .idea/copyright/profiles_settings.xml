@@ -3,9 +3,7 @@
     <module2copyright>
       <element module="All" copyright="AMP" />
     </module2copyright>
-    <LanguageOptions name="JAVA">
-      <option name="fileTypeOverride" value="3" />
-    </LanguageOptions>
+    <LanguageOptions name="JAVA" />
     <LanguageOptions name="Python">
       <option name="fileTypeOverride" value="3" />
       <option name="block" value="false" />
@@ -13,7 +11,6 @@
       <option name="separateAfter" value="true" />
     </LanguageOptions>
     <LanguageOptions name="TypeScript">
-      <option name="fileTypeOverride" value="3" />
       <option name="separateBefore" value="true" />
       <option name="separateAfter" value="true" />
     </LanguageOptions>
