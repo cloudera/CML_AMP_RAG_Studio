@@ -59,7 +59,8 @@ const ChatMessageController = () => {
     chatHistoryQuery: { chatHistory, chatHistoryStatus },
     activeSession,
   } = useContext(RagChatContext);
-  const scrollEl = useRef<HTMLDivElement>(null);
+  const bottomElement = useRef<HTMLDivElement>(null);
+  const topElement = useRef<HTMLDivElement>(null);
   const search: { question?: string } = useSearch({
     strict: false,
   });
@@ -101,12 +102,12 @@ const ChatMessageController = () => {
   useEffect(() => {
     if (chatHistory.length > 0) {
       setTimeout(() => {
-        if (scrollEl.current) {
-          scrollEl.current.scrollIntoView({ behavior: "auto" });
+        if (bottomElement.current) {
+          bottomElement.current.scrollIntoView({ behavior: "auto" });
         }
       }, 50);
     }
-  }, [scrollEl.current, chatHistory.length, activeSession?.id]);
+  }, [bottomElement.current, chatHistory.length, activeSession?.id]);
 
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;
@@ -132,8 +133,17 @@ const ChatMessageController = () => {
     );
   }
 
+  console.log(topElement.current?.getBoundingClientRect());
+  window.addEventListener("scroll", () => {
+    if (topElement.current) {
+      const { top } = topElement.current.getBoundingClientRect();
+      console.log(top);
+    }
+  });
+
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
+      <div ref={topElement} />
       {chatHistory.map((historyMessage, index) => (
         <ChatMessage
           data={historyMessage}
@@ -141,7 +151,7 @@ const ChatMessageController = () => {
           isLast={index === history.length - 1}
         />
       ))}
-      <div ref={scrollEl} />
+      <div ref={bottomElement} />
     </div>
   );
 };
