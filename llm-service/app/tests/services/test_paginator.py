@@ -35,12 +35,13 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import Any
 
 from app.services.chat_history.paginator import paginate
 
 
 class TestPaginate:
-    def test_paginate_with_limit_only(self):
+    def test_paginate_with_limit_only(self) -> None:
         """Test paginate function with only limit parameter."""
         # Test with a list of integers
         results = [1, 2, 3, 4, 5]
@@ -57,7 +58,7 @@ class TestPaginate:
         paginated = paginate(results, limit=10, offset=None)
         assert paginated == [1, 2, 3, 4, 5]
 
-    def test_paginate_with_limit_and_offset(self):
+    def test_paginate_with_limit_and_offset(self) -> None:
         """Test paginate function with both limit and offset parameters."""
         # Test with a list of integers
         results = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -76,10 +77,10 @@ class TestPaginate:
         paginated = paginate(results, limit=4, offset=0)
         assert paginated == [7, 8, 9, 10]
 
-    def test_paginate_edge_cases(self):
+    def test_paginate_edge_cases(self) -> None:
         """Test paginate function with edge cases."""
         # Empty list
-        results = []
+        results: list[Any] = []
         paginated = paginate(results, limit=5, offset=None)
         assert paginated == []
 
@@ -106,10 +107,10 @@ class TestPaginate:
         paginated = paginate(results, limit=None, offset=2)
         assert paginated == [1, 2, 3]
 
-    def test_paginate_with_different_types(self):
+    def test_paginate_with_different_types(self) -> None:
         """Test paginate function with different types of list elements."""
         # Test with a list of strings
-        results = ["a", "b", "c", "d", "e"]
+        results: list[Any] = ["a", "b", "c", "d", "e"]
         paginated = paginate(results, limit=2, offset=1)
         assert paginated == ["c", "d"]
 
