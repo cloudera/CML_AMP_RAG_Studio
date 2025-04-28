@@ -122,11 +122,30 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
   };
 };
 
-export const chatHistoryQueryKey = (request: ChatHistoryRequestType) => {
+const DEFAULT_PAGE_SIZE = 10;
+export const chatHistoryQueryKey = ({
+  session_id,
+  offset,
+  limit = DEFAULT_PAGE_SIZE,
+}: ChatHistoryRequestType) => {
+  const request: ChatHistoryRequestType = {
+    session_id,
+    offset,
+    limit,
+  };
   return [QueryKeys.chatHistoryQuery, request];
 };
 
-export const useChatHistoryQuery = (request: ChatHistoryRequestType) => {
+export const useChatHistoryQuery = ({
+  session_id,
+  offset,
+  limit = DEFAULT_PAGE_SIZE,
+}: ChatHistoryRequestType) => {
+  const request: ChatHistoryRequestType = {
+    session_id,
+    offset,
+    limit,
+  };
   return useQuery({
     queryKey: chatHistoryQueryKey(request),
     queryFn: () => chatHistoryQuery(request),
@@ -190,7 +209,6 @@ export const useChatMutation = ({
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
-          limit: 10,
           offset: 0,
         }),
         (cachedData) =>
@@ -201,7 +219,6 @@ export const useChatMutation = ({
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
-          limit: 10,
           offset: 0,
         }),
         (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
@@ -231,7 +248,6 @@ export const useChatMutation = ({
       queryClient.setQueryData<ChatMessageType[]>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
-          limit: 10,
           offset: 0,
         }),
         (cachedData) =>
