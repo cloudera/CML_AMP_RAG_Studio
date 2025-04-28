@@ -36,7 +36,8 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
+import { useInView } from "react-intersection-observer";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { Image, Typography } from "antd";
@@ -49,7 +50,6 @@ import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
   isPlaceholder,
-  useChatHistoryQuery,
   useChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
@@ -57,11 +57,17 @@ import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataS
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory, chatHistoryStatus },
+    chatHistoryQuery: {
+      chatHistory,
+      chatHistoryStatus,
+      fetchNextPage,
+      fetchPreviousPage,
+    },
     activeSession,
+    setPage,
   } = useContext(RagChatContext);
+  const { ref, inView } = useInView();
   const bottomElement = useRef<HTMLDivElement>(null);
-  const topElement = useRef<HTMLDivElement>(null);
   const search: { question?: string } = useSearch({
     strict: false,
   });
@@ -77,16 +83,11 @@ const ChatMessageController = () => {
       window.history.pushState(null, "", url.toString());
     },
   });
-  const [page, setPage] = useState(0);
-  const { isPlaceholderData } = useChatHistoryQuery({
-    session_id: activeSession?.id ?? 0,
-    offset: page,
-  });
 
   useEffect(() => {
     if (activeSession?.name === "") {
       const lastMessage =
-        chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+        chatHistory?.pages > 0 ? chatHistory[chatHistory.length - 1] : null;
       if (lastMessage && !isPlaceholder(lastMessage)) {
         renameMutation(activeSession.id.toString());
       }
@@ -106,20 +107,12 @@ const ChatMessageController = () => {
   }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
 
   useEffect(() => {
-    console.log(topElement.current?.getBoundingClientRect());
-    window.addEventListener("scroll", () => {
-      if (topElement.current) {
-        const { top } = topElement.current.getBoundingClientRect();
-        if (top > 50) {
-          setPage((prev) => prev + 1);
-        }
-        console.log(top);
-      }
-    });
-    return () => {
-      window.removeEventListener("scroll", () => {});
-    };
-  }, []);
+    if (inView) {
+      fetchNextPage().catch((err: unknown) => {
+        console.log(err);
+      });
+    }
+  }, [fetchNextPage, inView]);
 
   useEffect(() => {
     if (chatHistory.length > 0) {
@@ -160,7 +153,7 @@ const ChatMessageController = () => {
       {chatHistory.map((historyMessage, index) => {
         if (index === 1) {
           return (
-            <div ref={topElement} key={historyMessage.id}>
+            <div ref={ref} key={historyMessage.id}>
               <ChatMessage
                 data={historyMessage}
                 isLast={index === history.length - 1}
@@ -177,7 +170,7 @@ const ChatMessageController = () => {
           />
         );
       })}
-      <div ref={bottomElement} />
+      {/*<div ref={bottomElement} />*/}
     </div>
   );
 };

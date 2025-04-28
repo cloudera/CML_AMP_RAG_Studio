@@ -76,6 +76,12 @@ def post_rename_session(
     return rename_session(session_id, user_name=origin_remote_user)
 
 
+class RagStudioChatHistoryResponse(BaseModel):
+    data: list[RagStudioChatMessage]
+    next_id: Optional[int] = None
+    previous_id: Optional[int] = None
+
+
 @router.get(
     "/chat-history",
     summary="Returns an array of chat messages for the provided session, with optional pagination.",
@@ -83,10 +89,14 @@ def post_rename_session(
 @exceptions.propagates
 def chat_history(
     session_id: int, limit: Optional[int] = None, offset: Optional[int] = None
-) -> list[RagStudioChatMessage]:
+) -> RagStudioChatHistoryResponse:
     results = chat_history_manager.retrieve_chat_history(session_id=session_id)
 
-    return paginate(results, limit, offset)
+    return RagStudioChatHistoryResponse(
+        data=paginate(results, limit, offset),
+        next_id=limit + offset,
+        previous_id=offset - limit,
+    )
 
 
 @router.delete(

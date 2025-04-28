@@ -37,15 +37,31 @@
  ******************************************************************************/
 
 import { createContext, Dispatch, SetStateAction } from "react";
-import { ChatMessageType } from "src/api/chatApi.ts";
+import { ChatHistoryResponse } from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
+import {
+  FetchNextPageOptions,
+  FetchPreviousPageOptions,
+  InfiniteData,
+  InfiniteQueryObserverResult,
+} from "@tanstack/react-query";
 
 export interface RagChatContextType {
   activeSession?: Session;
   chatHistoryQuery: {
-    chatHistory: ChatMessageType[];
+    chatHistory?: InfiniteData<ChatHistoryResponse>;
     chatHistoryStatus?: "error" | "success" | "pending";
+    fetchPreviousPage: (
+      options?: FetchPreviousPageOptions,
+    ) => Promise<
+      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
+    >;
+    fetchNextPage: (
+      options?: FetchNextPageOptions,
+    ) => Promise<
+      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
+    >;
   };
   dataSourcesQuery: {
     dataSources: DataSourceType[];
@@ -53,12 +69,28 @@ export interface RagChatContextType {
   };
   dataSourceSize: number | null;
   excludeKnowledgeBaseState: [boolean, Dispatch<SetStateAction<boolean>>];
+  setPage: Dispatch<SetStateAction<number>>;
 }
 
 export const RagChatContext = createContext<RagChatContextType>({
   activeSession: undefined,
-  chatHistoryQuery: { chatHistory: [], chatHistoryStatus: undefined },
+  chatHistoryQuery: {
+    chatHistory: {
+      pages: [{ data: [], next_id: null, previous_id: null }],
+      pageParams: [],
+    },
+    chatHistoryStatus: undefined,
+    fetchNextPage: () =>
+      Promise.resolve(
+        {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,
+      ),
+    fetchPreviousPage: () =>
+      Promise.resolve(
+        {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,
+      ),
+  },
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],
+  setPage: () => null,
 });

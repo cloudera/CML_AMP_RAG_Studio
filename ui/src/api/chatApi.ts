@@ -46,8 +46,8 @@ import {
 } from "src/api/utils.ts";
 import {
   keepPreviousData,
+  useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
@@ -146,18 +146,26 @@ export const useChatHistoryQuery = ({
     offset,
     limit,
   };
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: chatHistoryQueryKey(request),
     queryFn: () => chatHistoryQuery(request),
     enabled: !!request.session_id,
     placeholderData: keepPreviousData,
-    initialData: [],
+    initialPageParam: 0,
+    getPreviousPageParam: (data) => data.previous_id,
+    getNextPageParam: (data) => data.next_id,
   });
 };
 
+export interface ChatHistoryResponse {
+  data: ChatMessageType[];
+  next_id: number | null;
+  previous_id: number | null;
+}
+
 export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
-): Promise<ChatMessageType[]> => {
+): Promise<ChatHistoryResponse> => {
   const params = new URLSearchParams();
   if (request.limit) {
     params.append("limit", request.limit.toString());

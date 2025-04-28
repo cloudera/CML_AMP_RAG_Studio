@@ -57,6 +57,7 @@ function ChatLayout() {
   const { data: allSessions } = useGetSessions();
 
   const sessions = allSessions ?? [];
+  const [page, setPage] = useState(0);
 
   const { projectId: routeProjectId, sessionId } = useParams({ strict: false });
   const { data: defaultProject } = useSuspenseQuery(
@@ -72,9 +73,14 @@ function ChatLayout() {
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
-  const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery({
+  const {
+    status: chatHistoryStatus,
+    data: chatHistory,
+    fetchNextPage,
+    fetchPreviousPage,
+  } = useChatHistoryQuery({
     session_id: sessionId ? +sessionId : 0,
-    offset: 0,
+    offset: page,
   });
 
   const dataSourceId = activeSession?.dataSourceIds[0];
@@ -92,12 +98,18 @@ function ChatLayout() {
           excludeKnowledgeBase,
           setExcludeKnowledgeBase,
         ],
-        chatHistoryQuery: { chatHistory, chatHistoryStatus },
+        chatHistoryQuery: {
+          chatHistory: chatHistory ?? [],
+          chatHistoryStatus,
+          fetchNextPage,
+          fetchPreviousPage,
+        },
         dataSourceSize,
         dataSourcesQuery: {
           dataSources: dataSources ?? [],
           dataSourcesStatus: dataSourcesStatus,
         },
+        setPage,
         activeSession,
       }}
     >
