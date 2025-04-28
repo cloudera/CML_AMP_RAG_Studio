@@ -102,7 +102,11 @@ const DeleteSession = ({ session }: { session: Session }) => {
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
-  const { data: chatHistory, isSuccess } = useChatHistoryQuery(session.id);
+  const { data: chatHistory, isSuccess } = useChatHistoryQuery({
+    session_id: session.id,
+    limit: 1,
+    offset: 0,
+  });
 
   const lastMessage = chatHistory.length
     ? chatHistory[chatHistory.length - 1]

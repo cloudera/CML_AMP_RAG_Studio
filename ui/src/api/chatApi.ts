@@ -78,6 +78,8 @@ export interface ChatMutationRequest {
 
 interface ChatHistoryRequestType {
   session_id: number;
+  limit?: number;
+  offset?: number;
 }
 
 export interface ChatMessageType {
@@ -115,15 +117,15 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
   };
 };
 
-export const chatHistoryQueryKey = (session_id: number) => {
-  return [QueryKeys.chatHistoryQuery, { session_id }];
+export const chatHistoryQueryKey = (request: ChatHistoryRequestType) => {
+  return [QueryKeys.chatHistoryQuery, request];
 };
 
-export const useChatHistoryQuery = (session_id: number) => {
+export const useChatHistoryQuery = (request: ChatHistoryRequestType) => {
   return useQuery({
-    queryKey: chatHistoryQueryKey(session_id),
-    queryFn: () => chatHistoryQuery({ session_id }),
-    enabled: !!session_id,
+    queryKey: chatHistoryQueryKey(request),
+    queryFn: () => chatHistoryQuery(request),
+    enabled: !!request.session_id,
     initialData: [],
   });
 };
@@ -131,8 +133,17 @@ export const useChatHistoryQuery = (session_id: number) => {
 export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
 ): Promise<ChatMessageType[]> => {
+  const params = new URLSearchParams();
+  if (request.limit) {
+    params.append("limit", request.limit.toString());
+  }
+  if (request.offset != undefined) {
+    params.append("offset", request.offset.toString());
+  }
+
   return await getRequest(
-    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history`,
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history?` +
+      params.toString(),
   );
 };
 
@@ -171,14 +182,22 @@ export const useChatMutation = ({
     mutationFn: chatMutation,
     onMutate: (variables) => {
       queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+          limit: 10,
+          offset: 0,
+        }),
         (cachedData) =>
           appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
     onSuccess: (data, variables) => {
       queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+          limit: 10,
+          offset: 0,
+        }),
         (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
       );
       queryClient
@@ -204,7 +223,11 @@ export const useChatMutation = ({
         timestamp: Date.now(),
       };
       queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+          limit: 10,
+          offset: 0,
+        }),
         (cachedData) =>
           replacePlaceholderInChatHistory(errorMessage, cachedData),
       );

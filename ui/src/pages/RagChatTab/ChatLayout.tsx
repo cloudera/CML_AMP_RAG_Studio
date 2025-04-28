@@ -72,9 +72,11 @@ function ChatLayout() {
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
-  const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery(
-    sessionId ? +sessionId : 0,
-  );
+  const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery({
+    session_id: sessionId ? +sessionId : 0,
+    offset: 0,
+    limit: 10,
+  });
 
   const dataSourceId = activeSession?.dataSourceIds[0];
 
@@ -114,21 +116,7 @@ function ChatLayout() {
           type="vertical"
           style={{ height: "100%", padding: 0, margin: 0 }}
         />
-        {/*<Flex style={{ width: "100%" }} justify="center">*/}
-        {/*  <Flex*/}
-        {/*    vertical*/}
-        {/*    align="center"*/}
-        {/*    justify="center"*/}
-        {/*    style={{*/}
-        {/*      maxWidth: 900,*/}
-        {/*      width: "100%",*/}
-        {/*      margin: 20,*/}
-        {/*    }}*/}
-        {/*    gap={20}*/}
-        {/*  >*/}
         <Outlet />
-        {/*  </Flex>*/}
-        {/*</Flex>*/}
       </Layout>
     </RagChatContext.Provider>
   );
