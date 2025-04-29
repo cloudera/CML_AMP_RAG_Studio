@@ -234,7 +234,7 @@ export const replacePlaceholderInChatHistory = (
     return (
       cachedData ?? {
         pages: [{ data: [data], previous_id: null, next_id: null }],
-        pageParams: [],
+        pageParams: [0],
       }
     );
   }

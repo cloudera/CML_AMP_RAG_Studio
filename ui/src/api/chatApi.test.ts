@@ -37,7 +37,11 @@
  ******************************************************************************/
 
 import { describe, it, expect } from "vitest";
-import { replacePlaceholderInChatHistory } from "src/api/chatApi.ts";
+import {
+  ChatHistoryResponse,
+  replacePlaceholderInChatHistory,
+} from "src/api/chatApi.ts";
+import { InfiniteData } from "@tanstack/react-query";
 
 describe("replacePlaceholderInChatHistory", () => {
   it("replaces placeholder with actual data when cachedData contains placeholder", () => {
@@ -57,11 +61,17 @@ describe("replacePlaceholderInChatHistory", () => {
       evaluations: [],
       timestamp: Date.now(),
     };
-    const cachedData = [placeholder];
+    const cachedData: InfiniteData<ChatHistoryResponse> = {
+      pages: [{ data: [placeholder], next_id: null, previous_id: null }],
+      pageParams: [0],
+    };
 
     const result = replacePlaceholderInChatHistory(actualData, cachedData);
 
-    expect(result).toEqual([actualData]);
+    expect(result).toEqual({
+      pages: [{ data: [actualData], next_id: null, previous_id: null }],
+      pageParams: [0],
+    });
   });
 
   it("returns actual data when cachedData is undefined", () => {
@@ -76,7 +86,10 @@ describe("replacePlaceholderInChatHistory", () => {
 
     const result = replacePlaceholderInChatHistory(actualData, undefined);
 
-    expect(result).toEqual([actualData]);
+    expect(result).toEqual({
+      pages: [{ data: [actualData], next_id: null, previous_id: null }],
+      pageParams: [0],
+    });
   });
 
   it("does not replace any data when cachedData does not contain placeholder", () => {
@@ -88,7 +101,7 @@ describe("replacePlaceholderInChatHistory", () => {
       evaluations: [],
       timestamp: Date.now(),
     };
-    const cachedData = [
+    const cachedItem = [
       {
         id: "other",
         session_id: 2,
@@ -98,6 +111,11 @@ describe("replacePlaceholderInChatHistory", () => {
         timestamp: Date.now(),
       },
     ];
+
+    const cachedData: InfiniteData<ChatHistoryResponse> = {
+      pages: [{ data: cachedItem, next_id: null, previous_id: null }],
+      pageParams: [0],
+    };
 
     const result = replacePlaceholderInChatHistory(actualData, cachedData);
 

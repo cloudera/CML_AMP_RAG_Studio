@@ -40,14 +40,14 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-def paginate(results: list[T], limit: int | None, offset: int | None) -> tuple[list[T], int, int]:
+def paginate(results: list[T], limit: int | None, offset: int | None) -> tuple[list[T], int | None, int | None]:
     limit = limit or len(results) + 1
     offset = offset or 0
     if limit < 0 or offset < 0:
         raise ValueError("Limit and offset must be non-negative integers.")
 
-    previous_id: int
-    next_id: int
+    previous_id: int | None
+    next_id: int | None
     if len(results) <= limit + offset:
         next_id = None
     else:
