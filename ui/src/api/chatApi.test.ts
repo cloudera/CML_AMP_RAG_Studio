@@ -36,8 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  appendPlaceholderToChatHistory,
   ChatHistoryResponse,
   replacePlaceholderInChatHistory,
 } from "src/api/chatApi.ts";
@@ -120,5 +121,161 @@ describe("replacePlaceholderInChatHistory", () => {
     const result = replacePlaceholderInChatHistory(actualData, cachedData);
 
     expect(result).toEqual(cachedData);
+  });
+});
+
+describe("appendPlaceholderToChatHistory", () => {
+  it("creates new data structure when cachedData is undefined", () => {
+    const query = "test query";
+    const timestamp = Date.now();
+    vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+    const result = appendPlaceholderToChatHistory(query, undefined);
+
+    expect(result).toEqual({
+      pages: [
+        {
+          data: [
+            {
+              id: "placeholder",
+              session_id: 0,
+              source_nodes: [],
+              rag_message: { user: query, assistant: "" },
+              evaluations: [],
+              timestamp,
+            },
+          ],
+          next_id: null,
+          previous_id: null,
+        },
+      ],
+      pageParams: [0],
+    });
+
+    // Restore the original Date.now
+    vi.restoreAllMocks();
+  });
+
+  it("appends placeholder to the last page when cachedData exists", () => {
+    const query = "test query";
+    const timestamp = Date.now();
+    vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+    const existingMessage = {
+      id: "existing",
+      session_id: 1,
+      source_nodes: [],
+      rag_message: { user: "previous query", assistant: "previous response" },
+      evaluations: [],
+      timestamp: timestamp - 1000, // Earlier timestamp
+    };
+
+    const cachedData: InfiniteData<ChatHistoryResponse> = {
+      pages: [
+        {
+          data: [existingMessage],
+          next_id: 5,
+          previous_id: 10,
+        },
+      ],
+      pageParams: [0],
+    };
+
+    const result = appendPlaceholderToChatHistory(query, cachedData);
+
+    expect(result).toEqual({
+      pages: [
+        {
+          data: [
+            existingMessage,
+            {
+              id: "placeholder",
+              session_id: 0,
+              source_nodes: [],
+              rag_message: { user: query, assistant: "" },
+              evaluations: [],
+              timestamp,
+            },
+          ],
+          next_id: 6, // Incremented
+          previous_id: 11, // Incremented
+        },
+      ],
+      pageParams: [0],
+    });
+
+    // Restore the original Date.now
+    vi.restoreAllMocks();
+  });
+
+  it("handles multiple pages correctly", () => {
+    const query = "test query";
+    const timestamp = Date.now();
+    vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+    const message1 = {
+      id: "msg1",
+      session_id: 1,
+      source_nodes: [],
+      rag_message: { user: "query 1", assistant: "response 1" },
+      evaluations: [],
+      timestamp: timestamp - 2000,
+    };
+
+    const message2 = {
+      id: "msg2",
+      session_id: 1,
+      source_nodes: [],
+      rag_message: { user: "query 2", assistant: "response 2" },
+      evaluations: [],
+      timestamp: timestamp - 1000,
+    };
+
+    const cachedData: InfiniteData<ChatHistoryResponse> = {
+      pages: [
+        {
+          data: [message1],
+          next_id: 5,
+          previous_id: 10,
+        },
+        {
+          data: [message2],
+          next_id: 15,
+          previous_id: 20,
+        },
+      ],
+      pageParams: [0, 10],
+    };
+
+    const result = appendPlaceholderToChatHistory(query, cachedData);
+
+    expect(result).toEqual({
+      pages: [
+        {
+          data: [message1],
+          next_id: 6, // Incremented
+          previous_id: 11, // Incremented
+        },
+        {
+          data: [
+            message2,
+            {
+              id: "placeholder",
+              session_id: 0,
+              source_nodes: [],
+              rag_message: { user: query, assistant: "" },
+              evaluations: [],
+              timestamp,
+            },
+          ],
+          next_id: 16, // Incremented
+          previous_id: 21, // Incremented
+        },
+      ],
+      pageParams: [0, 11], // Second param incremented
+    });
+
+    // Restore the original Date.now
+    vi.restoreAllMocks();
   });
 });

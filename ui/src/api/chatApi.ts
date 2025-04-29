@@ -183,7 +183,7 @@ export const chatHistoryQuery = async (
   );
 };
 
-const appendPlaceholderToChatHistory = (
+export const appendPlaceholderToChatHistory = (
   query: string,
   cachedData?: InfiniteData<ChatHistoryResponse>,
 ): InfiniteData<ChatHistoryResponse> => {
