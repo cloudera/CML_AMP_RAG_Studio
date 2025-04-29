@@ -117,6 +117,7 @@ const ChatMessageController = () => {
   }, [fetchPreviousPage, inView]);
 
   useEffect(() => {
+    // scroll to bottom when changing the active session
     if (bottomElement.current) {
       setTimeout(() => {
         if (bottomElement.current) {
@@ -124,7 +125,7 @@ const ChatMessageController = () => {
         }
       }, 50);
     }
-  }, [bottomElement.current]);
+  }, [bottomElement.current, activeSession?.id]);
 
   useEffect(() => {
     if (
