@@ -39,7 +39,7 @@
 import { describe, expect, it } from "vitest";
 import { InfiniteData } from "@tanstack/react-query";
 import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
-import { flattenChatHistory } from "./useFlattenChatHistory";
+import { flattenChatHistory } from "./flattenChatHistory.tsx";
 
 describe("flattenChatHistory", () => {
   it("returns empty array when chatHistory is undefined", () => {

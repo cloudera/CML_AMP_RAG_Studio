@@ -48,7 +48,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useFlattenChatHistory } from "pages/RagChatTab/hooks/useFlattenChatHistory.tsx";
+import { flattenChatHistory } from "pages/RagChatTab/hooks/flattenChatHistory.tsx";
 
 const DeleteSession = ({ session }: { session: Session }) => {
   const deleteSessionModal = useModal();
@@ -110,7 +110,7 @@ const SessionCard = ({ session }: { session: Session }) => {
     offset: 0,
   });
 
-  const flatChatHistory = useFlattenChatHistory(chatHistory);
+  const flatChatHistory = flattenChatHistory(chatHistory);
 
   const lastMessage = flatChatHistory.length
     ? flatChatHistory[flatChatHistory.length - 1]

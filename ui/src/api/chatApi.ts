@@ -268,6 +268,8 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
+      console.log(variables);
+      console.log("HELLO EXCUSE ME");
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
@@ -324,6 +326,7 @@ export const useChatMutation = ({
 const chatMutation = async (
   request: ChatMutationRequest,
 ): Promise<ChatMessageType> => {
+  console.log("Are we POSTing /chat?");
   return await postRequest(
     `${llmServicePath}/sessions/${request.session_id.toString()}/chat`,
     request,

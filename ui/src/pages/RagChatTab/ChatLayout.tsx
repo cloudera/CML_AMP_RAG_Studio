@@ -48,7 +48,7 @@ import {
   useGetDataSourcesForProject,
 } from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useFlattenChatHistory } from "pages/RagChatTab/hooks/useFlattenChatHistory.tsx";
+import { flattenChatHistory } from "pages/RagChatTab/hooks/flattenChatHistory.tsx";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
@@ -83,7 +83,7 @@ function ChatLayout() {
     offset: 0,
   });
 
-  const flatChatHistory: ChatMessageType[] = useFlattenChatHistory(chatHistory);
+  const flatChatHistory: ChatMessageType[] = flattenChatHistory(chatHistory);
 
   const dataSourceId = activeSession?.dataSourceIds[0];
 
