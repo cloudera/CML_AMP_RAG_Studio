@@ -41,37 +41,17 @@ import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.
 import { Session, useGetSessions } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import {
-  ChatHistoryResponse,
-  ChatMessageType,
-  useChatHistoryQuery,
-} from "src/api/chatApi.ts";
+import { ChatMessageType, useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   getDefaultProjectQueryOptions,
   useGetDataSourcesForProject,
 } from "src/api/projectsApi.ts";
-import { InfiniteData, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useFlattenChatHistory } from "pages/RagChatTab/hooks/useFlattenChatHistory.tsx";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
-};
-
-export const flattenChatHistory = (
-  chatHistory?: InfiniteData<ChatHistoryResponse>,
-): ChatMessageType[] => {
-  const history: ChatMessageType[] = [];
-
-  if (!chatHistory) {
-    return history;
-  }
-
-  chatHistory.pages.forEach((page: ChatHistoryResponse) => {
-    page.data.forEach((message: ChatMessageType) => {
-      history.push(message);
-    });
-  });
-  return history;
 };
 
 function ChatLayout() {
@@ -103,7 +83,7 @@ function ChatLayout() {
     offset: 0,
   });
 
-  const flatChatHistory: ChatMessageType[] = flattenChatHistory(chatHistory);
+  const flatChatHistory: ChatMessageType[] = useFlattenChatHistory(chatHistory);
 
   const dataSourceId = activeSession?.dataSourceIds[0];
 
