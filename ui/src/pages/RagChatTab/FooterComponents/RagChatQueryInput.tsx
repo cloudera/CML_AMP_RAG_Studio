@@ -45,6 +45,9 @@ import { useParams } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
+import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
+import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import { flattenChatHistory } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -53,7 +56,7 @@ const RagChatQueryInput = ({
 }) => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    // chatHistoryQuery: { chatHistory },
+    chatHistoryQuery: { chatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
   } = useContext(RagChatContext);
@@ -61,13 +64,13 @@ const RagChatQueryInput = ({
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
 
-  // const {
-  //   data: sampleQuestions,
-  //   isPending: sampleQuestionsIsPending,
-  //   isFetching: sampleQuestionsIsFetching,
-  // } = useSuggestQuestions({
-  //   session_id: sessionId ? +sessionId : undefined,
-  // });
+  const {
+    data: sampleQuestions,
+    isPending: sampleQuestionsIsPending,
+    isFetching: sampleQuestionsIsFetching,
+  } = useSuggestQuestions({
+    session_id: sessionId ? +sessionId : undefined,
+  });
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
@@ -96,21 +99,23 @@ const RagChatQueryInput = ({
     setExcludeKnowledgeBase(() => !checked);
   };
 
+  const flatChatHistory = flattenChatHistory(chatHistory);
+
   return (
     <div>
       <Flex vertical align="center" gap={10}>
-        {/*{chatHistory?.pages.length > 0 ? (*/}
-        {/*  <SuggestedQuestionsFooter*/}
-        {/*    questions={sampleQuestions?.suggested_questions ?? []}*/}
-        {/*    isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}*/}
-        {/*    handleChat={handleChat}*/}
-        {/*    condensedQuestion={*/}
-        {/*      chatHistory.length > 0*/}
-        {/*        ? chatHistory[chatHistory.length - 1].condensed_question*/}
-        {/*        : undefined*/}
-        {/*    }*/}
-        {/*  />*/}
-        {/*) : null}*/}
+        {flatChatHistory.length > 0 ? (
+          <SuggestedQuestionsFooter
+            questions={sampleQuestions?.suggested_questions ?? []}
+            isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
+            handleChat={handleChat}
+            condensedQuestion={
+              flatChatHistory.length > 0
+                ? flatChatHistory[flatChatHistory.length - 1].condensed_question
+                : undefined
+            }
+          />
+        ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <Input
             autoFocus

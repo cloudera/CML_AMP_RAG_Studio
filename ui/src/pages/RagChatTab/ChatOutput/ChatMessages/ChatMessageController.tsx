@@ -110,7 +110,7 @@ const ChatMessageController = () => {
         renameMutation(activeSession.id.toString());
       }
     }
-  }, [activeSession?.name, chatHistory, chatHistoryStatus]);
+  }, [activeSession?.name, chatHistory, chatHistoryStatus, activeSession?.id]);
 
   useEffect(() => {
     if (search.question && activeSession) {
