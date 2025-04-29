@@ -56,12 +56,12 @@ export interface RagChatContextType {
     fetchPreviousPage: (
       options?: FetchPreviousPageOptions,
     ) => Promise<
-      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>, Error>
+      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
     >;
     fetchNextPage: (
       options?: FetchNextPageOptions,
     ) => Promise<
-      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>, Error>
+      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
     >;
   };
   dataSourcesQuery: {
