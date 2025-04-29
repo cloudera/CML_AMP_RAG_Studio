@@ -124,17 +124,8 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
 };
 
 const DEFAULT_PAGE_SIZE = 10;
-export const chatHistoryQueryKey = ({
-  session_id,
-  offset,
-  limit = DEFAULT_PAGE_SIZE,
-}: ChatHistoryRequestType) => {
-  const request: ChatHistoryRequestType = {
-    session_id,
-    offset,
-    limit,
-  };
-  return [QueryKeys.chatHistoryQuery, { session_id: request.session_id }];
+export const chatHistoryQueryKey = ({ session_id }: ChatHistoryRequestType) => {
+  return [QueryKeys.chatHistoryQuery, { session_id }];
 };
 
 export const useChatHistoryQuery = ({
@@ -187,7 +178,7 @@ export const appendPlaceholderToChatHistory = (
   query: string,
   cachedData?: InfiniteData<ChatHistoryResponse>,
 ): InfiniteData<ChatHistoryResponse> => {
-  if (!cachedData) {
+  if (!cachedData || cachedData.pages.length === 0) {
     const firstPage: ChatHistoryResponse = {
       data: [placeholderChatResponse(query)],
       next_id: null,
@@ -268,8 +259,6 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
-      console.log(variables);
-      console.log("HELLO EXCUSE ME");
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
@@ -297,6 +286,7 @@ export const useChatMutation = ({
       onSuccess?.(data);
     },
     onError: (error: Error, variables) => {
+      // TODO: show something to user?
       const uuid = crypto.randomUUID();
       const errorMessage: ChatMessageType = {
         id: `error-${uuid}`,
@@ -326,7 +316,6 @@ export const useChatMutation = ({
 const chatMutation = async (
   request: ChatMutationRequest,
 ): Promise<ChatMessageType> => {
-  console.log("Are we POSTing /chat?");
   return await postRequest(
     `${llmServicePath}/sessions/${request.session_id.toString()}/chat`,
     request,
