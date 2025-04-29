@@ -91,19 +91,10 @@ def chat_history(
     session_id: int, limit: Optional[int] = None, offset: Optional[int] = None
 ) -> RagStudioChatHistoryResponse:
     results = chat_history_manager.retrieve_chat_history(session_id=session_id)
-    limit = limit or len(results) + 1
-    offset = offset or 0
-    if len(results) <= limit + offset:
-        next_id = None
-    else:
-        next_id = offset + limit
 
-    if offset > 0:
-        previous_id = offset - limit
-    else:
-        previous_id = None
+    paginated_results, previous_id, next_id = paginate(results, limit, offset)
     return RagStudioChatHistoryResponse(
-        data=paginate(results, limit, offset),
+        data=paginated_results,
         next_id=next_id,
         previous_id=previous_id,
     )
