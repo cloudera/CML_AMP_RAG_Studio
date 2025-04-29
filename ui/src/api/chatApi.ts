@@ -152,6 +152,7 @@ export const useChatHistoryQuery = ({
     queryFn: ({ pageParam }) => chatHistoryQuery(request, pageParam),
     enabled: !!request.session_id,
     placeholderData: keepPreviousData,
+    initialData: { pages: [], pageParams: [] },
     initialPageParam: 0,
     getPreviousPageParam: (data) => data.next_id,
     getNextPageParam: (data) => data.previous_id,

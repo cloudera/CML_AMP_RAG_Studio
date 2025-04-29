@@ -48,8 +48,6 @@ import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 
-import { flattenChatHistory } from "pages/RagChatTab/ChatLayout.tsx";
-
 const RagChatQueryInput = ({
   newSessionCallback,
 }: {
@@ -57,7 +55,7 @@ const RagChatQueryInput = ({
 }) => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    chatHistoryQuery: { chatHistory },
+    chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
   } = useContext(RagChatContext);
@@ -99,8 +97,6 @@ const RagChatQueryInput = ({
   const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
     setExcludeKnowledgeBase(() => !checked);
   };
-
-  const flatChatHistory = flattenChatHistory(chatHistory);
 
   return (
     <div>
