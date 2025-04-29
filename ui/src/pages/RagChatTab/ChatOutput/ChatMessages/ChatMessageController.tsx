@@ -77,10 +77,10 @@ export const flattenChatHistory = (
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory, chatHistoryStatus, fetchNextPage },
+    chatHistoryQuery: { chatHistory, chatHistoryStatus, fetchPreviousPage },
     activeSession,
   } = useContext(RagChatContext);
-  const { ref, inView } = useInView({ threshold: 0 });
+  const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
   const bottomElement = useRef<HTMLDivElement>(null);
   const search: { question?: string } = useSearch({
     strict: false,
@@ -126,15 +126,24 @@ const ChatMessageController = () => {
 
   useEffect(() => {
     if (inView) {
-      fetchNextPage().catch((err: unknown) => {
+      fetchPreviousPage().catch((err: unknown) => {
         console.log(err);
       });
     }
-  }, [fetchNextPage, inView]);
+  }, [fetchPreviousPage, inView]);
+
+  useEffect(() => {
+    if (bottomElement.current) {
+      bottomElement.current.scrollIntoView({ behavior: "auto" });
+    }
+  }, [bottomElement.current]);
 
   const flatChatHistory = flattenChatHistory(chatHistory);
   useEffect(() => {
-    if (flatChatHistory.length > 0) {
+    if (
+      flatChatHistory.length > 0 &&
+      isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
+    ) {
       setTimeout(() => {
         if (bottomElement.current) {
           bottomElement.current.scrollIntoView({ behavior: "auto" });
@@ -170,26 +179,18 @@ const ChatMessageController = () => {
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
       {flatChatHistory.map((historyMessage, index) => {
+        // trigger fetching on second to last item
         if (index === 1) {
           return (
-            <div ref={ref} key={historyMessage.id}>
-              <ChatMessage
-                data={historyMessage}
-                isLast={index === history.length - 1}
-              />
+            <div ref={refToFetchNextPage} key={historyMessage.id}>
+              <ChatMessage data={historyMessage} />
             </div>
           );
         }
 
-        return (
-          <ChatMessage
-            data={historyMessage}
-            key={historyMessage.id}
-            isLast={index === history.length - 1}
-          />
-        );
+        return <ChatMessage data={historyMessage} key={historyMessage.id} />;
       })}
-      {/*<div ref={bottomElement} />*/}
+      <div ref={bottomElement} />
     </div>
   );
 };

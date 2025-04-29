@@ -79,6 +79,7 @@ function ChatLayout() {
     fetchPreviousPage,
   } = useChatHistoryQuery({
     session_id: sessionId ? +sessionId : 0,
+    offset: 0,
   });
 
   const dataSourceId = activeSession?.dataSourceIds[0];

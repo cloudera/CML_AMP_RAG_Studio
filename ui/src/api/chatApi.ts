@@ -45,6 +45,7 @@ import {
   UseMutationType,
 } from "src/api/utils.ts";
 import {
+  InfiniteData,
   keepPreviousData,
   useInfiniteQuery,
   useMutation,
@@ -133,7 +134,7 @@ export const chatHistoryQueryKey = ({
     offset,
     limit,
   };
-  return [QueryKeys.chatHistoryQuery, request];
+  return [QueryKeys.chatHistoryQuery, { session_id: request.session_id }];
 };
 
 export const useChatHistoryQuery = ({
@@ -152,8 +153,8 @@ export const useChatHistoryQuery = ({
     enabled: !!request.session_id,
     placeholderData: keepPreviousData,
     initialPageParam: 0,
-    getPreviousPageParam: (data) => data.previous_id,
-    getNextPageParam: (data) => data.next_id,
+    getPreviousPageParam: (data) => data.next_id,
+    getNextPageParam: (data) => data.previous_id,
   });
 };
 
@@ -183,27 +184,78 @@ export const chatHistoryQuery = async (
 
 const appendPlaceholderToChatHistory = (
   query: string,
-  cachedData?: ChatMessageType[],
-) => {
+  cachedData?: InfiniteData<ChatHistoryResponse>,
+): InfiniteData<ChatHistoryResponse> => {
   if (!cachedData) {
-    return [placeholderChatResponse(query)];
+    const firstPage: ChatHistoryResponse = {
+      data: [placeholderChatResponse(query)],
+      next_id: null,
+      previous_id: null,
+    };
+    return {
+      pages: [firstPage],
+      pageParams: [0],
+    };
   }
-  return [...cachedData, placeholderChatResponse(query)];
+
+  const pageParams = cachedData.pageParams.map((pageParam, index) =>
+    index > 0 && typeof pageParam === "number" ? ++pageParam : pageParam,
+  );
+
+  const pages = cachedData.pages.map((page) => {
+    return {
+      ...page,
+      next_id: typeof page.next_id === "number" ? ++page.next_id : page.next_id,
+      previous_id:
+        typeof page.previous_id === "number"
+          ? ++page.previous_id
+          : page.previous_id,
+    };
+  });
+
+  const lastPage = pages[pages.length - 1];
+  return {
+    pageParams,
+    pages: [
+      ...pages.slice(0, -1),
+      {
+        ...lastPage,
+        data: [...lastPage.data, placeholderChatResponse(query)],
+      },
+    ],
+  };
 };
 
 export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
-  cachedData?: ChatMessageType[],
-) => {
-  if (!cachedData || cachedData.length == 0) {
-    return [data];
+  cachedData?: InfiniteData<ChatHistoryResponse>,
+): InfiniteData<ChatHistoryResponse> => {
+  if (!cachedData || cachedData.pages.length == 0) {
+    return (
+      cachedData ?? {
+        pages: [{ data: [data], previous_id: null, next_id: null }],
+        pageParams: [],
+      }
+    );
   }
-  return cachedData.map((message) => {
-    if (isPlaceholder(message)) {
-      return data;
-    }
-    return message;
+
+  const pages = cachedData.pages.map((page) => {
+    const pages = page.data.map((message) => {
+      if (isPlaceholder(message)) {
+        return data;
+      }
+      return message;
+    });
+    return {
+      ...page,
+      data: pages,
+    };
   });
+
+  return {
+    pageParams: cachedData.pageParams,
+    pages,
+  };
 };
 
 export const useChatMutation = ({
@@ -215,7 +267,7 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
-      queryClient.setQueryData<ChatMessageType[]>(
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
           offset: 0,
@@ -225,7 +277,7 @@ export const useChatMutation = ({
       );
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<ChatMessageType[]>(
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
           offset: 0,
@@ -254,7 +306,7 @@ export const useChatMutation = ({
         evaluations: [],
         timestamp: Date.now(),
       };
-      queryClient.setQueryData<ChatMessageType[]>(
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
           offset: 0,

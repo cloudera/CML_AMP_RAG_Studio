@@ -55,13 +55,7 @@ const isError = (data: ChatMessageType) => {
   return data.id.startsWith("error-");
 };
 
-const ChatMessage = ({
-  data,
-  isLast,
-}: {
-  data: ChatMessageType;
-  isLast: boolean;
-}) => {
+const ChatMessage = ({ data }: { data: ChatMessageType }) => {
   if (isError(data)) {
     return (
       <div data-testid="chat-message">
@@ -154,7 +148,7 @@ const ChatMessage = ({
           </Flex>
         </div>
       ) : null}
-      {isLast ? null : <Divider />}
+      <Divider />
     </div>
   );
 };
