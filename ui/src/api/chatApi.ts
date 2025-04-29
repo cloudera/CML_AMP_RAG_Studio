@@ -123,7 +123,7 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
   };
 };
 
-const DEFAULT_PAGE_SIZE = 3;
+const DEFAULT_PAGE_SIZE = 10;
 export const chatHistoryQueryKey = ({
   session_id,
   offset,
