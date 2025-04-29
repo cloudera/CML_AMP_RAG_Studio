@@ -48,36 +48,16 @@ import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/Su
 import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
-  ChatHistoryResponse,
-  ChatMessageType,
   createQueryConfiguration,
   isPlaceholder,
   useChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
-import { InfiniteData } from "@tanstack/react-query";
-
-export const flattenChatHistory = (
-  chatHistory?: InfiniteData<ChatHistoryResponse>,
-): ChatMessageType[] => {
-  const history: ChatMessageType[] = [];
-
-  if (!chatHistory) {
-    return history;
-  }
-
-  chatHistory.pages.forEach((page: ChatHistoryResponse) => {
-    page.data.forEach((message: ChatMessageType) => {
-      history.push(message);
-    });
-  });
-  return history;
-};
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory, chatHistoryStatus, fetchPreviousPage },
+    chatHistoryQuery: { flatChatHistory, chatHistoryStatus, fetchPreviousPage },
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -100,7 +80,6 @@ const ChatMessageController = () => {
   });
 
   useEffect(() => {
-    const flatChatHistory = flattenChatHistory(chatHistory);
     if (activeSession?.name === "") {
       const lastMessage =
         flatChatHistory.length > 0
@@ -110,7 +89,12 @@ const ChatMessageController = () => {
         renameMutation(activeSession.id.toString());
       }
     }
-  }, [activeSession?.name, chatHistory, chatHistoryStatus, activeSession?.id]);
+  }, [
+    activeSession?.name,
+    flatChatHistory,
+    chatHistoryStatus,
+    activeSession?.id,
+  ]);
 
   useEffect(() => {
     if (search.question && activeSession) {
@@ -142,7 +126,6 @@ const ChatMessageController = () => {
     }
   }, [bottomElement.current]);
 
-  const flatChatHistory = flattenChatHistory(chatHistory);
   useEffect(() => {
     if (
       flatChatHistory.length > 0 &&
@@ -183,7 +166,7 @@ const ChatMessageController = () => {
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
       {flatChatHistory.map((historyMessage, index) => {
-        // trigger fetching on second to last item
+        // trigger fetching on second to la`st item
         if (index === 2) {
           return (
             <div ref={refToFetchNextPage} key={historyMessage.id}>

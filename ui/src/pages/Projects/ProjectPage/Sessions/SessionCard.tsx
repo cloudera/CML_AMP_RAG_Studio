@@ -47,7 +47,8 @@ import { QueryKeys } from "src/api/utils.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { flattenChatHistory } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
+
+import { flattenChatHistory } from "pages/RagChatTab/ChatLayout.tsx";
 
 const DeleteSession = ({ session }: { session: Session }) => {
   const deleteSessionModal = useModal();

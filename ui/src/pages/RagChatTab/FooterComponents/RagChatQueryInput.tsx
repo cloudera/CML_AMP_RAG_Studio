@@ -47,7 +47,8 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
-import { flattenChatHistory } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
+
+import { flattenChatHistory } from "pages/RagChatTab/ChatLayout.tsx";
 
 const RagChatQueryInput = ({
   newSessionCallback,

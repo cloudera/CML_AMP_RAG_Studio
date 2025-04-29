@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { createContext, Dispatch, SetStateAction } from "react";
-import { ChatHistoryResponse } from "src/api/chatApi.ts";
+import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 import {
@@ -51,6 +51,7 @@ export interface RagChatContextType {
   activeSession?: Session;
   chatHistoryQuery: {
     chatHistory?: InfiniteData<ChatHistoryResponse>;
+    flatChatHistory: ChatMessageType[];
     chatHistoryStatus?: "error" | "success" | "pending";
     fetchPreviousPage: (
       options?: FetchPreviousPageOptions,
@@ -78,6 +79,7 @@ export const RagChatContext = createContext<RagChatContextType>({
       pages: [{ data: [], next_id: null, previous_id: null }],
       pageParams: [],
     },
+    flatChatHistory: [],
     chatHistoryStatus: undefined,
     fetchNextPage: () =>
       Promise.resolve(
