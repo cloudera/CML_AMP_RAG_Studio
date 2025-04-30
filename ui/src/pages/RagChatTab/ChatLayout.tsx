@@ -78,6 +78,7 @@ function ChatLayout() {
     data: chatHistory,
     fetchPreviousPage,
     isFetching,
+    isFetchingPreviousPage,
   } = useChatHistoryQuery({
     session_id: sessionId ? +sessionId : 0,
     offset: 0,
@@ -105,6 +106,7 @@ function ChatLayout() {
           chatHistoryStatus,
           fetchPreviousPage,
           isFetching,
+          isFetchingPreviousPage,
         },
         dataSourceSize,
         dataSourcesQuery: {

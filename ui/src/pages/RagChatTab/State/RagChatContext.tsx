@@ -51,6 +51,7 @@ export interface RagChatContextType {
   chatHistoryQuery: {
     flatChatHistory: ChatMessageType[];
     isFetching: boolean;
+    isFetchingPreviousPage: boolean;
     chatHistoryStatus?: "error" | "success" | "pending";
     fetchPreviousPage: (
       options?: FetchPreviousPageOptions,
@@ -72,6 +73,7 @@ export const RagChatContext = createContext<RagChatContextType>({
     flatChatHistory: [],
     chatHistoryStatus: undefined,
     isFetching: false,
+    isFetchingPreviousPage: false,
     fetchPreviousPage: () =>
       Promise.resolve(
         {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,

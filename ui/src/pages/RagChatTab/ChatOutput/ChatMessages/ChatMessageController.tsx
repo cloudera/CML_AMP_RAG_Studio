@@ -40,7 +40,7 @@ import { useContext, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { Image, Typography } from "antd";
+import { Image, Skeleton, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
@@ -62,6 +62,7 @@ const ChatMessageController = () => {
       chatHistoryStatus,
       fetchPreviousPage,
       isFetching: isFetchingHistory,
+      isFetchingPreviousPage,
     },
     activeSession,
   } = useContext(RagChatContext);
@@ -175,6 +176,7 @@ const ChatMessageController = () => {
 
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
+      {isFetchingPreviousPage && <Skeleton />}
       {flatChatHistory.map((historyMessage, index) => {
         // trigger fetching on second to la`st item
         if (index === 2) {
