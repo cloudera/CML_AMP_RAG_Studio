@@ -83,18 +83,6 @@ def v2_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
 
-    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return direct_llm_chat(session, query, user_name=user_name)
-
-    total_data_sources_size: int = sum(
-        map(
-            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
-        )
-    )
-    if total_data_sources_size == 0:
-        return direct_llm_chat(session, query, user_name)
-
     response_id = str(uuid.uuid4())
 
     new_chat_message: RagStudioChatMessage = _run_chat(
@@ -112,12 +100,20 @@ def _run_chat(
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
 ) -> RagStudioChatMessage:
-    if len(session.data_source_ids) != 1:
+    if len(session.data_source_ids) > 1:
         raise HTTPException(
-            status_code=400, detail="Only one datasource is supported for chat."
+            status_code=400, detail="Maximum of one datasource is supported for chat."
         )
-
-    data_source_id: int = session.data_source_ids[0]
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if (query_configuration.exclude_knowledge_base or len(session.data_source_ids) == 0) or total_data_sources_size == 0:
+        data_source_id = -1
+    else:
+        data_source_id: int = session.data_source_ids[0]
     response, condensed_question = querier.query(
         data_source_id,
         query,

@@ -89,24 +89,21 @@ def query(
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[AgentChatResponse, str | None]:
-    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-    vector_store = qdrant_store.llama_vector_store()
-    embedding_model = qdrant_store.get_embedding_model()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=embedding_model,
-    )
-    logger.info("fetched Qdrant index")
     llm = models.LLM.get(model_name=configuration.model_name)
 
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
-    )
-    chat_engine = _build_flexible_chat_engine(
-        configuration, llm, retriever, data_source_id
+    tools = []
+
+    # Create a direct_llm_chat tool
+    direct_llm_chat_tool = FunctionTool.from_defaults(
+        lambda messages: llm.chat(messages),
+        name="direct_llm_chat_tool",
+        description="Directly chat with the LLM. Used as a fallback when no other suitable tools are available.",
     )
 
-    logger.info("querying chat engine")
+    tools.append(direct_llm_chat_tool)
+    condensed_question = None
+
+    # Create a chat message list from the chat history
     chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
@@ -114,37 +111,60 @@ def query(
         )
     )
 
-    query_engine = RetrieverQueryEngine(
-        retriever=retriever,
-        response_synthesizer=chat_engine._get_response_synthesizer(
-            chat_history=chat_messages
-        ),
-    )
+    # Create a retriever tool
+    if data_source_id != -1:
+        qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
+        vector_store = qdrant_store.llama_vector_store()
+        embedding_model = qdrant_store.get_embedding_model()
+        index = VectorStoreIndex.from_vector_store(
+            vector_store=vector_store,
+            embed_model=embedding_model,
+        )
+        logger.info("fetched Qdrant index")
+        retriever = _create_retriever(
+            configuration, embedding_model, index, data_source_id, llm
+        )
+        chat_engine = _build_flexible_chat_engine(
+            configuration, llm, retriever, data_source_id
+        )
 
-    # todo: add summary as description
-    query_engine_tool = QueryEngineTool(
-        query_engine=query_engine,
-        metadata=ToolMetadata(
-            name="Knowledge_base_retriever",
-            description="Retrieves documents from the knowledge base",
-        ),
-    )
+        logger.info("querying chat engine")
+
+        query_engine = RetrieverQueryEngine(
+            retriever=retriever,
+            response_synthesizer=chat_engine._get_response_synthesizer(
+                chat_history=chat_messages
+            ),
+        )
+
+        # todo: add summary as description
+        query_engine_tool = QueryEngineTool(
+            query_engine=query_engine,
+            metadata=ToolMetadata(
+                name="Knowledge_base_retriever",
+                description="Retrieves documents from the knowledge base",
+            ),
+        )
+        tools.append(query_engine_tool)
+
+        # Condense the question
+        condensed_question: str = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
 
     multiplier_tool = FunctionTool.from_defaults(
         multiply,
         name="multiplier",
         description="multiplies two integers",
     )
+    tools.append(multiplier_tool)
 
     memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
 
     agent = ReActAgent(
-        tools=[query_engine_tool, multiplier_tool], llm=llm, verbose=True, memory=memory
+        tools=tools, llm=llm, verbose=True, memory=memory
     )
 
-    condensed_question: str = chat_engine.condense_question(
-        chat_messages, query_str
-    ).strip()
     try:
         # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         chat_response: AgentChatResponse = agent.chat(
