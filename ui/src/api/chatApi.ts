@@ -141,9 +141,9 @@ export const useChatHistoryQuery = ({
   return useInfiniteQuery({
     queryKey: chatHistoryQueryKey(request),
     queryFn: ({ pageParam }) => chatHistoryQuery(request, pageParam),
-    enabled: !!request.session_id,
+    enabled: request.session_id > 0,
     placeholderData: keepPreviousData,
-    initialData: { pages: [], pageParams: [] },
+    initialData: { pages: [], pageParams: [0] },
     initialPageParam: 0,
     getPreviousPageParam: (data) => data.next_id,
     getNextPageParam: (data) => data.previous_id,
@@ -230,7 +230,6 @@ export const replacePlaceholderInChatHistory = (
       }
     );
   }
-
   const pages = cachedData.pages.map((page) => {
     const pages = page.data.map((message) => {
       if (isPlaceholder(message)) {
@@ -244,9 +243,13 @@ export const replacePlaceholderInChatHistory = (
     };
   });
 
+  const noDataInPages = pages[pages.length - 1].data.length === 0;
+
   return {
     pageParams: cachedData.pageParams,
-    pages,
+    pages: noDataInPages
+      ? [{ data: [data], previous_id: null, next_id: null }]
+      : pages,
   };
 };
 
@@ -262,7 +265,6 @@ export const useChatMutation = ({
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
-          offset: 0,
         }),
         (cachedData) =>
           appendPlaceholderToChatHistory(variables.query, cachedData),
@@ -272,7 +274,6 @@ export const useChatMutation = ({
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
           session_id: variables.session_id,
-          offset: 0,
         }),
         (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
       );
@@ -286,7 +287,6 @@ export const useChatMutation = ({
       onSuccess?.(data);
     },
     onError: (error: Error, variables) => {
-      // TODO: show something to user?
       const uuid = crypto.randomUUID();
       const errorMessage: ChatMessageType = {
         id: `error-${uuid}`,

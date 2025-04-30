@@ -50,7 +50,6 @@ import "./index.css";
 import { ApiError } from "./api/utils";
 import { Button, Flex, Result, Spin, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,7 +126,7 @@ declare module "@tanstack/react-router" {
 ReactDOM.createRoot(document.getElementById("root") as HTMLDivElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/*<ReactQueryDevtools initialIsOpen={false} />*/}
       <RouterProvider router={router} />
     </QueryClientProvider>
   </React.StrictMode>,

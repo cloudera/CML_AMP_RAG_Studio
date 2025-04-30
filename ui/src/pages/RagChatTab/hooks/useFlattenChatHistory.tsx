@@ -39,9 +39,11 @@
 import { InfiniteData } from "@tanstack/react-query";
 import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
 
+import { useMemo } from "react";
+
 export const flattenChatHistory = (
-  chatHistory?: InfiniteData<ChatHistoryResponse>,
-): ChatMessageType[] => {
+  chatHistory: InfiniteData<ChatHistoryResponse> | undefined,
+) => {
   const history: ChatMessageType[] = [];
 
   if (!chatHistory) {
@@ -53,5 +55,11 @@ export const flattenChatHistory = (
       history.push(message);
     });
   });
+
   return history;
+};
+export const useFlattenChatHistory = (
+  chatHistory?: InfiniteData<ChatHistoryResponse>,
+): ChatMessageType[] => {
+  return useMemo(() => flattenChatHistory(chatHistory), [chatHistory]);
 };

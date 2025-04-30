@@ -48,7 +48,7 @@ import {
   useGetDataSourcesForProject,
 } from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { flattenChatHistory } from "pages/RagChatTab/hooks/flattenChatHistory.tsx";
+import { useFlattenChatHistory } from "pages/RagChatTab/hooks/useFlattenChatHistory.tsx";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
@@ -76,14 +76,14 @@ function ChatLayout() {
   const {
     status: chatHistoryStatus,
     data: chatHistory,
-    fetchNextPage,
     fetchPreviousPage,
+    isFetching,
   } = useChatHistoryQuery({
     session_id: sessionId ? +sessionId : 0,
     offset: 0,
   });
 
-  const flatChatHistory: ChatMessageType[] = flattenChatHistory(chatHistory);
+  const flatChatHistory: ChatMessageType[] = useFlattenChatHistory(chatHistory);
 
   const dataSourceId = activeSession?.dataSourceIds[0];
 
@@ -101,11 +101,10 @@ function ChatLayout() {
           setExcludeKnowledgeBase,
         ],
         chatHistoryQuery: {
-          chatHistory,
           flatChatHistory,
           chatHistoryStatus,
-          fetchNextPage,
           fetchPreviousPage,
+          isFetching,
         },
         dataSourceSize,
         dataSourcesQuery: {

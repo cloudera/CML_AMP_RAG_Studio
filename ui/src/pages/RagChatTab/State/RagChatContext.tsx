@@ -41,7 +41,6 @@ import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 import {
-  FetchNextPageOptions,
   FetchPreviousPageOptions,
   InfiniteData,
   InfiniteQueryObserverResult,
@@ -50,16 +49,11 @@ import {
 export interface RagChatContextType {
   activeSession?: Session;
   chatHistoryQuery: {
-    chatHistory?: InfiniteData<ChatHistoryResponse>;
     flatChatHistory: ChatMessageType[];
+    isFetching: boolean;
     chatHistoryStatus?: "error" | "success" | "pending";
     fetchPreviousPage: (
       options?: FetchPreviousPageOptions,
-    ) => Promise<
-      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
-    >;
-    fetchNextPage: (
-      options?: FetchNextPageOptions,
     ) => Promise<
       InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
     >;
@@ -75,16 +69,9 @@ export interface RagChatContextType {
 export const RagChatContext = createContext<RagChatContextType>({
   activeSession: undefined,
   chatHistoryQuery: {
-    chatHistory: {
-      pages: [{ data: [], next_id: null, previous_id: null }],
-      pageParams: [],
-    },
     flatChatHistory: [],
     chatHistoryStatus: undefined,
-    fetchNextPage: () =>
-      Promise.resolve(
-        {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,
-      ),
+    isFetching: false,
     fetchPreviousPage: () =>
       Promise.resolve(
         {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,

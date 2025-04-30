@@ -57,7 +57,12 @@ import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataS
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { flatChatHistory, chatHistoryStatus, fetchPreviousPage },
+    chatHistoryQuery: {
+      flatChatHistory,
+      chatHistoryStatus,
+      fetchPreviousPage,
+      isFetching: isFetchingHistory,
+    },
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -96,17 +101,22 @@ const ChatMessageController = () => {
     activeSession?.id,
   ]);
 
+  const excludeKnowledgeBases =
+    !activeSession?.dataSourceIds || activeSession.dataSourceIds.length === 0;
+  const { question } = search;
+  const activeSessionId = activeSession?.id;
+
   useEffect(() => {
-    if (search.question && activeSession) {
+    // note: when creating a new session, we run the risk of firing this off twice without the isFetchingHistory check
+    if (question && activeSessionId && !isFetchingHistory) {
+      console.log("search.question", search.question);
       chatMutation({
-        query: search.question,
-        session_id: activeSession.id,
-        configuration: createQueryConfiguration(
-          !(activeSession.dataSourceIds.length > 0),
-        ),
+        query: question,
+        session_id: activeSessionId,
+        configuration: createQueryConfiguration(excludeKnowledgeBases),
       });
     }
-  }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
+  }, [question, activeSessionId, excludeKnowledgeBases, isFetchingHistory]);
 
   useEffect(() => {
     if (inView) {
