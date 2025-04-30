@@ -109,7 +109,6 @@ const ChatMessageController = () => {
   useEffect(() => {
     // note: when creating a new session, we run the risk of firing this off twice without the isFetchingHistory check
     if (question && activeSessionId && !isFetchingHistory) {
-      console.log("search.question", search.question);
       chatMutation({
         query: question,
         session_id: activeSessionId,
@@ -120,8 +119,8 @@ const ChatMessageController = () => {
 
   useEffect(() => {
     if (inView) {
-      fetchPreviousPage().catch((err: unknown) => {
-        console.log(err);
+      fetchPreviousPage().catch(() => {
+        messageQueue.error("An error occurred fetching the next page");
       });
     }
   }, [fetchPreviousPage, inView]);
