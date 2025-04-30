@@ -90,21 +90,12 @@ export const getProjects = async (): Promise<Project[]> => {
   return await getRequest(`${ragPath}/projects`);
 };
 
-// Get default project
-export const useGetDefaultProject = () => {
-  return useQuery({
-    queryKey: [QueryKeys.getDefaultProject],
-    queryFn: async () => {
-      return await getDefaultProject();
-    },
-  });
-};
-
 export const getDefaultProjectQueryOptions = queryOptions({
   queryKey: [QueryKeys.getDefaultProject],
   queryFn: async () => {
     return await getDefaultProject();
   },
+  staleTime: Infinity,
 });
 
 const getDefaultProject = async (): Promise<Project> => {

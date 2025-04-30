@@ -35,62 +35,33 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Optional
+from typing import TypeVar
 
-from fastapi import HTTPException
-
-from . import models
-from .chat_history.chat_history_manager import chat_history_manager
-from .metadata_apis import session_metadata_api
-
-RENAME_SESSION_PROMPT_TEMPLATE = """
-You are tasked with suggesting an apt name for a chat session based on its first interaction. Only return the name of the session. 
-
-========================================
-First Interaction:
-```
-User: What is your name?
-Assistant: My name is Assistant.
-```
-
-Session Name:
-Introduction
-
-========================================
-First Interaction:
-```
-User: What do you know about the Moon?
-Assistant: The Moon is Earth's only natural satellite. It is the fifth-largest satellite in the Solar System, and by far the largest among planetary satellites relative to the size of the planet that it orbits.
-```
-
-Session Name:
-Facts about the Moon
-
-========================================
-First Interaction:
-```
-User: {}
-Assistant: {}
-```
-
-Session Name: 
-"""
+T = TypeVar("T")
 
 
-def rename_session(session_id: int, user_name: Optional[str]) -> str:
-    chat_history = chat_history_manager.retrieve_chat_history(session_id=session_id)
-    if not chat_history:
-        raise HTTPException(status_code=400, detail="No chat history found")
-    first_interaction = chat_history[0].rag_message
-    session_metadata = session_metadata_api.get_session(session_id, user_name)
-    llm = models.LLM.get(session_metadata.inference_model)
-    prompt = RENAME_SESSION_PROMPT_TEMPLATE.format(
-        first_interaction.user,
-        first_interaction.assistant,
-    )
+def paginate(results: list[T], limit: int | None, offset: int | None) -> tuple[list[T], int | None, int | None]:
+    limit = limit or len(results) + 1
+    offset = offset or 0
+    if limit < 0 or offset < 0:
+        raise ValueError("Limit and offset must be non-negative integers.")
 
-    response = llm.complete(prompt=prompt)
-    session_name = response.text.strip()
-    session_metadata.name = session_name
-    updated_session = session_metadata_api.update_session(session_metadata, user_name)
-    return updated_session.name
+    previous_id: int | None
+    next_id: int | None
+    if len(results) <= limit + offset:
+        next_id = None
+    else:
+        next_id = offset + limit
+
+    if offset > 0:
+        previous_id = offset - limit
+    else:
+        previous_id = None
+
+    if offset is not None:
+        if offset > 0:
+            results = results[-(offset + limit) : -offset]
+    if limit is not None:
+        results = results[-limit:]
+
+    return results, previous_id, next_id

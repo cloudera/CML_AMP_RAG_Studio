@@ -43,15 +43,15 @@ from typing import List, Iterable, Optional
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
+from pydantic import BaseModel
 
 from . import evaluators, llm_completion
-from .chat_store import (
-    ChatHistoryManager,
-    Evaluation,
-    RagContext,
+from .chat_history.chat_history_manager import (
     RagPredictSourceNode,
-    RagStudioChatMessage,
+    Evaluation,
     RagMessage,
+    RagStudioChatMessage,
+    chat_history_manager,
 )
 from .metadata_apis import session_metadata_api
 from .metadata_apis.session_metadata_api import Session
@@ -62,8 +62,16 @@ from ..ai.vector_stores.vector_store_factory import VectorStoreFactory
 from ..rag_types import RagPredictConfiguration
 
 
+class RagContext(BaseModel):
+    role: MessageRole
+    content: str
+
+
 def v2_chat(
-    session: Session, query: str, configuration: RagPredictConfiguration, user_name: Optional[str]
+    session: Session,
+    query: str,
+    configuration: RagPredictConfiguration,
+    user_name: Optional[str],
 ) -> RagStudioChatMessage:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -85,9 +93,7 @@ def v2_chat(
         )
     )
     if total_data_sources_size == 0:
-        return direct_llm_chat(
-            session, query, user_name
-        )
+        return direct_llm_chat(session, query, user_name)
 
     response_id = str(uuid.uuid4())
 
@@ -95,7 +101,7 @@ def v2_chat(
         session, response_id, query, query_configuration, user_name
     )
 
-    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
+    chat_history_manager.append_to_history(session.id, [new_chat_message])
     return new_chat_message
 
 
@@ -148,7 +154,7 @@ def _run_chat(
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = ChatHistoryManager().retrieve_chat_history(session_id)[:10]
+    chat_history = chat_history_manager.retrieve_chat_history(session_id)[:10]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(
@@ -329,5 +335,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    ChatHistoryManager().append_to_history(session.id, [new_chat_message])
+    chat_history_manager.append_to_history(session.id, [new_chat_message])
     return new_chat_message

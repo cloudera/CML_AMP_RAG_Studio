@@ -245,5 +245,7 @@ export const useDeleteChatHistoryMutation = ({
 export const deleteChatHistoryMutation = async (
   sessionId: string,
 ): Promise<void> => {
-  await deleteRequest(`${llmServicePath}/${paths.sessions}/${sessionId}`);
+  await deleteRequest(
+    `${llmServicePath}/${paths.sessions}/${sessionId}/chat-history`,
+  );
 };

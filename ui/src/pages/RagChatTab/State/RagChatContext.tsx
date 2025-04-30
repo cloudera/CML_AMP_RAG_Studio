@@ -37,15 +37,27 @@
  ******************************************************************************/
 
 import { createContext, Dispatch, SetStateAction } from "react";
-import { ChatMessageType } from "src/api/chatApi.ts";
+import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
+import {
+  FetchPreviousPageOptions,
+  InfiniteData,
+  InfiniteQueryObserverResult,
+} from "@tanstack/react-query";
 
 export interface RagChatContextType {
   activeSession?: Session;
   chatHistoryQuery: {
-    chatHistory: ChatMessageType[];
+    flatChatHistory: ChatMessageType[];
+    isFetching: boolean;
+    isFetchingPreviousPage: boolean;
     chatHistoryStatus?: "error" | "success" | "pending";
+    fetchPreviousPage: (
+      options?: FetchPreviousPageOptions,
+    ) => Promise<
+      InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
+    >;
   };
   dataSourcesQuery: {
     dataSources: DataSourceType[];
@@ -57,7 +69,16 @@ export interface RagChatContextType {
 
 export const RagChatContext = createContext<RagChatContextType>({
   activeSession: undefined,
-  chatHistoryQuery: { chatHistory: [], chatHistoryStatus: undefined },
+  chatHistoryQuery: {
+    flatChatHistory: [],
+    chatHistoryStatus: undefined,
+    isFetching: false,
+    isFetchingPreviousPage: false,
+    fetchPreviousPage: () =>
+      Promise.resolve(
+        {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,
+      ),
+  },
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],

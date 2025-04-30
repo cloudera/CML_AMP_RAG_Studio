@@ -64,13 +64,16 @@ export const suggestedQuestionKey = (
   ];
 };
 
-export const useSuggestQuestions = (request: SuggestQuestionsRequest) => {
+export const useSuggestQuestions = (
+  request: SuggestQuestionsRequest,
+  enable = true,
+) => {
   return useQuery({
     // Note: We only want to invalidate the query when the data_source_id changes, not when chat history changes
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: suggestedQuestionKey(request.session_id),
     queryFn: () => suggestQuestionsQuery(request),
-    enabled: true,
+    enabled: enable,
     gcTime: 0,
   });
 };

@@ -86,6 +86,7 @@ const SuggestedQuestionsCards = () => {
   } = useSuggestQuestions({
     session_id: sessionId ?? undefined,
   });
+
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation(
     {},
@@ -104,7 +105,6 @@ const SuggestedQuestionsCards = () => {
       }
     }
   };
-
   if (
     suggestedQuestionsIsPending ||
     askRagIsPending ||

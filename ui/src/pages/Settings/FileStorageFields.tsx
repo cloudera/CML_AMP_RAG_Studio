@@ -110,5 +110,19 @@ export const FileStorageFields = ({
     >
       <Switch disabled={!enableModification} />
     </Form.Item>
+    <Form.Item
+      label={"Store Chat History in S3"}
+      name={["chat_store_provider"]}
+      tooltip="The location of the chat history for each chat session."
+      initialValue={projectConfig?.chat_store_provider}
+      valuePropName={"checked"}
+      hidden={selectedFileStorage !== "AWS"}
+      getValueProps={(value) =>
+        value === "S3" ? { checked: true } : { checked: false }
+      }
+      normalize={(value) => (value ? "S3" : "Local")}
+    >
+      <Switch disabled={!enableModification} />
+    </Form.Item>
   </Flex>
 );

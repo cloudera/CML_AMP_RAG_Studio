@@ -44,7 +44,13 @@ import {
   QueryKeys,
   UseMutationType,
 } from "src/api/utils.ts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  InfiniteData,
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 
 export interface SourceNode {
@@ -78,6 +84,8 @@ export interface ChatMutationRequest {
 
 interface ChatHistoryRequestType {
   session_id: number;
+  limit?: number;
+  offset?: number;
 }
 
 export interface ChatMessageType {
@@ -115,50 +123,134 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
   };
 };
 
-export const chatHistoryQueryKey = (session_id: number) => {
+const DEFAULT_PAGE_SIZE = 10;
+export const chatHistoryQueryKey = ({ session_id }: ChatHistoryRequestType) => {
   return [QueryKeys.chatHistoryQuery, { session_id }];
 };
 
-export const useChatHistoryQuery = (session_id: number) => {
-  return useQuery({
-    queryKey: chatHistoryQueryKey(session_id),
-    queryFn: () => chatHistoryQuery({ session_id }),
-    enabled: !!session_id,
-    initialData: [],
+export const useChatHistoryQuery = ({
+  session_id,
+  offset,
+  limit = DEFAULT_PAGE_SIZE,
+}: ChatHistoryRequestType) => {
+  const request: ChatHistoryRequestType = {
+    session_id,
+    offset,
+    limit,
+  };
+  return useInfiniteQuery({
+    queryKey: chatHistoryQueryKey(request),
+    queryFn: ({ pageParam }) => chatHistoryQuery(request, pageParam),
+    enabled: request.session_id > 0,
+    placeholderData: keepPreviousData,
+    initialData: { pages: [], pageParams: [0] },
+    initialPageParam: 0,
+    getPreviousPageParam: (data) => data.next_id,
+    getNextPageParam: (data) => data.previous_id,
   });
 };
 
+export interface ChatHistoryResponse {
+  data: ChatMessageType[];
+  next_id: number | null;
+  previous_id: number | null;
+}
+
 export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
-): Promise<ChatMessageType[]> => {
+  pageParam: number | undefined,
+): Promise<ChatHistoryResponse> => {
+  const params = new URLSearchParams();
+  if (request.limit !== undefined) {
+    params.append("limit", request.limit.toString());
+  }
+  if (pageParam !== undefined) {
+    params.append("offset", pageParam.toString());
+  }
+
   return await getRequest(
-    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history`,
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history?` +
+      params.toString(),
   );
 };
 
-const appendPlaceholderToChatHistory = (
+export const appendPlaceholderToChatHistory = (
   query: string,
-  cachedData?: ChatMessageType[],
-) => {
-  if (!cachedData) {
-    return [placeholderChatResponse(query)];
+  cachedData?: InfiniteData<ChatHistoryResponse>,
+): InfiniteData<ChatHistoryResponse> => {
+  if (!cachedData || cachedData.pages.length === 0) {
+    const firstPage: ChatHistoryResponse = {
+      data: [placeholderChatResponse(query)],
+      next_id: null,
+      previous_id: null,
+    };
+    return {
+      pages: [firstPage],
+      pageParams: [0],
+    };
   }
-  return [...cachedData, placeholderChatResponse(query)];
+
+  const pageParams = cachedData.pageParams.map((pageParam, index) =>
+    index > 0 && typeof pageParam === "number" ? ++pageParam : pageParam,
+  );
+
+  const pages = cachedData.pages.map((page) => {
+    return {
+      ...page,
+      next_id: typeof page.next_id === "number" ? ++page.next_id : page.next_id,
+      previous_id:
+        typeof page.previous_id === "number"
+          ? ++page.previous_id
+          : page.previous_id,
+    };
+  });
+
+  const lastPage = pages[pages.length - 1];
+  return {
+    pageParams,
+    pages: [
+      ...pages.slice(0, -1),
+      {
+        ...lastPage,
+        data: [...lastPage.data, placeholderChatResponse(query)],
+      },
+    ],
+  };
 };
 
 export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
-  cachedData?: ChatMessageType[],
-) => {
-  if (!cachedData || cachedData.length == 0) {
-    return [data];
+  cachedData?: InfiniteData<ChatHistoryResponse>,
+): InfiniteData<ChatHistoryResponse> => {
+  if (!cachedData || cachedData.pages.length == 0) {
+    return (
+      cachedData ?? {
+        pages: [{ data: [data], previous_id: null, next_id: null }],
+        pageParams: [0],
+      }
+    );
   }
-  return cachedData.map((message) => {
-    if (isPlaceholder(message)) {
-      return data;
-    }
-    return message;
+  const pages = cachedData.pages.map((page) => {
+    const pages = page.data.map((message) => {
+      if (isPlaceholder(message)) {
+        return data;
+      }
+      return message;
+    });
+    return {
+      ...page,
+      data: pages,
+    };
   });
+
+  const noDataInPages = pages[pages.length - 1].data.length === 0;
+
+  return {
+    pageParams: cachedData.pageParams,
+    pages: noDataInPages
+      ? [{ data: [data], previous_id: null, next_id: null }]
+      : pages,
+  };
 };
 
 export const useChatMutation = ({
@@ -170,15 +262,19 @@ export const useChatMutation = ({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: chatMutation,
     onMutate: (variables) => {
-      queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+        }),
         (cachedData) =>
           appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+        }),
         (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
       );
       queryClient
@@ -203,8 +299,11 @@ export const useChatMutation = ({
         evaluations: [],
         timestamp: Date.now(),
       };
-      queryClient.setQueryData<ChatMessageType[]>(
-        chatHistoryQueryKey(variables.session_id),
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+          offset: 0,
+        }),
         (cachedData) =>
           replacePlaceholderInChatHistory(errorMessage, cachedData),
       );

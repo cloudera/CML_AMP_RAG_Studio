@@ -48,7 +48,11 @@ from ....rag_types import RagPredictConfiguration
 from ....services.chat import (
     v2_chat,
 )
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.chat_history.chat_history_manager import (
+    RagStudioChatMessage,
+    chat_history_manager,
+)
+from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
@@ -72,13 +76,28 @@ def post_rename_session(
     return rename_session(session_id, user_name=origin_remote_user)
 
 
+class RagStudioChatHistoryResponse(BaseModel):
+    data: list[RagStudioChatMessage]
+    next_id: Optional[int] = None
+    previous_id: Optional[int] = None
+
+
 @router.get(
     "/chat-history",
-    summary="Returns an array of chat messages for the provided session.",
+    summary="Returns an array of chat messages for the provided session, with optional pagination.",
 )
 @exceptions.propagates
-def chat_history(session_id: int) -> list[RagStudioChatMessage]:
-    return ChatHistoryManager().retrieve_chat_history(session_id=session_id)
+def chat_history(
+    session_id: int, limit: Optional[int] = None, offset: Optional[int] = None
+) -> RagStudioChatHistoryResponse:
+    results = chat_history_manager.retrieve_chat_history(session_id=session_id)
+
+    paginated_results, previous_id, next_id = paginate(results, limit, offset)
+    return RagStudioChatHistoryResponse(
+        data=paginated_results,
+        next_id=next_id,
+        previous_id=previous_id,
+    )
 
 
 @router.delete(
@@ -86,14 +105,14 @@ def chat_history(session_id: int) -> list[RagStudioChatMessage]:
 )
 @exceptions.propagates
 def clear_chat_history(session_id: int) -> str:
-    ChatHistoryManager().clear_chat_history(session_id=session_id)
+    chat_history_manager.clear_chat_history(session_id=session_id)
     return "Chat history cleared."
 
 
 @router.delete("", summary="Deletes the requested session.")
 @exceptions.propagates
-def delete_chat_history(session_id: int) -> str:
-    ChatHistoryManager().delete_chat_history(session_id=session_id)
+def delete_session(session_id: int) -> str:
+    chat_history_manager.delete_chat_history(session_id=session_id)
     return "Chat history deleted."
 
 

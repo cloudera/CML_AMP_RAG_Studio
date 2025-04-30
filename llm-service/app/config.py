@@ -50,6 +50,7 @@ from typing import cast, Optional, Literal
 
 
 SummaryStorageProviderType = Literal["Local", "S3"]
+ChatStoreProviderType = Literal["Local", "S3"]
 
 
 class _Settings:
@@ -116,6 +117,14 @@ class _Settings:
         )
 
     @property
+    def chat_store_provider(self) -> ChatStoreProviderType:
+        # TODO: check value of env var, and raise if not ChatStoreProviderType
+        return cast(
+            ChatStoreProviderType,
+            os.environ.get("CHAT_STORE_PROVIDER", "Local"),
+        )
+
+    @property
     def document_bucket(self) -> str:
         return os.environ.get("S3_RAG_DOCUMENT_BUCKET", "")
 
@@ -128,6 +137,9 @@ class _Settings:
 
     def is_s3_summary_storage_configured(self) -> bool:
         return self.summary_storage_provider == "S3" and self._is_s3_configured()
+
+    def is_s3_chat_store_configured(self) -> bool:
+        return self.chat_store_provider == "S3" and self._is_s3_configured()
 
     @property
     def azure_openai_api_key(self) -> Optional[str]:

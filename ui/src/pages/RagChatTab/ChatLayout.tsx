@@ -41,13 +41,14 @@ import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.
 import { Session, useGetSessions } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useChatHistoryQuery } from "src/api/chatApi.ts";
+import { ChatMessageType, useChatHistoryQuery } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   getDefaultProjectQueryOptions,
   useGetDataSourcesForProject,
 } from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useFlattenChatHistory } from "pages/RagChatTab/hooks/useFlattenChatHistory.tsx";
 
 const getSessionForSessionId = (sessionId?: string, sessions?: Session[]) => {
   return sessions?.find((session) => session.id.toString() === sessionId);
@@ -72,9 +73,18 @@ function ChatLayout() {
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
-  const { status: chatHistoryStatus, data: chatHistory } = useChatHistoryQuery(
-    sessionId ? +sessionId : 0,
-  );
+  const {
+    status: chatHistoryStatus,
+    data: chatHistory,
+    fetchPreviousPage,
+    isFetching,
+    isFetchingPreviousPage,
+  } = useChatHistoryQuery({
+    session_id: sessionId ? +sessionId : 0,
+    offset: 0,
+  });
+
+  const flatChatHistory: ChatMessageType[] = useFlattenChatHistory(chatHistory);
 
   const dataSourceId = activeSession?.dataSourceIds[0];
 
@@ -91,7 +101,13 @@ function ChatLayout() {
           excludeKnowledgeBase,
           setExcludeKnowledgeBase,
         ],
-        chatHistoryQuery: { chatHistory, chatHistoryStatus },
+        chatHistoryQuery: {
+          flatChatHistory,
+          chatHistoryStatus,
+          fetchPreviousPage,
+          isFetching,
+          isFetchingPreviousPage,
+        },
         dataSourceSize,
         dataSourcesQuery: {
           dataSources: dataSources ?? [],
@@ -114,21 +130,7 @@ function ChatLayout() {
           type="vertical"
           style={{ height: "100%", padding: 0, margin: 0 }}
         />
-        {/*<Flex style={{ width: "100%" }} justify="center">*/}
-        {/*  <Flex*/}
-        {/*    vertical*/}
-        {/*    align="center"*/}
-        {/*    justify="center"*/}
-        {/*    style={{*/}
-        {/*      maxWidth: 900,*/}
-        {/*      width: "100%",*/}
-        {/*      margin: 20,*/}
-        {/*    }}*/}
-        {/*    gap={20}*/}
-        {/*  >*/}
         <Outlet />
-        {/*  </Flex>*/}
-        {/*</Flex>*/}
       </Layout>
     </RagChatContext.Provider>
   );

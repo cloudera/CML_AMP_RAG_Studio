@@ -48,6 +48,8 @@ import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useFlattenChatHistory } from "pages/RagChatTab/hooks/useFlattenChatHistory.tsx";
+
 const DeleteSession = ({ session }: { session: Session }) => {
   const deleteSessionModal = useModal();
   const queryClient = useQueryClient();
@@ -102,10 +104,16 @@ const DeleteSession = ({ session }: { session: Session }) => {
 
 const SessionCard = ({ session }: { session: Session }) => {
   const navigate = useNavigate();
-  const { data: chatHistory, isSuccess } = useChatHistoryQuery(session.id);
+  const { data: chatHistory, isSuccess } = useChatHistoryQuery({
+    session_id: session.id,
+    limit: 1,
+    offset: 0,
+  });
 
-  const lastMessage = chatHistory.length
-    ? chatHistory[chatHistory.length - 1]
+  const flatChatHistory = useFlattenChatHistory(chatHistory);
+
+  const lastMessage = flatChatHistory.length
+    ? flatChatHistory[flatChatHistory.length - 1]
     : null;
 
   const handleNavOnClick = () => {

@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,18 +34,32 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+import { InfiniteData } from "@tanstack/react-query";
+import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
 
-export const Route = createFileRoute("/_layout/chats/_layout-chats/$sessionId")(
-  {
-    loader: async ({ context }) =>
-      await Promise.all([
-        context.queryClient.ensureQueryData(getSessionsQueryOptions),
-        context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-      ]),
-  },
-);
+import { useMemo } from "react";
+
+export const flattenChatHistory = (
+  chatHistory: InfiniteData<ChatHistoryResponse> | undefined,
+) => {
+  const history: ChatMessageType[] = [];
+
+  if (!chatHistory) {
+    return history;
+  }
+
+  chatHistory.pages.forEach((page: ChatHistoryResponse) => {
+    page.data.forEach((message: ChatMessageType) => {
+      history.push(message);
+    });
+  });
+
+  return history;
+};
+export const useFlattenChatHistory = (
+  chatHistory?: InfiniteData<ChatHistoryResponse>,
+): ChatMessageType[] => {
+  return useMemo(() => flattenChatHistory(chatHistory), [chatHistory]);
+};

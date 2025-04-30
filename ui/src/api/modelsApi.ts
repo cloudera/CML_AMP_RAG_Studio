@@ -73,6 +73,7 @@ export const useGetLlmModels = () => {
     queryFn: async () => {
       return await getLlmModels();
     },
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -81,6 +82,7 @@ export const getLlmModelsQueryOptions = queryOptions({
   queryFn: async () => {
     return await getLlmModels();
   },
+  staleTime: 1000 * 60 * 5,
 });
 
 const getLlmModels = async (): Promise<Model[]> => {
@@ -93,6 +95,7 @@ export const useGetEmbeddingModels = () => {
     queryFn: async () => {
       return await getEmbeddingModels();
     },
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -106,6 +109,7 @@ export const useGetRerankingModels = () => {
     queryFn: async () => {
       return await getRerankingModels();
     },
+    staleTime: 1000 * 60 * 5,
   });
 };
 
