@@ -31,6 +31,13 @@ from __future__ import annotations
 
 import typing
 
+from llama_index.core.agent import ReActAgent
+from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.tools import QueryEngineTool, ToolMetadata, BaseTool, FunctionTool
+
+from .tools import multiply
+
 if typing.TYPE_CHECKING:
     from ..chat import RagContext
 
@@ -107,11 +114,43 @@ def query(
         )
     )
 
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=chat_engine._get_response_synthesizer(
+            chat_history=chat_messages
+        ),
+    )
+
+    # todo: add summary as description
+    query_engine_tool = QueryEngineTool(
+        query_engine=query_engine,
+        metadata=ToolMetadata(
+            name="Knowledge_base_retriever",
+            description="Retrieves documents from the knowledge base",
+        ),
+    )
+
+    multiplier_tool = FunctionTool.from_defaults(
+        multiply,
+        name="multiplier",
+        description="multiplies two integers",
+    )
+
+    memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
+
+    agent = ReActAgent(
+        tools=[query_engine_tool, multiplier_tool], llm=llm, verbose=True, memory=memory
+    )
+
     condensed_question: str = chat_engine.condense_question(
         chat_messages, query_str
     ).strip()
     try:
-        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
+        # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
+        chat_response: AgentChatResponse = agent.chat(
+            message=query_str, chat_history=chat_messages
+        )
+        # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
@@ -181,6 +220,7 @@ def _build_flexible_chat_engine(
         condense_question_prompt=CUSTOM_PROMPT,
         retriever=retriever,
         node_postprocessors=postprocessors,
+        chat_mode="react",
     )
     chat_engine._configuration = configuration
     return chat_engine
