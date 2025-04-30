@@ -93,16 +93,6 @@ def query(
 
     tools = []
 
-    # Create a direct_llm_chat tool
-    direct_llm_chat_tool = FunctionTool.from_defaults(
-        lambda messages: llm.chat(messages),
-        name="direct_llm_chat_tool",
-        description="Directly chat with the LLM. Used as a fallback when no other suitable tools are available.",
-    )
-
-    tools.append(direct_llm_chat_tool)
-    condensed_question = None
-
     # Create a chat message list from the chat history
     chat_messages = list(
         map(
@@ -110,6 +100,22 @@ def query(
             chat_history,
         )
     )
+
+    def format_and_call_llm(content: str):
+        messages = chat_messages.copy()
+        user_message = ChatMessage(role="user", content=content)
+        messages.append(user_message)
+        return llm.chat(messages).message.content
+
+    # Create a direct_llm_chat tool
+    direct_llm_chat_tool = FunctionTool.from_defaults(
+        fn=format_and_call_llm,
+        name="direct_llm_chat_tool",
+        description="Directly chat with the LLM. Used as a fallback when no other suitable tools are available.",
+    )
+
+    tools.append(direct_llm_chat_tool)
+    condensed_question = None
 
     # Create a retriever tool
     if data_source_id != -1:
@@ -142,7 +148,8 @@ def query(
             query_engine=query_engine,
             metadata=ToolMetadata(
                 name="Knowledge_base_retriever",
-                description="Retrieves documents from the knowledge base",
+                description="Retrieves documents from the knowledge base. A summary of the knowledge base's contents is below:"
+                "A model for predicting COVID-19 cases has been developed by a collaboration of experts, using data on mobility to estimate future cases. It's been tested in the US and is being used in several countries to inform response strategies. Meanwhile, a document containing membership details is stored as an image, revealing information about a Peloton membership, including its status and purchase date. The membership is active and was purchased in November 2022, with a residence zip code of 80026.",
             ),
         )
         tools.append(query_engine_tool)
@@ -161,9 +168,7 @@ def query(
 
     memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
 
-    agent = ReActAgent(
-        tools=tools, llm=llm, verbose=True, memory=memory
-    )
+    agent = ReActAgent(tools=tools, llm=llm, verbose=True, memory=memory)
 
     try:
         # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
@@ -196,9 +201,9 @@ class DebugNodePostProcessor(BaseNodePostprocessor):
     def _postprocess_nodes(
         self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None
     ) -> list[NodeWithScore]:
-        logger.debug(f"nodes: {len(nodes)}")
+        logger.info(f"nodes: {len(nodes)}")
         for node in sorted(nodes, key=lambda n: n.node.node_id):
-            logger.debug(
+            logger.info(
                 node.node.node_id, node.node.metadata["document_id"], node.score
             )
 
