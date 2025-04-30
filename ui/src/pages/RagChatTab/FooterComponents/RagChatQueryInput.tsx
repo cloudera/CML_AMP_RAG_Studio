@@ -36,9 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, Switch, Tooltip } from "antd";
+import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -65,6 +65,7 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
+  const inputRef = useRef<InputRef>(null);
 
   const {
     data: sampleQuestions,
@@ -83,6 +84,12 @@ const RagChatQueryInput = ({
       setUserInput("");
     },
   });
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [inputRef.current, flatChatHistory.length]);
 
   const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
@@ -123,6 +130,7 @@ const RagChatQueryInput = ({
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <Input
             autoFocus
+            ref={inputRef}
             placeholder={
               dataSourceSize && dataSourceSize > 0
                 ? "Ask a question"
