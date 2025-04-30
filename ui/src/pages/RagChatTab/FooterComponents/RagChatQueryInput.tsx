@@ -41,7 +41,7 @@ import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
@@ -62,14 +62,21 @@ const RagChatQueryInput = ({
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
+  const search: { question?: string } = useSearch({
+    strict: false,
+  });
 
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
     isFetching: sampleQuestionsIsFetching,
-  } = useSuggestQuestions({
-    session_id: sessionId ? +sessionId : undefined,
-  });
+  } = useSuggestQuestions(
+    {
+      session_id: sessionId ? +sessionId : undefined,
+    },
+    // don't make a request to get suggest questions if we know a question will be in flight soon
+    !search.question,
+  );
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
