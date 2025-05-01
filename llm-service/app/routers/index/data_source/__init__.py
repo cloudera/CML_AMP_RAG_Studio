@@ -85,18 +85,6 @@ class DataSourceController:
         lambda data_source_id: VectorStoreFactory.for_chunks(data_source_id)
     )
 
-    @staticmethod
-    def _get_summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
-        datasource = data_sources_metadata_api.get_metadata(data_source_id)
-        if not datasource.summarization_model:
-            return None
-        return SummaryIndexer(
-            data_source_id=data_source_id,
-            splitter=SentenceSplitter(chunk_size=2048),
-            embedding_model=models.Embedding.get(datasource.embedding_model),
-            llm=models.LLM.get(datasource.summarization_model),
-        )
-
     @router.delete(
         "/", summary="Deletes the data source from the index.", response_model=None
     )
@@ -124,7 +112,7 @@ class DataSourceController:
     @exceptions.propagates
     def delete_document(self, data_source_id: int, doc_id: str) -> None:
         self.chunks_vector_store.delete_document(doc_id)
-        summary_indexer = self._get_summary_indexer(data_source_id)
+        summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
         if summary_indexer:
             try:
                 summary_indexer.delete_document(doc_id)
@@ -209,7 +197,7 @@ class DataSourceController:
     )
     @exceptions.propagates
     def get_document_summary(self, data_source_id: int, doc_id: str) -> str:
-        indexer = self._get_summary_indexer(data_source_id)
+        indexer = SummaryIndexer.get_summary_indexer(data_source_id)
         if not indexer:
             return SUMMARIZATION_DISABLED
         summary = indexer.get_summary(doc_id)
@@ -239,7 +227,7 @@ class DataSourceController:
                 request.original_filename,
             )
 
-            indexer = self._get_summary_indexer(data_source_id)
+            indexer = SummaryIndexer.get_summary_indexer(data_source_id)
             if not indexer:
                 return SUMMARIZATION_DISABLED
             # Delete to avoid duplicates
@@ -276,7 +264,7 @@ class DataSourceController:
     )
     @exceptions.propagates
     def get_document_summary_of_summaries(self, data_source_id: int) -> str:
-        indexer = self._get_summary_indexer(data_source_id)
+        indexer = SummaryIndexer.get_summary_indexer(data_source_id)
         if not indexer:
             return SUMMARIZATION_DISABLED
         summary = indexer.get_full_summary()

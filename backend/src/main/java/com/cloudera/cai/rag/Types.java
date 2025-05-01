@@ -101,7 +101,8 @@ public class Types {
       @Nullable Long totalDocSize,
       boolean availableForDefaultProject) {}
 
-  public record QueryConfiguration(boolean enableHyde, boolean enableSummaryFilter) {}
+  public record QueryConfiguration(
+      boolean enableHyde, boolean enableSummaryFilter, boolean enableToolCalling) {}
 
   @With
   @Builder

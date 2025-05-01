@@ -68,6 +68,18 @@ class BedrockModelProvider(ModelProvider):
         ]
 
         model_arns = BedrockModelProvider._get_model_arns()
+        # llama4_maverick = BedrockModelProvider._get_model_arn_by_profiles(
+        #     "meta.llama4-maverick-17b-instruct-v1:0", model_arns
+        # )
+        # if llama4_maverick:
+        #     models.append(llama4_maverick)
+        #
+        # model_arns = BedrockModelProvider._get_model_arns()
+        # llama4_maverick = BedrockModelProvider._get_model_arn_by_profiles(
+        #     "meta.llama4-scout-17b-instruct-v1:0", model_arns
+        # )
+        # if llama4_maverick:
+        #     models.append(llama4_maverick)
 
         claude37sonnet = BedrockModelProvider._get_model_arn_by_profiles(
             "anthropic.claude-3-7-sonnet-20250219-v1:0", model_arns
