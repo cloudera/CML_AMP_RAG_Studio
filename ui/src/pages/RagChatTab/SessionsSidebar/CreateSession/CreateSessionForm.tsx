@@ -84,7 +84,8 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                 title="Tool Calling"
                 content={
                   <Typography style={{ width: 300 }}>
-                    Enables tool calling.
+                    (Experimental) Enables tool calling. Note that not all
+                    models will work well with tool calling.
                   </Typography>
                 }
               >
