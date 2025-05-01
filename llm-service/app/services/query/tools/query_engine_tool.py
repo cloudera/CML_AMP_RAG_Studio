@@ -66,7 +66,9 @@ def query_engine_tool(
         ),
     )
     summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    summary = summary_indexer.get_full_summary()
+    summary: str | None = None
+    if summary_indexer:
+        summary = summary_indexer.get_full_summary()
     tool_description = "Retrieves documents from the knowledge base. Try using this tool first before any others."
     if summary is not None:
         tool_description += (

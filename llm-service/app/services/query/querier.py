@@ -77,13 +77,18 @@ def query(
         )
     )
 
+    total_data_sources_size: int = 0
+    if data_source_id:
+        total_data_sources_size = VectorStoreFactory.for_chunks(data_source_id).size()
+
     chat_engine: FlexibleContextChatEngine | None = None
     condensed_question: str | None = None
-    if data_source_id is not None:
+    if data_source_id is not None and not configuration.exclude_knowledge_base and total_data_sources_size > 0:
         chat_engine = create_chat_engine(configuration, data_source_id)
         condensed_question = chat_engine.condense_question(
             chat_messages, query_str
         ).strip()
+
     if configuration.use_tool_calling:
         chatter = configure_react_agent(
             chat_messages, configuration, chat_engine, data_source_id
@@ -91,7 +96,7 @@ def query(
     elif chat_engine is not None:
         chatter = chat_engine
     else:
-        raise ValueError("Expected either a data source or tool calling to be enabled")
+        chatter = a thing that calls llm_completion.completion...
 
     try:
         chat_response: AgentChatResponse = chatter.chat(

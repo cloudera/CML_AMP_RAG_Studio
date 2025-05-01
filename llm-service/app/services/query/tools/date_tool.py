@@ -38,11 +38,11 @@
 from datetime import datetime
 from llama_index.core.tools import FunctionTool
 
-def current_date():
+def current_date() -> str:
     """Get the current date"""
     return datetime.now().strftime("%Y-%m-%d")
 
-def current_date_tool():
+def current_date_tool() -> FunctionTool:
     return FunctionTool.from_defaults(
         current_date,
         name="current_date",
