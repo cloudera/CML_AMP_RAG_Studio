@@ -1,0 +1,27 @@
+(WIP) RAG Studio Allow List:
+
+NVM:
+https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
+
+Node 22:
+https://nodejs.org/dist/v22.15.0/node-v22.15.0-darwin-arm64.tar.xz
+
+RAG Studio artifacts:
+https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download
+
+Qdrant:
+https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64-unknown-linux-musl.tar.gz
+
+Java:
+https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
+
+RAG Studio CML image:
+https://raw.githubusercontent.com
+
+Python dependencies:
+https://pypi.org
+https://files.pythonhosted.org
+
+Node dependencies:
+http://registry.npmjs.org/
+
