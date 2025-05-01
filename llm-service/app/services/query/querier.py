@@ -96,7 +96,15 @@ def query(
     elif chat_engine is not None:
         chatter = chat_engine
     else:
-        chatter = a thing that calls llm_completion.completion...
+        def direct_llm_completion(chat_history: list[ChatMessage]) -> AgentChatResponse:
+            chat_history.append(ChatMessage.from_str(query_str, role="user"))
+            bare_chat_response = models.LLM.get(model_name=configuration.model_name).chat(
+                messages=chat_history
+            )
+            return AgentChatResponse(
+                response=bare_chat_response.message.content,
+            )
+        chatter = direct_llm_completion
 
     try:
         chat_response: AgentChatResponse = chatter.chat(
@@ -111,6 +119,7 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
+
 
 
 def create_chat_engine(
