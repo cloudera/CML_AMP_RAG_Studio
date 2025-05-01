@@ -112,7 +112,15 @@ export const ProjectsHeaderItem = () => {
           </Button>
         }
       >
-        <Form form={form} clearOnDestroy={true}>
+        <Form
+          form={form}
+          clearOnDestroy={true}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleCreateNewProject();
+            }
+          }}
+        >
           <Form.Item
             name="name"
             label="Project name"
