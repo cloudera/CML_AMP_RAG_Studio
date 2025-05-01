@@ -157,6 +157,9 @@ const ChatMessageController = () => {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;
     }
+    if (isFetchingHistory) {
+      return <ChatLoading />;
+    }
     return (
       <>
         <Image
