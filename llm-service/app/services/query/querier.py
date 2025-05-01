@@ -44,6 +44,7 @@ from .simple_reranker import SimpleReranker
 from .tools.query_engine_tool import DebugNodePostProcessor
 from .. import models
 from ..metadata_apis.data_sources_metadata_api import get_metadata
+from ..metadata_apis.session_metadata_api import Session
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 if typing.TYPE_CHECKING:
@@ -83,12 +84,15 @@ def query(
         condensed_question = chat_engine.condense_question(
             chat_messages, query_str
         ).strip()
-    agent = configure_react_agent(
-        chat_messages, configuration, chat_engine, data_source_id
-    )
+    if configuration.use_tool_calling:
+        chatter = configure_react_agent(
+            chat_messages, configuration, chat_engine, data_source_id
+        )
+    else:
+        chatter = chat_engine
+
     try:
-        # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
-        chat_response: AgentChatResponse = agent.chat(
+        chat_response: AgentChatResponse = chatter.chat(
             message=query_str, chat_history=chat_messages
         )
         logger.info("query response received from chat engine")

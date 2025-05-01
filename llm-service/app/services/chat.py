@@ -84,17 +84,19 @@ def v2_chat(
         use_tool_calling=session.query_configuration.enable_tool_calling,
     )
 
-    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return direct_llm_chat(session, query, user_name=user_name)
-
     total_data_sources_size: int = sum(
         map(
             lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
             session.data_source_ids,
         )
     )
-    if total_data_sources_size == 0:
-        return direct_llm_chat(session, query, user_name)
+
+    if (not query_configuration.use_tool_calling) and (
+        query_configuration.exclude_knowledge_base
+        or len(session.data_source_ids) == 0
+        or total_data_sources_size == 0
+    ):
+        return direct_llm_chat(session, query, user_name=user_name)
 
     response_id = str(uuid.uuid4())
 
@@ -305,7 +307,7 @@ def generate_suggested_questions(
                 use_question_condensing=False,
                 use_hyde=False,
                 use_postprocessor=False,
-                use_tool_calling=False
+                use_tool_calling=False,
             ),
             [],
         )
