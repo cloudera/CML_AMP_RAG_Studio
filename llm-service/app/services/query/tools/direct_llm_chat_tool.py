@@ -35,12 +35,21 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Annotated
+
+from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.tools import FunctionTool
 
 
-def multiply(
-    a: Annotated[int, "first integer"], b: Annotated[int, "second integer"]
-) -> int:
-    """Multiply two integers and returns the result integer"""
-    print("i can math")
-    return a * b
+def direct_llm_chat_tool(chat_messages, llm):
+    def format_and_call_llm(content: str):
+        messages = chat_messages.copy()
+        user_message = ChatMessage(role="user", content=content)
+        messages.append(user_message)
+        return llm.chat(messages).message.content
+
+    # Create a direct_llm_chat tool
+    return FunctionTool.from_defaults(
+        fn=format_and_call_llm,
+        name="direct_llm_chat_tool",
+        description="Directly chat with the LLM. Used as a fallback when no other suitable tools are available.",
+    )

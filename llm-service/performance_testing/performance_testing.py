@@ -53,7 +53,7 @@ from llama_index.core import VectorStoreIndex
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models, evaluators
-from app.services.query.querier import CUSTOM_PROMPT
+from app.services.query.tools.query_engine_tool import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleContextChatEngine
 
 test_runtime_config = {
@@ -75,7 +75,9 @@ def main():
     with open(
         os.path.abspath(os.path.join(os.path.dirname(__file__), "raw_results.csv")), "a"
     ) as details:
-        details.write("timestamp,chunk_size,hyde,summarization_model,reranking_model,top_k,file_name_1,max_score,relevance,faithfulness,question\n")
+        details.write(
+            "timestamp,chunk_size,hyde,summarization_model,reranking_model,top_k,file_name_1,max_score,relevance,faithfulness,question\n"
+        )
         for config in [
             dict(zip(test_runtime_config.keys(), values))
             for values in itertools.product(*test_runtime_config.values())
@@ -167,7 +169,7 @@ def setup(
         use_hyde=hyde,
         rerank_model_name=rerank_model,
     )
-    llm = models.get_llm(model_name=query_configuration.model_name)
+    llm = models.LLM.get(model_name=query_configuration.model_name)
     qdrant_store = QdrantVectorStore.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
@@ -187,7 +189,7 @@ def setup(
         llm=llm,
         condense_question_prompt=CUSTOM_PROMPT,
         retriever=retriever,
-        node_postprocessors=[models.get_reranking_model(rerank_model, top_k)],
+        node_postprocessors=[models.Reranking.get(rerank_model, top_k)],
     )
     chat_engine._configuration = query_configuration
     return chat_engine
