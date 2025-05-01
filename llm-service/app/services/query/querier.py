@@ -84,7 +84,7 @@ CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 
 
 def query(
-    data_source_id: int,
+    data_source_id: int | None,
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
@@ -118,7 +118,7 @@ def query(
     condensed_question = None
 
     # Create a retriever tool
-    if data_source_id != -1:
+    if data_source_id:
         qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
         vector_store = qdrant_store.llama_vector_store()
         embedding_model = qdrant_store.get_embedding_model()

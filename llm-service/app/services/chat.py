@@ -110,12 +110,11 @@ def _run_chat(
             session.data_source_ids,
         )
     )
-    if (
-        query_configuration.exclude_knowledge_base or len(session.data_source_ids) == 0
-    ) or total_data_sources_size == 0:
-        data_source_id = -1
-    else:
-        data_source_id: int = session.data_source_ids[0]
+    data_source_id: int | None = None
+    if not query_configuration.exclude_knowledge_base and len(
+            session.data_source_ids) != 0 and total_data_sources_size != 0:
+        data_source_id = session.data_source_ids[0]
+
     response, condensed_question = querier.query(
         data_source_id,
         query,
@@ -145,9 +144,9 @@ def _run_chat(
         condensed_question=condensed_question,
     )
 
-    # record_rag_mlflow_run(
-    #     new_chat_message, query_configuration, response_id, session, user_name
-    # )
+    record_rag_mlflow_run(
+        new_chat_message, query_configuration, response_id, session, user_name
+    )
     return new_chat_message
 
 

@@ -83,26 +83,32 @@ def chat_log_ml_flow_table(message: RagStudioChatMessage) -> dict[str, Any]:
 def chat_log_ml_flow_params(
     session: Session, query_configuration: QueryConfiguration, user_name: Optional[str]
 ) -> dict[str, Any]:
-    data_source_metadata = data_sources_metadata_api.get_metadata(
-        session.data_source_ids[0]
-    )
-    return {
-        "top_k": query_configuration.top_k,
+    base_data = {
         "inference_model": query_configuration.model_name,
         "rerank_model_name": query_configuration.rerank_model_name,
         "exclude_knowledge_base": query_configuration.exclude_knowledge_base,
         "use_question_condensing": query_configuration.use_question_condensing,
-        "use_hyde": query_configuration.use_hyde,
-        "use_summary_filter": query_configuration.use_summary_filter,
         "session_id": session.id,
         "project_id": session.project_id,
         "data_source_ids": session.data_source_ids,
         "user_name": user_name,
+    }
+    if len(session.data_source_ids) == 0:
+        return base_data
+
+    data_source_metadata = data_sources_metadata_api.get_metadata(
+        session.data_source_ids[0]
+    )
+    additional_data = {
+        "top_k": query_configuration.top_k,
+        "use_hyde": query_configuration.use_hyde,
+        "use_summary_filter": query_configuration.use_summary_filter,
         "embedding_model": data_source_metadata.embedding_model,
         "chunk_size": data_source_metadata.chunk_size,
         "summarization_model": data_source_metadata.summarization_model,
         "chunk_overlap_percent": data_source_metadata.chunk_overlap_percent,
     }
+    return {**base_data, **additional_data}
 
 
 def record_rag_mlflow_run(
