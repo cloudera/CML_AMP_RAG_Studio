@@ -83,7 +83,11 @@ def query(
 
     chat_engine: FlexibleContextChatEngine | None = None
     condensed_question: str | None = None
-    if data_source_id is not None and not configuration.exclude_knowledge_base and total_data_sources_size > 0:
+    if (
+        data_source_id is not None
+        and not configuration.exclude_knowledge_base
+        and total_data_sources_size > 0
+    ):
         chat_engine = create_chat_engine(configuration, data_source_id)
         condensed_question = chat_engine.condense_question(
             chat_messages, query_str
@@ -92,22 +96,27 @@ def query(
     if configuration.use_tool_calling:
         chatter = configure_react_agent(
             chat_messages, configuration, chat_engine, data_source_id
-        )
+        ).chat
     elif chat_engine is not None:
-        chatter = chat_engine
+        chatter = chat_engine.chat
     else:
-        def direct_llm_completion(chat_history: list[ChatMessage]) -> AgentChatResponse:
-            chat_history.append(ChatMessage.from_str(query_str, role="user"))
-            bare_chat_response = models.LLM.get(model_name=configuration.model_name).chat(
-                messages=chat_history
-            )
+
+        def direct_llm_completion(
+            message: str,
+            chat_history: list[ChatMessage],
+        ) -> AgentChatResponse:
+            chat_history.append(ChatMessage.from_str(message, role="user"))
+            bare_chat_response = models.LLM.get(
+                model_name=configuration.model_name
+            ).chat(messages=chat_history)
             return AgentChatResponse(
                 response=bare_chat_response.message.content,
             )
+
         chatter = direct_llm_completion
 
     try:
-        chat_response: AgentChatResponse = chatter.chat(
+        chat_response: AgentChatResponse = chatter(
             message=query_str, chat_history=chat_messages
         )
         logger.info("query response received from chat engine")
@@ -119,7 +128,6 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
-
 
 
 def create_chat_engine(

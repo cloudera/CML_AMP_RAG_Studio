@@ -84,20 +84,6 @@ def v2_chat(
         use_tool_calling=session.query_configuration.enable_tool_calling,
     )
 
-    total_data_sources_size: int = sum(
-        map(
-            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
-        )
-    )
-
-    if (not query_configuration.use_tool_calling) and (
-        query_configuration.exclude_knowledge_base
-        or len(session.data_source_ids) == 0
-        or total_data_sources_size == 0
-    ):
-        return direct_llm_chat(session, query, user_name=user_name)
-
     response_id = str(uuid.uuid4())
 
     new_chat_message: RagStudioChatMessage = _run_chat(
