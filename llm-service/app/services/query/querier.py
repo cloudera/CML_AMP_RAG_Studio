@@ -43,7 +43,6 @@ from fastapi import HTTPException
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -55,7 +54,6 @@ def query(
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[AgentChatResponse, str | None]:
-    llm = models.LLM.get(model_name=configuration.model_name)
 
     # Create a chat message list from the chat history
     chat_messages = list(
@@ -67,7 +65,7 @@ def query(
 
     # todo: it would be ideal to only return an agent from this.  not sure how to remove condensed_question yet
     agent, condensed_question = configure_react_agent(
-        chat_messages, configuration, data_source_id, llm, query_str
+        chat_messages, configuration, data_source_id, query_str
     )
     try:
         # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)

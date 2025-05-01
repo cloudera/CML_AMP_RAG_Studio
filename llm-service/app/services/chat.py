@@ -111,8 +111,11 @@ def _run_chat(
         )
     )
     data_source_id: int | None = None
-    if not query_configuration.exclude_knowledge_base and len(
-            session.data_source_ids) != 0 and total_data_sources_size != 0:
+    if (
+        not query_configuration.exclude_knowledge_base
+        and len(session.data_source_ids) != 0
+        and total_data_sources_size != 0
+    ):
         data_source_id = session.data_source_ids[0]
 
     response, condensed_question = querier.query(
@@ -166,7 +169,8 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
 
 
 def format_source_nodes(
-    response: AgentChatResponse, data_source_id: int
+    response: AgentChatResponse,
+    data_source_id: int | None,
 ) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:

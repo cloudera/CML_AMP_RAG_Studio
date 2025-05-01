@@ -39,8 +39,12 @@
 import logging
 
 from llama_index.core.agent import ReActAgent
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.tools import AsyncBaseTool
 
+from app.services import models
+from app.services.query.query_configuration import QueryConfiguration
 from app.services.query.tools.direct_llm_chat_tool import direct_llm_chat_tool
 from app.services.query.tools.multiplier_tool import multiplier_tool
 from app.services.query.tools.query_engine_tool import query_engine_tool
@@ -48,9 +52,15 @@ from app.services.query.tools.query_engine_tool import query_engine_tool
 logger = logging.getLogger(__name__)
 
 
-def configure_react_agent(chat_messages, configuration, data_source_id, llm, query_str):
-    tools = []
+def configure_react_agent(
+    chat_messages: list[ChatMessage],
+    configuration: QueryConfiguration,
+    data_source_id: int | None,
+    query_str: str,
+) -> tuple[ReActAgent, str | None]:
+    llm = models.LLM.get(model_name=configuration.model_name)
 
+    tools: list[AsyncBaseTool] = []
     tools.append(direct_llm_chat_tool(chat_messages, llm))
     condensed_question: str | None = None
     # Create a retriever tool

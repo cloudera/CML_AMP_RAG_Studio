@@ -43,6 +43,8 @@ from typing import List, Optional
 from llama_index.core import VectorStoreIndex, QueryBundle, PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.schema import NodeWithScore
@@ -51,7 +53,6 @@ from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import get_metadata
-from app.services.models import LLM
 from app.services.query.chat_engine import FlexibleContextChatEngine
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
@@ -90,7 +91,12 @@ def _create_retriever(
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
 
 
-def query_engine_tool(chat_messages, configuration, data_source_id, llm):
+def query_engine_tool(
+    chat_messages: list[ChatMessage],
+    configuration: QueryConfiguration,
+    data_source_id: int,
+    llm: LLM,
+) -> tuple[QueryEngineTool, FlexibleContextChatEngine]:
     qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()

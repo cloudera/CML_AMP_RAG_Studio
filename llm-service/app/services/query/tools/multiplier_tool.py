@@ -49,7 +49,7 @@ def multiply(
     return a * b
 
 
-def multiplier_tool():
+def multiplier_tool() -> FunctionTool:
     return FunctionTool.from_defaults(
         multiply,
         name="multiplier",

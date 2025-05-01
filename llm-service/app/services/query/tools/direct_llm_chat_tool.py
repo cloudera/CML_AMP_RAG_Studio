@@ -37,11 +37,12 @@
 #
 
 from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.llms import LLM
 from llama_index.core.tools import FunctionTool
 
 
-def direct_llm_chat_tool(chat_messages, llm):
-    def format_and_call_llm(content: str):
+def direct_llm_chat_tool(chat_messages: list[ChatMessage], llm: LLM) -> FunctionTool:
+    def format_and_call_llm(content: str) -> str | None:
         messages = chat_messages.copy()
         user_message = ChatMessage(role="user", content=content)
         messages.append(user_message)
