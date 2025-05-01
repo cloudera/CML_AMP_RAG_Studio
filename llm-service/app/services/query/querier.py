@@ -88,8 +88,10 @@ def query(
         chatter = configure_react_agent(
             chat_messages, configuration, chat_engine, data_source_id
         )
-    else:
+    elif chat_engine is not None:
         chatter = chat_engine
+    else:
+        raise ValueError("Expected either a data source or tool calling to be enabled")
 
     try:
         chat_response: AgentChatResponse = chatter.chat(
