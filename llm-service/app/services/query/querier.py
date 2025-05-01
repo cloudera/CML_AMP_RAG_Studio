@@ -30,6 +30,7 @@
 from __future__ import annotations
 
 import typing
+import logging
 
 from llama_index.core import VectorStoreIndex, PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
@@ -37,20 +38,18 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
-from app.services.query.tools.react_agent import configure_react_agent, logger
+from app.services.query.tools.react_agent import configure_react_agent
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
 from .tools.query_engine_tool import DebugNodePostProcessor
 from .. import models
 from ..metadata_apis.data_sources_metadata_api import get_metadata
-from ..metadata_apis.session_metadata_api import Session
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 if typing.TYPE_CHECKING:
     from ..chat import RagContext
 
-import logging
 
 import botocore.exceptions
 from fastapi import HTTPException
@@ -110,7 +109,7 @@ def query(
                 model_name=configuration.model_name
             ).chat(messages=chat_history)
             return AgentChatResponse(
-                response=bare_chat_response.message.content,
+                response=bare_chat_response.message.content or "",
             )
 
         chatter = direct_llm_completion
