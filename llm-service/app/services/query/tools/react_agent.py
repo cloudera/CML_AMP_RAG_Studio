@@ -59,14 +59,17 @@ def configure_react_agent(
     chat_messages: list[ChatMessage],
     configuration: QueryConfiguration,
     chat_engine: FlexibleContextChatEngine | None,
+    data_source_id: int | None,
 ) -> ReActAgent:
     llm = models.LLM.get(model_name=configuration.model_name)
 
     tools: list[AsyncBaseTool] = []
     tools.append(direct_llm_chat_tool(chat_messages, llm))
     # Create a retriever tool
-    if chat_engine is not None:
-        tools.append(query_engine_tool(chat_messages, chat_engine))
+    if chat_engine is not None and data_source_id is not None:
+        tools.append(
+            query_engine_tool(chat_messages, chat_engine, data_source_id=data_source_id)
+        )
     tools.append(multiplier_tool())
     tools.append(current_date_tool())
 

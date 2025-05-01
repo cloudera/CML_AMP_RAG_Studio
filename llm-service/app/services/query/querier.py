@@ -83,13 +83,14 @@ def query(
         condensed_question = chat_engine.condense_question(
             chat_messages, query_str
         ).strip()
-    agent = configure_react_agent(chat_messages, configuration, chat_engine)
+    agent = configure_react_agent(
+        chat_messages, configuration, chat_engine, data_source_id
+    )
     try:
         # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         chat_response: AgentChatResponse = agent.chat(
             message=query_str, chat_history=chat_messages
         )
-        # chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:

@@ -56,6 +56,7 @@ logger = logging.getLogger(__name__)
 def query_engine_tool(
     chat_messages: list[ChatMessage],
     chat_engine: FlexibleContextChatEngine,
+    data_source_id: int,
 ) -> QueryEngineTool:
     logger.info("querying chat engine")
     query_engine = RetrieverQueryEngine(
