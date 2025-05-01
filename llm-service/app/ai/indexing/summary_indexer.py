@@ -73,6 +73,7 @@ from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import settings
+from ...services.metadata_apis import data_sources_metadata_api
 from ...services.models.providers import CAIIModelProvider
 
 logger = logging.getLogger(__name__)
@@ -425,3 +426,16 @@ class SummaryIndexer(BaseTextIndexer):
                 )
             except Exception as e:
                 logger.debug(f"Error deleting data source {data_source_id}: {e}")
+
+    @staticmethod
+    def get_summary_indexer(data_source_id: int) -> Optional["SummaryIndexer"]:
+        datasource = data_sources_metadata_api.get_metadata(data_source_id)
+        if not datasource.summarization_model:
+            return None
+        return SummaryIndexer(
+            data_source_id=data_source_id,
+            splitter=SentenceSplitter(chunk_size=2048),
+            embedding_model=models.Embedding.get(datasource.embedding_model),
+            llm=models.LLM.get(datasource.summarization_model),
+        )
+

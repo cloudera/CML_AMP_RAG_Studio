@@ -50,6 +50,7 @@ from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 
+from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import get_metadata
@@ -98,6 +99,7 @@ def query_engine_tool(
     llm: LLM,
 ) -> tuple[QueryEngineTool, FlexibleContextChatEngine]:
     qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
+    summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
     index = VectorStoreIndex.from_vector_store(
@@ -118,14 +120,16 @@ def query_engine_tool(
             chat_history=chat_messages
         ),
     )
-    # todo: add summary as description
+    summary = summary_indexer.get_full_summary()
+    tool_description = "Retrieves documents from the knowledge base. Try using this tool first before any others."
+    if summary is not None:
+              tool_description += "\nA summary of the contents of this knowledge base is provided below:\n" + summary
     return (
         QueryEngineTool(
             query_engine=query_engine,
             metadata=ToolMetadata(
                 name="Knowledge_base_retriever",
-                description="Retrieves documents from the knowledge base. A summary of the knowledge base's contents is below:"
-                "A model for predicting COVID-19 cases has been developed by a collaboration of experts, using data on mobility to estimate future cases. It's been tested in the US and is being used in several countries to inform response strategies. Meanwhile, a document containing membership details is stored as an image, revealing information about a Peloton membership, including its status and purchase date. The membership is active and was purchased in November 2022, with a residence zip code of 80026.",
+                description=tool_description,
             ),
         ),
         chat_engine,
