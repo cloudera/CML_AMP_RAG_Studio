@@ -35,6 +35,7 @@ const useCreateSessionAndRedirect = () => {
         queryConfiguration: {
           enableHyde: false,
           enableSummaryFilter: true,
+          enableToolCalling: false,
         },
         projectId: projectId ? parseInt(projectId) : defaultProject.id,
       };
