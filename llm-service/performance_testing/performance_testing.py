@@ -53,7 +53,7 @@ from llama_index.core import VectorStoreIndex
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.services import models, evaluators
-from app.services.query.tools.query_engine_tool import CUSTOM_PROMPT
+from app.services.query.querier import CUSTOM_PROMPT
 from app.services.query.chat_engine import FlexibleContextChatEngine
 
 test_runtime_config = {

@@ -40,99 +40,45 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from llama_index.core import VectorStoreIndex, QueryBundle, PromptTemplate
-from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core import QueryBundle
 from llama_index.core.base.llms.types import ChatMessage
-from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
-from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
-from app.services import models
-from app.services.metadata_apis.data_sources_metadata_api import get_metadata
 from app.services.query.chat_engine import FlexibleContextChatEngine
-from app.services.query.flexible_retriever import FlexibleRetriever
-from app.services.query.query_configuration import QueryConfiguration
-from app.services.query.simple_reranker import SimpleReranker
 
 logger = logging.getLogger(__name__)
 
 
-def _build_flexible_chat_engine(
-    configuration: QueryConfiguration,
-    llm: LLM,
-    retriever: BaseRetriever,
-    data_source_id: int,
-) -> FlexibleContextChatEngine:
-    postprocessors = _create_node_postprocessors(
-        configuration, data_source_id=data_source_id, llm=llm
-    )
-    chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
-        llm=llm,
-        condense_question_prompt=CUSTOM_PROMPT,
-        retriever=retriever,
-        node_postprocessors=postprocessors,
-        chat_mode="react",
-    )
-    chat_engine._configuration = configuration
-    return chat_engine
-
-
-def _create_retriever(
-    configuration: QueryConfiguration,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    data_source_id: int,
-    llm: LLM,
-) -> BaseRetriever:
-    return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
-
-
 def query_engine_tool(
     chat_messages: list[ChatMessage],
-    configuration: QueryConfiguration,
+    chat_engine: FlexibleContextChatEngine,
     data_source_id: int,
-    llm: LLM,
-) -> tuple[QueryEngineTool, FlexibleContextChatEngine]:
-    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-    summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    vector_store = qdrant_store.llama_vector_store()
-    embedding_model = qdrant_store.get_embedding_model()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=embedding_model,
-    )
-    logger.info("fetched Qdrant index")
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
-    )
-    chat_engine = _build_flexible_chat_engine(
-        configuration, llm, retriever, data_source_id
-    )
+) -> QueryEngineTool:
     logger.info("querying chat engine")
     query_engine = RetrieverQueryEngine(
-        retriever=retriever,
+        retriever=chat_engine._retriever,
         response_synthesizer=chat_engine._get_response_synthesizer(
             chat_history=chat_messages
         ),
     )
+    summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
     summary = summary_indexer.get_full_summary()
     tool_description = "Retrieves documents from the knowledge base. Try using this tool first before any others."
     if summary is not None:
-              tool_description += "\nA summary of the contents of this knowledge base is provided below:\n" + summary
-    return (
-        QueryEngineTool(
-            query_engine=query_engine,
-            metadata=ToolMetadata(
-                name="Knowledge_base_retriever",
-                description=tool_description,
-            ),
+        tool_description += (
+            "\nA summary of the contents of this knowledge base is provided below:\n"
+            + summary
+        )
+    return QueryEngineTool(
+        query_engine=query_engine,
+        metadata=ToolMetadata(
+            name="Knowledge_base_retriever",
+            description=tool_description,
         ),
-        chat_engine,
     )
 
 
@@ -147,40 +93,3 @@ class DebugNodePostProcessor(BaseNodePostprocessor):
             )
 
         return nodes
-
-
-def _create_node_postprocessors(
-    configuration: QueryConfiguration, data_source_id: int, llm: LLM
-) -> list[BaseNodePostprocessor]:
-    if not configuration.use_postprocessor:
-        return []
-
-    data_source = get_metadata(data_source_id=data_source_id)
-    if data_source.summarization_model is None:
-        return [SimpleReranker(top_n=configuration.top_k)]
-
-    return [
-        DebugNodePostProcessor(),
-        models.Reranking.get(
-            model_name=configuration.rerank_model_name,
-            top_n=configuration.top_k,
-        )
-        or SimpleReranker(top_n=configuration.top_k),
-        DebugNodePostProcessor(),
-    ]
-
-
-CUSTOM_TEMPLATE = """\
-Given a conversation (between Human and Assistant) and a follow up message from Human, \
-rewrite the message to be a standalone question that captures all relevant context \
-from the conversation. Just provide the question, not any description of it.
-
-<Chat History>
-{chat_history}
-
-<Follow Up Message>
-{question}
-
-<Standalone question>
-"""
-CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
