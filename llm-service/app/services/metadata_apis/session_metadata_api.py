@@ -50,6 +50,7 @@ from app.services.utils import raise_for_http_error, body_to_json
 class SessionQueryConfiguration:
     enable_hyde: bool
     enable_summary_filter: bool
+    enable_tool_calling: bool
 
 
 @dataclass
@@ -112,6 +113,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
         query_configuration=SessionQueryConfiguration(  # TODO: automatically parse a dict into the dataclass?
             enable_hyde=data["queryConfiguration"]["enableHyde"],
             enable_summary_filter=data["queryConfiguration"]["enableSummaryFilter"],
+            enable_tool_calling=data["queryConfiguration"]["enableToolCalling"],
         ),
     )
 
@@ -128,6 +130,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
         queryConfiguration={
             "enableHyde": session.query_configuration.enable_hyde,
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
+            "enableToolCalling": session.query_configuration.enable_tool_calling,
         },
     )
     headers = {
