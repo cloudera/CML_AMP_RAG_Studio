@@ -78,7 +78,7 @@ def configure_react_agent(
 
     tools.append(multiplier_tool())
     tools.append(current_date_tool())
-    print("tools", tools)
+
 
     memory = ChatMemoryBuffer.from_defaults(token_limit=40000, chat_history=chat_messages)
     agent = ReActAgent(tools=tools, llm=llm, verbose=True, memory=memory)
