@@ -77,7 +77,7 @@ def configure_react_agent(
 
     tools.append(multiplier_tool())
 
-    memory = ChatMemoryBuffer.from_defaults(token_limit=40000)
+    memory = ChatMemoryBuffer.from_defaults(token_limit=40000, chat_history=chat_messages)
     agent = ReActAgent(tools=tools, llm=llm, verbose=True, memory=memory)
 
     return agent, condensed_question
