@@ -38,7 +38,7 @@
 
 import logging
 
-from llama_index.core.agent import ReActAgent
+from llama_index.core.agent import ReActAgent, FunctionCallingAgent, AgentRunner
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import AsyncBaseTool
@@ -55,12 +55,12 @@ from app.services.query.tools.date_tool import current_date_tool
 logger = logging.getLogger(__name__)
 
 
-def configure_react_agent(
+def configure_agent_runner(
     chat_messages: list[ChatMessage],
     configuration: QueryConfiguration,
     chat_engine: FlexibleContextChatEngine | None,
     data_source_id: int | None,
-) -> ReActAgent:
+) -> AgentRunner:
     llm = models.LLM.get(model_name=configuration.model_name)
 
     tools: list[AsyncBaseTool] = []
@@ -76,6 +76,6 @@ def configure_react_agent(
     memory = ChatMemoryBuffer.from_defaults(
         token_limit=40000, chat_history=chat_messages
     )
-    agent = ReActAgent(tools=tools, llm=llm, verbose=True, memory=memory)
+    agent = FunctionCallingAgent.from_tools(tools=tools, llm=llm, verbose=True, memory=memory)
 
     return agent
