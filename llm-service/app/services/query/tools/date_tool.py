@@ -35,52 +35,16 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from datetime import datetime
+from llama_index.core.tools import FunctionTool
 
-import logging
+def current_date():
+    """Get the current date"""
+    return datetime.now().strftime("%Y-%m-%d")
 
-from llama_index.core.agent import ReActAgent
-from llama_index.core.base.llms.types import ChatMessage
-from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core.tools import AsyncBaseTool
-
-from app.services import models
-from app.services.query.query_configuration import QueryConfiguration
-from app.services.query.tools.direct_llm_chat_tool import direct_llm_chat_tool
-from app.services.query.tools.multiplier_tool import multiplier_tool
-from app.services.query.tools.query_engine_tool import query_engine_tool
-from app.services.query.tools.date_tool import current_date_tool
-
-logger = logging.getLogger(__name__)
-
-
-def configure_react_agent(
-    chat_messages: list[ChatMessage],
-    configuration: QueryConfiguration,
-    data_source_id: int | None,
-    query_str: str,
-) -> tuple[ReActAgent, str | None]:
-    llm = models.LLM.get(model_name=configuration.model_name)
-
-    tools: list[AsyncBaseTool] = []
-    tools.append(direct_llm_chat_tool(chat_messages, llm))
-    condensed_question: str | None = None
-    # Create a retriever tool
-    if data_source_id:
-        tool, chat_engine = query_engine_tool(
-            chat_messages, configuration, data_source_id, llm
-        )
-        tools.append(tool)
-
-        # Condense the question
-        condensed_question = chat_engine.condense_question(
-            chat_messages, query_str
-        ).strip()
-
-    tools.append(multiplier_tool())
-    tools.append(current_date_tool())
-    print("tools", tools)
-
-    memory = ChatMemoryBuffer.from_defaults(token_limit=40000, chat_history=chat_messages)
-    agent = ReActAgent(tools=tools, llm=llm, verbose=True, memory=memory)
-
-    return agent, condensed_question
+def current_date_tool():
+    return FunctionTool.from_defaults(
+        current_date,
+        name="current_date",
+        description="fetches the current date in YYYY-MM-DD format. Can be used to get the current date for various purposes, such as logging, timestamps, or date calculations.",
+    )
