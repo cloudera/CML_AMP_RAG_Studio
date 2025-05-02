@@ -17,7 +17,7 @@ if len(apps.applications) > 0:
             "RagStudio application not found. Please install the RagStudio application first."
         )
 
-    # find the application named "RagStudio" and restart it
+    # find the application named "RagStudioQdrant" and restart it
     ragstudio_qdrant = next(
         (app for app in apps.applications if app.name == "RagStudioQdrant"), None
     )
@@ -25,6 +25,10 @@ if len(apps.applications) > 0:
         # if ragstudio_qdrant.status != "APPLICATION_RUNNING":
         app_id = ragstudio_qdrant.id
     else:
+        client.stop_application(
+            project_id=project_id,
+            application_id=ragstudio_app.id,
+        )
         application = client.create_application(
             project_id=project_id,
             body={
