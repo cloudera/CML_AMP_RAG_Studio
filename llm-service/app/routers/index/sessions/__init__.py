@@ -41,10 +41,12 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Header
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
+from ....services import models
 from ....services.chat import (
     v2_chat,
 )
@@ -53,6 +55,7 @@ from ....services.chat_history.chat_history_manager import (
     chat_history_manager,
 )
 from ....services.chat_history.paginator import paginate
+from ....services.llm_completion import stream_completion
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
@@ -161,6 +164,10 @@ class RagStudioChatRequest(BaseModel):
     configuration: RagPredictConfiguration | None = None
 
 
+class StreamCompletionRequest(BaseModel):
+    query: str
+
+
 def parse_jwt_cookie(jwt_cookie: str | None) -> str:
     if jwt_cookie is None:
         return "unknown"
@@ -188,3 +195,25 @@ def chat(
 
     configuration = request.configuration or RagPredictConfiguration()
     return v2_chat(session, request.query, configuration, user_name=origin_remote_user)
+
+
+@router.post(
+    "/stream-completion", summary="Stream completion responses for the given query"
+)
+@exceptions.propagates
+def stream_chat_completion(
+    session_id: int,
+    request: StreamCompletionRequest,
+    origin_remote_user: Optional[str] = Header(None),
+):
+    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
+    model_name = session.inference_model
+
+    def generate_stream():
+        for response in stream_completion(session_id, request.query, model_name):
+            yield json.dumps(
+                {"text": response.message.content, "done": response.delta is None}
+            ) + "\n"
+
+    # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
+    return StreamingResponse(generate_stream(), media_type="application/x-ndjson")

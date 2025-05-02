@@ -36,8 +36,15 @@
 #  DATA.
 #
 import itertools
+from typing import Generator
 
-from llama_index.core.base.llms.types import ChatMessage, ChatResponse
+from llama_index.core.base.llms.types import (
+    ChatMessage,
+    ChatResponse,
+    ChatResponseGen,
+    CompletionResponse,
+    CompletionResponseGen,
+)
 from llama_index.core.llms import LLM
 
 from . import models
@@ -66,6 +73,24 @@ def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
     return model.chat(messages)
 
 
+def stream_completion(
+    session_id: int, question: str, model_name: str
+) -> ChatResponseGen:
+    """
+    Streamed version of the completion function.
+    Returns a generator that yields ChatResponse objects as they become available.
+    """
+    model = models.LLM.get(model_name)
+    chat_history = chat_history_manager.retrieve_chat_history(session_id)[:10]
+    messages = list(
+        itertools.chain.from_iterable(
+            map(lambda x: make_chat_messages(x), chat_history)
+        )
+    )
+    messages.append(ChatMessage.from_str(question, role="user"))
+    return model.stream_chat(messages)
+
+
 def hypothetical(question: str, configuration: QueryConfiguration) -> str:
     model: LLM = models.LLM.get(configuration.model_name)
     prompt: str = (
@@ -73,3 +98,18 @@ def hypothetical(question: str, configuration: QueryConfiguration) -> str:
         "Produce a brief document that would hypothetically answer this question."
     )
     return model.complete(prompt).text
+
+
+def stream_hypothetical(
+    question: str, configuration: QueryConfiguration
+) -> CompletionResponseGen:
+    """
+    Streamed version of the hypothetical function.
+    Returns a generator that yields CompletionResponse objects as they become available.
+    """
+    model: LLM = models.LLM.get(configuration.model_name)
+    prompt: str = (
+        f"You are an expert. You are asked: {question}. "
+        "Produce a brief document that would hypothetically answer this question."
+    )
+    return model.stream_complete(prompt)
