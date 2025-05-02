@@ -69,7 +69,7 @@ def url_template() -> str:
 def get_metadata(data_source_id: int) -> RagDataSource:
     headers = {"Authorization": f"Bearer {settings.cdsw_apiv2_key}"}
 
-    response = requests.get(url_template().format(data_source_id), headers=headers)
+    response = requests.get(url_template().format(data_source_id), headers=headers, verify=False)
     raise_for_http_error(response)
     data = body_to_json(response)
     return RagDataSource(

@@ -142,6 +142,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
         data=json.dumps(updatable_session.__dict__, default=str),
         headers=headers,
         timeout=10,
+        verify=False,
     )
     raise_for_http_error(response)
     return session_from_java_response(body_to_json(response))
