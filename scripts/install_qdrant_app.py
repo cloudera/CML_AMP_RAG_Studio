@@ -1,5 +1,6 @@
 import os
 import time
+import uuid
 
 import cmlapi
 
@@ -29,11 +30,13 @@ if len(apps.applications) > 0:
             project_id=project_id,
             application_id=ragstudio_app.id,
         )
+
+        random_subdomain = str(uuid.uuid4())[:6]
         application = client.create_application(
             project_id=project_id,
             body={
                 "name": "RagStudioQdrant",
-                "subdomain": "ragstudioqdrant",
+                "subdomain": f"ragstudioqdrant-{random_subdomain}",
                 "bypass_authentication": False,
                 "static_subdomain": False,
                 "script": "scripts/startup_qdrant.py",
