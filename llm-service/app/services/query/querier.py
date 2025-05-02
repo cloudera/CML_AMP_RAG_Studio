@@ -38,7 +38,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
-from app.services.query.tools.react_agent import configure_react_agent
+from app.services.query.tools.react_agent import configure_agent_runner
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
 from .simple_reranker import SimpleReranker
@@ -93,7 +93,7 @@ def query(
         ).strip()
 
     if configuration.use_tool_calling:
-        chatter = configure_react_agent(
+        chatter = configure_agent_runner(
             chat_messages, configuration, chat_engine, data_source_id
         ).chat
     elif chat_engine is not None:
