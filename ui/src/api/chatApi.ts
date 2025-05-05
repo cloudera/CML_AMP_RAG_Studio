@@ -384,3 +384,45 @@ const feedbackMutation = async ({
     { feedback },
   );
 };
+
+interface ChatRequest {
+  query: string;
+  sessionId: string;
+}
+
+interface ChatMutationOptions {
+  onChunk?: (chunk: string) => void;
+}
+
+export function useStreamChatMutation(options?: ChatMutationOptions) {
+  return useMutation({
+    mutationKey: [MutationKeys.streamChatMutation],
+    mutationFn: async ({ query, sessionId }: ChatRequest) => {
+      const res = await fetch(
+        `${llmServicePath}/sessions/${sessionId}/stream-completion`,
+        {
+          method: "POST",
+          body: JSON.stringify({ query }),
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      if (!res.body) throw new Error("Error getting stream completion");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        // do we need the fallback?
+        const chunk = decoder.decode(value ?? new Uint8Array(), {
+          stream: true,
+        });
+        fullResponse += chunk;
+        options?.onChunk?.(chunk);
+      }
+      return fullResponse;
+    },
+  });
+}
