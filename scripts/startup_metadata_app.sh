@@ -51,6 +51,7 @@ fi
 export DB_URL=$DB_URL_LOCATION
 export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
+export METADATA_APP_PORT=${CDSW_APP_PORT}
 
 for i in {1..3}; do
   echo "Starting Java application..."
