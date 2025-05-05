@@ -214,5 +214,11 @@ def stream_chat_completion(
                 {"text": response.message.content, "done": response.delta is None}
             ) + "\n"
 
+    try:
+        stream = generate_stream()
+    finally:
+        print("DONE")
+
+    # kick off evals with full response
     # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
-    return StreamingResponse(generate_stream(), media_type="application/x-ndjson")
+    return StreamingResponse(stream, media_type="application/x-ndjson")

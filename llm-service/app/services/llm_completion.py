@@ -36,6 +36,7 @@
 #  DATA.
 #
 import itertools
+from typing import Generator
 
 from llama_index.core.base.llms.types import (
     ChatMessage,
@@ -72,7 +73,7 @@ def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
 
 def stream_completion(
     session_id: int, question: str, model_name: str
-) -> ChatResponseGen:
+) -> Generator[ChatResponse, None, None]:
     """
     Streamed version of the completion function.
     Returns a generator that yields ChatResponse objects as they become available.
@@ -85,7 +86,9 @@ def stream_completion(
         )
     )
     messages.append(ChatMessage.from_str(question, role="user"))
-    return model.stream_chat(messages)
+
+    stream = model.stream_chat(messages)
+    return stream
 
 
 def hypothetical(question: str, configuration: QueryConfiguration) -> str:
