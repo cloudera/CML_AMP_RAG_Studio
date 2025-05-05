@@ -1,6 +1,6 @@
 #
 # CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-# (C) Cloudera, Inc. 2024
+# (C) Cloudera, Inc. 2025
 # All rights reserved.
 #
 # Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 # with an authorized and properly licensed third party, you do not
 # have any rights to access nor to use this code.
 #
-# Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+# Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 # contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 # KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 # WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,10 +36,7 @@
 # DATA.
 #
 
-set -eox pipefail
-
-export RAG_DATABASES_DIR=$(pwd)/databases
-export API_URL="http://localhost:8080"
+set -ox pipefail
 
 RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
 DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
@@ -51,7 +48,6 @@ fi
 export DB_URL=$DB_URL_LOCATION
 export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
-export METADATA_APP_PORT=${CDSW_APP_PORT}
 
 for i in {1..3}; do
   echo "Starting Java application..."
@@ -59,4 +55,7 @@ for i in {1..3}; do
   echo "Java application crashed, retrying ($i/3)..."
   sleep 5
 done
-
+#while ! curl --output /dev/null --silent --fail http://localhost:8080/api/v1/rag/dataSources; do
+#    echo "Waiting for the Java backend to be ready..."
+#    sleep 4
+#done

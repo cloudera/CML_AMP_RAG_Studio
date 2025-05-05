@@ -56,7 +56,7 @@ class MetadataMetrics(BaseModel):
 def get_metadata_metrics() -> MetadataMetrics:
     headers = {"Authorization": f"Bearer {settings.cdsw_apiv2_key}"}
 
-    response = requests.get(url_template(), headers=headers)
+    response = requests.get(url_template(), headers=headers, verify=False)
     raise_for_http_error(response)
     data = body_to_json(response)
     return MetadataMetrics(

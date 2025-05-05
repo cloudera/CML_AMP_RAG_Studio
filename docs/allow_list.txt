@@ -7,7 +7,12 @@ Node 22:
 https://nodejs.org/dist/v22.15.0/node-v22.15.0-darwin-arm64.tar.xz
 
 RAG Studio artifacts:
-https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download
+# note: these first 3 redirect to the specific release url (eg. releases/download/1.16.0/...)
+https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download/rag-api.jar
+https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download/fe-dist.tar.gz
+https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download/node-dist.tar.gz
+https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth
+https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth
 
 Qdrant:
 https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64-unknown-linux-musl.tar.gz
@@ -15,13 +20,9 @@ https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64-unknown
 Java:
 https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
 
-RAG Studio CML image:
+RAG Studio CML image (the picture shown in the catalog):
 https://raw.githubusercontent.com
 
 Python dependencies:
 https://pypi.org
 https://files.pythonhosted.org
-
-Node dependencies:
-http://registry.npmjs.org/
-
