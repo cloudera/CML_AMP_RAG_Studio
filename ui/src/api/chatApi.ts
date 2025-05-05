@@ -417,11 +417,11 @@ export function useStreamChatMutation(options?: ChatMutationOptions) {
         const chunk = decoder.decode(value ?? new Uint8Array(), {
           stream: true,
         });
-        if (doneReading) {
-          console.log("HELLO");
-        } else {
-          console.log("CHUNK", chunk);
-        }
+        // if (doneReading) {
+        //   console.log("HELLO");
+        // } else {
+        //   console.log("CHUNK", chunk);
+        // }
         fullResponse += chunk;
         options?.onChunk?.(chunk);
       }

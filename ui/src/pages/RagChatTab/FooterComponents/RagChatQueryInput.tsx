@@ -92,7 +92,8 @@ const RagChatQueryInput = ({
 
   const streamChatMutation = useStreamChatMutation({
     onChunk: (chunk) => {
-      setResponse((prev) => prev + chunk);
+      console.log("stream chunk", chunk);
+      setResponse(() => chunk);
     },
   });
 
@@ -113,11 +114,11 @@ const RagChatQueryInput = ({
           configuration: createQueryConfiguration(excludeKnowledgeBase),
           session_id: +sessionId,
         });
-        chatMutation.mutate({
-          query: userInput,
-          session_id: +sessionId,
-          configuration: createQueryConfiguration(excludeKnowledgeBase),
-        });
+        // chatMutation.mutate({
+        //   query: userInput,
+        //   session_id: +sessionId,
+        //   configuration: createQueryConfiguration(excludeKnowledgeBase),
+        // });
       } else {
         newSessionCallback(userInput);
       }
