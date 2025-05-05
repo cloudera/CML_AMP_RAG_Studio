@@ -40,7 +40,11 @@ import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import {
+  createQueryConfiguration,
+  useChatMutation,
+  useStreamChatMutation,
+} from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
@@ -62,11 +66,12 @@ const RagChatQueryInput = ({
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
+  const [response, setResponse] = useState("");
   const search: { question?: string } = useSearch({
     strict: false,
   });
   const inputRef = useRef<InputRef>(null);
-
+  // console.log(response);
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
@@ -85,6 +90,12 @@ const RagChatQueryInput = ({
     },
   });
 
+  const streamChatMutation = useStreamChatMutation({
+    onChunk: (chunk) => {
+      setResponse((prev) => prev + chunk);
+    },
+  });
+
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
@@ -97,6 +108,11 @@ const RagChatQueryInput = ({
     }
     if (userInput.length > 0) {
       if (sessionId) {
+        streamChatMutation.mutate({
+          query: userInput,
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
+          session_id: +sessionId,
+        });
         chatMutation.mutate({
           query: userInput,
           session_id: +sessionId,

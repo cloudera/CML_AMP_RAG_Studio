@@ -48,6 +48,7 @@ from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat import (
     v2_chat,
+    v3_chat,
 )
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
@@ -202,23 +203,27 @@ def chat(
 @exceptions.propagates
 def stream_chat_completion(
     session_id: int,
-    request: StreamCompletionRequest,
+    request: RagStudioChatRequest,
     origin_remote_user: Optional[str] = Header(None),
 ):
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
-    model_name = session.inference_model
+    configuration = request.configuration or RagPredictConfiguration()
 
     def generate_stream():
-        for response in stream_completion(session_id, request.query, model_name):
+        for response in v3_chat(
+            session, request.query, configuration, user_name=origin_remote_user
+        ):
             yield json.dumps(
                 {"text": response.message.content, "done": response.delta is None}
             ) + "\n"
 
-    try:
-        stream = generate_stream()
-    finally:
-        print("DONE")
+    def full_response():
+        yield json.dumps({"text": "Another one", "done": True}) + "\n"
+
+    def combined_gen():
+        yield from generate_stream()
+        yield from full_response()
 
     # kick off evals with full response
     # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
-    return StreamingResponse(stream, media_type="application/x-ndjson")
+    return StreamingResponse(combined_gen(), media_type="application/x-ndjson")

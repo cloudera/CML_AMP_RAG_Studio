@@ -38,10 +38,10 @@
 import time
 import uuid
 from random import shuffle
-from typing import List, Iterable, Optional
+from typing import List, Iterable, Optional, Generator
 
 from fastapi import HTTPException
-from llama_index.core.base.llms.types import MessageRole
+from llama_index.core.base.llms.types import MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import AgentChatResponse
 from pydantic import BaseModel
 
@@ -65,6 +65,44 @@ from ..rag_types import RagPredictConfiguration
 class RagContext(BaseModel):
     role: MessageRole
     content: str
+
+
+def v3_chat(
+    session: Session,
+    query: str,
+    configuration: RagPredictConfiguration,
+    user_name: Optional[str],
+) -> Generator[ChatResponse, None, RagStudioChatMessage]:
+    query_configuration = QueryConfiguration(
+        top_k=session.response_chunks,
+        model_name=session.inference_model,
+        rerank_model_name=session.rerank_model,
+        exclude_knowledge_base=configuration.exclude_knowledge_base,
+        use_question_condensing=configuration.use_question_condensing,
+        use_hyde=session.query_configuration.enable_hyde,
+        use_summary_filter=session.query_configuration.enable_summary_filter,
+    )
+
+    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+        return stream_direct_llm_chat(session, query, user_name=user_name)
+
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if total_data_sources_size == 0:
+        return stream_direct_llm_chat(session, query, user_name)
+
+    response_id = str(uuid.uuid4())
+
+    new_chat_message: RagStudioChatMessage = _run_chat(
+        session, response_id, query, query_configuration, user_name
+    )
+
+    chat_history_manager.append_to_history(session.id, [new_chat_message])
+    return new_chat_message
 
 
 def v2_chat(
@@ -331,6 +369,38 @@ def direct_llm_chat(
         rag_message=RagMessage(
             user=query,
             assistant=str(chat_response.message.content),
+        ),
+        timestamp=time.time(),
+        condensed_question=None,
+    )
+    chat_history_manager.append_to_history(session.id, [new_chat_message])
+    return new_chat_message
+
+
+def stream_direct_llm_chat(
+    session: Session, query: str, user_name: Optional[str]
+) -> Generator[ChatResponse, None, RagStudioChatMessage]:
+    response_id = str(uuid.uuid4())
+    record_direct_llm_mlflow_run(response_id, session, user_name)
+
+    chat_response = llm_completion.stream_completion(
+        session.id, query, session.inference_model
+    )
+    yield from chat_response
+
+    assistant_message = ""
+    for response in chat_response:
+        assistant_message += response.message.content
+
+    new_chat_message = RagStudioChatMessage(
+        id=response_id,
+        session_id=session.id,
+        source_nodes=[],
+        inference_model=session.inference_model,
+        evaluations=[],
+        rag_message=RagMessage(
+            user=query,
+            assistant=assistant_message,
         ),
         timestamp=time.time(),
         condensed_question=None,

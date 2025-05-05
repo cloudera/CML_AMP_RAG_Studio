@@ -385,11 +385,6 @@ const feedbackMutation = async ({
   );
 };
 
-interface ChatRequest {
-  query: string;
-  sessionId: string;
-}
-
 interface ChatMutationOptions {
   onChunk?: (chunk: string) => void;
 }
@@ -397,12 +392,16 @@ interface ChatMutationOptions {
 export function useStreamChatMutation(options?: ChatMutationOptions) {
   return useMutation({
     mutationKey: [MutationKeys.streamChatMutation],
-    mutationFn: async ({ query, sessionId }: ChatRequest) => {
+    mutationFn: async ({
+      query,
+      configuration,
+      session_id,
+    }: ChatMutationRequest) => {
       const res = await fetch(
-        `${llmServicePath}/sessions/${sessionId}/stream-completion`,
+        `${llmServicePath}/sessions/${session_id.toString()}/stream-completion`,
         {
           method: "POST",
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ query, configuration }),
           headers: { "Content-Type": "application/json" },
         },
       );
@@ -411,7 +410,6 @@ export function useStreamChatMutation(options?: ChatMutationOptions) {
       const decoder = new TextDecoder();
       let fullResponse = "";
       let done = false;
-
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
@@ -419,6 +417,11 @@ export function useStreamChatMutation(options?: ChatMutationOptions) {
         const chunk = decoder.decode(value ?? new Uint8Array(), {
           stream: true,
         });
+        if (doneReading) {
+          console.log("HELLO");
+        } else {
+          console.log("CHUNK", chunk);
+        }
         fullResponse += chunk;
         options?.onChunk?.(chunk);
       }
