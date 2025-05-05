@@ -46,7 +46,6 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services import models
 from ....services.chat import (
     v2_chat,
 )
