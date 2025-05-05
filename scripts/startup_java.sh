@@ -1,6 +1,6 @@
 #
 # CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-# (C) Cloudera, Inc. 2024
+# (C) Cloudera, Inc. 2025
 # All rights reserved.
 #
 # Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 # with an authorized and properly licensed third party, you do not
 # have any rights to access nor to use this code.
 #
-# Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+# Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 # contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 # KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 # WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,61 +36,26 @@
 # DATA.
 #
 
-set -eox pipefail
-
-cleanup() {
-    # kill all processes whose parent is this process
-    pkill -P $$
-}
-
-## set the RELEASE_TAG env var from the file, if it exists
-source scripts/release_version.txt || true
-
-for sig in INT QUIT HUP TERM; do
-  trap "
-    cleanup
-    trap - $sig EXIT
-    kill -s $sig "'"$$"' "$sig"
-done
-trap cleanup EXIT
-
+set -ox pipefail
 
 RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
 if [ -z "$IS_COMPOSABLE" ]; then
   RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+  DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
 fi
 
-export RAG_DATABASES_DIR=$(pwd)/databases
-export LLM_SERVICE_URL="http://localhost:8081"
+export DB_URL=$DB_URL_LOCATION
+export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
+export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
 
-export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
-export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
-
-# start Qdrant vector DB
-qdrant/qdrant & 2>&1
-
-# start up the jarva
-scripts/startup_java.sh & 2>&1
-
-# start Python backend
-cd llm-service
-mkdir -p $MLFLOW_RECONCILER_DATA_PATH
-uv run fastapi run --reload --host 127.0.0.1 --port 8081 & 2>&1
-
-# wait for the python backend to be ready
-while ! curl --output /dev/null --silent --fail http://localhost:8081/amp; do
-    echo "Waiting for the Python backend to be ready..."
-    sleep 4
+for i in {1..3}; do
+  echo "Starting Java application..."
+  "$JAVA_HOME"/bin/java -jar artifacts/rag-api.jar
+  echo "Java application crashed, retrying ($i/3)..."
+  sleep 5
 done
-
-# start mlflow reconciler
-uv run reconciler/mlflow_reconciler.py &
-
-# start Node production server
-
-cd ..
-
-source scripts/load_nvm.sh > /dev/null
-
-cd ui
-node express/dist/index.js
+#while ! curl --output /dev/null --silent --fail http://localhost:8080/api/v1/rag/dataSources; do
+#    echo "Waiting for the Java backend to be ready..."
+#    sleep 4
+#done

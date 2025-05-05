@@ -91,5 +91,5 @@ rm -rf node_modules
 tar -xzf ../../artifacts/node-dist.tar.gz
 
 cd ../../scripts
-python install_qdrant_app.py
-python install_metadata_app.py
+#python install_qdrant_app.py
+#python install_metadata_app.py
