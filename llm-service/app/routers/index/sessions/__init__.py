@@ -226,7 +226,7 @@ def stream_chat_completion(
             session, request.query, configuration, user_name=origin_remote_user
         ):
             yield json.dumps(
-                {"text": response.message.content, "done": response.delta is None}
+                {"text": response.message.content, "response_id": response.additional_kwargs["response_id"], "done": response.delta is None}
             ) + "\n"
 
     def full_response():

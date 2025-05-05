@@ -41,7 +41,7 @@ from random import shuffle
 from typing import List, Iterable, Optional, Generator
 
 from fastapi import HTTPException
-from llama_index.core.base.llms.types import MessageRole, ChatResponse
+from llama_index.core.base.llms.types import MessageRole, ChatResponse, ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 from pydantic import BaseModel
 
@@ -386,8 +386,9 @@ def stream_direct_llm_chat(
     chat_response = llm_completion.stream_completion(
         session.id, query, session.inference_model
     )
-    response = ""
+    response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
     for response in chat_response:
+        response.additional_kwargs["response_id"] = response_id
         yield response
 
     new_chat_message = RagStudioChatMessage(
