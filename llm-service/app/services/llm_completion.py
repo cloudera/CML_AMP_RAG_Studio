@@ -36,14 +36,11 @@
 #  DATA.
 #
 import itertools
-from typing import Generator
 
 from llama_index.core.base.llms.types import (
     ChatMessage,
     ChatResponse,
     ChatResponseGen,
-    CompletionResponse,
-    CompletionResponseGen,
 )
 from llama_index.core.llms import LLM
 
@@ -98,18 +95,3 @@ def hypothetical(question: str, configuration: QueryConfiguration) -> str:
         "Produce a brief document that would hypothetically answer this question."
     )
     return model.complete(prompt).text
-
-
-def stream_hypothetical(
-    question: str, configuration: QueryConfiguration
-) -> CompletionResponseGen:
-    """
-    Streamed version of the hypothetical function.
-    Returns a generator that yields CompletionResponse objects as they become available.
-    """
-    model: LLM = models.LLM.get(configuration.model_name)
-    prompt: str = (
-        f"You are an expert. You are asked: {question}. "
-        "Produce a brief document that would hypothetically answer this question."
-    )
-    return model.stream_complete(prompt)
