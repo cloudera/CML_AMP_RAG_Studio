@@ -40,7 +40,7 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -55,7 +55,6 @@ from ....services.chat_history.chat_history_manager import (
     chat_history_manager,
 )
 from ....services.chat_history.paginator import paginate
-from ....services.llm_completion import stream_completion
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
@@ -101,6 +100,19 @@ def chat_history(
         next_id=next_id,
         previous_id=previous_id,
     )
+
+
+@router.get(
+    "/chat-history/{message_id}",
+    summary="Returns a specific chat messages for the provided session.",
+)
+@exceptions.propagates
+def get_message_by_id(session_id: int, message_id: str) -> RagStudioChatMessage:
+    results: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(session_id=session_id)
+    for message in results:
+        if message.id == message_id:
+            return message
+    raise HTTPException(status_code=404, detail=f"Message with id {message_id} not found in session {session_id}")
 
 
 @router.delete(

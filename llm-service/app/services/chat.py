@@ -386,9 +386,8 @@ def stream_direct_llm_chat(
     chat_response = llm_completion.stream_completion(
         session.id, query, session.inference_model
     )
-    assistant_message = ""
+    response = ""
     for response in chat_response:
-        assistant_message += response.message.content
         yield response
 
     new_chat_message = RagStudioChatMessage(
@@ -399,7 +398,7 @@ def stream_direct_llm_chat(
         evaluations=[],
         rag_message=RagMessage(
             user=query,
-            assistant=assistant_message,
+            assistant=response.message.content,
         ),
         timestamp=time.time(),
         condensed_question=None,
