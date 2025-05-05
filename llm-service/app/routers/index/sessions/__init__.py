@@ -205,7 +205,7 @@ def stream_chat_completion(
     session_id: int,
     request: RagStudioChatRequest,
     origin_remote_user: Optional[str] = Header(None),
-):
+) -> StreamingResponse:
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
@@ -218,7 +218,7 @@ def stream_chat_completion(
             ) + "\n"
 
     def full_response():
-        yield json.dumps({"text": "Another one", "done": True}) + "\n"
+        yield json.dumps({"text": "Done", "done": True}) + "\n"
 
     def combined_gen():
         yield from generate_stream()

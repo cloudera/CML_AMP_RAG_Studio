@@ -72,7 +72,7 @@ def v3_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-) -> Generator[ChatResponse, None, RagStudioChatMessage]:
+) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -379,18 +379,17 @@ def direct_llm_chat(
 
 def stream_direct_llm_chat(
     session: Session, query: str, user_name: Optional[str]
-) -> Generator[ChatResponse, None, RagStudioChatMessage]:
+) -> Generator[ChatResponse, None, None]:
     response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.stream_completion(
         session.id, query, session.inference_model
     )
-    yield from chat_response
-
     assistant_message = ""
     for response in chat_response:
         assistant_message += response.message.content
+        yield response
 
     new_chat_message = RagStudioChatMessage(
         id=response_id,
@@ -406,4 +405,3 @@ def stream_direct_llm_chat(
         condensed_question=None,
     )
     chat_history_manager.append_to_history(session.id, [new_chat_message])
-    return new_chat_message
