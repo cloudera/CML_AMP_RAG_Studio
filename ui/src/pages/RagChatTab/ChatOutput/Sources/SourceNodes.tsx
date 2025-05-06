@@ -46,12 +46,7 @@ import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const SkeletonNode = () => {
-  return (
-    <Skeleton.Node
-      active
-      style={{ width: 180, borderRadius: 20, height: 24 }}
-    />
-  );
+  return <Skeleton.Node style={{ width: 180, borderRadius: 20, height: 24 }} />;
 };
 const SourceNodes = ({ data }: { data: ChatMessageType }) => {
   const { data: inferenceModel } = useGetModelById(data.inference_model);
