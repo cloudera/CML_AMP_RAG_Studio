@@ -38,7 +38,7 @@
 import base64
 import json
 import logging
-from typing import Optional
+from typing import Optional, Generator
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -226,7 +226,7 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    def generate_stream():
+    def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
         for response in v3_chat(
             session, request.query, configuration, user_name=origin_remote_user

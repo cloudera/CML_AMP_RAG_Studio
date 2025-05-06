@@ -1,4 +1,4 @@
-# ##############################################################################
+# ##########################################################################
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
@@ -161,12 +161,13 @@ def _run_streaming_chat(
     )
 
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
-    for response in streaming_chat_response.chat_stream:
-        response.additional_kwargs["response_id"] = response_id
-        yield response
+    if streaming_chat_response.chat_stream:
+        for response in streaming_chat_response.chat_stream:
+            response.additional_kwargs["response_id"] = response_id
+            yield response
 
     chat_response = AgentChatResponse(
-        response=response.message.content,
+        response=response.message.content or "",
         sources=streaming_chat_response.sources,
         source_nodes=streaming_chat_response.source_nodes,
     )
@@ -199,6 +200,7 @@ def _run_streaming_chat(
     record_rag_mlflow_run(
         new_chat_message, query_configuration, response_id, session, user_name
     )
+
 
 
 def _run_chat(
@@ -455,7 +457,7 @@ def stream_direct_llm_chat(
         evaluations=[],
         rag_message=RagMessage(
             user=query,
-            assistant=response.message.content,
+            assistant=response.message.content or "",
         ),
         timestamp=time.time(),
         condensed_question=None,
