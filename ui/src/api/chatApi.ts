@@ -108,7 +108,7 @@ export interface ChatResponseFeedback {
   rating: boolean;
 }
 
-const placeholderChatResponseId = "placeholder";
+export const placeholderChatResponseId = "placeholder";
 
 export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
   return chatMessage.id === placeholderChatResponseId;
@@ -390,57 +390,10 @@ const feedbackMutation = async ({
   );
 };
 
-interface ChatMutationOptions {
-  onChunk?: (chunk: string) => void;
-}
-
 export interface ChatMutationResponse {
   text: string;
   response_id: string;
   done: boolean;
-}
-
-export function useStreamChatMutation(options?: ChatMutationOptions) {
-  return useMutation({
-    mutationKey: [MutationKeys.streamChatMutation],
-    mutationFn: async ({
-      query,
-      configuration,
-      session_id,
-    }: ChatMutationRequest) => {
-      const res = await fetch(
-        `${llmServicePath}/sessions/${session_id.toString()}/stream-completion`,
-        {
-          method: "POST",
-          body: JSON.stringify({ query, configuration }),
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-      if (!res.body) throw new Error("Error getting stream completion");
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = "";
-      let done = false;
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        // do we need the fallback?
-        const chunk = decoder.decode(value ?? new Uint8Array(), {
-          stream: true,
-        });
-        const parsedChunk = JSON.parse(chunk) as ChatMutationResponse;
-        // if (doneReading) {
-        //   console.log("HELLO");
-        // } else {
-        //   console.log("CHUNK", chunk);
-        // }
-        // console.log(parsedChunk);
-        fullResponse += parsedChunk.text;
-        options?.onChunk?.(parsedChunk.text);
-      }
-      return fullResponse;
-    },
-  });
 }
 
 export const useChatMutationV2 = ({

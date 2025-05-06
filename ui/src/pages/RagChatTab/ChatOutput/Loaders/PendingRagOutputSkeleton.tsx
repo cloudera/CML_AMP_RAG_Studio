@@ -36,61 +36,37 @@
  * DATA.
  ******************************************************************************/
 
-import { Divider, Flex, Row, Skeleton, Typography } from "antd";
-import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
+import { Row, Skeleton } from "antd";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import Markdown from "react-markdown";
-import Remark from "remark-gfm";
-import Images from "src/components/images/Images.ts";
-import { cdlBlue500 } from "src/cuix/variables.ts";
+import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
+import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
 
 const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   const {
     streamedChatState: [streamedChat],
   } = useContext(RagChatContext);
-  // console.log(streamedChat);
-  return (
-    <div style={{ width: "100%" }}>
-      <div>
-        <UserQuestion question={question} />
-        {streamedChat ? (
-          <Flex
-            style={{ marginTop: 15 }}
-            align="baseline"
-            justify="space-between"
-            gap={8}
-          >
-            <div style={{ flex: 1 }}>
-              <Images.AiAssistantWhite
-                style={{
-                  padding: 4,
-                  backgroundColor: cdlBlue500,
-                  borderRadius: 20,
-                  width: 24,
-                  height: 24,
-                  flex: 1,
-                }}
-              />
-            </div>
-            <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
-              <Markdown
-                skipHtml
-                remarkPlugins={[Remark]}
-                className="styled-markdown"
-              >
-                {streamedChat}
-              </Markdown>
-            </Typography.Text>
-          </Flex>
-        ) : (
-          <Row>
-            <Skeleton active />
-          </Row>
-        )}
-      </div>
-      <Divider />
-    </div>
+
+  const streamedMessage: ChatMessageType | undefined = streamedChat
+    ? {
+        id: placeholderChatResponseId,
+        session_id: 0,
+        source_nodes: [],
+        rag_message: {
+          user: question,
+          assistant: streamedChat,
+        },
+        evaluations: [],
+        timestamp: Date.now(),
+      }
+    : undefined;
+
+  return streamedMessage ? (
+    <ChatMessageBody data={streamedMessage} />
+  ) : (
+    <Row>
+      <Skeleton active />
+    </Row>
   );
 };
 
