@@ -42,6 +42,8 @@ import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
+import Images from "src/components/images/Images.ts";
+import { cdlBlue500 } from "src/cuix/variables.ts";
 
 const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   const {
@@ -59,6 +61,18 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
             justify="space-between"
             gap={8}
           >
+            <div style={{ flex: 1 }}>
+              <Images.AiAssistantWhite
+                style={{
+                  padding: 4,
+                  backgroundColor: cdlBlue500,
+                  borderRadius: 20,
+                  width: 24,
+                  height: 24,
+                  flex: 1,
+                }}
+              />
+            </div>
             <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
               <Markdown
                 skipHtml

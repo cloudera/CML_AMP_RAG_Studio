@@ -234,7 +234,7 @@ def stream_chat_completion(
             response_id = response.additional_kwargs["response_id"]
             json_delta = json.dumps({ "text": response.delta })
             yield f"data: {json_delta}" + "\n\n"
-        yield f'data: {"response_id" : {response_id}}\n\n'
+        yield f'data: {{"response_id" : {response_id}}}\n\n'
 
     # kick off evals with full response
     # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
