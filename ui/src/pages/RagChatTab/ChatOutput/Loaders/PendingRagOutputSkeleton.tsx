@@ -36,40 +36,29 @@
  * DATA.
  ******************************************************************************/
 
-import { Row, Skeleton } from "antd";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
+import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
 
 const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   const {
     streamedChatState: [streamedChat],
   } = useContext(RagChatContext);
 
-  const streamedMessage: ChatMessageType | undefined = streamedChat
-    ? {
-        id: placeholderChatResponseId,
-        session_id: 0,
-        source_nodes: [],
-        rag_message: {
-          user: question,
-          assistant: streamedChat,
-        },
-        evaluations: [],
-        timestamp: Date.now(),
-      }
-    : undefined;
+  const streamedMessage: ChatMessageType = {
+    id: placeholderChatResponseId,
+    session_id: 0,
+    source_nodes: [],
+    rag_message: {
+      user: question,
+      assistant: streamedChat,
+    },
+    evaluations: [],
+    timestamp: Date.now(),
+  };
 
-  return streamedMessage ? (
-    <div style={{ minHeight: window.innerHeight - 200 }}>
-      <ChatMessageBody data={streamedMessage} />
-    </div>
-  ) : (
-    <Row>
-      <Skeleton active />
-    </Row>
-  );
+  return <ChatMessageBody data={streamedMessage} />;
 };
 
 export default PendingRagOutputSkeleton;

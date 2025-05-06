@@ -133,26 +133,17 @@ const ChatMessageController = () => {
   }, [fetchPreviousPage, inView]);
 
   useEffect(() => {
-    // scroll to bottom when changing the active session
     if (bottomElement.current) {
-      setTimeout(() => {
-        if (bottomElement.current) {
-          bottomElement.current.scrollIntoView({ behavior: "auto" });
-        }
-      }, 50);
-    }
-  }, [bottomElement.current, activeSession?.id]);
-
-  useEffect(() => {
-    if (
-      flatChatHistory.length > 0 &&
-      isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
-    ) {
-      setTimeout(() => {
-        if (bottomElement.current) {
-          bottomElement.current.scrollTop = 0;
-        }
-      }, 50);
+      if (
+        flatChatHistory.length > 0 &&
+        isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
+      ) {
+        console.log("placeholder useeffect");
+        bottomElement.current.scrollIntoView({ behavior: "smooth" });
+      } else {
+        console.log("initial useeffect");
+        bottomElement.current.scrollIntoView({ behavior: "auto" });
+      }
     }
   }, [bottomElement.current, flatChatHistory.length, activeSession?.id]);
 
@@ -197,10 +188,15 @@ const ChatMessageController = () => {
             </div>
           );
         }
-
+        if (isLast) {
+          console.log(historyMessage.id);
+        }
         return (
-          <div key={historyMessage.id}>
-            {isLast && <div ref={bottomElement} />}
+          <div
+            key={historyMessage.id}
+            ref={isLast ? bottomElement : null}
+            style={isLast ? { minHeight: window.innerHeight - 200 } : {}}
+          >
             <ChatMessage data={historyMessage} />
           </div>
         );
