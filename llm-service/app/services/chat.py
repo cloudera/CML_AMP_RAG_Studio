@@ -161,6 +161,7 @@ def _run_streaming_chat(
     )
     for response in streaming_chat_response.chat_stream:
         response.additional_kwargs["response_id"] = response_id
+        print(f"{response=}")
         yield response
 
     chat_response = AgentChatResponse(
@@ -168,6 +169,7 @@ def _run_streaming_chat(
         sources=streaming_chat_response.sources,
         source_nodes=streaming_chat_response.source_nodes,
     )
+    print(f"{chat_response=}")
 
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
