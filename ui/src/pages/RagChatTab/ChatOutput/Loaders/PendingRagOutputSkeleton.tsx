@@ -62,7 +62,9 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
     : undefined;
 
   return streamedMessage ? (
-    <ChatMessageBody data={streamedMessage} />
+    <div style={{ minHeight: window.innerHeight - 200 }}>
+      <ChatMessageBody data={streamedMessage} />
+    </div>
   ) : (
     <Row>
       <Skeleton active />

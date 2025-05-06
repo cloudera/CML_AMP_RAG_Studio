@@ -42,7 +42,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
-  useChatMutation,
   useChatMutationV2,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -83,16 +82,13 @@ const RagChatQueryInput = ({
     !search.question,
   );
 
-  const chatMutation = useChatMutation({
-    onSuccess: () => {
-      setUserInput("");
-    },
-  });
-
   const streamChatMutation = useChatMutationV2({
     onChunk: (chunk) => {
-      // console.log("chunk", chunk);
       setStreamedChat((prev) => prev + chunk);
+    },
+    onSuccess: () => {
+      setUserInput("");
+      setStreamedChat("");
     },
   });
 
@@ -102,7 +98,7 @@ const RagChatQueryInput = ({
     }
   }, [inputRef.current, flatChatHistory.length]);
 
-  const handleChat = async (userInput: string) => {
+  const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
       return;
     }
@@ -167,7 +163,7 @@ const RagChatQueryInput = ({
                 />
               </Tooltip>
             }
-            disabled={chatMutation.isPending}
+            disabled={streamChatMutation.isPending}
           />
           <Button
             style={{ padding: 0 }}
@@ -176,7 +172,7 @@ const RagChatQueryInput = ({
               handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={chatMutation.isPending}
+            disabled={streamChatMutation.isPending}
           />
         </Flex>
       </Flex>

@@ -57,6 +57,7 @@ import {
   EventStreamContentType,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
+import messageQueue from "src/utils/messageQueue.ts";
 
 export interface SourceNode {
   node_id: string;
@@ -393,11 +394,11 @@ const feedbackMutation = async ({
 export interface ChatMutationResponse {
   text: string;
   response_id: string;
-  done: boolean;
 }
 
 export const useChatMutationV2 = ({
   onError,
+  onSuccess,
   onChunk,
 }: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
   const queryClient = useQueryClient();
@@ -414,20 +415,30 @@ export const useChatMutationV2 = ({
           appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
-    onSuccess: (data, variables) => {
-      console.log(`onSuccess is here! with response id: ${data}`);
-      // queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-      //   chatHistoryQueryKey({
-      //     session_id: variables.request.session_id,
-      //   }),
-      //   (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
-      // );
-      queryClient
-        .invalidateQueries({
-          queryKey: suggestedQuestionKey(variables.session_id),
+    onSuccess: (messageId, variables) => {
+      fetch(
+        `${llmServicePath}/sessions/${variables.session_id.toString()}/chat-history/${messageId}`,
+      )
+        .then(async (res) => {
+          const message = (await res.json()) as ChatMessageType;
+          queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+            chatHistoryQueryKey({
+              session_id: variables.session_id,
+            }),
+            (cachedData) =>
+              replacePlaceholderInChatHistory(message, cachedData),
+          );
+          queryClient
+            .invalidateQueries({
+              queryKey: suggestedQuestionKey(variables.session_id),
+            })
+            .catch((error: unknown) => {
+              console.error(error);
+            });
+          onSuccess?.(message);
         })
-        .catch((error: unknown) => {
-          console.error(error);
+        .catch(() => {
+          messageQueue.error("An error occurred fetching the chat message");
         });
     },
     onError: (error: Error, variables) => {
@@ -476,10 +487,7 @@ const chatMutationV2 = async (
       }),
       signal: ctrl.signal,
       onmessage(msg: EventSourceMessage) {
-        const data = JSON.parse(msg.data) as {
-          text?: string;
-          response_id?: string;
-        };
+        const data = JSON.parse(msg.data) as ChatMutationResponse;
 
         if (data.text) {
           onChunk(data.text);
@@ -487,9 +495,6 @@ const chatMutationV2 = async (
         if (data.response_id) {
           responseId = data.response_id;
         }
-      },
-      onclose() {
-        console.log("Connection closed");
       },
       onerror(err) {
         console.error("Error", err);
@@ -501,8 +506,6 @@ const chatMutationV2 = async (
           response.headers.get("content-type")?.includes(EventStreamContentType)
         ) {
           await Promise.resolve();
-          console.log("all good");
-          return; // everything's good
         } else if (
           response.status >= 400 &&
           response.status < 500 &&

@@ -144,7 +144,7 @@ const ChatMessageController = () => {
     ) {
       setTimeout(() => {
         if (bottomElement.current) {
-          bottomElement.current.scrollIntoView({ behavior: "auto" });
+          bottomElement.current.scrollTop = 0;
         }
       }, 50);
     }
@@ -181,18 +181,24 @@ const ChatMessageController = () => {
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
       {isFetchingPreviousPage && <Skeleton />}
       {flatChatHistory.map((historyMessage, index) => {
+        const isLast = index === flatChatHistory.length - 1;
         // trigger fetching on second to la`st item
         if (index === 2) {
           return (
             <div ref={refToFetchNextPage} key={historyMessage.id}>
+              {isLast && <div ref={bottomElement} />}
               <ChatMessage data={historyMessage} />
             </div>
           );
         }
 
-        return <ChatMessage data={historyMessage} key={historyMessage.id} />;
+        return (
+          <div key={historyMessage.id}>
+            {isLast && <div ref={bottomElement} />}
+            <ChatMessage data={historyMessage} />
+          </div>
+        );
       })}
-      <div ref={bottomElement} />
     </div>
   );
 };
