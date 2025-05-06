@@ -156,16 +156,21 @@ def _run_streaming_chat(
         )
 
     data_source_id: int = session.data_source_ids[0]
-    chat_response, condensed_question = querier.streaming_query(
+    streaming_chat_response, condensed_question = querier.streaming_query(
         data_source_id,
         query,
         query_configuration,
         retrieve_chat_history(session.id),
     )
-    response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
-    for response in chat_response.chat_stream:
+    for response in streaming_chat_response.chat_stream:
         response.additional_kwargs["response_id"] = response_id
         yield response
+
+    chat_response = AgentChatResponse(
+        response=streaming_chat_response.response,
+        sources=streaming_chat_response.sources,
+        source_nodes=streaming_chat_response.source_nodes,
+    )
 
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
@@ -193,7 +198,6 @@ def _run_streaming_chat(
     record_rag_mlflow_run(
         new_chat_message, query_configuration, response_id, session, user_name
     )
-    return new_chat_message
 
 
 def _run_chat(
