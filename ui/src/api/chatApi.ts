@@ -444,7 +444,6 @@ export function useStreamChatMutation(options?: ChatMutationOptions) {
 }
 
 export const useChatMutationV2 = ({
-  onSuccess,
   onError,
   onChunk,
 }: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
@@ -461,9 +460,6 @@ export const useChatMutationV2 = ({
         (cachedData) =>
           appendPlaceholderToChatHistory(variables.query, cachedData),
       );
-    },
-    onSettled: (data, error, variables) => {
-      console.log(`onSettled is here! with response id: ${data}`);
     },
     onSuccess: (data, variables) => {
       console.log(`onSuccess is here! with response id: ${data}`);
@@ -532,7 +528,6 @@ const chatMutationV2 = async (
           response_id?: string;
         };
 
-        console.log(`data: "${msg.data}"`);
         if (data.text) {
           onChunk(data.text);
         }

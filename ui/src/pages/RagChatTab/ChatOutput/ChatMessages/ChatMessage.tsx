@@ -50,8 +50,6 @@ import Markdown from "react-markdown";
 
 import "../tableMarkdown.css";
 import { ExclamationCircleTwoTone } from "@ant-design/icons";
-import { useContext } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const isError = (data: ChatMessageType) => {
   return data.id.startsWith("error-");

@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Divider, Row, Skeleton, Typography } from "antd";
+import { Divider, Flex, Row, Skeleton, Typography } from "antd";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -53,15 +53,22 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
       <div>
         <UserQuestion question={question} />
         {streamedChat ? (
-          <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
-            <Markdown
-              skipHtml
-              remarkPlugins={[Remark]}
-              className="styled-markdown"
-            >
-              {streamedChat}
-            </Markdown>
-          </Typography.Text>
+          <Flex
+            style={{ marginTop: 15 }}
+            align="baseline"
+            justify="space-between"
+            gap={8}
+          >
+            <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+              <Markdown
+                skipHtml
+                remarkPlugins={[Remark]}
+                className="styled-markdown"
+              >
+                {streamedChat}
+              </Markdown>
+            </Typography.Text>
+          </Flex>
         ) : (
           <Row>
             <Skeleton active />
