@@ -143,6 +143,59 @@ def v2_chat(
     return new_chat_message
 
 
+def _run_streaming_chat(
+    session: Session,
+    response_id: str,
+    query: str,
+    query_configuration: QueryConfiguration,
+    user_name: Optional[str],
+) -> Generator[ChatResponse, None, None]:
+    if len(session.data_source_ids) != 1:
+        raise HTTPException(
+            status_code=400, detail="Only one datasource is supported for chat."
+        )
+
+    data_source_id: int = session.data_source_ids[0]
+    chat_response, condensed_question = querier.streaming_query(
+        data_source_id,
+        query,
+        query_configuration,
+        retrieve_chat_history(session.id),
+    )
+    response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
+    for response in chat_response.chat_stream:
+        response.additional_kwargs["response_id"] = response_id
+        yield response
+
+    if condensed_question and (condensed_question.strip() == query.strip()):
+        condensed_question = None
+    relevance, faithfulness = evaluators.evaluate_response(
+        query, chat_response, session.inference_model
+    )
+    response_source_nodes = format_source_nodes(chat_response, data_source_id)
+    new_chat_message = RagStudioChatMessage(
+        id=response_id,
+        session_id=session.id,
+        source_nodes=response_source_nodes,
+        inference_model=session.inference_model,
+        rag_message=RagMessage(
+            user=query,
+            assistant=chat_response.response,
+        ),
+        evaluations=[
+            Evaluation(name="relevance", value=relevance),
+            Evaluation(name="faithfulness", value=faithfulness),
+        ],
+        timestamp=time.time(),
+        condensed_question=condensed_question,
+    )
+
+    record_rag_mlflow_run(
+        new_chat_message, query_configuration, response_id, session, user_name
+    )
+    return new_chat_message
+
+
 def _run_chat(
     session: Session,
     response_id: str,
