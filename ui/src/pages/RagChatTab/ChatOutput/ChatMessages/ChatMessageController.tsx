@@ -138,10 +138,8 @@ const ChatMessageController = () => {
         flatChatHistory.length > 0 &&
         isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
       ) {
-        console.log("placeholder useeffect");
         bottomElement.current.scrollIntoView({ behavior: "smooth" });
       } else {
-        console.log("initial useeffect");
         bottomElement.current.scrollIntoView({ behavior: "auto" });
       }
     }

@@ -61,7 +61,11 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
     <SourceCard key={node.node_id} source={node} />
   ));
 
-  if (isPlaceholder(data)) {
+  if (
+    isPlaceholder(data) &&
+    activeSession &&
+    activeSession.dataSourceIds.length > 0
+  ) {
     return (
       <Flex style={{ gap: 8 }}>
         <SkeletonNode />
