@@ -50,7 +50,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
   isPlaceholder,
-  useChatMutation,
+  useChatMutationV2,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
@@ -64,6 +64,7 @@ const ChatMessageController = () => {
       isFetching: isFetchingHistory,
       isFetchingPreviousPage,
     },
+    streamedChatState: [, setStreamedChat],
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -77,8 +78,13 @@ const ChatMessageController = () => {
       messageQueue.error(err.message);
     },
   });
-  const { mutate: chatMutation } = useChatMutation({
+
+  const { mutate: chatMutation } = useChatMutationV2({
+    onChunk: (chunk) => {
+      setStreamedChat((prev) => prev + chunk);
+    },
     onSuccess: () => {
+      setStreamedChat("");
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
