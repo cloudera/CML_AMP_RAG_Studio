@@ -39,14 +39,11 @@
 import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useRef, useState } from "react";
-import ndjson from "ndjson";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
-  ChatMutationResponse,
   createQueryConfiguration,
   useChatMutation,
   useChatMutationV2,
-  useStreamChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
@@ -54,11 +51,6 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
-import { llmServicePath } from "src/api/utils.ts";
-import {
-  EventStreamContentType,
-  fetchEventSource,
-} from "@microsoft/fetch-event-source";
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -99,7 +91,7 @@ const RagChatQueryInput = ({
 
   const streamChatMutation = useChatMutationV2({
     onChunk: (chunk) => {
-      console.log("chunk", chunk);
+      // console.log("chunk", chunk);
       setStreamedChat((prev) => prev + chunk);
     },
   });

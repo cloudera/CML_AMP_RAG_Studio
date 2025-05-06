@@ -53,10 +53,10 @@ import {
 } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 import {
+  EventSourceMessage,
   EventStreamContentType,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
-import { Dispatch, SetStateAction } from "react";
 
 export interface SourceNode {
   node_id: string;
@@ -434,7 +434,7 @@ export function useStreamChatMutation(options?: ChatMutationOptions) {
         // } else {
         //   console.log("CHUNK", chunk);
         // }
-        console.log(parsedChunk);
+        // console.log(parsedChunk);
         fullResponse += parsedChunk.text;
         options?.onChunk?.(parsedChunk.text);
       }
@@ -462,7 +462,11 @@ export const useChatMutationV2 = ({
           appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
+    onSettled: (data, error, variables) => {
+      console.log(`onSettled is here! with response id: ${data}`);
+    },
     onSuccess: (data, variables) => {
+      console.log(`onSuccess is here! with response id: ${data}`);
       // queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
       //   chatHistoryQueryKey({
       //     session_id: variables.request.session_id,
@@ -507,8 +511,9 @@ export const useChatMutationV2 = ({
 const chatMutationV2 = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
-): Promise<void> => {
+): Promise<string> => {
   const ctrl = new AbortController();
+  let responseId = "";
   await fetchEventSource(
     `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,
     {
@@ -521,8 +526,19 @@ const chatMutationV2 = async (
         configuration: request.configuration,
       }),
       signal: ctrl.signal,
-      onmessage(msg) {
-        onChunk(msg.data);
+      onmessage(msg: EventSourceMessage) {
+        const data = JSON.parse(msg.data) as {
+          text?: string;
+          response_id?: string;
+        };
+
+        console.log(`data: "${msg.data}"`);
+        if (data.text) {
+          onChunk(data.text);
+        }
+        if (data.response_id) {
+          responseId = data.response_id;
+        }
       },
       onclose() {
         console.log("Connection closed");
@@ -552,4 +568,5 @@ const chatMutationV2 = async (
       },
     },
   );
+  return responseId;
 };

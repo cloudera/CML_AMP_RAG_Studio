@@ -47,7 +47,7 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   const {
     streamedChatState: [streamedChat],
   } = useContext(RagChatContext);
-  console.log(streamedChat);
+  // console.log(streamedChat);
   return (
     <div style={{ width: "100%" }}>
       <div>

@@ -231,10 +231,10 @@ def stream_chat_completion(
         for response in v3_chat(
             session, request.query, configuration, user_name=origin_remote_user
         ):
-            print(response.delta)
             response_id = response.additional_kwargs["response_id"]
-            yield f"data: {response.delta}" + "\n\n"
-        yield f"data: {response_id}" + "\n\n"
+            json_delta = json.dumps({ "text": response.delta })
+            yield f"data: {json_delta}" + "\n\n"
+        yield f'data: {"response_id" : {response_id}}\n\n'
 
     # kick off evals with full response
     # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
