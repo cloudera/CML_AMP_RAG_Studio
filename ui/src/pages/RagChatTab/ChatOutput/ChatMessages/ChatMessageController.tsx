@@ -177,7 +177,7 @@ const ChatMessageController = () => {
       {isFetchingPreviousPage && <Skeleton />}
       {flatChatHistory.map((historyMessage, index) => {
         const isLast = index === flatChatHistory.length - 1;
-        // trigger fetching on second to la`st item
+        // trigger fetching on second to last item
         if (index === 2) {
           return (
             <div ref={refToFetchNextPage} key={historyMessage.id}>
@@ -186,9 +186,7 @@ const ChatMessageController = () => {
             </div>
           );
         }
-        if (isLast) {
-          console.log(historyMessage.id);
-        }
+
         return (
           <div
             key={historyMessage.id}
