@@ -97,12 +97,9 @@ def v3_chat(
     if total_data_sources_size == 0:
         return stream_direct_llm_chat(session, response_id, query, user_name)
 
-    new_chat_message: RagStudioChatMessage = _run_chat(
+    return _run_streaming_chat(
         session, response_id, query, query_configuration, user_name
     )
-
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
-    return new_chat_message
 
 
 def v2_chat(
@@ -194,6 +191,8 @@ def _run_streaming_chat(
         timestamp=time.time(),
         condensed_question=condensed_question,
     )
+
+    chat_history_manager.append_to_history(session.id, [new_chat_message])
 
     record_rag_mlflow_run(
         new_chat_message, query_configuration, response_id, session, user_name
