@@ -52,6 +52,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
+import {
+  EventStreamContentType,
+  fetchEventSource,
+} from "@microsoft/fetch-event-source";
+import { Dispatch, SetStateAction } from "react";
 
 export interface SourceNode {
   node_id: string;
@@ -389,6 +394,12 @@ interface ChatMutationOptions {
   onChunk?: (chunk: string) => void;
 }
 
+export interface ChatMutationResponse {
+  text: string;
+  response_id: string;
+  done: boolean;
+}
+
 export function useStreamChatMutation(options?: ChatMutationOptions) {
   return useMutation({
     mutationKey: [MutationKeys.streamChatMutation],
@@ -417,15 +428,128 @@ export function useStreamChatMutation(options?: ChatMutationOptions) {
         const chunk = decoder.decode(value ?? new Uint8Array(), {
           stream: true,
         });
+        const parsedChunk = JSON.parse(chunk) as ChatMutationResponse;
         // if (doneReading) {
         //   console.log("HELLO");
         // } else {
         //   console.log("CHUNK", chunk);
         // }
-        fullResponse += chunk;
-        options?.onChunk?.(chunk);
+        console.log(parsedChunk);
+        fullResponse += parsedChunk.text;
+        options?.onChunk?.(parsedChunk.text);
       }
       return fullResponse;
     },
   });
 }
+
+export const useChatMutationV2 = ({
+  onSuccess,
+  onError,
+  onChunk,
+}: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [MutationKeys.chatMutation],
+    mutationFn: (request: ChatMutationRequest) =>
+      chatMutationV2(request, onChunk),
+    onMutate: (variables) => {
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+        }),
+        (cachedData) =>
+          appendPlaceholderToChatHistory(variables.query, cachedData),
+      );
+    },
+    onSuccess: (data, variables) => {
+      // queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+      //   chatHistoryQueryKey({
+      //     session_id: variables.request.session_id,
+      //   }),
+      //   (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
+      // );
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(variables.session_id),
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+    },
+    onError: (error: Error, variables) => {
+      const uuid = crypto.randomUUID();
+      const errorMessage: ChatMessageType = {
+        id: `error-${uuid}`,
+        session_id: variables.session_id,
+        source_nodes: [],
+        rag_message: {
+          user: variables.query,
+          assistant: error.message,
+        },
+        evaluations: [],
+        timestamp: Date.now(),
+      };
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+          offset: 0,
+        }),
+        (cachedData) =>
+          replacePlaceholderInChatHistory(errorMessage, cachedData),
+      );
+
+      onError?.(error);
+    },
+  });
+};
+
+const chatMutationV2 = async (
+  request: ChatMutationRequest,
+  onChunk: (chunk: string) => void,
+): Promise<void> => {
+  const ctrl = new AbortController();
+  await fetchEventSource(
+    `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: request.query,
+        configuration: request.configuration,
+      }),
+      signal: ctrl.signal,
+      onmessage(msg) {
+        onChunk(msg.data);
+      },
+      onclose() {
+        console.log("Connection closed");
+      },
+      onerror(err) {
+        console.error("Error", err);
+        ctrl.abort();
+      },
+      async onopen(response) {
+        if (
+          response.ok &&
+          response.headers.get("content-type")?.includes(EventStreamContentType)
+        ) {
+          await Promise.resolve();
+          console.log("all good");
+          return; // everything's good
+        } else if (
+          response.status >= 400 &&
+          response.status < 500 &&
+          response.status !== 429
+        ) {
+          // client-side errors are usually non-retriable:
+          throw new Error();
+        } else {
+          throw new Error();
+        }
+      },
+    },
+  );
+};

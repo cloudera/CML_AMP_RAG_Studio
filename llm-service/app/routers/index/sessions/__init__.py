@@ -108,11 +108,16 @@ def chat_history(
 )
 @exceptions.propagates
 def get_message_by_id(session_id: int, message_id: str) -> RagStudioChatMessage:
-    results: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(session_id=session_id)
+    results: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(
+        session_id=session_id
+    )
     for message in results:
         if message.id == message_id:
             return message
-    raise HTTPException(status_code=404, detail=f"Message with id {message_id} not found in session {session_id}")
+    raise HTTPException(
+        status_code=404,
+        detail=f"Message with id {message_id} not found in session {session_id}",
+    )
 
 
 @router.delete(
@@ -222,20 +227,15 @@ def stream_chat_completion(
     configuration = request.configuration or RagPredictConfiguration()
 
     def generate_stream():
+        response_id: str = ""
         for response in v3_chat(
             session, request.query, configuration, user_name=origin_remote_user
         ):
-            yield json.dumps(
-                {"text": response.message.content, "response_id": response.additional_kwargs["response_id"], "done": response.delta is None}
-            ) + "\n"
-
-    def full_response():
-        yield json.dumps({"text": "Done", "done": True}) + "\n"
-
-    def combined_gen():
-        yield from generate_stream()
-        yield from full_response()
+            print(response.delta)
+            response_id = response.additional_kwargs["response_id"]
+            yield f"data: {response.delta}" + "\n\n"
+        yield f"data: {response_id}" + "\n\n"
 
     # kick off evals with full response
     # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
-    return StreamingResponse(combined_gen(), media_type="application/x-ndjson")
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")

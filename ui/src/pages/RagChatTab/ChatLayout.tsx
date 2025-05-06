@@ -73,6 +73,7 @@ function ChatLayout() {
   const { data: dataSources, status: dataSourcesStatus } =
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
+  const [streamedChat, setStreamedChat] = useState("");
   const {
     status: chatHistoryStatus,
     data: chatHistory,
@@ -108,6 +109,7 @@ function ChatLayout() {
           isFetching,
           isFetchingPreviousPage,
         },
+        streamedChatState: [streamedChat, setStreamedChat],
         dataSourceSize,
         dataSourcesQuery: {
           dataSources: dataSources ?? [],

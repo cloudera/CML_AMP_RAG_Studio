@@ -39,10 +39,13 @@
 import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useRef, useState } from "react";
+import ndjson from "ndjson";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
+  ChatMutationResponse,
   createQueryConfiguration,
   useChatMutation,
+  useChatMutationV2,
   useStreamChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -51,6 +54,11 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import { llmServicePath } from "src/api/utils.ts";
+import {
+  EventStreamContentType,
+  fetchEventSource,
+} from "@microsoft/fetch-event-source";
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -62,16 +70,15 @@ const RagChatQueryInput = ({
     chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
+    streamedChatState: [, setStreamedChat],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
-  const [response, setResponse] = useState("");
   const search: { question?: string } = useSearch({
     strict: false,
   });
   const inputRef = useRef<InputRef>(null);
-  // console.log(response);
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
@@ -90,10 +97,10 @@ const RagChatQueryInput = ({
     },
   });
 
-  const streamChatMutation = useStreamChatMutation({
+  const streamChatMutation = useChatMutationV2({
     onChunk: (chunk) => {
-      console.log("stream chunk", chunk);
-      setResponse(() => chunk);
+      console.log("chunk", chunk);
+      setStreamedChat((prev) => prev + chunk);
     },
   });
 
@@ -103,7 +110,7 @@ const RagChatQueryInput = ({
     }
   }, [inputRef.current, flatChatHistory.length]);
 
-  const handleChat = (userInput: string) => {
+  const handleChat = async (userInput: string) => {
     if (userInput.trim().length <= 0) {
       return;
     }
@@ -111,14 +118,9 @@ const RagChatQueryInput = ({
       if (sessionId) {
         streamChatMutation.mutate({
           query: userInput,
-          configuration: createQueryConfiguration(excludeKnowledgeBase),
           session_id: +sessionId,
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
-        // chatMutation.mutate({
-        //   query: userInput,
-        //   session_id: +sessionId,
-        //   configuration: createQueryConfiguration(excludeKnowledgeBase),
-        // });
       } else {
         newSessionCallback(userInput);
       }
