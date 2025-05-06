@@ -41,7 +41,6 @@ from typing import Generator
 from llama_index.core.base.llms.types import (
     ChatMessage,
     ChatResponse,
-    ChatResponseGen,
 )
 from llama_index.core.llms import LLM
 
