@@ -83,8 +83,10 @@ def v3_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
 
+    response_id = str(uuid.uuid4())
+
     if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return stream_direct_llm_chat(session, query, user_name=user_name)
+        return stream_direct_llm_chat(session, response_id, query, user_name)
 
     total_data_sources_size: int = sum(
         map(
@@ -93,9 +95,7 @@ def v3_chat(
         )
     )
     if total_data_sources_size == 0:
-        return stream_direct_llm_chat(session, query, user_name)
-
-    response_id = str(uuid.uuid4())
+        return stream_direct_llm_chat(session, response_id, query, user_name)
 
     new_chat_message: RagStudioChatMessage = _run_chat(
         session, response_id, query, query_configuration, user_name
@@ -121,8 +121,10 @@ def v2_chat(
         use_summary_filter=session.query_configuration.enable_summary_filter,
     )
 
+    response_id = str(uuid.uuid4())
+
     if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return direct_llm_chat(session, query, user_name=user_name)
+        return direct_llm_chat(session, response_id, query, user_name)
 
     total_data_sources_size: int = sum(
         map(
@@ -131,9 +133,7 @@ def v2_chat(
         )
     )
     if total_data_sources_size == 0:
-        return direct_llm_chat(session, query, user_name)
-
-    response_id = str(uuid.uuid4())
+        return direct_llm_chat(session, response_id, query, user_name)
 
     new_chat_message: RagStudioChatMessage = _run_chat(
         session, response_id, query, query_configuration, user_name
@@ -352,9 +352,8 @@ def process_response(response: str | None) -> list[str]:
 
 
 def direct_llm_chat(
-    session: Session, query: str, user_name: Optional[str]
+    session: Session, response_id: str, query: str, user_name: Optional[str]
 ) -> RagStudioChatMessage:
-    response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.completion(
@@ -378,9 +377,8 @@ def direct_llm_chat(
 
 
 def stream_direct_llm_chat(
-    session: Session, query: str, user_name: Optional[str]
+    session: Session, response_id: str, query: str, user_name: Optional[str]
 ) -> Generator[ChatResponse, None, None]:
-    response_id = str(uuid.uuid4())
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.stream_completion(
