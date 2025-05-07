@@ -978,6 +978,14 @@ wheels = [
 ]
 
 [[package]]
+name = "events"
+version = "0.5"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/ed/e47dec0626edd468c84c04d97769e7ab4ea6457b7f54dcb3f72b17fcd876/Events-0.5-py3-none-any.whl", hash = "sha256:a7286af378ba3e46640ac9825156c93bdba7502174dd696090fdfcd4d80a1abd", size = 6758 },
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2000,6 +2008,32 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-storage-kvstore-s3"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "boto3" },
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d6/cb/1b9fb92fccef755331298458b5f8d3b94da9845e802227b66596b45e803f/llama_index_storage_kvstore_s3-0.3.0.tar.gz", hash = "sha256:8747e2b274ace8969a806800a900a415fe707d0e2d5750fb8b571b67eb6b4dff", size = 2522 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/dc/b60d230f56b2c85df5c611a64582e02cf206a244e213a2f958f3fd5b707f/llama_index_storage_kvstore_s3-0.3.0-py3-none-any.whl", hash = "sha256:caf70e2f543a21b14a7a31f15c3103bfc9038e1409aa42b9ee0595fa2ca9027f", size = 2795 },
+]
+
+[[package]]
+name = "llama-index-vector-stores-opensearch"
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+    { name = "opensearch-py", extra = ["async"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7a/d7/0c0add889e5d7cddd942e7f9581969aa07516ada281b565eb32c4a21e3f8/llama_index_vector_stores_opensearch-0.5.2.tar.gz", hash = "sha256:b94ddd43dbadcc9e0bc908cdf32701b42a87650352ea7e15eb6aa31af8ef817e", size = 8861 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/9a/733d9e504f47e9fef2f2c90278b27cc1ed18b9132c0aa544adc14a209b44/llama_index_vector_stores_opensearch-0.5.2-py3-none-any.whl", hash = "sha256:948fe4993d9481c9c5ca6c76f4f30ae9bf7e4f6664ab8eecb8c51a02ad09e6b8", size = 9264 },
+]
+
+[[package]]
 name = "llama-index-vector-stores-qdrant"
 version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2036,6 +2070,8 @@ dependencies = [
     { name = "llama-index-postprocessor-bedrock-rerank" },
     { name = "llama-index-postprocessor-nvidia-rerank" },
     { name = "llama-index-readers-file" },
+    { name = "llama-index-storage-kvstore-s3" },
+    { name = "llama-index-vector-stores-opensearch" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
     { name = "mlflow" },
@@ -2081,6 +2117,8 @@ requires-dist = [
     { name = "llama-index-postprocessor-bedrock-rerank", specifier = ">=0.3.1" },
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
+    { name = "llama-index-storage-kvstore-s3", specifier = ">=0.3.0" },
+    { name = "llama-index-vector-stores-opensearch", specifier = ">=0.5.2" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },
     { name = "mlflow", specifier = ">=2.20.1" },
@@ -2930,6 +2968,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3d/f9/88d94a75de065ea32619465d2f77b29a0469500e99012523b91cc4141cd1/openpyxl-3.1.5.tar.gz", hash = "sha256:cf0e3cf56142039133628b5acffe8ef0c12bc902d2aadd3e0fe5878dc08d1050", size = 186464 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl", hash = "sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2", size = 250910 },
+]
+
+[[package]]
+name = "opensearch-py"
+version = "2.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "events" },
+    { name = "python-dateutil" },
+    { name = "requests" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/e4/192c97ca676c81f69e138a22e10fb03f64e14a55633cb2acffb41bf6d061/opensearch_py-2.8.0.tar.gz", hash = "sha256:6598df0bc7a003294edd0ba88a331e0793acbb8c910c43edf398791e3b2eccda", size = 237923 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/35/a957c6fb88ff6874996be688448b889475cf0ea978446cd5a30e764e0561/opensearch_py-2.8.0-py3-none-any.whl", hash = "sha256:52c60fdb5d4dcf6cce3ee746c13b194529b0161e0f41268b98ab8f1624abe2fa", size = 353492 },
+]
+
+[package.optional-dependencies]
+async = [
+    { name = "aiohttp" },
 ]
 
 [[package]]
@@ -4634,6 +4693,9 @@ dependencies = [
     { name = "torch" },
 ]
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/20/72eb0b5b08fa293f20fc41c374e37cf899f0033076f0144d2cdc48f9faee/torchvision-0.21.0-1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:5568c5a1ff1b2ec33127b629403adb530fab81378d9018ca4ed6508293f76e2b", size = 2327643 },
+    { url = "https://files.pythonhosted.org/packages/4e/3d/b7241abfa3e6651c6e00796f5de2bd1ce4d500bf5159bcbfeea47e711b93/torchvision-0.21.0-1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ff96666b94a55e802ea6796cabe788541719e6f4905fc59c380fed3517b6a64d", size = 2329320 },
+    { url = "https://files.pythonhosted.org/packages/52/5b/76ca113a853b19c7b1da761f8a72cb6429b3bd0bf932537d8df4657f47c3/torchvision-0.21.0-1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:ffa2a16499508fe6798323e455f312c7c55f2a88901c9a7c0fb1efa86cf7e327", size = 2329878 },
     { url = "https://files.pythonhosted.org/packages/8e/0d/143bd264876fad17c82096b6c2d433f1ac9b29cdc69ee45023096976ee3d/torchvision-0.21.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:044ea420b8c6c3162a234cada8e2025b9076fa82504758cd11ec5d0f8cd9fa37", size = 1784140 },
     { url = "https://files.pythonhosted.org/packages/5e/44/32e2d2d174391374d5ff3c4691b802e8efda9ae27ab9062eca2255b006af/torchvision-0.21.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:b0c0b264b89ab572888244f2e0bad5b7eaf5b696068fc0b93e96f7c3c198953f", size = 7237187 },
     { url = "https://files.pythonhosted.org/packages/0e/6b/4fca9373eda42c1b04096758306b7bd55f7d8f78ba273446490855a0f25d/torchvision-0.21.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:54815e0a56dde95cc6ec952577f67e0dc151eadd928e8d9f6a7f821d69a4a734", size = 14699067 },

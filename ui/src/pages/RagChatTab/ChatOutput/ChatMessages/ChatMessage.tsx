@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Divider, Flex, Typography } from "antd";
+import { Alert, Divider, Flex, Typography } from "antd";
 import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
@@ -49,14 +49,46 @@ import Remark from "remark-gfm";
 import Markdown from "react-markdown";
 
 import "../tableMarkdown.css";
+import { ExclamationCircleTwoTone } from "@ant-design/icons";
 
-const ChatMessage = ({
-  data,
-  isLast,
-}: {
-  data: ChatMessageType;
-  isLast: boolean;
-}) => {
+const isError = (data: ChatMessageType) => {
+  return data.id.startsWith("error-");
+};
+
+const ChatMessage = ({ data }: { data: ChatMessageType }) => {
+  if (isError(data)) {
+    return (
+      <div data-testid="chat-message">
+        <div>
+          <UserQuestion question={data.rag_message.user} />
+          <Flex
+            style={{ marginTop: 15 }}
+            align="baseline"
+            justify="space-between"
+            gap={8}
+          >
+            <div style={{ flex: 1 }}>
+              <ExclamationCircleTwoTone
+                type="error"
+                twoToneColor="#ff4d4f"
+                style={{ fontSize: 22 }}
+              />
+            </div>
+            <Flex vertical gap={8} style={{ width: "100%" }}>
+              <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+                <Alert
+                  type="error"
+                  message={data.rag_message.assistant.trimStart()}
+                />
+              </Typography.Text>
+            </Flex>
+          </Flex>
+          <Divider />
+        </div>
+      </div>
+    );
+  }
+
   if (isPlaceholder(data)) {
     return <PendingRagOutputSkeleton question={data.rag_message.user} />;
   }
@@ -116,7 +148,7 @@ const ChatMessage = ({
           </Flex>
         </div>
       ) : null}
-      {isLast ? null : <Divider />}
+      <Divider />
     </div>
   );
 };

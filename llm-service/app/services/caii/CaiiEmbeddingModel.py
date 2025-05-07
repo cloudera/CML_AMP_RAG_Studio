@@ -37,7 +37,6 @@
 #
 import http.client as http_client
 import json
-import os
 from typing import Any, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
@@ -45,6 +44,7 @@ from pydantic import Field
 
 from .types import Endpoint
 from .utils import build_auth_headers
+from ...config import settings
 
 
 class CaiiEmbeddingModel(BaseEmbedding):
@@ -83,7 +83,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return embedding
 
     def make_embedding_request(self, body: str) -> Any:
-        domain = os.environ["CAII_DOMAIN"]
+        domain = settings.caii_domain
 
         connection = http_client.HTTPSConnection(domain, 443)
         headers = build_auth_headers()

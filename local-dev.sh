@@ -42,10 +42,30 @@ set -a && source .env && set +a
 export RAG_DATABASES_DIR=$(pwd)/databases
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
+source scripts/release_version.txt || true
+
 cleanup() {
     # kill all processes whose parent is this process
     pkill -P $$
-    docker stop qdrant_dev
+
+    # Ensure Python processes are terminated
+    # Find and kill any remaining Python processes started by uv
+    killall -f "uv run" || true
+
+    # Kill any Python processes that might have been started by the script
+    killall -f "python.*mlflow" || true
+    killall -f "python.*fastapi" || true
+    killall -f "python.*reconciler" || true
+
+    # As a last resort, try to find any Python processes in our virtual environment
+    if [ -d "llm-service/venv" ]; then
+        killall -f "llm-service/venv/bin/python" || true
+    fi
+
+    # Stop Docker containers
+    docker stop qdrant_dev || true
+    cd ../..
+    docker compose -f opensearch/docker-compose.yaml down
 }
 
 for sig in INT QUIT HUP TERM; do
@@ -56,10 +76,24 @@ for sig in INT QUIT HUP TERM; do
 done
 trap cleanup EXIT
 
+# Stop any running vector db containers
 docker stop qdrant_dev || true
+docker compose -f opensearch/docker-compose.yaml down
 
+# Create the databases directory if it doesn't exist
 mkdir -p databases
-docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
+
+# Check the VECTOR_DB_PROVIDER environment variable
+if [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "QDRANT" ]; then
+  echo "Using Qdrant as the vector database provider..."
+  docker run --name qdrant_dev --rm -d -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
+elif [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "OPENSEARCH" ]; then
+  echo "Using OpenSearch as the vector database provider..."
+  docker compose -f opensearch/docker-compose.yaml up --detach
+else
+  echo "Unsupported VECTOR_DB_PROVIDER: ${VECTOR_DB_PROVIDER}. Supported values are QDRANT or OPENSEARCH."
+  exit 1
+fi
 
 cd llm-service
 if [ -z "$USE_SYSTEM_UV" ]; then
@@ -68,7 +102,7 @@ if [ -z "$USE_SYSTEM_UV" ]; then
   python -m pip install uv
 fi
 uv sync
-uv run pytest -sxvvra app
+#uv run pytest -sxvvra app
 
 uv run mlflow ui &
 
@@ -96,4 +130,5 @@ pnpm dev &
 
 # start the proxy
 cd express
+pnpm install
 pnpm run dev

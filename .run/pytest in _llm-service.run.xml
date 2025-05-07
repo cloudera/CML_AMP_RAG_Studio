@@ -1,13 +1,13 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="pytest in /llm-service" type="tests" factoryName="py.test">
-    <module name="backend.rag-api.test" />
+    <module name="CML_AMP_RAG_Studio" />
     <option name="ENV_FILES" value="$PROJECT_DIR$/.env" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <option name="SDK_HOME" value="" />
-    <option name="SDK_NAME" value="Python 3.10 (AmpRagStudio)" />
+    <option name="SDK_NAME" value="liberica-21" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/llm-service" />
-    <option name="IS_MODULE_SDK" value="false" />
+    <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />

@@ -46,79 +46,88 @@ export const AuthenticationFields = ({
   selectedFileStorage,
   projectConfig,
   enableModification,
+  summaryStorageProvider,
 }: {
   modelProvider?: ModelSource;
   selectedFileStorage?: FileStorage;
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
-}) => (
-  <Flex vertical style={{ maxWidth: 600 }}>
-    {modelProvider === "CAII" && selectedFileStorage === "Local" && (
-      <StyledHelperText>No additional authentication needed.</StyledHelperText>
-    )}
-    <Form.Item
-      label={"AWS Region"}
-      initialValue={projectConfig?.aws_config.region}
-      name={["aws_config", "region"]}
-      required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-      rules={[
-        {
-          required:
-            modelProvider === "Bedrock" || selectedFileStorage === "AWS",
-        },
-      ]}
-      tooltip="AWS Region where Bedrock is configured and/or the S3 bucket is located."
-      hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
-    >
-      <Input placeholder="us-west-2" disabled={!enableModification} />
-    </Form.Item>
-    <Form.Item
-      label={"AWS Access Key ID"}
-      initialValue={projectConfig?.aws_config.access_key_id}
-      name={["aws_config", "access_key_id"]}
-      required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-      rules={[
-        {
-          required:
-            modelProvider === "Bedrock" || selectedFileStorage === "AWS",
-        },
-      ]}
-      hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
-    >
-      <Input placeholder="access-key-id" disabled={!enableModification} />
-    </Form.Item>
-    <Form.Item
-      label={"AWS Secret Access Key"}
-      initialValue={projectConfig?.aws_config.secret_access_key}
-      name={["aws_config", "secret_access_key"]}
-      required={modelProvider === "Bedrock" || selectedFileStorage === "AWS"}
-      rules={[
-        {
-          required:
-            modelProvider === "Bedrock" || selectedFileStorage === "AWS",
-        },
-      ]}
-      hidden={modelProvider !== "Bedrock" && selectedFileStorage !== "AWS"}
-    >
-      <Input
-        placeholder="secret-access-key"
-        type="password"
-        disabled={!enableModification}
-      />
-    </Form.Item>
-    <Form.Item
-      label={"Azure OpenAI Key"}
-      initialValue={projectConfig?.azure_config.openai_key}
-      name={["azure_config", "openai_key"]}
-      required={modelProvider === "Azure"}
-      rules={[{ required: modelProvider === "Azure" }]}
-      hidden={modelProvider !== "Azure"}
-    >
-      <Input
-        placeholder="azure-openai-key"
-        type="password"
-        disabled={!enableModification}
-      />
-    </Form.Item>
-  </Flex>
-);
+  summaryStorageProvider?: ProjectConfig["summary_storage_provider"];
+}) => {
+  const usingAws =
+    modelProvider === "Bedrock" ||
+    selectedFileStorage === "AWS" ||
+    summaryStorageProvider === "S3";
+  return (
+    <Flex vertical style={{ maxWidth: 600 }}>
+      {modelProvider === "CAII" &&
+        selectedFileStorage === "Local" &&
+        summaryStorageProvider === "Local" && (
+          <StyledHelperText>
+            No additional authentication needed.
+          </StyledHelperText>
+        )}
+      <Form.Item
+        label={"AWS Region"}
+        initialValue={projectConfig?.aws_config.region}
+        name={["aws_config", "region"]}
+        required={usingAws}
+        rules={[
+          {
+            required: usingAws,
+          },
+        ]}
+        tooltip="AWS Region where Bedrock is configured and/or the S3 bucket is located."
+        hidden={!usingAws}
+      >
+        <Input placeholder="us-west-2" disabled={!enableModification} />
+      </Form.Item>
+      <Form.Item
+        label={"AWS Access Key ID"}
+        initialValue={projectConfig?.aws_config.access_key_id}
+        name={["aws_config", "access_key_id"]}
+        required={usingAws}
+        rules={[
+          {
+            required: usingAws,
+          },
+        ]}
+        hidden={!usingAws}
+      >
+        <Input placeholder="access-key-id" disabled={!enableModification} />
+      </Form.Item>
+      <Form.Item
+        label={"AWS Secret Access Key"}
+        initialValue={projectConfig?.aws_config.secret_access_key}
+        name={["aws_config", "secret_access_key"]}
+        required={usingAws}
+        rules={[
+          {
+            required: usingAws,
+          },
+        ]}
+        hidden={!usingAws}
+      >
+        <Input
+          placeholder="secret-access-key"
+          type="password"
+          disabled={!enableModification}
+        />
+      </Form.Item>
+      <Form.Item
+        label={"Azure OpenAI Key"}
+        initialValue={projectConfig?.azure_config.openai_key}
+        name={["azure_config", "openai_key"]}
+        required={modelProvider === "Azure"}
+        rules={[{ required: modelProvider === "Azure" }]}
+        hidden={modelProvider !== "Azure"}
+      >
+        <Input
+          placeholder="azure-openai-key"
+          type="password"
+          disabled={!enableModification}
+        />
+      </Form.Item>
+    </Flex>
+  );
+};

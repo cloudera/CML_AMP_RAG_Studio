@@ -142,12 +142,21 @@ export interface CaiiConfig {
   caii_domain?: string;
 }
 
+export interface ApplicationConfig {
+  num_of_gpus: number;
+  memory_size_gb: number;
+}
+
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
+  summary_storage_provider: "Local" | "S3";
+  chat_store_provider: "Local" | "S3";
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   caii_config: CaiiConfig;
   is_valid_config: boolean;
+  release_version: string;
+  application_config: ApplicationConfig;
 }
 
 export const useGetAmpConfig = (poll?: boolean) => {
@@ -163,13 +172,13 @@ export const useGetAmpConfig = (poll?: boolean) => {
   });
 };
 
-export const getAmpConfig = async (): Promise<ProjectConfig | undefined> => {
+export const getAmpConfig = async (): Promise<ProjectConfig | null> => {
   const res = await fetch(`${llmServicePath}/amp/config`, {
     method: "GET",
     headers: { ...commonHeaders },
   });
   if (!res.ok) {
-    return Promise.resolve(undefined);
+    return Promise.resolve(null);
   }
 
   return (await res.json()) as ProjectConfig;

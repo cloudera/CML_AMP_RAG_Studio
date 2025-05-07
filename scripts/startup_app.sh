@@ -43,6 +43,9 @@ cleanup() {
     pkill -P $$
 }
 
+## set the RELEASE_TAG env var from the file, if it exists
+source scripts/release_version.txt || true
+
 for sig in INT QUIT HUP TERM; do
   trap "
     cleanup
@@ -51,9 +54,15 @@ for sig in INT QUIT HUP TERM; do
 done
 trap cleanup EXIT
 
+
+RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+fi
+
 export RAG_DATABASES_DIR=$(pwd)/databases
 export LLM_SERVICE_URL="http://localhost:8081"
-export API_URL="http://localhost:8080"
+
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 

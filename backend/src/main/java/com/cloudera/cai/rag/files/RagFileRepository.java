@@ -65,8 +65,8 @@ public class RagFileRepository {
         handle -> {
           String insertSql =
               """
-              INSERT INTO rag_data_source_document(data_source_id, filename, document_id, s3_path, created_by_id, updated_by_id, time_created, extension, size_in_bytes)
-              VALUES (:dataSourceId, :filename, :documentId, :s3Path, :createdById, :createdById, :timeCreated, :extension, :sizeInBytes)
+              INSERT INTO rag_data_source_document(data_source_id, filename, document_id, s3_path, created_by_id, updated_by_id, time_created, extension, size_in_bytes, vector_upload_timestamp)
+              VALUES (:dataSourceId, :filename, :documentId, :s3Path, :createdById, :createdById, :timeCreated, :extension, :sizeInBytes, :vectorUploadTimestamp)
               """;
           try (var update = handle.createUpdate(insertSql)) {
             update.bindMethods(ragDocument);

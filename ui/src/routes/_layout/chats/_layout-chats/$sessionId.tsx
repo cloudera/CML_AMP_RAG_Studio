@@ -36,11 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from '@tanstack/react-router'
-import { getSessionsQueryOptions } from 'src/api/sessionApi.ts'
-import { getLlmModelsQueryOptions } from 'src/api/modelsApi.ts'
+import { createFileRoute } from "@tanstack/react-router";
+import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 
-export const Route = createFileRoute('/_layout/chats/_layout-chats/$sessionId')(
+export const Route = createFileRoute("/_layout/chats/_layout-chats/$sessionId")(
   {
     loader: async ({ context }) =>
       await Promise.all([
@@ -48,4 +48,4 @@ export const Route = createFileRoute('/_layout/chats/_layout-chats/$sessionId')(
         context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
       ]),
   },
-)
+);

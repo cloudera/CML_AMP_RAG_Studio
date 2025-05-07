@@ -39,7 +39,7 @@ import os
 import shutil
 from pathlib import Path
 
-from app.config import Settings
+from app.config import settings
 
 from .base import DocumentStorage
 
@@ -52,7 +52,7 @@ class FileSystemDocumentStorage(DocumentStorage):
         Copy file from local filesystem into the temp directory
         """
         original_filename = os.path.basename(original_filepath)
-        source_file = Path(Settings().rag_databases_dir, "file_storage", document_key)
+        source_file = Path(settings.rag_databases_dir, "file_storage", document_key)
         target_file = Path(temp_dir, original_filename)
         shutil.copy(source_file, target_file)
         return target_file

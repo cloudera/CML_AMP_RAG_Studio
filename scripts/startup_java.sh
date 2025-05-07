@@ -1,6 +1,6 @@
 #
 # CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-# (C) Cloudera, Inc. 2024
+# (C) Cloudera, Inc. 2025
 # All rights reserved.
 #
 # Applicable Open Source License: Apache 2.0
@@ -35,6 +35,7 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
+
 set -ox pipefail
 
 RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"

@@ -36,11 +36,9 @@
 #  DATA.
 #
 import logging
-import os
-from typing import List, Optional, cast
+from typing import Optional, cast
 
 import qdrant_client
-import umap
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
@@ -49,17 +47,25 @@ from llama_index.vector_stores.qdrant import (
 )
 from qdrant_client.http.models import CountResult, Record
 
-from ...services.metadata_apis import data_sources_metadata_api
-from ...services import models
 from .vector_store import VectorStore
+from ...config import settings
+from ...services import models
+from ...services.metadata_apis import data_sources_metadata_api
 
 logger = logging.getLogger(__name__)
 
 
-def new_qdrant_client() -> qdrant_client.QdrantClient:
-    host = os.environ.get("QDRANT_HOST", "localhost")
-    port = 6333
-    return qdrant_client.QdrantClient(host=host, port=port)
+def _new_qdrant_client() -> qdrant_client.QdrantClient:
+    auth_token: str | None = settings.cdsw_apiv2_key
+
+    def auth_token_provider() -> str:
+        return auth_token or "You should never see this"
+
+    return qdrant_client.QdrantClient(
+        host=settings.qdrant_host,
+        port=settings.qdrant_port,
+        auth_token_provider=auth_token_provider if auth_token else None,
+    )
 
 
 class QdrantVectorStore(VectorStore):
@@ -89,7 +95,7 @@ class QdrantVectorStore(VectorStore):
         data_source_id: int,
         client: Optional[qdrant_client.QdrantClient] = None,
     ):
-        self.client = client or new_qdrant_client()
+        self.client = client or _new_qdrant_client()
         self.table_name = table_name
         self.data_source_id = data_source_id
 
@@ -128,45 +134,20 @@ class QdrantVectorStore(VectorStore):
     def visualize(
         self, user_query: Optional[str] = None
     ) -> list[tuple[tuple[float, float], str]]:
-        records: list[Record]
         if not self.exists():
             return []
+        records: list[Record]
         records, _ = self.client.scroll(self.table_name, limit=5000, with_vectors=True)
-        # trap an edge case where there are no records and umap blows up
-        if len(records) <= 2:
-            return []
-        if user_query:
-            embedding_model = self.get_embedding_model()
-            user_query_vector = embedding_model.get_query_embedding(user_query)
-            records.append(
-                Record(
-                    vector=user_query_vector,
-                    id="abc123",
-                    payload={"file_name": "USER_QUERY"},
-                )
-            )
 
+        embeddings: list[list[float]] = []
+        filenames: list[str] = []
         record: Record
-        filenames: List[str] = []
         for record in records:
             payload = record.payload
             if payload:
                 filename = payload.get("file_name")
                 if filename:
                     filenames.append(filename)
+                    embeddings.append(cast(list[float], record.vector))
 
-        reducer = umap.UMAP()
-        embeddings = [record.vector for record in records]
-        try:
-            reduced_embeddings: List[List[float]] = reducer.fit_transform(
-                embeddings
-            ).tolist()
-            # todo: figure out how to satisfy mypy on this line
-            return [
-                (cast(tuple[float, float], tuple(coordinate)), filename)
-                for filename, coordinate in zip(filenames, reduced_embeddings)
-            ]
-        except Exception as e:
-            # Log the error
-            logger.error(f"Error during UMAP transformation: {e}")
-            return []
+        return self.visualize_embeddings(embeddings, filenames, user_query)

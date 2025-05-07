@@ -42,7 +42,7 @@ import { Flex, Form, Switch } from "antd";
 export const ProcessingFields = ({
   projectConfig,
 }: {
-  projectConfig?: ProjectConfig;
+  projectConfig?: ProjectConfig | null;
 }) => {
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
@@ -52,8 +52,28 @@ export const ProcessingFields = ({
         initialValue={projectConfig?.use_enhanced_pdf_processing}
         valuePropName="checked"
         tooltip={
-          "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16G of RAM is required for this option."
+          "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16GB of RAM is required for this option."
         }
+        validateTrigger="onChange"
+        rules={[
+          ({ getFieldValue }) => ({
+            validator() {
+              if (
+                projectConfig &&
+                (projectConfig.application_config.num_of_gpus === 0 ||
+                  projectConfig.application_config.memory_size_gb < 16) &&
+                getFieldValue("use_enhanced_pdf_processing")
+              ) {
+                return Promise.reject(
+                  new Error(
+                    "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.",
+                  ),
+                );
+              }
+              return Promise.resolve();
+            },
+          }),
+        ]}
       >
         <Switch />
       </Form.Item>

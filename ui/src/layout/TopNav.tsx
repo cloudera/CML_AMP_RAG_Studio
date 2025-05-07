@@ -51,7 +51,7 @@ import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
-import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
@@ -99,46 +99,53 @@ const TopNav: React.FC = () => {
     );
   };
 
+  const isValidConfig = Boolean(config && !config.is_valid_config);
+  const enableFullUsage = Boolean(!config?.is_valid_config);
+
   const baseItems: MenuItem[] = [
-    getItem(
-      <span data-testid="rag-apps-nav">Chats</span>,
-      "chat",
-      !config?.is_valid_config,
-      navigateTo("/chats"),
-      <CommentOutlined />,
-    ),
-    getItem(
-      <span data-testid="data-management-nav">Knowledge Bases</span>,
-      "data",
-      !config?.is_valid_config,
-      navigateTo("/data"),
-      <DatabaseOutlined />,
-    ),
+    getItem({
+      label: <span data-testid="rag-apps-nav">Chats</span>,
+      key: "chat",
+      disabled: isValidConfig,
+      onClick: navigateTo("/chats"),
+      icon: <CommentOutlined />,
+      config,
+    }),
+    getItem({
+      label: <span data-testid="data-management-nav">Knowledge Bases</span>,
+      key: "data",
+      disabled: enableFullUsage,
+      onClick: navigateTo("/data"),
+      icon: <DatabaseOutlined />,
+      config,
+    }),
   ];
 
-  const models = getItem(
-    <span data-testid="models-nav">Models</span>,
-    "models",
-    !config?.is_valid_config,
-    navigateTo("/models"),
-    <RobotFilled />,
-  );
+  const models = getItem({
+    label: <span data-testid="models-nav">Models</span>,
+    key: "models",
+    disabled: enableFullUsage,
+    onClick: navigateTo("/models"),
+    icon: <RobotFilled />,
+    config,
+  });
 
-  const analyticsItem = getItem(
-    <span data-testid="analytics-nav">Analytics</span>,
-    "analytics",
-    !config?.is_valid_config,
-    navigateTo("/analytics"),
-    <LineChartOutlined />,
-  );
+  const analyticsItem = getItem({
+    label: <span data-testid="analytics-nav">Analytics</span>,
+    key: "analytics",
+    disabled: enableFullUsage,
+    onClick: navigateTo("/analytics"),
+    icon: <LineChartOutlined />,
+    config,
+  });
 
-  const settingsItem = getItem(
-    <span data-testid="settings-nav">Settings</span>,
-    "settings",
-    false,
-    navigateTo("/settings"),
-    <SettingOutlined />,
-  );
+  const settingsItem = getItem({
+    label: <span data-testid="settings-nav">Settings</span>,
+    key: "settings",
+    disabled: false,
+    onClick: navigateTo("/settings"),
+    icon: <SettingOutlined />,
+  });
 
   const items = [...baseItems, models, analyticsItem];
   if (config) {
@@ -179,16 +186,27 @@ const TopNav: React.FC = () => {
 
 type MenuItem = Required<MenuProps>["items"][number];
 
-export function getItem(
-  label: React.ReactNode,
-  key: React.Key,
-  disabled: boolean,
-  onClick: () => void,
-  icon?: React.ReactNode,
-  children?: MenuItem[],
-): MenuItem {
+export function getItem({
+  label,
+  key,
+  disabled,
+  onClick,
+  icon,
+  children,
+  config,
+}: {
+  label: React.ReactNode;
+  key: React.Key;
+  disabled: boolean;
+  config?: ProjectConfig | null;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  children?: MenuItem[];
+}): MenuItem {
   const toolTipLabel = (
-    <Tooltip title="Valid settings are required">{label}</Tooltip>
+    <Tooltip title={!config ? "Login required" : "Valid settings are required"}>
+      {label}
+    </Tooltip>
   );
   return {
     key,

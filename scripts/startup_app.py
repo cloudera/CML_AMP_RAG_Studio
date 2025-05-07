@@ -38,10 +38,24 @@
 
 import subprocess
 import os
+import cmlapi
+
+client = cmlapi.default_client()
+applications = client.list_applications(project_id=os.environ['CDSW_PROJECT_ID'])
+metadata_base_url: str = "http://localhost:8080"
+if len(applications.applications) > 0:
+    for app in applications.applications:
+        if app.name == "RagStudioMetadata":
+            metadata_base_url = f"https://{app.subdomain}.{os.environ['CDSW_DOMAIN']}"
 
 root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
 os.chdir(root_dir)
 
+env = os.environ.copy()
+env["API_URL"] = f"{metadata_base_url}"
+
+print("Starting application with metadata base URL: ", metadata_base_url)
+
 while True:
-    print(subprocess.run(["bash scripts/startup_app.sh"], shell=True))
+    print(subprocess.run(["bash scripts/startup_app.sh"], shell=True, env=env))
     print("Application Restarting")

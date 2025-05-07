@@ -36,18 +36,17 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, Switch, Tooltip } from "antd";
-import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import messageQueue from "src/utils/messageQueue.ts";
 import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
-import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
+import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
+import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -56,30 +55,41 @@ const RagChatQueryInput = ({
 }) => {
   const {
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
-    chatHistoryQuery: { chatHistory },
+    chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
+  const search: { question?: string } = useSearch({
+    strict: false,
+  });
+  const inputRef = useRef<InputRef>(null);
 
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
     isFetching: sampleQuestionsIsFetching,
-  } = useSuggestQuestions({
-    session_id: sessionId ? +sessionId : undefined,
-  });
+  } = useSuggestQuestions(
+    {
+      session_id: sessionId ? +sessionId : undefined,
+    },
+    // don't make a request to get suggest questions if we know a question will be in flight soon
+    !search.question,
+  );
 
   const chatMutation = useChatMutation({
     onSuccess: () => {
       setUserInput("");
     },
-    onError: (res: Error) => {
-      messageQueue.error(res.toString());
-    },
   });
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [inputRef.current, flatChatHistory.length]);
 
   const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
@@ -105,14 +115,14 @@ const RagChatQueryInput = ({
   return (
     <div>
       <Flex vertical align="center" gap={10}>
-        {chatHistory.length > 0 ? (
+        {flatChatHistory.length > 0 ? (
           <SuggestedQuestionsFooter
             questions={sampleQuestions?.suggested_questions ?? []}
             isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
             handleChat={handleChat}
             condensedQuestion={
-              chatHistory.length > 0
-                ? chatHistory[chatHistory.length - 1].condensed_question
+              flatChatHistory.length > 0
+                ? flatChatHistory[flatChatHistory.length - 1].condensed_question
                 : undefined
             }
           />
@@ -120,6 +130,7 @@ const RagChatQueryInput = ({
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <Input
             autoFocus
+            ref={inputRef}
             placeholder={
               dataSourceSize && dataSourceSize > 0
                 ? "Ask a question"

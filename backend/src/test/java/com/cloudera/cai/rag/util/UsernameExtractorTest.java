@@ -47,35 +47,33 @@ import org.springframework.mock.web.MockHttpServletRequest;
 public class UsernameExtractorTest {
 
   @Test
-  void decode() {
+  void extract() {
     String userName = "johnson";
-    var extractedUsername = new UsernameExtractor().extractUsername(request(userName));
+    var extractedUsername = new UsernameExtractor().extractUsername(request(null, userName));
     assertThat(extractedUsername).isEqualTo(userName);
   }
 
-  private HttpServletRequest request(String userName) {
+  @Test
+  void extract_fallback_header() {
+    String userName = "johnson";
+    var extractedUsername = new UsernameExtractor().extractUsername(request(userName, null));
+    assertThat(extractedUsername).isEqualTo(userName);
+  }
+
+  private HttpServletRequest request(String fallbackUsername, String originUsername) {
     MockHttpServletRequest request = new MockHttpServletRequest();
-    if (userName != null) {
-      request.addHeader("remote-user", userName);
+    if (fallbackUsername != null) {
+      request.addHeader("remote-user", fallbackUsername);
+    }
+    if (originUsername != null) {
+      request.addHeader("origin-remote-user", originUsername);
     }
     return request;
   }
 
   @Test
-  void decode_noCookies() {
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null));
-    assertThat(extractedUsername).isEqualTo("unknown");
-  }
-
-  @Test
-  void decode_badCookie() {
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null));
-    assertThat(extractedUsername).isEqualTo("unknown");
-  }
-
-  @Test
-  void decode_differentCookie() {
-    var extractedUsername = new UsernameExtractor().extractUsername(request(null));
+  void decode_noHeaders() {
+    var extractedUsername = new UsernameExtractor().extractUsername(request(null, null));
     assertThat(extractedUsername).isEqualTo("unknown");
   }
 }

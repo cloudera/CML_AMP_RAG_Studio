@@ -129,6 +129,7 @@ const AmpUpdateBanner = ({
         destroyOnClose={true}
         title="Update RAG Studio to the latest version?"
         open={updateModal.isModalOpen}
+        maskClosable={updateAmpMutation.isSuccess}
         onCancel={() => {
           updateModal.handleCancel();
         }}

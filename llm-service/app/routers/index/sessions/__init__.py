@@ -48,7 +48,11 @@ from ....rag_types import RagPredictConfiguration
 from ....services.chat import (
     v2_chat,
 )
-from ....services.chat_store import ChatHistoryManager, RagStudioChatMessage
+from ....services.chat_history.chat_history_manager import (
+    RagStudioChatMessage,
+    chat_history_manager,
+)
+from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
@@ -67,18 +71,33 @@ class RagSuggestedQuestionsResponse(BaseModel):
 )
 @exceptions.propagates
 def post_rename_session(
-    session_id: int, remote_user: Optional[str] = Header(None)
+    session_id: int, origin_remote_user: Optional[str] = Header(None)
 ) -> str:
-    return rename_session(session_id, user_name=remote_user)
+    return rename_session(session_id, user_name=origin_remote_user)
+
+
+class RagStudioChatHistoryResponse(BaseModel):
+    data: list[RagStudioChatMessage]
+    next_id: Optional[int] = None
+    previous_id: Optional[int] = None
 
 
 @router.get(
     "/chat-history",
-    summary="Returns an array of chat messages for the provided session.",
+    summary="Returns an array of chat messages for the provided session, with optional pagination.",
 )
 @exceptions.propagates
-def chat_history(session_id: int) -> list[RagStudioChatMessage]:
-    return ChatHistoryManager().retrieve_chat_history(session_id=session_id)
+def chat_history(
+    session_id: int, limit: Optional[int] = None, offset: Optional[int] = None
+) -> RagStudioChatHistoryResponse:
+    results = chat_history_manager.retrieve_chat_history(session_id=session_id)
+
+    paginated_results, previous_id, next_id = paginate(results, limit, offset)
+    return RagStudioChatHistoryResponse(
+        data=paginated_results,
+        next_id=next_id,
+        previous_id=previous_id,
+    )
 
 
 @router.delete(
@@ -86,14 +105,14 @@ def chat_history(session_id: int) -> list[RagStudioChatMessage]:
 )
 @exceptions.propagates
 def clear_chat_history(session_id: int) -> str:
-    ChatHistoryManager().clear_chat_history(session_id=session_id)
+    chat_history_manager.clear_chat_history(session_id=session_id)
     return "Chat history cleared."
 
 
 @router.delete("", summary="Deletes the requested session.")
 @exceptions.propagates
-def delete_chat_history(session_id: int) -> str:
-    ChatHistoryManager().delete_chat_history(session_id=session_id)
+def delete_session(session_id: int) -> str:
+    chat_history_manager.delete_chat_history(session_id=session_id)
     return "Chat history deleted."
 
 
@@ -109,10 +128,10 @@ def rating(
     session_id: int,
     response_id: str,
     request: ChatResponseRating,
-    remote_user: Optional[str] = Header(None),
+    origin_remote_user: Optional[str] = Header(None),
 ) -> ChatResponseRating:
     rating_mlflow_log_metric(
-        request.rating, response_id, session_id, user_name=remote_user
+        request.rating, response_id, session_id, user_name=origin_remote_user
     )
     return ChatResponseRating(rating=request.rating)
 
@@ -129,10 +148,10 @@ def feedback(
     session_id: int,
     response_id: str,
     request: ChatResponseFeedback,
-    remote_user: Optional[str] = Header(None),
+    origin_remote_user: Optional[str] = Header(None),
 ) -> ChatResponseFeedback:
     feedback_mlflow_log_table(
-        request.feedback, response_id, session_id, user_name=remote_user
+        request.feedback, response_id, session_id, user_name=origin_remote_user
     )
     return ChatResponseFeedback(feedback=request.feedback)
 
@@ -163,9 +182,9 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
-    remote_user: Optional[str] = Header(None),
+    origin_remote_user: Optional[str] = Header(None),
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id, user_name=remote_user)
+    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
-    return v2_chat(session, request.query, configuration, user_name=remote_user)
+    return v2_chat(session, request.query, configuration, user_name=origin_remote_user)

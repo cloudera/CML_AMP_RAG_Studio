@@ -42,8 +42,8 @@ from .... import exceptions
 from ....ai.indexing.base import NotSupportedFileExtensionError
 from ....ai.indexing.embedding_indexer import EmbeddingIndexer
 from ....ai.indexing.summary_indexer import SummaryIndexer
-from ....ai.vector_stores.qdrant import QdrantVectorStore
 from ....ai.vector_stores.vector_store import VectorStore
+from ....ai.vector_stores.vector_store_factory import VectorStoreFactory
 from ....services import document_storage, models
 from ....services.metadata_apis import data_sources_metadata_api
 from ....services.metadata_apis.data_sources_metadata_api import RagDataSource
@@ -82,7 +82,7 @@ class ChunkContentsResponse(BaseModel):
 @cbv(router)
 class DataSourceController:
     chunks_vector_store: VectorStore = Depends(
-        lambda data_source_id: QdrantVectorStore.for_chunks(data_source_id)
+        lambda data_source_id: VectorStoreFactory.for_chunks(data_source_id)
     )
 
     @staticmethod
@@ -126,7 +126,11 @@ class DataSourceController:
         self.chunks_vector_store.delete_document(doc_id)
         summary_indexer = self._get_summary_indexer(data_source_id)
         if summary_indexer:
-            summary_indexer.delete_document(doc_id)
+            try:
+                summary_indexer.delete_document(doc_id)
+            except Exception as e:
+                # ignore, since it might just be because the summary index doesn't exist yet
+                logger.info("Failed to delete document %s: %s", doc_id, e)
 
     @router.post(
         "/documents/{doc_id}/index",

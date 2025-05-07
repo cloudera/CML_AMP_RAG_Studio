@@ -35,12 +35,15 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import logging
 from abc import abstractmethod, ABCMeta
-from typing import Optional
+from typing import Optional, List, cast
 
+import umap
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
+
+logger = logging.getLogger(__name__)
 
 
 class VectorStore(metaclass=ABCMeta):
@@ -77,3 +80,32 @@ class VectorStore(metaclass=ABCMeta):
     @abstractmethod
     def get_embedding_model(self) -> BaseEmbedding:
         """get the embedding model used for this vector store"""
+
+    def visualize_embeddings(
+        self,
+        embeddings: list[list[float]],
+        filenames: list[str],
+        user_query: Optional[str] = None,
+    ) -> list[tuple[tuple[float, float], str]]:
+        # trap an edge case where there are no records and umap blows up
+        if len(embeddings) <= 2:
+            return []
+        if user_query:
+            embedding_model = self.get_embedding_model()
+            user_query_vector = embedding_model.get_query_embedding(user_query)
+            embeddings.append(user_query_vector)
+            filenames.append("USER_QUERY")
+        reducer = umap.UMAP()
+        try:
+            reduced_embeddings: List[List[float]] = reducer.fit_transform(
+                embeddings
+            ).tolist()
+            # todo: figure out how to satisfy mypy on this line
+            return [
+                (cast(tuple[float, float], tuple(coordinate)), filename)
+                for filename, coordinate in zip(filenames, reduced_embeddings)
+            ]
+        except Exception as e:
+            # Log the error
+            logger.error(f"Error during UMAP transformation: {e}")
+            return []

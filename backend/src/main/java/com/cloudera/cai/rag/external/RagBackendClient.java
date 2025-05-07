@@ -38,8 +38,9 @@
 
 package com.cloudera.cai.rag.external;
 
+import static com.cloudera.cai.rag.configuration.AppConfiguration.getLlmServiceUrl;
+
 import com.cloudera.cai.rag.Types;
-import com.cloudera.cai.rag.configuration.AppConfiguration;
 import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.ClientError;
@@ -57,8 +58,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RagBackendClient {
+  private static final String AUTH_TOKEN = System.getenv("CDSW_APIV2_KEY");
   private final SimpleHttpClient client;
-  private final String indexUrl;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   private record FastApiError(String detail) {}
@@ -66,7 +67,6 @@ public class RagBackendClient {
   @Autowired
   public RagBackendClient(SimpleHttpClient client) {
     this.client = client;
-    indexUrl = AppConfiguration.getRagIndexUrl();
   }
 
   @WithSpan
@@ -74,14 +74,15 @@ public class RagBackendClient {
       Types.RagDocument ragDocument, String bucketName, IndexConfiguration configuration) {
     try {
       client.post(
-          indexUrl
+          getLlmServiceUrl()
               + "/data_sources/"
               + ragDocument.dataSourceId()
               + "/documents/"
               + ragDocument.documentId()
               + "/index",
-          new IndexRequest(
-              bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration));
+          new IndexRequest(bucketName, ragDocument.s3Path(), ragDocument.filename(), configuration),
+          "Authorization",
+          "Bearer " + AUTH_TOKEN);
     } catch (HttpError e) {
       throw convertError(e);
     } catch (IOException e) {
@@ -107,13 +108,15 @@ public class RagBackendClient {
   public String createSummary(Types.RagDocument ragDocument, String bucketName) {
     try {
       return client.post(
-          indexUrl
+          getLlmServiceUrl()
               + "/data_sources/"
               + ragDocument.dataSourceId()
               + "/documents/"
               + ragDocument.documentId()
               + "/summary",
-          new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()));
+          new SummaryRequest(bucketName, ragDocument.s3Path(), ragDocument.filename()),
+          "Authorization",
+          "Bearer " + AUTH_TOKEN);
     } catch (HttpError e) {
       throw convertError(e);
     } catch (IOException e) {
@@ -122,15 +125,22 @@ public class RagBackendClient {
   }
 
   public void deleteDataSource(Long dataSourceId) {
-    client.delete(indexUrl + "/data_sources/" + dataSourceId);
+    client.delete(
+        getLlmServiceUrl() + "/data_sources/" + dataSourceId,
+        "Authorization",
+        "Bearer " + AUTH_TOKEN);
   }
 
   public void deleteDocument(long dataSourceId, String documentId) {
-    client.delete(indexUrl + "/data_sources/" + dataSourceId + "/documents/" + documentId);
+    client.delete(
+        getLlmServiceUrl() + "/data_sources/" + dataSourceId + "/documents/" + documentId,
+        "Authorization",
+        "Bearer " + AUTH_TOKEN);
   }
 
   public void deleteSession(Long sessionId) {
-    client.delete(indexUrl + "/sessions/" + sessionId);
+    client.delete(
+        getLlmServiceUrl() + "/sessions/" + sessionId, "Authorization", "Bearer " + AUTH_TOKEN);
   }
 
   record IndexRequest(

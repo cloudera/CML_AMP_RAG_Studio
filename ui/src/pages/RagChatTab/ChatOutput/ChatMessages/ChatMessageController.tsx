@@ -37,9 +37,10 @@
  ******************************************************************************/
 
 import { useContext, useEffect, useRef } from "react";
+import { useInView } from "react-intersection-observer";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { Image, Typography } from "antd";
+import { Image, Skeleton, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
@@ -56,22 +57,27 @@ import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataS
 
 const ChatMessageController = () => {
   const {
-    chatHistoryQuery: { chatHistory, chatHistoryStatus },
+    chatHistoryQuery: {
+      flatChatHistory,
+      chatHistoryStatus,
+      fetchPreviousPage,
+      isFetching: isFetchingHistory,
+      isFetchingPreviousPage,
+    },
     activeSession,
   } = useContext(RagChatContext);
-  const scrollEl = useRef<HTMLDivElement>(null);
+  const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
+  const bottomElement = useRef<HTMLDivElement>(null);
   const search: { question?: string } = useSearch({
     strict: false,
   });
+
   const { mutate: renameMutation } = useRenameNameMutation({
     onError: (err) => {
       messageQueue.error(err.message);
     },
   });
   const { mutate: chatMutation } = useChatMutation({
-    onError: (err) => {
-      messageQueue.error(err.message);
-    },
     onSuccess: () => {
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
@@ -82,41 +88,77 @@ const ChatMessageController = () => {
   useEffect(() => {
     if (activeSession?.name === "") {
       const lastMessage =
-        chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+        flatChatHistory.length > 0
+          ? flatChatHistory[flatChatHistory.length - 1]
+          : null;
       if (lastMessage && !isPlaceholder(lastMessage)) {
         renameMutation(activeSession.id.toString());
       }
     }
-  }, [activeSession?.name, chatHistory, chatHistoryStatus]);
+  }, [
+    activeSession?.name,
+    flatChatHistory,
+    chatHistoryStatus,
+    activeSession?.id,
+  ]);
+
+  const excludeKnowledgeBases =
+    !activeSession?.dataSourceIds || activeSession.dataSourceIds.length === 0;
+  const { question } = search;
+  const activeSessionId = activeSession?.id;
 
   useEffect(() => {
-    if (search.question && activeSession) {
+    // note: when creating a new session, we run the risk of firing this off twice without the isFetchingHistory check
+    if (question && activeSessionId && !isFetchingHistory) {
       chatMutation({
-        query: search.question,
-        session_id: activeSession.id,
-        configuration: createQueryConfiguration(
-          !(activeSession.dataSourceIds.length > 0),
-        ),
+        query: question,
+        session_id: activeSessionId,
+        configuration: createQueryConfiguration(excludeKnowledgeBases),
       });
     }
-  }, [search.question, activeSession?.id, activeSession?.dataSourceIds.length]);
+  }, [question, activeSessionId, excludeKnowledgeBases, isFetchingHistory]);
 
   useEffect(() => {
-    if (chatHistory.length > 0) {
+    if (inView) {
+      fetchPreviousPage().catch(() => {
+        messageQueue.error("An error occurred fetching the next page");
+      });
+    }
+  }, [fetchPreviousPage, inView]);
+
+  useEffect(() => {
+    // scroll to bottom when changing the active session
+    if (bottomElement.current) {
       setTimeout(() => {
-        if (scrollEl.current) {
-          scrollEl.current.scrollIntoView({ behavior: "auto" });
+        if (bottomElement.current) {
+          bottomElement.current.scrollIntoView({ behavior: "auto" });
         }
       }, 50);
     }
-  }, [scrollEl.current, chatHistory.length, activeSession?.id]);
+  }, [bottomElement.current, activeSession?.id]);
+
+  useEffect(() => {
+    if (
+      flatChatHistory.length > 0 &&
+      isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
+    ) {
+      setTimeout(() => {
+        if (bottomElement.current) {
+          bottomElement.current.scrollIntoView({ behavior: "auto" });
+        }
+      }, 50);
+    }
+  }, [bottomElement.current, flatChatHistory.length, activeSession?.id]);
 
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;
   }
-  if (chatHistory.length === 0) {
+  if (flatChatHistory.length === 0) {
     if (search.question) {
       return <PendingRagOutputSkeleton question={search.question} />;
+    }
+    if (isFetchingHistory) {
+      return <ChatLoading />;
     }
     return (
       <>
@@ -137,14 +179,20 @@ const ChatMessageController = () => {
 
   return (
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
-      {chatHistory.map((historyMessage, index) => (
-        <ChatMessage
-          data={historyMessage}
-          key={historyMessage.id}
-          isLast={index === history.length - 1}
-        />
-      ))}
-      <div ref={scrollEl} />
+      {isFetchingPreviousPage && <Skeleton />}
+      {flatChatHistory.map((historyMessage, index) => {
+        // trigger fetching on second to la`st item
+        if (index === 2) {
+          return (
+            <div ref={refToFetchNextPage} key={historyMessage.id}>
+              <ChatMessage data={historyMessage} />
+            </div>
+          );
+        }
+
+        return <ChatMessage data={historyMessage} key={historyMessage.id} />;
+      })}
+      <div ref={bottomElement} />
     </div>
   );
 };
