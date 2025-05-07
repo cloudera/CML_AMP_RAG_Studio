@@ -44,11 +44,11 @@ from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.services.chat.streaming_chat import v3_chat
+from app.services.chat.streaming_chat import stream_chat
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
 from ....services.chat.chat import (
-    v2_chat,
+    chat as run_chat,
 )
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
@@ -211,7 +211,7 @@ def chat(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
-    return v2_chat(session, request.query, configuration, user_name=origin_remote_user)
+    return run_chat(session, request.query, configuration, user_name=origin_remote_user)
 
 
 @router.post(
@@ -229,7 +229,7 @@ def stream_chat_completion(
     def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
         try:
-            for response in v3_chat(
+            for response in stream_chat(
                 session, request.query, configuration, user_name=origin_remote_user
             ):
                 print(response)

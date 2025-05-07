@@ -58,7 +58,7 @@ from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
 
 
-def v2_chat(
+def chat(
     session: Session,
     query: str,
     configuration: RagPredictConfiguration,
