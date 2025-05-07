@@ -80,6 +80,7 @@ export enum MutationKeys {
   "removeDataSourceFromProject" = "removeDataSourceFromProject",
   "updateAmpConfig" = "updateAmpConfig",
   "restartApplication" = "restartApplication",
+  "streamChatMutation" = "streamChatMutation",
 }
 
 export enum QueryKeys {

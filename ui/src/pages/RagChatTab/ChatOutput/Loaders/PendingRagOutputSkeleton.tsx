@@ -36,23 +36,29 @@
  * DATA.
  ******************************************************************************/
 
-import { Divider, Row, Skeleton } from "antd";
-import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
+import { useContext } from "react";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
+import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
 
 const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
-  return (
-    <div style={{ width: "100%" }}>
-      <div>
-        <UserQuestion question={question} />
-        <Row>
-          <Skeleton active />
-          <Skeleton active />
-          <Skeleton active />
-        </Row>
-      </div>
-      <Divider />
-    </div>
-  );
+  const {
+    streamedChatState: [streamedChat],
+  } = useContext(RagChatContext);
+
+  const streamedMessage: ChatMessageType = {
+    id: placeholderChatResponseId,
+    session_id: 0,
+    source_nodes: [],
+    rag_message: {
+      user: question,
+      assistant: streamedChat,
+    },
+    evaluations: [],
+    timestamp: Date.now(),
+  };
+
+  return <ChatMessageBody data={streamedMessage} />;
 };
 
 export default PendingRagOutputSkeleton;

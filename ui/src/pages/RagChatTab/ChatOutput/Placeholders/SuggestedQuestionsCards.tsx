@@ -40,7 +40,10 @@ import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import {
+  createQueryConfiguration,
+  useStreamingChatMutation,
+} from "src/api/chatApi.ts";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
 const QuestionCard = ({
@@ -77,6 +80,7 @@ const SuggestedQuestionsCards = () => {
   const {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
+    streamedChatState: [, setStreamedChat],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id;
   const {
@@ -88,9 +92,15 @@ const SuggestedQuestionsCards = () => {
   });
 
   const createSessionAndRedirect = useCreateSessionAndRedirect();
-  const { mutate: chatMutation, isPending: askRagIsPending } = useChatMutation(
-    {},
-  );
+  const { mutate: chatMutation, isPending: askRagIsPending } =
+    useStreamingChatMutation({
+      onChunk: (chunk) => {
+        setStreamedChat((prev) => prev + chunk);
+      },
+      onSuccess: () => {
+        setStreamedChat("");
+      },
+    });
 
   const handleAskSample = (suggestedQuestion: string) => {
     if (suggestedQuestion.length > 0) {

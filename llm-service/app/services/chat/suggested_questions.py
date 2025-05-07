@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,160 +34,20 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
-import time
-import uuid
+#
+
 from random import shuffle
-from typing import List, Iterable, Optional
+from typing import List, Optional
 
 from fastapi import HTTPException
-from llama_index.core.base.llms.types import MessageRole
-from llama_index.core.chat_engine.types import AgentChatResponse
-from pydantic import BaseModel
 
-from . import evaluators, llm_completion
-from .chat_history.chat_history_manager import (
-    RagPredictSourceNode,
-    Evaluation,
-    RagMessage,
-    RagStudioChatMessage,
-    chat_history_manager,
-)
-from .metadata_apis import session_metadata_api
-from .metadata_apis.session_metadata_api import Session
-from .mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
-from .query import querier
-from .query.query_configuration import QueryConfiguration
-from ..ai.vector_stores.vector_store_factory import VectorStoreFactory
-from ..rag_types import RagPredictConfiguration
-
-
-class RagContext(BaseModel):
-    role: MessageRole
-    content: str
-
-
-def v2_chat(
-    session: Session,
-    query: str,
-    configuration: RagPredictConfiguration,
-    user_name: Optional[str],
-) -> RagStudioChatMessage:
-    query_configuration = QueryConfiguration(
-        top_k=session.response_chunks,
-        model_name=session.inference_model,
-        rerank_model_name=session.rerank_model,
-        exclude_knowledge_base=configuration.exclude_knowledge_base,
-        use_question_condensing=configuration.use_question_condensing,
-        use_hyde=session.query_configuration.enable_hyde,
-        use_summary_filter=session.query_configuration.enable_summary_filter,
-    )
-
-    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
-        return direct_llm_chat(session, query, user_name=user_name)
-
-    total_data_sources_size: int = sum(
-        map(
-            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
-        )
-    )
-    if total_data_sources_size == 0:
-        return direct_llm_chat(session, query, user_name)
-
-    response_id = str(uuid.uuid4())
-
-    new_chat_message: RagStudioChatMessage = _run_chat(
-        session, response_id, query, query_configuration, user_name
-    )
-
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
-    return new_chat_message
-
-
-def _run_chat(
-    session: Session,
-    response_id: str,
-    query: str,
-    query_configuration: QueryConfiguration,
-    user_name: Optional[str],
-) -> RagStudioChatMessage:
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400, detail="Only one datasource is supported for chat."
-        )
-
-    data_source_id: int = session.data_source_ids[0]
-    response, condensed_question = querier.query(
-        data_source_id,
-        query,
-        query_configuration,
-        retrieve_chat_history(session.id),
-    )
-    if condensed_question and (condensed_question.strip() == query.strip()):
-        condensed_question = None
-    relevance, faithfulness = evaluators.evaluate_response(
-        query, response, session.inference_model
-    )
-    response_source_nodes = format_source_nodes(response, data_source_id)
-    new_chat_message = RagStudioChatMessage(
-        id=response_id,
-        session_id=session.id,
-        source_nodes=response_source_nodes,
-        inference_model=session.inference_model,
-        rag_message=RagMessage(
-            user=query,
-            assistant=response.response,
-        ),
-        evaluations=[
-            Evaluation(name="relevance", value=relevance),
-            Evaluation(name="faithfulness", value=faithfulness),
-        ],
-        timestamp=time.time(),
-        condensed_question=condensed_question,
-    )
-
-    record_rag_mlflow_run(
-        new_chat_message, query_configuration, response_id, session, user_name
-    )
-    return new_chat_message
-
-
-def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = chat_history_manager.retrieve_chat_history(session_id)[:10]
-    history: List[RagContext] = []
-    for message in chat_history:
-        history.append(
-            RagContext(role=MessageRole.USER, content=message.rag_message.user)
-        )
-        history.append(
-            RagContext(
-                role=MessageRole.ASSISTANT, content=message.rag_message.assistant
-            )
-        )
-    return history
-
-
-def format_source_nodes(
-    response: AgentChatResponse, data_source_id: int
-) -> List[RagPredictSourceNode]:
-    response_source_nodes = []
-    for source_node in response.source_nodes:
-        doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
-        response_source_nodes.append(
-            RagPredictSourceNode(
-                node_id=source_node.node.node_id,
-                doc_id=doc_id,
-                source_file_name=source_node.node.metadata["file_name"],
-                score=source_node.score or 0.0,
-                dataSourceId=data_source_id,
-            )
-        )
-    response_source_nodes = sorted(
-        response_source_nodes, key=lambda x: x.score, reverse=True
-    )
-    return response_source_nodes
-
+from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
+from app.services import llm_completion
+from app.services.chat.utils import retrieve_chat_history, process_response
+from app.services.metadata_apis import session_metadata_api
+from app.services.metadata_apis.session_metadata_api import Session
+from app.services.query import querier
+from app.services.query.query_configuration import QueryConfiguration
 
 SAMPLE_QUESTIONS = [
     "What is Cloudera, and how does it support organizations in managing big data?",
@@ -296,44 +156,3 @@ def generate_suggested_questions(
         )
         suggested_questions = process_response(response.response)
     return suggested_questions
-
-
-def process_response(response: str | None) -> list[str]:
-    if response is None:
-        return []
-
-    sentences: Iterable[str] = response.splitlines()
-    sentences = map(lambda x: x.strip(), sentences)
-    sentences = map(lambda x: x.removeprefix("*").strip(), sentences)
-    sentences = map(lambda x: x.removeprefix("-").strip(), sentences)
-    sentences = map(lambda x: x.strip("*"), sentences)
-    sentences = filter(lambda x: len(x.split()) <= 60, sentences)
-    sentences = filter(lambda x: x != "Empty Response", sentences)
-    sentences = filter(lambda x: x != "", sentences)
-    return list(sentences)[:5]
-
-
-def direct_llm_chat(
-    session: Session, query: str, user_name: Optional[str]
-) -> RagStudioChatMessage:
-    response_id = str(uuid.uuid4())
-    record_direct_llm_mlflow_run(response_id, session, user_name)
-
-    chat_response = llm_completion.completion(
-        session.id, query, session.inference_model
-    )
-    new_chat_message = RagStudioChatMessage(
-        id=response_id,
-        session_id=session.id,
-        source_nodes=[],
-        inference_model=session.inference_model,
-        evaluations=[],
-        rag_message=RagMessage(
-            user=query,
-            assistant=str(chat_response.message.content),
-        ),
-        timestamp=time.time(),
-        condensed_question=None,
-    )
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
-    return new_chat_message

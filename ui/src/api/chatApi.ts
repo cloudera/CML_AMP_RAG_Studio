@@ -37,6 +37,7 @@
  ******************************************************************************/
 
 import {
+  commonHeaders,
   getRequest,
   llmServicePath,
   MutationKeys,
@@ -52,6 +53,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
+import {
+  EventSourceMessage,
+  EventStreamContentType,
+  fetchEventSource,
+} from "@microsoft/fetch-event-source";
 
 export interface SourceNode {
   node_id: string;
@@ -103,7 +109,7 @@ export interface ChatResponseFeedback {
   rating: boolean;
 }
 
-const placeholderChatResponseId = "placeholder";
+export const placeholderChatResponseId = "placeholder";
 
 export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
   return chatMessage.id === placeholderChatResponseId;
@@ -253,75 +259,6 @@ export const replacePlaceholderInChatHistory = (
   };
 };
 
-export const useChatMutation = ({
-  onSuccess,
-  onError,
-}: UseMutationType<ChatMessageType>) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: [MutationKeys.chatMutation],
-    mutationFn: chatMutation,
-    onMutate: (variables) => {
-      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-        chatHistoryQueryKey({
-          session_id: variables.session_id,
-        }),
-        (cachedData) =>
-          appendPlaceholderToChatHistory(variables.query, cachedData),
-      );
-    },
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-        chatHistoryQueryKey({
-          session_id: variables.session_id,
-        }),
-        (cachedData) => replacePlaceholderInChatHistory(data, cachedData),
-      );
-      queryClient
-        .invalidateQueries({
-          queryKey: suggestedQuestionKey(variables.session_id),
-        })
-        .catch((error: unknown) => {
-          console.error(error);
-        });
-      onSuccess?.(data);
-    },
-    onError: (error: Error, variables) => {
-      const uuid = crypto.randomUUID();
-      const errorMessage: ChatMessageType = {
-        id: `error-${uuid}`,
-        session_id: variables.session_id,
-        source_nodes: [],
-        rag_message: {
-          user: variables.query,
-          assistant: error.message,
-        },
-        evaluations: [],
-        timestamp: Date.now(),
-      };
-      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-        chatHistoryQueryKey({
-          session_id: variables.session_id,
-          offset: 0,
-        }),
-        (cachedData) =>
-          replacePlaceholderInChatHistory(errorMessage, cachedData),
-      );
-
-      onError?.(error);
-    },
-  });
-};
-
-const chatMutation = async (
-  request: ChatMutationRequest,
-): Promise<ChatMessageType> => {
-  return await postRequest(
-    `${llmServicePath}/sessions/${request.session_id.toString()}/chat`,
-    request,
-  );
-};
-
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean,
 ): QueryConfiguration => {
@@ -383,4 +320,155 @@ const feedbackMutation = async ({
     `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/feedback`,
     { feedback },
   );
+};
+
+export interface ChatMutationResponse {
+  text?: string;
+  response_id?: string;
+  error?: string;
+}
+
+const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
+  const uuid = crypto.randomUUID();
+  const errorMessage: ChatMessageType = {
+    id: `error-${uuid}`,
+    session_id: variables.session_id,
+    source_nodes: [],
+    rag_message: {
+      user: variables.query,
+      assistant: error.message,
+    },
+    evaluations: [],
+    timestamp: Date.now(),
+  };
+  return errorMessage;
+};
+
+export const useStreamingChatMutation = ({
+  onError,
+  onSuccess,
+  onChunk,
+}: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
+  const queryClient = useQueryClient();
+  const handleError = (variables: ChatMutationRequest, error: Error) => {
+    const errorMessage = errorChatMessage(variables, error);
+    queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+      chatHistoryQueryKey({
+        session_id: variables.session_id,
+        offset: 0,
+      }),
+      (cachedData) => replacePlaceholderInChatHistory(errorMessage, cachedData),
+    );
+  };
+  return useMutation({
+    mutationKey: [MutationKeys.chatMutation],
+    mutationFn: (request: ChatMutationRequest) => {
+      const convertError = (errorMessage: string) => {
+        const error = new Error(errorMessage);
+        handleError(request, error);
+        onError?.(error);
+      };
+      return streamChatMutation(request, onChunk, convertError);
+    },
+    onMutate: (variables) => {
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: variables.session_id,
+        }),
+        (cachedData) =>
+          appendPlaceholderToChatHistory(variables.query, cachedData),
+      );
+    },
+    onSuccess: (messageId, variables) => {
+      if (!messageId) {
+        return;
+      }
+      fetch(
+        `${llmServicePath}/sessions/${variables.session_id.toString()}/chat-history/${messageId}`,
+      )
+        .then(async (res) => {
+          const message = (await res.json()) as ChatMessageType;
+          queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+            chatHistoryQueryKey({
+              session_id: variables.session_id,
+            }),
+            (cachedData) =>
+              replacePlaceholderInChatHistory(message, cachedData),
+          );
+          queryClient
+            .invalidateQueries({
+              queryKey: suggestedQuestionKey(variables.session_id),
+            })
+            .catch((error: unknown) => {
+              console.error(error);
+            });
+          onSuccess?.(message);
+        })
+        .catch((error: unknown) => {
+          handleError(variables, error as Error);
+          onError?.(error as Error);
+        });
+    },
+    onError: (error: Error, variables) => {
+      handleError(variables, error);
+      onError?.(error);
+    },
+  });
+};
+
+const streamChatMutation = async (
+  request: ChatMutationRequest,
+  onChunk: (chunk: string) => void,
+  onError: (error: string) => void,
+): Promise<string> => {
+  const ctrl = new AbortController();
+  let responseId = "";
+  await fetchEventSource(
+    `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,
+    {
+      method: "POST",
+      headers: commonHeaders,
+      body: JSON.stringify({
+        query: request.query,
+        configuration: request.configuration,
+      }),
+      signal: ctrl.signal,
+      onmessage(msg: EventSourceMessage) {
+        const data = JSON.parse(msg.data) as ChatMutationResponse;
+
+        if (data.error) {
+          ctrl.abort();
+          onError(data.error);
+        }
+
+        if (data.text) {
+          onChunk(data.text);
+        }
+        if (data.response_id) {
+          responseId = data.response_id;
+        }
+      },
+      onerror(err: unknown) {
+        ctrl.abort();
+        onError(String(err));
+      },
+      async onopen(response) {
+        if (
+          response.ok &&
+          response.headers.get("content-type")?.includes(EventStreamContentType)
+        ) {
+          await Promise.resolve();
+        } else if (
+          response.status >= 400 &&
+          response.status < 500 &&
+          response.status !== 429
+        ) {
+          onError("An error occurred: " + response.statusText);
+        } else {
+          onError("An error occurred: " + response.statusText);
+        }
+      },
+    },
+  );
+  return responseId;
 };
