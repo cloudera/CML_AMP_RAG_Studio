@@ -241,6 +241,4 @@ def stream_chat_completion(
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
 
-    # kick off evals with full response
-    # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
     return StreamingResponse(generate_stream(), media_type="text/event-stream")

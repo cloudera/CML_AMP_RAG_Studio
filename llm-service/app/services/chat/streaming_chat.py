@@ -48,8 +48,12 @@ from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
 from app.services import evaluators, llm_completion
 from app.services.chat.utils import retrieve_chat_history, format_source_nodes
-from app.services.chat_history.chat_history_manager import RagStudioChatMessage, RagMessage, Evaluation, \
-    chat_history_manager
+from app.services.chat_history.chat_history_manager import (
+    RagStudioChatMessage,
+    RagMessage,
+    Evaluation,
+    chat_history_manager,
+)
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
 from app.services.query import querier
