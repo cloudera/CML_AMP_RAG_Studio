@@ -37,7 +37,6 @@
  ******************************************************************************/
 
 import {
-  commonHeaders,
   getRequest,
   llmServicePath,
   MutationKeys,
@@ -427,7 +426,9 @@ const streamChatMutation = async (
     `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,
     {
       method: "POST",
-      headers: commonHeaders,
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         query: request.query,
         configuration: request.configuration,
