@@ -79,6 +79,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
             model=model_name,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
+            max_tokens=1024,
         )
 
     @staticmethod
