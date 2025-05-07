@@ -195,7 +195,7 @@ const RestartAppModal = ({
         >
           Update Settings
         </Button>
-        {updateInProgress ? (
+        {updateAmpConfig.isSuccess ? (
           <Progress
             type="circle"
             percent={currentProgress.percent}
