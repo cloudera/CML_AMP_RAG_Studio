@@ -202,7 +202,6 @@ def _run_streaming_chat(
     )
 
 
-
 def _run_chat(
     session: Session,
     response_id: str,

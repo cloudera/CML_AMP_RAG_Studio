@@ -57,7 +57,6 @@ import {
   EventStreamContentType,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
-import messageQueue from "src/utils/messageQueue.ts";
 
 export interface SourceNode {
   node_id: string;
@@ -323,9 +322,26 @@ const feedbackMutation = async ({
 };
 
 export interface ChatMutationResponse {
-  text: string;
-  response_id: string;
+  text?: string;
+  response_id?: string;
+  error?: string;
 }
+
+const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
+  const uuid = crypto.randomUUID();
+  const errorMessage: ChatMessageType = {
+    id: `error-${uuid}`,
+    session_id: variables.session_id,
+    source_nodes: [],
+    rag_message: {
+      user: variables.query,
+      assistant: error.message,
+    },
+    evaluations: [],
+    timestamp: Date.now(),
+  };
+  return errorMessage;
+};
 
 export const useStreamingChatMutation = ({
   onError,
@@ -333,10 +349,26 @@ export const useStreamingChatMutation = ({
   onChunk,
 }: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
   const queryClient = useQueryClient();
+  const handleError = (variables: ChatMutationRequest, error: Error) => {
+    const errorMessage = errorChatMessage(variables, error);
+    queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+      chatHistoryQueryKey({
+        session_id: variables.session_id,
+        offset: 0,
+      }),
+      (cachedData) => replacePlaceholderInChatHistory(errorMessage, cachedData),
+    );
+  };
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
-    mutationFn: (request: ChatMutationRequest) =>
-      streamChatMutation(request, onChunk),
+    mutationFn: (request: ChatMutationRequest) => {
+      const convertError = (errorMessage: string) => {
+        const error = new Error(errorMessage);
+        handleError(request, error);
+        onError?.(error);
+      };
+      return streamChatMutation(request, onChunk, convertError);
+    },
     onMutate: (variables) => {
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
@@ -347,6 +379,9 @@ export const useStreamingChatMutation = ({
       );
     },
     onSuccess: (messageId, variables) => {
+      if (!messageId) {
+        return;
+      }
       fetch(
         `${llmServicePath}/sessions/${variables.session_id.toString()}/chat-history/${messageId}`,
       )
@@ -368,32 +403,13 @@ export const useStreamingChatMutation = ({
             });
           onSuccess?.(message);
         })
-        .catch(() => {
-          messageQueue.error("An error occurred fetching the chat message");
+        .catch((error: unknown) => {
+          handleError(variables, error as Error);
+          onError?.(error as Error);
         });
     },
     onError: (error: Error, variables) => {
-      const uuid = crypto.randomUUID();
-      const errorMessage: ChatMessageType = {
-        id: `error-${uuid}`,
-        session_id: variables.session_id,
-        source_nodes: [],
-        rag_message: {
-          user: variables.query,
-          assistant: error.message,
-        },
-        evaluations: [],
-        timestamp: Date.now(),
-      };
-      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-        chatHistoryQueryKey({
-          session_id: variables.session_id,
-          offset: 0,
-        }),
-        (cachedData) =>
-          replacePlaceholderInChatHistory(errorMessage, cachedData),
-      );
-
+      handleError(variables, error);
       onError?.(error);
     },
   });
@@ -402,6 +418,7 @@ export const useStreamingChatMutation = ({
 const streamChatMutation = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
+  onError: (error: string) => void,
 ): Promise<string> => {
   const ctrl = new AbortController();
   let responseId = "";
@@ -420,6 +437,11 @@ const streamChatMutation = async (
       onmessage(msg: EventSourceMessage) {
         const data = JSON.parse(msg.data) as ChatMutationResponse;
 
+        if (data.error) {
+          ctrl.abort();
+          onError(data.error);
+        }
+
         if (data.text) {
           onChunk(data.text);
         }
@@ -427,9 +449,9 @@ const streamChatMutation = async (
           responseId = data.response_id;
         }
       },
-      onerror(err) {
-        console.error("Error", err);
+      onerror(err: unknown) {
         ctrl.abort();
+        onError(String(err));
       },
       async onopen(response) {
         if (
@@ -442,10 +464,9 @@ const streamChatMutation = async (
           response.status < 500 &&
           response.status !== 429
         ) {
-          // client-side errors are usually non-retriable:
-          throw new Error();
+          onError("An error occurred: " + response.statusText);
         } else {
-          throw new Error();
+          onError("An error occurred: " + response.statusText);
         }
       },
     },

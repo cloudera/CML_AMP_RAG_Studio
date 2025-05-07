@@ -228,13 +228,18 @@ def stream_chat_completion(
 
     def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
-        for response in v3_chat(
-            session, request.query, configuration, user_name=origin_remote_user
-        ):
-            response_id = response.additional_kwargs["response_id"]
-            json_delta = json.dumps({ "text": response.delta })
-            yield f"data: {json_delta}" + "\n\n"
-        yield f'data: {{"response_id" : "{response_id}"}}\n\n'
+        try:
+            for response in v3_chat(
+                session, request.query, configuration, user_name=origin_remote_user
+            ):
+                print(response)
+                response_id = response.additional_kwargs["response_id"]
+                json_delta = json.dumps({"text": response.delta})
+                yield f"data: {json_delta}" + "\n\n"
+            yield f'data: {{"response_id" : "{response_id}"}}\n\n'
+        except Exception as e:
+            logger.exception("Failed to stream chat completion")
+            yield f'data: {{"error" : "{e}"}}\n\n'
 
     # kick off evals with full response
     # todo: write to history, start evals, rewrite question, log to mlfow once the response is done
