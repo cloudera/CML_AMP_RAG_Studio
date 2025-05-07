@@ -82,7 +82,7 @@ const SettingsPage = () => {
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      {!projectConfig?.is_valid_config && (
+      {!projectConfig?.is_valid_config && !confirmationModal.isModalOpen && (
         <Alert
           message={
             <div>

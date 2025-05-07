@@ -67,6 +67,51 @@ const PROGRESS_STATES = {
   },
 };
 
+const ProgressIndicator = ({
+  hasSeenRestarting,
+  config,
+  isRestarting,
+  waitingToRestart,
+}: {
+  hasSeenRestarting: boolean;
+  config?: ProjectConfig | null;
+  isRestarting: boolean;
+  waitingToRestart: boolean;
+}) => {
+  const currentProgress = useMemo(() => {
+    if (hasSeenRestarting && config) {
+      return PROGRESS_STATES.READY;
+    }
+
+    if (isRestarting) {
+      return PROGRESS_STATES.RESTARTING;
+    }
+
+    if (waitingToRestart) {
+      return PROGRESS_STATES.WAITING;
+    }
+
+    return PROGRESS_STATES.READY;
+  }, [waitingToRestart, isRestarting]);
+
+  return (
+    <Progress
+      type="circle"
+      percent={currentProgress.percent}
+      steps={3}
+      trailColor={cdlGray200}
+      strokeColor={currentProgress.color}
+      strokeWidth={10}
+      format={() => (
+        <Flex align="center" justify="center">
+          <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
+            {currentProgress.text}
+          </Typography.Text>
+        </Flex>
+      )}
+    />
+  );
+};
 const RestartAppModal = ({
   confirmationModal,
   form,
@@ -141,30 +186,6 @@ const RestartAppModal = ({
   };
 
   const waitingToRestart = polling && !hasSeenRestarting;
-  console.log({
-    waitingToRestart,
-    isRestarting,
-    polling,
-    hasSeenRestarting,
-    config,
-  });
-
-  const currentProgress = useMemo(() => {
-    if (hasSeenRestarting && config) {
-      return PROGRESS_STATES.READY;
-    }
-
-    if (isRestarting) {
-      return PROGRESS_STATES.RESTARTING;
-    }
-
-    if (waitingToRestart) {
-      return PROGRESS_STATES.WAITING;
-    }
-
-    return PROGRESS_STATES.READY;
-  }, [waitingToRestart, isRestarting]);
-
   const updateInProgress = updateAmpConfig.isSuccess && polling;
 
   return (
@@ -196,20 +217,11 @@ const RestartAppModal = ({
           Update Settings
         </Button>
         {updateAmpConfig.isSuccess ? (
-          <Progress
-            type="circle"
-            percent={currentProgress.percent}
-            steps={3}
-            trailColor={cdlGray200}
-            strokeColor={currentProgress.color}
-            strokeWidth={10}
-            format={() => (
-              <Flex align="center" justify="center">
-                <Typography.Text style={{ fontSize: 10, textWrap: "wrap" }}>
-                  {currentProgress.text}
-                </Typography.Text>
-              </Flex>
-            )}
+          <ProgressIndicator
+            hasSeenRestarting={hasSeenRestarting}
+            isRestarting={isRestarting}
+            waitingToRestart={waitingToRestart}
+            config={config}
           />
         ) : null}
         {updateAmpConfig.isSuccess && !waitingToRestart && !isRestarting ? (
