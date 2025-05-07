@@ -134,7 +134,12 @@ const RestartAppModal = ({
   };
 
   const waitingToRestart = polling && !hasSeenRestarting;
-
+  console.log({
+    waitingToRestart,
+    isRestarting,
+    polling,
+    isProjectConfigError,
+  });
   const currentProgress = useMemo(() => {
     if (waitingToRestart) {
       return PROGRESS_STATES.WAITING;
