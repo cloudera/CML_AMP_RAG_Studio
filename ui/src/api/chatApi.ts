@@ -327,7 +327,7 @@ export interface ChatMutationResponse {
   response_id: string;
 }
 
-export const useChatMutationV2 = ({
+export const useStreamingChatMutation = ({
   onError,
   onSuccess,
   onChunk,
@@ -336,7 +336,7 @@ export const useChatMutationV2 = ({
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: (request: ChatMutationRequest) =>
-      chatMutationV2(request, onChunk),
+      streamChatMutation(request, onChunk),
     onMutate: (variables) => {
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
         chatHistoryQueryKey({
@@ -399,7 +399,7 @@ export const useChatMutationV2 = ({
   });
 };
 
-const chatMutationV2 = async (
+const streamChatMutation = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
 ): Promise<string> => {

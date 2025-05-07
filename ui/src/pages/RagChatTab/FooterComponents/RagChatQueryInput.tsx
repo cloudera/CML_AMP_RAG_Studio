@@ -42,7 +42,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
-  useChatMutationV2,
+  useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
@@ -82,7 +82,7 @@ const RagChatQueryInput = ({
     !search.question,
   );
 
-  const streamChatMutation = useChatMutationV2({
+  const streamChatMutation = useStreamingChatMutation({
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },

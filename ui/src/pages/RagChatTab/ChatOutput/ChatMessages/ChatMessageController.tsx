@@ -50,7 +50,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
   isPlaceholder,
-  useChatMutationV2,
+  useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
@@ -79,7 +79,7 @@ const ChatMessageController = () => {
     },
   });
 
-  const { mutate: chatMutation } = useChatMutationV2({
+  const { mutate: chatMutation } = useStreamingChatMutation({
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },

@@ -42,7 +42,7 @@ import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import {
   createQueryConfiguration,
-  useChatMutationV2,
+  useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
 
@@ -93,7 +93,7 @@ const SuggestedQuestionsCards = () => {
 
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { mutate: chatMutation, isPending: askRagIsPending } =
-    useChatMutationV2({
+    useStreamingChatMutation({
       onChunk: (chunk) => {
         setStreamedChat((prev) => prev + chunk);
       },
