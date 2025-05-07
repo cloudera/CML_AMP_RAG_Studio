@@ -40,7 +40,10 @@ from typing import Optional
 from fastapi import HTTPException
 
 from . import models
-from .chat_history.chat_history_manager import chat_history_manager
+from .chat_history.chat_history_manager import (
+    chat_history_manager,
+    RagStudioChatMessage,
+)
 from .metadata_apis import session_metadata_api
 
 RENAME_SESSION_PROMPT_TEMPLATE = """
@@ -78,7 +81,7 @@ Session Name:
 
 
 def rename_session(session_id: int, user_name: Optional[str]) -> str:
-    chat_history = chat_history_manager.retrieve_chat_history(session_id=session_id)
+    chat_history: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(session_id=session_id)
     if not chat_history:
         raise HTTPException(status_code=400, detail="No chat history found")
     first_interaction = chat_history[0].rag_message

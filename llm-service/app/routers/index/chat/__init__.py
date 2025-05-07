@@ -42,7 +42,7 @@ from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
 from app import exceptions
-from app.services.chat import generate_suggested_questions
+from app.services.chat.suggested_questions import generate_suggested_questions
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["Chat"])

@@ -219,13 +219,17 @@ class SummaryIndexer(BaseTextIndexer):
     @classmethod
     def get_all_data_source_summaries(cls) -> dict[str, str]:
         root_dir = cls.__persist_root_dir()
-        # if not os.path.exists(root_dir):
-        #     return {}
-        storage_context = SummaryIndexer.create_storage_context(
-            persist_dir=root_dir,
-            vector_store=SimpleVectorStore(),
-        )
-        indices = load_indices_from_storage(storage_context=storage_context, index_ids=None,
+        try:
+            storage_context = SummaryIndexer.create_storage_context(
+                persist_dir=root_dir,
+                vector_store=SimpleVectorStore(),
+            )
+        except FileNotFoundError:
+            # If the directory doesn't exist, we don't have any summaries.
+            return {}
+        indices = load_indices_from_storage(
+            storage_context=storage_context,
+            index_ids=None,
             **{
                 "llm": models.LLM.get_noop(),
                 "response_synthesizer": models.LLM.get_noop(),
@@ -235,11 +239,13 @@ class SummaryIndexer(BaseTextIndexer):
                 "summary_query": "None",
                 "data_source_id": 0,
             },
-                                            )
+        )
         if len(indices) == 0:
             return {}
 
-        global_summary_store: DocumentSummaryIndex = cast(DocumentSummaryIndex, indices[0])
+        global_summary_store: DocumentSummaryIndex = cast(
+            DocumentSummaryIndex, indices[0]
+        )
 
         summary_ids = global_summary_store.index_struct.doc_id_to_summary_id.values()
         nodes = global_summary_store.docstore.get_nodes(list(summary_ids))

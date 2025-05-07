@@ -50,7 +50,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
   isPlaceholder,
-  useChatMutation,
+  useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
@@ -64,6 +64,7 @@ const ChatMessageController = () => {
       isFetching: isFetchingHistory,
       isFetchingPreviousPage,
     },
+    streamedChatState: [, setStreamedChat],
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -77,8 +78,13 @@ const ChatMessageController = () => {
       messageQueue.error(err.message);
     },
   });
-  const { mutate: chatMutation } = useChatMutation({
+
+  const { mutate: chatMutation } = useStreamingChatMutation({
+    onChunk: (chunk) => {
+      setStreamedChat((prev) => prev + chunk);
+    },
     onSuccess: () => {
+      setStreamedChat("");
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
@@ -127,26 +133,15 @@ const ChatMessageController = () => {
   }, [fetchPreviousPage, inView]);
 
   useEffect(() => {
-    // scroll to bottom when changing the active session
     if (bottomElement.current) {
-      setTimeout(() => {
-        if (bottomElement.current) {
-          bottomElement.current.scrollIntoView({ behavior: "auto" });
-        }
-      }, 50);
-    }
-  }, [bottomElement.current, activeSession?.id]);
-
-  useEffect(() => {
-    if (
-      flatChatHistory.length > 0 &&
-      isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
-    ) {
-      setTimeout(() => {
-        if (bottomElement.current) {
-          bottomElement.current.scrollIntoView({ behavior: "auto" });
-        }
-      }, 50);
+      if (
+        flatChatHistory.length > 0 &&
+        isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
+      ) {
+        bottomElement.current.scrollIntoView({ behavior: "smooth" });
+      } else {
+        bottomElement.current.scrollIntoView({ behavior: "auto" });
+      }
     }
   }, [bottomElement.current, flatChatHistory.length, activeSession?.id]);
 
@@ -181,18 +176,27 @@ const ChatMessageController = () => {
     <div data-testid="chat-message-controller" style={{ width: "100%" }}>
       {isFetchingPreviousPage && <Skeleton />}
       {flatChatHistory.map((historyMessage, index) => {
-        // trigger fetching on second to la`st item
+        const isLast = index === flatChatHistory.length - 1;
+        // trigger fetching on second to last item
         if (index === 2) {
           return (
             <div ref={refToFetchNextPage} key={historyMessage.id}>
+              {isLast && <div ref={bottomElement} />}
               <ChatMessage data={historyMessage} />
             </div>
           );
         }
 
-        return <ChatMessage data={historyMessage} key={historyMessage.id} />;
+        return (
+          <div
+            key={historyMessage.id}
+            ref={isLast ? bottomElement : null}
+            style={isLast ? { minHeight: window.innerHeight - 200 } : {}}
+          >
+            <ChatMessage data={historyMessage} />
+          </div>
+        );
       })}
-      <div ref={bottomElement} />
     </div>
   );
 };

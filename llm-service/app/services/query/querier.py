@@ -29,14 +29,12 @@
 # ##############################################################################
 from __future__ import annotations
 
-import typing
 import logging
+import typing
 
-from llama_index.core import VectorStoreIndex, PromptTemplate
+from llama_index.core import PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.llms import LLM
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from app.services.query.tools.react_agent import configure_agent_runner
 from .chat_engine import FlexibleContextChatEngine
@@ -48,17 +46,72 @@ from ..metadata_apis.data_sources_metadata_api import get_metadata
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 if typing.TYPE_CHECKING:
-    from ..chat import RagContext
+    from ..chat.utils import RagContext
 
 
 import botocore.exceptions
 from fastapi import HTTPException
 from llama_index.core.base.llms.types import ChatMessage
-from llama_index.core.chat_engine.types import AgentChatResponse
+from llama_index.core.chat_engine.types import (
+    AgentChatResponse,
+    StreamingAgentChatResponse,
+)
+from llama_index.core.indices import VectorStoreIndex
+from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
+
+
+def streaming_query(  # TODO: make changes to call tools like in query()
+    data_source_id: int,
+    query_str: str,
+    configuration: QueryConfiguration,
+    chat_history: list[RagContext],
+) -> tuple[StreamingAgentChatResponse, str | None]:
+    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
+    vector_store = qdrant_store.llama_vector_store()
+    embedding_model = qdrant_store.get_embedding_model()
+    index = VectorStoreIndex.from_vector_store(
+        vector_store=vector_store,
+        embed_model=embedding_model,
+    )
+    logger.info("fetched Qdrant index")
+    llm = models.LLM.get(model_name=configuration.model_name)
+
+    retriever = _create_retriever(
+        configuration, embedding_model, index, data_source_id, llm
+    )
+    chat_engine = _build_flexible_chat_engine(
+        configuration, llm, retriever, data_source_id
+    )
+
+    logger.info("querying chat engine")
+    chat_messages = list(
+        map(
+            lambda message: ChatMessage(role=message.role, content=message.content),
+            chat_history,
+        )
+    )
+
+    condensed_question: str = chat_engine.condense_question(
+        chat_messages, query_str
+    ).strip()
+    try:
+        chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+            query_str, chat_messages
+        )
+        logger.info("query response received from chat engine")
+        return chat_response, condensed_question
+    except botocore.exceptions.ClientError as error:
+        logger.warning(error.response)
+        json_error = error.response
+        raise HTTPException(
+            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+            detail=json_error["message"],
+        ) from error
 
 
 def query(
