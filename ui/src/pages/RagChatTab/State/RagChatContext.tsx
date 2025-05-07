@@ -59,6 +59,7 @@ export interface RagChatContextType {
       InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
     >;
   };
+  streamedChatState: [string, Dispatch<SetStateAction<string>>];
   dataSourcesQuery: {
     dataSources: DataSourceType[];
     dataSourcesStatus?: "error" | "success" | "pending";
@@ -79,6 +80,7 @@ export const RagChatContext = createContext<RagChatContextType>({
         {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,
       ),
   },
+  streamedChatState: ["", () => null],
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],

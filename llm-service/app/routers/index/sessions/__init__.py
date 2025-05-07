@@ -38,15 +38,17 @@
 import base64
 import json
 import logging
-from typing import Optional
+from typing import Optional, Generator
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.services.chat.streaming_chat import stream_chat
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services.chat import (
-    v2_chat,
+from ....services.chat.chat import (
+    chat as run_chat,
 )
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
@@ -97,6 +99,24 @@ def chat_history(
         data=paginated_results,
         next_id=next_id,
         previous_id=previous_id,
+    )
+
+
+@router.get(
+    "/chat-history/{message_id}",
+    summary="Returns a specific chat messages for the provided session.",
+)
+@exceptions.propagates
+def get_message_by_id(session_id: int, message_id: str) -> RagStudioChatMessage:
+    results: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(
+        session_id=session_id
+    )
+    for message in results:
+        if message.id == message_id:
+            return message
+    raise HTTPException(
+        status_code=404,
+        detail=f"Message with id {message_id} not found in session {session_id}",
     )
 
 
@@ -161,6 +181,10 @@ class RagStudioChatRequest(BaseModel):
     configuration: RagPredictConfiguration | None = None
 
 
+class StreamCompletionRequest(BaseModel):
+    query: str
+
+
 def parse_jwt_cookie(jwt_cookie: str | None) -> str:
     if jwt_cookie is None:
         return "unknown"
@@ -187,4 +211,34 @@ def chat(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
-    return v2_chat(session, request.query, configuration, user_name=origin_remote_user)
+    return run_chat(session, request.query, configuration, user_name=origin_remote_user)
+
+
+@router.post(
+    "/stream-completion", summary="Stream completion responses for the given query"
+)
+@exceptions.propagates
+def stream_chat_completion(
+    session_id: int,
+    request: RagStudioChatRequest,
+    origin_remote_user: Optional[str] = Header(None),
+) -> StreamingResponse:
+    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
+    configuration = request.configuration or RagPredictConfiguration()
+
+    def generate_stream() -> Generator[str, None, None]:
+        response_id: str = ""
+        try:
+            for response in stream_chat(
+                session, request.query, configuration, user_name=origin_remote_user
+            ):
+                print(response)
+                response_id = response.additional_kwargs["response_id"]
+                json_delta = json.dumps({"text": response.delta})
+                yield f"data: {json_delta}" + "\n\n"
+            yield f'data: {{"response_id" : "{response_id}"}}\n\n'
+        except Exception as e:
+            logger.exception("Failed to stream chat completion")
+            yield f'data: {{"error" : "{e}"}}\n\n'
+
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")

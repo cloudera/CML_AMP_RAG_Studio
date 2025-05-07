@@ -40,7 +40,10 @@ import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
 import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { createQueryConfiguration, useChatMutation } from "src/api/chatApi.ts";
+import {
+  createQueryConfiguration,
+  useStreamingChatMutation,
+} from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 
@@ -58,6 +61,7 @@ const RagChatQueryInput = ({
     chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
+    streamedChatState: [, setStreamedChat],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -66,7 +70,6 @@ const RagChatQueryInput = ({
     strict: false,
   });
   const inputRef = useRef<InputRef>(null);
-
   const {
     data: sampleQuestions,
     isPending: sampleQuestionsIsPending,
@@ -79,9 +82,13 @@ const RagChatQueryInput = ({
     !search.question,
   );
 
-  const chatMutation = useChatMutation({
+  const streamChatMutation = useStreamingChatMutation({
+    onChunk: (chunk) => {
+      setStreamedChat((prev) => prev + chunk);
+    },
     onSuccess: () => {
       setUserInput("");
+      setStreamedChat("");
     },
   });
 
@@ -97,7 +104,7 @@ const RagChatQueryInput = ({
     }
     if (userInput.length > 0) {
       if (sessionId) {
-        chatMutation.mutate({
+        streamChatMutation.mutate({
           query: userInput,
           session_id: +sessionId,
           configuration: createQueryConfiguration(excludeKnowledgeBase),
@@ -156,7 +163,7 @@ const RagChatQueryInput = ({
                 />
               </Tooltip>
             }
-            disabled={chatMutation.isPending}
+            disabled={streamChatMutation.isPending}
           />
           <Button
             style={{ padding: 0 }}
@@ -165,7 +172,7 @@ const RagChatQueryInput = ({
               handleChat(userInput);
             }}
             icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={chatMutation.isPending}
+            disabled={streamChatMutation.isPending}
           />
         </Flex>
       </Flex>

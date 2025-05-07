@@ -57,13 +57,11 @@ export const useGetModelById = (model_id?: string) => {
   return useQuery({
     queryKey: [QueryKeys.getModelById, { model_id }],
     queryFn: async () => {
-      if (!model_id) {
-        return undefined;
-      }
       const llmModels = await getLlmModels();
       return llmModels.find((model) => model.model_id === model_id);
     },
     staleTime: 1000 * 60 * 60,
+    enabled: !!model_id,
   });
 };
 
