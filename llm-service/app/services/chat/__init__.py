@@ -1,6 +1,6 @@
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -35,35 +35,4 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import logging
-from typing import Optional
 
-from fastapi import APIRouter, Header
-from pydantic import BaseModel
-
-from app import exceptions
-from app.services.chat.suggested_questions import generate_suggested_questions
-
-logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/chat", tags=["Chat"])
-
-
-class RagSuggestedQuestionsResponse(BaseModel):
-    suggested_questions: list[str]
-
-
-class SuggestedQuestionsRequest(BaseModel):
-    session_id: Optional[int] = None
-
-
-@router.post("/suggest-questions")
-@exceptions.propagates
-def suggest_questions(
-    request: SuggestedQuestionsRequest, origin_remote_user: Optional[str] = Header(None)
-) -> RagSuggestedQuestionsResponse:
-
-    return RagSuggestedQuestionsResponse(
-        suggested_questions=generate_suggested_questions(
-            request.session_id, user_name=origin_remote_user
-        )
-    )

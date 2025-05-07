@@ -40,7 +40,7 @@ import lipsum
 from hypothesis import example, given
 from hypothesis import strategies as st
 
-from app.services.chat import process_response
+from app.services.chat.utils import process_response
 
 
 @st.composite

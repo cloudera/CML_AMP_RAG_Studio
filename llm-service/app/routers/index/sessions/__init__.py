@@ -44,11 +44,11 @@ from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.services.chat.streaming_chat import v3_chat
 from .... import exceptions
 from ....rag_types import RagPredictConfiguration
-from ....services.chat import (
+from ....services.chat.chat import (
     v2_chat,
-    v3_chat,
 )
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,

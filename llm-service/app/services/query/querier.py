@@ -32,7 +32,7 @@ from __future__ import annotations
 import typing
 
 if typing.TYPE_CHECKING:
-    from ..chat import RagContext
+    from ..chat.utils import RagContext
 
 import logging
 from typing import List, Optional
