@@ -99,14 +99,20 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const { isError: isProjectConfigError } = useGetAmpConfig(polling);
+  const { data: config } = useGetAmpConfig(polling);
 
-  const isRestarting = isProjectConfigError && polling;
+  const isRestarting = !config && polling;
   useEffect(() => {
     if (isRestarting) {
       setHasSeenRestarting(true);
     }
   }, [isRestarting, setHasSeenRestarting]);
+
+  useEffect(() => {
+    if (config && polling) {
+      setPolling(false);
+    }
+  }, [setPolling, config, polling]);
 
   const handleSubmit = () => {
     form
@@ -138,15 +144,21 @@ const RestartAppModal = ({
     waitingToRestart,
     isRestarting,
     polling,
-    isProjectConfigError,
+    hasSeenRestarting,
+    config,
   });
   const currentProgress = useMemo(() => {
-    if (waitingToRestart) {
-      return PROGRESS_STATES.WAITING;
+    if (hasSeenRestarting && config) {
+      return PROGRESS_STATES.READY;
     }
+
     if (isRestarting) {
       return PROGRESS_STATES.RESTARTING;
     }
+    if (waitingToRestart) {
+      return PROGRESS_STATES.WAITING;
+    }
+
     return PROGRESS_STATES.READY;
   }, [waitingToRestart, isRestarting]);
 
