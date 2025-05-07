@@ -74,6 +74,7 @@ def stream_chat(
         use_question_condensing=configuration.use_question_condensing,
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
+        use_tool_calling=session.query_configuration.enable_tool_calling,
     )
 
     response_id = str(uuid.uuid4())
@@ -107,7 +108,21 @@ def _run_streaming_chat(
             status_code=400, detail="Only one datasource is supported for chat."
         )
 
-    data_source_id: int = session.data_source_ids[0]
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+
+    data_source_id: int | None = None
+    if (
+        not query_configuration.exclude_knowledge_base
+        and len(session.data_source_ids) != 0
+        and total_data_sources_size != 0
+    ):
+        data_source_id: int = session.data_source_ids[0]
+
     streaming_chat_response, condensed_question = querier.streaming_query(
         data_source_id,
         query,

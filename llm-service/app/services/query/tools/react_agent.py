@@ -37,11 +37,15 @@
 #
 
 import logging
+from functools import partial
+from typing import Callable, Generator, AsyncGenerator
 
 from llama_index.core.agent import ReActAgent, FunctionCallingAgent, AgentRunner
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.agent.workflow import AgentWorkflow, FunctionAgent, AgentStream
+from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import AsyncBaseTool
+from llama_index.core.workflow.handler import WorkflowHandler
 
 from app.services import models
 from app.services.query.chat_engine import FlexibleContextChatEngine
@@ -60,7 +64,7 @@ def configure_agent_runner(
     configuration: QueryConfiguration,
     chat_engine: FlexibleContextChatEngine | None,
     data_source_id: int | None,
-) -> AgentRunner:
+) -> Generator[ChatResponse, None, None]:
     llm = models.LLM.get(model_name=configuration.model_name)
 
     tools: list[AsyncBaseTool] = []
@@ -76,6 +80,27 @@ def configure_agent_runner(
     memory = ChatMemoryBuffer.from_defaults(
         token_limit=40000, chat_history=chat_messages
     )
-    agent = FunctionCallingAgent.from_tools(tools=tools, llm=llm, verbose=True, memory=memory)
+    agent = FunctionAgent(
+        tools=tools,
+        llm=llm,
+        system_prompt="You are a helpful assistant with a set of tools to work from.",
+        name="Assistant",
+        description="A helpful assistant that can use tools to assist the user.",
+    )
 
-    return agent
+    async def runner(
+        message: str,
+        chat_history: list[ChatMessage],
+    ) -> AsyncGenerator[ChatResponse, None]:
+        handler = AgentWorkflow(agents=[agent]).run(
+            user_msg=message, chat_history=chat_history, memory=memory
+        )
+
+        async for event in handler.stream_events():
+            if isinstance(event, AgentStream):
+                print(event)
+                yield ChatResponse(
+                    message=ChatMessage(content=event.response), delta=event.delta
+                )
+
+    return runner

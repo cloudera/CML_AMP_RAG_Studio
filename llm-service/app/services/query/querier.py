@@ -71,24 +71,8 @@ def streaming_query(  # TODO: make changes to call tools like in query()
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[StreamingAgentChatResponse, str | None]:
-    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-    vector_store = qdrant_store.llama_vector_store()
-    embedding_model = qdrant_store.get_embedding_model()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=embedding_model,
-    )
-    logger.info("fetched Qdrant index")
-    llm = models.LLM.get(model_name=configuration.model_name)
 
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
-    )
-    chat_engine = _build_flexible_chat_engine(
-        configuration, llm, retriever, data_source_id
-    )
-
-    logger.info("querying chat engine")
+    # Create a chat message list from the chat history
     chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
@@ -96,12 +80,47 @@ def streaming_query(  # TODO: make changes to call tools like in query()
         )
     )
 
-    condensed_question: str = chat_engine.condense_question(
-        chat_messages, query_str
-    ).strip()
+    total_data_sources_size: int = 0
+    if data_source_id:
+        total_data_sources_size = VectorStoreFactory.for_chunks(data_source_id).size()
+
+    chat_engine: FlexibleContextChatEngine | None = None
+    condensed_question: str | None = None
+    if (
+        data_source_id is not None
+        and not configuration.exclude_knowledge_base
+        and total_data_sources_size > 0
+    ):
+        chat_engine = create_chat_engine(configuration, data_source_id)
+        condensed_question = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
+
+    if configuration.use_tool_calling:
+        chatter = configure_agent_runner(
+            chat_messages, configuration, chat_engine, data_source_id
+        )
+    elif chat_engine is not None:
+        chatter = chat_engine.stream_chat
+    else:
+
+        def direct_llm_completion(
+            message: str,
+            chat_history: list[ChatMessage],
+        ) -> StreamingAgentChatResponse:
+            chat_history.append(ChatMessage.from_str(message, role="user"))
+            bare_chat_response = models.LLM.get(
+                model_name=configuration.model_name
+            ).stream_chat(messages=chat_history)
+            return StreamingAgentChatResponse(
+                chat_stream=bare_chat_response,
+            )
+
+        chatter = direct_llm_completion
+
     try:
-        chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
-            query_str, chat_messages
+        chat_response: StreamingAgentChatResponse = chatter(
+            message=query_str, chat_history=chat_messages
         )
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
