@@ -31,6 +31,8 @@ from __future__ import annotations
 
 import typing
 
+from ...routers.index.data_source import DataSourceController
+
 if typing.TYPE_CHECKING:
     from ..chat.utils import RagContext
 
@@ -38,6 +40,7 @@ import logging
 from typing import List, Optional
 
 import botocore.exceptions
+from crewai import Agent, Task, Crew, Process
 from fastapi import HTTPException
 from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
@@ -56,6 +59,7 @@ from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import FlexibleContextChatEngine
 from .flexible_retriever import FlexibleRetriever
+from .planner_agent import PlannerAgent
 from .simple_reranker import SimpleReranker
 from ..metadata_apis.data_sources_metadata_api import get_metadata
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
@@ -95,28 +99,160 @@ def streaming_query(
     logger.info("fetched Qdrant index")
     llm = models.LLM.get(model_name=configuration.model_name)
 
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
-    )
-    chat_engine = _build_flexible_chat_engine(
-        configuration, llm, retriever, data_source_id
-    )
+    data_source_summary = DataSourceController(
+        chunks_vector_store=vector_store
+    ).get_document_summary_of_summaries(data_source_id)
 
-    logger.info("querying chat engine")
-    chat_messages = list(
-        map(
-            lambda message: ChatMessage(role=message.role, content=message.content),
-            chat_history,
-        )
-    )
-
-    condensed_question: str = chat_engine.condense_question(
-        chat_messages, query_str
-    ).strip()
     try:
-        chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
-            query_str, chat_messages
+        # Create a planner agent to decide whether to use retrieval or answer directly
+        planner = PlannerAgent(llm, configuration)
+        planning_decision = planner.decide_retrieval_strategy(
+            query_str, data_source_summary
         )
+
+        logger.info(f"Planner decision: {planning_decision}")
+        print(type(planning_decision.get("use_retrieval")))
+        if planning_decision.get("use_retrieval", True):
+            retriever = _create_retriever(
+                configuration, embedding_model, index, data_source_id, llm
+            )
+            chat_engine = _build_flexible_chat_engine(
+                configuration, llm, retriever, data_source_id
+            )
+
+            logger.info("querying chat engine")
+            chat_messages = list(
+                map(
+                    lambda message: ChatMessage(
+                        role=message.role, content=message.content
+                    ),
+                    chat_history,
+                )
+            )
+
+            condensed_question: str = chat_engine.condense_question(
+                chat_messages, query_str
+            ).strip()
+            # If the planner decides to use retrieval, proceed with the current flow
+            logger.info("Planner decided to use retrieval")
+
+            # First, get the context from the retriever
+            query_bundle = QueryBundle(query_str=query_str)
+            retrieved_nodes = retriever.retrieve(query_bundle)
+            context = "\n\n".join([node.node.get_content() for node in retrieved_nodes])
+
+            # Create a CrewAI agent that uses the chat engine's LLM
+            researcher = Agent(
+                role="Researcher",
+                goal="Find the most accurate and relevant information",
+                backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
+                llm=llm,
+                # verbose=True,
+            )
+
+            # Create a calculator agent that performs mathematical calculations
+            calculator = Agent(
+                role="Calculator",
+                goal="Perform accurate mathematical calculations based on research findings",
+                backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
+                llm=llm,
+                # verbose=True,
+            )
+
+            # Create a responder agent that formulates the final response
+            responder = Agent(
+                role="Responder",
+                goal="Provide a comprehensive and accurate response to the query",
+                backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
+                llm=llm,
+                # verbose=True,
+            )
+
+            # Define tasks for the agents
+            research_task = Task(
+                description=f"Research the following query using the provided context: {query_str}\n\nContext: {context}",
+                agent=researcher,
+                expected_output="A detailed analysis of the query based on the provided context",
+            )
+
+            calculation_task = Task(
+                description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
+                agent=calculator,
+                expected_output="Results of any calculations performed, with step-by-step workings",
+                context=[research_task],
+            )
+
+            response_task = Task(
+                description="Formulate a comprehensive response based on the research findings and calculations",
+                agent=responder,
+                expected_output="A comprehensive and accurate response to the query",
+                context=[research_task, calculation_task],
+            )
+
+            # Create a crew with the agents and tasks
+            crew = Crew(
+                agents=[
+                    researcher,
+                    calculator,
+                    responder,
+                ],
+                tasks=[research_task, calculation_task, response_task],
+                verbose=True,
+                process=Process.sequential,
+            )
+
+            # Run the crew to get the enhanced response
+            crew_result = crew.kickoff()
+            # logger.info(f"CrewAI result: {crew_result}")
+
+            # Create an enhanced query that includes the CrewAI insights
+            enhanced_query = f"""
+            Original query: {query_str}
+
+            Research insights: {crew_result}
+
+            Please provide a comprehensive response to the original query, incorporating the insights from research.
+            """
+
+            # Use the existing chat engine with the enhanced query for streaming response
+            chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+                enhanced_query, chat_messages
+            )
+        else:
+            retriever = _create_retriever(
+                configuration, embedding_model, index, data_source_id, llm
+            )
+            chat_engine = _build_flexible_chat_engine(
+                configuration, llm, retriever, data_source_id
+            )
+
+            logger.info("querying chat engine")
+            chat_messages = list(
+                map(
+                    lambda message: ChatMessage(
+                        role=message.role, content=message.content
+                    ),
+                    chat_history,
+                )
+            )
+            # If the planner decides to answer directly, bypass retrieval
+            logger.info("Planner decided to answer directly without retrieval")
+
+            # Create a direct query with the explanation from the planner
+            direct_query = f"""
+            Original query: {query_str}
+
+            The planner has determined that this query can be answered directly without retrieval.
+            Explanation: {planning_decision.get('explanation', 'No explanation provided')}
+
+            Please provide a comprehensive response to the query using your general knowledge.
+            """
+
+            # Use the chat engine to answer directly without retrieval context
+            chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+                direct_query, chat_messages
+            )
+
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
@@ -162,8 +298,45 @@ def query(
     condensed_question: str = chat_engine.condense_question(
         chat_messages, query_str
     ).strip()
+
+    data_source_summary = DataSourceController(
+        chunks_vector_store=vector_store
+    ).get_document_summary_of_summaries(data_source_id)
+
     try:
-        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
+        # Create a planner agent to decide whether to use retrieval or answer directly
+        planner = PlannerAgent(llm, configuration)
+        planning_decision = planner.decide_retrieval_strategy(
+            query_str, data_source_summary
+        )
+
+        logger.info(f"Planner decision: {planning_decision}")
+
+        if planning_decision.get("use_retrieval", True):
+            # If the planner decides to use retrieval, proceed with the current flow
+            logger.info("Planner decided to use retrieval")
+            chat_response: AgentChatResponse = chat_engine.chat(
+                query_str, chat_messages
+            )
+        else:
+            # If the planner decides to answer directly, bypass retrieval
+            logger.info("Planner decided to answer directly without retrieval")
+
+            # Create a direct query with the explanation from the planner
+            direct_query = f"""
+            Original query: {query_str}
+
+            The planner has determined that this query can be answered directly without retrieval.
+            Explanation: {planning_decision.get('explanation', 'No explanation provided')}
+
+            Please provide a comprehensive response to the query using your general knowledge.
+            """
+
+            # Use the chat engine to answer directly without retrieval context
+            chat_response: AgentChatResponse = chat_engine.chat(
+                direct_query, chat_messages
+            )
+
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
