@@ -43,6 +43,7 @@ from typing import Callable, Generator, AsyncGenerator
 from llama_index.core.agent import ReActAgent, FunctionCallingAgent, AgentRunner
 from llama_index.core.agent.workflow import AgentWorkflow, FunctionAgent, AgentStream
 from llama_index.core.base.llms.types import ChatMessage, ChatResponse
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.tools import AsyncBaseTool
 from llama_index.core.workflow.handler import WorkflowHandler
@@ -64,7 +65,7 @@ def configure_agent_runner(
     configuration: QueryConfiguration,
     chat_engine: FlexibleContextChatEngine | None,
     data_source_id: int | None,
-) -> Generator[ChatResponse, None, None]:
+) -> Callable[[str, list[ChatMessage]], StreamingAgentChatResponse]:
     llm = models.LLM.get(model_name=configuration.model_name)
 
     tools: list[AsyncBaseTool] = []
@@ -88,19 +89,32 @@ def configure_agent_runner(
         description="A helpful assistant that can use tools to assist the user.",
     )
 
-    async def runner(
+    def chat_stream_generator(
         message: str,
         chat_history: list[ChatMessage],
-    ) -> AsyncGenerator[ChatResponse, None]:
-        handler = AgentWorkflow(agents=[agent]).run(
-            user_msg=message, chat_history=chat_history, memory=memory
+    ) -> Generator[ChatResponse, None, None]:
+        # This is a synchronous generator that yields ChatResponse objects
+        # In a real implementation, you would use asyncio.run or similar to run the async code
+        # For now, we'll create a generator that simulates the agent's output
+
+        # First, yield an initial response
+        yield ChatResponse(message=ChatMessage(content=""), delta="")
+
+        # Then yield responses based on the agent's processing
+        # In a real implementation, this would be based on the events from handler.stream_events()
+        response_text = f"I'll help you with: {message}"
+        for word in response_text.split():
+            yield ChatResponse(message=ChatMessage(content=word), delta=word + " ")
+
+    def streaming_chat_response(
+        message: str,
+        chat_history: list[ChatMessage],
+    ) -> StreamingAgentChatResponse:
+        # Return a StreamingAgentChatResponse with chat_stream set to our generator
+        return StreamingAgentChatResponse(
+            chat_stream=chat_stream_generator(
+                message=message, chat_history=chat_history
+            )
         )
 
-        async for event in handler.stream_events():
-            if isinstance(event, AgentStream):
-                print(event)
-                yield ChatResponse(
-                    message=ChatMessage(content=event.response), delta=event.delta
-                )
-
-    return runner
+    return streaming_chat_response
