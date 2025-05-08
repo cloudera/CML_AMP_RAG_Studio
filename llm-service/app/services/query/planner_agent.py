@@ -162,7 +162,7 @@ class PlannerAgent:
 
         # Run the crew to get the decision
         result = crew.kickoff()
-        # logger.info(f"Planner decision: {result}")
+        logger.info(f"Planner decision: {result}")
 
         # Parse the result to extract the decision
         # The result might be a string containing JSON, so we need to parse it
@@ -176,7 +176,6 @@ class PlannerAgent:
             json_match = re.search(json_pattern, str(result), re.DOTALL)
 
             if json_match:
-                print(f"JSON match found: {json_match.group(1)}")
                 decision_json = json.loads(json_match.group(1))
                 return decision_json
             else:

@@ -99,10 +99,18 @@ def streaming_query(
     logger.info("fetched Qdrant index")
     llm = models.LLM.get(model_name=configuration.model_name)
 
+    chat_messages = list(
+        map(
+            lambda message: ChatMessage(
+                role=message.role, content=message.content
+            ),
+            chat_history,
+        )
+    )
+
     data_source_summary = DataSourceController(
         chunks_vector_store=vector_store
     ).get_document_summary_of_summaries(data_source_id)
-
     try:
         # Create a planner agent to decide whether to use retrieval or answer directly
         planner = PlannerAgent(llm, configuration)
@@ -110,8 +118,7 @@ def streaming_query(
             query_str, data_source_summary
         )
 
-        logger.info(f"Planner decision: {planning_decision}")
-        print(type(planning_decision.get("use_retrieval")))
+        condensed_question = ""
         if planning_decision.get("use_retrieval", True):
             retriever = _create_retriever(
                 configuration, embedding_model, index, data_source_id, llm
@@ -121,14 +128,6 @@ def streaming_query(
             )
 
             logger.info("querying chat engine")
-            chat_messages = list(
-                map(
-                    lambda message: ChatMessage(
-                        role=message.role, content=message.content
-                    ),
-                    chat_history,
-                )
-            )
 
             condensed_question: str = chat_engine.condense_question(
                 chat_messages, query_str
@@ -197,7 +196,6 @@ def streaming_query(
                     responder,
                 ],
                 tasks=[research_task, calculation_task, response_task],
-                verbose=True,
                 process=Process.sequential,
             )
 
@@ -219,38 +217,27 @@ def streaming_query(
                 enhanced_query, chat_messages
             )
         else:
-            retriever = _create_retriever(
-                configuration, embedding_model, index, data_source_id, llm
-            )
-            chat_engine = _build_flexible_chat_engine(
-                configuration, llm, retriever, data_source_id
-            )
-
-            logger.info("querying chat engine")
-            chat_messages = list(
-                map(
-                    lambda message: ChatMessage(
-                        role=message.role, content=message.content
-                    ),
-                    chat_history,
-                )
-            )
             # If the planner decides to answer directly, bypass retrieval
             logger.info("Planner decided to answer directly without retrieval")
+            logger.info("querying llm directly")
 
             # Create a direct query with the explanation from the planner
             direct_query = f"""
             Original query: {query_str}
 
-            The planner has determined that this query can be answered directly without retrieval.
-            Explanation: {planning_decision.get('explanation', 'No explanation provided')}
-
             Please provide a comprehensive response to the query using your general knowledge.
             """
 
             # Use the chat engine to answer directly without retrieval context
-            chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
-                direct_query, chat_messages
+            chat_response: StreamingAgentChatResponse = StreamingAgentChatResponse(
+                chat_stream=llm.stream_chat(
+                    messages= chat_messages + [ChatMessage(
+                        role="user", content=direct_query
+                    )],
+                ),
+                sources=[],
+                source_nodes=[],
+                is_writing_to_memory=False,
             )
 
         logger.info("query response received from chat engine")

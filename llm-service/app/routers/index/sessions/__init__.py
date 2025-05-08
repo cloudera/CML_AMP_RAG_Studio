@@ -232,7 +232,6 @@ def stream_chat_completion(
             for response in stream_chat(
                 session, request.query, configuration, user_name=origin_remote_user
             ):
-                print(response)
                 response_id = response.additional_kwargs["response_id"]
                 json_delta = json.dumps({"text": response.delta})
                 yield f"data: {json_delta}" + "\n\n"
