@@ -42,7 +42,6 @@ from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
-from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
 
 from app.ai.indexing.summary_indexer import SummaryIndexer

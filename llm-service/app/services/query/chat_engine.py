@@ -39,7 +39,6 @@ import logging
 from typing import Any, Optional, List, Tuple
 
 from llama_index.core import VectorStoreIndex, PromptTemplate
-from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import (

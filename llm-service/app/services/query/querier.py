@@ -50,7 +50,7 @@ from llama_index.core.indices import VectorStoreIndex
 
 from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
-from .chat_engine import _create_retriever, build_flexible_chat_engine
+from .chat_engine import  build_flexible_chat_engine
 from .planner_agent import PlannerAgent
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
@@ -78,7 +78,8 @@ def streaming_query(
             chat_history,
         )
     )
-
+    chat_response: StreamingAgentChatResponse
+    condensed_question: str
     if configuration.use_tool_calling:
         chat_response, condensed_question = stream_crew_ai(
             llm,
@@ -98,11 +99,11 @@ def streaming_query(
             data_source_id=data_source_id,
         )
 
-        condensed_question: str = chat_engine.condense_question(
+        condensed_question = chat_engine.condense_question(
             chat_messages, query_str
         ).strip()
         try:
-            chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+            chat_response = chat_engine.stream_chat(
                 query_str, chat_messages
             )
             logger.info("query response received from chat engine")
