@@ -49,7 +49,7 @@ from app.services.query.chat_engine import (
     build_flexible_chat_engine,
 )
 from app.services.query.flexible_retriever import FlexibleRetriever
-from app.services.query.planner_agent import PlannerAgent
+from app.services.query.planner_agent import PlannerAgent, get_crewai_model_name
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -103,12 +103,14 @@ def stream_crew_ai(
         retrieved_nodes = base_retriever.retrieve(query_bundle)
         context = "\n\n".join([node.node.get_content() for node in retrieved_nodes])
 
+        crewai_llm_name = get_crewai_model_name(llm)
+
         # Create a CrewAI agent that uses the chat engine's LLM
         researcher = Agent(
             role="Researcher",
             goal="Find the most accurate and relevant information",
             backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
-            llm=llm,
+            llm=crewai_llm_name,
             # verbose=True,
         )
 
@@ -117,7 +119,7 @@ def stream_crew_ai(
             role="Calculator",
             goal="Perform accurate mathematical calculations based on research findings",
             backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
-            llm=llm,
+            llm=crewai_llm_name,
             # verbose=True,
         )
 
@@ -126,7 +128,7 @@ def stream_crew_ai(
             role="Responder",
             goal="Provide a comprehensive and accurate response to the query",
             backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
-            llm=llm,
+            llm=crewai_llm_name,
             # verbose=True,
         )
 

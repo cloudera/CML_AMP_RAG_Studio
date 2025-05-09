@@ -73,8 +73,19 @@ from crewai import Agent, Task, Crew, Process
 from llama_index.core.llms import LLM
 
 from .query_configuration import QueryConfiguration
+from ..models.providers import BedrockModelProvider, AzureModelProvider
 
 logger = logging.getLogger(__name__)
+
+
+def get_crewai_model_name(llm):
+    if AzureModelProvider.is_enabled():
+        crewai_llm_name = f"azure/{llm.metadata.model_name}"
+    elif BedrockModelProvider.is_enabled():
+        crewai_llm_name = f"bedrock/{llm.metadata.model_name}"
+    else:
+        raise ValueError("Model not supported")
+    return crewai_llm_name
 
 
 class PlannerAgent:
@@ -106,12 +117,13 @@ class PlannerAgent:
         Returns:
             A dictionary with the decision and explanation.
         """
+
         # Create a planner agent using CrewAI
         planner = Agent(
             role="Planner",
             goal="Decide whether to use retrieval or answer directly",
             backstory="You are an expert planner who decides the most efficient way to answer a query.",
-            llm=self.llm,
+            llm=get_crewai_model_name(self.llm),
             verbose=True,
         )
 
