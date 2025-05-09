@@ -53,6 +53,7 @@ os.chdir(root_dir)
 
 env = os.environ.copy()
 env["API_URL"] = f"{metadata_base_url}"
+env["AZURE_API_BASE"]=os.environ.get("AZURE_OPENAI_ENDPOINT")
 
 print("Starting application with metadata base URL: ", metadata_base_url)
 

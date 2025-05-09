@@ -170,6 +170,7 @@ class PlannerAgent:
             tasks=[planning_task],
             verbose=True,
             process=Process.sequential,
+            # task_callback=lambda task: logger.info(f"Task '{task=}'"),
         )
 
         # Run the crew to get the decision

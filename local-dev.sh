@@ -106,6 +106,7 @@ uv sync
 
 uv run mlflow ui &
 
+export AZURE_API_BASE=${AZURE_OPENAI_ENDPOINT}
 mkdir -p $MLFLOW_RECONCILER_DATA_PATH
 uv run fastapi dev --port=8081 &
 
