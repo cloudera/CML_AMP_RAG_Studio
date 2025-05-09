@@ -32,6 +32,7 @@ from __future__ import annotations
 import typing
 
 from .tools.crewai_querier import crew_ai
+from ...ai.indexing.summary_indexer import SummaryIndexer
 from ...routers.index.data_source import DataSourceController
 
 if typing.TYPE_CHECKING:
@@ -163,9 +164,10 @@ def query(
         chat_messages, query_str
     ).strip()
 
-    data_source_summary = DataSourceController(
-        chunks_vector_store=vector_store
-    ).get_document_summary_of_summaries(data_source_id)
+    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+    data_source_summary = None
+    if data_source_summary_indexer:
+        data_source_summary = data_source_summary_indexer.get_full_summary()
 
     try:
         # Create a planner agent to decide whether to use retrieval or answer directly
@@ -176,12 +178,11 @@ def query(
 
         logger.info(f"Planner decision: {planning_decision}")
 
+        chat_response: AgentChatResponse
         if planning_decision.get("use_retrieval", True):
             # If the planner decides to use retrieval, proceed with the current flow
             logger.info("Planner decided to use retrieval")
-            chat_response: AgentChatResponse = chat_engine.chat(
-                query_str, chat_messages
-            )
+            chat_response = chat_engine.chat(query_str, chat_messages)
         else:
             # If the planner decides to answer directly, bypass retrieval
             logger.info("Planner decided to answer directly without retrieval")
@@ -197,9 +198,7 @@ def query(
             """
 
             # Use the chat engine to answer directly without retrieval context
-            chat_response: AgentChatResponse = chat_engine.chat(
-                direct_query, chat_messages
-            )
+            chat_response = chat_engine.chat(direct_query, chat_messages)
 
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
@@ -236,7 +235,8 @@ class DebugNodePostProcessor(BaseNodePostprocessor):
 
 
 def _create_node_postprocessors(
-    configuration: QueryConfiguration, data_source_id: int,
+    configuration: QueryConfiguration,
+    data_source_id: int,
 ) -> list[BaseNodePostprocessor]:
     if not configuration.use_postprocessor:
         return []
