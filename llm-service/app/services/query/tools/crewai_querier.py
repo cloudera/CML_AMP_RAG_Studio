@@ -42,20 +42,21 @@ from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
+from llama_index.core.indices.vector_store import VectorIndexRetriever
 from llama_index.core.llms import LLM
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.chat_engine import (
-    _create_retriever,
-    _build_flexible_chat_engine,
+    build_flexible_chat_engine,
 )
+from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.planner_agent import PlannerAgent
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
 
 
-def crew_ai(
+def stream_crew_ai(
     llm: LLM,
     embedding_model: BaseEmbedding,
     chat_messages: list[ChatMessage],
@@ -79,11 +80,8 @@ def crew_ai(
     condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
     if planning_decision.get("use_retrieval", True):
-        retriever = _create_retriever(
-            configuration, embedding_model, index, data_source_id, llm
-        )
-        chat_engine = _build_flexible_chat_engine(
-            configuration, llm, retriever, data_source_id
+        chat_engine = build_flexible_chat_engine(
+            configuration, llm, embedding_model, index, data_source_id
         )
 
         logger.info("querying chat engine")
@@ -96,7 +94,14 @@ def crew_ai(
 
         # First, get the context from the retriever
         query_bundle = QueryBundle(query_str=query_str)
-        retrieved_nodes = retriever.retrieve(query_bundle)
+        base_retriever = FlexibleRetriever(
+            configuration=configuration,
+            index=index,
+            embedding_model=embedding_model,
+            data_source_id=data_source_id,
+            llm=llm,
+        )
+        retrieved_nodes = base_retriever.retrieve(query_bundle)
         context = "\n\n".join([node.node.get_content() for node in retrieved_nodes])
 
         # Create a CrewAI agent that uses the chat engine's LLM

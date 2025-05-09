@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import typing
 
-from .tools.crewai_querier import crew_ai
+from .tools.crewai_querier import stream_crew_ai
 from ...ai.indexing.summary_indexer import SummaryIndexer
 
 if typing.TYPE_CHECKING:
@@ -50,7 +50,7 @@ from llama_index.core.indices import VectorStoreIndex
 
 from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
-from .chat_engine import _create_retriever, _build_flexible_chat_engine
+from .chat_engine import _create_retriever, build_flexible_chat_engine
 from .planner_agent import PlannerAgent
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
@@ -80,7 +80,7 @@ def streaming_query(
     )
 
     if configuration.use_tool_calling:
-        chat_response, condensed_question = crew_ai(
+        chat_response, condensed_question = stream_crew_ai(
             llm,
             embedding_model,
             chat_messages,
@@ -90,7 +90,13 @@ def streaming_query(
             data_source_id,
         )
     else:
-        chat_engine = _build_flexible_chat_engine(configuration=configuration, llm=llm, retriever=_create_retriever(configuration, embedding_model, index, data_source_id, llm=llm), data_source_id=data_source_id)
+        chat_engine = build_flexible_chat_engine(
+            configuration=configuration,
+            llm=llm,
+            embedding_model=embedding_model,
+            index=index,
+            data_source_id=data_source_id,
+        )
 
         condensed_question: str = chat_engine.condense_question(
             chat_messages, query_str
@@ -127,11 +133,8 @@ def query(
     logger.info("fetched Qdrant index")
     llm = models.LLM.get(model_name=configuration.model_name)
 
-    retriever = _create_retriever(
-        configuration, embedding_model, index, data_source_id, llm
-    )
-    chat_engine = _build_flexible_chat_engine(
-        configuration, llm, retriever, data_source_id
+    chat_engine = build_flexible_chat_engine(
+        configuration, llm, embedding_model, index, data_source_id
     )
 
     logger.info("querying chat engine")

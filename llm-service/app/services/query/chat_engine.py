@@ -128,24 +128,14 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         return response_synthesizer, context_source, context_nodes
 
 
-def _create_retriever(
-    configuration: QueryConfiguration,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    data_source_id: int,
-    llm: LLM,
-) -> BaseRetriever:
-    return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
-
-
-def _build_flexible_chat_engine(
+def build_flexible_chat_engine(
     configuration: QueryConfiguration,
     llm: LLM,
     embedding_model: BaseEmbedding,
     index: VectorStoreIndex,
     data_source_id: int,
 ) -> FlexibleContextChatEngine:
-    retriever = _create_retriever(configuration, embedding_model, index, data_source_id, llm)
+    retriever = FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
     postprocessors = _create_node_postprocessors(
         configuration, data_source_id=data_source_id
     )
