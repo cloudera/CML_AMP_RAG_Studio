@@ -78,6 +78,7 @@ def streaming_query(
     )
     chat_response: StreamingAgentChatResponse
     condensed_question: str
+    print("configuration.use_tool_calling", configuration.use_tool_calling)
     if configuration.use_tool_calling:
         chat_response, condensed_question = stream_crew_ai(
             llm,

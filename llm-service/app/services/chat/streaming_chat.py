@@ -74,6 +74,7 @@ def stream_chat(
         use_question_condensing=configuration.use_question_condensing,
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
+        use_tool_calling=session.query_configuration.enable_tool_calling,
     )
 
     response_id = str(uuid.uuid4())
