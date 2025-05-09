@@ -31,8 +31,7 @@ from __future__ import annotations
 
 import typing
 
-from .tools.crewai_querier import stream_crew_ai
-from ...ai.indexing.summary_indexer import SummaryIndexer
+from .agents.crewai_querier import stream_crew_ai
 
 if typing.TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -50,8 +49,7 @@ from llama_index.core.indices import VectorStoreIndex
 
 from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
-from .chat_engine import  build_flexible_chat_engine
-from .planner_agent import PlannerAgent
+from .chat_engine import build_flexible_chat_engine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
@@ -103,9 +101,7 @@ def streaming_query(
             chat_messages, query_str
         ).strip()
         try:
-            chat_response = chat_engine.stream_chat(
-                query_str, chat_messages
-            )
+            chat_response = chat_engine.stream_chat(query_str, chat_messages)
             logger.info("query response received from chat engine")
         except botocore.exceptions.ClientError as error:
             logger.warning(error.response)
@@ -131,14 +127,12 @@ def query(
         vector_store=vector_store,
         embed_model=embedding_model,
     )
-    logger.info("fetched Qdrant index")
     llm = models.LLM.get(model_name=configuration.model_name)
 
     chat_engine = build_flexible_chat_engine(
         configuration, llm, embedding_model, index, data_source_id
     )
 
-    logger.info("querying chat engine")
     chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
@@ -150,42 +144,8 @@ def query(
         chat_messages, query_str
     ).strip()
 
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
-
     try:
-        # Create a planner agent to decide whether to use retrieval or answer directly
-        planner = PlannerAgent(llm, configuration)
-        planning_decision = planner.decide_retrieval_strategy(
-            query_str, data_source_summary
-        )
-
-        logger.info(f"Planner decision: {planning_decision}")
-
-        chat_response: AgentChatResponse
-        if planning_decision.get("use_retrieval", True):
-            # If the planner decides to use retrieval, proceed with the current flow
-            logger.info("Planner decided to use retrieval")
-            chat_response = chat_engine.chat(query_str, chat_messages)
-        else:
-            # If the planner decides to answer directly, bypass retrieval
-            logger.info("Planner decided to answer directly without retrieval")
-
-            # Create a direct query with the explanation from the planner
-            direct_query = f"""
-            Original query: {query_str}
-
-            The planner has determined that this query can be answered directly without retrieval.
-            Explanation: {planning_decision.get('explanation', 'No explanation provided')}
-
-            Please provide a comprehensive response to the query using your general knowledge.
-            """
-
-            # Use the chat engine to answer directly without retrieval context
-            chat_response = chat_engine.chat(direct_query, chat_messages)
-
+        chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
