@@ -1,0 +1,201 @@
+#
+#  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
+#  (C) Cloudera, Inc. 2025
+#  All rights reserved.
+#
+#  Applicable Open Source License: Apache 2.0
+#
+#  NOTE: Cloudera open source products are modular software products
+#  made up of hundreds of individual components, each of which was
+#  individually copyrighted.  Each Cloudera open source product is a
+#  collective work under U.S. Copyright Law. Your license to use the
+#  collective work is as provided in your written agreement with
+#  Cloudera.  Used apart from the collective work, this file is
+#  licensed for your use pursuant to the open source license
+#  identified above.
+#
+#  This code is provided to you pursuant a written agreement with
+#  (i) Cloudera, Inc. or (ii) a third-party authorized to distribute
+#  this code. If you do not have a written agreement with Cloudera nor
+#  with an authorized and properly licensed third party, you do not
+#  have any rights to access nor to use this code.
+#
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
+#  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
+#  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
+#  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
+#  FITNESS FOR A PARTICULAR PURPOSE; (C) CLOUDERA IS NOT LIABLE TO YOU,
+#  AND WILL NOT DEFEND, INDEMNIFY, NOR HOLD YOU HARMLESS FOR ANY CLAIMS
+#  ARISING FROM OR RELATED TO THE CODE; AND (D)WITH RESPECT TO YOUR EXERCISE
+#  OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR
+#  CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO, DAMAGES
+#  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
+#  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
+#  DATA.
+#
+import logging
+
+from crewai import Task, Process, Crew, Agent
+from llama_index.core import QueryBundle, VectorStoreIndex
+from llama_index.core.base.embeddings.base import Embedding, BaseEmbedding
+from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.chat_engine.types import StreamingAgentChatResponse
+from llama_index.core.llms import LLM
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
+
+from app.routers.index.data_source import DataSourceController
+from app.services.query.planner_agent import PlannerAgent
+from app.services.query.querier import _create_retriever, _build_flexible_chat_engine
+from app.services.query.query_configuration import QueryConfiguration
+
+logger = logging.getLogger(__name__)
+
+
+def crew_ai(
+    llm: LLM,
+    embedding_model: BaseEmbedding,
+    chat_messages: list[ChatMessage],
+    index: VectorStoreIndex,
+    query_str: str,
+    configuration: QueryConfiguration,
+    data_source_id: int,
+    vector_store: BasePydanticVectorStore,
+) -> tuple[StreamingAgentChatResponse, str]:
+
+    data_source_summary = DataSourceController(
+        chunks_vector_store=vector_store
+    ).get_document_summary_of_summaries(data_source_id)
+
+    # Create a planner agent to decide whether to use retrieval or answer directly
+    planner = PlannerAgent(llm, configuration)
+    planning_decision = planner.decide_retrieval_strategy(
+        query_str, data_source_summary
+    )
+
+    condensed_question = ""
+    if planning_decision.get("use_retrieval", True):
+        retriever = _create_retriever(
+            configuration, embedding_model, index, data_source_id, llm
+        )
+        chat_engine = _build_flexible_chat_engine(
+            configuration, llm, retriever, data_source_id
+        )
+
+        logger.info("querying chat engine")
+
+        condensed_question: str = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
+        # If the planner decides to use retrieval, proceed with the current flow
+        logger.info("Planner decided to use retrieval")
+
+        # First, get the context from the retriever
+        query_bundle = QueryBundle(query_str=query_str)
+        retrieved_nodes = retriever.retrieve(query_bundle)
+        context = "\n\n".join([node.node.get_content() for node in retrieved_nodes])
+
+        # Create a CrewAI agent that uses the chat engine's LLM
+        researcher = Agent(
+            role="Researcher",
+            goal="Find the most accurate and relevant information",
+            backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
+            llm=llm,
+            # verbose=True,
+        )
+
+        # Create a calculator agent that performs mathematical calculations
+        calculator = Agent(
+            role="Calculator",
+            goal="Perform accurate mathematical calculations based on research findings",
+            backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
+            llm=llm,
+            # verbose=True,
+        )
+
+        # Create a responder agent that formulates the final response
+        responder = Agent(
+            role="Responder",
+            goal="Provide a comprehensive and accurate response to the query",
+            backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
+            llm=llm,
+            # verbose=True,
+        )
+
+        # Define tasks for the agents
+        research_task = Task(
+            name="ResearcherTask",
+            description=f"Research the following query using the provided context: {query_str}\n\nContext: {context}",
+            agent=researcher,
+            expected_output="A detailed analysis of the query based on the provided context",
+        )
+
+        calculation_task = Task(
+            name="CalculatorTask",
+            description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
+            agent=calculator,
+            expected_output="Results of any calculations performed, with step-by-step workings",
+            context=[research_task],
+        )
+
+        response_task = Task(
+            name="ResponderTask",
+            description="Formulate a comprehensive response based on the research findings and calculations",
+            agent=responder,
+            expected_output="A comprehensive and accurate response to the query",
+            context=[research_task, calculation_task],
+        )
+
+        # Create a crew with the agents and tasks
+        crew = Crew(
+            agents=[
+                researcher,
+                calculator,
+                responder,
+            ],
+            tasks=[research_task, calculation_task, response_task],
+            process=Process.sequential,
+        )
+
+        # Run the crew to get the enhanced response
+        crew_result = crew.kickoff()
+        # logger.info(f"CrewAI result: {crew_result}")
+
+        # Create an enhanced query that includes the CrewAI insights
+        enhanced_query = f"""
+            Original query: {query_str}
+
+            Research insights: {crew_result}
+
+            Please provide a comprehensive response to the original query, incorporating the insights from research.
+            """
+
+        # Use the existing chat engine with the enhanced query for streaming response
+        chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+            enhanced_query, chat_messages
+        )
+    else:
+        # If the planner decides to answer directly, bypass retrieval
+        logger.info("Planner decided to answer directly without retrieval")
+        logger.info("querying llm directly")
+
+        # Create a direct query with the explanation from the planner
+        direct_query = f"""
+            Original query: {query_str}
+
+            Please provide a comprehensive response to the query using your general knowledge.
+            """
+
+        # Use the chat engine to answer directly without retrieval context
+        chat_response: StreamingAgentChatResponse = StreamingAgentChatResponse(
+            chat_stream=llm.stream_chat(
+                messages=chat_messages
+                + [ChatMessage(role="user", content=direct_query)],
+            ),
+            sources=[],
+            source_nodes=[],
+            is_writing_to_memory=False,
+        )
+
+    return chat_response, condensed_question

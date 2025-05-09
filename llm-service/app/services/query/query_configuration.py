@@ -57,3 +57,4 @@ class QueryConfiguration(BaseModel):
     use_hyde: Optional[bool] = False
     use_summary_filter: Optional[bool] = True
     use_postprocessor: Optional[bool] = True
+    use_tool_calling: Optional[bool] = False
