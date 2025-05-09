@@ -113,11 +113,9 @@ def streaming_query(
         query_str,
         configuration,
         data_source_id,
-        vector_store,
     )
 
     try:
-
         logger.info("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
@@ -211,15 +209,6 @@ def query(
         ) from error
 
 
-def _create_retriever(
-    configuration: QueryConfiguration,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    data_source_id: int,
-    llm: LLM,
-) -> BaseRetriever:
-    return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
-
 
 class DebugNodePostProcessor(BaseNodePostprocessor):
     def _postprocess_nodes(
@@ -255,21 +244,3 @@ def _create_node_postprocessors(
         DebugNodePostProcessor(),
     ]
 
-
-def _build_flexible_chat_engine(
-    configuration: QueryConfiguration,
-    llm: LLM,
-    retriever: BaseRetriever,
-    data_source_id: int,
-) -> FlexibleContextChatEngine:
-    postprocessors = _create_node_postprocessors(
-        configuration, data_source_id=data_source_id
-    )
-    chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
-        llm=llm,
-        condense_question_prompt=CUSTOM_PROMPT,
-        retriever=retriever,
-        node_postprocessors=postprocessors,
-    )
-    chat_engine._configuration = configuration
-    return chat_engine

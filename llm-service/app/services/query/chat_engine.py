@@ -38,6 +38,9 @@
 import logging
 from typing import Any, Optional, List, Tuple
 
+from llama_index.core import VectorStoreIndex
+from llama_index.core.base.base_retriever import BaseRetriever
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import (
     CondensePlusContextChatEngine,
@@ -46,6 +49,7 @@ from llama_index.core.response_synthesizers import CompactAndRefine
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import ToolOutput
 
+from .flexible_retriever import FlexibleRetriever
 from .query_configuration import QueryConfiguration
 from .. import llm_completion
 
@@ -102,3 +106,32 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         )
 
         return response_synthesizer, context_source, context_nodes
+
+
+def _create_retriever(
+        configuration: QueryConfiguration,
+        embedding_model: BaseEmbedding,
+        index: VectorStoreIndex,
+        data_source_id: int,
+        llm: LLM,
+) -> BaseRetriever:
+    return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
+
+def _build_flexible_chat_engine(
+        configuration: QueryConfiguration,
+        llm: LLM,
+        retriever: BaseRetriever,
+        data_source_id: int,
+) -> FlexibleContextChatEngine:
+    postprocessors = _create_node_postprocessors(
+        configuration, data_source_id=data_source_id
+    )
+    chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
+        llm=llm,
+        condense_question_prompt=CUSTOM_PROMPT,
+        retriever=retriever,
+        node_postprocessors=postprocessors,
+    )
+    chat_engine._configuration = configuration
+    return chat_engine
+

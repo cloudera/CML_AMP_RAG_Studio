@@ -39,13 +39,12 @@ import logging
 
 from crewai import Task, Process, Crew, Agent
 from llama_index.core import QueryBundle, VectorStoreIndex
-from llama_index.core.base.embeddings.base import Embedding, BaseEmbedding
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
-from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
-from app.routers.index.data_source import DataSourceController
+from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.planner_agent import PlannerAgent
 from app.services.query.querier import _create_retriever, _build_flexible_chat_engine
 from app.services.query.query_configuration import QueryConfiguration
@@ -61,12 +60,12 @@ def crew_ai(
     query_str: str,
     configuration: QueryConfiguration,
     data_source_id: int,
-    vector_store: BasePydanticVectorStore,
 ) -> tuple[StreamingAgentChatResponse, str]:
 
-    data_source_summary = DataSourceController(
-        chunks_vector_store=vector_store
-    ).get_document_summary_of_summaries(data_source_id)
+    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+    data_source_summary = None
+    if data_source_summary_indexer:
+        data_source_summary = data_source_summary_indexer.get_full_summary()
 
     # Create a planner agent to decide whether to use retrieval or answer directly
     planner = PlannerAgent(llm, configuration)
@@ -74,7 +73,8 @@ def crew_ai(
         query_str, data_source_summary
     )
 
-    condensed_question = ""
+    condensed_question: str = ""
+    chat_response: StreamingAgentChatResponse
     if planning_decision.get("use_retrieval", True):
         retriever = _create_retriever(
             configuration, embedding_model, index, data_source_id, llm
@@ -85,7 +85,7 @@ def crew_ai(
 
         logger.info("querying chat engine")
 
-        condensed_question: str = chat_engine.condense_question(
+        condensed_question = chat_engine.condense_question(
             chat_messages, query_str
         ).strip()
         # If the planner decides to use retrieval, proceed with the current flow
@@ -172,7 +172,7 @@ def crew_ai(
             """
 
         # Use the existing chat engine with the enhanced query for streaming response
-        chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+        chat_response = chat_engine.stream_chat(
             enhanced_query, chat_messages
         )
     else:
@@ -188,7 +188,7 @@ def crew_ai(
             """
 
         # Use the chat engine to answer directly without retrieval context
-        chat_response: StreamingAgentChatResponse = StreamingAgentChatResponse(
+        chat_response = StreamingAgentChatResponse(
             chat_stream=llm.stream_chat(
                 messages=chat_messages
                 + [ChatMessage(role="user", content=direct_query)],
