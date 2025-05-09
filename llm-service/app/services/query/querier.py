@@ -33,55 +33,28 @@ import typing
 
 from .tools.crewai_querier import crew_ai
 from ...ai.indexing.summary_indexer import SummaryIndexer
-from ...routers.index.data_source import DataSourceController
 
 if typing.TYPE_CHECKING:
     from ..chat.utils import RagContext
 
 import logging
-from typing import List, Optional
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core import PromptTemplate, QueryBundle
-from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import (
     AgentChatResponse,
     StreamingAgentChatResponse,
 )
 from llama_index.core.indices import VectorStoreIndex
-from llama_index.core.llms import LLM
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore
 
 from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
-from .chat_engine import FlexibleContextChatEngine
-from .flexible_retriever import FlexibleRetriever
+from .chat_engine import _create_retriever, _build_flexible_chat_engine
 from .planner_agent import PlannerAgent
-from .simple_reranker import SimpleReranker
-from ..metadata_apis.data_sources_metadata_api import get_metadata
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
-
-CUSTOM_TEMPLATE = """\
-Given a conversation (between Human and Assistant) and a follow up message from Human, \
-rewrite the message to be a standalone question that captures all relevant context \
-from the conversation. Just provide the question, not any description of it.
-
-<Chat History>
-{chat_history}
-
-<Follow Up Message>
-{question}
-
-<Standalone question>
-"""
-
-CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 
 
 def streaming_query(
@@ -105,26 +78,37 @@ def streaming_query(
             chat_history,
         )
     )
-    chat_response, condensed_question = crew_ai(
-        llm,
-        embedding_model,
-        chat_messages,
-        index,
-        query_str,
-        configuration,
-        data_source_id,
-    )
 
-    try:
-        logger.info("query response received from chat engine")
-        return chat_response, condensed_question
-    except botocore.exceptions.ClientError as error:
-        logger.warning(error.response)
-        json_error = error.response
-        raise HTTPException(
-            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["message"],
-        ) from error
+    if configuration.use_tool_calling:
+        chat_response, condensed_question = crew_ai(
+            llm,
+            embedding_model,
+            chat_messages,
+            index,
+            query_str,
+            configuration,
+            data_source_id,
+        )
+    else:
+        chat_engine = _build_flexible_chat_engine(configuration=configuration, llm=llm, retriever=_create_retriever(configuration, embedding_model, index, data_source_id, llm=llm), data_source_id=data_source_id)
+
+        condensed_question: str = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
+        try:
+            chat_response: StreamingAgentChatResponse = chat_engine.stream_chat(
+                query_str, chat_messages
+            )
+            logger.info("query response received from chat engine")
+        except botocore.exceptions.ClientError as error:
+            logger.warning(error.response)
+            json_error = error.response
+            raise HTTPException(
+                status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+                detail=json_error["message"],
+            ) from error
+
+    return chat_response, condensed_question
 
 
 def query(
@@ -207,40 +191,3 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["message"],
         ) from error
-
-
-
-class DebugNodePostProcessor(BaseNodePostprocessor):
-    def _postprocess_nodes(
-        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None
-    ) -> list[NodeWithScore]:
-        logger.debug(f"nodes: {len(nodes)}")
-        for node in sorted(nodes, key=lambda n: n.node.node_id):
-            logger.debug(
-                node.node.node_id, node.node.metadata["document_id"], node.score
-            )
-
-        return nodes
-
-
-def _create_node_postprocessors(
-    configuration: QueryConfiguration,
-    data_source_id: int,
-) -> list[BaseNodePostprocessor]:
-    if not configuration.use_postprocessor:
-        return []
-
-    data_source = get_metadata(data_source_id=data_source_id)
-    if data_source.summarization_model is None:
-        return [SimpleReranker(top_n=configuration.top_k)]
-
-    return [
-        DebugNodePostProcessor(),
-        models.Reranking.get(
-            model_name=configuration.rerank_model_name,
-            top_n=configuration.top_k,
-        )
-        or SimpleReranker(top_n=configuration.top_k),
-        DebugNodePostProcessor(),
-    ]
-

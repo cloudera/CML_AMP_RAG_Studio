@@ -45,8 +45,11 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.query.chat_engine import (
+    _create_retriever,
+    _build_flexible_chat_engine,
+)
 from app.services.query.planner_agent import PlannerAgent
-from app.services.query.querier import _create_retriever, _build_flexible_chat_engine
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -172,9 +175,7 @@ def crew_ai(
             """
 
         # Use the existing chat engine with the enhanced query for streaming response
-        chat_response = chat_engine.stream_chat(
-            enhanced_query, chat_messages
-        )
+        chat_response = chat_engine.stream_chat(enhanced_query, chat_messages)
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.info("Planner decided to answer directly without retrieval")

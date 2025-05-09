@@ -38,22 +38,42 @@
 import logging
 from typing import Any, Optional, List, Tuple
 
-from llama_index.core import VectorStoreIndex
+from llama_index.core import VectorStoreIndex, PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import (
     CondensePlusContextChatEngine,
 )
+from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.response_synthesizers import CompactAndRefine
-from llama_index.core.schema import NodeWithScore
+from llama_index.core.schema import NodeWithScore, QueryBundle
 from llama_index.core.tools import ToolOutput
 
 from .flexible_retriever import FlexibleRetriever
 from .query_configuration import QueryConfiguration
-from .. import llm_completion
+from .simple_reranker import SimpleReranker
+from .. import llm_completion, models
+from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
+
+CUSTOM_TEMPLATE = """\
+Given a conversation (between Human and Assistant) and a follow up message from Human, \
+rewrite the message to be a standalone question that captures all relevant context \
+from the conversation. Just provide the question, not any description of it.
+
+<Chat History>
+{chat_history}
+
+<Follow Up Message>
+{question}
+
+<Standalone question>
+"""
+
+CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
 
 
 class FlexibleContextChatEngine(CondensePlusContextChatEngine):
@@ -109,20 +129,23 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 
 
 def _create_retriever(
-        configuration: QueryConfiguration,
-        embedding_model: BaseEmbedding,
-        index: VectorStoreIndex,
-        data_source_id: int,
-        llm: LLM,
+    configuration: QueryConfiguration,
+    embedding_model: BaseEmbedding,
+    index: VectorStoreIndex,
+    data_source_id: int,
+    llm: LLM,
 ) -> BaseRetriever:
     return FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
 
+
 def _build_flexible_chat_engine(
-        configuration: QueryConfiguration,
-        llm: LLM,
-        retriever: BaseRetriever,
-        data_source_id: int,
+    configuration: QueryConfiguration,
+    llm: LLM,
+    embedding_model: BaseEmbedding,
+    index: VectorStoreIndex,
+    data_source_id: int,
 ) -> FlexibleContextChatEngine:
+    retriever = _create_retriever(configuration, embedding_model, index, data_source_id, llm)
     postprocessors = _create_node_postprocessors(
         configuration, data_source_id=data_source_id
     )
@@ -135,3 +158,37 @@ def _build_flexible_chat_engine(
     chat_engine._configuration = configuration
     return chat_engine
 
+
+class DebugNodePostProcessor(BaseNodePostprocessor):
+    def _postprocess_nodes(
+        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None
+    ) -> list[NodeWithScore]:
+        logger.debug(f"nodes: {len(nodes)}")
+        for node in sorted(nodes, key=lambda n: n.node.node_id):
+            logger.debug(
+                node.node.node_id, node.node.metadata["document_id"], node.score
+            )
+
+        return nodes
+
+
+def _create_node_postprocessors(
+    configuration: QueryConfiguration,
+    data_source_id: int,
+) -> list[BaseNodePostprocessor]:
+    if not configuration.use_postprocessor:
+        return []
+
+    data_source = get_metadata(data_source_id=data_source_id)
+    if data_source.summarization_model is None:
+        return [SimpleReranker(top_n=configuration.top_k)]
+
+    return [
+        DebugNodePostProcessor(),
+        models.Reranking.get(
+            model_name=configuration.rerank_model_name,
+            top_n=configuration.top_k,
+        )
+        or SimpleReranker(top_n=configuration.top_k),
+        DebugNodePostProcessor(),
+    ]
