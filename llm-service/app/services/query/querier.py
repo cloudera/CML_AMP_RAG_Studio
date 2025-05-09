@@ -13,7 +13,7 @@
 #  have any rights to access nor to use this code.
 #
 #  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
-#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
+#  contrary, (A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
 #  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
@@ -41,7 +41,6 @@ import logging
 from typing import List, Optional
 
 import botocore.exceptions
-from crewai import Agent, Task, Crew, Process
 from fastapi import HTTPException
 from llama_index.core import PromptTemplate, QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
@@ -105,18 +104,16 @@ def streaming_query(
             chat_history,
         )
     )
-
-    if configuration.use_tool_calling:
-        chat_response, condensed_question = crew_ai(
-            llm,
-            embedding_model,
-            chat_messages,
-            index,
-            query_str,
-            configuration,
-            data_source_id,
-            vector_store,
-        )
+    chat_response, condensed_question = crew_ai(
+        llm,
+        embedding_model,
+        chat_messages,
+        index,
+        query_str,
+        configuration,
+        data_source_id,
+        vector_store,
+    )
 
     try:
 
@@ -239,7 +236,7 @@ class DebugNodePostProcessor(BaseNodePostprocessor):
 
 
 def _create_node_postprocessors(
-    configuration: QueryConfiguration, data_source_id: int, llm: LLM
+    configuration: QueryConfiguration, data_source_id: int,
 ) -> list[BaseNodePostprocessor]:
     if not configuration.use_postprocessor:
         return []
@@ -266,7 +263,7 @@ def _build_flexible_chat_engine(
     data_source_id: int,
 ) -> FlexibleContextChatEngine:
     postprocessors = _create_node_postprocessors(
-        configuration, data_source_id=data_source_id, llm=llm
+        configuration, data_source_id=data_source_id
     )
     chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         llm=llm,

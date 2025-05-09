@@ -176,7 +176,7 @@ class PlannerAgent:
             json_match = re.search(json_pattern, str(result), re.DOTALL)
 
             if json_match:
-                decision_json = json.loads(json_match.group(1))
+                decision_json: dict[str, Any] = json.loads(json_match.group(1))
                 return decision_json
             else:
                 # If no JSON pattern found, make a default decision
