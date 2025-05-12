@@ -38,6 +38,36 @@
 
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
+#  (C) Cloudera, Inc. 2025
+#  All rights reserved.
+#
+#  Applicable Open Source License: Apache 2.0
+#
+#
+#  This code is provided to you pursuant a written agreement with
+#  (i) Cloudera, Inc. or (ii) a third-party authorized to distribute
+#  this code. If you do not have a written agreement with Cloudera nor
+#  with an authorized and properly licensed third party, you do not
+#  have any rights to access nor to use this code.
+#
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
+#  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
+#  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
+#  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
+#  IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND
+#  FITNESS FOR A PARTICULAR PURPOSE; (C) CLOUDERA IS NOT LIABLE TO YOU,
+#  AND WILL NOT DEFEND, INDEMNIFY, NOR HOLD YOU HARMLESS FOR ANY CLAIMS
+#  ARISING FROM OR RELATED TO THE CODE; AND (D)WITH RESPECT TO YOUR EXERCISE
+#  OF ANY RIGHTS GRANTED TO YOU FOR THE CODE, CLOUDERA IS NOT LIABLE FOR ANY
+#  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE OR
+#  CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT LIMITED TO, DAMAGES
+#  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
+#  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
+#  DATA.
+#
+
+#
+#  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
 #  (C) Cloudera, Inc. 2024
 #  All rights reserved.
 #
@@ -72,8 +102,9 @@ from typing import Dict, Any, Optional
 from crewai import Agent, Task, Crew, Process
 from llama_index.core.llms import LLM
 
-from .query_configuration import QueryConfiguration
-from ..models.providers import BedrockModelProvider, AzureModelProvider
+from app.services.query.agents.models import get_crewai_llm_object_direct
+from app.services.query.query_configuration import QueryConfiguration
+from app.services.models.providers import BedrockModelProvider, AzureModelProvider
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +154,7 @@ class PlannerAgent:
             role="Planner",
             goal="Decide whether to use retrieval or answer directly",
             backstory="You are an expert planner who decides the most efficient way to answer a query.",
-            llm=get_crewai_model_name(self.llm),
+            llm=get_crewai_llm_object_direct(self.llm, self.configuration.model_name),
             verbose=True,
         )
 

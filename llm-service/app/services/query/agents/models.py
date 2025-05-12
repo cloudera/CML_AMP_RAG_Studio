@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,28 +34,40 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
+from crewai import LLM as CrewAILLM
+from llama_index.core.llms import LLM as LlamaIndexLLM
 
-import subprocess
-import os
-import cmlapi
+from app import config
+from app.services.caii.utils import get_caii_access_token
+from app.services.models.providers import AzureModelProvider, CAIIModelProvider, BedrockModelProvider
 
-client = cmlapi.default_client()
-applications = client.list_applications(project_id=os.environ['CDSW_PROJECT_ID'])
-metadata_base_url: str = "http://localhost:8080"
-if len(applications.applications) > 0:
-    for app in applications.applications:
-        if app.name == "RagStudioMetadata":
-            metadata_base_url = f"https://{app.subdomain}.{os.environ['CDSW_DOMAIN']}"
 
-root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
-os.chdir(root_dir)
-
-env = os.environ.copy()
-env["API_URL"] = f"{metadata_base_url}"
-
-print("Starting application with metadata base URL: ", metadata_base_url)
-
-while True:
-    print(subprocess.run(["bash scripts/startup_app.sh"], shell=True, env=env))
-    print("Application Restarting")
+def get_crewai_llm_object_direct(language_model: LlamaIndexLLM, model_name: str) -> CrewAILLM:
+    if AzureModelProvider.is_enabled():
+        return CrewAILLM(
+            model="azure/" + model_name,
+            api_key=config.settings.azure_openai_api_key,
+            base_url=config.settings.azure_openai_endpoint,
+            # temperature=language_model.generation_config.get("temperature"),
+            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+            # seed=0,
+        )
+    elif CAIIModelProvider.is_enabled():
+        return CrewAILLM(
+            model="openai/" + model_name,
+            api_key=get_caii_access_token(),
+            base_url=language_model.api_base,
+            # temperature=language_model.generation_config.get("temperature"),
+            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+            # seed=0,
+        )
+    elif BedrockModelProvider.is_enabled():
+        return CrewAILLM(
+            model="bedrock/" + model_name,
+            # temperature=language_model.generation_config.get("temperature"),
+            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+            # seed=0,
+        )
+    else:
+        raise ValueError(f"Model type is not supported.")

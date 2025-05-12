@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,28 +34,5 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
-import subprocess
-import os
-import cmlapi
-
-client = cmlapi.default_client()
-applications = client.list_applications(project_id=os.environ['CDSW_PROJECT_ID'])
-metadata_base_url: str = "http://localhost:8080"
-if len(applications.applications) > 0:
-    for app in applications.applications:
-        if app.name == "RagStudioMetadata":
-            metadata_base_url = f"https://{app.subdomain}.{os.environ['CDSW_DOMAIN']}"
-
-root_dir = "/home/cdsw/rag-studio" if os.getenv("IS_COMPOSABLE", "") != "" else "/home/cdsw"
-os.chdir(root_dir)
-
-env = os.environ.copy()
-env["API_URL"] = f"{metadata_base_url}"
-
-print("Starting application with metadata base URL: ", metadata_base_url)
-
-while True:
-    print(subprocess.run(["bash scripts/startup_app.sh"], shell=True, env=env))
-    print("Application Restarting")

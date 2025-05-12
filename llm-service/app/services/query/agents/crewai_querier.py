@@ -45,11 +45,12 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.chat_engine import (
     build_flexible_chat_engine,
 )
 from app.services.query.flexible_retriever import FlexibleRetriever
-from app.services.query.planner_agent import PlannerAgent, get_crewai_model_name
+from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ def stream_crew_ai(
         retrieved_nodes = base_retriever.retrieve(query_bundle)
         context = "\n\n".join([node.node.get_content() for node in retrieved_nodes])
 
-        crewai_llm_name = get_crewai_model_name(llm)
+        crewai_llm_name = get_crewai_llm_object_direct(llm, configuration.model_name)
 
         # Create a CrewAI agent that uses the chat engine's LLM
         researcher = Agent(
