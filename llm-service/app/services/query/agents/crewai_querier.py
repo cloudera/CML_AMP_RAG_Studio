@@ -175,8 +175,8 @@ def stream_crew_ai(
 
     # Create a crew with the agents and tasks
     crew = Crew(
-        agents=[date_finder, researcher, calculator, responder],
-        tasks=[date_task, research_task, calculation_task, response_task],
+        agents=[researcher, calculator, responder],
+        tasks=[research_task, calculation_task, response_task],
         process=Process.sequential,
     )
 
