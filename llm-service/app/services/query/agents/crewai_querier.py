@@ -83,15 +83,7 @@ def stream_crew_ai(
 
     crewai_llm_name = get_crewai_llm_object_direct(llm, configuration.model_name)
 
-    # Create a calculator agent that performs mathematical calculations
-    calculator = Agent(
-        role="Calculator",
-        goal="Perform accurate mathematical calculations based on research findings",
-        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
-        llm=crewai_llm_name,
-        verbose=True,
-    )
-
+    # Define tasks for the agents
     date_finder = Agent(
         role="DateFinder",
         goal="Find the current date and time",
@@ -99,17 +91,6 @@ def stream_crew_ai(
         llm=crewai_llm_name,
         verbose=True,
     )
-
-    # Create a responder agent that formulates the final response
-    responder = Agent(
-        role="Responder",
-        goal="Provide a comprehensive and accurate response to the query",
-        backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
-        llm=crewai_llm_name,
-        verbose=True,
-    )
-
-    # Define tasks for the agents
     date_tool = DateTool()
     date_task = Task(
         name="DateFinderTask",
@@ -119,6 +100,14 @@ def stream_crew_ai(
         tools=[date_tool],
     )
 
+    # Create a calculator agent that performs mathematical calculations
+    calculator = Agent(
+        role="Calculator",
+        goal="Perform accurate mathematical calculations based on research findings",
+        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
+        llm=crewai_llm_name,
+        verbose=True,
+    )
     calculation_task = Task(
         name="CalculatorTask",
         description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
@@ -159,7 +148,6 @@ def stream_crew_ai(
         verbose=True,
         tools=[date_tool],
     )
-
     research_task = Task(
         name="ResearcherTask",
         description=f"Research the following query using any provided context: {query_str}\n\nContext: {context}",
@@ -167,6 +155,15 @@ def stream_crew_ai(
         expected_output="A detailed analysis of the query based on the provided context",
         tools=[date_tool],
         context=[date_task],
+    )
+
+    # Create a responder agent that formulates the final response
+    responder = Agent(
+        role="Responder",
+        goal="Provide a comprehensive and accurate response to the query",
+        backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
+        llm=crewai_llm_name,
+        verbose=True,
     )
     response_task = Task(
         name="ResponderTask",
