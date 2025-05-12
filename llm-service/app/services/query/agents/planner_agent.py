@@ -160,7 +160,7 @@ class PlannerAgent:
             goal="Decide whether to use retrieval or answer directly",
             backstory="You are an expert planner who decides the most efficient way to answer a query.",
             llm=get_crewai_llm_object_direct(self.llm, self.configuration.model_name),
-            verbose=True,
+            # verbose=True,
         )
 
         # Define the planning task

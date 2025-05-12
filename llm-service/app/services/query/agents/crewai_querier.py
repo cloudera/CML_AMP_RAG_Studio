@@ -48,6 +48,7 @@ from crewai_tools import SerperDevTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.date_tool import DateTool
+from app.services.query.agents.events import MyCustomListener
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
@@ -58,6 +59,7 @@ from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
+my_listener = MyCustomListener()
 
 
 def stream_crew_ai(
@@ -69,6 +71,7 @@ def stream_crew_ai(
     configuration: QueryConfiguration,
     data_source_id: int,
 ) -> tuple[StreamingAgentChatResponse, str]:
+
     use_retrieval = should_use_retrieval(
         configuration, data_source_id, llm, query_str, chat_messages
     )
@@ -115,7 +118,7 @@ def stream_crew_ai(
         goal="Find the most accurate and relevant information",
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
         llm=crewai_llm,
-        verbose=True,
+        # verbose=True,
         tools=[date_tool, serper],
     )
     research_task = Task(
@@ -133,7 +136,7 @@ def stream_crew_ai(
         goal="Provide a comprehensive and accurate response to the query",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
-        verbose=True,
+        # verbose=True,
     )
     response_task = Task(
         name="ResponderTask",
