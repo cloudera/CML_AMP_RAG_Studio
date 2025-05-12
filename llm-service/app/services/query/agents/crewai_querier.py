@@ -45,6 +45,7 @@ from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.tools.duckduckgo import DuckDuckGoSearchToolSpec
+from crewai_tools import SerperDevTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.date_tool import DateTool
@@ -102,14 +103,13 @@ def stream_crew_ai(
         tools=[date_tool],
     )
 
-    duck_duck_tool = DuckDuckGoSearchToolSpec().to_tool_list()
-    crewai_duck_duck_tools = [LlamaIndexTool.from_tool(tool) for tool in duck_duck_tool]
+    serper = SerperDevTool()
     searcher = Agent(
         role="Search Agent",
         goal="Search the internet for relevant information",
         backstory="You know everything about the web.  You can find anything that exists on the web.",
         llm=crewai_llm_name,
-        tools=crewai_duck_duck_tools,
+        tools=[serper],
         verbose=True,
     )
     search_task = Task(
@@ -164,14 +164,14 @@ def stream_crew_ai(
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
         llm=crewai_llm_name,
         verbose=True,
-        tools=[date_tool, *crewai_duck_duck_tools],
+        tools=[date_tool, serper],
     )
     research_task = Task(
         name="ResearcherTask",
         description=f"Research the following query using any provided context: {query_str}\n\nContext: {context}",
         agent=researcher,
         expected_output="A detailed analysis of the query based on the provided context",
-        tools=[date_tool, *crewai_duck_duck_tools],
+        tools=[date_tool, serper],
         context=[search_task, date_task],
     )
 
