@@ -107,13 +107,14 @@ def stream_crew_ai(
         goal="Search the internet for relevant information",
         backstory="You know everything about the web.  You can find anything that exists on the web.",
         llm=crewai_llm_name,
-        tools=[serper],
+        tools=[date_tool, serper],
         verbose=True,
     )
     search_task = Task(
         name="SearchTask",
         description="Search the internet for relevant information related to the query.",
         agent=searcher,
+        tools=[date_tool],
         expected_output="Results of any search performed, with step-by-step workings",
     )
 
@@ -191,8 +192,8 @@ def stream_crew_ai(
 
     # Create a crew with the agents and tasks
     crew = Crew(
-        agents=[searcher, researcher, calculator, responder],
-        tasks=[search_task, research_task, calculation_task, response_task],
+        agents=[date_finder, searcher, researcher, calculator, responder],
+        tasks=[date_task, search_task, research_task, calculation_task, response_task],
         process=Process.sequential,
     )
 
