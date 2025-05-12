@@ -422,59 +422,6 @@ export const useStreamingChatMutation = ({
   });
 };
 
-const streamCrewEvents = async (
-  sessionId: number,
-  onEvent?: (event: CrewEventResponse) => void,
-  onError?: (error: string) => void,
-): Promise<void> => {
-  const ctrl = new AbortController();
-
-  try {
-    await fetchEventSource(
-      `${llmServicePath}/sessions/${sessionId.toString()}/crew-events`,
-      {
-        method: "GET",
-        signal: ctrl.signal,
-        onmessage(msg: EventSourceMessage) {
-          const data = JSON.parse(msg.data) as CrewEventResponse;
-
-          if (data.error) {
-            ctrl.abort();
-            onError?.(data.error);
-            return;
-          }
-
-          onEvent?.(data);
-        },
-        onerror(err: unknown) {
-          ctrl.abort();
-          onError?.(String(err));
-        },
-        async onopen(response) {
-          if (
-            response.ok &&
-            response.headers
-              .get("content-type")
-              ?.includes(EventStreamContentType)
-          ) {
-            await Promise.resolve();
-          } else if (
-            response.status >= 400 &&
-            response.status < 500 &&
-            response.status !== 429
-          ) {
-            onError?.("An error occurred: " + response.statusText);
-          } else {
-            onError?.("An error occurred: " + response.statusText);
-          }
-        },
-      },
-    );
-  } catch (error) {
-    onError?.(String(error));
-  }
-};
-
 const streamChatMutation = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
@@ -495,6 +442,7 @@ const streamChatMutation = async (
       }),
       signal: ctrl.signal,
       onmessage(msg: EventSourceMessage) {
+        console.log(msg);
         const data = JSON.parse(msg.data) as ChatMutationResponse;
 
         if (data.error) {
@@ -518,17 +466,6 @@ const streamChatMutation = async (
           response.ok &&
           response.headers.get("content-type")?.includes(EventStreamContentType)
         ) {
-          // Start streaming crew events after chat stream is opened
-          await streamCrewEvents(
-            request.session_id,
-            (event) => {
-              console.log("Crew event received:", event);
-              // Handle crew events here if needed
-            },
-            (error) => {
-              console.error("Crew events stream error:", error);
-            },
-          );
           await Promise.resolve();
         } else if (
           response.status >= 400 &&

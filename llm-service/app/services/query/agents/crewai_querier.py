@@ -151,6 +151,7 @@ def stream_crew_ai(
         agents=[date_finder, searcher, researcher, calculator, responder],
         tasks=[date_task, search_task, research_task, calculation_task, response_task],
         process=Process.sequential,
+        name="QueryCrew",
     )
 
     # Run the crew to get the enhanced response

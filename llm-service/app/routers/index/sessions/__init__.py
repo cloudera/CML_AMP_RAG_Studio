@@ -36,6 +36,7 @@
 #  DATA.
 # ##############################################################################
 import base64
+import itertools
 import json
 import logging
 import queue
@@ -60,7 +61,7 @@ from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.session import rename_session
-from ....services.query.agents.events import crew_events_queue
+from ....services.query.agents.events import crew_events_queue, generate_queue
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
@@ -243,12 +244,12 @@ def stream_chat_completion(
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
 
-    return StreamingResponse(generate_stream(), media_type="text/event-stream")
+    combined_gen = itertools.chain(generate_queue(), generate_stream())
+
+    return StreamingResponse(combined_gen, media_type="text/event-stream")
 
 
-@router.get(
-    "/crew-events", summary="Stream crew events"
-)
+@router.get("/crew-events", summary="Stream crew events")
 @exceptions.propagates
 def stream_crew_events(
     session_id: int,
@@ -258,13 +259,14 @@ def stream_crew_events(
     Stream crew events as Server-Sent Events (SSE).
     Currently streams the on_crew_started event from events.py.
     """
+
     def generate_crew_events() -> Generator[str, None, None]:
         try:
             # Send a connection established event
             connection_event = {
                 "event_type": "connection_established",
                 "session_id": session_id,
-                "timestamp": time.time()
+                "timestamp": time.time(),
             }
             yield f"data: {json.dumps(connection_event)}\n\n"
 
