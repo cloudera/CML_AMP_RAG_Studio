@@ -29,11 +29,13 @@
 # ##############################################################################
 from __future__ import annotations
 
-import typing
+from typing import Optional, TYPE_CHECKING
+
+from llama_index.core.base.embeddings.base import BaseEmbedding
 
 from .agents.crewai_querier import stream_crew_ai
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from ..chat.utils import RagContext
 
 import logging
@@ -56,18 +58,13 @@ logger = logging.getLogger(__name__)
 
 
 def streaming_query(
-    data_source_id: int,
+    data_source_id: Optional[int],
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[StreamingAgentChatResponse, str | None]:
-    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-    vector_store = qdrant_store.llama_vector_store()
-    embedding_model = qdrant_store.get_embedding_model()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=embedding_model,
-    )
+    embedding_model, index = find_datasource_stuff(data_source_id)
+
     llm = models.LLM.get(model_name=configuration.model_name)
 
     chat_messages = list(
@@ -113,6 +110,19 @@ def streaming_query(
             ) from error
 
     return chat_response, condensed_question
+
+
+def find_datasource_stuff(data_source_id: Optional[int]) -> tuple[Optional[BaseEmbedding], Optional[VectorStoreIndex]]:
+    if data_source_id is None:
+        return None, None
+    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
+    vector_store = qdrant_store.llama_vector_store()
+    embedding_model = qdrant_store.get_embedding_model()
+    index = VectorStoreIndex.from_vector_store(
+        vector_store=vector_store,
+        embed_model=embedding_model,
+    )
+    return embedding_model, index
 
 
 def query(

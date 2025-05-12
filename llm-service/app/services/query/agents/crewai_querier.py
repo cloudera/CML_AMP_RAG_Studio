@@ -36,6 +36,7 @@
 #  DATA.
 #
 import logging
+from typing import Optional
 
 from crewai import Task, Process, Crew, Agent
 from llama_index.core import QueryBundle, VectorStoreIndex
@@ -51,6 +52,7 @@ from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
     build_flexible_chat_engine,
+    FlexibleContextChatEngine,
 )
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
@@ -60,83 +62,29 @@ logger = logging.getLogger(__name__)
 
 def stream_crew_ai(
     llm: LLM,
-    embedding_model: BaseEmbedding,
+    embedding_model: Optional[BaseEmbedding],
     chat_messages: list[ChatMessage],
-    index: VectorStoreIndex,
+    index: Optional[VectorStoreIndex],
     query_str: str,
     configuration: QueryConfiguration,
     data_source_id: int,
 ) -> tuple[StreamingAgentChatResponse, str]:
-
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
-
-    # Create a planner agent to decide whether to use retrieval or answer directly
-    planner = PlannerAgent(llm, configuration)
-    planning_decision = planner.decide_retrieval_strategy(
-        query_str, data_source_summary
-    )
+    use_retrieval = should_use_retrieval(configuration, data_source_id, llm, query_str)
 
     condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
 
-    crewai_llm_name = get_crewai_llm_object_direct(llm, configuration.model_name)
+    crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
 
     # Define tasks for the agents
-    date_finder = Agent(
-        role="DateFinder",
-        goal="Find the current date and time",
-        backstory="You are an expert at finding the current date and time.",
-        llm=crewai_llm_name,
-        verbose=True,
-    )
-    date_tool = DateTool()
-    date_task = Task(
-        name="DateFinderTask",
-        description="Find the current date and time.",
-        agent=date_finder,
-        expected_output="The current date and time.",
-        tools=[date_tool],
-    )
+    date_finder, date_task, date_tool = build_date_agent(crewai_llm)
+    search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
+    calculation_task, calculator = build_calculator_agent(crewai_llm)
 
-    serper = SerperDevTool()
-    searcher = Agent(
-        role="Search Agent",
-        goal="Search the internet for relevant information",
-        backstory="You know everything about the web.  You can find anything that exists on the web.",
-        llm=crewai_llm_name,
-        tools=[date_tool, serper],
-        verbose=True,
-    )
-    search_task = Task(
-        name="SearchTask",
-        description="Search the internet for relevant information related to the query.",
-        agent=searcher,
-        tools=[date_tool],
-        expected_output="Results of any search performed, with step-by-step workings",
-    )
-
-    calculator = Agent(
-        role="Calculator",
-        goal="Perform accurate mathematical calculations based on research findings",
-        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
-        llm=crewai_llm_name,
-        verbose=True,
-    )
-    calculation_task = Task(
-        name="CalculatorTask",
-        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
-        agent=calculator,
-        expected_output="Results of any calculations performed, with step-by-step workings",
-    )
-
-    chat_engine = build_flexible_chat_engine(
-        configuration, llm, embedding_model, index, data_source_id
-    )
+    chat_engine: Optional[FlexibleContextChatEngine] = None
     context: str = ""
-    if planning_decision.get("use_retrieval", True):
+    if use_retrieval:
+        chat_engine = build_flexible_chat_engine(configuration, llm, embedding_model, index, data_source_id)
         logger.info("querying chat engine")
 
         condensed_question = chat_engine.condense_question(
@@ -161,7 +109,7 @@ def stream_crew_ai(
         role="Researcher",
         goal="Find the most accurate and relevant information",
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
-        llm=crewai_llm_name,
+        llm=crewai_llm,
         verbose=True,
         tools=[date_tool, serper],
     )
@@ -179,7 +127,7 @@ def stream_crew_ai(
         role="Responder",
         goal="Provide a comprehensive and accurate response to the query",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
-        llm=crewai_llm_name,
+        llm=crewai_llm,
         verbose=True,
     )
     response_task = Task(
@@ -211,19 +159,12 @@ def stream_crew_ai(
         """
 
     # Use the existing chat engine with the enhanced query for streaming response
-    if planning_decision.get("use_retrieval", True):
+    if use_retrieval:
         chat_response = chat_engine.stream_chat(enhanced_query, chat_messages)
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.info("Planner decided to answer directly without retrieval")
-        logger.info("querying llm directly")
-
-        # Create a direct query with the explanation from the planner
-        direct_query = f"""
-            Original query: {query_str}
-
-            Please provide a comprehensive response to the query using your general knowledge.
-            """
+        logger.info("querying llm directly with enhanced query: \n%s", enhanced_query)
 
         # Use the chat engine to answer directly without retrieval context
         chat_response = StreamingAgentChatResponse(
@@ -237,3 +178,76 @@ def stream_crew_ai(
         )
 
     return chat_response, condensed_question
+
+
+def build_calculator_agent(crewai_llm_name):
+    calculator = Agent(
+        role="Calculator",
+        goal="Perform accurate mathematical calculations based on research findings",
+        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
+        llm=crewai_llm_name,
+        verbose=True,
+    )
+    calculation_task = Task(
+        name="CalculatorTask",
+        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
+        agent=calculator,
+        expected_output="Results of any calculations performed, with step-by-step workings",
+    )
+    return calculation_task, calculator
+
+
+def build_search_agent(crewai_llm_name, date_tool):
+    serper = SerperDevTool()
+    searcher = Agent(
+        role="Search Agent",
+        goal="Search the internet for relevant information",
+        backstory="You know everything about the web.  You can find anything that exists on the web.",
+        llm=crewai_llm_name,
+        tools=[date_tool, serper],
+        verbose=True,
+    )
+    search_task = Task(
+        name="SearchTask",
+        description="Search the internet for relevant information related to the query.",
+        agent=searcher,
+        tools=[date_tool],
+        expected_output="Results of any search performed, with step-by-step workings",
+    )
+    return search_task, searcher, serper
+
+
+def build_date_agent(crewai_llm):
+    date_finder = Agent(
+        role="DateFinder",
+        goal="Find the current date and time",
+        backstory="You are an expert at finding the current date and time.",
+        llm=crewai_llm,
+        verbose=True,
+    )
+    date_tool = DateTool()
+    date_task = Task(
+        name="DateFinderTask",
+        description="Find the current date and time.",
+        agent=date_finder,
+        expected_output="The current date and time.",
+        tools=[date_tool],
+    )
+    return date_finder, date_task, date_tool
+
+
+def should_use_retrieval(configuration: QueryConfiguration, data_source_id: Optional[int], llm: LLM, query_str: str) -> bool:
+    if not data_source_id:
+        return False
+
+    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+    data_source_summary = None
+    if data_source_summary_indexer:
+        data_source_summary = data_source_summary_indexer.get_full_summary()
+    # Create a planner agent to decide whether to use retrieval or answer directly
+    planner = PlannerAgent(llm, configuration)
+    planning_decision = planner.decide_retrieval_strategy(
+        query_str, data_source_summary
+    )
+    use_retrieval = planning_decision.get("use_retrieval", True)
+    return use_retrieval

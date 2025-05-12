@@ -79,18 +79,18 @@ def stream_chat(
 
     response_id = str(uuid.uuid4())
 
-    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+    if not query_configuration.use_tool_calling and not session.data_source_ids:
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
-    total_data_sources_size: int = sum(
-        map(
-            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
-        )
-    )
-    if total_data_sources_size == 0:
-        return _stream_direct_llm_chat(session, response_id, query, user_name)
-
+    # total_data_sources_size: int = sum(
+    #     map(
+    #         lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
+    #         session.data_source_ids,
+    #     )
+    # )
+    # if total_data_sources_size == 0:
+    #     return _stream_direct_llm_chat(session, response_id, query, user_name)
+    #
     return _run_streaming_chat(
         session, response_id, query, query_configuration, user_name
     )
@@ -103,12 +103,12 @@ def _run_streaming_chat(
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
 ) -> Generator[ChatResponse, None, None]:
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400, detail="Only one datasource is supported for chat."
-        )
+    # if len(session.data_source_ids) != 1:
+    #     raise HTTPException(
+    #         status_code=400, detail="Only one datasource is supported for chat."
+    #     )
 
-    data_source_id: int = session.data_source_ids[0]
+    data_source_id: Optional[int] = session.data_source_ids[0] if session.data_source_ids else None
     streaming_chat_response, condensed_question = querier.streaming_query(
         data_source_id,
         query,
