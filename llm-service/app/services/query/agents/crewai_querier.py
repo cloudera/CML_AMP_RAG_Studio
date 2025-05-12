@@ -45,12 +45,13 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.query.agents.date_tool import DateTool
 from app.services.query.agents.models import get_crewai_llm_object_direct
+from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
     build_flexible_chat_engine,
 )
 from app.services.query.flexible_retriever import FlexibleRetriever
-from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -79,11 +80,57 @@ def stream_crew_ai(
 
     condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
-    if planning_decision.get("use_retrieval", True):
-        chat_engine = build_flexible_chat_engine(
-            configuration, llm, embedding_model, index, data_source_id
-        )
 
+    crewai_llm_name = get_crewai_llm_object_direct(llm, configuration.model_name)
+
+    # Create a calculator agent that performs mathematical calculations
+    calculator = Agent(
+        role="Calculator",
+        goal="Perform accurate mathematical calculations based on research findings",
+        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
+        llm=crewai_llm_name,
+        verbose=True,
+    )
+
+    date_finder = Agent(
+        role="DateFinder",
+        goal="Find the current date and time",
+        backstory="You are an expert at finding the current date and time.",
+        llm=crewai_llm_name,
+        verbose=True,
+    )
+
+    # Create a responder agent that formulates the final response
+    responder = Agent(
+        role="Responder",
+        goal="Provide a comprehensive and accurate response to the query",
+        backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
+        llm=crewai_llm_name,
+        verbose=True,
+    )
+
+    # Define tasks for the agents
+    date_tool = DateTool()
+    date_task = Task(
+        name="DateFinderTask",
+        description="Find the current date and time.",
+        agent=date_finder,
+        expected_output="The current date and time.",
+        tools=[date_tool],
+    )
+
+    calculation_task = Task(
+        name="CalculatorTask",
+        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
+        agent=calculator,
+        expected_output="Results of any calculations performed, with step-by-step workings",
+    )
+
+    chat_engine = build_flexible_chat_engine(
+        configuration, llm, embedding_model, index, data_source_id
+    )
+    context: str = ""
+    if planning_decision.get("use_retrieval", True):
         logger.info("querying chat engine")
 
         condensed_question = chat_engine.condense_question(
@@ -102,86 +149,55 @@ def stream_crew_ai(
             llm=llm,
         )
         retrieved_nodes = base_retriever.retrieve(query_bundle)
-        context = "\n\n".join([node.node.get_content() for node in retrieved_nodes])
+        context += "\n\n".join([node.node.get_content() for node in retrieved_nodes])
 
-        crewai_llm_name = get_crewai_llm_object_direct(llm, configuration.model_name)
+    researcher = Agent(
+        role="Researcher",
+        goal="Find the most accurate and relevant information",
+        backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
+        llm=crewai_llm_name,
+        verbose=True,
+        tools=[date_tool],
+    )
 
-        # Create a CrewAI agent that uses the chat engine's LLM
-        researcher = Agent(
-            role="Researcher",
-            goal="Find the most accurate and relevant information",
-            backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
-            llm=crewai_llm_name,
-            # verbose=True,
-        )
+    research_task = Task(
+        name="ResearcherTask",
+        description=f"Research the following query using any provided context: {query_str}\n\nContext: {context}",
+        agent=researcher,
+        expected_output="A detailed analysis of the query based on the provided context",
+        tools=[date_tool],
+        context=[date_task],
+    )
+    response_task = Task(
+        name="ResponderTask",
+        description="Formulate a comprehensive response based on the research findings and calculations",
+        agent=responder,
+        expected_output="A comprehensive and accurate response to the query",
+        context=[date_task, research_task, calculation_task],
+    )
 
-        # Create a calculator agent that performs mathematical calculations
-        calculator = Agent(
-            role="Calculator",
-            goal="Perform accurate mathematical calculations based on research findings",
-            backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
-            llm=crewai_llm_name,
-            # verbose=True,
-        )
+    # Create a crew with the agents and tasks
+    crew = Crew(
+        agents=[date_finder, researcher, calculator, responder],
+        tasks=[date_task, research_task, calculation_task, response_task],
+        process=Process.sequential,
+    )
 
-        # Create a responder agent that formulates the final response
-        responder = Agent(
-            role="Responder",
-            goal="Provide a comprehensive and accurate response to the query",
-            backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
-            llm=crewai_llm_name,
-            # verbose=True,
-        )
+    # Run the crew to get the enhanced response
+    crew_result = crew.kickoff()
+    # logger.info(f"CrewAI result: {crew_result}")
 
-        # Define tasks for the agents
-        research_task = Task(
-            name="ResearcherTask",
-            description=f"Research the following query using the provided context: {query_str}\n\nContext: {context}",
-            agent=researcher,
-            expected_output="A detailed analysis of the query based on the provided context",
-        )
+    # Create an enhanced query that includes the CrewAI insights
+    enhanced_query = f"""
+        Original query: {query_str}
 
-        calculation_task = Task(
-            name="CalculatorTask",
-            description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
-            agent=calculator,
-            expected_output="Results of any calculations performed, with step-by-step workings",
-            context=[research_task],
-        )
+        Research insights: {crew_result}
 
-        response_task = Task(
-            name="ResponderTask",
-            description="Formulate a comprehensive response based on the research findings and calculations",
-            agent=responder,
-            expected_output="A comprehensive and accurate response to the query",
-            context=[research_task, calculation_task],
-        )
+        Please provide a comprehensive response to the original query, incorporating the insights from research.
+        """
 
-        # Create a crew with the agents and tasks
-        crew = Crew(
-            agents=[
-                researcher,
-                calculator,
-                responder,
-            ],
-            tasks=[research_task, calculation_task, response_task],
-            process=Process.sequential,
-        )
-
-        # Run the crew to get the enhanced response
-        crew_result = crew.kickoff()
-        # logger.info(f"CrewAI result: {crew_result}")
-
-        # Create an enhanced query that includes the CrewAI insights
-        enhanced_query = f"""
-            Original query: {query_str}
-
-            Research insights: {crew_result}
-
-            Please provide a comprehensive response to the original query, incorporating the insights from research.
-            """
-
-        # Use the existing chat engine with the enhanced query for streaming response
+    # Use the existing chat engine with the enhanced query for streaming response
+    if planning_decision.get("use_retrieval", True):
         chat_response = chat_engine.stream_chat(enhanced_query, chat_messages)
     else:
         # If the planner decides to answer directly, bypass retrieval
@@ -199,7 +215,7 @@ def stream_crew_ai(
         chat_response = StreamingAgentChatResponse(
             chat_stream=llm.stream_chat(
                 messages=chat_messages
-                + [ChatMessage(role="user", content=direct_query)],
+                         + [ChatMessage(role="user", content=enhanced_query)],
             ),
             sources=[],
             source_nodes=[],
