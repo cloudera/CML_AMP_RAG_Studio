@@ -100,6 +100,7 @@ import logging
 from typing import Dict, Any, Optional
 
 from crewai import Agent, Task, Crew, Process
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -136,13 +137,17 @@ class PlannerAgent:
         self.configuration = configuration
 
     def decide_retrieval_strategy(
-        self, query: str, data_source_summary: Optional[str] = None
+        self,
+        query: str,
+        chat_messages: list[ChatMessage],
+        data_source_summary: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Decide whether to use retrieval or answer directly.
 
         Args:
             query: The user query.
+            chat_messages: The chat history.
             data_source_summary: A summary of the data source content to help determine relevance.
 
         Returns:
@@ -164,12 +169,14 @@ class PlannerAgent:
         if data_source_summary:
             data_source_info = f"""
             Knowledge Base Summary: {data_source_summary}
+            Chat History: {chat_messages}
 
             """
             additional_data_source_questions = """
             Consider the following factors:
                 1. Is the query related to the content described in the knowledge base summary?
                 2. Does the knowledge base likely contain information that would help answer this query?
+                3. Consider the chat history when answering the above questions.
             """
 
         planning_task = Task(

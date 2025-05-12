@@ -69,7 +69,9 @@ def stream_crew_ai(
     configuration: QueryConfiguration,
     data_source_id: int,
 ) -> tuple[StreamingAgentChatResponse, str]:
-    use_retrieval = should_use_retrieval(configuration, data_source_id, llm, query_str)
+    use_retrieval = should_use_retrieval(
+        configuration, data_source_id, llm, query_str, chat_messages
+    )
 
     condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
@@ -83,8 +85,11 @@ def stream_crew_ai(
 
     chat_engine: Optional[FlexibleContextChatEngine] = None
     context: str = ""
+    chat_history = [message.content for message in chat_messages]
     if use_retrieval:
-        chat_engine = build_flexible_chat_engine(configuration, llm, embedding_model, index, data_source_id)
+        chat_engine = build_flexible_chat_engine(
+            configuration, llm, embedding_model, index, data_source_id
+        )
         logger.info("querying chat engine")
 
         condensed_question = chat_engine.condense_question(
@@ -115,7 +120,7 @@ def stream_crew_ai(
     )
     research_task = Task(
         name="ResearcherTask",
-        description=f"Research the following query using any provided context: {query_str}\n\nContext: {context}",
+        description=f"Research the following query using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
         agent=researcher,
         expected_output="A detailed analysis of the query based on the provided context",
         tools=[date_tool, serper],
@@ -236,7 +241,13 @@ def build_date_agent(crewai_llm):
     return date_finder, date_task, date_tool
 
 
-def should_use_retrieval(configuration: QueryConfiguration, data_source_id: Optional[int], llm: LLM, query_str: str) -> bool:
+def should_use_retrieval(
+    configuration: QueryConfiguration,
+    data_source_id: Optional[int],
+    llm: LLM,
+    query_str: str,
+    chat_messages: list[ChatMessage],
+) -> bool:
     if not data_source_id:
         return False
 
@@ -247,7 +258,7 @@ def should_use_retrieval(configuration: QueryConfiguration, data_source_id: Opti
     # Create a planner agent to decide whether to use retrieval or answer directly
     planner = PlannerAgent(llm, configuration)
     planning_decision = planner.decide_retrieval_strategy(
-        query_str, data_source_summary
+        query_str, chat_messages, data_source_summary
     )
     use_retrieval = planning_decision.get("use_retrieval", True)
     return use_retrieval
