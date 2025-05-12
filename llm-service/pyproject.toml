@@ -40,6 +40,7 @@ dependencies = [
     "llama-index-storage-kvstore-s3>=0.3.0",
     "llama-index-vector-stores-opensearch>=0.5.2",
     "crewai[tools]>=0.119.0",
+    "aiostream>=0.6.4",
 ]
 requires-python = ">=3.10,<=3.12"
 readme = "README.md"

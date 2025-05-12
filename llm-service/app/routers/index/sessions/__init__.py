@@ -36,13 +36,13 @@
 #  DATA.
 # ##############################################################################
 import base64
-import itertools
 import json
 import logging
 import queue
 import time
-from typing import Optional, Generator
+from typing import Optional, Generator, AsyncGenerator
 
+import aiostream
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -60,8 +60,8 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.session import rename_session
 from ....services.query.agents.events import crew_events_queue, generate_queue
+from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
@@ -222,7 +222,7 @@ def chat(
     "/stream-completion", summary="Stream completion responses for the given query"
 )
 @exceptions.propagates
-def stream_chat_completion(
+async def stream_chat_completion(
     session_id: int,
     request: RagStudioChatRequest,
     origin_remote_user: Optional[str] = Header(None),
@@ -230,10 +230,10 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    def generate_stream() -> Generator[str, None, None]:
+    async def generate_stream() -> AsyncGenerator[str, None]:
         response_id: str = ""
         try:
-            for response in stream_chat(
+            async for response in await stream_chat(
                 session, request.query, configuration, user_name=origin_remote_user
             ):
                 response_id = response.additional_kwargs["response_id"]
@@ -244,9 +244,9 @@ def stream_chat_completion(
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
 
-    combined_gen = itertools.chain(generate_queue(), generate_stream())
+    results = aiostream.stream.merge(generate_queue(), generate_stream())
 
-    return StreamingResponse(combined_gen, media_type="text/event-stream")
+    return StreamingResponse(results, media_type="text/event-stream")
 
 
 @router.get("/crew-events", summary="Stream crew events")

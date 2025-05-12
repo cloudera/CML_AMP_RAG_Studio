@@ -36,9 +36,8 @@
 #  DATA.
 #
 import asyncio
-import queue
 import time
-from typing import Generator
+from typing import AsyncGenerator
 
 from crewai.utilities.events import (
     CrewKickoffStartedEvent,
@@ -48,13 +47,13 @@ from crewai.utilities.events import (
 from crewai.utilities.events.base_event_listener import BaseEventListener
 
 # Global queue to store crew events
-crew_events_queue = queue.Queue()
+crew_events_queue = asyncio.Queue()
 
 
-def generate_queue() -> Generator[str, None, None]:
+async def generate_queue() -> AsyncGenerator[str, None]:
     while True:
-        asyncio.sleep(0.1)
-        event = crew_events_queue.get(block=True)
+        event = await crew_events_queue.get()
+        print(f"about to maybe yield event: {event}")
         if event.event_type == "crew_completed":
             break
         yield f"{event}"
@@ -74,7 +73,7 @@ class MyCustomListener(BaseEventListener):
                 "crew_name": event.crew_name,
                 "timestamp": time.time(),
             }
-            crew_events_queue.put(event_data)
+            asyncio.run(crew_events_queue.put(event_data))
 
         @crewai_event_bus.on(CrewKickoffCompletedEvent)
         def on_crew_completed(source, event):
@@ -85,15 +84,15 @@ class MyCustomListener(BaseEventListener):
                 "crew_name": event.crew_name,
                 "timestamp": time.time(),
             }
-            crew_events_queue.put(event_data)
+            asyncio.run(crew_events_queue.put(event_data))
 
         @crewai_event_bus.on(AgentExecutionCompletedEvent)
-        def on_agent_execution_completed(source, event):
+        def on_agent_execution_completed(source, event: AgentExecutionCompletedEvent):
             print(f"Agent '{event.agent.role}' completed task")
             print(f"Output: {event.output}")
             event_data = {
                 "event_type": "agent_execution_completed",
-                "crew_name": event.crew_name,
+                "crew_name": str(event.agent.crew),
                 "timestamp": time.time(),
             }
-            crew_events_queue.put(event_data)
+            asyncio.run(crew_events_queue.put(event_data))
