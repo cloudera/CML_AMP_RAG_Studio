@@ -38,11 +38,13 @@
 import logging
 
 from crewai import Task, Process, Crew, Agent
+from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
+from llama_index.tools.duckduckgo import DuckDuckGoSearchToolSpec
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.date_tool import DateTool
@@ -100,7 +102,23 @@ def stream_crew_ai(
         tools=[date_tool],
     )
 
-    # Create a calculator agent that performs mathematical calculations
+    duck_duck_tool = DuckDuckGoSearchToolSpec().to_tool_list()
+    crewai_duck_duck_tools = [LlamaIndexTool.from_tool(tool) for tool in duck_duck_tool]
+    searcher = Agent(
+        role="Search Agent",
+        goal="Search the internet for relevant information",
+        backstory="You know everything about the web.  You can find anything that exists on the web.",
+        llm=crewai_llm_name,
+        tools=crewai_duck_duck_tools,
+        verbose=True,
+    )
+    search_task = Task(
+        name="SearchTask",
+        description="Search the internet for relevant information related to the query.",
+        agent=searcher,
+        expected_output="Results of any search performed, with step-by-step workings",
+    )
+
     calculator = Agent(
         role="Calculator",
         goal="Perform accurate mathematical calculations based on research findings",
@@ -146,15 +164,15 @@ def stream_crew_ai(
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
         llm=crewai_llm_name,
         verbose=True,
-        tools=[date_tool],
+        tools=[date_tool, *crewai_duck_duck_tools],
     )
     research_task = Task(
         name="ResearcherTask",
         description=f"Research the following query using any provided context: {query_str}\n\nContext: {context}",
         agent=researcher,
         expected_output="A detailed analysis of the query based on the provided context",
-        tools=[date_tool],
-        context=[date_task],
+        tools=[date_tool, *crewai_duck_duck_tools],
+        context=[search_task, date_task],
     )
 
     # Create a responder agent that formulates the final response
@@ -170,13 +188,13 @@ def stream_crew_ai(
         description="Formulate a comprehensive response based on the research findings and calculations",
         agent=responder,
         expected_output="A comprehensive and accurate response to the query",
-        context=[date_task, research_task, calculation_task],
+        context=[search_task, date_task, research_task, calculation_task],
     )
 
     # Create a crew with the agents and tasks
     crew = Crew(
-        agents=[researcher, calculator, responder],
-        tasks=[research_task, calculation_task, response_task],
+        agents=[searcher, researcher, calculator, responder],
+        tasks=[search_task, research_task, calculation_task, response_task],
         process=Process.sequential,
     )
 
@@ -212,7 +230,7 @@ def stream_crew_ai(
         chat_response = StreamingAgentChatResponse(
             chat_stream=llm.stream_chat(
                 messages=chat_messages
-                         + [ChatMessage(role="user", content=enhanced_query)],
+                + [ChatMessage(role="user", content=enhanced_query)],
             ),
             sources=[],
             source_nodes=[],
