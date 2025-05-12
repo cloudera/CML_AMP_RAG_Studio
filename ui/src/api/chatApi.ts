@@ -325,6 +325,7 @@ export interface ChatMutationResponse {
   text?: string;
   response_id?: string;
   error?: string;
+  event?: CrewEventResponse;
 }
 
 export interface CrewEventResponse {

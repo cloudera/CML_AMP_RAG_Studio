@@ -36,6 +36,7 @@
 #  DATA.
 #
 import asyncio
+import json
 import time
 from typing import AsyncGenerator
 
@@ -54,9 +55,9 @@ async def generate_queue() -> AsyncGenerator[str, None]:
     while True:
         event = await crew_events_queue.get()
         print(f"about to maybe yield event: {event}")
-        if event.event_type == "crew_completed":
+        if event.get("event_type") == "crew_completed":
             break
-        yield f"{event}"
+        yield f'data: {{"event" : {json.dumps(event)}}}\n\n'
 
 
 class MyCustomListener(BaseEventListener):
@@ -73,7 +74,7 @@ class MyCustomListener(BaseEventListener):
                 "crew_name": event.crew_name,
                 "timestamp": time.time(),
             }
-            asyncio.run(crew_events_queue.put(event_data))
+            asyncio.get_event_loop().create_task(crew_events_queue.put(event_data))
 
         @crewai_event_bus.on(CrewKickoffCompletedEvent)
         def on_crew_completed(source, event):
@@ -84,7 +85,7 @@ class MyCustomListener(BaseEventListener):
                 "crew_name": event.crew_name,
                 "timestamp": time.time(),
             }
-            asyncio.run(crew_events_queue.put(event_data))
+            asyncio.get_event_loop().create_task(crew_events_queue.put(event_data))
 
         @crewai_event_bus.on(AgentExecutionCompletedEvent)
         def on_agent_execution_completed(source, event: AgentExecutionCompletedEvent):
@@ -92,7 +93,7 @@ class MyCustomListener(BaseEventListener):
             print(f"Output: {event.output}")
             event_data = {
                 "event_type": "agent_execution_completed",
-                "crew_name": str(event.agent.crew),
+                "crew_name": "",
                 "timestamp": time.time(),
             }
-            asyncio.run(crew_events_queue.put(event_data))
+            asyncio.get_event_loop().create_task(crew_events_queue.put(event_data))
