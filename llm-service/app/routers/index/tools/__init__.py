@@ -64,7 +64,7 @@ def tools() -> list[Tool]:
     return [
         Tool(
             id="1",
-            name="Internet Search",
+            name="search",
             description="Searches the internet for the given query.",
         ),
     ]
