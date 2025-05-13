@@ -38,8 +38,6 @@
 import logging
 from typing import Optional
 
-from crewai import Task, Process, Crew, Agent
-from crewai_tools import SerperDevTool
 from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
@@ -47,9 +45,8 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
-from app.services.query.agents.date_tool import DateTool
-from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
+from app.services.query.agents.query_crew import query_crew
 from app.services.query.chat_engine import (
     build_flexible_chat_engine,
     FlexibleContextChatEngine,
@@ -78,24 +75,12 @@ async def stream_crew_ai(
     configuration: QueryConfiguration,
     data_source_id: int,
 ) -> tuple[StreamingAgentChatResponse, str]:
-    print(configuration)
-
     use_retrieval = should_use_retrieval(
         configuration, data_source_id, llm, query_str, chat_messages
     )
 
     condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
-
-    crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
-
-    # Define tasks for the agents
-    date_finder, date_task, date_tool = build_date_agent(crewai_llm)
-    calculation_task, calculator = build_calculator_agent(crewai_llm)
-
-    search_task, searcher, serper = None, None, None
-    if "search" in configuration.tools:
-        search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
 
     chat_engine: Optional[FlexibleContextChatEngine] = None
     context: str = ""
@@ -124,64 +109,7 @@ async def stream_crew_ai(
         retrieved_nodes = base_retriever.retrieve(query_bundle)
         context += "\n\n".join([node.node.get_content() for node in retrieved_nodes])
 
-    research_tools = [date_tool]
-    if serper:
-        research_tools.append(serper)
-
-    researcher = Agent(
-        role="Researcher",
-        goal="Find the most accurate and relevant information",
-        backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
-        llm=crewai_llm,
-        # verbose=True,
-        tools=research_tools,
-        # callbacks=[pause],
-    )
-    research_task = Task(
-        name="ResearcherTask",
-        description=f"Research the following query using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
-        agent=researcher,
-        expected_output="A detailed analysis of the query based on the provided context",
-        # tools=[date_tool, serper],
-        # context=[search_task, date_task],
-        # callback=pause,
-    )
-
-    # Create a responder agent that formulates the final response
-    responder = Agent(
-        role="Responder",
-        goal="Provide a comprehensive and accurate response to the query",
-        backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
-        llm=crewai_llm,
-        # callbacks=[pause],
-        # verbose=True,
-    )
-
-    response_task = Task(
-        name="ResponderTask",
-        description="Formulate a comprehensive response based on the research findings and calculations",
-        agent=responder,
-        expected_output="A comprehensive and accurate response to the query",
-        # context=[search_task, date_task, research_task, calculation_task],
-        # callback=pause,
-    )
-
-    # Create a crew with the agents and tasks
-    agents = [date_finder]
-    tasks = [date_task]
-    if searcher:
-        agents.append(searcher)
-        tasks.append(search_task)
-    agents.extend([researcher, calculator, responder])
-    tasks.extend([research_task, calculation_task, response_task])
-
-    crew = Crew(
-        agents=agents,
-        tasks=tasks,
-        process=Process.sequential,
-        name="QueryCrew",
-        # task_callback=pause,
-    )
+    crew = query_crew(llm, configuration, query_str, context, chat_history)
 
     # Run the crew to get the enhanced response
     crew_result = crew.kickoff()
@@ -216,70 +144,6 @@ async def stream_crew_ai(
         )
 
     return chat_response, condensed_question
-
-
-def build_calculator_agent(crewai_llm_name):
-    calculator = Agent(
-        role="Calculator",
-        goal="Perform accurate mathematical calculations based on research findings",
-        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
-        llm=crewai_llm_name,
-        # verbose=True,
-        # callbacks=[pause],
-    )
-    calculation_task = Task(
-        name="CalculatorTask",
-        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
-        agent=calculator,
-        expected_output="Results of any calculations performed, with step-by-step workings",
-        # callback=pause,
-    )
-    return calculation_task, calculator
-
-
-def build_search_agent(crewai_llm_name, date_tool):
-    serper = SerperDevTool()
-    searcher = Agent(
-        role="Search Agent",
-        goal="Search the internet for relevant information",
-        backstory="You know everything about the web.  You can find anything that exists on the web.",
-        llm=crewai_llm_name,
-        tools=[date_tool, serper],
-        verbose=True,
-        # callbacks=[pause],
-    )
-    search_task = Task(
-        name="SearchTask",
-        description="Search the internet for relevant information related to the query.",
-        agent=searcher,
-        # tools=[date_tool],
-        expected_output="Results of any search performed, with step-by-step workings",
-        # callback=pause,
-    )
-    return search_task, searcher, serper
-
-
-def build_date_agent(crewai_llm):
-    date_tool = DateTool()
-    date_finder = Agent(
-        role="DateFinder",
-        goal="Find the current date and time",
-        backstory="You are an expert at finding the current date and time.",
-        llm=crewai_llm,
-        tools=[date_tool],
-        # verbose=True,
-        # callbacks=[pause],
-    )
-    date_task = Task(
-        name="DateFinderTask",
-        description="Find the current date and time.",
-        agent=date_finder,
-        expected_output="The current date and time.",
-        # tools=[date_tool],
-        # async_execution=True,
-        # callback=pause,
-    )
-    return date_finder, date_task, date_tool
 
 
 def should_use_retrieval(
