@@ -91,8 +91,11 @@ async def stream_crew_ai(
 
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm)
-    search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
     calculation_task, calculator = build_calculator_agent(crewai_llm)
+
+    search_task, searcher, serper = None, None, None
+    if "search" in configuration.tools:
+        search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
 
     chat_engine: Optional[FlexibleContextChatEngine] = None
     context: str = ""
@@ -121,13 +124,17 @@ async def stream_crew_ai(
         retrieved_nodes = base_retriever.retrieve(query_bundle)
         context += "\n\n".join([node.node.get_content() for node in retrieved_nodes])
 
+    research_tools = [date_tool]
+    if serper:
+        research_tools.append(serper)
+
     researcher = Agent(
         role="Researcher",
         goal="Find the most accurate and relevant information",
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
         llm=crewai_llm,
         # verbose=True,
-        tools=[date_tool, serper],
+        tools=research_tools,
         # callbacks=[pause],
     )
     research_task = Task(
@@ -135,8 +142,8 @@ async def stream_crew_ai(
         description=f"Research the following query using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
         agent=researcher,
         expected_output="A detailed analysis of the query based on the provided context",
-        tools=[date_tool, serper],
-        context=[search_task, date_task],
+        # tools=[date_tool, serper],
+        # context=[search_task, date_task],
         # callback=pause,
     )
 
@@ -155,14 +162,22 @@ async def stream_crew_ai(
         description="Formulate a comprehensive response based on the research findings and calculations",
         agent=responder,
         expected_output="A comprehensive and accurate response to the query",
-        context=[search_task, date_task, research_task, calculation_task],
+        # context=[search_task, date_task, research_task, calculation_task],
         # callback=pause,
     )
 
     # Create a crew with the agents and tasks
+    agents = [date_finder]
+    tasks = [date_task]
+    if searcher:
+        agents.append(searcher)
+        tasks.append(search_task)
+    agents.extend([researcher, calculator, responder])
+    tasks.extend([research_task, calculation_task, response_task])
+
     crew = Crew(
-        agents=[date_finder, searcher, researcher, calculator, responder],
-        tasks=[date_task, search_task, research_task, calculation_task, response_task],
+        agents=agents,
+        tasks=tasks,
         process=Process.sequential,
         name="QueryCrew",
         # task_callback=pause,
@@ -230,14 +245,14 @@ def build_search_agent(crewai_llm_name, date_tool):
         backstory="You know everything about the web.  You can find anything that exists on the web.",
         llm=crewai_llm_name,
         tools=[date_tool, serper],
-        # verbose=True,
+        verbose=True,
         # callbacks=[pause],
     )
     search_task = Task(
         name="SearchTask",
         description="Search the internet for relevant information related to the query.",
         agent=searcher,
-        tools=[date_tool],
+        # tools=[date_tool],
         expected_output="Results of any search performed, with step-by-step workings",
         # callback=pause,
     )
@@ -245,21 +260,22 @@ def build_search_agent(crewai_llm_name, date_tool):
 
 
 def build_date_agent(crewai_llm):
+    date_tool = DateTool()
     date_finder = Agent(
         role="DateFinder",
         goal="Find the current date and time",
         backstory="You are an expert at finding the current date and time.",
         llm=crewai_llm,
+        tools=[date_tool],
         # verbose=True,
         # callbacks=[pause],
     )
-    date_tool = DateTool()
     date_task = Task(
         name="DateFinderTask",
         description="Find the current date and time.",
         agent=date_finder,
         expected_output="The current date and time.",
-        tools=[date_tool],
+        # tools=[date_tool],
         # async_execution=True,
         # callback=pause,
     )

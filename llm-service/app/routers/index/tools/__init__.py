@@ -64,17 +64,7 @@ def tools() -> list[Tool]:
     return [
         Tool(
             id="1",
-            name="date",
-            description="Retrieves current date and time information",
-        ),
-        Tool(
-            id="2",
-            name="search",
-            description="Performs a search query and returns relevant results",
-        ),
-        Tool(
-            id="3",
-            name="calculator",
-            description="Performs mathematical calculations",
+            name="Internet Search",
+            description="Searches the internet for the given query.",
         ),
     ]

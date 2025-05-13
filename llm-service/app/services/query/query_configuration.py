@@ -45,7 +45,7 @@ from app.services.models.providers.bedrock import (
     DEFAULT_BEDROCK_RERANK_MODEL,
 )
 
-tool_types = Literal["date", "search", "calculator"]
+tool_types = Literal["search"]
 
 
 class QueryConfiguration(BaseModel):

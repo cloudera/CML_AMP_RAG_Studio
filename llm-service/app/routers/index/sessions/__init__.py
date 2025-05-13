@@ -42,7 +42,6 @@ import queue
 import time
 from typing import Optional, Generator, AsyncGenerator
 
-import aiostream
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -60,7 +59,7 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.events import crew_events_queue, generate_queue
+from ....services.query.agents.events import crew_events_queue
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -244,9 +243,7 @@ async def stream_chat_completion(
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
 
-    results = aiostream.stream.merge(generate_queue(), generate_stream())
-
-    return StreamingResponse(results, media_type="text/event-stream")
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")
 
 
 @router.get("/crew-events", summary="Stream crew events")
