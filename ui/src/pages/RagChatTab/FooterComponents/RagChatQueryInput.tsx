@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
-import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
+import { DatabaseFilled, SendOutlined, ToolOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
@@ -50,6 +50,7 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import ToolsManager from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -69,6 +70,8 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
+  const [toolsManagerOpen, setToolsManagerOpen] = useState(false);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const inputRef = useRef<InputRef>(null);
   const {
     data: sampleQuestions,
@@ -154,14 +157,32 @@ const RagChatQueryInput = ({
               }
             }}
             suffix={
-              <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
-                <Switch
-                  checkedChildren={<DatabaseFilled />}
-                  value={!excludeKnowledgeBase}
-                  style={{ display: dataSourceSize ? "block" : "none" }}
-                  onChange={handleExcludeKnowledgeBase}
-                />
-              </Tooltip>
+              <Flex align="center" gap={8}>
+                <Tooltip title={!toolsManagerOpen ? "Tools manager" : ""}>
+                  <ToolsManager
+                    isOpen={toolsManagerOpen}
+                    selectedTools={selectedTools}
+                    setSelectedTools={setSelectedTools}
+                  />
+                  <Button
+                    icon={<ToolOutlined />}
+                    type="text"
+                    size={"small"}
+                    style={{ color: cdlBlue600 }}
+                    onClick={() => {
+                      setToolsManagerOpen(!toolsManagerOpen);
+                    }}
+                  />
+                </Tooltip>
+                <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
+                  <Switch
+                    checkedChildren={<DatabaseFilled />}
+                    value={!excludeKnowledgeBase}
+                    style={{ display: dataSourceSize ? "block" : "none" }}
+                    onChange={handleExcludeKnowledgeBase}
+                  />
+                </Tooltip>
+              </Flex>
             }
             disabled={streamChatMutation.isPending}
           />
