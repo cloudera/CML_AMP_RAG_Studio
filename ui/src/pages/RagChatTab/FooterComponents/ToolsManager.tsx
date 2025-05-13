@@ -45,7 +45,7 @@ import {
   Typography,
 } from "antd";
 import { useToolsQuery } from "src/api/toolsApi.ts";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, ReactNode, SetStateAction } from "react";
 
 const ToolsManagerContent = ({
   selectedTools,
@@ -101,23 +101,31 @@ const ToolsManagerContent = ({
 
 const ToolsManager = ({
   isOpen,
+  setIsOpen,
   selectedTools,
   setSelectedTools,
+  children,
 }: {
   isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
   selectedTools: string[];
   setSelectedTools: Dispatch<SetStateAction<string[]>>;
+  children: ReactNode;
 }) => {
   return (
     <Popover
       open={isOpen}
+      trigger="click"
+      onOpenChange={setIsOpen}
       content={
         <ToolsManagerContent
           selectedTools={selectedTools}
           setSelectedTools={setSelectedTools}
         />
       }
-    />
+    >
+      {children}
+    </Popover>
   );
 };
 

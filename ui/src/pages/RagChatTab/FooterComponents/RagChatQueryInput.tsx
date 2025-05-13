@@ -164,18 +164,20 @@ const RagChatQueryInput = ({
                 <Tooltip title={!toolsManagerOpen ? "Tools manager" : ""}>
                   <ToolsManager
                     isOpen={toolsManagerOpen}
+                    setIsOpen={setToolsManagerOpen}
                     selectedTools={selectedTools}
                     setSelectedTools={setSelectedTools}
-                  />
-                  <Button
-                    icon={<ToolOutlined />}
-                    type="text"
-                    size={"small"}
-                    style={{ color: cdlBlue600 }}
-                    onClick={() => {
-                      setToolsManagerOpen(!toolsManagerOpen);
-                    }}
-                  />
+                  >
+                    <Button
+                      icon={<ToolOutlined />}
+                      type="text"
+                      size={"small"}
+                      style={{ color: cdlBlue600 }}
+                      onClick={() => {
+                        setToolsManagerOpen(!toolsManagerOpen);
+                      }}
+                    />
+                  </ToolsManager>
                 </Tooltip>
                 <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
                   <Switch
