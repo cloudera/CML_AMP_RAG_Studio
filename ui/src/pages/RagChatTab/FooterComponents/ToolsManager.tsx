@@ -37,15 +37,26 @@
  */
 
 import {
+  Button,
   Checkbox,
   CheckboxChangeEvent,
   Flex,
   List,
   Popover,
+  Tooltip,
   Typography,
 } from "antd";
 import { useToolsQuery } from "src/api/toolsApi.ts";
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useContext,
+  useState,
+} from "react";
+import { ToolOutlined } from "@ant-design/icons";
+import { cdlBlue600 } from "src/cuix/variables.ts";
+import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
 const ToolsManagerContent = ({
   selectedTools,
@@ -70,8 +81,8 @@ const ToolsManagerContent = ({
   };
 
   return (
-    <Flex style={{ width: 600, height: 200 }} vertical>
-      <Typography.Title level={5} style={{ margin: 2, marginBottom: 16 }}>
+    <Flex style={{ width: 400, height: 200, margin: 16 }} vertical>
+      <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
         Tools Manager
       </Typography.Title>
       <List
@@ -129,4 +140,40 @@ const ToolsManager = ({
   );
 };
 
-export default ToolsManager;
+const ToolsManagerButton = ({
+  selectedTools,
+  setSelectedTools,
+}: {
+  selectedTools: string[];
+  setSelectedTools: Dispatch<SetStateAction<string[]>>;
+}) => {
+  const { activeSession } = useContext(RagChatContext);
+  const [toolsManagerOpen, setToolsManagerOpen] = useState(false);
+
+  if (!activeSession?.queryConfiguration.enableToolCalling) {
+    return null;
+  }
+
+  return (
+    <Tooltip title={!toolsManagerOpen ? "Tools manager" : ""}>
+      <ToolsManager
+        isOpen={toolsManagerOpen}
+        setIsOpen={setToolsManagerOpen}
+        selectedTools={selectedTools}
+        setSelectedTools={setSelectedTools}
+      >
+        <Button
+          icon={<ToolOutlined />}
+          type="text"
+          size={"small"}
+          style={{ color: cdlBlue600 }}
+          onClick={() => {
+            setToolsManagerOpen(!toolsManagerOpen);
+          }}
+        />
+      </ToolsManager>
+    </Tooltip>
+  );
+};
+
+export default ToolsManagerButton;
