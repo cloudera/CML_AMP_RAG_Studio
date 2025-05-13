@@ -35,7 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import asyncio
 import logging
+from time import sleep
 from typing import Optional
 
 from crewai import Task, Process, Crew, Agent
@@ -59,10 +61,16 @@ from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
+
+logging.getLogger("asyncio").setLevel(logging.DEBUG)
+
 my_listener = MyCustomListener()
 
+def pause(obj: any) -> None:
+    print("pausing with obj:", obj)
+    # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
 
-def stream_crew_ai(
+async def stream_crew_ai(
     llm: LLM,
     embedding_model: Optional[BaseEmbedding],
     chat_messages: list[ChatMessage],
@@ -120,6 +128,7 @@ def stream_crew_ai(
         llm=crewai_llm,
         # verbose=True,
         tools=[date_tool, serper],
+        # callbacks=[pause],
     )
     research_task = Task(
         name="ResearcherTask",
@@ -128,6 +137,7 @@ def stream_crew_ai(
         expected_output="A detailed analysis of the query based on the provided context",
         tools=[date_tool, serper],
         context=[search_task, date_task],
+        # callback=pause,
     )
 
     # Create a responder agent that formulates the final response
@@ -136,6 +146,7 @@ def stream_crew_ai(
         goal="Provide a comprehensive and accurate response to the query",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
+        # callbacks=[pause],
         # verbose=True,
     )
     response_task = Task(
@@ -144,6 +155,7 @@ def stream_crew_ai(
         agent=responder,
         expected_output="A comprehensive and accurate response to the query",
         context=[search_task, date_task, research_task, calculation_task],
+        # callback=pause,
     )
 
     # Create a crew with the agents and tasks
@@ -152,6 +164,7 @@ def stream_crew_ai(
         tasks=[date_task, search_task, research_task, calculation_task, response_task],
         process=Process.sequential,
         name="QueryCrew",
+        task_callback=pause,
     )
 
     # Run the crew to get the enhanced response
@@ -196,12 +209,14 @@ def build_calculator_agent(crewai_llm_name):
         backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
         llm=crewai_llm_name,
         verbose=True,
+        # callbacks=[pause],
     )
     calculation_task = Task(
         name="CalculatorTask",
         description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
         agent=calculator,
         expected_output="Results of any calculations performed, with step-by-step workings",
+        # callback=pause,
     )
     return calculation_task, calculator
 
@@ -215,6 +230,7 @@ def build_search_agent(crewai_llm_name, date_tool):
         llm=crewai_llm_name,
         tools=[date_tool, serper],
         verbose=True,
+        # callbacks=[pause],
     )
     search_task = Task(
         name="SearchTask",
@@ -222,6 +238,7 @@ def build_search_agent(crewai_llm_name, date_tool):
         agent=searcher,
         tools=[date_tool],
         expected_output="Results of any search performed, with step-by-step workings",
+        # callback=pause,
     )
     return search_task, searcher, serper
 
@@ -233,6 +250,7 @@ def build_date_agent(crewai_llm):
         backstory="You are an expert at finding the current date and time.",
         llm=crewai_llm,
         verbose=True,
+        # callbacks=[pause],
     )
     date_tool = DateTool()
     date_task = Task(
@@ -241,6 +259,8 @@ def build_date_agent(crewai_llm):
         agent=date_finder,
         expected_output="The current date and time.",
         tools=[date_tool],
+        # async_execution=True,
+        # callback=pause,
     )
     return date_finder, date_task, date_tool
 

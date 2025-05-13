@@ -57,7 +57,7 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 logger = logging.getLogger(__name__)
 
 
-def streaming_query(
+async def streaming_query(
     data_source_id: Optional[int],
     query_str: str,
     configuration: QueryConfiguration,
@@ -77,7 +77,7 @@ def streaming_query(
     condensed_question: str
     print("configuration.use_tool_calling", configuration.use_tool_calling)
     if configuration.use_tool_calling:
-        chat_response, condensed_question = stream_crew_ai(
+        chat_response, condensed_question = await stream_crew_ai(
             llm,
             embedding_model,
             chat_messages,

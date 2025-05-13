@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import asyncio
 from datetime import datetime
 
 from crewai.tools.base_tool import Tool
@@ -56,4 +57,6 @@ class DateTool(Tool):
         )
 
     def _run(self) -> str:
+        # loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
         return datetime.now().isoformat()

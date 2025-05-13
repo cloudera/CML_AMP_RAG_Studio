@@ -109,7 +109,7 @@ async def _run_streaming_chat(
     #     )
 
     data_source_id: Optional[int] = session.data_source_ids[0] if session.data_source_ids else None
-    streaming_chat_response, condensed_question = querier.streaming_query(
+    streaming_chat_response, condensed_question = await querier.streaming_query(
         data_source_id,
         query,
         query_configuration,
