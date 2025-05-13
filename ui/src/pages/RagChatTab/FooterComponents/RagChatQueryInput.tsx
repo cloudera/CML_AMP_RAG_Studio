@@ -110,7 +110,10 @@ const RagChatQueryInput = ({
         streamChatMutation.mutate({
           query: userInput,
           session_id: +sessionId,
-          configuration: createQueryConfiguration(excludeKnowledgeBase),
+          configuration: createQueryConfiguration(
+            excludeKnowledgeBase,
+            selectedTools,
+          ),
         });
       } else {
         newSessionCallback(userInput);

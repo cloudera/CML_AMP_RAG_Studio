@@ -35,22 +35,19 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import asyncio
 import logging
-from time import sleep
 from typing import Optional
 
 from crewai import Task, Process, Crew, Agent
+from crewai_tools import SerperDevTool
 from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
-from crewai_tools import SerperDevTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.date_tool import DateTool
-from app.services.query.agents.events import MyCustomListener
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
@@ -64,11 +61,13 @@ logger = logging.getLogger(__name__)
 
 logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
-my_listener = MyCustomListener()
+# my_listener = MyCustomListener()
+
 
 def pause(obj: any) -> None:
     print("pausing with obj:", obj)
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
+
 
 async def stream_crew_ai(
     llm: LLM,
@@ -79,6 +78,7 @@ async def stream_crew_ai(
     configuration: QueryConfiguration,
     data_source_id: int,
 ) -> tuple[StreamingAgentChatResponse, str]:
+    print(configuration)
 
     use_retrieval = should_use_retrieval(
         configuration, data_source_id, llm, query_str, chat_messages
@@ -149,6 +149,7 @@ async def stream_crew_ai(
         # callbacks=[pause],
         # verbose=True,
     )
+
     response_task = Task(
         name="ResponderTask",
         description="Formulate a comprehensive response based on the research findings and calculations",
@@ -164,7 +165,7 @@ async def stream_crew_ai(
         tasks=[date_task, search_task, research_task, calculation_task, response_task],
         process=Process.sequential,
         name="QueryCrew",
-        task_callback=pause,
+        # task_callback=pause,
     )
 
     # Run the crew to get the enhanced response
@@ -208,7 +209,7 @@ def build_calculator_agent(crewai_llm_name):
         goal="Perform accurate mathematical calculations based on research findings",
         backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
         llm=crewai_llm_name,
-        verbose=True,
+        # verbose=True,
         # callbacks=[pause],
     )
     calculation_task = Task(
@@ -229,7 +230,7 @@ def build_search_agent(crewai_llm_name, date_tool):
         backstory="You know everything about the web.  You can find anything that exists on the web.",
         llm=crewai_llm_name,
         tools=[date_tool, serper],
-        verbose=True,
+        # verbose=True,
         # callbacks=[pause],
     )
     search_task = Task(
@@ -249,7 +250,7 @@ def build_date_agent(crewai_llm):
         goal="Find the current date and time",
         backstory="You are an expert at finding the current date and time.",
         llm=crewai_llm,
-        verbose=True,
+        # verbose=True,
         # callbacks=[pause],
     )
     date_tool = DateTool()

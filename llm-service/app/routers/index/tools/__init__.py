@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,16 +34,47 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
-from typing import Optional
+import logging
 
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.services.query.query_configuration import tool_types
+from .... import exceptions
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/tools", tags=["Tools"])
 
 
-class RagPredictConfiguration(BaseModel):
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    tools: Optional[list[tool_types]] = None
+class Tool(BaseModel):
+    id: str
+    name: str
+    description: str
+
+
+@router.get(
+    "",
+    summary="Returns a list of available tools.",
+    response_model=None,
+)
+@exceptions.propagates
+def tools() -> list[Tool]:
+    return [
+        Tool(
+            id="1",
+            name="date",
+            description="Retrieves current date and time information",
+        ),
+        Tool(
+            id="2",
+            name="search",
+            description="Performs a search query and returns relevant results",
+        ),
+        Tool(
+            id="3",
+            name="calculator",
+            description="Performs mathematical calculations",
+        ),
+    ]

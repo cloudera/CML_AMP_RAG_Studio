@@ -38,13 +38,11 @@
 
 import time
 import uuid
-from typing import Optional, Generator, AsyncGenerator
+from typing import Optional, AsyncGenerator
 
-from fastapi import HTTPException
 from llama_index.core.base.llms.types import ChatResponse, ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
 from app.services import evaluators, llm_completion
 from app.services.chat.utils import retrieve_chat_history, format_source_nodes
@@ -75,6 +73,7 @@ async def stream_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
         use_tool_calling=session.query_configuration.enable_tool_calling,
+        tools=configuration.tools,
     )
 
     response_id = str(uuid.uuid4())
@@ -108,7 +107,9 @@ async def _run_streaming_chat(
     #         status_code=400, detail="Only one datasource is supported for chat."
     #     )
 
-    data_source_id: Optional[int] = session.data_source_ids[0] if session.data_source_ids else None
+    data_source_id: Optional[int] = (
+        session.data_source_ids[0] if session.data_source_ids else None
+    )
     streaming_chat_response, condensed_question = await querier.streaming_query(
         data_source_id,
         query,

@@ -36,17 +36,38 @@
  * DATA.
  */
 
-import { Checkbox, Flex, List, Popover, Typography } from "antd";
+import {
+  Checkbox,
+  CheckboxChangeEvent,
+  Flex,
+  List,
+  Popover,
+  Typography,
+} from "antd";
 import { useToolsQuery } from "src/api/toolsApi.ts";
 import { Dispatch, SetStateAction } from "react";
 
-const ToolsManagerContent = () => {
+const ToolsManagerContent = ({
+  selectedTools,
+  setSelectedTools,
+}: {
+  selectedTools: string[];
+  setSelectedTools: Dispatch<SetStateAction<string[]>>;
+}) => {
   const { data, isLoading } = useToolsQuery();
 
-  const toolsList = data?.tools.map((tool) => ({
+  const toolsList = data?.map((tool) => ({
     title: tool.name,
     description: tool.description,
   }));
+
+  const handleCheck = (title: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTools((prev) => [...prev, title]);
+    } else {
+      setSelectedTools((prev) => prev.filter((tool) => tool !== title));
+    }
+  };
 
   return (
     <Flex style={{ width: 600, height: 200 }} vertical>
@@ -62,7 +83,14 @@ const ToolsManagerContent = () => {
             <List.Item.Meta
               title={item.title}
               description={item.description}
-              avatar={<Checkbox />}
+              avatar={
+                <Checkbox
+                  checked={selectedTools.includes(item.title)}
+                  onChange={(e: CheckboxChangeEvent) => {
+                    handleCheck(item.title, e.target.checked);
+                  }}
+                />
+              }
             />
           </List.Item>
         )}
@@ -73,12 +101,24 @@ const ToolsManagerContent = () => {
 
 const ToolsManager = ({
   isOpen,
+  selectedTools,
+  setSelectedTools,
 }: {
   isOpen: boolean;
   selectedTools: string[];
   setSelectedTools: Dispatch<SetStateAction<string[]>>;
 }) => {
-  return <Popover open={isOpen} content={<ToolsManagerContent />} />;
+  return (
+    <Popover
+      open={isOpen}
+      content={
+        <ToolsManagerContent
+          selectedTools={selectedTools}
+          setSelectedTools={setSelectedTools}
+        />
+      }
+    />
+  );
 };
 
 export default ToolsManager;

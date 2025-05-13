@@ -36,26 +36,13 @@
  * DATA.
  */
 
-import { QueryKeys } from "src/api/utils.ts";
+import { getRequest, llmServicePath, QueryKeys } from "src/api/utils.ts";
 import { useQuery } from "@tanstack/react-query";
-
-export interface ToolInputParameter {
-  name: string;
-  description: string;
-  type: string;
-  required: boolean;
-}
 
 export interface Tool {
   id: string;
   name: string;
   description: string;
-  inputs: ToolInputParameter[];
-  outputFormat: string;
-}
-
-export interface GetToolsResponse {
-  tools: Tool[];
 }
 
 export const useToolsQuery = () => {
@@ -66,65 +53,6 @@ export const useToolsQuery = () => {
 };
 
 // Mock function to get tools
-export const getTools = async (): Promise<GetToolsResponse> => {
-  return Promise.resolve({
-    tools: [
-      {
-        id: "1",
-        name: "date",
-        description: "Retrieves current date and time information",
-        inputs: [
-          {
-            name: "timezone",
-            description:
-              "The timezone to get date/time for (e.g., 'UTC', 'America/New_York')",
-            type: "string",
-            required: false,
-          },
-          {
-            name: "format",
-            description: "Date format (e.g., 'YYYY-MM-DD', 'MM/DD/YYYY')",
-            type: "string",
-            required: false,
-          },
-        ],
-        outputFormat: "String containing the formatted date and time",
-      },
-      {
-        id: "2",
-        name: "search",
-        description: "Performs a search query and returns relevant results",
-        inputs: [
-          {
-            name: "query",
-            description: "The search query",
-            type: "string",
-            required: true,
-          },
-          {
-            name: "limit",
-            description: "Maximum number of results to return",
-            type: "number",
-            required: false,
-          },
-        ],
-        outputFormat:
-          "JSON array of search results with titles and descriptions",
-      },
-      {
-        id: "3",
-        name: "calculator",
-        description: "Performs mathematical calculations",
-        inputs: [
-          {
-            name: "expression",
-            description: "The mathematical expression to evaluate",
-            type: "string",
-            required: true,
-          },
-        ],
-        outputFormat: "Numerical result of the calculation",
-      },
-    ],
-  });
+export const getTools = async (): Promise<Tool[]> => {
+  return getRequest(`${llmServicePath}/tools`);
 };
