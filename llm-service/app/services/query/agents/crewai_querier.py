@@ -70,6 +70,7 @@ def output_task_progress(obj: any) -> None:
 
 def assemble_crew(
     use_retrieval: bool,
+    chat_engine: FlexibleContextChatEngine,
     llm: LLM,
     embedding_model: Optional[BaseEmbedding],
     chat_messages: list[ChatMessage],
@@ -91,18 +92,10 @@ def assemble_crew(
     search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
     calculation_task, calculator = build_calculator_agent(crewai_llm)
 
-    chat_engine: Optional[FlexibleContextChatEngine] = None
     context: str = ""
     chat_history = [message.content for message in chat_messages]
     if use_retrieval:
         crew_events_queue.put("using retrieval engine")
-        chat_engine = build_flexible_chat_engine(
-            configuration,
-            llm,
-            embedding_model,
-            index,
-            data_source_id,
-        )
         logger.info("querying chat engine")
 
         condensed_question = chat_engine.condense_question(

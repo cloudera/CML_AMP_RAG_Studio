@@ -57,7 +57,7 @@ from llama_index.core.indices import VectorStoreIndex
 
 from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
-from .chat_engine import build_flexible_chat_engine
+from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
@@ -80,6 +80,13 @@ def streaming_query(
             chat_history,
         )
     )
+    chat_engine: FlexibleContextChatEngine = build_flexible_chat_engine(
+        configuration,
+        llm,
+        embedding_model,
+        index,
+        data_source_id,
+    )
     chat_response: StreamingAgentChatResponse
     condensed_question: str
     print("configuration.use_tool_calling", configuration.use_tool_calling)
@@ -93,6 +100,7 @@ def streaming_query(
         )
         crew, chat_engine, condensed_question = assemble_crew(
             use_retrieval,
+            chat_engine,
             llm,
             embedding_model,
             chat_messages,
@@ -115,14 +123,6 @@ def streaming_query(
         )
         return chat_response, condensed_question
     else:
-        chat_engine = build_flexible_chat_engine(
-            configuration=configuration,
-            llm=llm,
-            embedding_model=embedding_model,
-            index=index,
-            data_source_id=data_source_id,
-        )
-
         condensed_question = chat_engine.condense_question(
             chat_messages, query_str
         ).strip()
