@@ -79,10 +79,9 @@ def assemble_crew(
     configuration: QueryConfiguration,
     data_source_id: int,
     crew_events_queue: Queue,
-) -> tuple[Crew, FlexibleContextChatEngine, str]:
+) -> tuple[Crew, FlexibleContextChatEngine]:
     crew_events_queue.put("I BELIEVE IN FERRIES ⛴️")
 
-    condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
 
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
@@ -98,9 +97,6 @@ def assemble_crew(
         crew_events_queue.put("using retrieval engine")
         logger.info("querying chat engine")
 
-        condensed_question = chat_engine.condense_question(
-            chat_messages, query_str
-        ).strip()
         # If the planner decides to use retrieval, proceed with the current flow
         logger.info("Planner decided to use retrieval")
 
@@ -164,7 +160,7 @@ def assemble_crew(
     crew_events_queue.put("running the crew")
     # yield from send_event_to_queue
 
-    return crew, chat_engine, condensed_question
+    return crew, chat_engine
 
 
 def launch_crew(

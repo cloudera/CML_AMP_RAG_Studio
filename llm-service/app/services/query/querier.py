@@ -87,6 +87,7 @@ def streaming_query(
         index,
         data_source_id,
     )
+    condensed_question = chat_engine.condense_question(chat_messages, query_str).strip()
     chat_response: StreamingAgentChatResponse
     condensed_question: str
     print("configuration.use_tool_calling", configuration.use_tool_calling)
@@ -98,7 +99,7 @@ def streaming_query(
             query_str,
             chat_messages,
         )
-        crew, chat_engine, condensed_question = assemble_crew(
+        crew, chat_engine = assemble_crew(
             use_retrieval,
             chat_engine,
             llm,
@@ -123,9 +124,6 @@ def streaming_query(
         )
         return chat_response, condensed_question
     else:
-        condensed_question = chat_engine.condense_question(
-            chat_messages, query_str
-        ).strip()
         try:
             chat_response = chat_engine.stream_chat(query_str, chat_messages)
             logger.info("query response received from chat engine")
