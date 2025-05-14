@@ -35,14 +35,15 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import asyncio
 import base64
+import itertools
 import json
 import logging
 import queue
 import time
-from typing import Optional, Generator, AsyncGenerator
+from typing import Optional, Generator
 
-import aiostream
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -60,7 +61,6 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.events import crew_events_queue, generate_queue
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -222,7 +222,7 @@ def chat(
     "/stream-completion", summary="Stream completion responses for the given query"
 )
 @exceptions.propagates
-async def stream_chat_completion(
+def stream_chat_completion(
     session_id: int,
     request: RagStudioChatRequest,
     origin_remote_user: Optional[str] = Header(None),
@@ -230,23 +230,42 @@ async def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    async def generate_stream() -> AsyncGenerator[str, None]:
+    crew_events_queue = queue.Queue()
+    def crew_callback() -> Generator[str, None, None]:
+        while True:
+            try:
+                print("waiting for an event")
+                event_data = crew_events_queue.get(block=True, timeout=1.0)
+                if event_data == "Done":
+                    break
+                event_json = json.dumps({"event": event_data})
+                yield f"data: {event_json}\n\n"
+            except queue.Empty:
+                print("No event received, sending heartbeat")
+                # Send a heartbeat event every second to keep the connection alive
+                heartbeat = {"event": "heartbeat", "timestamp": time.time()}
+                asyncio.run(asyncio.sleep(1))
+                yield f"data: {json.dumps(heartbeat)}\n\n"
+
+    def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
         try:
-            async for response in await stream_chat(
-                session, request.query, configuration, user_name=origin_remote_user
+            for response in stream_chat(
+                session, request.query, configuration, user_name=origin_remote_user, crew_events_queue=crew_events_queue
             ):
-                response_id = response.additional_kwargs["response_id"]
-                json_delta = json.dumps({"text": response.delta})
-                yield f"data: {json_delta}" + "\n\n"
+                if isinstance(response, str):
+                    message = json.dumps({"event": response})
+                    yield f"data: {message}\n\n"
+                else:
+                    response_id = response.additional_kwargs["response_id"]
+                    json_delta = json.dumps({"text": response.delta})
+                    yield f"data: {json_delta}\n\n"
             yield f'data: {{"response_id" : "{response_id}"}}\n\n'
         except Exception as e:
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
 
-    results = aiostream.stream.merge(generate_queue(), generate_stream())
-
-    return StreamingResponse(results, media_type="text/event-stream")
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")
 
 
 @router.get("/crew-events", summary="Stream crew events")

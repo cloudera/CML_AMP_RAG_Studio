@@ -29,7 +29,8 @@
 # ##############################################################################
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+import queue
+from typing import Optional, TYPE_CHECKING, Generator
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
@@ -57,12 +58,8 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 logger = logging.getLogger(__name__)
 
 
-async def streaming_query(
-    data_source_id: Optional[int],
-    query_str: str,
-    configuration: QueryConfiguration,
-    chat_history: list[RagContext],
-) -> tuple[StreamingAgentChatResponse, str | None]:
+def streaming_query(data_source_id: Optional[int], query_str: str, configuration: QueryConfiguration,
+                    chat_history: list[RagContext], crew_events_queue: queue.Queue) -> Generator[str, None, tuple[StreamingAgentChatResponse, str | None]]:
     embedding_model, index = find_datasource_stuff(data_source_id)
 
     llm = models.LLM.get(model_name=configuration.model_name)
@@ -77,16 +74,14 @@ async def streaming_query(
     condensed_question: str
     print("configuration.use_tool_calling", configuration.use_tool_calling)
     if configuration.use_tool_calling:
-        chat_response, condensed_question = await stream_crew_ai(
-            llm,
-            embedding_model,
-            chat_messages,
-            index,
-            query_str,
-            configuration,
-            data_source_id,
-        )
+        ai = stream_crew_ai(llm, embedding_model, chat_messages, index, query_str, configuration, data_source_id)
+        while True:
+            try:
+                yield next(ai)
+            except StopIteration as e:
+                return e.value
     else:
+        yield ""
         chat_engine = build_flexible_chat_engine(
             configuration=configuration,
             llm=llm,
@@ -109,7 +104,7 @@ async def streaming_query(
                 detail=json_error["message"],
             ) from error
 
-    return chat_response, condensed_question
+        return chat_response, condensed_question
 
 
 def find_datasource_stuff(data_source_id: Optional[int]) -> tuple[Optional[BaseEmbedding], Optional[VectorStoreIndex]]:

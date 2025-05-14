@@ -35,65 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import asyncio
-import json
-import time
-from typing import AsyncGenerator
-
-from crewai.utilities.events import (
-    CrewKickoffStartedEvent,
-    CrewKickoffCompletedEvent,
-    AgentExecutionCompletedEvent,
-)
-from crewai.utilities.events.base_event_listener import BaseEventListener
+import queue
 
 # Global queue to store crew events
-crew_events_queue = asyncio.Queue()
 
-
-async def generate_queue() -> AsyncGenerator[str, None]:
-    while True:
-        event = await crew_events_queue.get()
-        print(f"about to maybe yield event: {event}")
-        if event.get("event_type") == "crew_completed":
-            break
-        yield f'data: {{"event" : {json.dumps(event)}}}\n\n'
-
-
-class MyCustomListener(BaseEventListener):
-    def __init__(self):
-        super().__init__()
-
-    def setup_listeners(self, crewai_event_bus):
-        @crewai_event_bus.on(CrewKickoffStartedEvent)
-        def on_crew_started(source, event):
-            print(f"Crew '{event.crew_name}' has started execution!")
-            # Add event data to the queue
-            event_data = {
-                "event_type": "crew_started",
-                "crew_name": event.crew_name,
-                "timestamp": time.time(),
-            }
-            asyncio.get_event_loop().create_task(crew_events_queue.put(event_data))
-
-        @crewai_event_bus.on(CrewKickoffCompletedEvent)
-        def on_crew_completed(source, event):
-            print(f"Crew '{event.crew_name}' has completed execution!")
-            print(f"Output: {event.output}")
-            event_data = {
-                "event_type": "crew_completed",
-                "crew_name": event.crew_name,
-                "timestamp": time.time(),
-            }
-            asyncio.get_event_loop().create_task(crew_events_queue.put(event_data))
-
-        @crewai_event_bus.on(AgentExecutionCompletedEvent)
-        def on_agent_execution_completed(source, event: AgentExecutionCompletedEvent):
-            print(f"Agent '{event.agent.role}' completed task")
-            print(f"Output: {event.output}")
-            event_data = {
-                "event_type": "agent_execution_completed",
-                "crew_name": "",
-                "timestamp": time.time(),
-            }
-            asyncio.get_event_loop().create_task(crew_events_queue.put(event_data))

@@ -35,16 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import queue
 import time
 import uuid
-from typing import Optional, Generator, AsyncGenerator
+from typing import Optional, Generator
 
-from fastapi import HTTPException
 from llama_index.core.base.llms.types import ChatResponse, ChatMessage
 from llama_index.core.chat_engine.types import AgentChatResponse
 
-from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
 from app.services import evaluators, llm_completion
 from app.services.chat.utils import retrieve_chat_history, format_source_nodes
@@ -60,12 +58,8 @@ from app.services.query import querier
 from app.services.query.query_configuration import QueryConfiguration
 
 
-async def stream_chat(
-    session: Session,
-    query: str,
-    configuration: RagPredictConfiguration,
-    user_name: Optional[str],
-) -> AsyncGenerator[ChatResponse, None]:
+def stream_chat(session: Session, query: str, configuration: RagPredictConfiguration, user_name: Optional[str],
+                crew_events_queue: queue.Queue) -> Generator[ChatResponse| str, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -92,30 +86,27 @@ async def stream_chat(
     #     return _stream_direct_llm_chat(session, response_id, query, user_name)
     #
     return _run_streaming_chat(
-        session, response_id, query, query_configuration, user_name
+        session, response_id, query, query_configuration, user_name, crew_events_queue=crew_events_queue
     )
 
 
-async def _run_streaming_chat(
-    session: Session,
-    response_id: str,
-    query: str,
-    query_configuration: QueryConfiguration,
-    user_name: Optional[str],
-) -> AsyncGenerator[ChatResponse, None]:
+def _run_streaming_chat(session: Session, response_id: str, query: str, query_configuration: QueryConfiguration,
+                        user_name: Optional[str],
+                        crew_events_queue: queue.Queue) -> Generator[ChatResponse| str, None, None]:
     # if len(session.data_source_ids) != 1:
     #     raise HTTPException(
     #         status_code=400, detail="Only one datasource is supported for chat."
     #     )
 
     data_source_id: Optional[int] = session.data_source_ids[0] if session.data_source_ids else None
-    streaming_chat_response, condensed_question = await querier.streaming_query(
-        data_source_id,
-        query,
-        query_configuration,
-        retrieve_chat_history(session.id),
-    )
-
+    streaming_thingee = querier.streaming_query(data_source_id, query, query_configuration,
+                                              retrieve_chat_history(session.id), crew_events_queue=crew_events_queue)
+    while True:
+        try:
+            yield next(streaming_thingee)
+        except StopIteration as e:
+            streaming_chat_response, condensed_question = e.value
+            break
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
@@ -130,7 +121,7 @@ async def _run_streaming_chat(
 
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
-    relevance, faithfulness = await evaluators.async_evaluate_response(
+    relevance, faithfulness = evaluators.evaluate_response(
         query, chat_response, session.inference_model
     )
     response_source_nodes = format_source_nodes(chat_response, data_source_id)
@@ -158,9 +149,9 @@ async def _run_streaming_chat(
     )
 
 
-async def _stream_direct_llm_chat(
+def _stream_direct_llm_chat(
     session: Session, response_id: str, query: str, user_name: Optional[str]
-) -> AsyncGenerator[ChatResponse, None]:
+) -> Generator[ChatResponse, None, None]:
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.stream_completion(
