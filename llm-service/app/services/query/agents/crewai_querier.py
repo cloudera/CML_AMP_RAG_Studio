@@ -63,6 +63,8 @@ from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
 
+poison_pill = "poison_pill"
+
 # logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
 
@@ -157,6 +159,7 @@ def assemble_crew(
         ),
         # callbacks=[pause],
     )
+
     research_task = Task(
         name="ResearcherTask",
         description=f"Research the following query using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
@@ -164,7 +167,9 @@ def assemble_crew(
         expected_output="A detailed analysis of the query based on the provided context",
         tools=[date_tool, serper],
         context=[search_task, date_task],
-        # callback=lambda _: crew_events_queue.put("Done"),
+        callback=lambda _: crew_events_queue.put(
+            CrewEvent(type=poison_pill, name="researcher")
+        ),
     )
 
     # Create a responder agent that formulates the final response
