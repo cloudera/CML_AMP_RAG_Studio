@@ -40,6 +40,8 @@ from queue import Queue
 from typing import Optional
 
 from crewai import Task, Process, Crew, Agent, CrewOutput
+from crewai.agents.parser import AgentFinish
+from crewai.tools.tool_types import ToolResult
 from crewai_tools import SerperDevTool
 from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -69,6 +71,27 @@ def output_task_progress(obj: any) -> None:
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
 
 
+def step_callback(
+    output: ToolResult | AgentFinish, agent: str, crew_events_queue: Queue
+) -> None:
+    if isinstance(output, ToolResult):
+        return crew_events_queue.put(
+            {
+                "agent": agent,
+                "result": output.result,
+            }
+        )
+    elif isinstance(output, AgentFinish):
+        return crew_events_queue.put(
+            {
+                "agent": agent,
+                "thought": output.thought,
+                "output": output.output,
+                "text": output.text,
+            }
+        )
+
+
 def assemble_crew(
     use_retrieval: bool,
     llm: LLM,
@@ -88,7 +111,9 @@ def assemble_crew(
     crew_events_queue.put("building crew tasks")
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
-    search_task, searcher, serper = build_search_agent(crewai_llm, date_tool, crew_events_queue)
+    search_task, searcher, serper = build_search_agent(
+        crewai_llm, date_tool, crew_events_queue
+    )
     calculation_task, calculator = build_calculator_agent(crewai_llm, crew_events_queue)
 
     context: str = ""
@@ -119,6 +144,9 @@ def assemble_crew(
         llm=crewai_llm,
         # verbose=True,
         tools=[date_tool, serper],
+        step_callback=lambda output: step_callback(
+            output, "researcher", crew_events_queue
+        ),
         # callbacks=[pause],
     )
     research_task = Task(
@@ -137,6 +165,9 @@ def assemble_crew(
         goal="Provide a comprehensive and accurate response to the query",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
+        step_callback=lambda output: step_callback(
+            output, "responder", crew_events_queue
+        ),
         # callbacks=[pause],
         # verbose=True,
     )
@@ -220,6 +251,9 @@ def build_calculator_agent(crewai_llm_name, crew_events_queue: Queue):
         backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
         llm=crewai_llm_name,
         verbose=True,
+        step_callback=lambda output: step_callback(
+            output, "calculator", crew_events_queue
+        ),
         # callbacks=[pause],
     )
     calculation_task = Task(
@@ -242,6 +276,9 @@ def build_search_agent(crewai_llm_name, date_tool, crew_events_queue: Queue):
         llm=crewai_llm_name,
         tools=[date_tool, serper],
         verbose=True,
+        step_callback=lambda output: step_callback(
+            output, "searcher", crew_events_queue
+        ),
         # callbacks=[pause],
     )
     search_task = Task(
@@ -263,6 +300,9 @@ def build_date_agent(crewai_llm, crew_events_queue: Queue):
         backstory="You are an expert at finding the current date and time.",
         llm=crewai_llm,
         verbose=True,
+        step_callback=lambda output: step_callback(
+            output, "date finder", crew_events_queue
+        ),
         # callbacks=[pause],
     )
     date_tool = DateTool()
