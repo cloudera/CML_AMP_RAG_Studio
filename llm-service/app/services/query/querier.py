@@ -64,33 +64,18 @@ logger = logging.getLogger(__name__)
 
 
 def streaming_query(
+    chat_engine: Optional[FlexibleContextChatEngine],
     data_source_id: Optional[int],
     query_str: str,
     configuration: QueryConfiguration,
-    chat_history: list[RagContext],
+    chat_messages: list[ChatMessage],
     crew_events_queue: queue.Queue,
-) -> tuple[StreamingAgentChatResponse, str]:
+) -> StreamingAgentChatResponse:
     embedding_model, index = find_datasource_stuff(data_source_id)
 
     llm = models.LLM.get(model_name=configuration.model_name)
 
-    chat_messages = list(
-        map(
-            lambda message: ChatMessage(role=message.role, content=message.content),
-            chat_history,
-        )
-    )
-    chat_engine: FlexibleContextChatEngine = build_flexible_chat_engine(
-        configuration,
-        llm,
-        embedding_model,
-        index,
-        data_source_id,
-    )
-    condensed_question = chat_engine.condense_question(chat_messages, query_str).strip()
     chat_response: StreamingAgentChatResponse
-    condensed_question: str
-    print("configuration.use_tool_calling", configuration.use_tool_calling)
     if configuration.use_tool_calling:
         use_retrieval = should_use_retrieval(
             configuration,
@@ -99,9 +84,8 @@ def streaming_query(
             query_str,
             chat_messages,
         )
-        crew, chat_engine = assemble_crew(
+        crew = assemble_crew(
             use_retrieval,
-            chat_engine,
             llm,
             embedding_model,
             chat_messages,
@@ -122,7 +106,7 @@ def streaming_query(
             enhanced_query,
             chat_messages,
         )
-        return chat_response, condensed_question
+        return chat_response
     else:
         try:
             chat_response = chat_engine.stream_chat(query_str, chat_messages)
@@ -135,7 +119,7 @@ def streaming_query(
                 detail=json_error["message"],
             ) from error
 
-        return chat_response, condensed_question
+        return chat_response
 
 
 def find_datasource_stuff(

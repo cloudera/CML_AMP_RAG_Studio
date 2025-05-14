@@ -237,15 +237,15 @@ def stream_chat_completion(
     def crew_callback() -> Generator[str, None, None]:
         while True:
             try:
-                print("waiting for an event")
+                # print("waiting for an event")
                 event_data = crew_events_queue.get(block=True, timeout=1.0)
-                print(f"got event: {event_data}")
+                # print(f"got event: {event_data}")
                 if event_data == "Done":
                     break
                 event_json = json.dumps({"event": event_data})
                 yield f"data: {event_json}\n\n"
             except queue.Empty:
-                print("No event received, sending heartbeat")
+                # print("No event received, sending heartbeat")
                 # Send a heartbeat event every second to keep the connection alive
                 heartbeat = {"event": "heartbeat", "timestamp": time.time()}
                 yield f"data: {json.dumps(heartbeat)}\n\n"
@@ -266,13 +266,9 @@ def stream_chat_completion(
                     crew_events_queue=crew_events_queue,
                 )
 
-                # TODO: check queue
-                result = future.result()
-                print("we got a result")
-                next(result)
                 yield from crew_callback()
 
-                for response in result:
+                for response in future.result():
                     response_id = response.additional_kwargs["response_id"]
                     json_delta = json.dumps({"text": response.delta})
                     yield f"data: {json_delta}\n\n"

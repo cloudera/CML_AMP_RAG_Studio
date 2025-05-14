@@ -52,7 +52,6 @@ from app.services.query.agents.date_tool import DateTool
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
-    build_flexible_chat_engine,
     FlexibleContextChatEngine,
 )
 from app.services.query.flexible_retriever import FlexibleRetriever
@@ -64,13 +63,14 @@ logger = logging.getLogger(__name__)
 
 
 def output_task_progress(obj: any) -> None:
-    print("progress obj:", obj)
+    # print("progress obj:", obj)
+    pass
+
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
 
 
 def assemble_crew(
     use_retrieval: bool,
-    chat_engine: FlexibleContextChatEngine,
     llm: LLM,
     embedding_model: Optional[BaseEmbedding],
     chat_messages: list[ChatMessage],
@@ -79,7 +79,7 @@ def assemble_crew(
     configuration: QueryConfiguration,
     data_source_id: int,
     crew_events_queue: Queue,
-) -> tuple[Crew, FlexibleContextChatEngine]:
+) -> Crew:
     crew_events_queue.put("I BELIEVE IN FERRIES ⛴️")
 
     chat_response: StreamingAgentChatResponse
@@ -87,9 +87,9 @@ def assemble_crew(
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
     crew_events_queue.put("building crew tasks")
     # Define tasks for the agents
-    date_finder, date_task, date_tool = build_date_agent(crewai_llm)
-    search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
-    calculation_task, calculator = build_calculator_agent(crewai_llm)
+    date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
+    search_task, searcher, serper = build_search_agent(crewai_llm, date_tool, crew_events_queue)
+    calculation_task, calculator = build_calculator_agent(crewai_llm, crew_events_queue)
 
     context: str = ""
     chat_history = [message.content for message in chat_messages]
@@ -155,12 +155,13 @@ def assemble_crew(
         tasks=[date_task, search_task, research_task, calculation_task, response_task],
         process=Process.sequential,
         name="QueryCrew",
-        task_callback=output_task_progress,
+        # task_callback=lambda x: crew_events_queue.put(f"Task Done {x[:20]}"),
+        # task_callback=lambda x: crew_events_queue.put(f"Task Done {x[:20]}"),
     )
     crew_events_queue.put("running the crew")
     # yield from send_event_to_queue
 
-    return crew, chat_engine
+    return crew
 
 
 def launch_crew(
@@ -186,7 +187,7 @@ def launch_crew(
 def stream_chat(
     use_retrieval: bool,
     llm: LLM,
-    chat_engine: FlexibleContextChatEngine,
+    chat_engine: Optional[FlexibleContextChatEngine],
     enhanced_query: str,
     chat_messages: list[ChatMessage],
 ) -> StreamingAgentChatResponse:
@@ -212,7 +213,7 @@ def stream_chat(
     return chat_response
 
 
-def build_calculator_agent(crewai_llm_name):
+def build_calculator_agent(crewai_llm_name, crew_events_queue: Queue):
     calculator = Agent(
         role="Calculator",
         goal="Perform accurate mathematical calculations based on research findings",
@@ -226,12 +227,13 @@ def build_calculator_agent(crewai_llm_name):
         description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
         agent=calculator,
         expected_output="Results of any calculations performed, with step-by-step workings",
+        callback=lambda _: crew_events_queue.put("Calculation Done"),
         # callback=lambda x: send_event_to_queue.send("date_tool"),
     )
     return calculation_task, calculator
 
 
-def build_search_agent(crewai_llm_name, date_tool):
+def build_search_agent(crewai_llm_name, date_tool, crew_events_queue: Queue):
     serper = SerperDevTool()
     searcher = Agent(
         role="Search Agent",
@@ -248,12 +250,13 @@ def build_search_agent(crewai_llm_name, date_tool):
         agent=searcher,
         tools=[date_tool],
         expected_output="Results of any search performed, with step-by-step workings",
+        callback=lambda _: crew_events_queue.put("Search Done"),
         # callback=lambda x: send_event_to_queue.send("date_tool"),
     )
     return search_task, searcher, serper
 
 
-def build_date_agent(crewai_llm):
+def build_date_agent(crewai_llm, crew_events_queue: Queue):
     date_finder = Agent(
         role="DateFinder",
         goal="Find the current date and time",
@@ -270,6 +273,7 @@ def build_date_agent(crewai_llm):
         expected_output="The current date and time.",
         tools=[date_tool],
         # async_execution=True,
+        callback=lambda _: crew_events_queue.put("Date Finder Done"),
         # callback=lambda x: send_event_to_queue.send("date_tool"),
     )
     return date_finder, date_task, date_tool
