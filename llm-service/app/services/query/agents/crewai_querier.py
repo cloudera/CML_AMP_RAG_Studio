@@ -58,9 +58,6 @@ logger = logging.getLogger(__name__)
 
 logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
-# my_listener = MyCustomListener()
-
-
 def pause(obj: any) -> None:
     print("pausing with obj:", obj)
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))

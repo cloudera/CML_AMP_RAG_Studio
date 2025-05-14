@@ -59,7 +59,6 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.events import crew_events_queue
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -244,42 +243,3 @@ async def stream_chat_completion(
             yield f'data: {{"error" : "{e}"}}\n\n'
 
     return StreamingResponse(generate_stream(), media_type="text/event-stream")
-
-
-@router.get("/crew-events", summary="Stream crew events")
-@exceptions.propagates
-def stream_crew_events(
-    session_id: int,
-    origin_remote_user: Optional[str] = Header(None),
-) -> StreamingResponse:
-    """
-    Stream crew events as Server-Sent Events (SSE).
-    Currently streams the on_crew_started event from events.py.
-    """
-
-    def generate_crew_events() -> Generator[str, None, None]:
-        try:
-            # Send a connection established event
-            connection_event = {
-                "event_type": "connection_established",
-                "session_id": session_id,
-                "timestamp": time.time(),
-            }
-            yield f"data: {json.dumps(connection_event)}\n\n"
-
-            # Poll the queue for new events
-            while True:
-                try:
-                    # Non-blocking get with timeout
-                    event_data = crew_events_queue.get(block=True, timeout=1.0)
-                    yield f"data: {json.dumps(event_data)}\n\n"
-                except queue.Empty:
-                    # Send a heartbeat event every second to keep the connection alive
-                    heartbeat = {"event_type": "heartbeat", "timestamp": time.time()}
-                    yield f"data: {json.dumps(heartbeat)}\n\n"
-                    time.sleep(1)
-        except Exception as e:
-            logger.exception("Failed to stream crew events")
-            yield f'data: {{"error": "{str(e)}"}}\n\n'
-
-    return StreamingResponse(generate_crew_events(), media_type="text/event-stream")
