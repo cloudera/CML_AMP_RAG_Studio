@@ -46,6 +46,7 @@ import Markdown from "react-markdown";
 import Remark from "remark-gfm";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import RatingFeedbackWrapper from "pages/RagChatTab/ChatOutput/ChatMessages/RatingFeedbackWrapper.tsx";
+import CopyButton from "pages/RagChatTab/ChatOutput/ChatMessages/CopyButton.tsx";
 
 export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
   return (
@@ -96,6 +97,7 @@ export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
                 </Markdown>
               </Typography.Text>
               <Flex gap={16} align="center">
+                <CopyButton message={data} />
                 <Evaluations evaluations={data.evaluations} />
                 <RatingFeedbackWrapper responseId={data.id} />
               </Flex>
