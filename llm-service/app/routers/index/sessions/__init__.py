@@ -35,13 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-import asyncio
 import base64
-import itertools
 import json
 import logging
 import queue
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Generator
