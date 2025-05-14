@@ -34,7 +34,12 @@ from typing import Optional, TYPE_CHECKING, Generator
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
-from .agents.crewai_querier import stream_crew_ai
+from .agents.crewai_querier import (
+    assemble_crew,
+    should_use_retrieval,
+    launch_crew,
+    stream_chat,
+)
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -64,7 +69,7 @@ def streaming_query(
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
     crew_events_queue: queue.Queue,
-) -> tuple[StreamingAgentChatResponse, str | None]:
+) -> tuple[StreamingAgentChatResponse, str]:
     embedding_model, index = find_datasource_stuff(data_source_id)
 
     llm = models.LLM.get(model_name=configuration.model_name)
@@ -79,7 +84,15 @@ def streaming_query(
     condensed_question: str
     print("configuration.use_tool_calling", configuration.use_tool_calling)
     if configuration.use_tool_calling:
-        return stream_crew_ai(
+        use_retrieval = should_use_retrieval(
+            configuration,
+            data_source_id,
+            llm,
+            query_str,
+            chat_messages,
+        )
+        crew, chat_engine, condensed_question = assemble_crew(
+            use_retrieval,
             llm,
             embedding_model,
             chat_messages,
@@ -89,6 +102,18 @@ def streaming_query(
             data_source_id,
             crew_events_queue,
         )
+        enhanced_query = launch_crew(
+            crew,
+            query_str,
+        )
+        chat_response = stream_chat(
+            use_retrieval,
+            llm,
+            chat_engine,
+            enhanced_query,
+            chat_messages,
+        )
+        return chat_response, condensed_question
     else:
         chat_engine = build_flexible_chat_engine(
             configuration=configuration,

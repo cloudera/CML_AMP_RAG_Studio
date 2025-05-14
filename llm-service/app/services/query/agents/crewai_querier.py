@@ -68,7 +68,8 @@ def output_task_progress(obj: any) -> None:
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
 
 
-def stream_crew_ai(
+def assemble_crew(
+    use_retrieval: bool,
     llm: LLM,
     embedding_model: Optional[BaseEmbedding],
     chat_messages: list[ChatMessage],
@@ -77,12 +78,8 @@ def stream_crew_ai(
     configuration: QueryConfiguration,
     data_source_id: int,
     crew_events_queue: Queue,
-) -> tuple[StreamingAgentChatResponse, str | None]:
+) -> tuple[Crew, FlexibleContextChatEngine, str]:
     crew_events_queue.put("I BELIEVE IN FERRIES ⛴️")
-
-    use_retrieval = should_use_retrieval(
-        configuration, data_source_id, llm, query_str, chat_messages
-    )
 
     condensed_question: str = ""
     chat_response: StreamingAgentChatResponse
@@ -100,7 +97,11 @@ def stream_crew_ai(
     if use_retrieval:
         crew_events_queue.put("using retrieval engine")
         chat_engine = build_flexible_chat_engine(
-            configuration, llm, embedding_model, index, data_source_id
+            configuration,
+            llm,
+            embedding_model,
+            index,
+            data_source_id,
         )
         logger.info("querying chat engine")
 
@@ -170,13 +171,21 @@ def stream_crew_ai(
     crew_events_queue.put("running the crew")
     # yield from send_event_to_queue
 
+    return crew, chat_engine, condensed_question
+
+
+def launch_crew(
+    crew: Crew,
+    query_str: str,
+) -> str:
+
     # Run the crew to get the enhanced response
     crew_result: CrewOutput = crew.kickoff()
     print("THINGS ARE KICKED OFFFFFFF")
     # logger.info(f"CrewAI result: {crew_result}")
 
     # Create an enhanced query that includes the CrewAI insights
-    enhanced_query = f"""
+    return f"""
         Original query: {query_str}
 
         Research insights: {crew_result}
@@ -184,6 +193,14 @@ def stream_crew_ai(
         Please provide a comprehensive response to the original query, incorporating the insights from research.
         """
 
+
+def stream_chat(
+    use_retrieval: bool,
+    llm: LLM,
+    chat_engine: FlexibleContextChatEngine,
+    enhanced_query: str,
+    chat_messages: list[ChatMessage],
+) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     if use_retrieval:
         chat_response = chat_engine.stream_chat(enhanced_query, chat_messages)
@@ -203,7 +220,7 @@ def stream_crew_ai(
             is_writing_to_memory=False,
         )
 
-    return chat_response, condensed_question
+    return chat_response
 
 
 def build_calculator_agent(crewai_llm_name):

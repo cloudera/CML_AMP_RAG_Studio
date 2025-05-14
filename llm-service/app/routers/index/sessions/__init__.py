@@ -234,7 +234,7 @@ def stream_chat_completion(
 
     crew_events_queue = queue.Queue()
 
-    def crew_callback(crew_queue_future) -> Generator[str, None, None]:
+    def crew_callback() -> Generator[str, None, None]:
         while True:
             try:
                 print("waiting for an event")
@@ -267,9 +267,10 @@ def stream_chat_completion(
                 )
 
                 # TODO: check queue
-                yield from crew_callback(future)
                 result = future.result()
                 print("we got a result")
+                next(result)
+                yield from crew_callback()
 
                 for response in result:
                     response_id = response.additional_kwargs["response_id"]

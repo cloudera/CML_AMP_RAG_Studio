@@ -130,6 +130,7 @@ def _run_streaming_chat(
         retrieve_chat_history(session.id),
         crew_events_queue=crew_events_queue,
     )
+    yield ChatResponse(message=ChatMessage(content="You don't need this, dummy"))
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
