@@ -60,6 +60,7 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
+from ....services.query.agents.crewai_querier import CrewEvent
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -229,7 +230,7 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    crew_events_queue = queue.Queue()
+    crew_events_queue: queue.Queue[CrewEvent] = queue.Queue()
 
     def crew_callback() -> Generator[str, None, None]:
         while True:
@@ -239,15 +240,16 @@ def stream_chat_completion(
                 # print(f"got event: {event_data}")
                 if event_data == "Done":
                     break
-                event_json = json.dumps({"event": event_data})
+                event_json = json.dumps({"event": event_data.model_dump()})
                 yield f"data: {event_json}\n\n"
             except queue.Empty:
                 # print("No event received, sending heartbeat")
                 # Send a heartbeat event every second to keep the connection alive
-                heartbeat = {"event": "heartbeat", "timestamp": time.time()}
-                yield f"data: {json.dumps(heartbeat)}\n\n"
+                heartbeat = CrewEvent(
+                    type="heartbeat", name="heartbeat", timestamp=time.time()
+                )
+                yield f"data: {json.dumps(heartbeat.model_dump())}\n\n"
                 time.sleep(1)
-        print("WE ARE DONE WITH THE LOOP")
 
     def generate_stream() -> Generator[str, None, None]:
 

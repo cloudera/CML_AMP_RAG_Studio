@@ -36,7 +36,7 @@
  * DATA.
  */
 
-import { ChatMessageType } from "src/api/chatApi.ts";
+import { ChatMessageType, CrewEventResponse } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Divider, Flex, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
@@ -48,7 +48,13 @@ import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluation
 import RatingFeedbackWrapper from "pages/RagChatTab/ChatOutput/ChatMessages/RatingFeedbackWrapper.tsx";
 import CopyButton from "pages/RagChatTab/ChatOutput/ChatMessages/CopyButton.tsx";
 
-export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
+export const ChatMessageBody = ({
+  data,
+  streamedEvents,
+}: {
+  data: ChatMessageType;
+  streamedEvents?: CrewEventResponse[];
+}) => {
   return (
     <div data-testid="chat-message">
       {data.rag_message.user ? (
@@ -87,6 +93,9 @@ export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
               <SourceNodes data={data} />
+              {streamedEvents?.map((event) => {
+                return <div>{JSON.stringify(event)}</div>;
+              })}
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
                   skipHtml

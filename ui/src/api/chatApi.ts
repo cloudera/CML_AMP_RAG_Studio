@@ -329,10 +329,10 @@ export interface ChatMutationResponse {
 }
 
 export interface CrewEventResponse {
-  event_type: string;
-  crew_name?: string;
+  type: string;
+  name: string;
+  data?: string;
   timestamp: number;
-  error?: string;
 }
 
 const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
@@ -351,11 +351,17 @@ const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
   return errorMessage;
 };
 
+interface StreamingChatCallbacks {
+  onChunk: (msg: string) => void;
+  onEvent: (event: CrewEventResponse) => void;
+}
+
 export const useStreamingChatMutation = ({
   onError,
   onSuccess,
   onChunk,
-}: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
+  onEvent,
+}: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
   const handleError = (variables: ChatMutationRequest, error: Error) => {
     const errorMessage = errorChatMessage(variables, error);
@@ -375,7 +381,7 @@ export const useStreamingChatMutation = ({
         handleError(request, error);
         onError?.(error);
       };
-      return streamChatMutation(request, onChunk, convertError);
+      return streamChatMutation(request, onChunk, onEvent, convertError);
     },
     onMutate: (variables) => {
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
@@ -426,6 +432,7 @@ export const useStreamingChatMutation = ({
 const streamChatMutation = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
+  onEvent: (event: CrewEventResponse) => void,
   onError: (error: string) => void,
 ): Promise<string> => {
   const ctrl = new AbortController();
@@ -443,7 +450,6 @@ const streamChatMutation = async (
       }),
       signal: ctrl.signal,
       onmessage(msg: EventSourceMessage) {
-        console.log(msg);
         const data = JSON.parse(msg.data) as ChatMutationResponse;
 
         if (data.error) {
@@ -453,6 +459,9 @@ const streamChatMutation = async (
 
         if (data.text) {
           onChunk(data.text);
+        }
+        if (data.event) {
+          onEvent(data.event);
         }
         if (data.response_id) {
           responseId = data.response_id;

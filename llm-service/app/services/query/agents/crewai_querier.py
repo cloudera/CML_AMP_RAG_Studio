@@ -36,6 +36,7 @@
 #  DATA.
 #
 import logging
+import time
 from queue import Queue
 from typing import Optional
 
@@ -48,6 +49,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
+from pydantic import BaseModel
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.date_tool import DateTool
@@ -71,24 +73,33 @@ def output_task_progress(obj: any) -> None:
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
 
 
+class CrewEvent(BaseModel):
+    type: str
+    name: str
+    data: Optional[str] = None
+    timestamp: float = 0.0
+
+
 def step_callback(
     output: ToolResult | AgentFinish, agent: str, crew_events_queue: Queue
 ) -> None:
-    if isinstance(output, ToolResult):
-        return crew_events_queue.put(
-            {
-                "agent": agent,
-                "result": output.result,
-            }
-        )
-    elif isinstance(output, AgentFinish):
-        return crew_events_queue.put(
-            {
-                "agent": agent,
-                "thought": output.thought,
-                "output": output.output,
-                "text": output.text,
-            }
+    # if isinstance(output, ToolResult):
+    #     crew_events_queue.put(
+    #         {
+    #             "agent": agent,
+    #             "result": output.result,
+    #         }
+    #     )
+    if isinstance(output, AgentFinish):
+        crew_events_queue.put(
+            CrewEvent(
+                type="agent_finish",
+                name=agent,
+                data=output.thought,
+                timestamp=time.time(),
+                # "output": output.output,
+                # "text": output.text,
+            )
         )
 
 
@@ -103,12 +114,10 @@ def assemble_crew(
     data_source_id: int,
     crew_events_queue: Queue,
 ) -> Crew:
-    crew_events_queue.put("I BELIEVE IN FERRIES ⛴️")
 
     chat_response: StreamingAgentChatResponse
 
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
-    crew_events_queue.put("building crew tasks")
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
     search_task, searcher, serper = build_search_agent(
@@ -119,7 +128,6 @@ def assemble_crew(
     context: str = ""
     chat_history = [message.content for message in chat_messages]
     if use_retrieval:
-        crew_events_queue.put("using retrieval engine")
         logger.info("querying chat engine")
 
         # If the planner decides to use retrieval, proceed with the current flow
@@ -156,7 +164,7 @@ def assemble_crew(
         expected_output="A detailed analysis of the query based on the provided context",
         tools=[date_tool, serper],
         context=[search_task, date_task],
-        callback=lambda _: crew_events_queue.put("Done"),
+        # callback=lambda _: crew_events_queue.put("Done"),
     )
 
     # Create a responder agent that formulates the final response
@@ -189,7 +197,6 @@ def assemble_crew(
         # task_callback=lambda x: crew_events_queue.put(f"Task Done {x[:20]}"),
         # task_callback=lambda x: crew_events_queue.put(f"Task Done {x[:20]}"),
     )
-    crew_events_queue.put("running the crew")
     # yield from send_event_to_queue
 
     return crew
@@ -202,7 +209,6 @@ def launch_crew(
 
     # Run the crew to get the enhanced response
     crew_result: CrewOutput = crew.kickoff()
-    print("THINGS ARE KICKED OFFFFFFF")
     # logger.info(f"CrewAI result: {crew_result}")
 
     # Create an enhanced query that includes the CrewAI insights
@@ -261,7 +267,7 @@ def build_calculator_agent(crewai_llm_name, crew_events_queue: Queue):
         description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
         agent=calculator,
         expected_output="Results of any calculations performed, with step-by-step workings",
-        callback=lambda _: crew_events_queue.put("Calculation Done"),
+        # callback=lambda _: crew_events_queue.put("Calculation Done"),
         # callback=lambda x: send_event_to_queue.send("date_tool"),
     )
     return calculation_task, calculator
@@ -287,7 +293,7 @@ def build_search_agent(crewai_llm_name, date_tool, crew_events_queue: Queue):
         agent=searcher,
         tools=[date_tool],
         expected_output="Results of any search performed, with step-by-step workings",
-        callback=lambda _: crew_events_queue.put("Search Done"),
+        # callback=lambda _: crew_events_queue.put("Search Done"),
         # callback=lambda x: send_event_to_queue.send("date_tool"),
     )
     return search_task, searcher, serper
@@ -313,7 +319,7 @@ def build_date_agent(crewai_llm, crew_events_queue: Queue):
         expected_output="The current date and time.",
         tools=[date_tool],
         # async_execution=True,
-        callback=lambda _: crew_events_queue.put("Date Finder Done"),
+        # callback=lambda _: crew_events_queue.put("Date Finder Done"),
         # callback=lambda x: send_event_to_queue.send("date_tool"),
     )
     return date_finder, date_task, date_tool

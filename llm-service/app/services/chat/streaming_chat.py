@@ -58,7 +58,10 @@ from app.services.chat_history.chat_history_manager import (
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
 from app.services.query import querier
-from app.services.query.chat_engine import FlexibleContextChatEngine, build_flexible_chat_engine
+from app.services.query.chat_engine import (
+    FlexibleContextChatEngine,
+    build_flexible_chat_engine,
+)
 from app.services.query.querier import find_datasource_stuff
 from app.services.query.query_configuration import QueryConfiguration
 
@@ -70,9 +73,6 @@ def stream_chat(
     user_name: Optional[str],
     crew_events_queue: queue.Queue,
 ) -> Generator[ChatResponse, None, None]:
-    print("we're streaming")
-    crew_events_queue.put("We're streaming")
-    print("we're still streaming")
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -87,12 +87,11 @@ def stream_chat(
     response_id = str(uuid.uuid4())
 
     if not query_configuration.use_tool_calling and not session.data_source_ids:
-        print("WE ARE GONNA DIRECT STREAM")
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
-    print("WE ARE GONNA RUN STREAMING CHAT")
-    condensed_question, data_source_id, streaming_chat_response = build_streamer(crew_events_queue, query,
-                                                                                 query_configuration, session)
+    condensed_question, data_source_id, streaming_chat_response = build_streamer(
+        crew_events_queue, query, query_configuration, session
+    )
     return _run_streaming_chat(
         session,
         response_id,
@@ -117,7 +116,6 @@ def _run_streaming_chat(
     data_source_id: Optional[int] = None,
     streaming_chat_response: StreamingAgentChatResponse = None,
 ) -> Generator[ChatResponse, None, None]:
-    crew_events_queue.put("WE ARE IN _RUN_STREAMING_CHAT")
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
@@ -160,21 +158,25 @@ def _run_streaming_chat(
     )
 
 
-def build_streamer(crew_events_queue, query, query_configuration, session) -> tuple[str| None, int | None, StreamingAgentChatResponse]:
-    crew_events_queue.put("_run_streaming_chat()")
-    print("WE ARE IN _RUN_STREAMING_CHAT")
+def build_streamer(
+    crew_events_queue, query, query_configuration, session
+) -> tuple[str | None, int | None, StreamingAgentChatResponse]:
     data_source_id: Optional[int] = (
         session.data_source_ids[0] if session.data_source_ids else None
     )
     llm = models.LLM.get(model_name=query_configuration.model_name)
     embedding_model, index = find_datasource_stuff(data_source_id)
-    chat_engine: Optional[FlexibleContextChatEngine] = build_flexible_chat_engine(
-        query_configuration,
-        llm,
-        embedding_model,
-        index,
-        data_source_id,
-    ) if data_source_id else None
+    chat_engine: Optional[FlexibleContextChatEngine] = (
+        build_flexible_chat_engine(
+            query_configuration,
+            llm,
+            embedding_model,
+            index,
+            data_source_id,
+        )
+        if data_source_id
+        else None
+    )
     chat_history = retrieve_chat_history(session.id)
     chat_messages = list(
         map(
@@ -182,7 +184,11 @@ def build_streamer(crew_events_queue, query, query_configuration, session) -> tu
             chat_history,
         )
     )
-    condensed_question = chat_engine.condense_question(chat_messages, query).strip() if chat_engine else None
+    condensed_question = (
+        chat_engine.condense_question(chat_messages, query).strip()
+        if chat_engine
+        else None
+    )
     streaming_chat_response = querier.streaming_query(
         chat_engine,
         data_source_id,

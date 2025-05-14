@@ -62,6 +62,7 @@ const RagChatQueryInput = ({
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
+    streamedEventState: [, setStreamedEvent],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -85,6 +86,11 @@ const RagChatQueryInput = ({
   const streamChatMutation = useStreamingChatMutation({
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
+    },
+    onEvent: (event) => {
+      setStreamedEvent((prev) => {
+        return [...prev, event];
+      });
     },
     onSuccess: () => {
       setUserInput("");
