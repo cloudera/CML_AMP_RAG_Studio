@@ -172,6 +172,7 @@ def stream_crew_ai(
 
     # Run the crew to get the enhanced response
     crew_result: CrewOutput = crew.kickoff()
+    print("THINGS ARE KICKED OFFFFFFF")
     # logger.info(f"CrewAI result: {crew_result}")
 
     # Create an enhanced query that includes the CrewAI insights

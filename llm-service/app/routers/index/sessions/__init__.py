@@ -234,11 +234,12 @@ def stream_chat_completion(
 
     crew_events_queue = queue.Queue()
 
-    def crew_callback() -> Generator[str, None, None]:
+    def crew_callback(crew_queue_future) -> Generator[str, None, None]:
         while True:
             try:
                 print("waiting for an event")
                 event_data = crew_events_queue.get(block=True, timeout=1.0)
+                print(f"got event: {event_data}")
                 if event_data == "Done":
                     break
                 event_json = json.dumps({"event": event_data})
@@ -249,12 +250,13 @@ def stream_chat_completion(
                 heartbeat = {"event": "heartbeat", "timestamp": time.time()}
                 yield f"data: {json.dumps(heartbeat)}\n\n"
                 time.sleep(1)
+        print("WE ARE DONE WITH THE LOOP")
 
     def generate_stream() -> Generator[str, None, None]:
 
         response_id: str = ""
         try:
-            with ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(
                     stream_chat,
                     session=session,
@@ -265,9 +267,11 @@ def stream_chat_completion(
                 )
 
                 # TODO: check queue
-                yield from crew_callback()
+                yield from crew_callback(future)
+                result = future.result()
+                print("we got a result")
 
-                for response in future.result():
+                for response in result:
                     response_id = response.additional_kwargs["response_id"]
                     json_delta = json.dumps({"text": response.delta})
                     yield f"data: {json_delta}\n\n"

@@ -67,6 +67,7 @@ def stream_chat(
 ) -> Generator[ChatResponse, None, None]:
     print("we're streaming")
     crew_events_queue.put("We're streaming")
+    print("we're still streaming")
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -75,12 +76,13 @@ def stream_chat(
         use_question_condensing=configuration.use_question_condensing,
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
-        use_tool_calling=session.query_configuration.enable_tool_calling,
+        use_tool_calling=True,
     )
 
     response_id = str(uuid.uuid4())
 
     if not query_configuration.use_tool_calling and not session.data_source_ids:
+        print("WE ARE GONNA DIRECT STREAM")
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     # total_data_sources_size: int = sum(
@@ -92,6 +94,7 @@ def stream_chat(
     # if total_data_sources_size == 0:
     #     return _stream_direct_llm_chat(session, response_id, query, user_name)
     #
+    print("WE ARE GONNA RUN STREAMING CHAT")
     return _run_streaming_chat(
         session,
         response_id,
@@ -110,6 +113,8 @@ def _run_streaming_chat(
     user_name: Optional[str],
     crew_events_queue: queue.Queue,
 ) -> Generator[ChatResponse, None, None]:
+    crew_events_queue.put("_run_streaming_chat()")
+    print("WE ARE IN _RUN_STREAMING_CHAT")
     # if len(session.data_source_ids) != 1:
     #     raise HTTPException(
     #         status_code=400, detail="Only one datasource is supported for chat."
