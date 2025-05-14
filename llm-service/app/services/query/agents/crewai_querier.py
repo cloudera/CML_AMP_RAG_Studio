@@ -36,7 +36,8 @@
 #  DATA.
 #
 import logging
-from typing import Optional, Generator
+from queue import Queue
+from typing import Optional
 
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai_tools import SerperDevTool
@@ -61,14 +62,23 @@ logger = logging.getLogger(__name__)
 
 # logging.getLogger("asyncio").setLevel(logging.DEBUG)
 
+
 def output_task_progress(obj: any) -> None:
     print("progress obj:", obj)
     # await asyncio.get_event_loop().create_task(asyncio.sleep(0.1))
 
-def stream_crew_ai(llm: LLM, embedding_model: Optional[BaseEmbedding], chat_messages: list[ChatMessage],
-                   index: Optional[VectorStoreIndex], query_str: str, configuration: QueryConfiguration,
-                   data_source_id: int) -> Generator[str, None, tuple[StreamingAgentChatResponse, str | None]]:
 
+def stream_crew_ai(
+    llm: LLM,
+    embedding_model: Optional[BaseEmbedding],
+    chat_messages: list[ChatMessage],
+    index: Optional[VectorStoreIndex],
+    query_str: str,
+    configuration: QueryConfiguration,
+    data_source_id: int,
+    crew_events_queue: Queue,
+) -> tuple[StreamingAgentChatResponse, str | None]:
+    crew_events_queue.put("I BELIEVE IN FERRIES ⛴️")
 
     use_retrieval = should_use_retrieval(
         configuration, data_source_id, llm, query_str, chat_messages
@@ -78,7 +88,7 @@ def stream_crew_ai(llm: LLM, embedding_model: Optional[BaseEmbedding], chat_mess
     chat_response: StreamingAgentChatResponse
 
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
-    yield "building crew tasks"
+    crew_events_queue.put("building crew tasks")
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm)
     search_task, searcher, serper = build_search_agent(crewai_llm, date_tool)
@@ -88,7 +98,7 @@ def stream_crew_ai(llm: LLM, embedding_model: Optional[BaseEmbedding], chat_mess
     context: str = ""
     chat_history = [message.content for message in chat_messages]
     if use_retrieval:
-        yield "using retrieval engine"
+        crew_events_queue.put("using retrieval engine")
         chat_engine = build_flexible_chat_engine(
             configuration, llm, embedding_model, index, data_source_id
         )
@@ -128,7 +138,7 @@ def stream_crew_ai(llm: LLM, embedding_model: Optional[BaseEmbedding], chat_mess
         expected_output="A detailed analysis of the query based on the provided context",
         tools=[date_tool, serper],
         context=[search_task, date_task],
-        # callback=functools.partial(send_event, "Done"),
+        callback=lambda _: crew_events_queue.put("Done"),
     )
 
     # Create a responder agent that formulates the final response
@@ -157,7 +167,7 @@ def stream_crew_ai(llm: LLM, embedding_model: Optional[BaseEmbedding], chat_mess
         name="QueryCrew",
         task_callback=output_task_progress,
     )
-    yield "running the crew"
+    crew_events_queue.put("running the crew")
     # yield from send_event_to_queue
 
     # Run the crew to get the enhanced response

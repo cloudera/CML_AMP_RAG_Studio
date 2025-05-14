@@ -41,7 +41,9 @@ import itertools
 import json
 import logging
 import queue
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Generator
 
 from fastapi import APIRouter, Header, HTTPException
@@ -231,6 +233,7 @@ def stream_chat_completion(
     configuration = request.configuration or RagPredictConfiguration()
 
     crew_events_queue = queue.Queue()
+
     def crew_callback() -> Generator[str, None, None]:
         while True:
             try:
@@ -244,64 +247,33 @@ def stream_chat_completion(
                 print("No event received, sending heartbeat")
                 # Send a heartbeat event every second to keep the connection alive
                 heartbeat = {"event": "heartbeat", "timestamp": time.time()}
-                asyncio.run(asyncio.sleep(1))
                 yield f"data: {json.dumps(heartbeat)}\n\n"
+                time.sleep(1)
 
     def generate_stream() -> Generator[str, None, None]:
+
         response_id: str = ""
         try:
-            for response in stream_chat(
-                session, request.query, configuration, user_name=origin_remote_user, crew_events_queue=crew_events_queue
-            ):
-                if isinstance(response, str):
-                    message = json.dumps({"event": response})
-                    yield f"data: {message}\n\n"
-                else:
+            with ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    stream_chat,
+                    session=session,
+                    query=request.query,
+                    configuration=configuration,
+                    user_name=origin_remote_user,
+                    crew_events_queue=crew_events_queue,
+                )
+
+                # TODO: check queue
+                yield from crew_callback()
+
+                for response in future.result():
                     response_id = response.additional_kwargs["response_id"]
                     json_delta = json.dumps({"text": response.delta})
                     yield f"data: {json_delta}\n\n"
-            yield f'data: {{"response_id" : "{response_id}"}}\n\n'
+                yield f'data: {{"response_id" : "{response_id}"}}\n\n'
         except Exception as e:
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
 
     return StreamingResponse(generate_stream(), media_type="text/event-stream")
-
-
-@router.get("/crew-events", summary="Stream crew events")
-@exceptions.propagates
-def stream_crew_events(
-    session_id: int,
-    origin_remote_user: Optional[str] = Header(None),
-) -> StreamingResponse:
-    """
-    Stream crew events as Server-Sent Events (SSE).
-    Currently streams the on_crew_started event from events.py.
-    """
-
-    def generate_crew_events() -> Generator[str, None, None]:
-        try:
-            # Send a connection established event
-            connection_event = {
-                "event_type": "connection_established",
-                "session_id": session_id,
-                "timestamp": time.time(),
-            }
-            yield f"data: {json.dumps(connection_event)}\n\n"
-
-            # Poll the queue for new events
-            while True:
-                try:
-                    # Non-blocking get with timeout
-                    event_data = crew_events_queue.get(block=True, timeout=1.0)
-                    yield f"data: {json.dumps(event_data)}\n\n"
-                except queue.Empty:
-                    # Send a heartbeat event every second to keep the connection alive
-                    heartbeat = {"event_type": "heartbeat", "timestamp": time.time()}
-                    yield f"data: {json.dumps(heartbeat)}\n\n"
-                    time.sleep(1)
-        except Exception as e:
-            logger.exception("Failed to stream crew events")
-            yield f'data: {{"error": "{str(e)}"}}\n\n'
-
-    return StreamingResponse(generate_crew_events(), media_type="text/event-stream")

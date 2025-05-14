@@ -58,8 +58,13 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 logger = logging.getLogger(__name__)
 
 
-def streaming_query(data_source_id: Optional[int], query_str: str, configuration: QueryConfiguration,
-                    chat_history: list[RagContext], crew_events_queue: queue.Queue) -> Generator[str, None, tuple[StreamingAgentChatResponse, str | None]]:
+def streaming_query(
+    data_source_id: Optional[int],
+    query_str: str,
+    configuration: QueryConfiguration,
+    chat_history: list[RagContext],
+    crew_events_queue: queue.Queue,
+) -> tuple[StreamingAgentChatResponse, str | None]:
     embedding_model, index = find_datasource_stuff(data_source_id)
 
     llm = models.LLM.get(model_name=configuration.model_name)
@@ -74,14 +79,17 @@ def streaming_query(data_source_id: Optional[int], query_str: str, configuration
     condensed_question: str
     print("configuration.use_tool_calling", configuration.use_tool_calling)
     if configuration.use_tool_calling:
-        ai = stream_crew_ai(llm, embedding_model, chat_messages, index, query_str, configuration, data_source_id)
-        while True:
-            try:
-                yield next(ai)
-            except StopIteration as e:
-                return e.value
+        return stream_crew_ai(
+            llm,
+            embedding_model,
+            chat_messages,
+            index,
+            query_str,
+            configuration,
+            data_source_id,
+            crew_events_queue,
+        )
     else:
-        yield ""
         chat_engine = build_flexible_chat_engine(
             configuration=configuration,
             llm=llm,
@@ -107,7 +115,9 @@ def streaming_query(data_source_id: Optional[int], query_str: str, configuration
         return chat_response, condensed_question
 
 
-def find_datasource_stuff(data_source_id: Optional[int]) -> tuple[Optional[BaseEmbedding], Optional[VectorStoreIndex]]:
+def find_datasource_stuff(
+    data_source_id: Optional[int],
+) -> tuple[Optional[BaseEmbedding], Optional[VectorStoreIndex]]:
     if data_source_id is None:
         return None, None
     qdrant_store = VectorStoreFactory.for_chunks(data_source_id)

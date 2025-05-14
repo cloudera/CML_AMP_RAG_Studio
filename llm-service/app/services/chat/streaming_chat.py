@@ -58,8 +58,15 @@ from app.services.query import querier
 from app.services.query.query_configuration import QueryConfiguration
 
 
-def stream_chat(session: Session, query: str, configuration: RagPredictConfiguration, user_name: Optional[str],
-                crew_events_queue: queue.Queue) -> Generator[ChatResponse| str, None, None]:
+def stream_chat(
+    session: Session,
+    query: str,
+    configuration: RagPredictConfiguration,
+    user_name: Optional[str],
+    crew_events_queue: queue.Queue,
+) -> Generator[ChatResponse, None, None]:
+    print("we're streaming")
+    crew_events_queue.put("We're streaming")
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
         model_name=session.inference_model,
@@ -86,27 +93,38 @@ def stream_chat(session: Session, query: str, configuration: RagPredictConfigura
     #     return _stream_direct_llm_chat(session, response_id, query, user_name)
     #
     return _run_streaming_chat(
-        session, response_id, query, query_configuration, user_name, crew_events_queue=crew_events_queue
+        session,
+        response_id,
+        query,
+        query_configuration,
+        user_name,
+        crew_events_queue=crew_events_queue,
     )
 
 
-def _run_streaming_chat(session: Session, response_id: str, query: str, query_configuration: QueryConfiguration,
-                        user_name: Optional[str],
-                        crew_events_queue: queue.Queue) -> Generator[ChatResponse| str, None, None]:
+def _run_streaming_chat(
+    session: Session,
+    response_id: str,
+    query: str,
+    query_configuration: QueryConfiguration,
+    user_name: Optional[str],
+    crew_events_queue: queue.Queue,
+) -> Generator[ChatResponse, None, None]:
     # if len(session.data_source_ids) != 1:
     #     raise HTTPException(
     #         status_code=400, detail="Only one datasource is supported for chat."
     #     )
 
-    data_source_id: Optional[int] = session.data_source_ids[0] if session.data_source_ids else None
-    streaming_thingee = querier.streaming_query(data_source_id, query, query_configuration,
-                                              retrieve_chat_history(session.id), crew_events_queue=crew_events_queue)
-    while True:
-        try:
-            yield next(streaming_thingee)
-        except StopIteration as e:
-            streaming_chat_response, condensed_question = e.value
-            break
+    data_source_id: Optional[int] = (
+        session.data_source_ids[0] if session.data_source_ids else None
+    )
+    streaming_chat_response, condensed_question = querier.streaming_query(
+        data_source_id,
+        query,
+        query_configuration,
+        retrieve_chat_history(session.id),
+        crew_events_queue=crew_events_queue,
+    )
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
