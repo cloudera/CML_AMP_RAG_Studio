@@ -40,7 +40,7 @@ from datetime import datetime
 from crewai.tools import BaseTool
 
 
-class DateTool(BaseTool):
+class DateTool(BaseTool):  # type: ignore[misc]
     """
     A tool that provides the current date and time.
     """
