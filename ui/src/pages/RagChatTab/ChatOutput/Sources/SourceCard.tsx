@@ -102,7 +102,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
       content={
         <Card
           title={<CardTitle source={source} />}
-          bordered={false}
+          variant="borderless"
           style={{
             width: 800,
             height: 600,
