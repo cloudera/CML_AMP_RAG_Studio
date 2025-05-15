@@ -36,7 +36,7 @@
 #  DATA.
 #
 
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -44,6 +44,8 @@ from app.services.models.providers.bedrock import (
     DEFAULT_BEDROCK_LLM_MODEL,
     DEFAULT_BEDROCK_RERANK_MODEL,
 )
+
+tool_types = Literal["search"]
 
 
 class QueryConfiguration(BaseModel):
@@ -58,3 +60,4 @@ class QueryConfiguration(BaseModel):
     use_summary_filter: Optional[bool] = True
     use_postprocessor: Optional[bool] = True
     use_tool_calling: Optional[bool] = False
+    tools: Optional[list[tool_types]] = None
