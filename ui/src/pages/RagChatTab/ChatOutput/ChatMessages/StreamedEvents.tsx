@@ -47,9 +47,6 @@ const StreamedEvent = ({ event }: { event: CrewEventResponse }) => {
     <Flex vertical style={{ paddingRight: 16 }}>
       <Flex justify="space-between">
         <Flex gap={8}>
-          <Typography.Text style={{ fontSize: 10 }} type="secondary">
-            {event.type}:
-          </Typography.Text>
           <Typography.Text style={{ fontSize: 10 }}>
             {event.name}
           </Typography.Text>
@@ -98,8 +95,7 @@ const StreamedEvents = ({
           <div>
             <Typography.Text>Agent Events - </Typography.Text>
             <Typography.Text type="secondary">
-              {lastEvent.type}: {lastEvent.name} (
-              {format(lastEvent.timestamp * 1000, "pp")})
+              {lastEvent.name} ({format(lastEvent.timestamp * 1000, "pp")})
             </Typography.Text>
           </div>
         </Flex>

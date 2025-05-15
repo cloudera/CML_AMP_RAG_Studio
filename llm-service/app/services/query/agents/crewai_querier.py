@@ -139,7 +139,7 @@ def assemble_crew(
         # verbose=True,
         tools=research_tools,
         step_callback=lambda output: step_callback(
-            output, "researcher", crew_events_queue
+            output, "Research Complete", crew_events_queue
         ),
     )
 
@@ -162,7 +162,7 @@ def assemble_crew(
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
         step_callback=lambda output: step_callback(
-            output, "responder", crew_events_queue
+            output, "Response Computed", crew_events_queue
         ),
         # verbose=True,
     )
@@ -249,7 +249,7 @@ def build_calculator_agent(
         llm=crewai_llm_name,
         verbose=True,
         step_callback=lambda output: step_callback(
-            output, "calculator", crew_events_queue
+            output, "Calculations Done", crew_events_queue
         ),
     )
     calculation_task = Task(
@@ -273,7 +273,7 @@ def build_search_agent(
         tools=[date_tool, serper],
         verbose=True,
         step_callback=lambda output: step_callback(
-            output, "searcher", crew_events_queue
+            output, "Internet Search Complete", crew_events_queue
         ),
     )
     search_task = Task(
@@ -296,7 +296,7 @@ def build_date_agent(
         llm=crewai_llm,
         verbose=True,
         step_callback=lambda output: step_callback(
-            output, "date finder", crew_events_queue
+            output, "Current Date Calculated", crew_events_queue
         ),
         # callbacks=[pause],
     )

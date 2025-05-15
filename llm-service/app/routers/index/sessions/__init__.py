@@ -246,7 +246,7 @@ def stream_chat_completion(
                 # print("No event received, sending heartbeat")
                 # Send a heartbeat event every second to keep the connection alive
                 heartbeat = CrewEvent(
-                    type="event", name="processing", timestamp=time.time()
+                    type="event", name="Processing", timestamp=time.time()
                 )
                 event_json = json.dumps({"event": heartbeat.model_dump()})
                 yield f"data: {event_json}\n\n"
