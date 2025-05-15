@@ -49,7 +49,6 @@ import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
-  CrewEventResponse,
   isPlaceholder,
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
@@ -85,13 +84,14 @@ const ChatMessageController = () => {
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },
-    onEvent: (event: CrewEventResponse) => {
+    onEvent: (event) => {
       if (event.type === "done") {
         setStreamedEvent([]);
+      } else {
+        setStreamedEvent((prev) => {
+          return [...prev, event];
+        });
       }
-      setStreamedEvent((prev) => {
-        return [...prev, event];
-      });
     },
     onSuccess: () => {
       setStreamedChat("");

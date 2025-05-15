@@ -101,10 +101,11 @@ const SuggestedQuestionsCards = () => {
       onEvent: (event) => {
         if (event.type === "done") {
           setStreamedEvent([]);
+        } else {
+          setStreamedEvent((prev) => {
+            return [...prev, event];
+          });
         }
-        setStreamedEvent((prev) => {
-          return [...prev, event];
-        });
       },
       onSuccess: () => {
         setStreamedChat("");

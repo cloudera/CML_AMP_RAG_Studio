@@ -251,9 +251,6 @@ def stream_chat_completion(
                 event_json = json.dumps({"event": heartbeat.model_dump()})
                 yield f"data: {event_json}\n\n"
                 time.sleep(1)
-        done = CrewEvent(type="done", name="done", timestamp=time.time())
-        event_json = json.dumps({"event": done.model_dump()})
-        yield f"data: {event_json}\n\n"
 
     def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
@@ -270,7 +267,15 @@ def stream_chat_completion(
 
                 yield from crew_callback()
 
+                first_message = True
                 for response in future.result():
+                    if first_message:
+                        done = CrewEvent(
+                            type="done", name="done", timestamp=time.time()
+                        )
+                        event_json = json.dumps({"event": done.model_dump()})
+                        yield f"data: {event_json}\n\n"
+                        first_message = False
                     response_id = response.additional_kwargs["response_id"]
                     json_delta = json.dumps({"text": response.delta})
                     yield f"data: {json_delta}\n\n"
