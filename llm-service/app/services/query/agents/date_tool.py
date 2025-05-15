@@ -35,28 +35,18 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import asyncio
 from datetime import datetime
 
-from crewai.tools.base_tool import Tool
+from crewai.tools import BaseTool
 
 
-class DateTool(Tool):
+class DateTool(BaseTool):
     """
     A tool that provides the current date and time.
     """
 
-    # name: str = "date_tool"
-    # description: str = "A tool that provides the current date and time."
-    #
-    def __init__(self):
-        super().__init__(
-            name="date_tool",
-            description="A tool that provides the current date and time.",
-            func=self._run,
-        )
+    name: str = "date_tool"
+    description: str = "A tool that provides the current date and time."
 
     def _run(self) -> str:
-        # loop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(loop)
         return datetime.now().isoformat()

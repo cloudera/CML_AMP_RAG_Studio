@@ -110,7 +110,7 @@ from app.services.models.providers import BedrockModelProvider, AzureModelProvid
 logger = logging.getLogger(__name__)
 
 
-def get_crewai_model_name(llm):
+def get_crewai_model_name(llm: LLM) -> str:
     if AzureModelProvider.is_enabled():
         crewai_llm_name = f"azure/{llm.metadata.model_name}"
     elif BedrockModelProvider.is_enabled():

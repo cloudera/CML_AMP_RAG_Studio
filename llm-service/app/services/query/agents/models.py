@@ -54,14 +54,17 @@ def get_crewai_llm_object_direct(language_model: LlamaIndexLLM, model_name: str)
             # seed=0,
         )
     elif CAIIModelProvider.is_enabled():
-        return CrewAILLM(
-            model="openai/" + model_name,
-            api_key=get_caii_access_token(),
-            base_url=language_model.api_base,
-            # temperature=language_model.generation_config.get("temperature"),
-            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
-            # seed=0,
-        )
+        if hasattr(language_model, "api_base"):
+            return CrewAILLM(
+                model="openai/" + model_name,
+                api_key=get_caii_access_token(),
+                base_url=language_model.api_base,
+                # temperature=language_model.generation_config.get("temperature"),
+                # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+                # seed=0,
+            )
+        else:
+            raise ValueError("Model type is not supported.")
     elif BedrockModelProvider.is_enabled():
         return CrewAILLM(
             model="bedrock/" + model_name,

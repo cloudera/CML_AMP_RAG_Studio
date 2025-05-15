@@ -41,6 +41,7 @@ import uuid
 from typing import Optional
 
 from fastapi import HTTPException
+from llama_index.core.chat_engine.types import AgentChatResponse
 
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
@@ -117,8 +118,14 @@ def _run_chat(
     return finalize_response(response, condensed_question, data_source_id, query, query_configuration, response_id,session, user_name)
 
 
-def finalize_response(chat_response, condensed_question, data_source_id, query, query_configuration, response_id,
-                      session, user_name):
+def finalize_response(chat_response: AgentChatResponse,
+                      condensed_question: str | None,
+                      data_source_id: Optional[int],
+                      query: str,
+                      query_configuration: QueryConfiguration,
+                      response_id: str,
+                      session: Session,
+                      user_name: Optional[str]) -> RagStudioChatMessage:
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
     relevance, faithfulness = evaluators.evaluate_response(

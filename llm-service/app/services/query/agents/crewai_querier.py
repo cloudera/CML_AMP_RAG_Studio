@@ -74,7 +74,7 @@ class CrewEvent(BaseModel):
 
 
 def step_callback(
-    output: ToolResult | AgentFinish, agent: str, crew_events_queue: Queue
+    output: ToolResult | AgentFinish, agent: str, crew_events_queue: Queue[CrewEvent]
 ) -> None:
     # if isinstance(output, ToolResult):
     #     crew_events_queue.put(
@@ -104,8 +104,8 @@ def assemble_crew(
     index: Optional[VectorStoreIndex],
     query_str: str,
     configuration: QueryConfiguration,
-    data_source_id: int,
-    crew_events_queue: Queue,
+    data_source_id: Optional[int],
+    crew_events_queue: Queue[CrewEvent],
 ) -> Crew:
 
     chat_response: StreamingAgentChatResponse
@@ -120,7 +120,7 @@ def assemble_crew(
 
     context: str = ""
     chat_history = [message.content for message in chat_messages]
-    if use_retrieval:
+    if use_retrieval and index and embedding_model and data_source_id:
         logger.info("Planner decided to use retrieval")
 
         # First, get the context from the retriever
@@ -214,7 +214,8 @@ def stream_chat(
     chat_messages: list[ChatMessage],
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
-    if use_retrieval:
+    chat_response: StreamingAgentChatResponse
+    if use_retrieval and chat_engine:
         chat_response = chat_engine.stream_chat(enhanced_query, chat_messages)
     else:
         # If the planner decides to answer directly, bypass retrieval
@@ -235,7 +236,7 @@ def stream_chat(
     return chat_response
 
 
-def build_calculator_agent(crewai_llm_name, crew_events_queue: Queue):
+def build_calculator_agent(crewai_llm_name: LLM, crew_events_queue: Queue[CrewEvent]) -> tuple[Task, Agent]:
     calculator = Agent(
         role="Calculator",
         goal="Perform accurate mathematical calculations based on research findings",
@@ -255,7 +256,7 @@ def build_calculator_agent(crewai_llm_name, crew_events_queue: Queue):
     return calculation_task, calculator
 
 
-def build_search_agent(crewai_llm_name, date_tool, crew_events_queue: Queue):
+def build_search_agent(crewai_llm_name: LLM, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]) -> tuple[Task, Agent, SerperDevTool]:
     serper = SerperDevTool()
     searcher = Agent(
         role="Search Agent",
@@ -278,7 +279,7 @@ def build_search_agent(crewai_llm_name, date_tool, crew_events_queue: Queue):
     return search_task, searcher, serper
 
 
-def build_date_agent(crewai_llm, crew_events_queue: Queue):
+def build_date_agent(crewai_llm: LLM, crew_events_queue: Queue[CrewEvent]) -> tuple[Agent, Task, DateTool]:
     date_finder = Agent(
         role="DateFinder",
         goal="Find the current date and time",
@@ -290,7 +291,7 @@ def build_date_agent(crewai_llm, crew_events_queue: Queue):
         ),
         # callbacks=[pause],
     )
-    date_tool = DateTool()
+    date_tool: DateTool = DateTool()
     date_task = Task(
         name="DateFinderTask",
         description="Find the current date and time.",
@@ -320,5 +321,5 @@ def should_use_retrieval(
     planning_decision = planner.decide_retrieval_strategy(
         query_str, chat_messages, data_source_summary
     )
-    use_retrieval = planning_decision.get("use_retrieval", True)
+    use_retrieval: bool = planning_decision.get("use_retrieval", True)
     return use_retrieval

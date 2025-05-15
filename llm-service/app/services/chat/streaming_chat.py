@@ -35,9 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import queue
 import time
 import uuid
+from queue import Queue
 from typing import Optional, Generator
 
 from llama_index.core.base.llms.types import ChatResponse, ChatMessage
@@ -58,6 +58,7 @@ from app.services.chat_history.chat_history_manager import (
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
+from app.services.query.agents.crewai_querier import CrewEvent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
@@ -71,7 +72,7 @@ def stream_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-    crew_events_queue: queue.Queue,
+    crew_events_queue: Queue[CrewEvent],
 ) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -126,14 +127,20 @@ def _run_streaming_chat(
         source_nodes=streaming_chat_response.source_nodes,
     )
 
-    finalize_response(chat_response, condensed_question, data_source_id, query, query_configuration,
-                                         response_id, session, user_name,)
+    finalize_response(chat_response,
+                      condensed_question,
+                      data_source_id,
+                      query,
+                      query_configuration,
+                      response_id,
+                      session,
+                      user_name,)
 
 
 
 
 def build_streamer(
-    crew_events_queue, query, query_configuration, session
+    crew_events_queue: Queue[CrewEvent], query: str, query_configuration: QueryConfiguration, session: Session
 ) -> tuple[str | None, int | None, StreamingAgentChatResponse]:
     data_source_id: Optional[int] = (
         session.data_source_ids[0] if session.data_source_ids else None
@@ -148,7 +155,7 @@ def build_streamer(
             vector_store,
             data_source_id,
         )
-        if data_source_id
+        if data_source_id and embedding_model and vector_store
         else None
     )
     chat_history = retrieve_chat_history(session.id)

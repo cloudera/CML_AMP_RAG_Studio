@@ -252,7 +252,6 @@ def stream_chat_completion(
                 time.sleep(1)
 
     def generate_stream() -> Generator[str, None, None]:
-
         response_id: str = ""
         try:
             with ThreadPoolExecutor(max_workers=1) as executor:

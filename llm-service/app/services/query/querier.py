@@ -29,7 +29,7 @@
 # ##############################################################################
 from __future__ import annotations
 
-import queue
+from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -39,6 +39,7 @@ from .agents.crewai_querier import (
     should_use_retrieval,
     launch_crew,
     stream_chat,
+    CrewEvent,
 )
 
 if TYPE_CHECKING:
@@ -69,7 +70,7 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    crew_events_queue: queue.Queue,
+    crew_events_queue: Queue[CrewEvent],
 ) -> StreamingAgentChatResponse:
     embedding_model, index = build_datasource_query_components(data_source_id)
 
@@ -107,20 +108,24 @@ def streaming_query(
             chat_messages,
         )
         return chat_response
-    else:
-        try:
-            chat_response = chat_engine.stream_chat(query_str, chat_messages)
-            logger.debug("query response received from chat engine")
-        except botocore.exceptions.ClientError as error:
-            logger.warning(error.response)
-            json_error = error.response
-            raise HTTPException(
-                status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-                detail=json_error["message"],
-            ) from error
+    if not chat_engine:
+        raise HTTPException(
+            status_code=500,
+            detail="Chat engine is not initialized. Please check the configuration.",
+        )
 
-        return chat_response
+    try:
+        chat_response = chat_engine.stream_chat(query_str, chat_messages)
+        logger.debug("query response received from chat engine")
+    except botocore.exceptions.ClientError as error:
+        logger.warning(error.response)
+        json_error = error.response
+        raise HTTPException(
+            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+            detail=json_error["message"],
+        ) from error
 
+    return chat_response
 
 def build_datasource_query_components(
     data_source_id: Optional[int],
