@@ -58,7 +58,88 @@ from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
 
-CUSTOM_TEMPLATE = """\
+CUSTOM_CONTEXT_PROMPT_TEMPLATE = """\
+The following is a friendly conversation between a user and an AI assistant.
+The assistant is talkative and provides lots of specific details from its context.
+If the assistant does not know the answer to a question, it truthfully says it
+does not know.\
+When referencing information from a source, \
+cite the appropriate source(s) using their corresponding numbers. \
+Every answer should include at least one source citation. \
+Only cite a source when you are explicitly referencing it. \
+If none of the sources are helpful, you should indicate that. \
+For example:
+
+<Contexts>
+Source 1:
+The sky is red in the evening and blue in the morning.
+Source 2:
+Water is wet when the sky is red.
+
+<Query>
+When is water wet?
+
+<Answer>
+Water will be wet when the sky is red [2], \
+which occurs in the evening [1].
+
+Now it's your turn. Below are several numbered sources of information:
+
+<Contexts>
+{context_str}
+
+<Query>
+{query_str}
+
+<Answer>
+"""
+
+
+CUSTOM_CONTEXT_REFINE_PROMPT_TEMPLATE = """\
+The following is a friendly conversation between a user and an AI assistant. \
+The assistant is talkative and provides lots of specific details from its context. \
+If the assistant does not know the answer to a question, it truthfully says \
+it does not know.
+
+Please provide an answer based solely on the provided sources. \
+When referencing information from a source, \
+cite the appropriate source(s) using their corresponding numbers. \
+Every answer should include at least one source citation. \
+Only cite a source when you are explicitly referencing it. \
+If none of the sources are helpful, you should indicate that. \ 
+For example:
+
+<Contexts>
+Source 1:
+The sky is red in the evening and blue in the morning.
+Source 2:
+Water is wet when the sky is red.
+
+<Query>
+When is water wet?
+
+<Answer> 
+Water will be wet when the sky is red [2], \
+which occurs in the evening [1].
+
+Now it's your turn. 
+We have provided an existing answer: {existing_answer}
+
+Below are several numbered sources of information.
+Use them to refine the existing answer.
+If the provided sources are not helpful, you will repeat the existing answer.
+Begin refining!
+
+<Contexts>
+{context_msg}
+
+<Query>
+{query_str}
+
+<Answer>
+"""
+
+CUSTOM_CONDENSE_TEMPLATE = """\
 Given a conversation (between Human and Assistant) and a follow up message from Human, \
 rewrite the message to be a standalone question that captures all relevant context \
 from the conversation. Just provide the question, not any description of it.
@@ -72,7 +153,9 @@ from the conversation. Just provide the question, not any description of it.
 <Standalone question>
 """
 
-CUSTOM_PROMPT = PromptTemplate(CUSTOM_TEMPLATE)
+CUSTOM_CONDENSE_PROMPT = PromptTemplate(CUSTOM_CONDENSE_TEMPLATE)
+CUSTOM_CONTEXT_PROMPT = PromptTemplate(CUSTOM_CONTEXT_PROMPT_TEMPLATE)
+CUSTOM_CONTEXT_REFINE_PROMPT = PromptTemplate(CUSTOM_CONTEXT_REFINE_PROMPT_TEMPLATE)
 
 
 class FlexibleContextChatEngine(CondensePlusContextChatEngine):
@@ -112,6 +195,10 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
                 logger.info(f"Hypothetical document: {vector_match_input}")
 
         context_nodes = self._get_nodes(vector_match_input)
+        for node in context_nodes:
+            # number the nodes in the content
+            new_content = f"Source {node.node.node_id}:\n{node.node.get_content()}"
+            node.node.set_content(value=new_content)
         context_source = ToolOutput(
             tool_name="retriever",
             content=str(context_nodes),
@@ -134,13 +221,17 @@ def build_flexible_chat_engine(
     index: VectorStoreIndex,
     data_source_id: int,
 ) -> FlexibleContextChatEngine:
-    retriever = FlexibleRetriever(configuration, index, embedding_model, data_source_id, llm)
+    retriever = FlexibleRetriever(
+        configuration, index, embedding_model, data_source_id, llm
+    )
     postprocessors = _create_node_postprocessors(
         configuration, data_source_id=data_source_id
     )
     chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         llm=llm,
-        condense_question_prompt=CUSTOM_PROMPT,
+        context_prompt=CUSTOM_CONTEXT_PROMPT,
+        context_refine_prompt=CUSTOM_CONTEXT_REFINE_PROMPT,
+        condense_prompt=CUSTOM_CONDENSE_PROMPT,
         retriever=retriever,
         node_postprocessors=postprocessors,
     )
