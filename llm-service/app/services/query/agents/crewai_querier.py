@@ -42,7 +42,7 @@ from typing import Optional
 
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.agents.parser import AgentFinish
-from crewai.tools.base_tool import Tool, BaseTool
+from crewai.tools.base_tool import BaseTool
 from crewai.tools.tool_types import ToolResult
 from crewai_tools import SerperDevTool
 from llama_index.core import QueryBundle, VectorStoreIndex
@@ -102,12 +102,11 @@ def assemble_crew(
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
-
     calculation_task, calculator = build_calculator_agent(crewai_llm, crew_events_queue)
 
 
     search_task, searcher, serper = None, None, None
-    if "search" in configuration.tools:
+    if configuration.tools and "search" in configuration.tools:
         search_task, searcher, serper = build_search_agent(crewai_llm, date_tool, crew_events_queue)
 
     research_tools: list[BaseTool] = [date_tool]
