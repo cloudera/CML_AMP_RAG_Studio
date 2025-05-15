@@ -83,6 +83,7 @@ def stream_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
         use_tool_calling=True,
+        tools=configuration.tools,
     )
 
     response_id = str(uuid.uuid4())
@@ -135,7 +136,6 @@ def _run_streaming_chat(
                       response_id,
                       session,
                       user_name,)
-
 
 
 

@@ -42,6 +42,7 @@ from typing import Optional
 
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.agents.parser import AgentFinish
+from crewai.tools.base_tool import Tool, BaseTool
 from crewai.tools.tool_types import ToolResult
 from crewai_tools import SerperDevTool
 from llama_index.core import QueryBundle, VectorStoreIndex
@@ -76,13 +77,6 @@ class CrewEvent(BaseModel):
 def step_callback(
     output: ToolResult | AgentFinish, agent: str, crew_events_queue: Queue[CrewEvent]
 ) -> None:
-    # if isinstance(output, ToolResult):
-    #     crew_events_queue.put(
-    #         {
-    #             "agent": agent,
-    #             "result": output.result,
-    #         }
-    #     )
     if isinstance(output, AgentFinish):
         crew_events_queue.put(
             CrewEvent(
@@ -90,8 +84,6 @@ def step_callback(
                 name=agent,
                 data=output.thought,
                 timestamp=time.time(),
-                # "output": output.output,
-                # "text": output.text,
             )
         )
 
@@ -110,10 +102,18 @@ def assemble_crew(
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
-    search_task, searcher, serper = build_search_agent(
-        crewai_llm, date_tool, crew_events_queue
-    )
+
     calculation_task, calculator = build_calculator_agent(crewai_llm, crew_events_queue)
+
+
+    search_task, searcher, serper = None, None, None
+    if "search" in configuration.tools:
+        search_task, searcher, serper = build_search_agent(crewai_llm, date_tool, crew_events_queue)
+
+    research_tools: list[BaseTool] = [date_tool]
+    if serper:
+        research_tools.append(serper)
+
 
     context: str = ""
     chat_history = [message.content for message in chat_messages]
@@ -138,7 +138,7 @@ def assemble_crew(
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
         llm=crewai_llm,
         # verbose=True,
-        tools=[date_tool, serper],
+        tools=research_tools,
         step_callback=lambda output: step_callback(
             output, "researcher", crew_events_queue
         ),
@@ -175,14 +175,21 @@ def assemble_crew(
         context=[search_task, date_task, research_task, calculation_task],
     )
 
-    crew = Crew(
-        agents=[date_finder, searcher, researcher, calculator, responder],
-        tasks=[date_task, search_task, research_task, calculation_task, response_task],
+    # Create a crew with the agents and tasks
+    agents = [date_finder]
+    tasks = [date_task]
+    if searcher:
+        agents.append(searcher)
+        tasks.append(search_task)
+    agents.extend([researcher, calculator, responder])
+    tasks.extend([research_task, calculation_task, response_task])
+
+    return Crew(
+        agents=agents,
+        tasks=tasks,
         process=Process.sequential,
         name="QueryCrew",
     )
-
-    return crew
 
 
 def launch_crew(
