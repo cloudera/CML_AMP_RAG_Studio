@@ -47,22 +47,22 @@ from llama_index.core.chat_engine.types import (
 )
 
 from app.rag_types import RagPredictConfiguration
-from app.services import evaluators, llm_completion, models
-from app.services.chat.utils import retrieve_chat_history, format_source_nodes
+from app.services import llm_completion, models
+from app.services.chat.chat import finalize_response
+from app.services.chat.utils import retrieve_chat_history
 from app.services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     RagMessage,
-    Evaluation,
     chat_history_manager,
 )
 from app.services.metadata_apis.session_metadata_api import Session
-from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
+from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.querier import find_datasource_stuff
+from app.services.query.querier import build_datasource_query_components
 from app.services.query.query_configuration import QueryConfiguration
 
 
@@ -98,7 +98,6 @@ def stream_chat(
         query,
         query_configuration,
         user_name,
-        crew_events_queue=crew_events_queue,
         condensed_question=condensed_question,
         data_source_id=data_source_id,
         streaming_chat_response=streaming_chat_response,
@@ -111,7 +110,6 @@ def _run_streaming_chat(
     query: str,
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
-    crew_events_queue: queue.Queue,
     condensed_question: Optional[str] = None,
     data_source_id: Optional[int] = None,
     streaming_chat_response: StreamingAgentChatResponse = None,
@@ -128,34 +126,10 @@ def _run_streaming_chat(
         source_nodes=streaming_chat_response.source_nodes,
     )
 
-    if condensed_question and (condensed_question.strip() == query.strip()):
-        condensed_question = None
-    relevance, faithfulness = evaluators.evaluate_response(
-        query, chat_response, session.inference_model
-    )
-    response_source_nodes = format_source_nodes(chat_response, data_source_id)
-    new_chat_message = RagStudioChatMessage(
-        id=response_id,
-        session_id=session.id,
-        source_nodes=response_source_nodes,
-        inference_model=session.inference_model,
-        rag_message=RagMessage(
-            user=query,
-            assistant=chat_response.response,
-        ),
-        evaluations=[
-            Evaluation(name="relevance", value=relevance),
-            Evaluation(name="faithfulness", value=faithfulness),
-        ],
-        timestamp=time.time(),
-        condensed_question=condensed_question,
-    )
+    finalize_response(chat_response, condensed_question, data_source_id, query, query_configuration,
+                                         response_id, session, user_name,)
 
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
 
-    record_rag_mlflow_run(
-        new_chat_message, query_configuration, response_id, session, user_name
-    )
 
 
 def build_streamer(
@@ -165,13 +139,13 @@ def build_streamer(
         session.data_source_ids[0] if session.data_source_ids else None
     )
     llm = models.LLM.get(model_name=query_configuration.model_name)
-    embedding_model, index = find_datasource_stuff(data_source_id)
+    embedding_model, vector_store = build_datasource_query_components(data_source_id)
     chat_engine: Optional[FlexibleContextChatEngine] = (
         build_flexible_chat_engine(
             query_configuration,
             llm,
             embedding_model,
-            index,
+            vector_store,
             data_source_id,
         )
         if data_source_id

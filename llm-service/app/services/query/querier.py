@@ -30,7 +30,7 @@
 from __future__ import annotations
 
 import queue
-from typing import Optional, TYPE_CHECKING, Generator
+from typing import Optional, TYPE_CHECKING
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
@@ -71,7 +71,7 @@ def streaming_query(
     chat_messages: list[ChatMessage],
     crew_events_queue: queue.Queue,
 ) -> StreamingAgentChatResponse:
-    embedding_model, index = find_datasource_stuff(data_source_id)
+    embedding_model, index = build_datasource_query_components(data_source_id)
 
     llm = models.LLM.get(model_name=configuration.model_name)
 
@@ -110,7 +110,7 @@ def streaming_query(
     else:
         try:
             chat_response = chat_engine.stream_chat(query_str, chat_messages)
-            logger.info("query response received from chat engine")
+            logger.debug("query response received from chat engine")
         except botocore.exceptions.ClientError as error:
             logger.warning(error.response)
             json_error = error.response
@@ -122,7 +122,7 @@ def streaming_query(
         return chat_response
 
 
-def find_datasource_stuff(
+def build_datasource_query_components(
     data_source_id: Optional[int],
 ) -> tuple[Optional[BaseEmbedding], Optional[VectorStoreIndex]]:
     if data_source_id is None:
@@ -169,7 +169,7 @@ def query(
 
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
-        logger.info("query response received from chat engine")
+        logger.debug("query response received from chat engine")
         return chat_response, condensed_question
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)

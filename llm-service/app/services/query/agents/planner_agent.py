@@ -206,7 +206,7 @@ class PlannerAgent:
         crew = Crew(
             agents=[planner],
             tasks=[planning_task],
-            verbose=True,
+            # verbose=True,
             process=Process.sequential,
             name="PlannerAgentCrew",
             # task_callback=lambda task: logger.info(f"Task '{task=}'"),
