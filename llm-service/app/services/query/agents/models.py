@@ -40,10 +40,16 @@ from llama_index.core.llms import LLM as LlamaIndexLLM
 
 from app import config
 from app.services.caii.utils import get_caii_access_token
-from app.services.models.providers import AzureModelProvider, CAIIModelProvider, BedrockModelProvider
+from app.services.models.providers import (
+    AzureModelProvider,
+    CAIIModelProvider,
+    BedrockModelProvider,
+)
 
 
-def get_crewai_llm_object_direct(language_model: LlamaIndexLLM, model_name: str) -> CrewAILLM:
+def get_crewai_llm_object_direct(
+    language_model: LlamaIndexLLM, model_name: str
+) -> CrewAILLM:
     if AzureModelProvider.is_enabled():
         return CrewAILLM(
             model="azure/" + model_name,
@@ -73,4 +79,4 @@ def get_crewai_llm_object_direct(language_model: LlamaIndexLLM, model_name: str)
             # seed=0,
         )
     else:
-        raise ValueError(f"Model type is not supported.")
+        raise ValueError("Model type is not supported.")

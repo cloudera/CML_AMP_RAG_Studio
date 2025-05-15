@@ -107,9 +107,6 @@ def assemble_crew(
     data_source_id: Optional[int],
     crew_events_queue: Queue[CrewEvent],
 ) -> Crew:
-
-    chat_response: StreamingAgentChatResponse
-
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
     # Define tasks for the agents
     date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
@@ -236,7 +233,9 @@ def stream_chat(
     return chat_response
 
 
-def build_calculator_agent(crewai_llm_name: LLM, crew_events_queue: Queue[CrewEvent]) -> tuple[Task, Agent]:
+def build_calculator_agent(
+    crewai_llm_name: LLM, crew_events_queue: Queue[CrewEvent]
+) -> tuple[Task, Agent]:
     calculator = Agent(
         role="Calculator",
         goal="Perform accurate mathematical calculations based on research findings",
@@ -256,7 +255,9 @@ def build_calculator_agent(crewai_llm_name: LLM, crew_events_queue: Queue[CrewEv
     return calculation_task, calculator
 
 
-def build_search_agent(crewai_llm_name: LLM, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]) -> tuple[Task, Agent, SerperDevTool]:
+def build_search_agent(
+    crewai_llm_name: LLM, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]
+) -> tuple[Task, Agent, SerperDevTool]:
     serper = SerperDevTool()
     searcher = Agent(
         role="Search Agent",
@@ -279,7 +280,9 @@ def build_search_agent(crewai_llm_name: LLM, date_tool: DateTool, crew_events_qu
     return search_task, searcher, serper
 
 
-def build_date_agent(crewai_llm: LLM, crew_events_queue: Queue[CrewEvent]) -> tuple[Agent, Task, DateTool]:
+def build_date_agent(
+    crewai_llm: LLM, crew_events_queue: Queue[CrewEvent]
+) -> tuple[Agent, Task, DateTool]:
     date_finder = Agent(
         role="DateFinder",
         goal="Find the current date and time",
