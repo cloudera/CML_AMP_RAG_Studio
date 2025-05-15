@@ -76,7 +76,7 @@ class CrewEvent(BaseModel):
     type: str
     name: str
     data: Optional[str] = None
-    timestamp: float = 0.0
+    timestamp: float = time.time()
 
 
 def step_callback(
