@@ -58,7 +58,7 @@ from app.services.chat_history.chat_history_manager import (
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
-from app.services.query.agents.crewai_querier import CrewEvent
+from app.services.query.agents.crewai_querier import CrewEvent, poison_pill
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
@@ -82,14 +82,16 @@ def stream_chat(
         use_question_condensing=configuration.use_question_condensing,
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
-        use_tool_calling=True,
+        use_tool_calling=session.query_configuration.enable_tool_calling,
         tools=configuration.tools,
     )
 
     response_id = str(uuid.uuid4())
 
-    if not query_configuration.use_tool_calling and not session.data_source_ids:
-        return _stream_direct_llm_chat(session, response_id, query, user_name)
+    if not query_configuration.use_tool_calling and len(session.data_source_ids) == 0:
+        # put a poison pill in the queue to stop the crew events stream
+        crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
+        return _stream_direct_llm_chat(session, response_id, query, user_name, crew_events_queue)
 
     condensed_question, data_source_id, streaming_chat_response = build_streamer(
         crew_events_queue, query, query_configuration, session
@@ -138,7 +140,6 @@ def _run_streaming_chat(
                       user_name,)
 
 
-
 def build_streamer(
     crew_events_queue: Queue[CrewEvent], query: str, query_configuration: QueryConfiguration, session: Session
 ) -> tuple[str | None, int | None, StreamingAgentChatResponse]:
@@ -181,9 +182,7 @@ def build_streamer(
     return condensed_question, data_source_id, streaming_chat_response
 
 
-def _stream_direct_llm_chat(
-    session: Session, response_id: str, query: str, user_name: Optional[str]
-) -> Generator[ChatResponse, None, None]:
+def _stream_direct_llm_chat(session: Session, response_id: str, query: str, user_name: Optional[str], queue: Queue[CrewEvent]) -> Generator[ChatResponse, None, None]:
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.stream_completion(

@@ -243,7 +243,6 @@ def stream_chat_completion(
                 event_json = json.dumps({"event": event_data.model_dump()})
                 yield f"data: {event_json}\n\n"
             except queue.Empty:
-                # print("No event received, sending heartbeat")
                 # Send a heartbeat event every second to keep the connection alive
                 heartbeat = CrewEvent(
                     type="event", name="Processing", timestamp=time.time()
@@ -269,6 +268,7 @@ def stream_chat_completion(
 
                 first_message = True
                 for response in future.result():
+                    # send an initial message to let the client know the response stream is starting
                     if first_message:
                         done = CrewEvent(
                             type="done", name="done", timestamp=time.time()
