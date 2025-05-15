@@ -88,6 +88,9 @@ const RagChatQueryInput = ({
       setStreamedChat((prev) => prev + chunk);
     },
     onEvent: (event) => {
+      if (event.type === "done") {
+        setStreamedEvent([]);
+      }
       setStreamedEvent((prev) => {
         return [...prev, event];
       });

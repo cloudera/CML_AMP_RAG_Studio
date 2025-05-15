@@ -86,6 +86,9 @@ const ChatMessageController = () => {
       setStreamedChat((prev) => prev + chunk);
     },
     onEvent: (event: CrewEventResponse) => {
+      if (event.type === "done") {
+        setStreamedEvent([]);
+      }
       setStreamedEvent((prev) => {
         return [...prev, event];
       });

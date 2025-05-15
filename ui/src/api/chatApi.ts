@@ -460,9 +460,11 @@ const streamChatMutation = async (
         if (data.text) {
           onChunk(data.text);
         }
+
         if (data.event) {
           onEvent(data.event);
         }
+
         if (data.response_id) {
           responseId = data.response_id;
         }
