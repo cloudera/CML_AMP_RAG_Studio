@@ -171,15 +171,17 @@ const StreamedEvents = ({
       title={
         <Flex align="center" gap={8}>
           <Spin size="small" />
-          <Typography.Text>Agent Events -</Typography.Text>
-          {lastEvent ? (
-            <Typography.Text type="secondary">
-              {lastEvent.type}: {lastEvent.name} (
-              {format(lastEvent.timestamp * 1000, "pp")})
-            </Typography.Text>
-          ) : (
-            <Typography.Text type="secondary">No event</Typography.Text>
-          )}
+          <div>
+            <Typography.Text>Agent Events - </Typography.Text>
+            {lastEvent ? (
+              <Typography.Text type="secondary">
+                {lastEvent.type}: {lastEvent.name} (
+                {format(lastEvent.timestamp * 1000, "pp")})
+              </Typography.Text>
+            ) : (
+              <Typography.Text type="secondary">No event</Typography.Text>
+            )}
+          </div>
         </Flex>
       }
       extra={
