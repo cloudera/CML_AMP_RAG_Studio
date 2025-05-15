@@ -42,6 +42,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
+  getOnEvent,
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -87,15 +88,7 @@ const RagChatQueryInput = ({
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },
-    onEvent: (event) => {
-      if (event.type === "done") {
-        setStreamedEvent([]);
-      } else {
-        setStreamedEvent((prev) => {
-          return [...prev, event];
-        });
-      }
-    },
+    onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
       setUserInput("");
       setStreamedChat("");

@@ -57,6 +57,7 @@ import {
   EventStreamContentType,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
+import { Dispatch, SetStateAction } from "react";
 
 export interface SourceNode {
   node_id: string;
@@ -492,4 +493,18 @@ const streamChatMutation = async (
     },
   );
   return responseId;
+};
+
+export const getOnEvent = (
+  setStreamedEvent: Dispatch<SetStateAction<CrewEventResponse[]>>,
+) => {
+  return (event: CrewEventResponse) => {
+    if (event.type === "done") {
+      setStreamedEvent([]);
+    } else {
+      setStreamedEvent((prev) => {
+        return [...prev, event];
+      });
+    }
+  };
 };
