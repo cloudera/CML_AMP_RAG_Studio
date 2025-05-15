@@ -280,7 +280,7 @@ def build_search_agent(
         name="SearchTask",
         description="Search the internet for relevant information related to the query.",
         agent=searcher,
-        tools=[date_tool],
+        tools=[date_tool, serper],
         expected_output="Results of any search performed, with step-by-step workings",
     )
     return search_task, searcher, serper
