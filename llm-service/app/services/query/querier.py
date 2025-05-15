@@ -100,6 +100,7 @@ def streaming_query(
             crew,
             query_str,
         )
+        print("Enhanced query:", enhanced_query)
         chat_response = stream_chat(
             use_retrieval,
             llm,
@@ -126,6 +127,7 @@ def streaming_query(
         ) from error
 
     return chat_response
+
 
 def build_datasource_query_components(
     data_source_id: Optional[int],

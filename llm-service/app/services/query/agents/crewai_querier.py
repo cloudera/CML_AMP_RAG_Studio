@@ -107,7 +107,7 @@ def assemble_crew(
     search_task, searcher, serper = None, None, None
     if configuration.tools and "search" in configuration.tools:
         search_task, searcher, serper = build_search_agent(
-            crewai_llm, date_tool, crew_events_queue
+            crewai_llm, query_str, date_tool, crew_events_queue
         )
 
     research_tools: list[BaseTool] = [date_tool]
@@ -143,13 +143,16 @@ def assemble_crew(
         ),
     )
 
+    task_context = [date_task]
+    if search_task:
+        task_context.append(search_task)
     research_task = Task(
         name="ResearcherTask",
-        description=f"Research the following query using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
+        description=f"Research the following question using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
         agent=researcher,
-        expected_output="A detailed analysis of the query based on the provided context",
+        expected_output="A detailed analysis of the user's question based on the provided context",
         tools=research_tools,
-        context=[date_task],
+        context=task_context,
         callback=lambda _: crew_events_queue.put(
             CrewEvent(type=poison_pill, name="researcher")
         ),
@@ -158,7 +161,7 @@ def assemble_crew(
     # Create a responder agent that formulates the final response
     responder = Agent(
         role="Responder",
-        goal="Provide a comprehensive and accurate response to the query",
+        goal="Provide a comprehensive and accurate response to the user's question",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
         step_callback=lambda output: step_callback(
@@ -170,8 +173,8 @@ def assemble_crew(
         name="ResponderTask",
         description="Formulate a comprehensive response based on the research findings and calculations",
         agent=responder,
-        expected_output="A comprehensive and accurate response to the query",
-        context=[date_task],
+        expected_output="A accurate response to the query.",
+        context=task_context,
     )
 
     # Create a crew with the agents and tasks
@@ -180,8 +183,8 @@ def assemble_crew(
     if searcher:
         agents.append(searcher)
         tasks.append(search_task)
-    agents.extend([researcher, calculator, responder])
-    tasks.extend([research_task, calculation_task, response_task])
+    # agents.extend([researcher, calculator, responder])
+    # tasks.extend([research_task, calculation_task, response_task])
 
     return Crew(
         agents=agents,
@@ -205,7 +208,9 @@ def launch_crew(
 
         Research insights: {crew_result}
 
-        Please provide a comprehensive response to the original query, incorporating the insights from research.
+        Please provide a response to the original query, incorporating the insights from research.
+        If insights from the research are used, provide in-line citations to the research findings.
+        The citations should provide a link to the research findings.
         """
 
 
@@ -261,8 +266,20 @@ def build_calculator_agent(
     return calculation_task, calculator
 
 
+class SearchResult(BaseModel):
+    result: str
+    link: str
+
+
+class SearchOutput(BaseModel):
+    results: list[SearchResult]
+
+
 def build_search_agent(
-    crewai_llm_name: LLM, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]
+    crewai_llm_name: LLM,
+    query: str,
+    date_tool: DateTool,
+    crew_events_queue: Queue[CrewEvent],
 ) -> tuple[Task, Agent, SerperDevTool]:
     serper = SerperDevTool()
     searcher = Agent(
@@ -278,10 +295,11 @@ def build_search_agent(
     )
     search_task = Task(
         name="SearchTask",
-        description="Search the internet for relevant information related to the query.",
+        description=f"Search the internet for relevant information related to the user's question.  User's question: {query}.",
         agent=searcher,
         tools=[date_tool, serper],
-        expected_output="Results of any search performed, with step-by-step workings",
+        expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
+        output_json=SearchOutput,
     )
     return search_task, searcher, serper
 
