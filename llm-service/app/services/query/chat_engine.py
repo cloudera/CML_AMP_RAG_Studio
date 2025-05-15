@@ -64,9 +64,11 @@ The assistant is talkative and provides lots of specific details from its contex
 If the assistant does not know the answer to a question, it truthfully says it
 does not know.\
 When referencing information from a source, \
-cite the appropriate source(s) using their corresponding numbers. \
+cite the appropriate source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
+The citations should be in square brackets, \
+and inline with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \
 For example:
 
@@ -102,10 +104,12 @@ If the assistant does not know the answer to a question, it truthfully says \
 it does not know.
 
 Please provide an answer based solely on the provided sources. \
-When referencing information from a source, \
-cite the appropriate source(s) using their corresponding numbers. \
+When referencing information from a source, cite the appropriate \
+source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
+The citations should be in square brackets, \
+and inline with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \ 
 For example:
 
@@ -122,8 +126,10 @@ When is water wet?
 Water will be wet when the sky is red [2], \
 which occurs in the evening [1].
 
-Now it's your turn. 
-We have provided an existing answer: {existing_answer}
+Now it's your turn. We have provided an existing answer: 
+
+<Existing Answer>
+{existing_answer}
 
 Below are several numbered sources of information.
 Use them to refine the existing answer.
