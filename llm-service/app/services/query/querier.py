@@ -40,6 +40,7 @@ from .agents.crewai_querier import (
     launch_crew,
     stream_chat,
     CrewEvent,
+    poison_pill,
 )
 
 if TYPE_CHECKING:
@@ -116,6 +117,7 @@ def streaming_query(
 
     try:
         chat_response = chat_engine.stream_chat(query_str, chat_messages)
+        crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
         logger.debug("query response received from chat engine")
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
