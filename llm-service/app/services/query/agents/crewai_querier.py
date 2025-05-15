@@ -104,15 +104,15 @@ def assemble_crew(
     date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
     calculation_task, calculator = build_calculator_agent(crewai_llm, crew_events_queue)
 
-
     search_task, searcher, serper = None, None, None
     if configuration.tools and "search" in configuration.tools:
-        search_task, searcher, serper = build_search_agent(crewai_llm, date_tool, crew_events_queue)
+        search_task, searcher, serper = build_search_agent(
+            crewai_llm, date_tool, crew_events_queue
+        )
 
     research_tools: list[BaseTool] = [date_tool]
     if serper:
         research_tools.append(serper)
-
 
     context: str = ""
     chat_history = [message.content for message in chat_messages]
@@ -148,8 +148,8 @@ def assemble_crew(
         description=f"Research the following query using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
         agent=researcher,
         expected_output="A detailed analysis of the query based on the provided context",
-        tools=[date_tool, serper],
-        context=[search_task, date_task],
+        tools=research_tools,
+        context=[date_task],
         callback=lambda _: crew_events_queue.put(
             CrewEvent(type=poison_pill, name="researcher")
         ),
@@ -171,7 +171,7 @@ def assemble_crew(
         description="Formulate a comprehensive response based on the research findings and calculations",
         agent=responder,
         expected_output="A comprehensive and accurate response to the query",
-        context=[search_task, date_task, research_task, calculation_task],
+        context=[date_task],
     )
 
     # Create a crew with the agents and tasks
