@@ -48,6 +48,8 @@ import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluation
 import RatingFeedbackWrapper from "pages/RagChatTab/ChatOutput/ChatMessages/RatingFeedbackWrapper.tsx";
 import CopyButton from "pages/RagChatTab/ChatOutput/ChatMessages/CopyButton.tsx";
 import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEvents.tsx";
+import rehypeRaw from "rehype-raw";
+import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 
 export const ChatMessageBody = ({
   data,
@@ -97,22 +99,26 @@ export const ChatMessageBody = ({
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
-                  // skipHtml
-                  // remarkPlugins={[Remark]}
+                  skipHtml={false}
+                  remarkPlugins={[Remark]}
+                  rehypePlugins={[rehypeRaw]}
                   className="styled-markdown"
                   children={data.rag_message.assistant.trimStart()}
                   components={{
-                    a({ node, className, ...props }) {
-                      debugger;
-                      return (
-                        <a
-                          {...props}
-                          style={{
-                            color: cdlBlue500,
-                            textDecoration: "underline",
-                          }}
-                        />
-                      );
+                    a: (props) => {
+                      const { href, className, node: htmlNode } = props;
+                      if (
+                        className === "rag_citation" &&
+                        data.source_nodes.length
+                      ) {
+                        const sourceNode = data.source_nodes.find(
+                          (source_node) => source_node.node_id === href,
+                        );
+                        if (sourceNode) {
+                          return <SourceCard source={sourceNode} />;
+                        }
+                      }
+                      return htmlNode;
                     },
                   }}
                 />
