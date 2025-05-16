@@ -67,7 +67,7 @@ When referencing information from a source, \
 cite the appropriate source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
-The citations should be in double curly brackets, \
+The citations should be in an html anchor tag (<a href=>) with an html "class" of "rag_citation", \
 and inline with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \
 For example:
@@ -82,8 +82,8 @@ Water is wet when the sky is red.
 When is water wet?
 
 <Answer>
-Water will be wet when the sky is red {{2}}, \
-which occurs in the evening {{1}}.
+Water will be wet when the sky is red <a class="rag_citation" href="1">1</a>, \
+which occurs in the evening <a class="rag_citation" href="2">2</a>.
 
 Now it's your turn. Below are several numbered sources of information:
 
@@ -108,7 +108,7 @@ When referencing information from a source, cite the appropriate \
 source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
-The citations should be in double curly brackets, \
+The citations should be in an html-style tag: <rag_citation>, \
 and inline with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \ 
 For example:
@@ -123,8 +123,8 @@ Water is wet when the sky is red.
 When is water wet?
 
 <Answer> 
-Water will be wet when the sky is red {{2}}, \
-which occurs in the evening {{1}}.
+Water will be wet when the sky is red <a class="rag_citation" href="1">1</a>, \
+which occurs in the evening <a class="rag_citation" href="2">2</a>.
 
 Now it's your turn. We have provided an existing answer: 
 

@@ -97,12 +97,25 @@ export const ChatMessageBody = ({
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
-                  skipHtml
-                  remarkPlugins={[Remark]}
+                  // skipHtml
+                  // remarkPlugins={[Remark]}
                   className="styled-markdown"
-                >
-                  {data.rag_message.assistant.trimStart()}
-                </Markdown>
+                  children={data.rag_message.assistant.trimStart()}
+                  components={{
+                    a({ node, className, ...props }) {
+                      debugger;
+                      return (
+                        <a
+                          {...props}
+                          style={{
+                            color: cdlBlue500,
+                            textDecoration: "underline",
+                          }}
+                        />
+                      );
+                    },
+                  }}
+                />
               </Typography.Text>
               <Flex gap={16} align="center">
                 <CopyButton message={data} />
