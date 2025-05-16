@@ -123,7 +123,8 @@ def get_llm(
     return NVIDIA(
         api_key=get_caii_access_token(),
         base_url=api_base,
-        model=model
+        model=model,
+        api_base=api_base,
     )
 
 

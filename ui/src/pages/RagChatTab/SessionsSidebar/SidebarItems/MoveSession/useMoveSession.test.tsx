@@ -103,6 +103,7 @@ describe("useMoveSession", () => {
     queryConfiguration: {
       enableHyde: false,
       enableSummaryFilter: false,
+      enableToolCalling: false,
     },
   };
 

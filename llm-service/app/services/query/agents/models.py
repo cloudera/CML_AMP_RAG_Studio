@@ -1,6 +1,6 @@
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -35,29 +35,48 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from crewai import LLM as CrewAILLM
+from llama_index.core.llms import LLM as LlamaIndexLLM
 
-from typing import Optional, Literal
-
-from pydantic import BaseModel, ConfigDict
-
-from app.services.models.providers.bedrock import (
-    DEFAULT_BEDROCK_LLM_MODEL,
-    DEFAULT_BEDROCK_RERANK_MODEL,
+from app import config
+from app.services.caii.utils import get_caii_access_token
+from app.services.models.providers import (
+    AzureModelProvider,
+    CAIIModelProvider,
+    BedrockModelProvider,
 )
 
-tool_types = Literal["search"]
 
-
-class QueryConfiguration(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())
-
-    top_k: int = 5
-    model_name: str = DEFAULT_BEDROCK_LLM_MODEL
-    rerank_model_name: Optional[str] = DEFAULT_BEDROCK_RERANK_MODEL
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    use_hyde: Optional[bool] = False
-    use_summary_filter: Optional[bool] = True
-    use_postprocessor: Optional[bool] = True
-    use_tool_calling: Optional[bool] = False
-    tools: Optional[list[tool_types]] = None
+def get_crewai_llm_object_direct(
+    language_model: LlamaIndexLLM, model_name: str
+) -> CrewAILLM:
+    if AzureModelProvider.is_enabled():
+        return CrewAILLM(
+            model="azure/" + model_name,
+            api_key=config.settings.azure_openai_api_key,
+            base_url=config.settings.azure_openai_endpoint,
+            # temperature=language_model.generation_config.get("temperature"),
+            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+            # seed=0,
+        )
+    elif CAIIModelProvider.is_enabled():
+        if hasattr(language_model, "api_base"):
+            return CrewAILLM(
+                model="openai/" + model_name,
+                api_key=get_caii_access_token(),
+                base_url=language_model.api_base,
+                # temperature=language_model.generation_config.get("temperature"),
+                # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+                # seed=0,
+            )
+        else:
+            raise ValueError("Model type is not supported.")
+    elif BedrockModelProvider.is_enabled():
+        return CrewAILLM(
+            model="bedrock/" + model_name,
+            # temperature=language_model.generation_config.get("temperature"),
+            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
+            # seed=0,
+        )
+    else:
+        raise ValueError("Model type is not supported.")

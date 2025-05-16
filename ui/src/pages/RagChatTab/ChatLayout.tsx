@@ -41,7 +41,11 @@ import { SessionSidebar } from "pages/RagChatTab/SessionsSidebar/SessionSidebar.
 import { Session, useGetSessions } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChatMessageType, useChatHistoryQuery } from "src/api/chatApi.ts";
+import {
+  ChatMessageType,
+  CrewEventResponse,
+  useChatHistoryQuery,
+} from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   getDefaultProjectQueryOptions,
@@ -74,6 +78,7 @@ function ChatLayout() {
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
   const [streamedChat, setStreamedChat] = useState("");
+  const [streamedEvent, setStreamedEvent] = useState<CrewEventResponse[]>([]);
   const {
     status: chatHistoryStatus,
     data: chatHistory,
@@ -110,6 +115,7 @@ function ChatLayout() {
           isFetchingPreviousPage,
         },
         streamedChatState: [streamedChat, setStreamedChat],
+        streamedEventState: [streamedEvent, setStreamedEvent],
         dataSourceSize,
         dataSourcesQuery: {
           dataSources: dataSources ?? [],

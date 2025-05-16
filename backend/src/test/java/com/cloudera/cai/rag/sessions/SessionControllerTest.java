@@ -145,7 +145,7 @@ class SessionControllerTest {
                 .withRerankModel(updatedRerankModel)
                 .withName(updatedName)
                 .withProjectId(updatedProjectId)
-                .withQueryConfiguration(new Types.QueryConfiguration(true, false)),
+                .withQueryConfiguration(new Types.QueryConfiguration(true, false, true)),
             request);
 
     assertThat(updatedSession.id()).isNotNull();
@@ -159,8 +159,8 @@ class SessionControllerTest {
     assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
-    assertThat(updatedSession.queryConfiguration().enableHyde()).isTrue();
-    assertThat(updatedSession.queryConfiguration().enableSummaryFilter()).isFalse();
+    assertThat(updatedSession.queryConfiguration())
+        .isEqualTo(new Types.QueryConfiguration(true, false, true));
   }
 
   @Test

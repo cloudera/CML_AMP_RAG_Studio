@@ -112,6 +112,9 @@ def record_rag_mlflow_run(
     session: Session,
     user_name: Optional[str],
 ) -> None:
+    if not session.data_source_ids:
+        record_direct_llm_mlflow_run(response_id, session, user_name)
+        return
     params = chat_log_ml_flow_params(session, query_configuration, user_name)
     source_nodes: list[RagPredictSourceNode] = new_chat_message.source_nodes
     metrics: dict[str, Any] = {
