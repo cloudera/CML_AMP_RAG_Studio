@@ -67,23 +67,23 @@ When referencing information from a source, \
 cite the appropriate source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
-The citations should be in square brackets, \
+The citations should be in double curly brackets, \
 and inline with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \
 For example:
 
 <Contexts>
-Source 1:
+1:
 The sky is red in the evening and blue in the morning.
-Source 2:
+2:
 Water is wet when the sky is red.
 
 <Query>
 When is water wet?
 
 <Answer>
-Water will be wet when the sky is red [2], \
-which occurs in the evening [1].
+Water will be wet when the sky is red {{2}}, \
+which occurs in the evening {{1}}.
 
 Now it's your turn. Below are several numbered sources of information:
 
@@ -108,23 +108,23 @@ When referencing information from a source, cite the appropriate \
 source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
-The citations should be in square brackets, \
+The citations should be in double curly brackets, \
 and inline with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \ 
 For example:
 
 <Contexts>
-Source 1:
+1:
 The sky is red in the evening and blue in the morning.
-Source 2:
+2:
 Water is wet when the sky is red.
 
 <Query>
 When is water wet?
 
 <Answer> 
-Water will be wet when the sky is red [2], \
-which occurs in the evening [1].
+Water will be wet when the sky is red {{2}}, \
+which occurs in the evening {{1}}.
 
 Now it's your turn. We have provided an existing answer: 
 
@@ -203,7 +203,7 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         context_nodes = self._get_nodes(vector_match_input)
         for node in context_nodes:
             # number the nodes in the content
-            new_content = f"Source {node.node.node_id}:\n{node.node.get_content()}"
+            new_content = f"{node.node.node_id}:\n{node.node.get_content()}"
             node.node.set_content(value=new_content)
         context_source = ToolOutput(
             tool_name="retriever",
