@@ -102,7 +102,7 @@ export const ChatMessageBody = ({
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
-                  skipHtml={true}
+                  // skipHtml={true}
                   remarkPlugins={[Remark]}
                   rehypePlugins={[rehypeRaw]}
                   className="styled-markdown"
@@ -122,7 +122,9 @@ export const ChatMessageBody = ({
                         if (sourceNode) {
                           return <SourceCard source={sourceNode} />;
                         }
-                        return undefined;
+                        if (!href?.startsWith("http")) {
+                          return undefined;
+                        }
                       }
                       return (
                         <a href={href} className={className} {...other}>
