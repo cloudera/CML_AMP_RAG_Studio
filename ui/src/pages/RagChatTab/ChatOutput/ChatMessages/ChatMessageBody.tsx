@@ -42,10 +42,9 @@ import {
   SourceNode,
 } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
-import { Divider, Flex, Typography } from "antd";
+import { Divider, Flex, Tag, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
-import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
@@ -55,6 +54,26 @@ import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEve
 import rehypeRaw from "rehype-raw";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 import { ComponentProps, ReactElement } from "react";
+import { SyncOutlined } from "@ant-design/icons";
+
+const SourceNodeLoader = () => {
+  return (
+    <Tag
+      style={{
+        width: 180,
+        borderRadius: 20,
+        height: 24,
+        cursor: "pointer",
+      }}
+    >
+      <Flex style={{ height: "100%" }} justify="center" align="center">
+        <Typography.Paragraph style={{ margin: 0, fontSize: 12 }}>
+          <SyncOutlined spin style={{ marginRight: 8 }} />
+        </Typography.Paragraph>
+      </Flex>
+    </Tag>
+  );
+};
 
 export const ChatMessageBody = ({
   data,
@@ -100,7 +119,6 @@ export const ChatMessageBody = ({
               )}
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
-              <SourceNodes data={data} />
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
@@ -114,16 +132,17 @@ export const ChatMessageBody = ({
                       props: ComponentProps<"a">,
                     ): ReactElement<SourceNode> | undefined => {
                       const { href, className, children, ...other } = props;
-                      if (
-                        className === "rag_citation" &&
-                        data.source_nodes.length
-                      ) {
+                      if (className === "rag_citation") {
+                        if (data.source_nodes.length === 0) {
+                          return <SourceNodeLoader />;
+                        }
                         const sourceNode = data.source_nodes.find(
                           (source_node) => source_node.node_id === href,
                         );
                         if (sourceNode) {
                           return <SourceCard source={sourceNode} />;
                         }
+                        return undefined;
                       }
                       return (
                         <a href={href} className={className} {...other}>
