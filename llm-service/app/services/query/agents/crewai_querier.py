@@ -41,6 +41,7 @@ import time
 from queue import Queue
 from typing import Optional
 
+import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
@@ -63,9 +64,7 @@ from app.services.query.chat_engine import (
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 
-import opik
-
-if os.environ.get("ENABLE_OPIK") is not None:
+if os.environ.get("ENABLE_OPIK") == 'True':
     from opik.integrations.crewai import track_crewai
     opik.configure(use_local=True, url=os.environ.get("OPIK_URL", "http://localhost:5174"))
 
@@ -193,7 +192,7 @@ def assemble_crew(
     agents.extend([researcher, calculator, responder])
     tasks.extend([research_task, calculation_task, response_task])
 
-    if os.environ.get("ENABLE_OPIK") is not None:
+    if os.environ.get("ENABLE_OPIK") == 'True':
         track_crewai(project_name="crewai-ragstudio")
 
     return Crew(
