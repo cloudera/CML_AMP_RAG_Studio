@@ -36,7 +36,11 @@
  * DATA.
  */
 
-import { ChatMessageType, CrewEventResponse } from "src/api/chatApi.ts";
+import {
+  ChatMessageType,
+  CrewEventResponse,
+  SourceNode,
+} from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Divider, Flex, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
@@ -50,6 +54,7 @@ import CopyButton from "pages/RagChatTab/ChatOutput/ChatMessages/CopyButton.tsx"
 import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEvents.tsx";
 import rehypeRaw from "rehype-raw";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
+import { ComponentProps, ReactElement } from "react";
 
 export const ChatMessageBody = ({
   data,
@@ -99,14 +104,16 @@ export const ChatMessageBody = ({
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
-                  skipHtml={false}
+                  skipHtml={true}
                   remarkPlugins={[Remark]}
                   rehypePlugins={[rehypeRaw]}
                   className="styled-markdown"
                   children={data.rag_message.assistant.trimStart()}
                   components={{
-                    a: (props) => {
-                      const { href, className, node: htmlNode } = props;
+                    a: (
+                      props: ComponentProps<"a">,
+                    ): ReactElement<SourceNode> | undefined => {
+                      const { href, className, children, ...other } = props;
                       if (
                         className === "rag_citation" &&
                         data.source_nodes.length
@@ -118,7 +125,11 @@ export const ChatMessageBody = ({
                           return <SourceCard source={sourceNode} />;
                         }
                       }
-                      return htmlNode;
+                      return (
+                        <a href={href} className={className} {...other}>
+                          {children}
+                        </a>
+                      );
                     },
                   }}
                 />
