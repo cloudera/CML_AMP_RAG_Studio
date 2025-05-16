@@ -133,10 +133,10 @@ def assemble_crew(
 
     researcher = Agent(
         role="Researcher",
-        goal="Find the most accurate and relevant information",
+        goal=f"Find the most accurate and relevant information to the user's question: {query_str}",
         backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
         llm=crewai_llm,
-        # verbose=True,
+        verbose=True,
         tools=research_tools,
         step_callback=lambda output: step_callback(
             output, "Research Complete", crew_events_queue
@@ -150,7 +150,7 @@ def assemble_crew(
         name="ResearcherTask",
         description=f"Research the following question using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
         agent=researcher,
-        expected_output="A detailed analysis of the user's question based on the provided context",
+        expected_output="A detailed analysis of the user's question based on the provided context, including relevant links and citations.",
         tools=research_tools,
         context=task_context,
         callback=lambda _: crew_events_queue.put(
@@ -161,7 +161,7 @@ def assemble_crew(
     # Create a responder agent that formulates the final response
     responder = Agent(
         role="Responder",
-        goal="Provide a comprehensive and accurate response to the user's question",
+        goal=f"Provide a comprehensive and accurate response to the user's question. Question: {query_str}",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
         step_callback=lambda output: step_callback(
@@ -171,9 +171,9 @@ def assemble_crew(
     )
     response_task = Task(
         name="ResponderTask",
-        description="Formulate a comprehensive response based on the research findings and calculations",
+        description="Formulate a comprehensive response based on the research findings and calculations, including any relevant links and citations.",
         agent=responder,
-        expected_output="A accurate response to the query.",
+        expected_output="A accurate response to the user's question.",
         context=task_context,
     )
 
@@ -183,8 +183,8 @@ def assemble_crew(
     if searcher:
         agents.append(searcher)
         tasks.append(search_task)
-    # agents.extend([researcher, calculator, responder])
-    # tasks.extend([research_task, calculation_task, response_task])
+    agents.extend([researcher, calculator, responder])
+    tasks.extend([research_task, calculation_task, response_task])
 
     return Crew(
         agents=agents,
@@ -316,7 +316,6 @@ def build_date_agent(
         step_callback=lambda output: step_callback(
             output, "Current Date Calculated", crew_events_queue
         ),
-        # callbacks=[pause],
     )
     date_tool: DateTool = DateTool()
     date_task = Task(
