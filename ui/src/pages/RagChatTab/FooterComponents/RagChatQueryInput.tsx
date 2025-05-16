@@ -72,7 +72,7 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [selectedTools, setSelectedTools] = useState<string[]>(["search"]);
   const inputRef = useRef<InputRef>(null);
   const {
     data: sampleQuestions,
