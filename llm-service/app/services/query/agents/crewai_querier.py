@@ -62,10 +62,10 @@ from app.services.query.chat_engine import (
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 
-import opik
-from opik.integrations.crewai import track_crewai
-
-opik.configure(use_local=True, url="http://localhost:5174")
+# import opik
+# from opik.integrations.crewai import track_crewai
+#
+# opik.configure(use_local=True, url="http://localhost:5174")
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +191,7 @@ def assemble_crew(
     agents.extend([researcher, calculator, responder])
     tasks.extend([research_task, calculation_task, response_task])
 
-    track_crewai(project_name="crewai-ragstudio")
+    # track_crewai(project_name="crewai-ragstudio")
 
     return Crew(
         agents=agents,
