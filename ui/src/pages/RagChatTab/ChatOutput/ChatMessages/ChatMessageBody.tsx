@@ -42,7 +42,7 @@ import {
   SourceNode,
 } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
-import { Divider, Flex, Tag, Typography } from "antd";
+import { Divider, Flex, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
 import Markdown from "react-markdown";
@@ -54,26 +54,6 @@ import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEve
 import rehypeRaw from "rehype-raw";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 import { ComponentProps, ReactElement } from "react";
-import { SyncOutlined } from "@ant-design/icons";
-
-const SourceNodeLoader = () => {
-  return (
-    <Tag
-      style={{
-        width: 180,
-        borderRadius: 20,
-        height: 24,
-        cursor: "pointer",
-      }}
-    >
-      <Flex style={{ height: "100%" }} justify="center" align="center">
-        <Typography.Paragraph style={{ margin: 0, fontSize: 12 }}>
-          <SyncOutlined spin style={{ marginRight: 8 }} />
-        </Typography.Paragraph>
-      </Flex>
-    </Tag>
-  );
-};
 
 export const ChatMessageBody = ({
   data,
@@ -134,7 +114,7 @@ export const ChatMessageBody = ({
                       const { href, className, children, ...other } = props;
                       if (className === "rag_citation") {
                         if (data.source_nodes.length === 0) {
-                          return <SourceNodeLoader />;
+                          return undefined;
                         }
                         const sourceNode = data.source_nodes.find(
                           (source_node) => source_node.node_id === href,
