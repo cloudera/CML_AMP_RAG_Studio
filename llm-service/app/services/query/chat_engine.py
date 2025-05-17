@@ -68,8 +68,10 @@ cite the appropriate source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
 The citations should be in an html anchor tag (<a href=>) with an html "class" of "rag_citation", \
-and inline with the text. No footnotes or endnotes. \
+and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \
+Do not make up source ids for citations. Only use the source ids \
+provided in the contexts. \
 For example:
 
 <Contexts>
@@ -109,8 +111,10 @@ source(s) using their corresponding ids. \
 Every answer should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
 The citations should be in an html-style tag: <rag_citation>, \
-and inline with the text. No footnotes or endnotes. \
-If none of the sources are helpful, you should indicate that. \ 
+and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
+If none of the sources are helpful, you should indicate that. \
+Do not make up source ids for citations. Only use the source ids \
+provided in the contexts. \
 For example:
 
 <Contexts>

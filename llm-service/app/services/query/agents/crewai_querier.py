@@ -47,11 +47,13 @@ from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
 from crewai.tools.tool_types import ToolResult
 from crewai_tools import SerperDevTool
+from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
+from llama_index.core.tools import RetrieverTool, ToolMetadata
 from pydantic import BaseModel
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
@@ -64,9 +66,12 @@ from app.services.query.chat_engine import (
 from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 
-if os.environ.get("ENABLE_OPIK") == 'True':
+if os.environ.get("ENABLE_OPIK") == "True":
     from opik.integrations.crewai import track_crewai
-    opik.configure(use_local=True, url=os.environ.get("OPIK_URL", "http://localhost:5174"))
+
+    opik.configure(
+        use_local=True, url=os.environ.get("OPIK_URL", "http://localhost:5174")
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +99,116 @@ def step_callback(
         )
 
 
+def build_calculation_task(agent: Agent, crew_events_queue: Queue[CrewEvent]) -> Task:
+    calculation_task = Task(
+        name="CalculatorTask",
+        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
+        agent=agent,
+        expected_output="Results of any calculations performed, with step-by-step workings",
+        # callback=lambda output: step_callback(
+        #     output, "Calculation Complete", crew_events_queue
+        # ),
+    )
+    return calculation_task
+
+
+class SearchResult(BaseModel):
+    result: str
+    link: str
+
+
+class SearchOutput(BaseModel):
+    results: list[SearchResult]
+
+
+def build_search_task(
+    agent: Agent,
+    query: str,
+    date_tool: DateTool,
+    search_tool: SerperDevTool,
+    crew_events_queue: Queue[CrewEvent],
+) -> Task:
+    search_task = Task(
+        name="SearchTask",
+        description=f"Search the internet for relevant information related to the user's question.  User's question: {query}.",
+        agent=agent,
+        tools=[date_tool, search_tool],
+        expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
+        output_json=SearchOutput,
+        # callback=lambda output: step_callback(
+        #     output, "Search Complete", crew_events_queue
+        # ),
+    )
+    return search_task
+
+
+class RetrieverResult(BaseModel):
+    node_id: str
+    content: str
+
+
+class RetrieverOutput(BaseModel):
+    results: list[RetrieverResult]
+
+
+def build_retriever_task(
+    agent: Agent,
+    query: str,
+    retriever_tool: BaseTool,
+    crew_events_queue: Queue[CrewEvent],
+) -> Task:
+    retriever_task = Task(
+        name="RetrieverTask",
+        description="Retrieve relevant information from the index based the user's question: \n\n"
+        f"<Question>:\n{query}.",
+        agent=agent,
+        tools=[retriever_tool],
+        expected_output="Relevant information retrieved from the index, including links to the sources.",
+        output_json=RetrieverOutput,
+        # callback=lambda output: step_callback(
+        #     output, "Retrieval Complete", crew_events_queue
+        # ),
+    )
+    return retriever_task
+
+
+def build_date_task(
+    agent: Agent, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]
+) -> Task:
+    date_task = Task(
+        name="DateFinderTask",
+        description="Find the current date and time.",
+        agent=agent,
+        expected_output="The current date and time.",
+        tools=[date_tool],
+        # callback=lambda output: step_callback(output, "Date Found", crew_events_queue),
+    )
+    return date_task
+
+
+def should_use_retrieval(
+    configuration: QueryConfiguration,
+    data_source_id: Optional[int],
+    llm: LLM,
+    query_str: str,
+    chat_messages: list[ChatMessage],
+) -> bool:
+    if not data_source_id:
+        return False
+
+    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+    data_source_summary = None
+    if data_source_summary_indexer:
+        data_source_summary = data_source_summary_indexer.get_full_summary()
+    # Create a planner agent to decide whether to use retrieval or answer directly
+    planner = PlannerAgent(llm, configuration)
+    planning_decision = planner.decide_retrieval_strategy(
+        query_str, chat_messages, data_source_summary
+    )
+    use_retrieval: bool = planning_decision.get("use_retrieval", True)
+    return use_retrieval
+
+
 def assemble_crew(
     use_retrieval: bool,
     llm: LLM,
@@ -106,27 +221,25 @@ def assemble_crew(
     crew_events_queue: Queue[CrewEvent],
 ) -> Crew:
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
-    # Define tasks for the agents
-    date_finder, date_task, date_tool = build_date_agent(crewai_llm, crew_events_queue)
-    calculation_task, calculator = build_calculator_agent(crewai_llm, crew_events_queue)
+    # Gather all the tools needed for the crew
 
-    search_task, searcher, serper = None, None, None
-    if configuration.tools and "search" in configuration.tools:
-        search_task, searcher, serper = build_search_agent(
-            crewai_llm, query_str, date_tool, crew_events_queue
-        )
-
+    # Create a date tool to get the current date and time
+    date_tool = DateTool()
     research_tools: list[BaseTool] = [date_tool]
-    if serper:
-        research_tools.append(serper)
 
-    context: str = ""
-    chat_history = [message.content for message in chat_messages]
+    # Create a search tool if needed
+    search_tool = None
+    if configuration.tools and "search" in configuration.tools:
+        search_tool = SerperDevTool()
+        research_tools.append(search_tool)
+
+    # Create a retriever tool if needed
+    crewai_retriever_tool = None
     if use_retrieval and index and embedding_model and data_source_id:
         logger.info("Planner decided to use retrieval")
 
         # First, get the context from the retriever
-        query_bundle = QueryBundle(query_str=query_str)
+        # TODO: Make a retriever tool and task
         base_retriever = FlexibleRetriever(
             configuration=configuration,
             index=index,
@@ -134,31 +247,72 @@ def assemble_crew(
             data_source_id=data_source_id,
             llm=llm,
         )
-        retrieved_nodes = base_retriever.retrieve(query_bundle)
-        context += "\n\n".join([node.node.get_content() for node in retrieved_nodes])
+        # fetch summary fromm index if available
+        data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+        data_source_summary = None
+        if data_source_summary_indexer:
+            data_source_summary = data_source_summary_indexer.get_full_summary()
+        retriever_tool = RetrieverTool.from_defaults(
+            retriever=base_retriever,
+            name="Retriever",
+            description=(
+                "A tool to retrieve relevant information from "
+                "the index. "
+                f"The index information about: {data_source_summary}"
+                if data_source_summary
+                else ""
+            ),
+        )
+        crewai_retriever_tool = LlamaIndexTool.from_tool(retriever_tool)
+        research_tools.append(crewai_retriever_tool)
 
+    # Define the researcher agent
     researcher = Agent(
         role="Researcher",
-        goal=f"Find the most accurate and relevant information to the user's question: {query_str}",
-        backstory="You are an expert researcher who provides accurate and relevant information based on the provided context.",
+        goal=f"Research and find relevant information about `{query_str}` and provide comprehensive research insights.",
+        backstory="You are an expert researcher who provides accurate and relevant information. "
+        "You know when to use tools and when to answer directly.",
         llm=crewai_llm,
         verbose=True,
-        tools=research_tools,
         step_callback=lambda output: step_callback(
             output, "Research Complete", crew_events_queue
         ),
     )
 
-    task_context = [date_task]
-    if search_task:
-        task_context.append(search_task)
+    # Define tasks for the researcher agents
+    date_task = build_date_task(researcher, date_tool, crew_events_queue)
+    calculation_task = build_calculation_task(researcher, crew_events_queue)
+
+    # create a list of tasks for the researcher
+    researcher_task_context = [date_task]
+
+    # Add retriever task if needed
+    retriever_task = None
+    if crewai_retriever_tool:
+        retriever_task = build_retriever_task(
+            researcher, query_str, crewai_retriever_tool
+        )
+        researcher_task_context.append(retriever_task)
+
+    # Add search task if needed
+    search_task = None
+    if search_tool:
+        search_task = build_search_task(
+            researcher, query_str, date_tool, search_tool, crew_events_queue
+        )
+        researcher_task_context.append(search_task)
+
+    chat_history = [message.content for message in chat_messages]
+
     research_task = Task(
         name="ResearcherTask",
-        description=f"Research the following question using any provided context and chat history: {query_str}\n\nContext: {context} \n\nChat history: {chat_history}",
+        description="Research the user's question using the tools available "
+        "and chat history. Based on the research return comprehensive research insights. "
+        f"Given below, is the user's question and the chat history: \n<Question>:\n{query_str}\n\n<Chat history>:\n {chat_history}",
         agent=researcher,
         expected_output="A detailed analysis of the user's question based on the provided context, including relevant links and citations.",
         tools=research_tools,
-        context=task_context,
+        context=researcher_task_context,
         callback=lambda _: crew_events_queue.put(
             CrewEvent(type=poison_pill, name="researcher")
         ),
@@ -167,7 +321,7 @@ def assemble_crew(
     # Create a responder agent that formulates the final response
     responder = Agent(
         role="Responder",
-        goal=f"Provide a comprehensive and accurate response to the user's question. Question: {query_str}",
+        goal=f"Provide a comprehensive and accurate response to the user's question. \n<Question>\n: {query_str}",
         backstory="You are an expert at formulating clear, concise, and accurate responses based on research findings.",
         llm=crewai_llm,
         step_callback=lambda output: step_callback(
@@ -180,19 +334,19 @@ def assemble_crew(
         description="Formulate a comprehensive response based on the research findings and calculations, including any relevant links and citations.",
         agent=responder,
         expected_output="A accurate response to the user's question.",
-        context=task_context,
+        context=[research_task],
     )
 
     # Create a crew with the agents and tasks
-    agents = [date_finder]
-    tasks = [date_task]
-    if searcher:
-        agents.append(searcher)
-        tasks.append(search_task)
-    agents.extend([researcher, calculator, responder])
+    agents = []
+    tasks = []
+
+    for task in researcher_task_context:
+        tasks.append(task)
+    agents.extend([researcher, responder])
     tasks.extend([research_task, calculation_task, response_task])
 
-    if os.environ.get("ENABLE_OPIK") == 'True':
+    if os.environ.get("ENABLE_OPIK") == "True":
         track_crewai(project_name="crewai-ragstudio")
 
     return Crew(
@@ -252,110 +406,3 @@ def stream_chat(
         )
 
     return chat_response
-
-
-def build_calculator_agent(
-    crewai_llm_name: LLM, crew_events_queue: Queue[CrewEvent]
-) -> tuple[Task, Agent]:
-    calculator = Agent(
-        role="Calculator",
-        goal="Perform accurate mathematical calculations based on research findings",
-        backstory="You are an expert mathematician who can perform complex calculations and data analysis.",
-        llm=crewai_llm_name,
-        verbose=True,
-        step_callback=lambda output: step_callback(
-            output, "Calculations Done", crew_events_queue
-        ),
-    )
-    calculation_task = Task(
-        name="CalculatorTask",
-        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
-        agent=calculator,
-        expected_output="Results of any calculations performed, with step-by-step workings",
-    )
-    return calculation_task, calculator
-
-
-class SearchResult(BaseModel):
-    result: str
-    link: str
-
-
-class SearchOutput(BaseModel):
-    results: list[SearchResult]
-
-
-def build_search_agent(
-    crewai_llm_name: LLM,
-    query: str,
-    date_tool: DateTool,
-    crew_events_queue: Queue[CrewEvent],
-) -> tuple[Task, Agent, SerperDevTool]:
-    serper = SerperDevTool()
-    searcher = Agent(
-        role="Search Agent",
-        goal="Search the internet for relevant information",
-        backstory="You know everything about the web.  You can find anything that exists on the web.",
-        llm=crewai_llm_name,
-        tools=[date_tool, serper],
-        verbose=True,
-        step_callback=lambda output: step_callback(
-            output, "Internet Search Complete", crew_events_queue
-        ),
-    )
-    search_task = Task(
-        name="SearchTask",
-        description=f"Search the internet for relevant information related to the user's question.  User's question: {query}.",
-        agent=searcher,
-        tools=[date_tool, serper],
-        expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
-        output_json=SearchOutput,
-    )
-    return search_task, searcher, serper
-
-
-def build_date_agent(
-    crewai_llm: LLM, crew_events_queue: Queue[CrewEvent]
-) -> tuple[Agent, Task, DateTool]:
-    date_finder = Agent(
-        role="DateFinder",
-        goal="Find the current date and time",
-        backstory="You are an expert at finding the current date and time.",
-        llm=crewai_llm,
-        verbose=True,
-        step_callback=lambda output: step_callback(
-            output, "Current Date Calculated", crew_events_queue
-        ),
-    )
-    date_tool: DateTool = DateTool()
-    date_task = Task(
-        name="DateFinderTask",
-        description="Find the current date and time.",
-        agent=date_finder,
-        expected_output="The current date and time.",
-        tools=[date_tool],
-    )
-    return date_finder, date_task, date_tool
-
-
-def should_use_retrieval(
-    configuration: QueryConfiguration,
-    data_source_id: Optional[int],
-    llm: LLM,
-    query_str: str,
-    chat_messages: list[ChatMessage],
-) -> bool:
-    if not data_source_id:
-        return False
-
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
-    # Create a planner agent to decide whether to use retrieval or answer directly
-    planner = PlannerAgent(llm, configuration)
-    planning_decision = planner.decide_retrieval_strategy(
-        query_str, chat_messages, data_source_summary
-    )
-    use_retrieval: bool = planning_decision.get("use_retrieval", True)
-    return use_retrieval
