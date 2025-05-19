@@ -101,7 +101,7 @@ def streaming_query(
             crew,
             query_str,
         )
-        print("Enhanced query:", enhanced_query)
+
         chat_response = stream_chat(
             use_retrieval,
             llm,

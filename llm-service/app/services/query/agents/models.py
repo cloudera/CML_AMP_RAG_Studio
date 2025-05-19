@@ -55,9 +55,6 @@ def get_crewai_llm_object_direct(
             model="azure/" + model_name,
             api_key=config.settings.azure_openai_api_key,
             base_url=config.settings.azure_openai_endpoint,
-            # temperature=language_model.generation_config.get("temperature"),
-            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
-            # seed=0,
         )
     elif CAIIModelProvider.is_enabled():
         if hasattr(language_model, "api_base"):
@@ -65,18 +62,12 @@ def get_crewai_llm_object_direct(
                 model="openai/" + model_name,
                 api_key=get_caii_access_token(),
                 base_url=language_model.api_base,
-                # temperature=language_model.generation_config.get("temperature"),
-                # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
-                # seed=0,
             )
         else:
             raise ValueError("Model type is not supported.")
     elif BedrockModelProvider.is_enabled():
         return CrewAILLM(
             model="bedrock/" + model_name,
-            # temperature=language_model.generation_config.get("temperature"),
-            # max_completion_tokens=language_model.generation_config.get("max_new_tokens"),
-            # seed=0,
         )
     else:
         raise ValueError("Model type is not supported.")

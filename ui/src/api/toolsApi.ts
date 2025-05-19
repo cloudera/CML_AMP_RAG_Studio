@@ -52,7 +52,6 @@ export const useToolsQuery = () => {
   });
 };
 
-// Mock function to get tools
 export const getTools = async (): Promise<Tool[]> => {
   return getRequest(`${llmServicePath}/tools`);
 };
