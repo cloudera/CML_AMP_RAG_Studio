@@ -39,10 +39,10 @@ import logging
 import os
 import time
 from queue import Queue
-from typing import Optional
+from typing import Optional, Any
 
 import opik
-from crewai import Task, Process, Crew, Agent, CrewOutput
+from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
 from crewai.tools.tool_types import ToolResult
@@ -85,9 +85,7 @@ class CrewEvent(BaseModel):
     timestamp: float = time.time()
 
 
-def step_callback(
-    output: ToolResult | AgentFinish, agent: str, crew_events_queue: Queue[CrewEvent]
-) -> None:
+def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) -> None:
     if isinstance(output, AgentFinish):
         crew_events_queue.put(
             CrewEvent(
@@ -105,9 +103,9 @@ def build_calculation_task(agent: Agent, crew_events_queue: Queue[CrewEvent]) ->
         description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
         agent=agent,
         expected_output="Results of any calculations performed, with step-by-step workings",
-        # callback=lambda output: step_callback(
-        #     output, "Calculation Complete", crew_events_queue
-        # ),
+        callback=lambda output: step_callback(
+            output, "Calculation Complete", crew_events_queue
+        ),
     )
     return calculation_task
 
@@ -135,9 +133,9 @@ def build_search_task(
         tools=[date_tool, search_tool],
         expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
         output_json=SearchOutput,
-        # callback=lambda output: step_callback(
-        #     output, "Search Complete", crew_events_queue
-        # ),
+        callback=lambda output: step_callback(
+            output, "Search Complete", crew_events_queue
+        ),
     )
     return search_task
 
@@ -165,9 +163,9 @@ def build_retriever_task(
         tools=[retriever_tool],
         expected_output="Relevant information retrieved from the index, including links to the sources.",
         output_json=RetrieverOutput,
-        # callback=lambda output: step_callback(
-        #     output, "Retrieval Complete", crew_events_queue
-        # ),
+        callback=lambda output: step_callback(
+            output, "Retrieval Complete", crew_events_queue
+        ),
     )
     return retriever_task
 
@@ -181,7 +179,7 @@ def build_date_task(
         agent=agent,
         expected_output="The current date and time.",
         tools=[date_tool],
-        # callback=lambda output: step_callback(output, "Date Found", crew_events_queue),
+        callback=lambda output: step_callback(output, "Date Found", crew_events_queue),
     )
     return date_task
 
@@ -290,7 +288,7 @@ def assemble_crew(
     retriever_task = None
     if crewai_retriever_tool:
         retriever_task = build_retriever_task(
-            researcher, query_str, crewai_retriever_tool
+            researcher, query_str, crewai_retriever_tool, crew_events_queue
         )
         researcher_task_context.append(retriever_task)
 
@@ -335,6 +333,9 @@ def assemble_crew(
         agent=responder,
         expected_output="A accurate response to the user's question.",
         context=[research_task],
+        # callback=lambda _: crew_events_queue.put(
+        #     CrewEvent(type=poison_pill, name="responder")
+        # ),
     )
 
     # Create a crew with the agents and tasks
