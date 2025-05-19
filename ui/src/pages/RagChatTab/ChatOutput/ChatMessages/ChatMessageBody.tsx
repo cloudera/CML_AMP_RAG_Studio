@@ -100,7 +100,6 @@ export const ChatMessageBody = ({
               )}
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
-              <SourceNodes data={data} />
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
@@ -122,7 +121,7 @@ export const ChatMessageBody = ({
                         const sourceNodeIndex = source_nodes.findIndex(
                           (source_node) => source_node.node_id === href,
                         );
-                        if (sourceNodeIndex) {
+                        if (sourceNodeIndex >= 0) {
                           return (
                             <SourceCard
                               source={source_nodes[sourceNodeIndex]}
@@ -148,6 +147,7 @@ export const ChatMessageBody = ({
                 <Evaluations evaluations={data.evaluations} />
                 <RatingFeedbackWrapper responseId={data.id} />
               </Flex>
+              <SourceNodes data={data} />
             </Flex>
           </Flex>
         </div>
