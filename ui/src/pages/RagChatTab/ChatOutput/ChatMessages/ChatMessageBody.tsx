@@ -142,12 +142,12 @@ export const ChatMessageBody = ({
                   }}
                 />
               </Typography.Text>
+              <SourceNodes data={data} />
               <Flex gap={16} align="center">
                 <CopyButton message={data} />
                 <Evaluations evaluations={data.evaluations} />
                 <RatingFeedbackWrapper responseId={data.id} />
               </Flex>
-              <SourceNodes data={data} />
             </Flex>
           </Flex>
         </div>
