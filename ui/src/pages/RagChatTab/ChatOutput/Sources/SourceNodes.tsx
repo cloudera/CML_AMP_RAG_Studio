@@ -104,7 +104,9 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
     },
   ];
 
-  return <Collapse items={items} ghost={true} />;
+  return nodes.length > 0 ? (
+    <Collapse items={items} ghost={true} size="small" />
+  ) : null;
 };
 
 export default SourceNodes;

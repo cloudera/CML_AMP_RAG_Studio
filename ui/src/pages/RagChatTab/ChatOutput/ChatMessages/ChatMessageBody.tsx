@@ -118,11 +118,17 @@ export const ChatMessageBody = ({
                         if (data.source_nodes.length === 0) {
                           return undefined;
                         }
-                        const sourceNode = data.source_nodes.find(
+                        const { source_nodes } = data;
+                        const sourceNodeIndex = source_nodes.findIndex(
                           (source_node) => source_node.node_id === href,
                         );
-                        if (sourceNode) {
-                          return <SourceCard source={sourceNode} />;
+                        if (sourceNodeIndex) {
+                          return (
+                            <SourceCard
+                              source={source_nodes[sourceNodeIndex]}
+                              index={sourceNodeIndex + 1}
+                            />
+                          );
                         }
                         if (!href?.startsWith("http")) {
                           return undefined;
