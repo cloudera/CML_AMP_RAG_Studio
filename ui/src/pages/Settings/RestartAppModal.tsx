@@ -176,6 +176,8 @@ const RestartAppModal = ({
         if (selectedFileStorage === "Local") {
           values.aws_config.document_bucket_name = undefined;
           values.aws_config.bucket_prefix = undefined;
+          values.summary_storage_provider = "Local";
+          values.chat_store_provider = "Local";
         }
 
         updateAmpConfig.mutate(values);
