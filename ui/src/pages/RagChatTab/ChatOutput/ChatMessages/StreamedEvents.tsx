@@ -88,12 +88,12 @@ const StreamedEvents = ({
 
   return (
     <Card
-      style={{ marginTop: 8 }}
+      style={{ marginTop: 16 }}
       title={
         <Flex align="center" gap={8}>
           <Spin size="small" />
           <div>
-            <Typography.Text>Agent Events - </Typography.Text>
+            <Typography.Text>Query Events - </Typography.Text>
             <Typography.Text type="secondary">
               {lastEvent.name} ({format(lastEvent.timestamp * 1000, "pp")})
             </Typography.Text>
