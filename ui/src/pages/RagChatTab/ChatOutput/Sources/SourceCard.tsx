@@ -76,7 +76,6 @@ const getTag = (source: SourceNode, index?: number) => {
   return (
     <Tag
       style={{
-        width: index ? 24 : 180,
         borderRadius: 20,
         height: 24,
         cursor: "pointer",
