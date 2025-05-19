@@ -54,6 +54,7 @@ import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEve
 import rehypeRaw from "rehype-raw";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 import { ComponentProps, ReactElement } from "react";
+import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 
 export const ChatMessageBody = ({
   data,
@@ -99,6 +100,7 @@ export const ChatMessageBody = ({
               )}
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
+              <SourceNodes data={data} />
               <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown

@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Skeleton, Typography } from "antd";
+import { Collapse, Flex, Skeleton, Typography } from "antd";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
 import { WarningTwoTone } from "@ant-design/icons";
@@ -92,11 +92,19 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
     );
   }
 
-  return (
-    <Flex wrap="wrap" style={{ gap: 8 }}>
-      {nodes}
-    </Flex>
-  );
+  const items = [
+    {
+      key: "source_nodes",
+      label: "Sources",
+      children: (
+        <Flex wrap="wrap" style={{ gap: 8 }}>
+          {nodes}
+        </Flex>
+      ),
+    },
+  ];
+
+  return <Collapse items={items} ghost={true} />;
 };
 
 export default SourceNodes;
