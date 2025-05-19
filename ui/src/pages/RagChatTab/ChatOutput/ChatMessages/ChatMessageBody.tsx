@@ -70,11 +70,11 @@ export const ChatMessageBody = ({
           <UserQuestion question={data.rag_message.user} />
           <Flex
             style={{ marginTop: 15 }}
-            align="baseline"
+            align="self-start"
             justify="space-between"
             gap={8}
           >
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, marginTop: 24 }}>
               {data.source_nodes.length > 0 ? (
                 <Images.AiAssistantWhite
                   style={{
