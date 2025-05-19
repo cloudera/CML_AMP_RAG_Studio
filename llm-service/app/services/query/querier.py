@@ -125,7 +125,7 @@ def streaming_query(
         json_error = error.response
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["message"],
+            detail=json_error["StatusReason"],
         ) from error
 
     return chat_response
@@ -185,5 +185,5 @@ def query(
         json_error = error.response
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["message"],
+            detail=json_error["StatusReason"],
         ) from error

@@ -41,8 +41,9 @@ import logging
 from typing import List
 
 import boto3
-from botocore.client import BaseClient
+from boto3 import Session
 from botocore.exceptions import ClientError
+from types_boto3_s3.client import S3Client
 
 from app.config import settings
 from app.services.chat_history.chat_history_manager import (
@@ -59,13 +60,13 @@ class S3ChatHistoryManager(ChatHistoryManager):
     def __init__(self, bucket_name: str = settings.document_bucket):
         self.bucket_name = bucket_name
         self.bucket_prefix = settings.document_bucket_prefix
-        self._s3_client = None
+        self._s3_client: S3Client | None = None
 
     @property
-    def s3_client(self) -> BaseClient:
+    def s3_client(self) -> S3Client:
         """Lazy initialization of S3 client."""
         if self._s3_client is None:
-            session = boto3.session.Session()
+            session: Session = boto3.session.Session()
             self._s3_client = session.client("s3")
         return self._s3_client
 

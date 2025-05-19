@@ -59,13 +59,15 @@ from ..metadata_apis.data_sources_metadata_api import get_metadata
 logger = logging.getLogger(__name__)
 
 CUSTOM_CONTEXT_PROMPT_TEMPLATE = """\
-The following is a friendly conversation between a user and an AI assistant.
-The assistant is talkative and provides lots of specific details from its context.
-If the assistant does not know the answer to a question, it truthfully says it
-does not know.\
-When referencing information from a source, \
+The following is a friendly conversation between a user and an AI assistant. \
+The assistant is talkative and provides lots of specific details from its context. \
+If the assistant does not know the answer to a question, it truthfully says it \
+does not know. 
+
+As the assistant, please provide an answer based solely on the provided sources with \
+citations to the paragraphs. When referencing information from a source, \
 cite the appropriate source(s) using their corresponding ids. \
-Every answer should include at least one source citation. \
+Every answer/paragraph should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
 The citations should be in an html anchor tag (<a href=>) with an html "class" of "rag_citation", \
 and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
@@ -75,9 +77,10 @@ provided in the contexts. \
 For example:
 
 <Contexts>
-1:
+Source: 1
 The sky is red in the evening and blue in the morning.
-2:
+
+Source: 2
 Water is wet when the sky is red.
 
 <Query>
@@ -105,10 +108,10 @@ The assistant is talkative and provides lots of specific details from its contex
 If the assistant does not know the answer to a question, it truthfully says \
 it does not know.
 
-Please provide an answer based solely on the provided sources. \
-When referencing information from a source, cite the appropriate \
-source(s) using their corresponding ids. \
-Every answer should include at least one source citation. \
+As the assistant, please provide an answer based solely on the provided sources with \
+citations to the paragraphs. When referencing information from a source, \
+cite the appropriate source(s) using their corresponding ids. \
+Every answer/paragraph should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
 The citations should be in an html-style tag: <rag_citation>, \
 and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
@@ -118,9 +121,10 @@ provided in the contexts. \
 For example:
 
 <Contexts>
-1:
+Source: 1
 The sky is red in the evening and blue in the morning.
-2:
+
+Source: 2
 Water is wet when the sky is red.
 
 <Query>
@@ -207,7 +211,7 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         context_nodes = self._get_nodes(vector_match_input)
         for node in context_nodes:
             # number the nodes in the content
-            new_content = f"{node.node.node_id}:\n{node.node.get_content()}"
+            new_content = f"Source: {node.node.node_id}\n{node.node.get_content()}\n"
             node.node.set_content(value=new_content)
         context_source = ToolOutput(
             tool_name="retriever",
