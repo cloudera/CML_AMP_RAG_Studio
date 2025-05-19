@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,53 +34,10 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import SettingsPage from "pages/Settings/SettingsPage.tsx";
-import { Flex, Layout, Typography } from "antd";
-import { cdlGray300 } from "src/cuix/variables.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
-import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
+import { ErrorComponent } from "@tanstack/react-router";
 
-const { Content, Header } = Layout;
-
-export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
-  {
-    component: () => {
-      const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
-
-      return (
-        <Layout
-          style={{
-            minHeight: "100%",
-            width: "100%",
-            margin: 0,
-          }}
-        >
-          <Header
-            style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}
-          >
-            <Flex
-              align="center"
-              justify={"space-between"}
-              style={{ height: "100%" }}
-            >
-              <Typography.Title level={4} style={{ margin: 0 }}>
-                Settings
-              </Typography.Title>
-              <Typography.Text type="secondary">
-                version: {config?.release_version}
-              </Typography.Text>
-            </Flex>
-          </Header>
-          <Content style={{ margin: "0", overflowY: "auto" }}>
-            <SettingsPage />
-          </Content>
-        </Layout>
-      );
-    },
-    errorComponent: () => <NotFoundComponent />,
-  },
-);
+export const CustomUnhandledError = ({ error }: { error: Error }) => {
+  return <ErrorComponent error={error} />;
+};
