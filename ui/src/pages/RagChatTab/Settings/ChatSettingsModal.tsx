@@ -122,25 +122,6 @@ const ChatSettingsModal = ({
       children: (
         <>
           <Form.Item
-            name={["queryConfiguration", "enableToolCalling"]}
-            initialValue={activeSession.queryConfiguration.enableToolCalling}
-            valuePropName="checked"
-            label={
-              <Popover
-                title="Tool Calling"
-                content={
-                  <Typography style={{ width: 300 }}>
-                    Enable tool calling.
-                  </Typography>
-                }
-              >
-                Enable Tool Calling
-              </Popover>
-            }
-          >
-            <Switch />
-          </Form.Item>
-          <Form.Item
             name={["queryConfiguration", "enableHyde"]}
             initialValue={activeSession.queryConfiguration.enableHyde}
             valuePropName="checked"
