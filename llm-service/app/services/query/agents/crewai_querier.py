@@ -490,8 +490,6 @@ def launch_crew(
     # Run the crew to get the enhanced response
     crew_result: CrewOutput = crew.kickoff()
 
-    print(f"{crew_result.tasks_output=}")
-
     # find if RetrieverTask in tasks_outputs
     source_nodes = []
     for task_output in crew_result.tasks_output:
@@ -512,8 +510,6 @@ def launch_crew(
                     score=result["score"],
                 )
                 source_nodes.append(node)
-
-    print(f"{source_nodes=}")
 
     # Create an enhanced query that includes the CrewAI insights
     return (
