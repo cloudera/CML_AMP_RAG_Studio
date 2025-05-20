@@ -37,11 +37,12 @@
 # ##############################################################################
 import os
 import subprocess
+import json
 from subprocess import CompletedProcess
 from typing import Annotated
 
 import fastapi
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
@@ -169,3 +170,23 @@ def restart_application() -> str:
         start_new_session=True,
     )
     return "OK"
+
+
+@router.post("/config/cdp-auth-token", summary="Saves a CDP auth token for authentication to AI Inference services.")
+@exceptions.propagates
+def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
+    """
+    Saves the provided auth token to /tmp/jwt file in the format expected by caii/utils.py.
+
+    Args:
+        auth_token: The authentication token to save
+
+    Returns:
+        A success message
+    """
+    token_data = {"access_token": auth_token}
+
+    with open("/tmp/jwt", "w") as file:
+        json.dump(token_data, file)
+
+    return "Auth token saved successfully"
