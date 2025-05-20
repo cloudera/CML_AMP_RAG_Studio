@@ -57,6 +57,7 @@ import {
   EventStreamContentType,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
+import { Dispatch, SetStateAction } from "react";
 
 export interface SourceNode {
   node_id: string;
@@ -79,6 +80,7 @@ export interface RagMessageV2 {
 export interface QueryConfiguration {
   exclude_knowledge_base: boolean;
   use_question_condensing: boolean;
+  tools?: string[];
 }
 
 export interface ChatMutationRequest {
@@ -260,10 +262,12 @@ export const replacePlaceholderInChatHistory = (
 
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean,
+  tools?: string[],
 ): QueryConfiguration => {
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: false,
+    tools,
   };
 };
 
@@ -325,6 +329,14 @@ export interface ChatMutationResponse {
   text?: string;
   response_id?: string;
   error?: string;
+  event?: CrewEventResponse;
+}
+
+export interface CrewEventResponse {
+  type: string;
+  name: string;
+  data?: string;
+  timestamp: number;
 }
 
 const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
@@ -343,11 +355,17 @@ const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
   return errorMessage;
 };
 
+interface StreamingChatCallbacks {
+  onChunk: (msg: string) => void;
+  onEvent: (event: CrewEventResponse) => void;
+}
+
 export const useStreamingChatMutation = ({
   onError,
   onSuccess,
   onChunk,
-}: UseMutationType<ChatMessageType> & { onChunk: (msg: string) => void }) => {
+  onEvent,
+}: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
   const handleError = (variables: ChatMutationRequest, error: Error) => {
     const errorMessage = errorChatMessage(variables, error);
@@ -367,7 +385,7 @@ export const useStreamingChatMutation = ({
         handleError(request, error);
         onError?.(error);
       };
-      return streamChatMutation(request, onChunk, convertError);
+      return streamChatMutation(request, onChunk, onEvent, convertError);
     },
     onMutate: (variables) => {
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
@@ -418,6 +436,7 @@ export const useStreamingChatMutation = ({
 const streamChatMutation = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
+  onEvent: (event: CrewEventResponse) => void,
   onError: (error: string) => void,
 ): Promise<string> => {
   const ctrl = new AbortController();
@@ -445,6 +464,11 @@ const streamChatMutation = async (
         if (data.text) {
           onChunk(data.text);
         }
+
+        if (data.event) {
+          onEvent(data.event);
+        }
+
         if (data.response_id) {
           responseId = data.response_id;
         }
@@ -472,4 +496,18 @@ const streamChatMutation = async (
     },
   );
   return responseId;
+};
+
+export const getOnEvent = (
+  setStreamedEvent: Dispatch<SetStateAction<CrewEventResponse[]>>,
+) => {
+  return (event: CrewEventResponse) => {
+    if (event.type === "done") {
+      setStreamedEvent([]);
+    } else {
+      setStreamedEvent((prev) => {
+        return [...prev, event];
+      });
+    }
+  };
 };

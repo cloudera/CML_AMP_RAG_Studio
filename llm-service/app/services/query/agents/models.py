@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,16 +34,40 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
+from crewai import LLM as CrewAILLM
+from llama_index.core.llms import LLM as LlamaIndexLLM
 
-from typing import Optional
+from app import config
+from app.services.caii.utils import get_caii_access_token
+from app.services.models.providers import (
+    AzureModelProvider,
+    CAIIModelProvider,
+    BedrockModelProvider,
+)
 
-from pydantic import BaseModel
 
-from app.services.query.query_configuration import tool_types
-
-
-class RagPredictConfiguration(BaseModel):
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
-    tools: Optional[list[tool_types]] = None
+def get_crewai_llm_object_direct(
+    language_model: LlamaIndexLLM, model_name: str
+) -> CrewAILLM:
+    if AzureModelProvider.is_enabled():
+        return CrewAILLM(
+            model="azure/" + model_name,
+            api_key=config.settings.azure_openai_api_key,
+            base_url=config.settings.azure_openai_endpoint,
+        )
+    elif CAIIModelProvider.is_enabled():
+        if hasattr(language_model, "api_base"):
+            return CrewAILLM(
+                model="openai/" + model_name,
+                api_key=get_caii_access_token(),
+                base_url=language_model.api_base,
+            )
+        else:
+            raise ValueError("Model type is not supported.")
+    elif BedrockModelProvider.is_enabled():
+        return CrewAILLM(
+            model="bedrock/" + model_name,
+        )
+    else:
+        raise ValueError("Model type is not supported.")

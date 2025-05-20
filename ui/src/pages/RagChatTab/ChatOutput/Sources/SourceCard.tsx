@@ -72,7 +72,45 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
   );
 };
 
-export const SourceCard = ({ source }: { source: SourceNode }) => {
+const getTag = (source: SourceNode, index?: number) => {
+  return (
+    <Tag
+      style={{
+        borderRadius: 20,
+        height: 24,
+        cursor: "pointer",
+      }}
+    >
+      <Flex
+        style={{ height: "100%", width: "100%" }}
+        justify="center"
+        align="center"
+      >
+        <Typography.Paragraph
+          ellipsis={{
+            rows: 1,
+            expandable: false,
+            tooltip: source.source_file_name,
+          }}
+          style={{ margin: 0, padding: 0, fontSize: index ? 10 : 12 }}
+        >
+          {!index && (
+            <Icon component={DocumentationIcon} style={{ marginRight: 8 }} />
+          )}
+          {index ?? source.source_file_name}
+        </Typography.Paragraph>
+      </Flex>
+    </Tag>
+  );
+};
+
+export const SourceCard = ({
+  source,
+  index,
+}: {
+  source: SourceNode;
+  index?: number;
+}) => {
   const { activeSession } = useContext(RagChatContext);
   const [showContent, setShowContent] = useState(false);
   const { dataSourceId: nodeDataSourceId } = source;
@@ -102,7 +140,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
       content={
         <Card
           title={<CardTitle source={source} />}
-          bordered={false}
+          variant="borderless"
           style={{
             width: 800,
             height: 600,
@@ -150,23 +188,7 @@ export const SourceCard = ({ source }: { source: SourceNode }) => {
         </Card>
       }
     >
-      <Tag
-        style={{ width: 180, borderRadius: 20, height: 24, cursor: "pointer" }}
-      >
-        <Flex style={{ height: "100%" }} justify="center" align="center">
-          <Typography.Paragraph
-            ellipsis={{
-              rows: 1,
-              expandable: false,
-              tooltip: source.source_file_name,
-            }}
-            style={{ margin: 0, fontSize: 12 }}
-          >
-            <Icon component={DocumentationIcon} style={{ marginRight: 8 }} />
-            {source.source_file_name}
-          </Typography.Paragraph>
-        </Flex>
-      </Tag>
+      {getTag(source, index)}
     </Popover>
   );
 };

@@ -36,19 +36,33 @@
  * DATA.
  */
 
-import { ChatMessageType } from "src/api/chatApi.ts";
+import {
+  ChatMessageType,
+  CrewEventResponse,
+  SourceNode,
+} from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Divider, Flex, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
-import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import Markdown from "react-markdown";
 import Remark from "remark-gfm";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import RatingFeedbackWrapper from "pages/RagChatTab/ChatOutput/ChatMessages/RatingFeedbackWrapper.tsx";
 import CopyButton from "pages/RagChatTab/ChatOutput/ChatMessages/CopyButton.tsx";
+import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEvents.tsx";
+import rehypeRaw from "rehype-raw";
+import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
+import { ComponentProps, ReactElement } from "react";
+import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 
-export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
+export const ChatMessageBody = ({
+  data,
+  streamedEvents,
+}: {
+  data: ChatMessageType;
+  streamedEvents?: CrewEventResponse[];
+}) => {
   return (
     <div data-testid="chat-message">
       {data.rag_message.user ? (
@@ -56,11 +70,11 @@ export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
           <UserQuestion question={data.rag_message.user} />
           <Flex
             style={{ marginTop: 15 }}
-            align="baseline"
+            align="self-start"
             justify="space-between"
             gap={8}
           >
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, marginTop: 24 }}>
               {data.source_nodes.length > 0 ? (
                 <Images.AiAssistantWhite
                   style={{
@@ -86,16 +100,49 @@ export const ChatMessageBody = ({ data }: { data: ChatMessageType }) => {
               )}
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
-              <SourceNodes data={data} />
+              <StreamedEvents streamedEvents={streamedEvents} />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <Markdown
-                  skipHtml
+                  // skipHtml={true}
                   remarkPlugins={[Remark]}
+                  rehypePlugins={[rehypeRaw]}
                   className="styled-markdown"
-                >
-                  {data.rag_message.assistant.trimStart()}
-                </Markdown>
+                  children={data.rag_message.assistant.trimStart()}
+                  components={{
+                    a: (
+                      props: ComponentProps<"a">,
+                    ): ReactElement<SourceNode> | undefined => {
+                      const { href, className, children, ...other } = props;
+                      if (className === "rag_citation") {
+                        if (data.source_nodes.length === 0) {
+                          return undefined;
+                        }
+                        const { source_nodes } = data;
+                        const sourceNodeIndex = source_nodes.findIndex(
+                          (source_node) => source_node.node_id === href,
+                        );
+                        if (sourceNodeIndex >= 0) {
+                          return (
+                            <SourceCard
+                              source={source_nodes[sourceNodeIndex]}
+                              index={sourceNodeIndex + 1}
+                            />
+                          );
+                        }
+                        if (!href?.startsWith("http")) {
+                          return undefined;
+                        }
+                      }
+                      return (
+                        <a href={href} className={className} {...other}>
+                          {children}
+                        </a>
+                      );
+                    },
+                  }}
+                />
               </Typography.Text>
+              <SourceNodes data={data} />
               <Flex gap={16} align="center">
                 <CopyButton message={data} />
                 <Evaluations evaluations={data.evaluations} />

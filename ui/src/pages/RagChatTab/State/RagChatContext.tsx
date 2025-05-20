@@ -37,7 +37,11 @@
  ******************************************************************************/
 
 import { createContext, Dispatch, SetStateAction } from "react";
-import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
+import {
+  ChatHistoryResponse,
+  ChatMessageType,
+  CrewEventResponse,
+} from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
 import {
@@ -60,6 +64,10 @@ export interface RagChatContextType {
     >;
   };
   streamedChatState: [string, Dispatch<SetStateAction<string>>];
+  streamedEventState: [
+    CrewEventResponse[],
+    Dispatch<SetStateAction<CrewEventResponse[]>>,
+  ];
   dataSourcesQuery: {
     dataSources: DataSourceType[];
     dataSourcesStatus?: "error" | "success" | "pending";
@@ -81,6 +89,7 @@ export const RagChatContext = createContext<RagChatContextType>({
       ),
   },
   streamedChatState: ["", () => null],
+  streamedEventState: [[], () => null],
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],

@@ -59,6 +59,7 @@ export interface CreateSessionType {
   queryConfiguration: {
     enableHyde: boolean;
     enableSummaryFilter: boolean;
+    enableToolCalling: boolean;
   };
 }
 
@@ -114,6 +115,7 @@ const CreateSessionModal = ({
           queryConfiguration: {
             enableHyde: values.queryConfiguration.enableHyde,
             enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+            enableToolCalling: values.queryConfiguration.enableToolCalling,
           },
           projectId: defaultProject.id,
         };

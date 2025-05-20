@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,34 +34,24 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { useContext } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
-import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
+import { getRequest, llmServicePath, QueryKeys } from "src/api/utils.ts";
+import { useQuery } from "@tanstack/react-query";
 
-const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
-  const {
-    streamedChatState: [streamedChat],
-    streamedEventState: [streamedEvent],
-  } = useContext(RagChatContext);
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+}
 
-  const streamedMessage: ChatMessageType = {
-    id: placeholderChatResponseId,
-    session_id: 0,
-    source_nodes: [],
-    rag_message: {
-      user: question,
-      assistant: streamedChat,
-    },
-    evaluations: [],
-    timestamp: Date.now(),
-  };
-
-  return (
-    <ChatMessageBody data={streamedMessage} streamedEvents={streamedEvent} />
-  );
+export const useToolsQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getTools],
+    queryFn: getTools,
+  });
 };
 
-export default PendingRagOutputSkeleton;
+export const getTools = async (): Promise<Tool[]> => {
+  return getRequest(`${llmServicePath}/tools`);
+};

@@ -42,6 +42,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
+  getOnEvent,
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -50,6 +51,7 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -62,6 +64,7 @@ const RagChatQueryInput = ({
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
+    streamedEventState: [, setStreamedEvent],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -69,6 +72,7 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
+  const [selectedTools, setSelectedTools] = useState<string[]>(["search"]);
   const inputRef = useRef<InputRef>(null);
   const {
     data: sampleQuestions,
@@ -86,6 +90,7 @@ const RagChatQueryInput = ({
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },
+    onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
       setUserInput("");
       setStreamedChat("");
@@ -107,7 +112,10 @@ const RagChatQueryInput = ({
         streamChatMutation.mutate({
           query: userInput,
           session_id: +sessionId,
-          configuration: createQueryConfiguration(excludeKnowledgeBase),
+          configuration: createQueryConfiguration(
+            excludeKnowledgeBase,
+            selectedTools,
+          ),
         });
       } else {
         newSessionCallback(userInput);
@@ -154,14 +162,20 @@ const RagChatQueryInput = ({
               }
             }}
             suffix={
-              <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
-                <Switch
-                  checkedChildren={<DatabaseFilled />}
-                  value={!excludeKnowledgeBase}
-                  style={{ display: dataSourceSize ? "block" : "none" }}
-                  onChange={handleExcludeKnowledgeBase}
+              <Flex align="center" gap={8}>
+                <ToolsManagerButton
+                  selectedTools={selectedTools}
+                  setSelectedTools={setSelectedTools}
                 />
-              </Tooltip>
+                <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
+                  <Switch
+                    checkedChildren={<DatabaseFilled />}
+                    value={!excludeKnowledgeBase}
+                    style={{ display: dataSourceSize ? "block" : "none" }}
+                    onChange={handleExcludeKnowledgeBase}
+                  />
+                </Tooltip>
+              </Flex>
             }
             disabled={streamChatMutation.isPending}
           />

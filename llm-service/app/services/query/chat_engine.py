@@ -38,18 +38,138 @@
 import logging
 from typing import Any, Optional, List, Tuple
 
+from llama_index.core import VectorStoreIndex, PromptTemplate
+from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import (
     CondensePlusContextChatEngine,
 )
+from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.response_synthesizers import CompactAndRefine
-from llama_index.core.schema import NodeWithScore
+from llama_index.core.schema import NodeWithScore, QueryBundle
 from llama_index.core.tools import ToolOutput
 
+from .flexible_retriever import FlexibleRetriever
 from .query_configuration import QueryConfiguration
-from .. import llm_completion
+from .simple_reranker import SimpleReranker
+from .. import llm_completion, models
+from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
+
+CUSTOM_CONTEXT_PROMPT_TEMPLATE = """\
+The following is a friendly conversation between a user and an AI assistant. \
+The assistant is talkative and provides lots of specific details from its context. \
+If the assistant does not know the answer to a question, it truthfully says it \
+does not know. 
+
+As the assistant, please provide an answer based solely on the provided sources with \
+citations to the paragraphs. When referencing information from a source, \
+cite the appropriate source(s) using their corresponding ids. \
+Every answer/paragraph should include at least one source citation. \
+Only cite a source when you are explicitly referencing it. \
+The citations should be in an html anchor tag (<a href=>) with an html "class" of "rag_citation", \
+and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
+If none of the sources are helpful, you should indicate that. \
+Do not make up source ids for citations. Only use the source ids \
+provided in the contexts. \
+For example:
+
+<Contexts>
+Source: 1
+The sky is red in the evening and blue in the morning.
+
+Source: 2
+Water is wet when the sky is red.
+
+<Query>
+When is water wet?
+
+<Answer>
+Water will be wet when the sky is red <a class="rag_citation" href="1">1</a>, \
+which occurs in the evening <a class="rag_citation" href="2">2</a>.
+
+Now it's your turn. Below are several numbered sources of information:
+
+<Contexts>
+{context_str}
+
+<Query>
+{query_str}
+
+<Answer>
+"""
+
+
+CUSTOM_CONTEXT_REFINE_PROMPT_TEMPLATE = """\
+The following is a friendly conversation between a user and an AI assistant. \
+The assistant is talkative and provides lots of specific details from its context. \
+If the assistant does not know the answer to a question, it truthfully says \
+it does not know.
+
+As the assistant, please provide an answer based solely on the provided sources with \
+citations to the paragraphs. When referencing information from a source, \
+cite the appropriate source(s) using their corresponding ids. \
+Every answer/paragraph should include at least one source citation. \
+Only cite a source when you are explicitly referencing it. \
+The citations should be in an html-style tag: <rag_citation>, \
+and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
+If none of the sources are helpful, you should indicate that. \
+Do not make up source ids for citations. Only use the source ids \
+provided in the contexts. \
+For example:
+
+<Contexts>
+Source: 1
+The sky is red in the evening and blue in the morning.
+
+Source: 2
+Water is wet when the sky is red.
+
+<Query>
+When is water wet?
+
+<Answer> 
+Water will be wet when the sky is red <a class="rag_citation" href="1">1</a>, \
+which occurs in the evening <a class="rag_citation" href="2">2</a>.
+
+Now it's your turn. We have provided an existing answer: 
+
+<Existing Answer>
+{existing_answer}
+
+Below are several numbered sources of information.
+Use them to refine the existing answer.
+If the provided sources are not helpful, you will repeat the existing answer.
+Begin refining!
+
+<Contexts>
+{context_msg}
+
+<Query>
+{query_str}
+
+<Answer>
+"""
+
+CUSTOM_CONDENSE_TEMPLATE = """\
+Given a conversation (between Human and Assistant) and a follow up message from Human, \
+rewrite the message to be a standalone question that captures all relevant context \
+from the conversation. Just provide the question, not any description of it.
+
+<Chat History>
+{chat_history}
+
+<Follow Up Message>
+{question}
+
+<Standalone question>
+"""
+
+CUSTOM_CONDENSE_PROMPT = PromptTemplate(CUSTOM_CONDENSE_TEMPLATE)
+CUSTOM_CONTEXT_PROMPT = PromptTemplate(CUSTOM_CONTEXT_PROMPT_TEMPLATE)
+CUSTOM_CONTEXT_REFINE_PROMPT = PromptTemplate(CUSTOM_CONTEXT_REFINE_PROMPT_TEMPLATE)
 
 
 class FlexibleContextChatEngine(CondensePlusContextChatEngine):
@@ -89,6 +209,10 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
                 logger.info(f"Hypothetical document: {vector_match_input}")
 
         context_nodes = self._get_nodes(vector_match_input)
+        for node in context_nodes:
+            # number the nodes in the content
+            new_content = f"Source: {node.node.node_id}\n{node.node.get_content()}\n"
+            node.node.set_content(value=new_content)
         context_source = ToolOutput(
             tool_name="retriever",
             content=str(context_nodes),
@@ -102,3 +226,63 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         )
 
         return response_synthesizer, context_source, context_nodes
+
+
+def build_flexible_chat_engine(
+    configuration: QueryConfiguration,
+    llm: LLM,
+    embedding_model: BaseEmbedding,
+    index: VectorStoreIndex,
+    data_source_id: int,
+) -> FlexibleContextChatEngine:
+    retriever = FlexibleRetriever(
+        configuration, index, embedding_model, data_source_id, llm
+    )
+    postprocessors = _create_node_postprocessors(
+        configuration, data_source_id=data_source_id
+    )
+    chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
+        llm=llm,
+        context_prompt=CUSTOM_CONTEXT_PROMPT,
+        context_refine_prompt=CUSTOM_CONTEXT_REFINE_PROMPT,
+        condense_prompt=CUSTOM_CONDENSE_PROMPT,
+        retriever=retriever,
+        node_postprocessors=postprocessors,
+    )
+    chat_engine._configuration = configuration
+    return chat_engine
+
+
+class DebugNodePostProcessor(BaseNodePostprocessor):
+    def _postprocess_nodes(
+        self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None
+    ) -> list[NodeWithScore]:
+        logger.debug(f"nodes: {len(nodes)}")
+        for node in sorted(nodes, key=lambda n: n.node.node_id):
+            logger.debug(
+                node.node.node_id, node.node.metadata["document_id"], node.score
+            )
+
+        return nodes
+
+
+def _create_node_postprocessors(
+    configuration: QueryConfiguration,
+    data_source_id: int,
+) -> list[BaseNodePostprocessor]:
+    if not configuration.use_postprocessor:
+        return []
+
+    data_source = get_metadata(data_source_id=data_source_id)
+    if data_source.summarization_model is None:
+        return [SimpleReranker(top_n=configuration.top_k)]
+
+    return [
+        DebugNodePostProcessor(),
+        models.Reranking.get(
+            model_name=configuration.rerank_model_name,
+            top_n=configuration.top_k,
+        )
+        or SimpleReranker(top_n=configuration.top_k),
+        DebugNodePostProcessor(),
+    ]
