@@ -122,7 +122,11 @@ export const ChatMessageBody = ({
                         const sourceNodeIndex = source_nodes.findIndex(
                           (source_node) => source_node.node_id === href,
                         );
-                        if (sourceNodeIndex) {
+                        if (sourceNodeIndex >= 0) {
+                          console.log(
+                            sourceNodeIndex,
+                            source_nodes[sourceNodeIndex],
+                          );
                           return (
                             <SourceCard
                               source={source_nodes[sourceNodeIndex]}
