@@ -51,6 +51,14 @@ def get_caii_access_token() -> str:
     if token_override := settings.cdp_token_override:
         return token_override
 
+    try:
+        with open("cdp_token", "r") as file:
+            token_contents = json.load(file)
+            access_token: str = token_contents["access_token"]
+            return access_token
+    except FileNotFoundError:
+        pass
+
     with open("/tmp/jwt", "r") as file:
         jwt_contents = json.load(file)
     access_token: str = jwt_contents["access_token"]
