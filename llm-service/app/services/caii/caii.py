@@ -124,7 +124,7 @@ def get_llm(
         api_key=get_caii_access_token(),
         base_url=api_base,
         model=model,
-        api_base=api_base,
+        # api_base=api_base, # todo: figure out how to integrate with Crew models
     )
 
 
@@ -154,8 +154,8 @@ def get_caii_llm_models() -> List[ModelResponse]:
             model = get_llm(endpoint_name=potential.name, messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt)
             if model.metadata:
                 results.append(potential)
-        except Exception:
-            logger.warning(f"Unable to load model metadata for model: {potential.name}")
+        except Exception as e:
+            logger.warning(f"Unable to load model metadata for model: {potential.name}. Error: {e}")
             pass
 
     return results
@@ -169,6 +169,7 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 def get_models_with_task(task_type: str) -> List[ModelResponse]:
     endpoints = list_endpoints()
+    print(f"Endpoints: {endpoints}")
     endpoint_details = list(
         map(lambda endpoint: describe_endpoint(endpoint.name), endpoints)
     )
