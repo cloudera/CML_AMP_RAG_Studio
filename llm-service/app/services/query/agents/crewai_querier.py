@@ -55,7 +55,7 @@ from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import MetadataMode, NodeWithScore, TextNode
+from llama_index.core.schema import MetadataMode, NodeWithScore, TextNode, BaseNode
 from llama_index.core.tools import RetrieverTool, ToolMetadata, ToolOutput
 from pydantic import BaseModel, Field
 
@@ -444,9 +444,11 @@ def assemble_crew(
     )
     response_task = Task(
         name="ResponderTask",
-        description="Formulate a comprehensive response based on the research findings and calculations, including any relevant links and in-line citations.",
+        description="Formulate a comprehensive response based on the research findings and calculations, "
+        "including any relevant links and in-line citations.",
         agent=responder,
-        expected_output="A accurate response to the user's question. The citations are to be copied as is from the context.",
+        expected_output="A accurate response to the user's question. The citations are to be copied as is "
+        "from the context. Do not format it, or change it in any way.",
         context=[research_task],
         # callback=lambda _: crew_events_queue.put(
         #     CrewEvent(type=poison_pill, name="responder")
@@ -496,19 +498,17 @@ def launch_crew(
         if task_output.name == "RetrieverTask":
             json_output = task_output.json_dict["results"]
             for result in json_output:
-                text_node = TextNode.from_dict(
-                    data={
-                        "node_id": result["node_id"],
-                        "text": result["content"],
-                        "metadata": {
-                            "file_name": result["source_file_name"],
-                            "document_id": result["doc_id"],
-                            "data_source_id": result["data_source_id"],
-                        },
-                    }
+                base_node = TextNode(
+                    id_=result["node_id"],
+                    metadata={
+                        "document_id": result["doc_id"],
+                        "file_name": result["source_file_name"],
+                        "data_source_id": result["data_source_id"],
+                    },
+                    text=result["content"],
                 )
                 node = NodeWithScore(
-                    node=text_node,
+                    node=base_node,
                     score=result["score"],
                 )
                 source_nodes.append(node)
