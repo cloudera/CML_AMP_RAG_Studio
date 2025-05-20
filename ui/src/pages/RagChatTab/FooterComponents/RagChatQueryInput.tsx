@@ -53,6 +53,8 @@ import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 
+const { TextArea } = Input;
+
 const RagChatQueryInput = ({
   newSessionCallback,
 }: {
@@ -143,26 +145,42 @@ const RagChatQueryInput = ({
           />
         ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
-          <Input
-            autoFocus
-            ref={inputRef}
-            placeholder={
-              dataSourceSize && dataSourceSize > 0
-                ? "Ask a question"
-                : "Chat with the LLM"
-            }
-            status={dataSourcesStatus === "error" ? "error" : undefined}
-            value={userInput}
-            onChange={(e) => {
-              setUserInput(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleChat(userInput);
+          <div style={{ position: "relative", width: "100%" }}>
+            <TextArea
+              autoFocus
+              ref={inputRef}
+              placeholder={
+                dataSourceSize && dataSourceSize > 0
+                  ? "Ask a question"
+                  : "Chat with the LLM"
               }
-            }}
-            suffix={
-              <Flex align="center" gap={8}>
+              status={dataSourcesStatus === "error" ? "error" : undefined}
+              value={userInput}
+              onChange={(e) => {
+                setUserInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.shiftKey && e.key === "Enter") {
+                  return null;
+                } else if (e.key === "Enter") {
+                  handleChat(userInput);
+                }
+              }}
+              autoSize={{ minRows: 1, maxRows: 20 }}
+              disabled={streamChatMutation.isPending}
+              style={{ paddingRight: 110 }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                right: "8px",
+                bottom: "5px",
+                display: "flex",
+                gap: "4px",
+                zIndex: 1,
+              }}
+            >
+              <Flex gap={8} align="end">
                 <ToolsManagerButton
                   selectedTools={selectedTools}
                   setSelectedTools={setSelectedTools}
@@ -176,18 +194,17 @@ const RagChatQueryInput = ({
                   />
                 </Tooltip>
               </Flex>
-            }
-            disabled={streamChatMutation.isPending}
-          />
-          <Button
-            style={{ padding: 0 }}
-            type="text"
-            onClick={() => {
-              handleChat(userInput);
-            }}
-            icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={streamChatMutation.isPending}
-          />
+              <Button
+                size="small"
+                type="text"
+                onClick={() => {
+                  handleChat(userInput);
+                }}
+                icon={<SendOutlined style={{ color: cdlBlue600 }} />}
+                disabled={streamChatMutation.isPending}
+              />
+            </div>
+          </div>
         </Flex>
       </Flex>
     </div>
