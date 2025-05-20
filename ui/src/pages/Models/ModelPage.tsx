@@ -83,7 +83,7 @@ const ModelPage = () => {
   } = useGetRerankingModels();
 
   return (
-    <Flex vertical align="center">
+    <Flex vertical style={{ marginLeft: 60 }}>
       <div style={{ maxWidth: 800 }}>
         <ModelPageAlert error={inferenceError} type="Inference" />
         <ModelPageAlert error={embeddingError} type="Embedding" />

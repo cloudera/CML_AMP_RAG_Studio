@@ -60,7 +60,7 @@ export const StyledHelperText = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const SettingsPage = () => {
+const AmpSettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: currentModelSource } = useGetModelSource();
   const confirmationModal = useModal();
@@ -170,4 +170,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default AmpSettingsPage;

@@ -39,7 +39,10 @@
 import { ModelSource } from "src/api/modelsApi.ts";
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
 import { Flex, Form, Input } from "antd";
-import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
+import {
+  FileStorage,
+  StyledHelperText,
+} from "pages/Settings/AmpSettingsPage.tsx";
 
 export const AuthenticationFields = ({
   modelProvider,

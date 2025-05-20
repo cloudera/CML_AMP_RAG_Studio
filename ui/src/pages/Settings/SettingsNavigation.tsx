@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,53 +34,72 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { createLazyFileRoute } from "@tanstack/react-router";
-import { Flex, Layout, Typography } from "antd";
-import { cdlGray300 } from "src/cuix/variables.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
-import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
-import SettingsNavigation from "pages/Settings/SettingsNavigation.tsx";
+import { Flex, Tabs, TabsProps } from "antd";
+import AmpSettingsPage from "pages/Settings/AmpSettingsPage.tsx";
+import ModelPage from "pages/Models/ModelPage.tsx";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 
-const { Content, Header } = Layout;
+const SettingsNavigation = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { data: config } = useGetAmpConfig();
 
-export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
-  {
-    component: () => {
-      const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
+  const handleNav = (key: string) => {
+    navigate({ hash: key }).catch((reason: unknown) => {
+      console.error(reason);
+    });
+  };
 
-      return (
-        <Layout
-          style={{
-            minHeight: "100%",
-            width: "100%",
-            margin: 0,
-          }}
-        >
-          <Header
-            style={{ height: 48, borderBottom: `1px solid ${cdlGray300}` }}
-          >
-            <Flex
-              align="center"
-              justify={"space-between"}
-              style={{ height: "100%" }}
-            >
-              <Typography.Title level={4} style={{ margin: 0 }}>
-                Settings
-              </Typography.Title>
-              <Typography.Text type="secondary">
-                version: {config?.release_version}
-              </Typography.Text>
-            </Flex>
-          </Header>
-          <Content style={{ margin: "0", overflowY: "auto" }}>
-            <SettingsNavigation />
-          </Content>
-        </Layout>
-      );
+  const tabItems: TabsProps["items"] = [
+    {
+      key: "modelConfiguration",
+      label: "Model Configuration",
+      children: <ModelPage />,
+      disabled: !config?.is_valid_config,
     },
-    errorComponent: () => <NotFoundComponent />,
-  },
-);
+  ];
+
+  if (config) {
+    tabItems.unshift({
+      key: "ampSettings",
+      label: "AMP Settings",
+      children: <AmpSettingsPage />,
+    });
+  }
+
+  const defaultKey = config ? "ampSettings" : "modelConfiguration";
+  useEffect(() => {
+    if (location.hash) {
+      const tabsIncludeHash = tabItems.find(
+        (item) => item.key === location.hash,
+      );
+
+      if (!tabsIncludeHash) {
+        handleNav(defaultKey);
+      }
+    }
+  }, [location.hash, tabItems, navigate]);
+
+  return (
+    <Flex
+      vertical
+      style={{ width: "80%", maxWidth: 1000, marginLeft: 50 }}
+      gap={20}
+    >
+      <Tabs
+        defaultActiveKey={defaultKey}
+        activeKey={location.hash || defaultKey}
+        items={tabItems}
+        onChange={(key) => {
+          handleNav(key);
+        }}
+      />
+    </Flex>
+  );
+};
+
+export default SettingsNavigation;
