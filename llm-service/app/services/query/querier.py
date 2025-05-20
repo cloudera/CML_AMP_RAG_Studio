@@ -97,7 +97,7 @@ def streaming_query(
             data_source_id,
             crew_events_queue,
         )
-        enhanced_query = launch_crew(
+        enhanced_query, source_nodes = launch_crew(
             crew,
             query_str,
         )
@@ -107,6 +107,7 @@ def streaming_query(
             llm,
             chat_engine,
             enhanced_query,
+            source_nodes,
             chat_messages,
         )
         return chat_response

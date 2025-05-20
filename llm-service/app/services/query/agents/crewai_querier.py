@@ -39,7 +39,7 @@ import logging
 import os
 import time
 from queue import Queue
-from typing import Optional, Any
+from typing import Optional, Any, Tuple
 
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
@@ -49,12 +49,15 @@ from crewai.tools.tool_types import ToolResult
 from crewai_tools import SerperDevTool
 from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle, VectorStoreIndex
+from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
-from llama_index.core.tools import RetrieverTool, ToolMetadata
-from pydantic import BaseModel
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core.schema import MetadataMode, NodeWithScore, TextNode
+from llama_index.core.tools import RetrieverTool, ToolMetadata, ToolOutput
+from pydantic import BaseModel, Field
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.date_tool import DateTool
@@ -140,9 +143,134 @@ def build_search_task(
     return search_task
 
 
+class RetrieverToolInput(BaseModel):
+    """Input Schema for the RetrieverTool."""
+
+    query: str = Field(
+        ...,
+        description="The query to search for in the index.",
+    )
+
+
+class RetrieverToolWithNodeInfo(RetrieverTool):
+    """
+    Retriever tool.
+
+    A tool making use of a retriever.
+
+    Args:
+        retriever (BaseRetriever): A retriever.
+        metadata (ToolMetadata): The associated metadata of the query engine.
+        node_postprocessors (Optional[List[BaseNodePostprocessor]]): A list of
+            node postprocessors.
+    """
+
+    def call(self, *args: Any, **kwargs: Any) -> ToolOutput:
+        query_str = ""
+        if args is not None:
+            query_str += ", ".join([str(arg) for arg in args]) + "\n"
+        if kwargs is not None:
+            query_str += (
+                ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
+            )
+        if query_str == "":
+            raise ValueError("Cannot call query engine without inputs")
+
+        docs = self._retriever.retrieve(query_str)
+        docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
+        content = ""
+        for doc in docs:
+            node_copy = doc.node.model_copy()
+            node_copy.text_template = "{metadata_str}\n{content}"
+            node_copy.metadata_template = "{key} = {value}"
+            content += (
+                f"node_id = {node_copy.node_id}\n"
+                + f"score = {doc.score}\n"
+                + node_copy.get_content(MetadataMode.LLM)
+                + "\n\n"
+            )
+        return ToolOutput(
+            content=content,
+            tool_name=self.metadata.name,
+            raw_input={"input": query_str},
+            raw_output=docs,
+        )
+
+    async def acall(self, *args: Any, **kwargs: Any) -> ToolOutput:
+        query_str = ""
+        if args is not None:
+            query_str += ", ".join([str(arg) for arg in args]) + "\n"
+        if kwargs is not None:
+            query_str += (
+                ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
+            )
+        if query_str == "":
+            raise ValueError("Cannot call query engine without inputs")
+        docs = await self._retriever.aretrieve(query_str)
+        content = ""
+        docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
+        for doc in docs:
+            node_copy = doc.node.model_copy()
+            node_copy.text_template = "{metadata_str}\n{content}"
+            node_copy.metadata_template = "{key} = {value}"
+            content += (
+                f"node_id = {node_copy.node_id}\n"
+                + f"score = {doc.score}\n"
+                + node_copy.get_content(MetadataMode.LLM)
+                + "\n\n"
+            )
+        return ToolOutput(
+            content=content,
+            tool_name=self.metadata.name,
+            raw_input={"input": query_str},
+            raw_output=docs,
+        )
+
+
+def build_retriever_tool(
+    configuration: QueryConfiguration,
+    data_source_id: Optional[int],
+    embedding_model: Optional[BaseEmbedding],
+    index: Optional[VectorStoreIndex],
+    llm: LLM,
+) -> BaseTool:
+    base_retriever = FlexibleRetriever(
+        configuration=configuration,
+        index=index,
+        embedding_model=embedding_model,
+        data_source_id=data_source_id,
+        llm=llm,
+    )
+    # fetch summary fromm index if available
+    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+    data_source_summary = None
+    if data_source_summary_indexer:
+        data_source_summary = data_source_summary_indexer.get_full_summary()
+    retriever_tool = RetrieverToolWithNodeInfo(
+        retriever=base_retriever,
+        metadata=ToolMetadata(
+            name="Retriever",
+            description=(
+                "A tool to retrieve relevant information from "
+                "the index. It takes a query of type string and returns relevant nodes from the index."
+                f"The index summary is: {data_source_summary}"
+                if data_source_summary
+                else "Assume the index has relevant information about the user's question."
+            ),
+            fn_schema=RetrieverToolInput,
+        ),
+    )
+    crewai_retriever_tool = LlamaIndexTool.from_tool(retriever_tool)
+    return crewai_retriever_tool
+
+
 class RetrieverResult(BaseModel):
     node_id: str
+    doc_id: str
     content: str
+    source_file_name: str
+    data_source_id: int
+    score: float
 
 
 class RetrieverOutput(BaseModel):
@@ -225,44 +353,24 @@ def assemble_crew(
     date_tool = DateTool()
     research_tools: list[BaseTool] = [date_tool]
 
+    # Create a retriever tool if needed
+    crewai_retriever_tool = None
+    if use_retrieval and index and embedding_model and data_source_id:
+        logger.info("Planner decided to use retrieval")
+        crewai_retriever_tool = build_retriever_tool(
+            configuration,
+            data_source_id,
+            embedding_model,
+            index,
+            llm,
+        )
+        research_tools.append(crewai_retriever_tool)
+
     # Create a search tool if needed
     search_tool = None
     if configuration.tools and "search" in configuration.tools:
         search_tool = SerperDevTool()
         research_tools.append(search_tool)
-
-    # Create a retriever tool if needed
-    crewai_retriever_tool = None
-    if use_retrieval and index and embedding_model and data_source_id:
-        logger.info("Planner decided to use retrieval")
-
-        # First, get the context from the retriever
-        # TODO: Make a retriever tool and task
-        base_retriever = FlexibleRetriever(
-            configuration=configuration,
-            index=index,
-            embedding_model=embedding_model,
-            data_source_id=data_source_id,
-            llm=llm,
-        )
-        # fetch summary fromm index if available
-        data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-        data_source_summary = None
-        if data_source_summary_indexer:
-            data_source_summary = data_source_summary_indexer.get_full_summary()
-        retriever_tool = RetrieverTool.from_defaults(
-            retriever=base_retriever,
-            name="Retriever",
-            description=(
-                "A tool to retrieve relevant information from "
-                "the index. "
-                f"The index information about: {data_source_summary}"
-                if data_source_summary
-                else ""
-            ),
-        )
-        crewai_retriever_tool = LlamaIndexTool.from_tool(retriever_tool)
-        research_tools.append(crewai_retriever_tool)
 
     # Define the researcher agent
     researcher = Agent(
@@ -279,7 +387,7 @@ def assemble_crew(
 
     # Define tasks for the researcher agents
     date_task = build_date_task(researcher, date_tool, crew_events_queue)
-    calculation_task = build_calculation_task(researcher, crew_events_queue)
+    # calculation_task = build_calculation_task(researcher, crew_events_queue)
 
     # create a list of tasks for the researcher
     researcher_task_context = [date_task]
@@ -308,7 +416,14 @@ def assemble_crew(
         "and chat history. Based on the research return comprehensive research insights. "
         f"Given below, is the user's question and the chat history: \n<Question>:\n{query_str}\n\n<Chat history>:\n {chat_history}",
         agent=researcher,
-        expected_output="A detailed analysis of the user's question based on the provided context, including relevant links and citations.",
+        expected_output="A detailed analysis of the user's question based on the provided context, "
+        "including relevant links and in-line citations."
+        "Note: \n"
+        "* For citations from search with result and link, convert them into markdown links. "
+        "* For citations from retrieval results with node_id and other metadata, the node_id "
+        "should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. "
+        "For example: <a class='rag_citation' href='2'>2</a>. "
+        "Do not use filenames as citations. Only node ids should be used.",
         tools=research_tools,
         context=researcher_task_context,
         callback=lambda _: crew_events_queue.put(
@@ -329,9 +444,9 @@ def assemble_crew(
     )
     response_task = Task(
         name="ResponderTask",
-        description="Formulate a comprehensive response based on the research findings and calculations, including any relevant links and citations.",
+        description="Formulate a comprehensive response based on the research findings and calculations, including any relevant links and in-line citations.",
         agent=responder,
-        expected_output="A accurate response to the user's question.",
+        expected_output="A accurate response to the user's question. The citations are to be copied as is from the context.",
         context=[research_task],
         # callback=lambda _: crew_events_queue.put(
         #     CrewEvent(type=poison_pill, name="responder")
@@ -345,7 +460,13 @@ def assemble_crew(
     for task in researcher_task_context:
         tasks.append(task)
     agents.extend([researcher, responder])
-    tasks.extend([research_task, calculation_task, response_task])
+    tasks.extend(
+        [
+            research_task,
+            # calculation_task,
+            response_task,
+        ]
+    )
 
     if os.environ.get("ENABLE_OPIK") == "True":
         track_crewai(project_name="crewai-ragstudio")
@@ -362,21 +483,50 @@ def assemble_crew(
 def launch_crew(
     crew: Crew,
     query_str: str,
-) -> str:
+) -> Tuple[str, list[NodeWithScore]]:
 
     # Run the crew to get the enhanced response
     crew_result: CrewOutput = crew.kickoff()
 
+    print(f"{crew_result.tasks_output=}")
+
+    # find if RetrieverTask in tasks_outputs
+    source_nodes = []
+    for task_output in crew_result.tasks_output:
+        if task_output.name == "RetrieverTask":
+            json_output = task_output.json_dict["results"]
+            for result in json_output:
+                text_node = TextNode.from_dict(
+                    data={
+                        "node_id": result["node_id"],
+                        "text": result["content"],
+                        "metadata": {
+                            "file_name": result["source_file_name"],
+                            "document_id": result["doc_id"],
+                            "data_source_id": result["data_source_id"],
+                        },
+                    }
+                )
+                node = NodeWithScore(
+                    node=text_node,
+                    score=result["score"],
+                )
+                source_nodes.append(node)
+
+    print(f"{source_nodes=}")
+
     # Create an enhanced query that includes the CrewAI insights
-    return f"""
-        Original query: {query_str}
+    return (
+        f"""
+Original query: {query_str}
 
-        Research insights: {crew_result}
+Research insights: {crew_result}
 
-        Please provide a response to the original query, incorporating the insights from research.
-        If insights from the research are used, provide in-line citations to the research findings.
-        The citations should provide a link to the research findings.
-        """
+Please provide a response to the original query, incorporating the insights from research.
+If insights from the research are used, use the in-line citations from the research insights as is.
+""",
+        source_nodes,
+    )
 
 
 def stream_chat(
@@ -384,12 +534,20 @@ def stream_chat(
     llm: LLM,
     chat_engine: Optional[FlexibleContextChatEngine],
     enhanced_query: str,
+    source_nodes: Optional[list[NodeWithScore]],
     chat_messages: list[ChatMessage],
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
     if use_retrieval and chat_engine:
-        chat_response = chat_engine.stream_chat(enhanced_query, chat_messages)
+        chat_response = StreamingAgentChatResponse(
+            chat_stream=llm.stream_chat(
+                messages=chat_messages
+                + [ChatMessage(role="user", content=enhanced_query)],
+            ),
+            source_nodes=source_nodes,
+            is_writing_to_memory=False,
+        )
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")
