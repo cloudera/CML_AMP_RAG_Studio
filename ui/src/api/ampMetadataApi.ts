@@ -222,3 +222,21 @@ export const useRestartApplication = ({
 const restartApplication = async (): Promise<string> => {
   return await postRequest(`${llmServicePath}/amp/restart-application`, {});
 };
+
+export const useSetCdpToken = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.setCdpToken],
+    mutationFn: setCdpToken,
+    onSuccess,
+    onError,
+  });
+};
+
+const setCdpToken = async (auth_token: string): Promise<string> => {
+  return await postRequest(`${llmServicePath}/amp/config/cdp-auth-token`, {
+    auth_token,
+  });
+};

@@ -36,15 +36,22 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Flex, Typography } from "antd";
+import { Alert, Button, Card, Flex, Input, Typography } from "antd";
 import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
 import {
+  ModelSource,
   useGetEmbeddingModels,
   useGetLlmModels,
+  useGetModelSource,
   useGetRerankingModels,
 } from "src/api/modelsApi.ts";
 import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
 import RerankingModelTable from "pages/Models/RerankingModelTable.tsx";
+import { useState } from "react";
+import { useSetCdpToken } from "src/api/ampMetadataApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { ApiError, QueryKeys } from "src/api/utils.ts";
 
 const ModelPageAlert = ({
   error,
@@ -65,6 +72,101 @@ const ModelPageAlert = ({
   );
 };
 
+const CDPTokenInput = () => {
+  const [token, setToken] = useState("");
+  const queryClient = useQueryClient();
+  const setAuthToken = useSetCdpToken({
+    onSuccess: () => {
+      messageQueue.success("Token saved successfully");
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getRerankingModels],
+        })
+        .catch(() => {
+          messageQueue.error("Error occurred fetching reranking models");
+        });
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getLlmModels],
+        })
+        .catch(() => {
+          messageQueue.error("Error occurred fetching LLM models");
+        });
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getEmbeddingModels],
+        })
+        .catch(() => {
+          messageQueue.error("Error occurred fetching embedding models");
+        });
+    },
+    onError: () => {
+      messageQueue.error("Error occurred setting token");
+    },
+  });
+
+  const handleSubmit = () => {
+    if (token) {
+      setAuthToken.mutate(token);
+    }
+  };
+
+  return (
+    <Card title="CDP Token Expired - Update to use Cloudera AI Inference Models">
+      <Flex gap={8}>
+        <Input
+          placeholder="CDP Token"
+          value={token}
+          onChange={(e) => {
+            setToken(e.target.value);
+          }}
+        />
+        <Button onClick={handleSubmit}>Submit</Button>
+      </Flex>
+    </Card>
+  );
+};
+
+const checkHandledCaiiError = (
+  inferenceError: Error | null | ApiError,
+  rerankingError: Error | null | ApiError,
+  embeddingError: Error | null | ApiError,
+) => {
+  return (
+    (inferenceError instanceof ApiError &&
+      (inferenceError.status === 401 || inferenceError.status === 500)) ||
+    (rerankingError instanceof ApiError &&
+      (rerankingError.status === 401 || rerankingError.status === 500)) ||
+    (embeddingError instanceof ApiError &&
+      (embeddingError.status === 401 || embeddingError.status === 500))
+  );
+};
+
+const ModelErrors = ({
+  inferenceError,
+  rerankingError,
+  embeddingError,
+  modelSource,
+}: {
+  inferenceError: Error | null;
+  embeddingError: Error | null;
+  rerankingError: Error | null;
+  modelSource?: ModelSource;
+}) => {
+  if (modelSource === "CAII") {
+    if (checkHandledCaiiError(inferenceError, rerankingError, embeddingError)) {
+      return null;
+    }
+  }
+
+  return (
+    <>
+      <ModelPageAlert error={inferenceError} type="Inference" />
+      <ModelPageAlert error={embeddingError} type="Embedding" />
+      <ModelPageAlert error={rerankingError} type="Reranking" />
+    </>
+  );
+};
 const ModelPage = () => {
   const {
     data: embeddingModels,
@@ -81,15 +183,24 @@ const ModelPage = () => {
     isLoading: areRerankingModelsLoading,
     error: rerankingError,
   } = useGetRerankingModels();
+  const getModelSource = useGetModelSource();
 
   return (
     <Flex vertical style={{ marginLeft: 60 }}>
-      <div style={{ maxWidth: 800 }}>
-        <ModelPageAlert error={inferenceError} type="Inference" />
-        <ModelPageAlert error={embeddingError} type="Embedding" />
-        <ModelPageAlert error={rerankingError} type="Reranking" />
-      </div>
+      <ModelErrors
+        inferenceError={inferenceError}
+        embeddingError={embeddingError}
+        rerankingError={rerankingError}
+        modelSource={getModelSource.data}
+      />
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
+        {checkHandledCaiiError(
+          inferenceError,
+          rerankingError,
+          embeddingError,
+        ) ? (
+          <CDPTokenInput />
+        ) : null}
         <Typography.Title level={3}>Embedding Models</Typography.Title>
         <EmbeddingModelTable
           embeddingModels={embeddingModels}

@@ -81,6 +81,7 @@ export enum MutationKeys {
   "updateAmpConfig" = "updateAmpConfig",
   "restartApplication" = "restartApplication",
   "streamChatMutation" = "streamChatMutation",
+  "setCdpToken" = "setCdpToken",
 }
 
 export enum QueryKeys {
