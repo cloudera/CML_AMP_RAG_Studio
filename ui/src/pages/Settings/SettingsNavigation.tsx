@@ -43,6 +43,9 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
 
+const modelConfigKey = "modelConfiguration";
+const ampSettingsKey = "ampSettings";
+
 const SettingsNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,7 +59,7 @@ const SettingsNavigation = () => {
 
   const tabItems: TabsProps["items"] = [
     {
-      key: "modelConfiguration",
+      key: modelConfigKey,
       label: "Model Configuration",
       children: <ModelPage />,
       disabled: !config?.is_valid_config,
@@ -65,13 +68,13 @@ const SettingsNavigation = () => {
 
   if (config) {
     tabItems.unshift({
-      key: "ampSettings",
+      key: ampSettingsKey,
       label: "AMP Settings",
       children: <AmpSettingsPage />,
     });
   }
 
-  const defaultKey = config ? "ampSettings" : "modelConfiguration";
+  const defaultKey = config ? ampSettingsKey : modelConfigKey;
   useEffect(() => {
     if (location.hash) {
       const tabsIncludeHash = tabItems.find(

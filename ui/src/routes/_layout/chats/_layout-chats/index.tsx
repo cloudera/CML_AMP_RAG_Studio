@@ -36,16 +36,62 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from '@tanstack/react-router'
-import { getSessionsQueryOptions } from 'src/api/sessionApi.ts'
-import { getLlmModelsQueryOptions } from 'src/api/modelsApi.ts'
-import { getDefaultProjectQueryOptions } from 'src/api/projectsApi.ts'
+import {
+  createFileRoute,
+  ErrorComponent,
+  useNavigate,
+} from "@tanstack/react-router";
+import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import {
+  getLlmModelsQueryOptions,
+  useGetModelSource,
+} from "src/api/modelsApi.ts";
+import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
+import { ApiError } from "src/api/utils.ts";
+import { Alert, Button } from "antd";
+import messageQueue from "src/utils/messageQueue.ts";
 
-export const Route = createFileRoute('/_layout/chats/_layout-chats/')({
+export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
   loader: async ({ context }) =>
     await Promise.all([
       context.queryClient.ensureQueryData(getSessionsQueryOptions),
       context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
       context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
     ]),
-})
+  errorComponent: (error) => {
+    const modelSource = useGetModelSource();
+    const navigate = useNavigate();
+    if (
+      error.error instanceof ApiError &&
+      error.error.status === 401 &&
+      modelSource.data === "CAII"
+    ) {
+      return (
+        <Alert
+          type="error"
+          style={{ margin: 20, width: 500, height: 80 }}
+          showIcon
+          message={"Invalid or missing CDP token. Go to settings to set it."}
+          action={
+            <Button
+              type="default"
+              danger
+              onClick={() => {
+                navigate({
+                  to: "/settings",
+                  hash: "modelConfiguration",
+                }).catch(() => {
+                  messageQueue.error("Error occurred navigating to settings");
+                });
+              }}
+            >
+              Settings
+            </Button>
+          }
+        />
+      );
+    }
+
+    return <ErrorComponent error={error} />;
+  },
+});
