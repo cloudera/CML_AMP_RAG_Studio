@@ -37,12 +37,12 @@
  ******************************************************************************/
 
 import { createLazyFileRoute } from "@tanstack/react-router";
-import SettingsPage from "pages/Settings/SettingsPage.tsx";
 import { Flex, Layout, Typography } from "antd";
 import { cdlGray300 } from "src/cuix/variables.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
+import SettingsNavigation from "pages/Settings/SettingsNavigation.tsx";
 
 const { Content, Header } = Layout;
 
@@ -76,7 +76,7 @@ export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
             </Flex>
           </Header>
           <Content style={{ margin: "0", overflowY: "auto" }}>
-            <SettingsPage />
+            <SettingsNavigation />
           </Content>
         </Layout>
       );

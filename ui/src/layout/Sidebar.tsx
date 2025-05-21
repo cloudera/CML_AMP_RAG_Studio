@@ -41,7 +41,6 @@ import {
   CommentOutlined,
   DatabaseOutlined,
   LineChartOutlined,
-  RobotFilled,
   SettingOutlined,
 } from "@ant-design/icons";
 import {
@@ -60,7 +59,7 @@ import LightbulbIcon from "src/cuix/icons/LightbulbIcon";
 import { cdlAmber200, cdlAmber900 } from "src/cuix/variables.ts";
 import "./style.css";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
-import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { useGetPollingAmpConfig } from "src/api/ampMetadataApi.ts";
 import { getItem } from "./TopNav";
 
 const { Sider } = Layout;
@@ -72,7 +71,7 @@ const Sidebar: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
-  const { data: config } = useGetAmpConfig();
+  const { data: config } = useGetPollingAmpConfig();
 
   const navToRagApp = () => {
     navigate({ to: "/chats" }).catch(() => null);
@@ -90,10 +89,6 @@ const Sidebar: React.FC = () => {
 
   const navToSettings = () => {
     navigate({ to: "/settings" }).catch(() => null);
-  };
-
-  const navToModels = () => {
-    navigate({ to: "/models" }).catch(() => null);
   };
 
   const isValidConfig = Boolean(config && !config.is_valid_config);
@@ -167,15 +162,6 @@ const Sidebar: React.FC = () => {
     }),
   ];
 
-  const models = getItem({
-    label: <div data-testid="models-nav">Models</div>,
-    key: "models",
-    disabled: enableFullUsage,
-    onClick: navToModels,
-    icon: <RobotFilled />,
-    config,
-  });
-
   const analyticsItem = getItem({
     label: <div data-testid="analytics-nav">Analytics</div>,
     key: "analytics",
@@ -194,7 +180,7 @@ const Sidebar: React.FC = () => {
     config,
   });
 
-  const items = [...baseItems, models, analyticsItem];
+  const items = [...baseItems, analyticsItem];
 
   if (config) {
     items.push(settingsItem);
@@ -205,8 +191,6 @@ const Sidebar: React.FC = () => {
       return ["data"];
     } else if (matchRoute({ to: "/chats", fuzzy: true })) {
       return ["chat"];
-    } else if (matchRoute({ to: "/models", fuzzy: true })) {
-      return ["models"];
     } else if (matchRoute({ to: "/analytics", fuzzy: true })) {
       return ["analytics"];
     } else if (matchRoute({ to: "/projects", fuzzy: true })) {

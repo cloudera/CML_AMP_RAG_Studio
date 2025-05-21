@@ -38,7 +38,7 @@
 import { Button, Flex, FormInstance, Modal, Progress, Typography } from "antd";
 import {
   ProjectConfig,
-  useGetAmpConfig,
+  useGetPollingAmpConfig,
   useRestartApplication,
   useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
@@ -47,7 +47,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 import { ModalHook } from "src/utils/useModal.ts";
 import { cdlBlue600, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
 import { ModelSource } from "src/api/modelsApi.ts";
-import { FileStorage } from "pages/Settings/SettingsPage.tsx";
+import { FileStorage } from "pages/Settings/AmpSettingsPage.tsx";
 
 const PROGRESS_STATES = {
   WAITING: {
@@ -144,7 +144,7 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const { data: config } = useGetAmpConfig(polling);
+  const { data: config } = useGetPollingAmpConfig(polling);
 
   const isRestarting = !config && polling;
 

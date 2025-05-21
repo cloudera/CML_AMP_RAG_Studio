@@ -36,11 +36,11 @@
  * DATA.
  ******************************************************************************/
 
-import { createFileRoute } from '@tanstack/react-router'
-import ChatLayout from 'pages/RagChatTab/ChatLayout.tsx'
+import { createFileRoute } from "@tanstack/react-router";
+import ChatLayout from "pages/RagChatTab/ChatLayout.tsx";
 
-export const Route = createFileRoute('/_layout/chats/_layout-chats')({
+export const Route = createFileRoute("/_layout/chats/_layout-chats")({
   component: () => {
-    return <ChatLayout />
+    return <ChatLayout />;
   },
-})
+});

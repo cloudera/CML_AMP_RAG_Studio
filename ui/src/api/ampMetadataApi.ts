@@ -157,11 +157,19 @@ export interface ProjectConfig {
   is_valid_config: boolean;
   release_version: string;
   application_config: ApplicationConfig;
+  cdp_token?: string;
 }
 
-export const useGetAmpConfig = (poll?: boolean) => {
+export const useGetAmpConfig = () => {
   return useQuery({
     queryKey: [QueryKeys.getAmpConfig],
+    queryFn: getAmpConfig,
+  });
+};
+
+export const useGetPollingAmpConfig = (poll?: boolean) => {
+  return useQuery({
+    queryKey: [QueryKeys.getPollingAmpConfig],
     queryFn: getAmpConfig,
     refetchInterval: () => {
       if (poll) {
@@ -221,4 +229,22 @@ export const useRestartApplication = ({
 
 const restartApplication = async (): Promise<string> => {
   return await postRequest(`${llmServicePath}/amp/restart-application`, {});
+};
+
+export const useSetCdpToken = ({
+  onSuccess,
+  onError,
+}: UseMutationType<string>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.setCdpToken],
+    mutationFn: setCdpToken,
+    onSuccess,
+    onError,
+  });
+};
+
+const setCdpToken = async (auth_token: string): Promise<string> => {
+  return await postRequest(`${llmServicePath}/amp/config/cdp-auth-token`, {
+    auth_token,
+  });
 };

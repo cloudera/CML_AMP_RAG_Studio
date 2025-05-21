@@ -79,7 +79,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
         desc_json = {"namespace": DEFAULT_NAMESPACE}
 
-        response = requests.post(describe_url, headers=headers, json=desc_json)
+        response = requests.post(describe_url, headers=headers, json=desc_json, timeout=5)
         raise_for_http_error(response)
         endpoints = body_to_json(response)["endpoints"]
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
@@ -124,7 +124,7 @@ def get_llm(
         api_key=get_caii_access_token(),
         base_url=api_base,
         model=model,
-        api_base=api_base,
+        # api_base=api_base, # todo: figure out how to integrate with Crew models
     )
 
 
@@ -154,8 +154,8 @@ def get_caii_llm_models() -> List[ModelResponse]:
             model = get_llm(endpoint_name=potential.name, messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt)
             if model.metadata:
                 results.append(potential)
-        except Exception:
-            logger.warning(f"Unable to load model metadata for model: {potential.name}")
+        except Exception as e:
+            logger.warning(f"Unable to load model metadata for model: {potential.name}. Error: {e}")
             pass
 
     return results

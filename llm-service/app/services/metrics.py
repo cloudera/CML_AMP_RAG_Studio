@@ -38,6 +38,7 @@
 import json
 import pathlib
 from collections import Counter
+from io import StringIO
 from typing import Optional
 
 import mlflow
@@ -105,8 +106,8 @@ def filter_runs(metric_filter: MetricFilter) -> list[Run]:
 def get_relevant_runs(metric_filter: MetricFilter, runs: list[Run]) -> list[Run]:
     def filter_by_parameters(r: Run) -> bool:
         data_source_ids = r.data.params.get("data_source_ids", "[]")
-        # no data_source_ids means it is probably a run from indexing, rather than chat.
-        if data_source_ids == "[]":
+        # filter out experiments with datasource as they are during indexing
+        if r.info.experiment_id.startswith("datasource"):
             return False
 
         if metric_filter.data_source_id:
@@ -265,4 +266,4 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
 def load_dataframe_from_artifact(uri: str, name: str) -> pd.DataFrame:
     artifact_loc = uri + "/" + name
     data = mlflow.artifacts.load_text(artifact_loc)
-    return pd.read_json(data, orient="split")
+    return pd.read_json(StringIO(data), orient="split")

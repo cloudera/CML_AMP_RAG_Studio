@@ -38,7 +38,10 @@
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
 import { Flex, Form, Input, Radio, Switch } from "antd";
-import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
+import {
+  FileStorage,
+  StyledHelperText,
+} from "pages/Settings/AmpSettingsPage.tsx";
 
 export const FileStorageFields = ({
   projectConfig,

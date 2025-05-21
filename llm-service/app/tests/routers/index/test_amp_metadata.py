@@ -1,6 +1,6 @@
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -35,31 +35,49 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
-from typing import Dict
 
-from app.config import settings
+"""Integration tests for app/routers/index/amp_metadata/."""
+from typing import Generator, Any
+from unittest.mock import patch, mock_open, MagicMock
 
-
-def build_auth_headers() -> Dict[str, str]:
-    access_token: str = get_caii_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-    return headers
+import pytest
+from fastapi.testclient import TestClient
 
 
-def get_caii_access_token() -> str:
-    if token_override := settings.cdp_token_override:
-        return token_override
-    access_token: str
-    try:
-        with open("cdp_token", "r") as file:
-            token_contents = json.load(file)
-            access_token = token_contents["access_token"]
-            return access_token
-    except FileNotFoundError:
-        pass
+@pytest.fixture()
+def mock_json_dump() -> Generator[Any, None, None]:
+    with patch("json.dump") as mock:
+        yield mock
 
-    with open("/tmp/jwt", "r") as file:
-        jwt_contents = json.load(file)
-    access_token = jwt_contents["access_token"]
-    return access_token
+
+@pytest.fixture()
+def mock_file() -> Generator[Any, None, None]:
+    with patch("builtins.open", new_callable=mock_open()) as m:
+        yield m
+
+
+class TestAmpMetadata:
+    @staticmethod
+    def test_save_auth_token(
+        client: TestClient, mock_json_dump: MagicMock, mock_file: MagicMock
+    ) -> None:
+        """Test POST /amp/config/auth-token."""
+        test_token = "test_auth_token_value"
+
+        response = client.post(
+            "/amp/config/cdp-auth-token",
+            json={"auth_token": test_token},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == "Auth token saved successfully"
+
+        # Verify the file was opened correctly
+        mock_file.assert_called_once_with("cdp_token", "w")
+
+        # Verify the correct data was written to the file
+        mock_json_dump.assert_called_once()
+        args, _ = mock_json_dump.call_args
+        assert args[0] == {"access_token": test_token}
+        # todo: verify the file content
+        # assert args[1] == mock_file()
