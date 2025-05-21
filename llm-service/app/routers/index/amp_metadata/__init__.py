@@ -149,9 +149,9 @@ def update_configuration(
     application_config = get_application_config()
 
     if origin_remote_user == project_owner or remote_user_perm == "RW":
-        # merge the new configuration with the existing one
         if config.cdp_token:
             save_cdp_token(config.cdp_token)
+        # merge the new configuration with the existing one
         updated_env = config_to_env(config)
         env_to_save = existing_env | updated_env
         update_project_environment(env_to_save)
