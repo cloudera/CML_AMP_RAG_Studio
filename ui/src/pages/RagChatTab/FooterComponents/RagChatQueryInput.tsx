@@ -163,6 +163,7 @@ const RagChatQueryInput = ({
                 if (e.shiftKey && e.key === "Enter") {
                   return null;
                 } else if (e.key === "Enter") {
+                  e.preventDefault();
                   handleChat(userInput);
                 }
               }}
