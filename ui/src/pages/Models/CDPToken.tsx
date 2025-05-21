@@ -72,8 +72,12 @@ export const CDPTokenInput = () => {
           messageQueue.error("Error occurred fetching embedding models");
         });
     },
-    onError: () => {
-      messageQueue.error("Error occurred setting token");
+    onError: (e) => {
+      if (e.message) {
+        messageQueue.error(e.message);
+      } else {
+        messageQueue.error("Error occurred setting token");
+      }
     },
   });
 

@@ -46,6 +46,7 @@ from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
+from ....services import models
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
@@ -190,6 +191,14 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
         A success message
     """
     save_cdp_token(auth_token)
+    try:
+        models.LLM.list_available()
+    except Exception as e:
+        os.remove("cdp_token")
+        raise fastapi.HTTPException(
+            status_code=400,
+            detail="Invalid auth token",
+        )
 
     return "Auth token saved successfully"
 
