@@ -36,7 +36,7 @@
  * DATA.
  */
 
-import { ChatMessageType } from "src/api/chatApi.ts";
+import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Button, Tooltip } from "antd";
 import { CopyOutlined } from "@ant-design/icons";
@@ -53,6 +53,7 @@ const CopyButton = ({ message }: { message: ChatMessageType }) => {
             });
         }}
         type="text"
+        disabled={message.id === placeholderChatResponseId}
         icon={<CopyOutlined />}
       />
     </Tooltip>
