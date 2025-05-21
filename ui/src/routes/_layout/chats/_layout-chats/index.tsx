@@ -48,7 +48,7 @@ import {
 } from "src/api/modelsApi.ts";
 import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
 import { ApiError } from "src/api/utils.ts";
-import { Alert, Button } from "antd";
+import { Alert, Button, Flex } from "antd";
 import messageQueue from "src/utils/messageQueue.ts";
 
 export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
@@ -67,28 +67,33 @@ export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
       modelSource.data === "CAII"
     ) {
       return (
-        <Alert
-          type="error"
-          style={{ margin: 20, width: 500, height: 80 }}
-          showIcon
-          message={"Invalid or missing CDP token. Go to settings to set it."}
-          action={
-            <Button
-              type="default"
-              danger
-              onClick={() => {
-                navigate({
-                  to: "/settings",
-                  hash: "modelConfiguration",
-                }).catch(() => {
-                  messageQueue.error("Error occurred navigating to settings");
-                });
-              }}
-            >
-              Settings
-            </Button>
-          }
-        />
+        <Flex
+          align="center"
+          justify="center"
+          style={{ height: "100%", width: "100%" }}
+        >
+          <Alert
+            type="warning"
+            style={{ margin: 20, width: 500, height: 80 }}
+            showIcon
+            message={"Invalid or missing CDP token. Go to settings to set it."}
+            action={
+              <Button
+                type="default"
+                onClick={() => {
+                  navigate({
+                    to: "/settings",
+                    hash: "modelConfiguration",
+                  }).catch(() => {
+                    messageQueue.error("Error occurred navigating to settings");
+                  });
+                }}
+              >
+                Settings
+              </Button>
+            }
+          />
+        </Flex>
       );
     }
 

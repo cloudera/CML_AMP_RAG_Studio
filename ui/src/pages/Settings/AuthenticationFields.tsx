@@ -40,6 +40,7 @@ import { ModelSource } from "src/api/modelsApi.ts";
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
 import { Flex, Form, Input, Typography } from "antd";
 import { FileStorage } from "pages/Settings/AmpSettingsPage.tsx";
+import { cdlBlue300 } from "src/cuix/variables.ts";
 
 export const AuthenticationFields = ({
   modelProvider,
@@ -126,15 +127,16 @@ export const AuthenticationFields = ({
         name={["cdp_auth_token"]}
         tooltip={
           <Typography.Text style={{ color: "#fff" }}>
-            Please see{" "}
+            CDP Auth token is not required in all environments. Please see
+            Cloudera AI Inference{" "}
             <Typography.Link
               target="_blank"
-              style={{ color: "#1668dc" }}
+              style={{ color: cdlBlue300 }}
               href="https://docs.cloudera.com/machine-learning/cloud/ai-inference/topics/ml-caii-authentication.html"
             >
-              our documentation
+              documentation
             </Typography.Link>{" "}
-            for how to access a CDP token.
+            for how to access or generate a CDP Auth token.
           </Typography.Text>
         }
         hidden={modelProvider !== "CAII"}
