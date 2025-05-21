@@ -79,7 +79,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
         desc_json = {"namespace": DEFAULT_NAMESPACE}
 
-        response = requests.post(describe_url, headers=headers, json=desc_json)
+        response = requests.post(describe_url, headers=headers, json=desc_json, timeout=5)
         raise_for_http_error(response)
         endpoints = body_to_json(response)["endpoints"]
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
