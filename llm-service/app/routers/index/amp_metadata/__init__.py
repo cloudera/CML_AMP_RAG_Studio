@@ -193,7 +193,7 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     save_cdp_token(auth_token)
     try:
         models.LLM.list_available()
-    except Exception as e:
+    except Exception:
         os.remove("cdp_token")
         raise fastapi.HTTPException(
             status_code=400,
