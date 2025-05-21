@@ -67,24 +67,25 @@
 #
 
 """Integration tests for app/routers/index/amp_metadata/."""
-from unittest.mock import patch, mock_open
+from typing import Generator, Any
+from unittest.mock import patch, mock_open, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 @pytest.fixture()
-def mock_json_dump():
+def mock_json_dump() -> Generator[Any, None, None]:
     with patch("json.dump") as mock:
         yield mock
 
 @pytest.fixture()
-def mock_file():
+def mock_file() -> Generator[Any, None, None]:
     with patch("builtins.open", new_callable=mock_open()) as m:
         yield m
 
 class TestAmpMetadata:
     @staticmethod
-    def test_save_auth_token(client: TestClient, mock_json_dump, mock_file) -> None:
+    def test_save_auth_token(client: TestClient, mock_json_dump: MagicMock, mock_file: MagicMock) -> None:
         """Test POST /amp/config/auth-token."""
         test_token = "test_auth_token_value"
 
@@ -97,7 +98,7 @@ class TestAmpMetadata:
         assert response.json() == "Auth token saved successfully"
 
         # Verify the file was opened correctly
-        mock_file.assert_called_once_with("/tmp/jwt", "w")
+        mock_file.assert_called_once_with("cdp_token", "w")
 
         # Verify the correct data was written to the file
         mock_json_dump.assert_called_once()
