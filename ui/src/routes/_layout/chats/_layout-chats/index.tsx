@@ -36,81 +36,12 @@
  * DATA.
  ******************************************************************************/
 
-import {
-  createFileRoute,
-  ErrorComponent,
-  ErrorComponentProps,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import {
-  getLlmModelsQueryOptions,
-  useGetModelSource,
-} from "src/api/modelsApi.ts";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
-import { ApiError } from "src/api/utils.ts";
-import { Button, Card, Flex, Typography } from "antd";
-import messageQueue from "src/utils/messageQueue.ts";
-import { WarningOutlined } from "@ant-design/icons";
+import { CaiiTokenErrorComponent } from "src/components/ErrorComponents/CaiiTokenErrorComponent.tsx";
 
-export const CustomErrorComponent = ({
-  errorComponent,
-}: {
-  errorComponent: ErrorComponentProps;
-}) => {
-  const modelSource = useGetModelSource();
-  const navigate = useNavigate();
-  const { error } = errorComponent;
-  if (
-    error instanceof ApiError &&
-    error.status === 401 &&
-    modelSource.data === "CAII"
-  ) {
-    return (
-      <Flex
-        align={"center"}
-        justify={"center"}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <Card
-          title={
-            <Typography.Text type="danger">
-              <WarningOutlined style={{ marginRight: 8 }} />
-              Invalid or missing CDP token
-            </Typography.Text>
-          }
-          style={{
-            width: "100%",
-            maxWidth: 600,
-          }}
-        >
-          <Flex vertical gap={16}>
-            <Typography.Text italic>
-              Provide a valid CDP token on the Settings page to use Cloudera AI
-              Inference
-            </Typography.Text>
-            <Flex gap={8}>
-              <Button
-                type="default"
-                onClick={() => {
-                  navigate({
-                    to: "/settings",
-                    hash: "modelConfiguration",
-                  }).catch(() => {
-                    messageQueue.error("Error occurred navigating to settings");
-                  });
-                }}
-              >
-                Settings
-              </Button>
-            </Flex>
-          </Flex>
-        </Card>
-      </Flex>
-    );
-  }
-  return <ErrorComponent error={error} />;
-};
 export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
   loader: async ({ context }) =>
     await Promise.all([
@@ -118,5 +49,7 @@ export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
       context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
       context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
     ]),
-  errorComponent: (error) => <CustomErrorComponent errorComponent={error} />,
+  errorComponent: (errorComponent) => (
+    <CaiiTokenErrorComponent errorComponent={errorComponent} />
+  ),
 });
