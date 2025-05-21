@@ -55,6 +55,15 @@ export const ChatMessageBody = ({
   data: ChatMessageType;
   streamedEvents?: CrewEventResponse[];
 }) => {
+  // TODO: DETLETE ME
+  streamedEvents = [
+    {
+      type: "agent_finish",
+      name: "Research Complete",
+      data: "Thought: I encountered issues with the search tool, but based on the provided context, I can still extract and analyze the necessary details about company policies related to meals, entertainment, gifts, and telework guidelines.",
+      timestamp: 1747858409.192696,
+    },
+  ];
   return (
     <div data-testid="chat-message">
       {data.rag_message.user ? (
