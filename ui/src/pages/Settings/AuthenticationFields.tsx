@@ -39,10 +39,7 @@
 import { ModelSource } from "src/api/modelsApi.ts";
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
 import { Flex, Form, Input, Typography } from "antd";
-import {
-  FileStorage,
-  StyledHelperText,
-} from "pages/Settings/AmpSettingsPage.tsx";
+import { FileStorage } from "pages/Settings/AmpSettingsPage.tsx";
 
 export const AuthenticationFields = ({
   modelProvider,
@@ -63,13 +60,6 @@ export const AuthenticationFields = ({
     summaryStorageProvider === "S3";
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
-      {modelProvider === "CAII" &&
-        selectedFileStorage === "Local" &&
-        summaryStorageProvider === "Local" && (
-          <StyledHelperText>
-            No additional authentication needed.
-          </StyledHelperText>
-        )}
       <Form.Item
         label={"AWS Region"}
         initialValue={projectConfig?.aws_config.region}
@@ -135,11 +125,16 @@ export const AuthenticationFields = ({
         label={"CDP Auth Token"}
         name={["cdp_auth_token"]}
         tooltip={
-          <Typography.Text>
-            To get access to a CDP token, please see{" "}
-            <a href="https://docs.cloudera.com/machine-learning/cloud/ai-inference/topics/ml-caii-authentication.html">
+          <Typography.Text style={{ color: "#fff" }}>
+            Please see{" "}
+            <Typography.Link
+              target="_blank"
+              style={{ color: "#1668dc" }}
+              href="https://docs.cloudera.com/machine-learning/cloud/ai-inference/topics/ml-caii-authentication.html"
+            >
               our documentation
-            </a>
+            </Typography.Link>{" "}
+            for how to access a CDP token.
           </Typography.Text>
         }
         hidden={modelProvider !== "CAII"}
