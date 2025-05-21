@@ -169,7 +169,6 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 def get_models_with_task(task_type: str) -> List[ModelResponse]:
     endpoints = list_endpoints()
-    print(f"Endpoints: {endpoints}")
     endpoint_details = list(
         map(lambda endpoint: describe_endpoint(endpoint.name), endpoints)
     )
