@@ -194,7 +194,7 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     return "Auth token saved successfully"
 
 
-def save_cdp_token(auth_token):
+def save_cdp_token(auth_token: str) -> None:
     token_data = {"access_token": auth_token}
     with open("cdp_token", "w") as file:
         json.dump(token_data, file)
