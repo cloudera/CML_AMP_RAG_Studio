@@ -53,12 +53,17 @@ import { Button, Card, Flex, Typography } from "antd";
 import messageQueue from "src/utils/messageQueue.ts";
 import { WarningOutlined } from "@ant-design/icons";
 
-export const getErrorComponent = (error: ErrorComponentProps) => {
+export const CustomErrorComponent = ({
+  errorComponent,
+}: {
+  errorComponent: ErrorComponentProps;
+}) => {
   const modelSource = useGetModelSource();
   const navigate = useNavigate();
+  const { error } = errorComponent;
   if (
-    error.error instanceof ApiError &&
-    error.error.status === 401 &&
+    error instanceof ApiError &&
+    error.status === 401 &&
     modelSource.data === "CAII"
   ) {
     return (
@@ -104,7 +109,6 @@ export const getErrorComponent = (error: ErrorComponentProps) => {
       </Flex>
     );
   }
-
   return <ErrorComponent error={error} />;
 };
 export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
@@ -114,5 +118,5 @@ export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
       context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
       context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
     ]),
-  errorComponent: getErrorComponent,
+  errorComponent: (error) => <CustomErrorComponent errorComponent={error} />,
 });

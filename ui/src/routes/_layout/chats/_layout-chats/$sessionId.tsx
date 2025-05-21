@@ -39,7 +39,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
-import { getErrorComponent } from "src/routes/_layout/chats/_layout-chats/index.tsx";
+import { CustomErrorComponent } from "src/routes/_layout/chats/_layout-chats/index.tsx";
 
 export const Route = createFileRoute("/_layout/chats/_layout-chats/$sessionId")(
   {
@@ -48,6 +48,6 @@ export const Route = createFileRoute("/_layout/chats/_layout-chats/$sessionId")(
         context.queryClient.ensureQueryData(getSessionsQueryOptions),
         context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
       ]),
-    errorComponent: getErrorComponent,
+    errorComponent: (error) => <CustomErrorComponent errorComponent={error} />,
   },
 );
