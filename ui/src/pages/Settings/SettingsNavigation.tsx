@@ -59,20 +59,18 @@ const SettingsNavigation = () => {
 
   const tabItems: TabsProps["items"] = [
     {
+      key: ampSettingsKey,
+      label: "AMP Settings",
+      children: <AmpSettingsPage />,
+      disabled: !config?.is_valid_config,
+    },
+    {
       key: modelConfigKey,
       label: "Model Configuration",
       children: <ModelPage />,
       disabled: !config?.is_valid_config,
     },
   ];
-
-  if (config) {
-    tabItems.unshift({
-      key: ampSettingsKey,
-      label: "AMP Settings",
-      children: <AmpSettingsPage />,
-    });
-  }
 
   const defaultKey = config ? ampSettingsKey : modelConfigKey;
   useEffect(() => {
