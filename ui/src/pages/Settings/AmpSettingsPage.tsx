@@ -36,7 +36,10 @@
  * DATA.
  ******************************************************************************/
 import { Alert, Button, Flex, Form, Typography } from "antd";
-import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import {
+  ProjectConfig,
+  useGetPollingAmpConfig,
+} from "src/api/ampMetadataApi.ts";
 import { ReactNode, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -64,7 +67,7 @@ const AmpSettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: currentModelSource } = useGetModelSource();
   const confirmationModal = useModal();
-  const { data: projectConfig } = useGetAmpConfig();
+  const { data: projectConfig } = useGetPollingAmpConfig();
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );

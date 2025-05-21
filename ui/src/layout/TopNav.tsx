@@ -50,12 +50,15 @@ import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
-import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import {
+  ProjectConfig,
+  useGetPollingAmpConfig,
+} from "src/api/ampMetadataApi.ts";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
-  const { data: config } = useGetAmpConfig();
+  const { data: config } = useGetPollingAmpConfig();
 
   const navigateTo = (path: string) => () => {
     navigate({ to: path }).catch(() => null);

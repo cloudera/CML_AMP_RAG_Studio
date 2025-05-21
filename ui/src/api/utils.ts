@@ -112,6 +112,7 @@ export enum QueryKeys {
   "getSessionsForProject" = "getSessionsForProject",
   "getAmpConfig" = "getAmpConfig",
   "getTools" = "getTools",
+  "getPollingAmpConfig" = "getPollingAmpConfig",
 }
 
 export const commonHeaders = {

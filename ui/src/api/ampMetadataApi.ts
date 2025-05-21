@@ -160,9 +160,16 @@ export interface ProjectConfig {
   cdp_auth_token?: string;
 }
 
-export const useGetAmpConfig = (poll?: boolean) => {
+export const useGetAmpConfig = () => {
   return useQuery({
     queryKey: [QueryKeys.getAmpConfig],
+    queryFn: getAmpConfig,
+  });
+};
+
+export const useGetPollingAmpConfig = (poll?: boolean) => {
+  return useQuery({
+    queryKey: [QueryKeys.getPollingAmpConfig],
     queryFn: getAmpConfig,
     refetchInterval: () => {
       if (poll) {

@@ -38,7 +38,7 @@
 import { Button, Flex, FormInstance, Modal, Progress, Typography } from "antd";
 import {
   ProjectConfig,
-  useGetAmpConfig,
+  useGetPollingAmpConfig,
   useRestartApplication,
   useUpdateAmpConfig,
 } from "src/api/ampMetadataApi.ts";
@@ -144,7 +144,7 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const { data: config } = useGetAmpConfig(polling);
+  const { data: config } = useGetPollingAmpConfig(polling);
 
   const isRestarting = !config && polling;
 
