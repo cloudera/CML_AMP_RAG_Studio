@@ -124,7 +124,7 @@ export const AuthenticationFields = ({
       </Form.Item>
       <Form.Item
         label={"CDP Auth Token"}
-        name={["cdp_auth_token"]}
+        name={["cdp_token"]}
         tooltip={
           <Typography.Text style={{ color: "#fff" }}>
             CDP Auth token is not required in all environments. Please see

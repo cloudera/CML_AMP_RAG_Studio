@@ -157,7 +157,7 @@ export interface ProjectConfig {
   is_valid_config: boolean;
   release_version: string;
   application_config: ApplicationConfig;
-  cdp_auth_token?: string;
+  cdp_token?: string;
 }
 
 export const useGetAmpConfig = () => {
