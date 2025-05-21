@@ -39,6 +39,7 @@
 import {
   createFileRoute,
   ErrorComponent,
+  ErrorComponentProps,
   useNavigate,
 } from "@tanstack/react-router";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
@@ -48,36 +49,42 @@ import {
 } from "src/api/modelsApi.ts";
 import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
 import { ApiError } from "src/api/utils.ts";
-import { Alert, Button, Flex } from "antd";
+import { Button, Card, Flex, Typography } from "antd";
 import messageQueue from "src/utils/messageQueue.ts";
+import { WarningOutlined } from "@ant-design/icons";
 
-export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
-  loader: async ({ context }) =>
-    await Promise.all([
-      context.queryClient.ensureQueryData(getSessionsQueryOptions),
-      context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
-      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-    ]),
-  errorComponent: (error) => {
-    const modelSource = useGetModelSource();
-    const navigate = useNavigate();
-    if (
-      error.error instanceof ApiError &&
-      error.error.status === 401 &&
-      modelSource.data === "CAII"
-    ) {
-      return (
-        <Flex
-          align="center"
-          justify="center"
-          style={{ height: "100%", width: "100%" }}
+export const getErrorComponent = (error: ErrorComponentProps) => {
+  const modelSource = useGetModelSource();
+  const navigate = useNavigate();
+  if (
+    error.error instanceof ApiError &&
+    error.error.status === 401 &&
+    modelSource.data === "CAII"
+  ) {
+    return (
+      <Flex
+        align={"center"}
+        justify={"center"}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <Card
+          title={
+            <Typography.Text type="danger">
+              <WarningOutlined style={{ marginRight: 8 }} />
+              Invalid or missing CDP token
+            </Typography.Text>
+          }
+          style={{
+            width: "100%",
+            maxWidth: 600,
+          }}
         >
-          <Alert
-            type="warning"
-            style={{ margin: 20, width: 500, height: 80 }}
-            showIcon
-            message={"Invalid or missing CDP token. Go to settings to set it."}
-            action={
+          <Flex vertical gap={16}>
+            <Typography.Text italic>
+              Provide a valid CDP token on the Settings page to use Cloudera AI
+              Inference
+            </Typography.Text>
+            <Flex gap={8}>
               <Button
                 type="default"
                 onClick={() => {
@@ -91,12 +98,21 @@ export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
               >
                 Settings
               </Button>
-            }
-          />
-        </Flex>
-      );
-    }
+            </Flex>
+          </Flex>
+        </Card>
+      </Flex>
+    );
+  }
 
-    return <ErrorComponent error={error} />;
-  },
+  return <ErrorComponent error={error} />;
+};
+export const Route = createFileRoute("/_layout/chats/_layout-chats/")({
+  loader: async ({ context }) =>
+    await Promise.all([
+      context.queryClient.ensureQueryData(getSessionsQueryOptions),
+      context.queryClient.ensureQueryData(getDefaultProjectQueryOptions),
+      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
+    ]),
+  errorComponent: getErrorComponent,
 });
