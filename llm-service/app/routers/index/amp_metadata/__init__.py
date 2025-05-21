@@ -149,6 +149,8 @@ def update_configuration(
 
     if origin_remote_user == project_owner or remote_user_perm == "RW":
         # merge the new configuration with the existing one
+        if config.cdp_token:
+            save_cdp_token(config.cdp_token)
         updated_env = config_to_env(config)
         env_to_save = existing_env | updated_env
         update_project_environment(env_to_save)
@@ -172,7 +174,10 @@ def restart_application() -> str:
     return "OK"
 
 
-@router.post("/config/cdp-auth-token", summary="Saves a CDP auth token for authentication to AI Inference services.")
+@router.post(
+    "/config/cdp-auth-token",
+    summary="Saves a CDP auth token for authentication to AI Inference services.",
+)
 @exceptions.propagates
 def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     """
@@ -184,9 +189,12 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     Returns:
         A success message
     """
-    token_data = {"access_token": auth_token}
-
-    with open("cdp_token", "w") as file:
-        json.dump(token_data, file)
+    save_cdp_token(auth_token)
 
     return "Auth token saved successfully"
+
+
+def save_cdp_token(auth_token):
+    token_data = {"access_token": auth_token}
+    with open("cdp_token", "w") as file:
+        json.dump(token_data, file)

@@ -131,6 +131,17 @@ export const AuthenticationFields = ({
           disabled={!enableModification}
         />
       </Form.Item>
+      <Form.Item
+        label={"CDP Auth Token"}
+        name={["cdp_auth_token"]}
+        hidden={modelProvider !== "CAII"}
+      >
+        <Input
+          placeholder="cdp-auth-token"
+          type="password"
+          disabled={!enableModification}
+        />
+      </Form.Item>
     </Flex>
   );
 };

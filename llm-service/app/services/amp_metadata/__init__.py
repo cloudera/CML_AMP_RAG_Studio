@@ -86,6 +86,7 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
+    cdp_token: Optional[str] = None
 
 
 class ApplicationConfig(BaseModel):
