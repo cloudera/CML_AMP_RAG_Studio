@@ -87,8 +87,8 @@ Water is wet when the sky is red.
 When is water wet?
 
 <Answer>
-Water will be wet when the sky is red <a class="rag_citation" href="1"></a>, \
-which occurs in the evening <a class="rag_citation" href="2"></a>.
+Water will be wet when the sky is red<a class="rag_citation" href="1"></a>, \
+which occurs in the evening<a class="rag_citation" href="2"></a>.
 
 Now it's your turn. Below are several numbered sources of information:
 
@@ -131,8 +131,8 @@ Water is wet when the sky is red.
 When is water wet?
 
 <Answer> 
-Water will be wet when the sky is red <a class="rag_citation" href="1"></a>, \
-which occurs in the evening <a class="rag_citation" href="2"></a>.
+Water will be wet when the sky is red<a class="rag_citation" href="1"></a>, \
+which occurs in the evening<a class="rag_citation" href="2"></a>.
 
 Now it's your turn. We have provided an existing answer: 
 

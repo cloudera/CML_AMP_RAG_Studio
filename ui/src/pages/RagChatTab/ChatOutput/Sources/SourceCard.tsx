@@ -78,7 +78,11 @@ const getTag = (source: SourceNode, index?: number) => {
       style={{
         borderRadius: 20,
         height: 24,
+        minWidth: 24,
         cursor: "pointer",
+        margin: 0,
+        marginLeft: 4,
+        bottom: 2,
       }}
     >
       <Flex
