@@ -38,7 +38,7 @@
 
 import { ModelSource } from "src/api/modelsApi.ts";
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input } from "antd";
+import { Flex, Form, Input, Typography } from "antd";
 import {
   FileStorage,
   StyledHelperText,
@@ -134,6 +134,14 @@ export const AuthenticationFields = ({
       <Form.Item
         label={"CDP Auth Token"}
         name={["cdp_auth_token"]}
+        tooltip={
+          <Typography.Text>
+            To get access to a CDP token, please see{" "}
+            <a href="https://docs.cloudera.com/machine-learning/cloud/ai-inference/topics/ml-caii-authentication.html">
+              our documentation
+            </a>
+          </Typography.Text>
+        }
         hidden={modelProvider !== "CAII"}
       >
         <Input
