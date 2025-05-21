@@ -69,7 +69,7 @@ citations to the paragraphs. When referencing information from a source, \
 cite the appropriate source(s) using their corresponding ids. \
 Every answer/paragraph should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
-The citations should be in an html anchor tag (<a href=>) with an html "class" of "rag_citation", \
+The citations should be the href of an anchor tag (<a class="rag_citation" href=CITATION_HERE></a>), \
 and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \
 Do not make up source ids for citations. Only use the source ids \
@@ -87,8 +87,8 @@ Water is wet when the sky is red.
 When is water wet?
 
 <Answer>
-Water will be wet when the sky is red <a class="rag_citation" href="1">1</a>, \
-which occurs in the evening <a class="rag_citation" href="2">2</a>.
+Water will be wet when the sky is red <a class="rag_citation" href="1"></a>, \
+which occurs in the evening <a class="rag_citation" href="2"></a>.
 
 Now it's your turn. Below are several numbered sources of information:
 
@@ -113,7 +113,7 @@ citations to the paragraphs. When referencing information from a source, \
 cite the appropriate source(s) using their corresponding ids. \
 Every answer/paragraph should include at least one source citation. \
 Only cite a source when you are explicitly referencing it. \
-The citations should be in an html-style tag: <rag_citation>, \
+The citations should be the href of an anchor tag (<a class="rag_citation" href=CITATION_HERE></a>), \
 and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
 If none of the sources are helpful, you should indicate that. \
 Do not make up source ids for citations. Only use the source ids \
@@ -131,8 +131,8 @@ Water is wet when the sky is red.
 When is water wet?
 
 <Answer> 
-Water will be wet when the sky is red <a class="rag_citation" href="1">1</a>, \
-which occurs in the evening <a class="rag_citation" href="2">2</a>.
+Water will be wet when the sky is red <a class="rag_citation" href="1"></a>, \
+which occurs in the evening <a class="rag_citation" href="2"></a>.
 
 Now it's your turn. We have provided an existing answer: 
 

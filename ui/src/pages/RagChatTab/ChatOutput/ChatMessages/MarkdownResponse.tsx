@@ -36,30 +36,53 @@
  * DATA.
  */
 
-import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
-import messageQueue from "src/utils/messageQueue.ts";
-import { Button, Tooltip } from "antd";
-import { CopyOutlined } from "@ant-design/icons";
+import { ChatMessageType, SourceNode } from "src/api/chatApi.ts";
+import Markdown from "react-markdown";
+import Remark from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import { ComponentProps, ReactElement } from "react";
+import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 
-const CopyButton = ({ message }: { message: ChatMessageType }) => {
+export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
   return (
-    <Tooltip title="Copy the assistant's response">
-      <Button
-        onClick={() => {
-          const div = document.createElement("div");
-          div.innerHTML = message.rag_message.assistant;
-          const plainText = div.textContent;
-          navigator.clipboard
-            .writeText(plainText ?? message.rag_message.assistant)
-            .catch(() => {
-              messageQueue.error("Failed to copy to clipboard");
-            });
-        }}
-        type="text"
-        disabled={message.id === placeholderChatResponseId}
-        icon={<CopyOutlined />}
-      />
-    </Tooltip>
+    <Markdown
+      // skipHtml={true}
+      remarkPlugins={[Remark]}
+      rehypePlugins={[rehypeRaw]}
+      className="styled-markdown"
+      children={data.rag_message.assistant.trimStart()}
+      components={{
+        a: (
+          props: ComponentProps<"a">,
+        ): ReactElement<SourceNode> | undefined => {
+          const { href, className, children, ...other } = props;
+          if (className === "rag_citation") {
+            if (data.source_nodes.length === 0) {
+              return undefined;
+            }
+            const { source_nodes } = data;
+            const sourceNodeIndex = source_nodes.findIndex(
+              (source_node) => source_node.node_id === href,
+            );
+            if (sourceNodeIndex >= 0) {
+              return (
+                <SourceCard
+                  source={source_nodes[sourceNodeIndex]}
+                  index={sourceNodeIndex + 1}
+                />
+              );
+            }
+            if (!href?.startsWith("http")) {
+              return undefined;
+            }
+          }
+          return (
+            <a href={href} className={className} {...other}>
+              {children}
+            </a>
+          );
+        },
+      }}
+    />
   );
 };
-export default CopyButton;
