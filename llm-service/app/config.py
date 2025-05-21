@@ -145,5 +145,8 @@ class _Settings:
     def azure_openai_api_key(self) -> Optional[str]:
         return os.environ.get("AZURE_OPENAI_API_KEY")
 
+    @property
+    def azure_openai_endpoint(self) -> Optional[str]:
+        return os.environ.get("AZURE_OPENAI_ENDPOINT")
 
 settings = _Settings()

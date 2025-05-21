@@ -49,6 +49,7 @@ import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
   createQueryConfiguration,
+  getOnEvent,
   isPlaceholder,
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
@@ -65,6 +66,7 @@ const ChatMessageController = () => {
       isFetchingPreviousPage,
     },
     streamedChatState: [, setStreamedChat],
+    streamedEventState: [, setStreamedEvent],
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -83,6 +85,7 @@ const ChatMessageController = () => {
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },
+    onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
       setStreamedChat("");
       const url = new URL(window.location.href);

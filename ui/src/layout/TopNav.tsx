@@ -41,7 +41,6 @@ import {
   CommentOutlined,
   DatabaseOutlined,
   LineChartOutlined,
-  RobotFilled,
   SettingOutlined,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Tooltip, Typography } from "antd";
@@ -51,12 +50,15 @@ import { cdlAmber200, cdlAmber900, cdlSlate800 } from "src/cuix/variables.ts";
 import AmpUpdateBanner from "src/components/AmpUpdate/AmpUpdateBanner.tsx";
 
 import "./style.css";
-import { ProjectConfig, useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import {
+  ProjectConfig,
+  useGetPollingAmpConfig,
+} from "src/api/ampMetadataApi.ts";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
-  const { data: config } = useGetAmpConfig();
+  const { data: config } = useGetPollingAmpConfig();
 
   const navigateTo = (path: string) => () => {
     navigate({ to: path }).catch(() => null);
@@ -121,15 +123,6 @@ const TopNav: React.FC = () => {
     }),
   ];
 
-  const models = getItem({
-    label: <span data-testid="models-nav">Models</span>,
-    key: "models",
-    disabled: enableFullUsage,
-    onClick: navigateTo("/models"),
-    icon: <RobotFilled />,
-    config,
-  });
-
   const analyticsItem = getItem({
     label: <span data-testid="analytics-nav">Analytics</span>,
     key: "analytics",
@@ -147,7 +140,7 @@ const TopNav: React.FC = () => {
     icon: <SettingOutlined />,
   });
 
-  const items = [...baseItems, models, analyticsItem];
+  const items = [...baseItems, analyticsItem];
   if (config) {
     items.push(settingsItem);
   }
@@ -157,8 +150,6 @@ const TopNav: React.FC = () => {
       return ["data"];
     } else if (matchRoute({ to: "/chats", fuzzy: true })) {
       return ["chat"];
-    } else if (matchRoute({ to: "/models", fuzzy: true })) {
-      return ["models"];
     } else if (matchRoute({ to: "/analytics", fuzzy: true })) {
       return ["analytics"];
     } else if (matchRoute({ to: "/projects", fuzzy: true })) {

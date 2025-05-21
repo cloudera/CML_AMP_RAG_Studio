@@ -42,6 +42,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
+  getOnEvent,
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
@@ -50,6 +51,9 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
+
+const { TextArea } = Input;
 
 const RagChatQueryInput = ({
   newSessionCallback,
@@ -62,6 +66,7 @@ const RagChatQueryInput = ({
     dataSourceSize,
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
+    streamedEventState: [, setStreamedEvent],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -69,6 +74,7 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
+  const [selectedTools, setSelectedTools] = useState<string[]>(["search"]);
   const inputRef = useRef<InputRef>(null);
   const {
     data: sampleQuestions,
@@ -86,6 +92,7 @@ const RagChatQueryInput = ({
     onChunk: (chunk) => {
       setStreamedChat((prev) => prev + chunk);
     },
+    onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
       setUserInput("");
       setStreamedChat("");
@@ -107,7 +114,10 @@ const RagChatQueryInput = ({
         streamChatMutation.mutate({
           query: userInput,
           session_id: +sessionId,
-          configuration: createQueryConfiguration(excludeKnowledgeBase),
+          configuration: createQueryConfiguration(
+            excludeKnowledgeBase,
+            selectedTools,
+          ),
         });
       } else {
         newSessionCallback(userInput);
@@ -135,45 +145,67 @@ const RagChatQueryInput = ({
           />
         ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
-          <Input
-            autoFocus
-            ref={inputRef}
-            placeholder={
-              dataSourceSize && dataSourceSize > 0
-                ? "Ask a question"
-                : "Chat with the LLM"
-            }
-            status={dataSourcesStatus === "error" ? "error" : undefined}
-            value={userInput}
-            onChange={(e) => {
-              setUserInput(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleChat(userInput);
+          <div style={{ position: "relative", width: "100%" }}>
+            <TextArea
+              autoFocus
+              ref={inputRef}
+              placeholder={
+                dataSourceSize && dataSourceSize > 0
+                  ? "Ask a question"
+                  : "Chat with the LLM"
               }
-            }}
-            suffix={
-              <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
-                <Switch
-                  checkedChildren={<DatabaseFilled />}
-                  value={!excludeKnowledgeBase}
-                  style={{ display: dataSourceSize ? "block" : "none" }}
-                  onChange={handleExcludeKnowledgeBase}
+              status={dataSourcesStatus === "error" ? "error" : undefined}
+              value={userInput}
+              onChange={(e) => {
+                setUserInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.shiftKey && e.key === "Enter") {
+                  return null;
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleChat(userInput);
+                }
+              }}
+              autoSize={{ minRows: 1, maxRows: 20 }}
+              disabled={streamChatMutation.isPending}
+              style={{ paddingRight: 110 }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                right: "8px",
+                bottom: "5px",
+                display: "flex",
+                gap: "4px",
+                zIndex: 1,
+              }}
+            >
+              <Flex gap={8} align="end">
+                <ToolsManagerButton
+                  selectedTools={selectedTools}
+                  setSelectedTools={setSelectedTools}
                 />
-              </Tooltip>
-            }
-            disabled={streamChatMutation.isPending}
-          />
-          <Button
-            style={{ padding: 0 }}
-            type="text"
-            onClick={() => {
-              handleChat(userInput);
-            }}
-            icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-            disabled={streamChatMutation.isPending}
-          />
+                <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
+                  <Switch
+                    checkedChildren={<DatabaseFilled />}
+                    value={!excludeKnowledgeBase}
+                    style={{ display: dataSourceSize ? "block" : "none" }}
+                    onChange={handleExcludeKnowledgeBase}
+                  />
+                </Tooltip>
+              </Flex>
+              <Button
+                size="small"
+                type="text"
+                onClick={() => {
+                  handleChat(userInput);
+                }}
+                icon={<SendOutlined style={{ color: cdlBlue600 }} />}
+                disabled={streamChatMutation.isPending}
+              />
+            </div>
+          </div>
         </Flex>
       </Flex>
     </div>

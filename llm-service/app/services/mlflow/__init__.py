@@ -45,7 +45,10 @@ import mlflow
 from mlflow.entities import Experiment, Run
 
 from app.config import settings
-from app.services.chat_history.chat_history_manager import RagPredictSourceNode, RagStudioChatMessage
+from app.services.chat_history.chat_history_manager import (
+    RagPredictSourceNode,
+    RagStudioChatMessage,
+)
 from app.services.metadata_apis import data_sources_metadata_api, session_metadata_api
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.query.query_configuration import QueryConfiguration
@@ -112,6 +115,9 @@ def record_rag_mlflow_run(
     session: Session,
     user_name: Optional[str],
 ) -> None:
+    if not session.data_source_ids:
+        record_direct_llm_mlflow_run(response_id, session, user_name)
+        return
     params = chat_log_ml_flow_params(session, query_configuration, user_name)
     source_nodes: list[RagPredictSourceNode] = new_chat_message.source_nodes
     metrics: dict[str, Any] = {
@@ -181,7 +187,7 @@ def rating_mlflow_log_metric(
 ) -> None:
     session = session_metadata_api.get_session(session_id, user_name=user_name)
     experiment: Experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
+        experiment_name=f"session_{session.id}"
     )
     runs: list[Run] = mlflow.search_runs(
         [experiment.experiment_id],
@@ -194,10 +200,12 @@ def rating_mlflow_log_metric(
         mlflow.log_metric("rating", value, run_id=run.info.run_id)
 
 
-def feedback_mlflow_log_table(feedback: str, response_id: str, session_id: int, user_name: Optional[str]) -> None:
+def feedback_mlflow_log_table(
+    feedback: str, response_id: str, session_id: int, user_name: Optional[str]
+) -> None:
     session = session_metadata_api.get_session(session_id, user_name=user_name)
     experiment: Experiment = mlflow.set_experiment(
-        experiment_name=f"session_{session.name}_{session.id}"
+        experiment_name=f"session_{session.id}"
     )
     runs: list[Run] = mlflow.search_runs(
         [experiment.experiment_id],

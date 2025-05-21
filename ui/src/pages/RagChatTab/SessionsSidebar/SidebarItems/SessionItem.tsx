@@ -68,7 +68,10 @@ const SessionItem = ({ session }: { session: Session }) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
-  const { mutate: deleteChatHistoryMutate } = useDeleteChatHistoryMutation({
+  const {
+    mutate: deleteChatHistoryMutate,
+    isPending: deleteChatHistoryIsPending,
+  } = useDeleteChatHistoryMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: chatHistoryQueryKey({ session_id: session.id }),
@@ -189,6 +192,7 @@ const SessionItem = ({ session }: { session: Session }) => {
         }}
         okText={"Yes, clear it!"}
         okButtonProps={{
+          loading: deleteChatHistoryIsPending,
           danger: true,
         }}
         onCancel={deleteChatHistoryModal.handleCancel}

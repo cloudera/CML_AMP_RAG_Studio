@@ -37,14 +37,16 @@
 # ##############################################################################
 import os
 import subprocess
+import json
 from subprocess import CompletedProcess
 from typing import Annotated
 
 import fastapi
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
+from ....services import models
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
@@ -147,6 +149,8 @@ def update_configuration(
     application_config = get_application_config()
 
     if origin_remote_user == project_owner or remote_user_perm == "RW":
+        if config.cdp_token:
+            save_cdp_token(config.cdp_token)
         # merge the new configuration with the existing one
         updated_env = config_to_env(config)
         env_to_save = existing_env | updated_env
@@ -169,3 +173,37 @@ def restart_application() -> str:
         start_new_session=True,
     )
     return "OK"
+
+
+@router.post(
+    "/config/cdp-auth-token",
+    summary="Saves a CDP auth token for authentication to AI Inference services.",
+)
+@exceptions.propagates
+def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
+    """
+    Saves the provided auth token to /tmp/jwt file in the format expected by caii/utils.py.
+
+    Args:
+        auth_token: The authentication token to save
+
+    Returns:
+        A success message
+    """
+    save_cdp_token(auth_token)
+    try:
+        models.LLM.list_available()
+    except Exception:
+        os.remove("cdp_token")
+        raise fastapi.HTTPException(
+            status_code=400,
+            detail="Invalid auth token",
+        )
+
+    return "Auth token saved successfully"
+
+
+def save_cdp_token(auth_token: str) -> None:
+    token_data = {"access_token": auth_token}
+    with open("cdp_token", "w") as file:
+        json.dump(token_data, file)

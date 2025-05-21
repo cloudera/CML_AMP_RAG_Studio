@@ -44,6 +44,7 @@ import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMe
 const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   const {
     streamedChatState: [streamedChat],
+    streamedEventState: [streamedEvent],
   } = useContext(RagChatContext);
 
   const streamedMessage: ChatMessageType = {
@@ -58,7 +59,9 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
     timestamp: Date.now(),
   };
 
-  return <ChatMessageBody data={streamedMessage} />;
+  return (
+    <ChatMessageBody data={streamedMessage} streamedEvents={streamedEvent} />
+  );
 };
 
 export default PendingRagOutputSkeleton;

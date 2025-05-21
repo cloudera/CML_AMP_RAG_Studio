@@ -43,7 +43,10 @@ import {
   LikeOutlined,
   LikeTwoTone,
 } from "@ant-design/icons";
-import { useRatingMutation } from "src/api/chatApi.ts";
+import {
+  placeholderChatResponseId,
+  useRatingMutation,
+} from "src/api/chatApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Dispatch, SetStateAction, useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -87,6 +90,7 @@ const Rating = ({
           icon={isGood ? <LikeTwoTone /> : <LikeOutlined />}
           type="text"
           size="small"
+          disabled={responseId === placeholderChatResponseId}
           onClick={() => {
             handleFeedback(true);
           }}
@@ -97,6 +101,7 @@ const Rating = ({
           icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
           type="text"
           size="small"
+          disabled={responseId === placeholderChatResponseId}
           onClick={() => {
             handleFeedback(false);
           }}

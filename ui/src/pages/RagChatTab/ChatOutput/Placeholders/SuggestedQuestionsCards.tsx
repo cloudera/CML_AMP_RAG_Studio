@@ -42,6 +42,7 @@ import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import {
   createQueryConfiguration,
+  getOnEvent,
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
@@ -81,6 +82,7 @@ const SuggestedQuestionsCards = () => {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
     streamedChatState: [, setStreamedChat],
+    streamedEventState: [, setStreamedEvent],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id;
   const {
@@ -97,6 +99,7 @@ const SuggestedQuestionsCards = () => {
       onChunk: (chunk) => {
         setStreamedChat((prev) => prev + chunk);
       },
+      onEvent: getOnEvent(setStreamedEvent),
       onSuccess: () => {
         setStreamedChat("");
       },

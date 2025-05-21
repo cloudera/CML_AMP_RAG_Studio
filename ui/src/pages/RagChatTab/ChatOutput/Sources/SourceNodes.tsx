@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Skeleton, Typography } from "antd";
+import { Collapse, Flex, Typography } from "antd";
 import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
 import { WarningTwoTone } from "@ant-design/icons";
@@ -45,9 +45,6 @@ import { useGetModelById } from "src/api/modelsApi.ts";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
-const SkeletonNode = () => {
-  return <Skeleton.Node style={{ width: 180, borderRadius: 20, height: 24 }} />;
-};
 const SourceNodes = ({ data }: { data: ChatMessageType }) => {
   const { data: inferenceModel } = useGetModelById(data.inference_model);
   const { activeSession } = useContext(RagChatContext);
@@ -61,14 +58,7 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
     activeSession &&
     activeSession.dataSourceIds.length > 0
   ) {
-    return (
-      <Flex style={{ gap: 8 }}>
-        <SkeletonNode />
-        <SkeletonNode />
-        <SkeletonNode />
-        <SkeletonNode />
-      </Flex>
-    );
+    return null;
   }
 
   if (
@@ -92,11 +82,21 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
     );
   }
 
-  return (
-    <Flex wrap="wrap" style={{ gap: 8 }}>
-      {nodes}
-    </Flex>
-  );
+  const items = [
+    {
+      key: "source_nodes",
+      label: "Sources",
+      children: (
+        <Flex wrap="wrap" style={{ gap: 8 }}>
+          {nodes}
+        </Flex>
+      ),
+    },
+  ];
+
+  return nodes.length > 0 ? (
+    <Collapse items={items} ghost={true} size="small" />
+  ) : null;
 };
 
 export default SourceNodes;

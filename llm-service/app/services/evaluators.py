@@ -56,6 +56,13 @@ def evaluate_response(
     evaluator_llm = models.LLM.get(model_name)
     return asyncio.run(_async_evaluate_response(query, chat_response, evaluator_llm))
 
+async def async_evaluate_response(
+        query: str, chat_response: AgentChatResponse, model_name: str
+) -> tuple[float, float]:
+    # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
+    evaluator_llm = models.LLM.get(model_name)
+    return await _async_evaluate_response(query, chat_response, evaluator_llm)
+
 
 async def _async_evaluate_response(query: str, chat_response: AgentChatResponse, evaluator_llm: LLM) -> tuple[float, float] :
     relevance = await _evaluate_relevancy(chat_response, evaluator_llm, query)

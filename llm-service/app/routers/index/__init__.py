@@ -40,7 +40,7 @@ import logging
 
 from fastapi import APIRouter
 
-from . import data_source
+from . import data_source, tools
 from . import sessions
 from . import summaries
 from . import amp_metadata
@@ -61,3 +61,4 @@ router.include_router(amp_metadata.router)
 router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
 router.include_router(models.router)
 router.include_router(metrics.router)
+router.include_router(tools.router)

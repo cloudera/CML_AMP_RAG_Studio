@@ -36,34 +36,21 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Flex, Typography } from "antd";
+import { Flex, Typography } from "antd";
 import EmbeddingModelTable from "pages/Models/EmbeddingModelTable.tsx";
 import {
   useGetEmbeddingModels,
   useGetLlmModels,
+  useGetModelSource,
   useGetRerankingModels,
 } from "src/api/modelsApi.ts";
 import InferenceModelTable from "pages/Models/InferenceModelTable.tsx";
 import RerankingModelTable from "pages/Models/RerankingModelTable.tsx";
-
-const ModelPageAlert = ({
-  error,
-  type,
-}: {
-  error: Error | null;
-  type: string;
-}) => {
-  if (!error) {
-    return null;
-  }
-  return (
-    <Alert
-      style={{ margin: 10 }}
-      message={`${type} model error: ${error.message}`}
-      type="error"
-    />
-  );
-};
+import { CDPTokenInput } from "pages/Models/CDPToken.tsx";
+import {
+  checkHandledCaiiError,
+  ModelErrors,
+} from "pages/Models/ModelErrors.tsx";
 
 const ModelPage = () => {
   const {
@@ -81,15 +68,24 @@ const ModelPage = () => {
     isLoading: areRerankingModelsLoading,
     error: rerankingError,
   } = useGetRerankingModels();
+  const getModelSource = useGetModelSource();
 
   return (
-    <Flex vertical align="center">
-      <div style={{ maxWidth: 800 }}>
-        <ModelPageAlert error={inferenceError} type="Inference" />
-        <ModelPageAlert error={embeddingError} type="Embedding" />
-        <ModelPageAlert error={rerankingError} type="Reranking" />
-      </div>
+    <Flex vertical style={{ marginLeft: 60 }}>
+      <ModelErrors
+        inferenceError={inferenceError}
+        embeddingError={embeddingError}
+        rerankingError={rerankingError}
+        modelSource={getModelSource.data}
+      />
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
+        {checkHandledCaiiError(
+          inferenceError,
+          rerankingError,
+          embeddingError,
+        ) ? (
+          <CDPTokenInput />
+        ) : null}
         <Typography.Title level={3}>Embedding Models</Typography.Title>
         <EmbeddingModelTable
           embeddingModels={embeddingModels}

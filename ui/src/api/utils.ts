@@ -81,6 +81,7 @@ export enum MutationKeys {
   "updateAmpConfig" = "updateAmpConfig",
   "restartApplication" = "restartApplication",
   "streamChatMutation" = "streamChatMutation",
+  "setCdpToken" = "setCdpToken",
 }
 
 export enum QueryKeys {
@@ -110,6 +111,8 @@ export enum QueryKeys {
   "getDataSourcesForProject" = "getDataSourcesForProject",
   "getSessionsForProject" = "getSessionsForProject",
   "getAmpConfig" = "getAmpConfig",
+  "getTools" = "getTools",
+  "getPollingAmpConfig" = "getPollingAmpConfig",
 }
 
 export const commonHeaders = {
