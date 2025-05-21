@@ -80,7 +80,7 @@ class ProjectConfig(BaseModel):
     Model to represent the project configuration.
     """
 
-    use_enhanced_pdf_processing: bool
+    use_enhanced_pdf_processing: Optional[bool]
     summary_storage_provider: SummaryStorageProviderType
     chat_store_provider: ChatStoreProviderType
     aws_config: AwsConfig
