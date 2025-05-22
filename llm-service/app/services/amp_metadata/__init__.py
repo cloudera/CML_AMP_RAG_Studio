@@ -75,6 +75,14 @@ class CaiiConfig(BaseModel):
     caii_domain: Optional[str] = None
 
 
+class OpenAiConfig(BaseModel):
+    """
+    Model to represent the OpenAI configuration.
+    """
+
+    openai_api_key: Optional[str] = None
+    openai_api_base: Optional[str] = None
+
 class ProjectConfig(BaseModel):
     """
     Model to represent the project configuration.
@@ -86,6 +94,7 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
+    openai_config: OpenAiConfig
     cdp_token: Optional[str] = None
 
 
@@ -137,6 +146,8 @@ def validate_model_config(environ: dict[str, str]) -> bool:
     # caii
     caii_domain = environ.get("CAII_DOMAIN") or None
 
+    open_ai_key = environ.get("OPENAI_API_KEY") or None
+
     valid_model_config_exists = False
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is not None:
@@ -164,6 +175,9 @@ def validate_model_config(environ: dict[str, str]) -> bool:
                 "Azure config is not valid for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
             )
 
+    if any([open_ai_key]):
+        if open_ai_key:
+            valid_model_config_exists = True
     return valid_model_config_exists
 
 
@@ -195,6 +209,8 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
         "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
         "CAII_DOMAIN": config.caii_config.caii_domain or "",
+        "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
+        "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
     }
 
 
@@ -238,6 +254,11 @@ def build_configuration(
         is_valid_config=validate(env),
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
         application_config=application_config,
+        openai_config=OpenAiConfig(
+            openai_api_key=env.get("OPENAI_API_KEY"),
+            openai_api_base=env.get("OPENAI_API_BASE"),
+        ),
+        cdp_token=env.get("CDP_TOKEN"),
     )
 
 
