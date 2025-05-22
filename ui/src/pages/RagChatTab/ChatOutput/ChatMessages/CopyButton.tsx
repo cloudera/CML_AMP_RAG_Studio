@@ -36,7 +36,7 @@
  * DATA.
  */
 
-import { ChatMessageType } from "src/api/chatApi.ts";
+import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Button, Tooltip } from "antd";
 import { CopyOutlined } from "@ant-design/icons";
@@ -46,13 +46,17 @@ const CopyButton = ({ message }: { message: ChatMessageType }) => {
     <Tooltip title="Copy the assistant's response">
       <Button
         onClick={() => {
+          const div = document.createElement("div");
+          div.innerHTML = message.rag_message.assistant;
+          const plainText = div.textContent;
           navigator.clipboard
-            .writeText(message.rag_message.assistant)
+            .writeText(plainText ?? message.rag_message.assistant)
             .catch(() => {
               messageQueue.error("Failed to copy to clipboard");
             });
         }}
         type="text"
+        disabled={message.id === placeholderChatResponseId}
         icon={<CopyOutlined />}
       />
     </Tooltip>

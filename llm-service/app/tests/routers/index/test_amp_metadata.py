@@ -35,39 +35,49 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from crewai import LLM as CrewAILLM
-from llama_index.core.llms import LLM as LlamaIndexLLM
 
-from app import config
-from app.services.caii.utils import get_caii_access_token
-from app.services.models.providers import (
-    AzureModelProvider,
-    CAIIModelProvider,
-    BedrockModelProvider,
-)
+"""Integration tests for app/routers/index/amp_metadata/."""
+from typing import Generator, Any
+from unittest.mock import patch, mock_open, MagicMock
+
+import pytest
+from fastapi.testclient import TestClient
 
 
-def get_crewai_llm_object_direct(
-    language_model: LlamaIndexLLM, model_name: str
-) -> CrewAILLM:
-    if AzureModelProvider.is_enabled():
-        return CrewAILLM(
-            model="azure/" + model_name,
-            api_key=config.settings.azure_openai_api_key,
-            base_url=config.settings.azure_openai_endpoint,
+@pytest.fixture()
+def mock_json_dump() -> Generator[Any, None, None]:
+    with patch("json.dump") as mock:
+        yield mock
+
+
+@pytest.fixture()
+def mock_file() -> Generator[Any, None, None]:
+    with patch("builtins.open", new_callable=mock_open()) as m:
+        yield m
+
+
+class TestAmpMetadata:
+    @staticmethod
+    def test_save_auth_token(
+        client: TestClient, mock_json_dump: MagicMock, mock_file: MagicMock
+    ) -> None:
+        """Test POST /amp/config/auth-token."""
+        test_token = "test_auth_token_value"
+
+        response = client.post(
+            "/amp/config/cdp-auth-token",
+            json={"auth_token": test_token},
         )
-    elif CAIIModelProvider.is_enabled():
-        if hasattr(language_model, "api_base"):
-            return CrewAILLM(
-                model="openai/" + model_name,
-                api_key=get_caii_access_token(),
-                base_url=language_model.api_base,
-            )
-        else:
-            raise ValueError("Model type is not supported.")
-    elif BedrockModelProvider.is_enabled():
-        return CrewAILLM(
-            model="bedrock/" + model_name,
-        )
-    else:
-        raise ValueError("Model type is not supported.")
+
+        assert response.status_code == 200
+        assert response.json() == "Auth token saved successfully"
+
+        # Verify the file was opened correctly
+        mock_file.assert_called_once_with("cdp_token", "w")
+
+        # Verify the correct data was written to the file
+        mock_json_dump.assert_called_once()
+        args, _ = mock_json_dump.call_args
+        assert args[0] == {"access_token": test_token}
+        # todo: verify the file content
+        # assert args[1] == mock_file()

@@ -38,8 +38,9 @@
 
 import { ModelSource } from "src/api/modelsApi.ts";
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input } from "antd";
-import { FileStorage, StyledHelperText } from "pages/Settings/SettingsPage.tsx";
+import { Flex, Form, Input, Typography } from "antd";
+import { FileStorage } from "pages/Settings/AmpSettingsPage.tsx";
+import { cdlBlue300 } from "src/cuix/variables.ts";
 
 export const AuthenticationFields = ({
   modelProvider,
@@ -60,13 +61,6 @@ export const AuthenticationFields = ({
     summaryStorageProvider === "S3";
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
-      {modelProvider === "CAII" &&
-        selectedFileStorage === "Local" &&
-        summaryStorageProvider === "Local" && (
-          <StyledHelperText>
-            No additional authentication needed.
-          </StyledHelperText>
-        )}
       <Form.Item
         label={"AWS Region"}
         initialValue={projectConfig?.aws_config.region}
@@ -124,6 +118,31 @@ export const AuthenticationFields = ({
       >
         <Input
           placeholder="azure-openai-key"
+          type="password"
+          disabled={!enableModification}
+        />
+      </Form.Item>
+      <Form.Item
+        label={"CDP Auth Token"}
+        name={["cdp_token"]}
+        tooltip={
+          <Typography.Text style={{ color: "#fff" }}>
+            CDP Auth token is not required in all environments. Please see
+            Cloudera AI Inference{" "}
+            <Typography.Link
+              target="_blank"
+              style={{ color: cdlBlue300 }}
+              href="https://docs.cloudera.com/machine-learning/cloud/ai-inference/topics/ml-caii-authentication.html"
+            >
+              documentation
+            </Typography.Link>{" "}
+            for how to access or generate a CDP Auth token.
+          </Typography.Text>
+        }
+        hidden={modelProvider !== "CAII"}
+      >
+        <Input
+          placeholder="cdp-auth-token"
           type="password"
           disabled={!enableModification}
         />

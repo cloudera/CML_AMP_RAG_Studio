@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,81 +34,74 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { Button, Tooltip } from "antd";
 import {
-  DislikeOutlined,
-  DislikeTwoTone,
-  LikeOutlined,
-  LikeTwoTone,
-} from "@ant-design/icons";
-import {
-  placeholderChatResponseId,
-  useRatingMutation,
-} from "src/api/chatApi.ts";
+  ErrorComponent,
+  ErrorComponentProps,
+  useNavigate,
+} from "@tanstack/react-router";
+import { useGetModelSource } from "src/api/modelsApi.ts";
+import { ApiError } from "src/api/utils.ts";
+import { Button, Card, Flex, Typography } from "antd";
+import { WarningOutlined } from "@ant-design/icons";
 import messageQueue from "src/utils/messageQueue.ts";
-import { Dispatch, SetStateAction, useContext } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 
-const Rating = ({
-  responseId,
-  setIsGood,
-  isGood,
+export const CaiiTokenErrorComponent = ({
+  errorComponent,
 }: {
-  responseId: string;
-  setIsGood: Dispatch<SetStateAction<boolean | null>>;
-  isGood: boolean | null;
+  errorComponent: ErrorComponentProps;
 }) => {
-  const session = useContext(RagChatContext).activeSession;
-
-  const { mutate: ratingMutate } = useRatingMutation({
-    onSuccess: (data) => {
-      setIsGood(data.rating);
-    },
-    onError: () => {
-      setIsGood(null);
-      messageQueue.error("Failed submit rating");
-    },
-  });
-
-  const handleFeedback = (isGood: boolean) => {
-    if (!session) {
-      return;
-    }
-    ratingMutate({
-      sessionId: session.id.toString(),
-      responseId,
-      rating: isGood,
-    });
-  };
-
-  return (
-    <>
-      <Tooltip title="Good response">
-        <Button
-          icon={isGood ? <LikeTwoTone /> : <LikeOutlined />}
-          type="text"
-          size="small"
-          disabled={responseId === placeholderChatResponseId}
-          onClick={() => {
-            handleFeedback(true);
+  const modelSource = useGetModelSource();
+  const navigate = useNavigate();
+  const { error } = errorComponent;
+  if (
+    error instanceof ApiError &&
+    error.status === 401 &&
+    modelSource.data === "CAII"
+  ) {
+    return (
+      <Flex
+        align={"center"}
+        justify={"center"}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <Card
+          title={
+            <Typography.Text type="danger">
+              <WarningOutlined style={{ marginRight: 8 }} />
+              Invalid or missing CDP token
+            </Typography.Text>
+          }
+          style={{
+            width: "100%",
+            maxWidth: 600,
           }}
-        />
-      </Tooltip>
-      <Tooltip title="Bad response">
-        <Button
-          icon={isGood === false ? <DislikeTwoTone /> : <DislikeOutlined />}
-          type="text"
-          size="small"
-          disabled={responseId === placeholderChatResponseId}
-          onClick={() => {
-            handleFeedback(false);
-          }}
-        />
-      </Tooltip>
-    </>
-  );
+        >
+          <Flex vertical gap={16}>
+            <Typography.Text italic>
+              Provide a valid CDP token on the Settings page to use Cloudera AI
+              Inference
+            </Typography.Text>
+            <Flex gap={8}>
+              <Button
+                type="default"
+                onClick={() => {
+                  navigate({
+                    to: "/settings",
+                    hash: "modelConfiguration",
+                  }).catch(() => {
+                    messageQueue.error("Error occurred navigating to settings");
+                  });
+                }}
+              >
+                Settings
+              </Button>
+            </Flex>
+          </Flex>
+        </Card>
+      </Flex>
+    );
+  }
+  return <ErrorComponent error={error} />;
 };
-
-export default Rating;

@@ -42,7 +42,8 @@ import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
 import ProjectPage from "pages/Projects/ProjectPage/ProjectPage.tsx";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
-import { NotFoundComponent } from "src/main.tsx";
+
+import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
 
 export const Route = createLazyFileRoute(
   "/_layout/chats/_layout-chats/projects/$projectId/",

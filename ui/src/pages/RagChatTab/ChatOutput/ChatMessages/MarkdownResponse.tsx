@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,23 +34,55 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+import { ChatMessageType, SourceNode } from "src/api/chatApi.ts";
+import Markdown from "react-markdown";
+import Remark from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import { ComponentProps, ReactElement } from "react";
+import { SourceCard } from "pages/RagChatTab/ChatOutput/Sources/SourceCard.tsx";
 
-import { CaiiTokenErrorComponent } from "src/components/ErrorComponents/CaiiTokenErrorComponent.tsx";
-
-export const Route = createFileRoute("/_layout/chats/_layout-chats/$sessionId")(
-  {
-    loader: async ({ context }) =>
-      await Promise.all([
-        context.queryClient.ensureQueryData(getSessionsQueryOptions),
-        context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-      ]),
-    errorComponent: (errorComponent) => (
-      <CaiiTokenErrorComponent errorComponent={errorComponent} />
-    ),
-  },
-);
+export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
+  return (
+    <Markdown
+      // skipHtml={true}
+      remarkPlugins={[Remark]}
+      rehypePlugins={[rehypeRaw]}
+      className="styled-markdown"
+      children={data.rag_message.assistant.trimStart()}
+      components={{
+        a: (
+          props: ComponentProps<"a">,
+        ): ReactElement<SourceNode> | undefined => {
+          const { href, className, children, ...other } = props;
+          if (className === "rag_citation") {
+            if (data.source_nodes.length === 0) {
+              return undefined;
+            }
+            const { source_nodes } = data;
+            const sourceNodeIndex = source_nodes.findIndex(
+              (source_node) => source_node.node_id === href,
+            );
+            if (sourceNodeIndex >= 0) {
+              return (
+                <SourceCard
+                  source={source_nodes[sourceNodeIndex]}
+                  index={sourceNodeIndex + 1}
+                />
+              );
+            }
+            if (!href?.startsWith("http")) {
+              return undefined;
+            }
+          }
+          return (
+            <a href={href} className={className} {...other}>
+              {children}
+            </a>
+          );
+        },
+      }}
+    />
+  );
+};

@@ -72,6 +72,42 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
   );
 };
 
+const getTag = (source: SourceNode, index?: number) => {
+  return (
+    <Tag
+      style={{
+        borderRadius: 20,
+        height: 24,
+        minWidth: 24,
+        cursor: "pointer",
+        margin: 0,
+        marginLeft: 4,
+        bottom: 2,
+      }}
+    >
+      <Flex
+        style={{ height: "100%", width: "100%" }}
+        justify="center"
+        align="center"
+      >
+        <Typography.Paragraph
+          ellipsis={{
+            rows: 1,
+            expandable: false,
+            tooltip: source.source_file_name,
+          }}
+          style={{ margin: 0, padding: 0, fontSize: index ? 10 : 12 }}
+        >
+          {!index && (
+            <Icon component={DocumentationIcon} style={{ marginRight: 8 }} />
+          )}
+          {index ?? source.source_file_name}
+        </Typography.Paragraph>
+      </Flex>
+    </Tag>
+  );
+};
+
 export const SourceCard = ({
   source,
   index,
@@ -156,34 +192,7 @@ export const SourceCard = ({
         </Card>
       }
     >
-      <Tag
-        style={{
-          width: index ? 24 : 180,
-          borderRadius: 20,
-          height: 24,
-          cursor: "pointer",
-        }}
-      >
-        <Flex
-          style={{ height: "100%", width: "100%" }}
-          justify="center"
-          align="center"
-        >
-          <Typography.Paragraph
-            ellipsis={{
-              rows: 1,
-              expandable: false,
-              tooltip: source.source_file_name,
-            }}
-            style={{ margin: 0, padding: 0, fontSize: index ? 10 : 12 }}
-          >
-            {!index && (
-              <Icon component={DocumentationIcon} style={{ marginRight: 8 }} />
-            )}
-            {index ?? source.source_file_name}
-          </Typography.Paragraph>
-        </Flex>
-      </Tag>
+      {getTag(source, index)}
     </Popover>
   );
 };

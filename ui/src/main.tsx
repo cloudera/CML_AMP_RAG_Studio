@@ -40,22 +40,21 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
-import {
-  createRouter,
-  ErrorComponent,
-  RouterProvider,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 import "./index.css";
 import { ApiError } from "./api/utils";
-import { Button, Flex, Result, Spin, Typography } from "antd";
-import Images from "src/components/images/Images.ts";
+import { Flex, Spin, Typography } from "antd";
+import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
+import { CustomUnhandledError } from "src/components/ErrorComponents/CustomUnhandledError.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (_, error: Error) => {
         if (error instanceof ApiError) {
+          if (error.message.includes("No such file or directory: '/tmp/jwt'")) {
+            return false;
+          }
           return error.status >= 500;
         }
         return true;
@@ -64,44 +63,10 @@ const queryClient = new QueryClient({
   },
 });
 
-export const NotFoundComponent = () => {
-  const navigate = useNavigate();
-  return (
-    <Flex
-      align="center"
-      justify="center"
-      style={{ height: "100vh", width: "100%" }}
-    >
-      <Result
-        icon={
-          <img
-            src={Images.image404}
-            alt="Page not found"
-            height={300}
-            style={{ borderRadius: 20 }}
-          />
-        }
-        title="404"
-        subTitle="Sorry, the page you visited does not exist."
-        extra={
-          <Button
-            type="primary"
-            onClick={() => {
-              navigate({ to: "/" }).catch(() => null);
-            }}
-          >
-            Back Home
-          </Button>
-        }
-      />
-    </Flex>
-  );
-};
-
 const router = createRouter({
   routeTree,
   context: { queryClient: queryClient },
-  defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
+  defaultErrorComponent: ({ error }) => <CustomUnhandledError error={error} />,
   defaultNotFoundComponent: () => <NotFoundComponent />,
   defaultPendingComponent: () => (
     <Flex

@@ -235,9 +235,7 @@ def stream_chat_completion(
     def crew_callback() -> Generator[str, None, None]:
         while True:
             try:
-                # print("waiting for an event")
                 event_data = crew_events_queue.get(block=True, timeout=1.0)
-                # print(f"got event: {event_data}")
                 if event_data.type == poison_pill:
                     break
                 event_json = json.dumps({"event": event_data.model_dump()})

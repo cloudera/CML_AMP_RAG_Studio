@@ -46,6 +46,7 @@ from llama_index.core.chat_engine.types import (
     StreamingAgentChatResponse,
 )
 
+from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
 from app.services import llm_completion, models
 from app.services.chat.chat import finalize_response
@@ -87,8 +88,13 @@ def stream_chat(
     )
 
     response_id = str(uuid.uuid4())
-
-    if not query_configuration.use_tool_calling and len(session.data_source_ids) == 0:
+    total_data_sources_size: int = sum(
+        map(
+            lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
+            session.data_source_ids,
+        )
+    )
+    if not query_configuration.use_tool_calling and (len(session.data_source_ids) == 0 or total_data_sources_size == 0):
         # put a poison pill in the queue to stop the crew events stream
         crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
         return _stream_direct_llm_chat(session, response_id, query, user_name, crew_events_queue)

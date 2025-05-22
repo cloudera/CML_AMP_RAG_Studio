@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,23 +34,42 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { createFileRoute } from "@tanstack/react-router";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
-import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+import { useNavigate } from "@tanstack/react-router";
+import { Button, Flex, Result } from "antd";
+import Images from "src/components/images/Images.ts";
 
-import { CaiiTokenErrorComponent } from "src/components/ErrorComponents/CaiiTokenErrorComponent.tsx";
-
-export const Route = createFileRoute("/_layout/chats/_layout-chats/$sessionId")(
-  {
-    loader: async ({ context }) =>
-      await Promise.all([
-        context.queryClient.ensureQueryData(getSessionsQueryOptions),
-        context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
-      ]),
-    errorComponent: (errorComponent) => (
-      <CaiiTokenErrorComponent errorComponent={errorComponent} />
-    ),
-  },
-);
+export const NotFoundComponent = () => {
+  const navigate = useNavigate();
+  return (
+    <Flex
+      align="center"
+      justify="center"
+      style={{ height: "100vh", width: "100%" }}
+    >
+      <Result
+        icon={
+          <img
+            src={Images.image404}
+            alt="Page not found"
+            height={300}
+            style={{ borderRadius: 20 }}
+          />
+        }
+        title="404"
+        subTitle="Sorry, the page you visited does not exist."
+        extra={
+          <Button
+            type="primary"
+            onClick={() => {
+              navigate({ to: "/" }).catch(() => null);
+            }}
+          >
+            Back Home
+          </Button>
+        }
+      />
+    </Flex>
+  );
+};
