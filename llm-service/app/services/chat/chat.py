@@ -141,7 +141,8 @@ def finalize_response(
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
 
-    chat_response = extract_nodes_from_response_str(chat_response, data_source_id)
+    if data_source_id:
+        chat_response = extract_nodes_from_response_str(chat_response, data_source_id)
 
     relevance, faithfulness = evaluators.evaluate_response(
         query, chat_response, session.inference_model
@@ -172,7 +173,7 @@ def finalize_response(
 
 
 def extract_nodes_from_response_str(
-    chat_response: AgentChatResponse, data_source_id: Optional[int]
+    chat_response: AgentChatResponse, data_source_id: int
 ) -> AgentChatResponse:
     # get nodes from response source nodes
     node_ids_present = set([node.node_id for node in chat_response.source_nodes])

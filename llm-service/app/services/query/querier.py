@@ -29,7 +29,6 @@
 # ##############################################################################
 from __future__ import annotations
 
-import re
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
@@ -150,14 +149,14 @@ def get_nodes_from_citations(
     if index:
         nodes = index.vector_store.get_nodes(node_ids=source_node_ids)
         if nodes:
-            nodes = [
+            nodes_w_score = [
                 NodeWithScore(
                     node=node,
                     score=score,
                 )
                 for node, score in zip(nodes, scores)
             ]
-            source_nodes.extend(nodes)
+            source_nodes.extend(nodes_w_score)
     return source_nodes
 
 

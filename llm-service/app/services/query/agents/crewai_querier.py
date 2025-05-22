@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
 import logging
 import os
 import re
@@ -47,7 +46,6 @@ import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
-from crewai.utilities.events import TaskCompletedEvent
 from crewai_tools import SerperDevTool
 from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle, VectorStoreIndex
@@ -239,7 +237,7 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
             )
         return ToolOutput(
             content=content,
-            tool_name=self.metadata.name,
+            tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
             raw_input={"input": query_str},
             raw_output=docs,
         )
@@ -269,7 +267,7 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
             )
         return ToolOutput(
             content=content,
-            tool_name=self.metadata.name,
+            tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
             raw_input={"input": query_str},
             raw_output=docs,
         )
@@ -277,9 +275,9 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
 
 def build_retriever_tool(
     configuration: QueryConfiguration,
-    data_source_id: Optional[int],
-    embedding_model: Optional[BaseEmbedding],
-    index: Optional[VectorStoreIndex],
+    data_source_id: int,
+    embedding_model: BaseEmbedding,
+    index: VectorStoreIndex,
     llm: LLM,
 ) -> BaseTool:
     base_retriever = FlexibleRetriever(
@@ -619,7 +617,7 @@ def stream_chat(
     llm: LLM,
     chat_engine: Optional[FlexibleContextChatEngine],
     enhanced_query: str,
-    source_nodes: Optional[list[NodeWithScore]],
+    source_nodes: list[NodeWithScore],
     chat_messages: list[ChatMessage],
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response

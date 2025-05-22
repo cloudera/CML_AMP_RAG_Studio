@@ -184,7 +184,9 @@ class PlannerAgent:
         try:
             if result.json_dict:
                 # If the result is already a JSON object, return it
-                return result.json_dict
+                return dict(result.json_dict)
+
+            # If the result is not a JSON object, we need to parse it`
             import json
             import re
 
