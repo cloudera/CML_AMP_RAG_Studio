@@ -75,6 +75,14 @@ class CaiiConfig(BaseModel):
     caii_domain: Optional[str] = None
 
 
+class OpenAiConfig(BaseModel):
+    """
+    Model to represent the OpenAI configuration.
+    """
+
+    openai_key: Optional[str] = None
+    openai_base: Optional[str] = None
+
 class ProjectConfig(BaseModel):
     """
     Model to represent the project configuration.
@@ -86,6 +94,7 @@ class ProjectConfig(BaseModel):
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
+    openai_config: OpenAiConfig
     cdp_token: Optional[str] = None
 
 
@@ -200,6 +209,8 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
         "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
         "CAII_DOMAIN": config.caii_config.caii_domain or "",
+        "OPENAI_API_KEY": config.openai_config.openai_key or "",
+        "OPENAI_API_BASE": config.openai_config.openai_base or "",
     }
 
 
@@ -243,6 +254,11 @@ def build_configuration(
         is_valid_config=validate(env),
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
         application_config=application_config,
+        openai_config=OpenAiConfig(
+            openai_key=env.get("OPENAI_API_KEY"),
+            openai_base=env.get("OPENAI_API_BASE"),
+        ),
+        cdp_token=env.get("CDP_TOKEN"),
     )
 
 

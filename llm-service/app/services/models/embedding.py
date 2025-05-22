@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 from typing import Optional
 
 from fastapi import HTTPException
@@ -76,8 +75,8 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
         if OpenAiModelProvider.is_enabled():
             return OpenAIEmbedding(
                 model_name=model_name,
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                api_base=os.environ.get("OPENAI_API_BASE"),
+                api_key=settings.openai_api_key,
+                api_base=settings.openai_api_base,
             )
 
         return BedrockEmbedding(model_name=model_name)

@@ -43,6 +43,7 @@ from .providers import (
     AzureModelProvider,
     CAIIModelProvider,
 )
+from .providers.openai import OpenAiModelProvider
 from .reranking import Reranking
 
 __all__ = [
@@ -56,6 +57,7 @@ class ModelSource(str, Enum):
     BEDROCK = "Bedrock"
     CAII = "CAII"
     AZURE = "Azure"
+    OPENAI = "OpenAI"
 
 
 def get_model_source() -> ModelSource:
@@ -63,4 +65,6 @@ def get_model_source() -> ModelSource:
         return ModelSource.CAII
     if AzureModelProvider.is_enabled():
         return ModelSource.AZURE
+    if OpenAiModelProvider.is_enabled():
+        return ModelSource.OPENAI
     return ModelSource.BEDROCK

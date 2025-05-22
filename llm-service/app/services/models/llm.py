@@ -55,6 +55,7 @@ from .providers.openai import OpenAiModelProvider
 from ..caii.caii import get_llm as caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt
+from ...config import settings
 
 
 class LLM(_model_type.ModelType[llms.LLM]):
@@ -78,7 +79,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
                 messages_to_prompt=messages_to_prompt,
                 completion_to_prompt=completion_to_prompt,
                 max_tokens=2048,
-                api_base=os.environ.get("OPENAI_API_BASE"),
+                api_base=settings.openai_api_base,
             )
 
         if CAIIModelProvider.is_enabled():
