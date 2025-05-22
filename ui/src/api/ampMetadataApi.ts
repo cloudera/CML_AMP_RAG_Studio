@@ -140,7 +140,7 @@ export interface AzureConfig {
 
 export interface OpenAIConfig {
   openai_api_key?: string;
-  openai_base?: string;
+  openai_api_base?: string;
 }
 
 export interface CaiiConfig {

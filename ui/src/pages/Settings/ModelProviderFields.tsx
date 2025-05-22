@@ -110,8 +110,8 @@ export const ModelProviderFields = ({
     </Form.Item>
     <Form.Item
       label={"OpenAI Base URL"}
-      initialValue={projectConfig?.openai_config.openai_base}
-      name={["openai_config", "openai_base"]}
+      initialValue={projectConfig?.openai_config.openai_api_base}
+      name={["openai_config", "openai_api_base"]}
       required={modelProvider === "OpenAI"}
       tooltip="The base URL for the OpenAI service."
       hidden={modelProvider !== "OpenAI"}
