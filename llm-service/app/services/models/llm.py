@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import os
 from typing import Literal, Optional
 
 from fastapi import HTTPException
@@ -42,6 +43,7 @@ from llama_index.core import llms
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.bedrock_converse import BedrockConverse
+from llama_index.llms.openai import OpenAI
 
 from . import _model_type, _noop
 from .providers import (
@@ -49,6 +51,7 @@ from .providers import (
     BedrockModelProvider,
     CAIIModelProvider,
 )
+from .providers.openai import OpenAiModelProvider
 from ..caii.caii import get_llm as caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt
@@ -67,6 +70,15 @@ class LLM(_model_type.ModelType[llms.LLM]):
                 messages_to_prompt=messages_to_prompt,
                 completion_to_prompt=completion_to_prompt,
                 max_tokens=2048,
+            )
+
+        if OpenAiModelProvider.is_enabled():
+            return OpenAI(
+                model=model_name,
+                messages_to_prompt=messages_to_prompt,
+                completion_to_prompt=completion_to_prompt,
+                max_tokens=2048,
+                api_base=os.environ.get("OPENAI_API_BASE"),
             )
 
         if CAIIModelProvider.is_enabled():
@@ -94,6 +106,9 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.get_llm_models()
+
+        if OpenAiModelProvider.is_enabled():
+            return OpenAiModelProvider.get_llm_models()
 
         return BedrockModelProvider.get_llm_models()
 

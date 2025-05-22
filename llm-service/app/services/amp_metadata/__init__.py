@@ -137,6 +137,8 @@ def validate_model_config(environ: dict[str, str]) -> bool:
     # caii
     caii_domain = environ.get("CAII_DOMAIN") or None
 
+    open_ai_key = environ.get("OPENAI_API_KEY") or None
+
     valid_model_config_exists = False
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is not None:
@@ -164,6 +166,9 @@ def validate_model_config(environ: dict[str, str]) -> bool:
                 "Azure config is not valid for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
             )
 
+    if any([open_ai_key]):
+        if open_ai_key:
+            valid_model_config_exists = True
     return valid_model_config_exists
 
 
