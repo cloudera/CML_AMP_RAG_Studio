@@ -42,7 +42,12 @@ import { Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 const isModelSource = (value: string): value is ModelSource => {
-  return value === "CAII" || value === "Bedrock" || value === "Azure";
+  return (
+    value === "CAII" ||
+    value === "Bedrock" ||
+    value === "Azure" ||
+    value === "OpenAI"
+  );
 };
 
 export const ModelProviderFields = ({
