@@ -44,7 +44,7 @@ from queue import Queue
 from typing import Optional, Any, Tuple
 
 import opik
-from crewai import Task, Process, Crew, Agent, CrewOutput
+from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
 from crewai.utilities.events import TaskCompletedEvent
@@ -99,12 +99,12 @@ def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) 
                 timestamp=time.time(),
             )
         )
-    if isinstance(output, TaskCompletedEvent):
+    if isinstance(output, TaskOutput):
         crew_events_queue.put(
             CrewEvent(
                 type="task_completed",
                 name=agent,
-                data=json.dumps(output.output.json_dict, indent="\t"),
+                data=output.raw,
                 timestamp=time.time(),
             )
         )
@@ -141,7 +141,7 @@ def build_calculation_task(
 
 
 class SearchResult(BaseModel):
-    result: str
+    result: str | None = None
     link: str | None = None
 
 
@@ -431,9 +431,6 @@ def assemble_crew(
         "You know when to use tools and when to answer directly.",
         llm=crewai_llm,
         verbose=True,
-        step_callback=lambda output: step_callback(
-            output, "Research Complete", crew_events_queue
-        ),
     )
 
     # Define tasks for the researcher agents
@@ -492,15 +489,16 @@ def assemble_crew(
         "* Use the citations from the chat history as is. "
         "* Use links and result from the search results (search_results) if needed to answer the question "
         "and cite them in the given format: the link should be in markdown format. For example: "
-        "[link](https://example.com). \n"
+        "[link](https://example.com). Do not make up links that are not present chat history or context.\n"
         "* Cite from retriever results (retriever_results) in the given format: the node_id "
         "should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. "
         "Do not use filenames as citations. Only node ids should be used."
-        "For example: <a class='rag_citation' href='2'>2</a>.",
+        "For example: <a class='rag_citation' href='2'>2</a>. Do not make up node ids that are not present "
+        "in the context.\n",
         context=researcher_task_context,
-        # callback=lambda _: crew_events_queue.put(
-        #     CrewEvent(type=poison_pill, name="researcher")
-        # ),
+        callback=lambda output: step_callback(
+            output, "Research Complete", crew_events_queue
+        ),
     )
 
     # Create a calculation task if needed
