@@ -138,6 +138,11 @@ export interface AzureConfig {
   openai_api_version?: string;
 }
 
+export interface OpenAIConfig {
+  openai_api_key?: string;
+  openai_base?: string;
+}
+
 export interface CaiiConfig {
   caii_domain?: string;
 }
@@ -153,6 +158,7 @@ export interface ProjectConfig {
   chat_store_provider: "Local" | "S3";
   aws_config: AwsConfig;
   azure_config: AzureConfig;
+  openai_config: OpenAIConfig;
   caii_config: CaiiConfig;
   is_valid_config: boolean;
   release_version: string;

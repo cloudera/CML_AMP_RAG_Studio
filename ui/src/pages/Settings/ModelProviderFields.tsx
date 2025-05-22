@@ -71,6 +71,7 @@ export const ModelProviderFields = ({
         { value: "CAII", label: "Cloudera AI" },
         { value: "Bedrock", label: "AWS Bedrock" },
         { value: "Azure", label: "Azure OpenAI" },
+        { value: "OpenAI", label: "OpenAI" },
       ]}
       disabled={!enableModification}
     />
@@ -104,6 +105,19 @@ export const ModelProviderFields = ({
     >
       <Input
         placeholder="https://myendpoint.openai.azure.com/"
+        disabled={!enableModification}
+      />
+    </Form.Item>
+    <Form.Item
+      label={"OpenAI Base URL"}
+      initialValue={projectConfig?.openai_config.openai_base}
+      name={["openai_config", "openai_base"]}
+      required={modelProvider === "OpenAI"}
+      tooltip="The base URL for the OpenAI service."
+      hidden={modelProvider !== "OpenAI"}
+    >
+      <Input
+        placeholder="https://myendpoint.openai.com/"
         disabled={!enableModification}
       />
     </Form.Item>

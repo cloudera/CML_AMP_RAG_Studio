@@ -80,6 +80,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
                 completion_to_prompt=completion_to_prompt,
                 max_tokens=2048,
                 api_base=settings.openai_api_base,
+                api_key=settings.openai_api_key,
             )
 
         if CAIIModelProvider.is_enabled():
