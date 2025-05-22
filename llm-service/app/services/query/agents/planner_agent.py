@@ -40,8 +40,9 @@ import logging
 from typing import Dict, Any, Optional
 
 from crewai import Agent, Task, Crew, Process
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
+from pydantic import BaseModel, Field
 
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.query_configuration import QueryConfiguration
@@ -58,6 +59,27 @@ def get_crewai_model_name(llm: LLM) -> str:
     else:
         raise ValueError("Model not supported")
     return crewai_llm_name
+
+
+class PlannerTaskOutput(BaseModel):
+    """
+    The output of the planner agent.
+    """
+
+    use_retrieval: bool = Field(
+        ..., description="Whether to use retrieval or answer directly."
+    )
+    explanation: str = Field(
+        ..., description="Explanation for the decision made by the planner agent."
+    )
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "use_retrieval": True,
+                "explanation": "The query is related to the content described in the knowledge base summary.",
+            }
+        }
 
 
 class PlannerAgent:
@@ -106,11 +128,19 @@ class PlannerAgent:
         # Define the planning task
         data_source_info = ""
         additional_data_source_questions = ""
+        chat_history = ""
+        for message in chat_messages:
+            if message.role == MessageRole.USER:
+                chat_history += f"User:\n{message.content}\n"
+            elif message.role == MessageRole.ASSISTANT:
+                chat_history += f"Assistant:\n{message.content}\n"
         if data_source_summary:
             data_source_info = f"""
-            Knowledge Base Summary: {data_source_summary}
-            Chat History: {chat_messages}
-
+            ==================================================================
+            Knowledge Base Summary:\n{data_source_summary}
+            ==================================================================
+            Chat History:\n{chat_history}
+            ==================================================================
             """
             additional_data_source_questions = """
             Consider the following factors:
@@ -128,18 +158,13 @@ class PlannerAgent:
 
             {additional_data_source_questions}
             
-            If the query is related to the content described in the knowledge base summary, use the retrieval strategy.
-            Else, use the direct answer strategy.
+            If the query is related to the content described or is in the knowledge base summary, use the retrieval strategy.
+            Else, use the direct answer strategy. If the query can be answered directly based on the chat history, use the direct answer strategy.
             If there is no knowledge base summary, use the retrieval strategy first.
-
-            Return your decision in the following format:
-            {{
-                "use_retrieval": true/false,
-                "explanation": "Your explanation here"
-            }}
             """,
             agent=planner,
             expected_output="A JSON object with the decision and explanation",
+            output_json=PlannerTaskOutput,
         )
 
         # Create a crew with just the planner agent
@@ -154,15 +179,18 @@ class PlannerAgent:
 
         # Run the crew to get the decision
         result = crew.kickoff()
-        logger.info(f"Planner decision: {result}")
+        logger.info(f"Planner agent result: {result}")
 
-        # Parse the result to extract the decision
-        # The result might be a string containing JSON, so we need to parse it
         try:
-            # Try to extract JSON from the result
+            if result.json_dict:
+                # If the result is already a JSON object, return it
+                return dict(result.json_dict)
+
+            # If the result is not a JSON object, we need to parse it`
             import json
             import re
 
+            # The result might be a string containing JSON, so we need to parse it
             # Look for JSON pattern in the result
             json_pattern = r"({.*?})"
             json_match = re.search(json_pattern, str(result), re.DOTALL)

@@ -33,15 +33,16 @@ from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.schema import NodeWithScore
 
 from .agents.crewai_querier import (
     assemble_crew,
     should_use_retrieval,
     launch_crew,
     stream_chat,
-    CrewEvent,
     poison_pill,
 )
+from .crew_events import CrewEvent
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -97,16 +98,19 @@ def streaming_query(
             data_source_id,
             crew_events_queue,
         )
-        enhanced_query = launch_crew(
+        enhanced_query, source_node_ids_w_score = launch_crew(
             crew,
             query_str,
         )
+
+        source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
 
         chat_response = stream_chat(
             use_retrieval,
             llm,
             chat_engine,
             enhanced_query,
+            source_nodes,
             chat_messages,
         )
         return chat_response
@@ -129,6 +133,29 @@ def streaming_query(
         ) from error
 
     return chat_response
+
+
+def get_nodes_from_citations(
+    index: Optional[VectorStoreIndex], source_node_ids_w_score: list[tuple[str, float]]
+) -> list[NodeWithScore]:
+    # Extract node_ids from the source_node_ids_w_score
+    source_node_ids, scores = [node_id for node_id, _ in source_node_ids_w_score], [
+        score for _, score in source_node_ids_w_score
+    ]
+    # fetch the source nodes from the index using the extracted node_ids
+    source_nodes = []
+    if index:
+        nodes = index.vector_store.get_nodes(node_ids=source_node_ids)
+        if nodes:
+            nodes_w_score = [
+                NodeWithScore(
+                    node=node,
+                    score=score,
+                )
+                for node, score in zip(nodes, scores)
+            ]
+            source_nodes.extend(nodes_w_score)
+    return source_nodes
 
 
 def build_datasource_query_components(
