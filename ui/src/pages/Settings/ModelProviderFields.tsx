@@ -42,7 +42,12 @@ import { Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 const isModelSource = (value: string): value is ModelSource => {
-  return value === "CAII" || value === "Bedrock" || value === "Azure";
+  return (
+    value === "CAII" ||
+    value === "Bedrock" ||
+    value === "Azure" ||
+    value === "OpenAI"
+  );
 };
 
 export const ModelProviderFields = ({
@@ -71,6 +76,7 @@ export const ModelProviderFields = ({
         { value: "CAII", label: "Cloudera AI" },
         { value: "Bedrock", label: "AWS Bedrock" },
         { value: "Azure", label: "Azure OpenAI" },
+        { value: "OpenAI", label: "OpenAI" },
       ]}
       disabled={!enableModification}
     />
@@ -104,6 +110,18 @@ export const ModelProviderFields = ({
     >
       <Input
         placeholder="https://myendpoint.openai.azure.com/"
+        disabled={!enableModification}
+      />
+    </Form.Item>
+    <Form.Item
+      label={"OpenAI Base URL"}
+      initialValue={projectConfig?.openai_config.openai_api_base}
+      name={["openai_config", "openai_api_base"]}
+      tooltip="The base URL for the OpenAI service."
+      hidden={modelProvider !== "OpenAI"}
+    >
+      <Input
+        placeholder="https://myendpoint.openai.com/"
         disabled={!enableModification}
       />
     </Form.Item>

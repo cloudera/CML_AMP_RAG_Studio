@@ -123,6 +123,20 @@ export const AuthenticationFields = ({
         />
       </Form.Item>
       <Form.Item
+        label={"OpenAI API Key"}
+        initialValue={projectConfig?.openai_config.openai_api_key}
+        name={["openai_config", "openai_api_key"]}
+        required={modelProvider === "OpenAI"}
+        rules={[{ required: modelProvider === "OpenAI" }]}
+        hidden={modelProvider !== "OpenAI"}
+      >
+        <Input
+          placeholder="openai-api-key"
+          type="password"
+          disabled={!enableModification}
+        />
+      </Form.Item>
+      <Form.Item
         label={"CDP Auth Token"}
         name={["cdp_token"]}
         tooltip={
