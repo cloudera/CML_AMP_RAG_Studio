@@ -177,7 +177,6 @@ def assemble_crew(
         researcher_task_context.append(retriever_task)
 
     # Add search task if needed
-    search_task = None
     if search_tool:
         search_task_context = [date_task]
         if retriever_task:

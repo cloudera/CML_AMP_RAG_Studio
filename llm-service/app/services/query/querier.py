@@ -103,8 +103,6 @@ def streaming_query(
             query_str,
         )
 
-        print("Enhanced query:", enhanced_query)
-
         source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
 
         chat_response = stream_chat(
