@@ -38,34 +38,34 @@
 import logging
 import os
 import re
-import time
 from queue import Queue
-from typing import Optional, Any, Tuple
+from typing import Optional, Tuple
 
 import opik
-from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
-from crewai.agents.parser import AgentFinish
+from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.tools.base_tool import BaseTool
 from crewai_tools import SerperDevTool
-from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
-from llama_index.core import QueryBundle, VectorStoreIndex
+from llama_index.core import VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import RetrieverTool, ToolMetadata, ToolOutput
-from pydantic import BaseModel, Field
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
-from app.services.query.agents.date_tool import DateTool
+from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.tasks.calculation import build_calculation_task
+from app.services.query.tasks.date import build_date_task
+from app.services.query.tasks.retriever import build_retriever_task
+from app.services.query.tasks.search import build_search_task
+from app.services.query.tools.date import DateTool
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
-from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
+from app.services.query.tools.retriever import build_retriever_tool
 
 if os.environ.get("ENABLE_OPIK") == "True":
     from opik.integrations.crewai import track_crewai
@@ -77,287 +77,6 @@ if os.environ.get("ENABLE_OPIK") == "True":
 logger = logging.getLogger(__name__)
 
 poison_pill = "poison_pill"
-
-
-class CrewEvent(BaseModel):
-    type: str
-    name: str
-    data: Optional[str] = None
-    timestamp: float = time.time()
-
-
-def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) -> None:
-    if isinstance(output, AgentFinish):
-        crew_events_queue.put(
-            CrewEvent(
-                type="agent_finish",
-                name=agent,
-                data=output.thought,
-                timestamp=time.time(),
-            )
-        )
-    if isinstance(output, TaskOutput):
-        crew_events_queue.put(
-            CrewEvent(
-                type="task_completed",
-                name=agent,
-                data=output.raw,
-                timestamp=time.time(),
-            )
-        )
-
-
-def build_calculation_task(
-    agent: Agent,
-    calculation_task_context: list[Task],
-    crew_events_queue: Queue[CrewEvent],
-) -> Task:
-    """
-    Build a calculation task for the agent.
-    This task will perform any necessary calculations based on the research findings.
-
-    Args:
-        agent (Agent): The agent that will perform the calculations.
-        calculation_task_context (list[Task]): The list of Task objects that will be used as context for the calculation task.
-        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
-
-    Returns:
-        Task: The calculation task.
-    """
-    calculation_task = Task(
-        name="CalculatorTask",
-        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
-        agent=agent,
-        context=calculation_task_context if calculation_task_context else None,
-        expected_output="Results of any calculations performed, with step-by-step workings",
-        callback=lambda output: step_callback(
-            output, "Calculation Complete", crew_events_queue
-        ),
-    )
-    return calculation_task
-
-
-class SearchResult(BaseModel):
-    result: str | None = None
-    link: str | None = None
-
-
-class SearchOutput(BaseModel):
-    search_results: list[SearchResult]
-
-
-def build_search_task(
-    agent: Agent,
-    query: str,
-    chat_history: str,
-    search_task_context: list[Task],
-    search_tool: SerperDevTool,
-    crew_events_queue: Queue[CrewEvent],
-) -> Task:
-    """
-    Build a search task for the agent.
-    This task will search the internet for relevant information related to the user's question and chat history.
-
-    Args:
-        agent (Agent): The agent that will perform the search.
-        query (str): The user's question.
-        chat_history (list[str | None]): The chat history.
-        search_task_context (list[Task]): The list of Task objects that will be used as context for the search task.
-        search_tool (SerperDevTool): The search tool to be used.
-        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
-
-    Returns:
-        Task: The search task.
-    """
-    search_task = Task(
-        name="SearchTask",
-        description="Search the internet for relevant information related to the user's question and chat history.\n\n"
-        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
-        "If the question can be answered using the chat history or the context, do not use the search tool and "
-        "return blank strings for the search results. If needed, use the chat history to refine the user's "
-        "question to pass as input to the search tool.",
-        agent=agent,
-        tools=[search_tool],
-        context=search_task_context if search_task_context else None,
-        expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
-        output_json=SearchOutput,
-        callback=lambda output: step_callback(
-            output, "Search Complete", crew_events_queue
-        ),
-    )
-    return search_task
-
-
-class RetrieverToolInput(BaseModel):
-    """Input Schema for the RetrieverTool."""
-
-    query: str = Field(
-        ...,
-        description="The query to search for in the index.",
-    )
-
-
-class RetrieverToolWithNodeInfo(RetrieverTool):
-    """
-    Retriever tool.
-
-    A tool making use of a retriever.
-
-    Args:
-        retriever (BaseRetriever): A retriever.
-        metadata (ToolMetadata): The associated metadata of the query engine.
-        node_postprocessors (Optional[List[BaseNodePostprocessor]]): A list of
-            node postprocessors.
-    """
-
-    def call(self, *args: Any, **kwargs: Any) -> ToolOutput:
-        query_str = ""
-        if args is not None:
-            query_str += ", ".join([str(arg) for arg in args]) + "\n"
-        if kwargs is not None:
-            query_str += (
-                ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
-            )
-        if query_str == "":
-            raise ValueError("Cannot call query engine without inputs")
-
-        docs = self._retriever.retrieve(query_str)
-        docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
-        content = ""
-        for doc in docs:
-            node_copy = doc.node.model_copy()
-            node_copy.text_template = "{metadata_str}\n{content}"
-            node_copy.metadata_template = "{key} = {value}"
-            content += (
-                f"node_id = {node_copy.node_id}\n"
-                + f"score = {doc.score}\n"
-                + node_copy.get_content()
-                + "\n\n"
-            )
-        return ToolOutput(
-            content=content,
-            tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
-            raw_input={"input": query_str},
-            raw_output=docs,
-        )
-
-    async def acall(self, *args: Any, **kwargs: Any) -> ToolOutput:
-        query_str = ""
-        if args is not None:
-            query_str += ", ".join([str(arg) for arg in args]) + "\n"
-        if kwargs is not None:
-            query_str += (
-                ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
-            )
-        if query_str == "":
-            raise ValueError("Cannot call query engine without inputs")
-        docs = await self._retriever.aretrieve(query_str)
-        content = ""
-        docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
-        for doc in docs:
-            node_copy = doc.node.model_copy()
-            node_copy.text_template = "{metadata_str}\n{content}"
-            node_copy.metadata_template = "{key} = {value}"
-            content += (
-                f"node_id = {node_copy.node_id}\n"
-                + f"score = {doc.score}\n"
-                + node_copy.get_content()
-                + "\n\n"
-            )
-        return ToolOutput(
-            content=content,
-            tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
-            raw_input={"input": query_str},
-            raw_output=docs,
-        )
-
-
-def build_retriever_tool(
-    configuration: QueryConfiguration,
-    data_source_id: int,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    llm: LLM,
-) -> BaseTool:
-    base_retriever = FlexibleRetriever(
-        configuration=configuration,
-        index=index,
-        embedding_model=embedding_model,
-        data_source_id=data_source_id,
-        llm=llm,
-    )
-    # fetch summary fromm index if available
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
-    retriever_tool = RetrieverToolWithNodeInfo(
-        retriever=base_retriever,
-        metadata=ToolMetadata(
-            name="Retriever",
-            description=(
-                "A tool to retrieve relevant information from "
-                "the index. It takes a query of type string and returns relevant nodes from the index."
-                f"The index summary is: {data_source_summary}"
-                if data_source_summary
-                else "Assume the index has relevant information about the user's question."
-            ),
-            fn_schema=RetrieverToolInput,
-        ),
-    )
-    crewai_retriever_tool = LlamaIndexTool.from_tool(retriever_tool)
-    return crewai_retriever_tool
-
-
-class RetrieverResult(BaseModel):
-    node_id: str | None = None
-    score: float | None = None
-    content: str | None = None
-
-
-class RetrieverOutput(BaseModel):
-    retriever_results: list[RetrieverResult]
-
-
-def build_retriever_task(
-    agent: Agent,
-    query: str,
-    chat_history: str,
-    retriever_task_context: list[Task],
-    retriever_tool: BaseTool,
-    crew_events_queue: Queue[CrewEvent],
-) -> Task:
-    retriever_task = Task(
-        name="RetrieverTask",
-        description="Retrieve relevant information from the index based on the user's question.\n\n"
-        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
-        "If the question can be answered using the chat history or the context, do not use the retriever tool and "
-        "return blank strings for the retriever results. If needed, use the chat history to refine the user's question "
-        "to pass as input to the retriever tool.",
-        agent=agent,
-        tools=[retriever_tool],
-        context=retriever_task_context if retriever_task_context else None,
-        expected_output="Relevant information retrieved from the index.",
-        output_json=RetrieverOutput,
-        callback=lambda output: step_callback(
-            output, "Retrieval Complete", crew_events_queue
-        ),
-    )
-    return retriever_task
-
-
-def build_date_task(
-    agent: Agent, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]
-) -> Task:
-    date_task = Task(
-        name="DateFinderTask",
-        description="Find the current date and time.",
-        agent=agent,
-        expected_output="The current date and time.",
-        tools=[date_tool],
-        callback=lambda output: step_callback(output, "Date Found", crew_events_queue),
-    )
-    return date_task
 
 
 def should_use_retrieval(

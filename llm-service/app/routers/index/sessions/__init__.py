@@ -60,7 +60,8 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.crewai_querier import CrewEvent, poison_pill
+from ....services.query.agents.crewai_querier import poison_pill
+from ....services.query.crew_events import CrewEvent
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)

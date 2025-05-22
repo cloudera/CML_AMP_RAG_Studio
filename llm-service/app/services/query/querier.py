@@ -40,9 +40,9 @@ from .agents.crewai_querier import (
     should_use_retrieval,
     launch_crew,
     stream_chat,
-    CrewEvent,
     poison_pill,
 )
+from .crew_events import CrewEvent
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
