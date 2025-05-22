@@ -115,23 +115,35 @@ def _run_chat(
         query_configuration,
         retrieve_chat_history(session.id),
     )
-    return finalize_response(response, condensed_question, data_source_id, query, query_configuration, response_id,session, user_name)
+    return finalize_response(
+        response,
+        condensed_question,
+        data_source_id,
+        query,
+        query_configuration,
+        response_id,
+        session,
+        user_name,
+    )
 
 
-def finalize_response(chat_response: AgentChatResponse,
-                      condensed_question: str | None,
-                      data_source_id: Optional[int],
-                      query: str,
-                      query_configuration: QueryConfiguration,
-                      response_id: str,
-                      session: Session,
-                      user_name: Optional[str]) -> RagStudioChatMessage:
+def finalize_response(
+    chat_response: AgentChatResponse,
+    condensed_question: str | None,
+    data_source_id: Optional[int],
+    query: str,
+    query_configuration: QueryConfiguration,
+    response_id: str,
+    session: Session,
+    user_name: Optional[str],
+) -> RagStudioChatMessage:
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
     relevance, faithfulness = evaluators.evaluate_response(
         query, chat_response, session.inference_model
     )
     response_source_nodes = format_source_nodes(chat_response, data_source_id)
+    print(f"{response_source_nodes=}")
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         session_id=session.id,
@@ -179,5 +191,3 @@ def direct_llm_chat(
     )
     chat_history_manager.append_to_history(session.id, [new_chat_message])
     return new_chat_message
-
-

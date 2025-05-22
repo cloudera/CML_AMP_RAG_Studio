@@ -29,10 +29,12 @@
 # ##############################################################################
 from __future__ import annotations
 
+import re
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.schema import NodeWithScore
 
 from .agents.crewai_querier import (
     assemble_crew,
@@ -97,11 +99,20 @@ def streaming_query(
             data_source_id,
             crew_events_queue,
         )
-        enhanced_query, source_nodes = launch_crew(
+        enhanced_query, source_node_ids_w_score = launch_crew(
             crew,
             query_str,
         )
+
         print("Enhanced query:", enhanced_query)
+
+        source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
+
+        print(
+            "Source nodes:",
+            [(node.node_id, node.metadata, node.score) for node in source_nodes],
+        )
+
         chat_response = stream_chat(
             use_retrieval,
             llm,
@@ -130,6 +141,28 @@ def streaming_query(
         ) from error
 
     return chat_response
+
+
+def get_nodes_from_citations(
+    index: VectorStoreIndex, source_node_ids_w_score: list[tuple[str, float]]
+) -> list[NodeWithScore]:
+    # Extract node_ids from the source_node_ids_w_score
+    source_node_ids, scores = [node_id for node_id, _ in source_node_ids_w_score], [
+        score for _, score in source_node_ids_w_score
+    ]
+    # fetch the source nodes from the index using the extracted node_ids
+    source_nodes = []
+    nodes = index.vector_store.get_nodes(node_ids=source_node_ids)
+    if nodes:
+        nodes = [
+            NodeWithScore(
+                node=node,
+                score=score,
+            )
+            for node, score in zip(nodes, scores)
+        ]
+        source_nodes.extend(nodes)
+    return source_nodes
 
 
 def build_datasource_query_components(

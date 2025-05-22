@@ -35,8 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import json
 import logging
 import os
+import re
 import time
 from queue import Queue
 from typing import Optional, Any, Tuple
@@ -45,7 +47,7 @@ import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
-from crewai.tools.tool_types import ToolResult
+from crewai.utilities.events import TaskCompletedEvent
 from crewai_tools import SerperDevTool
 from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle, VectorStoreIndex
@@ -98,13 +100,39 @@ def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) 
                 timestamp=time.time(),
             )
         )
+    if isinstance(output, TaskCompletedEvent):
+        crew_events_queue.put(
+            CrewEvent(
+                type="task_completed",
+                name=agent,
+                data=json.dumps(output.output.json_dict, indent="\t"),
+                timestamp=time.time(),
+            )
+        )
 
 
-def build_calculation_task(agent: Agent, crew_events_queue: Queue[CrewEvent]) -> Task:
+def build_calculation_task(
+    agent: Agent,
+    calculation_task_context: list[Task],
+    crew_events_queue: Queue[CrewEvent],
+) -> Task:
+    """
+    Build a calculation task for the agent.
+    This task will perform any necessary calculations based on the research findings.
+
+    Args:
+        agent (Agent): The agent that will perform the calculations.
+        calculation_task_context (list[Task]): The list of Task objects that will be used as context for the calculation task.
+        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
+
+    Returns:
+        Task: The calculation task.
+    """
     calculation_task = Task(
         name="CalculatorTask",
         description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
         agent=agent,
+        context=calculation_task_context if calculation_task_context else None,
         expected_output="Results of any calculations performed, with step-by-step workings",
         callback=lambda output: step_callback(
             output, "Calculation Complete", crew_events_queue
@@ -115,25 +143,45 @@ def build_calculation_task(agent: Agent, crew_events_queue: Queue[CrewEvent]) ->
 
 class SearchResult(BaseModel):
     result: str
-    link: str
+    link: str | None = None
 
 
 class SearchOutput(BaseModel):
-    results: list[SearchResult]
+    search_results: list[SearchResult]
 
 
 def build_search_task(
     agent: Agent,
     query: str,
-    date_tool: DateTool,
+    chat_history: str,
+    search_task_context: list[Task],
     search_tool: SerperDevTool,
     crew_events_queue: Queue[CrewEvent],
 ) -> Task:
+    """
+    Build a search task for the agent.
+    This task will search the internet for relevant information related to the user's question and chat history.
+
+    Args:
+        agent (Agent): The agent that will perform the search.
+        query (str): The user's question.
+        chat_history (list[str | None]): The chat history.
+        search_task_context (list[Task]): The list of Task objects that will be used as context for the search task.
+        search_tool (SerperDevTool): The search tool to be used.
+        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
+
+    Returns:
+        Task: The search task.
+    """
     search_task = Task(
         name="SearchTask",
-        description=f"Search the internet for relevant information related to the user's question.  User's question: {query}.",
+        description="Search the internet for relevant information related to the user's question and chat history. "
+        "If the question can be answered using the chat history or the context, do not use the search tool. "
+        "If needed, use the chat history to refine the user's question to pass as input to the search tool.\n\n"
+        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}",
         agent=agent,
-        tools=[date_tool, search_tool],
+        tools=[search_tool],
+        context=search_task_context if search_task_context else None,
         expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
         output_json=SearchOutput,
         callback=lambda output: step_callback(
@@ -186,7 +234,7 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
             content += (
                 f"node_id = {node_copy.node_id}\n"
                 + f"score = {doc.score}\n"
-                + node_copy.get_content(MetadataMode.LLM)
+                + node_copy.get_content()
                 + "\n\n"
             )
         return ToolOutput(
@@ -216,7 +264,7 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
             content += (
                 f"node_id = {node_copy.node_id}\n"
                 + f"score = {doc.score}\n"
-                + node_copy.get_content(MetadataMode.LLM)
+                + node_copy.get_content()
                 + "\n\n"
             )
         return ToolOutput(
@@ -265,31 +313,34 @@ def build_retriever_tool(
 
 
 class RetrieverResult(BaseModel):
-    node_id: str
-    doc_id: str
-    content: str
-    source_file_name: str
-    data_source_id: int
-    score: float
+    node_id: str | None = None
+    score: float | None = None
+    content: str | None = None
 
 
 class RetrieverOutput(BaseModel):
-    results: list[RetrieverResult]
+    retriever_results: list[RetrieverResult]
 
 
 def build_retriever_task(
     agent: Agent,
     query: str,
+    chat_history: str,
+    retriever_task_context: list[Task],
     retriever_tool: BaseTool,
     crew_events_queue: Queue[CrewEvent],
 ) -> Task:
     retriever_task = Task(
         name="RetrieverTask",
-        description="Retrieve relevant information from the index based the user's question: \n\n"
-        f"<Question>:\n{query}.",
+        description="Retrieve relevant information from the index based on the user's question. "
+        "If the question can be answered using the chat history or the context, do not use the retriever tool and "
+        "return blank strings for the retriever results. If needed, use the chat history to refine the user's question "
+        "to pass as input to the retriever tool.\n\n"
+        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}",
         agent=agent,
         tools=[retriever_tool],
-        expected_output="Relevant information retrieved from the index, including links to the sources.",
+        context=retriever_task_context if retriever_task_context else None,
+        expected_output="Relevant information retrieved from the index.",
         output_json=RetrieverOutput,
         callback=lambda output: step_callback(
             output, "Retrieval Complete", crew_events_queue
@@ -387,7 +438,18 @@ def assemble_crew(
 
     # Define tasks for the researcher agents
     date_task = build_date_task(researcher, date_tool, crew_events_queue)
-    # calculation_task = build_calculation_task(researcher, crew_events_queue)
+
+    chat_history = (
+        "=========================================================================\n"
+    )
+    for message in chat_messages:
+        if message.role == "user":
+            chat_history += f"User:\n{message.content}\n"
+        elif message.role == "assistant":
+            chat_history += f"Assistant:\n{message.content}\n"
+    chat_history += (
+        "=========================================================================\n"
+    )
 
     # create a list of tasks for the researcher
     researcher_task_context = [date_task]
@@ -395,40 +457,61 @@ def assemble_crew(
     # Add retriever task if needed
     retriever_task = None
     if crewai_retriever_tool:
+        retriever_task_context = [date_task]
         retriever_task = build_retriever_task(
-            researcher, query_str, crewai_retriever_tool, crew_events_queue
+            researcher,
+            query_str,
+            chat_history,
+            retriever_task_context,
+            crewai_retriever_tool,
+            crew_events_queue,
         )
         researcher_task_context.append(retriever_task)
 
     # Add search task if needed
     search_task = None
     if search_tool:
+        search_task_context = [date_task]
+        if retriever_task:
+            search_task_context.append(retriever_task)
         search_task = build_search_task(
-            researcher, query_str, date_tool, search_tool, crew_events_queue
+            researcher,
+            query_str,
+            chat_history,
+            search_task_context,
+            search_tool,
+            crew_events_queue,
         )
         researcher_task_context.append(search_task)
 
-    chat_history = [message.content for message in chat_messages]
-
     research_task = Task(
         name="ResearcherTask",
-        description="Research the user's question using the tools available "
+        description="Research the user's question using the context available "
         "and chat history. Based on the research return comprehensive research insights. "
-        f"Given below, is the user's question and the chat history: \n<Question>:\n{query_str}\n\n<Chat history>:\n {chat_history}",
+        "Given below, is the user's question and the chat history: \n\n"
+        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
         agent=researcher,
         expected_output="A detailed analysis of the user's question based on the provided context, "
         "including relevant links and in-line citations."
         "Note: \n"
-        "* For citations from search with result and link, convert them into markdown links. "
-        "* For citations from retrieval results with node_id and other metadata, the node_id "
+        "* Use the citations from the chat history as is. "
+        "* Use links and result from the search results (search_results) if needed to answer the question "
+        "and cite them in the given format: the link should be in markdown format. For example: "
+        "[link](https://example.com). \n"
+        "* Cite from retriever results (retriever_results) in the given format: the node_id "
         "should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. "
-        "For example: <a class='rag_citation' href='2'>2</a>. "
-        "Do not use filenames as citations. Only node ids should be used.",
-        tools=research_tools,
+        "Do not use filenames as citations. Only node ids should be used."
+        "For example: <a class='rag_citation' href='2'>2</a>.",
         context=researcher_task_context,
-        callback=lambda _: crew_events_queue.put(
-            CrewEvent(type=poison_pill, name="researcher")
-        ),
+        # callback=lambda _: crew_events_queue.put(
+        #     CrewEvent(type=poison_pill, name="researcher")
+        # ),
+    )
+
+    # Create a calculation task if needed
+    calculation_task_context = [research_task]
+    calculation_task = build_calculation_task(
+        researcher, calculation_task_context, crew_events_queue
     )
 
     # Create a responder agent that formulates the final response
@@ -447,12 +530,12 @@ def assemble_crew(
         description="Formulate a comprehensive response based on the research findings and calculations, "
         "including any relevant links and in-line citations.",
         agent=responder,
-        expected_output="A accurate response to the user's question. The citations are to be copied as is "
+        expected_output="A accurate response to the user's question. The links and citations are to be copied as is "
         "from the context. Do not format it, or change it in any way.",
-        context=[research_task],
-        # callback=lambda _: crew_events_queue.put(
-        #     CrewEvent(type=poison_pill, name="responder")
-        # ),
+        context=[research_task, calculation_task],
+        callback=lambda _: crew_events_queue.put(
+            CrewEvent(type=poison_pill, name="responder")
+        ),
     )
 
     # Create a crew with the agents and tasks
@@ -465,7 +548,7 @@ def assemble_crew(
     tasks.extend(
         [
             research_task,
-            # calculation_task,
+            calculation_task,
             response_task,
         ]
     )
@@ -485,31 +568,11 @@ def assemble_crew(
 def launch_crew(
     crew: Crew,
     query_str: str,
-) -> Tuple[str, list[NodeWithScore]]:
-
+) -> Tuple[str, list[Tuple[str, float]]]:
     # Run the crew to get the enhanced response
     crew_result: CrewOutput = crew.kickoff()
 
-    # find if RetrieverTask in tasks_outputs
-    source_nodes = []
-    for task_output in crew_result.tasks_output:
-        if task_output.name == "RetrieverTask":
-            json_output = task_output.json_dict["results"]
-            for result in json_output:
-                base_node = TextNode(
-                    id_=result["node_id"],
-                    metadata={
-                        "document_id": result["doc_id"],
-                        "file_name": result["source_file_name"],
-                        "data_source_id": result["data_source_id"],
-                    },
-                    text=result["content"],
-                )
-                node = NodeWithScore(
-                    node=base_node,
-                    score=result["score"],
-                )
-                source_nodes.append(node)
+    source_node_ids_w_score = extract_node_ids_from_crew_result(crew_result)
 
     # Create an enhanced query that includes the CrewAI insights
     return (
@@ -518,11 +581,44 @@ Original query: {query_str}
 
 Research insights: {crew_result}
 
-Please provide a response to the original query, incorporating the insights from research.
-If insights from the research are used, use the in-line citations from the research insights as is.
+Please provide a response to the original query, incorporating the insights from research with in-line citations. \
+If insights from the research are used, use the links and in-line citations from the research insights as is. \
+Keep markdown formatted links as is. Keep the in-line citations of format `<a class='rag_citation' \
+href='node_id'>node_id</a>` as is.
 """,
-        source_nodes,
+        source_node_ids_w_score,
     )
+
+
+def extract_node_ids_from_crew_result(
+    crew_result: CrewOutput,
+) -> list[Tuple[str, float]]:
+    # find if RetrieverTask in tasks_outputs
+    source_node_ids_w_score = []
+    # Extract the retriever results from the crew result
+    for task_output in crew_result.tasks_output:
+        if task_output.name == "RetrieverTask":
+            if task_output.json_dict:
+                json_output = task_output.json_dict["retriever_results"]
+                for result in json_output:
+                    node_id = result["node_id"]
+                    score = result["score"]
+                    if node_id and score:
+                        # Append the node id and score to the list
+                        source_node_ids_w_score.append((node_id, score))
+    # Extract the node ids from the crew result string
+    crew_result_str = crew_result.raw
+    extracted_node_ids = re.findall(
+        r"<a class='rag_citation' href='(.*?)'>",
+        crew_result_str,
+    )
+    print(f"extracted_node_ids= {extracted_node_ids}")
+    # add the extracted node ids to the source node ids
+    source_node_ids = set([node_id for node_id, _ in source_node_ids_w_score])
+    for node_id in extracted_node_ids:
+        if node_id not in source_node_ids:
+            source_node_ids_w_score.append((node_id, 1.0))
+    return source_node_ids_w_score
 
 
 def stream_chat(
