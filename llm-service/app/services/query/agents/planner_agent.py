@@ -40,7 +40,7 @@ import logging
 from typing import Dict, Any, Optional
 
 from crewai import Agent, Task, Crew, Process
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from pydantic import BaseModel, Field
 
@@ -129,10 +129,11 @@ class PlannerAgent:
         data_source_info = ""
         additional_data_source_questions = ""
         chat_history = ""
-        if chat_messages:
-            chat_history = "\n".join(
-                [f"{message.role}: {message.content}" for message in chat_messages]
-            )
+        for message in chat_messages:
+            if message.role == MessageRole.USER:
+                chat_history += f"User:\n{message.content}\n"
+            elif message.role == MessageRole.ASSISTANT:
+                chat_history += f"Assistant:\n{message.content}\n"
         if data_source_summary:
             data_source_info = f"""
             ==================================================================

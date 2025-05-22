@@ -108,11 +108,6 @@ def streaming_query(
 
         source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
 
-        print(
-            "Source nodes:",
-            [(node.node_id, node.metadata, node.score) for node in source_nodes],
-        )
-
         chat_response = stream_chat(
             use_retrieval,
             llm,

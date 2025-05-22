@@ -44,7 +44,7 @@ from queue import Queue
 from typing import Optional, Any, Tuple
 
 import opik
-from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
+from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.agents.parser import AgentFinish
 from crewai.tools.base_tool import BaseTool
 from crewai.utilities.events import TaskCompletedEvent
@@ -53,11 +53,10 @@ from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle, VectorStoreIndex
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import MetadataMode, NodeWithScore, TextNode, BaseNode
+from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import RetrieverTool, ToolMetadata, ToolOutput
 from pydantic import BaseModel, Field
 
@@ -175,10 +174,11 @@ def build_search_task(
     """
     search_task = Task(
         name="SearchTask",
-        description="Search the internet for relevant information related to the user's question and chat history. "
-        "If the question can be answered using the chat history or the context, do not use the search tool. "
-        "If needed, use the chat history to refine the user's question to pass as input to the search tool.\n\n"
-        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}",
+        description="Search the internet for relevant information related to the user's question and chat history.\n\n"
+        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
+        "If the question can be answered using the chat history or the context, do not use the search tool and "
+        "return blank strings for the search results. If needed, use the chat history to refine the user's "
+        "question to pass as input to the search tool.",
         agent=agent,
         tools=[search_tool],
         context=search_task_context if search_task_context else None,
@@ -332,11 +332,11 @@ def build_retriever_task(
 ) -> Task:
     retriever_task = Task(
         name="RetrieverTask",
-        description="Retrieve relevant information from the index based on the user's question. "
+        description="Retrieve relevant information from the index based on the user's question.\n\n"
+        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
         "If the question can be answered using the chat history or the context, do not use the retriever tool and "
         "return blank strings for the retriever results. If needed, use the chat history to refine the user's question "
-        "to pass as input to the retriever tool.\n\n"
-        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}",
+        "to pass as input to the retriever tool.",
         agent=agent,
         tools=[retriever_tool],
         context=retriever_task_context if retriever_task_context else None,
@@ -439,17 +439,12 @@ def assemble_crew(
     # Define tasks for the researcher agents
     date_task = build_date_task(researcher, date_tool, crew_events_queue)
 
-    chat_history = (
-        "=========================================================================\n"
-    )
+    chat_history = ""
     for message in chat_messages:
-        if message.role == "user":
+        if message.role == MessageRole.USER:
             chat_history += f"User:\n{message.content}\n"
-        elif message.role == "assistant":
+        elif message.role == MessageRole.ASSISTANT:
             chat_history += f"Assistant:\n{message.content}\n"
-    chat_history += (
-        "=========================================================================\n"
-    )
 
     # create a list of tasks for the researcher
     researcher_task_context = [date_task]
@@ -612,12 +607,11 @@ def extract_node_ids_from_crew_result(
         r"<a class='rag_citation' href='(.*?)'>",
         crew_result_str,
     )
-    print(f"extracted_node_ids= {extracted_node_ids}")
     # add the extracted node ids to the source node ids
     source_node_ids = set([node_id for node_id, _ in source_node_ids_w_score])
     for node_id in extracted_node_ids:
         if node_id not in source_node_ids:
-            source_node_ids_w_score.append((node_id, 1.0))
+            source_node_ids_w_score.append((node_id, 0.0))
     return source_node_ids_w_score
 
 

@@ -143,7 +143,6 @@ def finalize_response(
         query, chat_response, session.inference_model
     )
     response_source_nodes = format_source_nodes(chat_response, data_source_id)
-    print(f"{response_source_nodes=}")
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         session_id=session.id,
