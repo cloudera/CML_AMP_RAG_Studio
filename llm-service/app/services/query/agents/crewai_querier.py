@@ -494,7 +494,8 @@ def assemble_crew(
         "should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. "
         "Do not use filenames as citations. Only node ids should be used."
         "For example: <a class='rag_citation' href='2'>2</a>. Do not make up node ids that are not present "
-        "in the context.\n",
+        "in the context.\n"
+        "* All citations should be either in-line citations or markdown links. ",
         context=researcher_task_context,
         callback=lambda output: step_callback(
             output, "Research Complete", crew_events_queue

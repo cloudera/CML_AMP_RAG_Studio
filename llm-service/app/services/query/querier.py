@@ -139,7 +139,7 @@ def streaming_query(
 
 
 def get_nodes_from_citations(
-    index: VectorStoreIndex, source_node_ids_w_score: list[tuple[str, float]]
+    index: Optional[VectorStoreIndex], source_node_ids_w_score: list[tuple[str, float]]
 ) -> list[NodeWithScore]:
     # Extract node_ids from the source_node_ids_w_score
     source_node_ids, scores = [node_id for node_id, _ in source_node_ids_w_score], [
@@ -147,16 +147,17 @@ def get_nodes_from_citations(
     ]
     # fetch the source nodes from the index using the extracted node_ids
     source_nodes = []
-    nodes = index.vector_store.get_nodes(node_ids=source_node_ids)
-    if nodes:
-        nodes = [
-            NodeWithScore(
-                node=node,
-                score=score,
-            )
-            for node, score in zip(nodes, scores)
-        ]
-        source_nodes.extend(nodes)
+    if index:
+        nodes = index.vector_store.get_nodes(node_ids=source_node_ids)
+        if nodes:
+            nodes = [
+                NodeWithScore(
+                    node=node,
+                    score=score,
+                )
+                for node, score in zip(nodes, scores)
+            ]
+            source_nodes.extend(nodes)
     return source_nodes
 
 
