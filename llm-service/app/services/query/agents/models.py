@@ -40,6 +40,7 @@ from llama_index.core.llms import LLM as LlamaIndexLLM
 
 from app import config
 from app.services.caii.utils import get_caii_access_token
+from app.services.models import OpenAiModelProvider
 from app.services.models.providers import (
     AzureModelProvider,
     CAIIModelProvider,
@@ -68,6 +69,12 @@ def get_crewai_llm_object_direct(
     elif BedrockModelProvider.is_enabled():
         return CrewAILLM(
             model="bedrock/" + model_name,
+        )
+    elif OpenAiModelProvider.is_enabled():
+        return CrewAILLM(
+            model="openai/" + model_name,
+            api_key=config.settings.openai_api_key,
+            base_url=config.settings.openai_api_base,
         )
     else:
         raise ValueError("Model type is not supported.")

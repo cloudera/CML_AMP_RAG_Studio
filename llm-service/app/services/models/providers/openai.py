@@ -61,12 +61,10 @@ class OpenAiModelProvider(ModelProvider):
             ModelResponse(
                 model_id="text-embedding-ada-002",
                 name="Text Embedding Ada 002",
-                available=True
             ),
             ModelResponse(
                 model_id="text-embedding-3-large",
                 name="Text Embedding 3 Large",
-                available=True
             ),
         ]
 
