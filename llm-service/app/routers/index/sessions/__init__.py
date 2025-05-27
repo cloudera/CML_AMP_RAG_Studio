@@ -41,7 +41,7 @@ import logging
 import queue
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import Optional, Generator
+from typing import Optional, Generator, Any
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -233,7 +233,7 @@ def stream_chat_completion(
 
     crew_events_queue: queue.Queue[CrewEvent] = queue.Queue()
 
-    def crew_callback(chat_future: Future) -> Generator[str, None, None]:
+    def crew_callback(chat_future: Future[Any]) -> Generator[str, None, None]:
         while True:
             if chat_future.done() and (e := chat_future.exception()):
                 raise e

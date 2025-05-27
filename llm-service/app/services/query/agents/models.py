@@ -40,11 +40,11 @@ from llama_index.core.llms import LLM as LlamaIndexLLM
 
 from app import config
 from app.services.caii.utils import get_caii_access_token
-from app.services.models import OpenAiModelProvider
 from app.services.models.providers import (
     AzureModelProvider,
     CAIIModelProvider,
     BedrockModelProvider,
+    OpenAiModelProvider,
 )
 
 

@@ -38,9 +38,11 @@
 from .azure import AzureModelProvider
 from .bedrock import BedrockModelProvider
 from .caii import CAIIModelProvider
+from .openai import OpenAiModelProvider
 
 __all__ = [
     "AzureModelProvider",
     "BedrockModelProvider",
     "CAIIModelProvider",
+    "OpenAiModelProvider",
 ]
