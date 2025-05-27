@@ -46,8 +46,8 @@ from app.services.query.crew_events import CrewEvent, step_callback
 
 
 class SearchResult(BaseModel):
-    result: str
-    link: str
+    result: str = ""
+    link: str = ""
 
 
 class SearchOutput(BaseModel):
@@ -81,13 +81,15 @@ def build_search_task(
         name="SearchTask",
         description="Search the internet for relevant information related to the user's question and chat history.\n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
-        "If the question can be answered using the chat history or the context, do not use the search tool and "
-        "return blank strings for the search results. If needed, use the chat history to refine the user's "
+        "If needed, use the chat history to refine the user's "
         "question to pass as input to the search tool.",
         agent=agent,
         tools=[search_tool],
         context=search_task_context if search_task_context else None,
-        expected_output="Results of any search performed, with step-by-step workings, including links to the sources.",
+        expected_output="Results of any search performed, with step-by-step workings, "
+        "including links to the sources. If the question can be answered using the chat "
+        "history or the context, do not use the search tool and "
+        "return an empty list for search results. ",
         output_json=SearchOutput,
         callback=lambda output: step_callback(
             output, "Search Complete", crew_events_queue

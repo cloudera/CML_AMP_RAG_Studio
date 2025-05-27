@@ -146,7 +146,7 @@ def assemble_crew(
         backstory="You are an expert researcher who provides accurate and relevant information. "
         "You know when to use tools and when to answer directly.",
         llm=crewai_llm,
-        verbose=True,
+        # verbose=True,
     )
 
     # Define tasks for the researcher agents
@@ -198,7 +198,7 @@ def assemble_crew(
         "Given below, is the user's question and the chat history: \n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
         agent=researcher,
-        expected_output="A detailed analysis of the user's question based on the provided context, "
+        expected_output="A detailed analysis of the user's question based on the provided context and chat history, "
         "including relevant links and in-line citations."
         "Note: \n"
         "* Use the citations from the chat history as is. "
@@ -292,8 +292,8 @@ Research insights: {crew_result}
 
 Please provide a response to the original query, incorporating the insights from research with in-line citations. \
 If insights from the research are used, use the links and in-line citations from the research insights as is. \
-Keep markdown formatted links as is. Keep the in-line citations of format `<a class='rag_citation' \
-href='node_id'>node_id</a>` as is.
+Keep markdown formatted links as is i.e. [<text>](<web_link>). Keep the in-line citations of format \
+`<a class='rag_citation' href='node_id'>node_id</a>` as is.
 """,
         source_node_ids_w_score,
     )

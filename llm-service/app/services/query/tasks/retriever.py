@@ -46,9 +46,9 @@ from app.services.query.crew_events import CrewEvent, step_callback
 
 
 class RetrieverResult(BaseModel):
-    node_id: str
-    score: float
-    content: str
+    node_id: str = ""
+    score: float = 0.0
+    content: str = ""
 
 
 class RetrieverOutput(BaseModel):
@@ -67,13 +67,14 @@ def build_retriever_task(
         name="RetrieverTask",
         description="Retrieve relevant information from the index based on the user's question.\n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
-        "If the question can be answered using the chat history or the context, do not use the retriever tool and "
-        "return blank strings for the node_id and content, and 0 for the score. If needed, use the chat history to refine the user's question "
+        "If needed, use the chat history to refine the user's question "
         "to pass as input to the retriever tool.",
         agent=agent,
         tools=[retriever_tool],
         context=retriever_task_context if retriever_task_context else None,
-        expected_output="Relevant information retrieved from the index.",
+        expected_output="Results of relevant information retrieved from the index. "
+        "If the question can be answered using the chat history or the context, do "
+        "not use the retriever tool and return an empty list of retriever results.",
         output_json=RetrieverOutput,
         callback=lambda output: step_callback(
             output, "Retrieval Complete", crew_events_queue

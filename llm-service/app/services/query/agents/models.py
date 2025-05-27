@@ -56,6 +56,7 @@ def get_crewai_llm_object_direct(
             model="azure/" + model_name,
             api_key=config.settings.azure_openai_api_key,
             base_url=config.settings.azure_openai_endpoint,
+            api_version=config.settings.azure_openai_api_version,
         )
     elif CAIIModelProvider.is_enabled():
         if hasattr(language_model, "api_base"):
