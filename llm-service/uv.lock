@@ -2685,6 +2685,18 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-callbacks-opik"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/00/b7/1e9cdd3a3876e24e7a69e719036df47013e49901ea65e64bc4fce5a0ea25/llama_index_callbacks_opik-1.1.0.tar.gz", hash = "sha256:e8f4c33f59a8303275dcfe34bf9d26444265f44e10163847c9ee047cb6655988", size = 2089 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/e0/2abcafd3ec4dff7ad859008c0603dd9ad2ba1778438cd57a35e2fbbf1eb1/llama_index_callbacks_opik-1.1.0-py3-none-any.whl", hash = "sha256:2de81eb8e912f94fcab99e0bbaa738e6a9314b308296eab8a04644a39bc5e036", size = 2478 },
+]
+
+[[package]]
 name = "llama-index-core"
 version = "0.12.15"
 source = { registry = "https://pypi.org/simple" }
@@ -2949,6 +2961,7 @@ dependencies = [
     { name = "docx2txt" },
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-utils" },
+    { name = "llama-index-callbacks-opik" },
     { name = "llama-index-core" },
     { name = "llama-index-embeddings-azure-openai" },
     { name = "llama-index-embeddings-bedrock" },
@@ -3001,6 +3014,7 @@ requires-dist = [
     { name = "docx2txt", specifier = ">=0.8" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.111.0" },
     { name = "fastapi-utils", specifier = ">=0.8.0" },
+    { name = "llama-index-callbacks-opik", specifier = ">=1.1.0" },
     { name = "llama-index-core", specifier = ">=0.10.68" },
     { name = "llama-index-embeddings-azure-openai", specifier = ">=0.3.0" },
     { name = "llama-index-embeddings-bedrock", specifier = ">=0.2.1" },
