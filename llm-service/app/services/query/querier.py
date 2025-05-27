@@ -29,11 +29,14 @@
 # ##############################################################################
 from __future__ import annotations
 
+import os
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.schema import NodeWithScore
+from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
+from mcp import StdioServerParameters
 
 from .agents.crewai_querier import (
     assemble_crew,
@@ -74,65 +77,78 @@ def streaming_query(
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
 ) -> StreamingAgentChatResponse:
-    embedding_model, index = build_datasource_query_components(data_source_id)
+    server_params = StdioServerParameters(
+        command="uvx",
+        args=[
+            "mcp-server-git",
+            "-r",
+            "/Users/ewilliams/code/cloudera/CML_AMP_RAG_Studio",
+        ],
+        env={"UV_PYTHON": "3.12", **os.environ},
+    )
+    with MCPServerAdapter(serverparams=server_params) as mcp_tools:
 
-    llm = models.LLM.get(model_name=configuration.model_name)
+        embedding_model, index = build_datasource_query_components(data_source_id)
 
-    chat_response: StreamingAgentChatResponse
-    if configuration.use_tool_calling:
-        use_retrieval = should_use_retrieval(
-            configuration,
-            data_source_id,
-            llm,
-            query_str,
-            chat_messages,
-        )
-        crew = assemble_crew(
-            use_retrieval,
-            llm,
-            embedding_model,
-            chat_messages,
-            index,
-            query_str,
-            configuration,
-            data_source_id,
-            crew_events_queue,
-        )
-        enhanced_query, source_node_ids_w_score = launch_crew(
-            crew,
-            query_str,
-        )
+        llm = models.LLM.get(model_name=configuration.model_name)
 
-        source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
+        chat_response: StreamingAgentChatResponse
+        if configuration.use_tool_calling:
+            use_retrieval = should_use_retrieval(
+                configuration,
+                data_source_id,
+                llm,
+                query_str,
+                chat_messages,
+            )
 
-        chat_response = stream_chat(
-            use_retrieval,
-            llm,
-            chat_engine,
-            enhanced_query,
-            source_nodes,
-            chat_messages,
-        )
+            crew = assemble_crew(
+                use_retrieval,
+                llm,
+                embedding_model,
+                chat_messages,
+                index,
+                query_str,
+                configuration,
+                data_source_id,
+                crew_events_queue,
+                mcp_tools,
+            )
+            enhanced_query, source_node_ids_w_score = launch_crew(
+                crew,
+                query_str,
+            )
+
+            source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
+
+            chat_response = stream_chat(
+                use_retrieval,
+                llm,
+                chat_engine,
+                enhanced_query,
+                source_nodes,
+                chat_messages,
+            )
+            return chat_response
+        if not chat_engine:
+            raise HTTPException(
+                status_code=500,
+                detail="Chat engine is not initialized. Please check the configuration.",
+            )
+
+        try:
+            chat_response = chat_engine.stream_chat(query_str, chat_messages)
+            crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
+            logger.debug("query response received from chat engine")
+        except botocore.exceptions.ClientError as error:
+            logger.warning(error.response)
+            json_error = error.response
+            raise HTTPException(
+                status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+                detail=json_error["StatusReason"],
+            ) from error
+
         return chat_response
-    if not chat_engine:
-        raise HTTPException(
-            status_code=500,
-            detail="Chat engine is not initialized. Please check the configuration.",
-        )
-
-    try:
-        chat_response = chat_engine.stream_chat(query_str, chat_messages)
-        crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
-        logger.debug("query response received from chat engine")
-    except botocore.exceptions.ClientError as error:
-        logger.warning(error.response)
-        json_error = error.response
-        raise HTTPException(
-            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["StatusReason"],
-        ) from error
-
-    return chat_response
 
 
 def get_nodes_from_citations(

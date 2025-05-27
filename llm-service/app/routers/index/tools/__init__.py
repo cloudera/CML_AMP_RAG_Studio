@@ -62,9 +62,14 @@ class Tool(BaseModel):
 @exceptions.propagates
 def tools() -> list[Tool]:
     return [
+        # Tool(
+        #     id="1",
+        #     name="search",
+        #     description="Searches the internet for the given query.",
+        # ),
         Tool(
-            id="1",
-            name="search",
-            description="Searches the internet for the given query.",
-        ),
+            id="2",
+            name="text2sql2text",
+            description="Converts a natural language question to SQL and back to natural language.",
+        )
     ]

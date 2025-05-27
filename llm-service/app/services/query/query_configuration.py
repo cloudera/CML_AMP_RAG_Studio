@@ -45,7 +45,7 @@ from app.services.models.providers.bedrock import (
     DEFAULT_BEDROCK_RERANK_MODEL,
 )
 
-tool_types = Literal["search"]
+tool_types = Literal["text2sql2text"]
 
 
 class QueryConfiguration(BaseModel):

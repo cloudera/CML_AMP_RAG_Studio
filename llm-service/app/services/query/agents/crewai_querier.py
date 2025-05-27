@@ -53,18 +53,18 @@ from llama_index.core.llms import LLM
 from llama_index.core.schema import NodeWithScore
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
-from app.services.query.crew_events import CrewEvent, step_callback
-from app.services.query.tasks.calculation import build_calculation_task
-from app.services.query.tasks.date import build_date_task
-from app.services.query.tasks.retriever import build_retriever_task
-from app.services.query.tasks.search import build_search_task
-from app.services.query.tools.date import DateTool
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
+from app.services.query.crew_events import CrewEvent, step_callback
 from app.services.query.query_configuration import QueryConfiguration
+from app.services.query.tasks.calculation import build_calculation_task
+from app.services.query.tasks.date import build_date_task
+from app.services.query.tasks.retriever import build_retriever_task
+from app.services.query.tasks.search import build_search_task
+from app.services.query.tools.date import DateTool
 from app.services.query.tools.retriever import build_retriever_tool
 
 if os.environ.get("ENABLE_OPIK") == "True":
@@ -112,6 +112,7 @@ def assemble_crew(
     configuration: QueryConfiguration,
     data_source_id: Optional[int],
     crew_events_queue: Queue[CrewEvent],
+    mcp_tools: Optional[list[BaseTool]] = None,
 ) -> Crew:
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
     # Gather all the tools needed for the crew
@@ -191,6 +192,27 @@ def assemble_crew(
         )
         researcher_task_context.append(search_task)
 
+    mcp_agent = None
+    mcp_task = None
+    if configuration.tools and "text2sql2text" in configuration.tools and mcp_tools:
+        print("Using MCP tools:", mcp_tools)
+        mcp_agent = Agent(
+            role="Git agent",
+            goal=f"Determine what git query is needed and return a response to it. \n<Question>:\n{query_str}",
+            backstory="You are an expert at determining what git query is needed to answer the user's question. ",
+            tools=mcp_tools,
+            verbose=True,
+            llm=crewai_llm,
+        )
+        mcp_task = Task(
+            description="Determine what git query is needed to answer the user's question. ",
+            expected_output="The response from the git query command that can be used to answer the user's question.",
+            agent=mcp_agent,
+            callback=lambda output: step_callback(
+                output, "MCP Complete", crew_events_queue
+            ),
+        )
+
     research_task = Task(
         name="ResearcherTask",
         description="Research the user's question using the context available "
@@ -234,6 +256,11 @@ def assemble_crew(
         ),
         # verbose=True,
     )
+    response_context = []
+    if mcp_task:
+        response_context.append(mcp_task)
+    response_context.append(calculation_task)
+
     response_task = Task(
         name="ResponderTask",
         description="Formulate a comprehensive response based on the research findings and calculations, "
@@ -241,7 +268,7 @@ def assemble_crew(
         agent=responder,
         expected_output="A accurate response to the user's question. The links and citations are to be copied as is "
         "from the context. Do not format it, or change it in any way.",
-        context=[research_task, calculation_task],
+        context=response_context,
         callback=lambda _: crew_events_queue.put(
             CrewEvent(type=poison_pill, name="responder")
         ),
@@ -253,7 +280,11 @@ def assemble_crew(
 
     for task in researcher_task_context:
         tasks.append(task)
+    if mcp_agent:
+        agents.append(mcp_agent)
     agents.extend([researcher, responder])
+    if mcp_task:
+        tasks.append(mcp_task)
     tasks.extend(
         [
             research_task,
