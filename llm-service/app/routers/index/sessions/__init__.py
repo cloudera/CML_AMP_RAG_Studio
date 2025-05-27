@@ -40,7 +40,7 @@ import json
 import logging
 import queue
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Optional, Generator
 
 from fastapi import APIRouter, Header, HTTPException
@@ -233,8 +233,11 @@ def stream_chat_completion(
 
     crew_events_queue: queue.Queue[CrewEvent] = queue.Queue()
 
-    def crew_callback() -> Generator[str, None, None]:
+    def crew_callback(chat_future: Future) -> Generator[str, None, None]:
         while True:
+            if chat_future.done() and (e := chat_future.exception()):
+                raise e
+
             try:
                 event_data = crew_events_queue.get(block=True, timeout=1.0)
                 if event_data.type == poison_pill:
@@ -263,7 +266,7 @@ def stream_chat_completion(
                     crew_events_queue=crew_events_queue,
                 )
 
-                yield from crew_callback()
+                yield from crew_callback(future)
 
                 first_message = True
                 for response in future.result():
