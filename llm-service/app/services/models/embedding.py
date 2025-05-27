@@ -41,6 +41,7 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.embeddings.bedrock import BedrockEmbedding
+from llama_index.embeddings.openai import OpenAIEmbedding
 
 from . import _model_type, _noop
 from .providers import (
@@ -48,6 +49,7 @@ from .providers import (
     BedrockModelProvider,
     CAIIModelProvider,
 )
+from .providers.openai import OpenAiModelProvider
 from ..caii.caii import get_embedding_model as caii_embedding
 from ..caii.types import ModelResponse
 from ...config import settings
@@ -70,6 +72,13 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
         if CAIIModelProvider.is_enabled():
             return caii_embedding(model_name=model_name)
 
+        if OpenAiModelProvider.is_enabled():
+            return OpenAIEmbedding(
+                model_name=model_name,
+                api_key=settings.openai_api_key,
+                api_base=settings.openai_api_base,
+            )
+
         return BedrockEmbedding(model_name=model_name)
 
     @staticmethod
@@ -83,6 +92,9 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
 
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.get_embedding_models()
+
+        if OpenAiModelProvider.is_enabled():
+            return OpenAiModelProvider.get_embedding_models()
 
         return BedrockModelProvider.get_embedding_models()
 

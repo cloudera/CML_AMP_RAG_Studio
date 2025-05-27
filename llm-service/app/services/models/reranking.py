@@ -48,6 +48,7 @@ from .providers import (
     BedrockModelProvider,
     CAIIModelProvider,
 )
+from .providers.openai import OpenAiModelProvider
 from ..caii.caii import get_reranking_model as caii_reranking
 from ..caii.types import ModelResponse
 from ..query.simple_reranker import SimpleReranker
@@ -79,6 +80,9 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
 
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.get_reranking_models()
+
+        if OpenAiModelProvider.is_enabled():
+            return OpenAiModelProvider.get_reranking_models()
 
         return BedrockModelProvider.get_reranking_models()
 

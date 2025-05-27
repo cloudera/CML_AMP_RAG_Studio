@@ -1,6 +1,6 @@
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -35,36 +35,41 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from enum import Enum
+from typing import List
 
-from .embedding import Embedding
-from .llm import LLM
-from .providers import (
-    AzureModelProvider,
-    CAIIModelProvider,
-)
-from .providers.openai import OpenAiModelProvider
-from .reranking import Reranking
-
-__all__ = [
-    "Embedding",
-    "LLM",
-    "Reranking",
-]
+from app.services.caii.types import ModelResponse
+from app.services.models.providers._model_provider import ModelProvider
 
 
-class ModelSource(str, Enum):
-    BEDROCK = "Bedrock"
-    CAII = "CAII"
-    AZURE = "Azure"
-    OPENAI = "OpenAI"
+class OpenAiModelProvider(ModelProvider):
+    @staticmethod
+    def get_env_var_names() -> set[str]:
+        return {"OPENAI_API_KEY"}
 
+    @staticmethod
+    def get_llm_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id="gpt-4o",
+                name="OpenAI GPT-4o",
+            ),
+        ]
 
-def get_model_source() -> ModelSource:
-    if CAIIModelProvider.is_enabled():
-        return ModelSource.CAII
-    if AzureModelProvider.is_enabled():
-        return ModelSource.AZURE
-    if OpenAiModelProvider.is_enabled():
-        return ModelSource.OPENAI
-    return ModelSource.BEDROCK
+    @staticmethod
+    def get_embedding_models() -> List[ModelResponse]:
+        return [
+            ModelResponse(
+                model_id="text-embedding-ada-002",
+                name="Text Embedding Ada 002",
+                available=True
+            ),
+            ModelResponse(
+                model_id="text-embedding-3-large",
+                name="Text Embedding 3 Large",
+                available=True
+            ),
+        ]
+
+    @staticmethod
+    def get_reranking_models() -> List[ModelResponse]:
+        return []

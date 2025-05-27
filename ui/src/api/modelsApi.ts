@@ -115,7 +115,7 @@ const getRerankingModels = async (): Promise<Model[]> => {
   return await getRequest(`${llmServicePath}/models/reranking`);
 };
 
-export type ModelSource = "CAII" | "Bedrock" | "Azure";
+export type ModelSource = "CAII" | "Bedrock" | "Azure" | "OpenAI";
 
 export const useGetModelSource = () => {
   return useQuery({

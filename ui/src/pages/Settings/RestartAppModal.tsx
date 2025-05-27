@@ -166,10 +166,16 @@ const RestartAppModal = ({
       .then((values) => {
         if (modelProvider === "CAII") {
           values.azure_config = {};
+          values.openai_config = {};
         } else if (modelProvider === "Bedrock") {
           values.azure_config = {};
           values.caii_config = {};
+          values.openai_config = {};
         } else if (modelProvider === "Azure") {
+          values.caii_config = {};
+          values.openai_config = {};
+        } else if (modelProvider === "OpenAI") {
+          values.azure_config = {};
           values.caii_config = {};
         }
 
