@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import logging
 import re
 import time
 import uuid
@@ -59,6 +60,7 @@ from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_
 from app.services.query import querier
 from app.services.query.query_configuration import QueryConfiguration
 
+logger = logging.getLogger(__name__)
 
 def chat(
     session: Session,
@@ -187,18 +189,21 @@ def extract_nodes_from_response_str(
     extracted_node_ids = [
         node_id for node_id in extracted_node_ids if node_id not in node_ids_present
     ]
-    if extracted_node_ids:
-        qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-        vector_store = qdrant_store.llama_vector_store()
-        extracted_source_nodes = vector_store.get_nodes(node_ids=extracted_node_ids)
+    if len(extracted_node_ids) > 0:
+        try:
+            qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
+            vector_store = qdrant_store.llama_vector_store()
+            extracted_source_nodes = vector_store.get_nodes(node_ids=extracted_node_ids)
 
-        # cast them into NodeWithScore with score 0.0
-        extracted_source_nodes_w_score = [
-            NodeWithScore(node=node, score=0.0) for node in extracted_source_nodes
-        ]
-        # add the source nodes to the response
-        chat_response.source_nodes += extracted_source_nodes_w_score
-
+            # cast them into NodeWithScore with score 0.0
+            extracted_source_nodes_w_score = [
+                NodeWithScore(node=node, score=0.0) for node in extracted_source_nodes
+            ]
+            # add the source nodes to the response
+            chat_response.source_nodes += extracted_source_nodes_w_score
+        except Exception as e:
+            logger.warning("Failed to extract nodes from response citations (%s): %s", extracted_node_ids, e)
+            pass
     return chat_response
 
 

@@ -46,8 +46,8 @@ from app.services.query.crew_events import CrewEvent, step_callback
 
 
 class SearchResult(BaseModel):
-    result: str | None = None
-    link: str | None = None
+    result: str
+    link: str
 
 
 class SearchOutput(BaseModel):
