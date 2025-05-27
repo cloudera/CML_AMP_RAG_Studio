@@ -144,9 +144,13 @@ def finalize_response(
     if data_source_id:
         chat_response = extract_nodes_from_response_str(chat_response, data_source_id)
 
-    relevance, faithfulness = evaluators.evaluate_response(
-        query, chat_response, session.inference_model
-    )
+    evaluations = []
+    if len(chat_response.source_nodes) != 0:
+        relevance, faithfulness = evaluators.evaluate_response(
+            query, chat_response, session.inference_model
+        )
+        evaluations.append(Evaluation(name="relevance", value=relevance))
+        evaluations.append(Evaluation(name="faithfulness", value=faithfulness))
     response_source_nodes = format_source_nodes(chat_response, data_source_id)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
@@ -157,10 +161,7 @@ def finalize_response(
             user=query,
             assistant=chat_response.response,
         ),
-        evaluations=[
-            Evaluation(name="relevance", value=relevance),
-            Evaluation(name="faithfulness", value=faithfulness),
-        ],
+        evaluations=evaluations,
         timestamp=time.time(),
         condensed_question=condensed_question,
     )
