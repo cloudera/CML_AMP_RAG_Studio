@@ -194,29 +194,11 @@ def assemble_crew(
 
     mcp_agent = None
     mcp_task = None
-    if configuration.tools and "text2sql2text" in configuration.tools and mcp_tools:
-        print("Using MCP tools:", mcp_tools)
-        mcp_agent = Agent(
-            role="Git agent",
-            goal=f"Determine what git query is needed and return a response to it. \n<Question>:\n{query_str}",
-            backstory="You are an expert at determining what git query is needed to answer the user's question. ",
-            tools=mcp_tools,
-            verbose=True,
-            llm=crewai_llm,
-        )
-        mcp_task = Task(
-            description="Determine what git query is needed to answer the user's question. ",
-            expected_output="The response from the git query command that can be used to answer the user's question.",
-            agent=mcp_agent,
-            callback=lambda output: step_callback(
-                output, "MCP Complete", crew_events_queue
-            ),
-        )
 
     research_task = Task(
         name="ResearcherTask",
-        description="Research the user's question using the context available "
-        "and chat history. Based on the research return comprehensive research insights. "
+        description="Research the user's question using the context available, "
+        "chat history, and the tools provided. Based on the research return comprehensive research insights. "
         "Given below, is the user's question and the chat history: \n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
         agent=researcher,
@@ -237,6 +219,7 @@ def assemble_crew(
         callback=lambda output: step_callback(
             output, "Research Complete", crew_events_queue
         ),
+        tools=mcp_tools,
     )
 
     # Create a calculation task if needed
