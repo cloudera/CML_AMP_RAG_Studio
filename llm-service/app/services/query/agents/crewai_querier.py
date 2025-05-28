@@ -134,7 +134,7 @@ def assemble_crew(
         )
         research_tools.append(crewai_retriever_tool)
 
-    # Create a search tool if needed
+    # Create a search tool if needed # TODO: fix this because we don't use configuration.tools any more!
     search_tool = None
     if configuration.tools and "search" in configuration.tools:
         search_tool = SerperDevTool()

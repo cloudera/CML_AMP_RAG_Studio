@@ -194,6 +194,7 @@ def build_streamer(
         query_configuration,
         chat_messages,
         crew_events_queue=crew_events_queue,
+        session=session
     )
     return condensed_question, data_source_id, streaming_chat_response
 

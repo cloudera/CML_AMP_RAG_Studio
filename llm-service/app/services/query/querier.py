@@ -48,6 +48,7 @@ from .agents.crewai_querier import (
     poison_pill,
 )
 from .crew_events import CrewEvent
+from ..metadata_apis.session_metadata_api import Session
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -118,13 +119,14 @@ def streaming_query(
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
+    session: Session
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
 
     # Add adapters for each tool specified in the configuration
-    if configuration.tools:
-        for tool_name in configuration.tools:
+    if session.query_configuration and session.query_configuration.selected_tools:
+        for tool_name in session.query_configuration.selected_tools:
             try:
                 adapter = get_mcp_server_adapter(tool_name)
                 print(f"Adding adapter for tool: {adapter}")
