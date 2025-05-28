@@ -45,7 +45,7 @@ from app.services.models.providers.bedrock import (
     DEFAULT_BEDROCK_RERANK_MODEL,
 )
 
-tool_types = Literal["text2sql2text"]
+tool_types = Literal["text2sql2text", "mcp-server-fetch"]
 
 
 class QueryConfiguration(BaseModel):

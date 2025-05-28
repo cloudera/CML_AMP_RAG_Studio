@@ -62,11 +62,11 @@ class Tool(BaseModel):
 @exceptions.propagates
 def tools() -> list[Tool]:
     return [
-        # Tool(
-        #     id="1",
-        #     name="search",
-        #     description="Searches the internet for the given query.",
-        # ),
+        Tool(
+            id="1",
+            name="mcp-server-fetch",
+            description="Fetches web page contents from the Internet",
+        ),
         Tool(
             id="2",
             name="text2sql2text",

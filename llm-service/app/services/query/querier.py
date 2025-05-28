@@ -33,6 +33,7 @@ import os
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
+from crewai.tools import BaseTool
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.schema import NodeWithScore
 from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
@@ -77,13 +78,23 @@ def streaming_query(
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
 ) -> StreamingAgentChatResponse:
-    server_params = StdioServerParameters(
-        command="uvx",
-        args=[
-            "mcp-server-fetch",
-        ],
-    )
-    with MCPServerAdapter(serverparams=server_params) as mcp_tools:
+    mcp_tools: list[BaseTool] = []
+    all_adapters: list[MCPServerAdapter] = []
+
+    if configuration.tools and "mcp-server-fetch" in configuration.tools:
+        fetch_params: StdioServerParameters = StdioServerParameters(
+            command="uvx",
+            args=[
+                "mcp-server-fetch",
+            ],
+        )
+        fetch_adapter: MCPServerAdapter = MCPServerAdapter(serverparams=fetch_params)
+        all_adapters.append(fetch_adapter)
+
+    try:
+        for adapter in all_adapters:
+            mcp_tools.extend(adapter.tools)
+
         embedding_model, index = build_datasource_query_components(data_source_id)
 
         llm = models.LLM.get(model_name=configuration.model_name)
@@ -145,6 +156,9 @@ def streaming_query(
             ) from error
 
         return chat_response
+    finally:
+        for adapter in all_adapters:
+            adapter.stop()
 
 
 def get_nodes_from_citations(
