@@ -1,0 +1,25 @@
+{
+  "mcp_servers": [
+    {
+      "name": "mcp-server-fetch",
+      "command": "uvx",
+      "metadata": {
+        "display_name": "Web Scraper",
+        "description": "Fetch the contents of web pages"
+      },
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    {
+      "name": "text2sql2text",
+      "url": [
+        "http://localhost:8088/sse"
+      ],
+      "metadata": {
+        "display_name": "Text to SQL to Text",
+        "description": "text to sql"
+      }
+    }
+  ]
+}

@@ -29,6 +29,8 @@
 # ##############################################################################
 from __future__ import annotations
 
+import json
+import os
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
@@ -69,6 +71,46 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 logger = logging.getLogger(__name__)
 
 
+# a method that takes in a name of a mcp server, finds it in hte mcp.json, and returns
+# that mcp server as either a MCPServerAdapter or a StdioServerAdapter
+def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
+    """
+    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
+
+    Args:
+        server_name: The name of the MCP server to find
+
+    Returns:
+        An MCPServerAdapter configured for the specified server
+
+    Raises:
+        ValueError: If the server name is not found in the mcp.json file
+    """
+    # Get the path to the mcp.json file (in the same directory as this file)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    mcp_json_path = os.path.join(current_dir, "mcp.json")
+
+    # Load the mcp.json file
+    with open(mcp_json_path, "r") as f:
+        mcp_config = json.load(f)
+
+    mcp_servers = mcp_config["mcp_servers"]
+    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
+
+    # Determine the type of adapter to create based on the configuration
+    if "command" in server_config:
+        # This is a StdioServerParameters configuration
+        params = StdioServerParameters(
+            command=server_config["command"], args=server_config.get("args", [])
+        )
+        return MCPServerAdapter(serverparams=params)
+    elif "url" in server_config:
+        # This is a direct MCPServerAdapter configuration
+        return MCPServerAdapter({"url": server_config["url"][0]})
+    else:
+        raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
+
+
 def streaming_query(
     chat_engine: Optional[FlexibleContextChatEngine],
     data_source_id: Optional[int],
@@ -80,21 +122,16 @@ def streaming_query(
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
 
-    if configuration.tools and "mcp-server-fetch" in configuration.tools:
-        fetch_params: StdioServerParameters = StdioServerParameters(
-            command="uvx",
-            args=[
-                "mcp-server-fetch",
-            ],
-        )
-        fetch_adapter: MCPServerAdapter = MCPServerAdapter(serverparams=fetch_params)
-        all_adapters.append(fetch_adapter)
-
-    if configuration.tools and "text2sql2text" in configuration.tools:
-        text2sql_adapter: MCPServerAdapter = MCPServerAdapter(
-            {"url": "http://localhost:8088/sse"}
-        )
-        all_adapters.append(text2sql_adapter)
+    # Add adapters for each tool specified in the configuration
+    if configuration.tools:
+        for tool_name in configuration.tools:
+            try:
+                adapter = get_mcp_server_adapter(tool_name)
+                print(f"Adding adapter for tool: {adapter}")
+                all_adapters.append(adapter)
+            except ValueError as e:
+                logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
+                continue
 
     try:
         for adapter in all_adapters:

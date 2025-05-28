@@ -81,13 +81,13 @@ export const TestCell = ({
 
 export const modelColumns: TableProps<Model>["columns"] = [
   {
-    title: "Model ID",
+    name: "Model ID",
     dataIndex: "model_id",
     key: "model_id",
     width: 350,
   },
   {
-    title: "Name",
+    name: "Name",
     dataIndex: "name",
     key: "name",
     width: 350,
@@ -95,7 +95,7 @@ export const modelColumns: TableProps<Model>["columns"] = [
       name ?? <Typography.Text type="warning">No model found</Typography.Text>,
   },
   {
-    title: "Status",
+    name: "Status",
     dataIndex: "available",
     width: 150,
     key: "available",

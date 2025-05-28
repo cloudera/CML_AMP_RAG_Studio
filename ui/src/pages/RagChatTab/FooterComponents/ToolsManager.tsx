@@ -68,8 +68,9 @@ const ToolsManagerContent = ({
   const { data, isLoading } = useToolsQuery();
 
   const toolsList = data?.map((tool) => ({
-    title: tool.name,
-    description: tool.description,
+    name: tool.name,
+    displayName: tool.metadata.display_name,
+    description: tool.metadata.description,
   }));
 
   const handleCheck = (title: string, checked: boolean) => {
@@ -92,13 +93,13 @@ const ToolsManagerContent = ({
         renderItem={(item) => (
           <List.Item>
             <List.Item.Meta
-              title={item.title}
+              title={item.displayName || item.name}
               description={item.description}
               avatar={
                 <Checkbox
-                  checked={selectedTools.includes(item.title)}
+                  checked={selectedTools.includes(item.name)}
                   onChange={(e: CheckboxChangeEvent) => {
-                    handleCheck(item.title, e.target.checked);
+                    handleCheck(item.name, e.target.checked);
                   }}
                 />
               }

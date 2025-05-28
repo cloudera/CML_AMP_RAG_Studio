@@ -70,7 +70,7 @@ const columns = (
   summarizationModel?: string,
 ): TableProps<RagDocumentResponseType>["columns"] => [
   {
-    title: (
+    name: (
       <Tooltip
         title={
           <Flex vertical gap={4}>
@@ -105,26 +105,26 @@ const columns = (
     },
   },
   {
-    title: "Filename",
+    name: "Filename",
     dataIndex: "filename",
     key: "filename",
     showSorterTooltip: false,
     sorter: (a, b) => a.filename.localeCompare(b.filename),
   },
   {
-    title: "Size",
+    name: "Size",
     dataIndex: "sizeInBytes",
     key: "sizeInBytes",
     render: (sizeInBytes: RagDocumentResponseType["sizeInBytes"]) =>
       bytesConversion(sizeInBytes.toString()),
   },
   {
-    title: "Extension",
+    name: "Extension",
     dataIndex: "extension",
     key: "extension",
   },
   {
-    title: "Creation date",
+    name: "Creation date",
     dataIndex: "timeCreated",
     key: "timeCreated",
     showSorterTooltip: false,
@@ -135,13 +135,13 @@ const columns = (
     render: (timestamp) => new Date(timestamp * 1000).toLocaleString(),
   },
   {
-    title: <Tooltip title="Document indexing complete">Ready</Tooltip>,
+    name: <Tooltip title="Document indexing complete">Ready</Tooltip>,
     dataIndex: "vectorUploadTimestamp",
     key: "vectorUploadTimestamp",
     render: (_, file: RagDocumentResponseType) => <ReadyColumn file={file} />,
   },
   {
-    title: "Actions",
+    name: "Actions",
     render: (_, record) => {
       return (
         <Button

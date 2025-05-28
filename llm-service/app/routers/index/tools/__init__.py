@@ -35,11 +35,13 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import json
 import logging
+import os
+from typing import Any
+from pydantic import BaseModel
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 from .... import exceptions
 
@@ -49,9 +51,13 @@ router = APIRouter(prefix="/tools", tags=["Tools"])
 
 
 class Tool(BaseModel):
-    id: str
+    """
+    Represents a tool in the MCP configuration.
+    """
+
     name: str
-    description: str
+
+    metadata: dict[str, Any]
 
 
 @router.get(
@@ -61,15 +67,12 @@ class Tool(BaseModel):
 )
 @exceptions.propagates
 def tools() -> list[Tool]:
-    return [
-        Tool(
-            id="1",
-            name="mcp-server-fetch",
-            description="Fetches web page contents from the Internet",
-        ),
-        Tool(
-            id="2",
-            name="text2sql2text",
-            description="Converts a natural language question to SQL and back to natural language.",
-        )
-    ]
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    mcp_json_path = os.path.join(
+        current_dir, "..", "..", "..", "services/query/mcp.json"
+    )
+
+    with open(mcp_json_path, "r") as f:
+        mcp_config = json.load(f)
+    return [Tool(**server) for server in mcp_config["mcp_servers"]]

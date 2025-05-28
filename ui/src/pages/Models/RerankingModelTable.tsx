@@ -67,7 +67,7 @@ const RerankingModelTestCell = ({ model }: { model: Model }) => {
 
 const testCell: TableProps<Model>["columns"] = [
   {
-    title: "Test",
+    name: "Test",
     width: 140,
     render: (_, model) => {
       return <RerankingModelTestCell model={model} />;
