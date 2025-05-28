@@ -82,7 +82,6 @@ def streaming_query(
         args=[
             "mcp-server-fetch",
         ],
-        env={"UV_PYTHON": "3.12", **os.environ},
     )
     with MCPServerAdapter(serverparams=server_params) as mcp_tools:
         embedding_model, index = build_datasource_query_components(data_source_id)
