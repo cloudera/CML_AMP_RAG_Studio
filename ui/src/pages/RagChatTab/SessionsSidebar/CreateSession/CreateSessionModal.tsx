@@ -60,6 +60,7 @@ export interface CreateSessionType {
     enableHyde: boolean;
     enableSummaryFilter: boolean;
     enableToolCalling: boolean;
+    selectedTools: string[];
   };
 }
 
@@ -116,6 +117,7 @@ const CreateSessionModal = ({
             enableHyde: values.queryConfiguration.enableHyde,
             enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
             enableToolCalling: values.queryConfiguration.enableToolCalling,
+            selectedTools: values.queryConfiguration.selectedTools,
           },
           projectId: defaultProject.id,
         };

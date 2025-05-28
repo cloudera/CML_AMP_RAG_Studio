@@ -57,14 +57,16 @@ import {
 import { ToolOutlined } from "@ant-design/icons";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import {
+  Session,
+  UpdateSessionRequest,
+  useUpdateSessionMutation,
+} from "src/api/sessionApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import { useQueryClient } from "@tanstack/react-query";
 
-const ToolsManagerContent = ({
-  selectedTools,
-  setSelectedTools,
-}: {
-  selectedTools: string[];
-  setSelectedTools: Dispatch<SetStateAction<string[]>>;
-}) => {
+const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   const { data, isLoading } = useToolsQuery();
 
   const toolsList = data?.map((tool) => ({
@@ -73,11 +75,44 @@ const ToolsManagerContent = ({
     description: tool.metadata.description,
   }));
 
+  const queryClient = useQueryClient();
+
+  const updateSession = useUpdateSessionMutation({
+    onError: (error) => {
+      console.error(error);
+      messageQueue.error("Failed to update session");
+    },
+    onSuccess: async () => {
+      messageQueue.success("Session updated successfully");
+      await queryClient.invalidateQueries({
+        queryKey: [QueryKeys.getSessions],
+      });
+    },
+  });
+
+  const handleUpdateSession = (selectedTools: string[]) => {
+    const request: UpdateSessionRequest = {
+      ...activeSession,
+      queryConfiguration: {
+        ...activeSession.queryConfiguration,
+        selectedTools: selectedTools,
+      },
+    };
+    updateSession.mutate(request);
+  };
+
   const handleCheck = (title: string, checked: boolean) => {
     if (checked) {
-      setSelectedTools((prev) => [...prev, title]);
+      handleUpdateSession([
+        ...activeSession.queryConfiguration.selectedTools,
+        title,
+      ]);
     } else {
-      setSelectedTools((prev) => prev.filter((tool) => tool !== title));
+      handleUpdateSession(
+        activeSession.queryConfiguration.selectedTools.filter(
+          (tool) => tool !== title,
+        ),
+      );
     }
   };
 
@@ -97,7 +132,9 @@ const ToolsManagerContent = ({
               description={item.description}
               avatar={
                 <Checkbox
-                  checked={selectedTools.includes(item.name)}
+                  checked={activeSession.queryConfiguration.selectedTools.includes(
+                    item.name,
+                  )}
                   onChange={(e: CheckboxChangeEvent) => {
                     handleCheck(item.name, e.target.checked);
                   }}
@@ -114,40 +151,27 @@ const ToolsManagerContent = ({
 const ToolsManager = ({
   isOpen,
   setIsOpen,
-  selectedTools,
-  setSelectedTools,
   children,
+  activeSession,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  selectedTools: string[];
-  setSelectedTools: Dispatch<SetStateAction<string[]>>;
   children: ReactNode;
+  activeSession: Session;
 }) => {
   return (
     <Popover
       open={isOpen}
       trigger="click"
       onOpenChange={setIsOpen}
-      content={
-        <ToolsManagerContent
-          selectedTools={selectedTools}
-          setSelectedTools={setSelectedTools}
-        />
-      }
+      content={<ToolsManagerContent activeSession={activeSession} />}
     >
       {children}
     </Popover>
   );
 };
 
-const ToolsManagerButton = ({
-  selectedTools,
-  setSelectedTools,
-}: {
-  selectedTools: string[];
-  setSelectedTools: Dispatch<SetStateAction<string[]>>;
-}) => {
+const ToolsManagerButton = () => {
   const { activeSession } = useContext(RagChatContext);
   const [toolsManagerOpen, setToolsManagerOpen] = useState(false);
 
@@ -160,8 +184,7 @@ const ToolsManagerButton = ({
       <ToolsManager
         isOpen={toolsManagerOpen}
         setIsOpen={setToolsManagerOpen}
-        selectedTools={selectedTools}
-        setSelectedTools={setSelectedTools}
+        activeSession={activeSession}
       >
         <Button
           icon={<ToolOutlined />}

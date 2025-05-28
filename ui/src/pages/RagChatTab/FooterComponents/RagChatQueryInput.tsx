@@ -67,6 +67,7 @@ const RagChatQueryInput = ({
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    activeSession,
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -74,7 +75,6 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
   const inputRef = useRef<InputRef>(null);
   const {
     data: sampleQuestions,
@@ -116,7 +116,7 @@ const RagChatQueryInput = ({
           session_id: +sessionId,
           configuration: createQueryConfiguration(
             excludeKnowledgeBase,
-            selectedTools,
+            activeSession?.queryConfiguration.selectedTools,
           ),
         });
       } else {
@@ -182,10 +182,7 @@ const RagChatQueryInput = ({
               }}
             >
               <Flex gap={8} align="end">
-                <ToolsManagerButton
-                  selectedTools={selectedTools}
-                  setSelectedTools={setSelectedTools}
-                />
+                <ToolsManagerButton />
                 <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
                   <Switch
                     checkedChildren={<DatabaseFilled />}
