@@ -29,14 +29,13 @@
 # ##############################################################################
 from __future__ import annotations
 
-import os
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
 from crewai.tools import BaseTool
+from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.schema import NodeWithScore
-from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from mcp import StdioServerParameters
 
 from .agents.crewai_querier import (
@@ -90,6 +89,12 @@ def streaming_query(
         )
         fetch_adapter: MCPServerAdapter = MCPServerAdapter(serverparams=fetch_params)
         all_adapters.append(fetch_adapter)
+
+    if configuration.tools and "text2sql2text" in configuration.tools:
+        text2sql_adapter: MCPServerAdapter = MCPServerAdapter(
+            {"url": "http://localhost:8088/sse"}
+        )
+        all_adapters.append(text2sql_adapter)
 
     try:
         for adapter in all_adapters:
