@@ -36,7 +36,7 @@
 #  DATA.
 #
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Any, Optional
 
@@ -51,6 +51,7 @@ class SessionQueryConfiguration:
     enable_hyde: bool
     enable_summary_filter: bool
     enable_tool_calling: bool = False
+    selected_tools: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -116,6 +117,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
             enable_tool_calling=data["queryConfiguration"].get(
                 "enableToolCalling", False
             ),
+            selected_tools=data["queryConfiguration"]["selectedTools"] or []
         ),
     )
 
@@ -133,6 +135,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableHyde": session.query_configuration.enable_hyde,
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
             "enableToolCalling": session.query_configuration.enable_tool_calling,
+            "selectedTools": session.query_configuration.selected_tools
         },
     )
     headers = {
