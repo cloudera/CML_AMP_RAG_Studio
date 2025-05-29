@@ -42,6 +42,7 @@ from typing import Optional, Any
 
 from crewai import TaskOutput
 from crewai.agents.parser import AgentFinish
+from crewai.tools.tool_types import ToolResult
 
 from pydantic import BaseModel
 
@@ -69,6 +70,16 @@ def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) 
                 type="task_completed",
                 name=agent,
                 data=output.raw,
+                timestamp=time.time(),
+            )
+        )
+
+    if isinstance(output, ToolResult):
+        crew_events_queue.put(
+            CrewEvent(
+                type="tool_result",
+                name=agent,
+                data=output.result,
                 timestamp=time.time(),
             )
         )

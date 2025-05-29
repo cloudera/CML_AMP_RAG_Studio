@@ -140,6 +140,9 @@ def assemble_crew(
         "You know when to use tools and when to answer directly.",
         llm=crewai_llm,
         verbose=True,
+        step_callback=lambda output: step_callback(
+            output, "Tool Result", crew_events_queue
+        ),
     )
 
     # Define tasks for the researcher agents
