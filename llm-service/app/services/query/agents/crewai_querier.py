@@ -168,29 +168,30 @@ def assemble_crew(
         )
         researcher_task_context.append(retriever_task)
 
-    mcp_agent = None
-    mcp_task = None
-
     research_task = Task(
         name="ResearcherTask",
         description="Research the user's question using the context available, "
         "chat history, and the tools provided. Based on the research return comprehensive research insights. "
+        "If the answer is not available in the context or chat history, use the tools to gather information. "
+        "No need to use the tools if the answer is available in the context or chat history. \n"
         "Given below, is the user's question and the chat history: \n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
         agent=researcher,
         expected_output="A detailed analysis of the user's question based on the provided context and chat history, "
         "including relevant links and in-line citations."
-        "Note: \n"
+        "Note for in-line citations: \n"
         "* Use the citations from the chat history as is. "
-        "* Use links and result from the search results (search_results) if needed to answer the question "
-        "and cite them in the given format: the link should be in markdown format. For example: "
-        "[link](https://example.com). Do not make up links that are not present chat history or context.\n"
+        "* Use links and results from the search if needed to answer the question "
+        "and cite them in-line in the given format: the link should be in markdown format. For example: "
+        "Refer to the example in [example.com](https://example.com). Do not make up links that are not "
+        "present chat history or context.\n"
         "* Cite from retriever results (retriever_results) in the given format: the node_id "
         "should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. "
         "Do not use filenames as citations. Only node ids should be used."
         "For example: <a class='rag_citation' href='2'>2</a>. Do not make up node ids that are not present "
         "in the context.\n"
-        "* All citations should be either in-line citations or markdown links. ",
+        "* All citations should be either in-line citations or markdown links. \n"
+        "* If there are no retriever results, do not use any citations from the retriever results. ",
         context=researcher_task_context,
         callback=lambda output: step_callback(
             output, "Research Complete", crew_events_queue
@@ -215,10 +216,8 @@ def assemble_crew(
         ),
         verbose=True,
     )
-    response_context = []
-    if mcp_task:
-        response_context.append(mcp_task)
-    response_context.append(calculation_task)
+
+    response_context = [research_task, calculation_task]
 
     response_task = Task(
         name="ResponderTask",
@@ -239,11 +238,7 @@ def assemble_crew(
 
     for task in researcher_task_context:
         tasks.append(task)
-    if mcp_agent:
-        agents.append(mcp_agent)
     agents.extend([researcher, responder])
-    if mcp_task:
-        tasks.append(mcp_task)
     tasks.extend(
         [
             research_task,
@@ -281,9 +276,12 @@ Original query: {query_str}
 Research insights: {crew_result}
 
 Please provide a response to the original query, incorporating the insights from research with in-line citations. \
-If insights from the research are used, use the links and in-line citations from the research insights as is. \
-Keep markdown formatted links as is i.e. [<text>](<web_link>). Keep the in-line citations of format \
-`<a class='rag_citation' href='node_id'>node_id</a>` as is.
+If you cannot find relevant information in the research insights, answer the question directly and indicate that \
+you don't have enough information. If citations from the research insights are used, use the in-line links and \
+citations from the research insights as is. Keep markdown formatted links as is i.e. [<text>](<web_link>). \
+Keep the in-line citations of format `<a class='rag_citation' href='node_id'>node_id</a>` as is. Do not make up any \
+links or citations of the form `<a class='rag_citation' href='node_id'>node_id</a>` that are not present in the \
+research insights. Only use the links and citations from the research insights. \
 """,
         source_node_ids_w_score,
     )

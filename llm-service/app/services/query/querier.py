@@ -129,7 +129,9 @@ def streaming_query(
         for tool_name in session.query_configuration.selected_tools:
             try:
                 adapter = get_mcp_server_adapter(tool_name)
-                print(f"Adding adapter for tool: {adapter}")
+                print(
+                    f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
+                )
                 all_adapters.append(adapter)
             except ValueError as e:
                 logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
