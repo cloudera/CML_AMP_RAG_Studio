@@ -38,6 +38,9 @@
 from typing import Optional, cast
 
 import boto3
+from llama_index.embeddings.bedrock import BedrockEmbedding
+from llama_index.llms.bedrock_converse import BedrockConverse
+from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 from app.config import settings
 from ._model_provider import ModelProvider
@@ -136,6 +139,21 @@ class BedrockModelProvider(ModelProvider):
                 name="Amazon Rerank v1",
             ),
         ]
+
+    @staticmethod
+    def get_llm_model(model_name: str) -> BedrockConverse:
+        """Return available LLM models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_embedding_model(model_name: str) -> BedrockEmbedding:
+        """Return available embedding models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_reranking_model(model_name: str, top_n: int) -> AWSBedrockRerank:
+        """Return available reranking models."""
+        raise NotImplementedError
 
 
 # ensure interface is implemented

@@ -35,9 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.openai import OpenAI
 
-from app.services.caii.types import ModelResponse
-from app.services.models.providers._model_provider import ModelProvider
+from ._model_provider import ModelProvider
+from ...caii.types import ModelResponse
 
 
 class OpenAiModelProvider(ModelProvider):
@@ -70,3 +73,22 @@ class OpenAiModelProvider(ModelProvider):
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
         return []
+
+    @staticmethod
+    def get_llm_model(model_name: str) -> OpenAI:
+        """Return available LLM models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_embedding_model(model_name: str) -> OpenAIEmbedding:
+        """Return available embedding models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
+        """Return available reranking models."""
+        raise NotImplementedError
+
+
+# ensure interface is implemented
+_ = OpenAiModelProvider()

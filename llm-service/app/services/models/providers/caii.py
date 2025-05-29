@@ -37,6 +37,10 @@
 #
 from typing import List
 
+from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+
 from ._model_provider import ModelProvider
 from ...caii.caii import (
     get_caii_llm_models,
@@ -62,6 +66,21 @@ class CAIIModelProvider(ModelProvider):
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
         return get_caii_reranking_models()
+
+    @staticmethod
+    def get_llm_model(model_name: str) -> LLM:
+        """Return available LLM models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_embedding_model(model_name: str) -> BaseEmbedding:
+        """Return available embedding models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
+        """Return available reranking models."""
+        raise NotImplementedError
 
 
 # ensure interface is implemented

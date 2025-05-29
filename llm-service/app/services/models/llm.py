@@ -51,7 +51,7 @@ from .providers import (
     CAIIModelProvider,
 )
 from .providers.openai import OpenAiModelProvider
-from ..caii.caii import get_llm as caii_llm
+from ..caii.caii import get_llm as get_caii_llm
 from ..caii.types import ModelResponse
 from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ...config import settings
@@ -83,7 +83,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
             )
 
         if CAIIModelProvider.is_enabled():
-            return caii_llm(
+            return get_caii_llm(
                 endpoint_name=model_name,
                 messages_to_prompt=messages_to_prompt,
                 completion_to_prompt=completion_to_prompt,

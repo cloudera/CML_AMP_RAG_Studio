@@ -35,9 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
+from llama_index.llms.azure_openai import AzureOpenAI
 
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
+from ...query.simple_reranker import SimpleReranker
 
 
 class AzureModelProvider(ModelProvider):
@@ -74,6 +77,21 @@ class AzureModelProvider(ModelProvider):
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
         return []
+
+    @staticmethod
+    def get_llm_model(model_name: str) -> AzureOpenAI:
+        """Return available LLM models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_embedding_model(model_name: str) -> AzureOpenAIEmbedding:
+        """Return available embedding models."""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_reranking_model(model_name: str, top_n: int) -> SimpleReranker:
+        """Return available reranking models."""
+        raise NotImplementedError
 
 
 # ensure interface is implemented
