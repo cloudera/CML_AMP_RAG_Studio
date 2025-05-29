@@ -35,13 +35,13 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import List, Optional, cast
+from typing import Optional, cast
 
 import boto3
 
 from app.config import settings
-from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
+from ...caii.types import ModelResponse
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
@@ -53,7 +53,7 @@ class BedrockModelProvider(ModelProvider):
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
 
     @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         models = [
             ModelResponse(
                 model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
@@ -91,7 +91,8 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def _get_model_arn_by_profiles(
-        suffix: str, profiles: List[dict[str, str]]
+        suffix: str,
+        profiles: list[dict[str, str]],
     ) -> Optional[ModelResponse]:
         for profile in profiles:
             if profile["inferenceProfileId"].endswith(suffix):
@@ -102,13 +103,16 @@ class BedrockModelProvider(ModelProvider):
         return None
 
     @staticmethod
-    def _get_model_arns() -> List[dict[str, str]]:
-        bedrock_client = boto3.client("bedrock", region_name=settings.aws_default_region)
+    def _get_model_arns() -> list[dict[str, str]]:
+        bedrock_client = boto3.client(
+            "bedrock",
+            region_name=settings.aws_default_region,
+        )
         profiles = bedrock_client.list_inference_profiles()["inferenceProfileSummaries"]
-        return cast(List[dict[str, str]], profiles)
+        return cast(list[dict[str, str]], profiles)
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="cohere.embed-english-v3",
@@ -121,7 +125,7 @@ class BedrockModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id=DEFAULT_BEDROCK_RERANK_MODEL,

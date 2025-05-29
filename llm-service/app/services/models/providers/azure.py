@@ -36,10 +36,8 @@
 #  DATA.
 #
 
-from typing import List
-
-from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
+from ...caii.types import ModelResponse
 
 
 class AzureModelProvider(ModelProvider):
@@ -48,7 +46,7 @@ class AzureModelProvider(ModelProvider):
         return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
 
     @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="gpt-4o",
@@ -61,7 +59,7 @@ class AzureModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="text-embedding-ada-002",
@@ -74,7 +72,7 @@ class AzureModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         return []
 
 

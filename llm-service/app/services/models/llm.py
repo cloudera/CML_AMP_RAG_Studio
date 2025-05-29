@@ -103,15 +103,15 @@ class LLM(_model_type.ModelType[llms.LLM]):
     @staticmethod
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_llm_models()
+            return AzureModelProvider.list_llm_models()
 
         if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_llm_models()
+            return CAIIModelProvider.list_llm_models()
 
         if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_llm_models()
+            return OpenAiModelProvider.list_llm_models()
 
-        return BedrockModelProvider.get_llm_models()
+        return BedrockModelProvider.list_llm_models()
 
     @classmethod
     def test(cls, model_name: str) -> Literal["ok"]:

@@ -101,16 +101,16 @@ class TestListAvailableModels:
         """Verify models.Embedding.list_available() only returns models from the enabled model provider."""
         assert (
             models.Embedding.list_available()
-            == EnabledModelProvider.get_embedding_models()
+            == EnabledModelProvider.list_embedding_models()
         )
 
     def test_llm(self, EnabledModelProvider: type[ModelProvider]) -> None:
         """Verify models.LLM.list_available() only returns models from the enabled model provider."""
-        assert models.LLM.list_available() == EnabledModelProvider.get_llm_models()
+        assert models.LLM.list_available() == EnabledModelProvider.list_llm_models()
 
     def test_reranking(self, EnabledModelProvider: type[ModelProvider]) -> None:
         """Verify models.Reranking.list_available() only returns models from the enabled model provider."""
         assert (
             models.Reranking.list_available()
-            == EnabledModelProvider.get_reranking_models()
+            == EnabledModelProvider.list_reranking_models()
         )

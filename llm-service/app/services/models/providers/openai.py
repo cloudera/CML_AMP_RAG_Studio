@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import List
 
 from app.services.caii.types import ModelResponse
 from app.services.models.providers._model_provider import ModelProvider
@@ -47,7 +46,7 @@ class OpenAiModelProvider(ModelProvider):
         return {"OPENAI_API_KEY"}
 
     @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="gpt-4o",
@@ -56,7 +55,7 @@ class OpenAiModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="text-embedding-ada-002",
@@ -69,5 +68,5 @@ class OpenAiModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         return []

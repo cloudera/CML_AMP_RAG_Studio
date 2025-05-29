@@ -37,7 +37,10 @@
 #
 import abc
 import os
-from typing import List
+
+from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.llms import LLM
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from ...caii.types import ModelResponse
 
@@ -56,18 +59,18 @@ class ModelProvider(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         """Return available LLM models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         """Return available embedding models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         """Return available reranking models."""
         raise NotImplementedError

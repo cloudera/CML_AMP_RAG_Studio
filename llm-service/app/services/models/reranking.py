@@ -76,15 +76,15 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
     @staticmethod
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_reranking_models()
+            return AzureModelProvider.list_reranking_models()
 
         if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_reranking_models()
+            return CAIIModelProvider.list_reranking_models()
 
         if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_reranking_models()
+            return OpenAiModelProvider.list_reranking_models()
 
-        return BedrockModelProvider.get_reranking_models()
+        return BedrockModelProvider.list_reranking_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:

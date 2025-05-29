@@ -52,15 +52,15 @@ class CAIIModelProvider(ModelProvider):
         return {"CAII_DOMAIN"}
 
     @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         return get_caii_llm_models()
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         return get_caii_embedding_models()
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         return get_caii_reranking_models()
 
 

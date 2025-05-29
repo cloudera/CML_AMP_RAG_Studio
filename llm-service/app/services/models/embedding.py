@@ -88,15 +88,15 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
     @staticmethod
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_embedding_models()
+            return AzureModelProvider.list_embedding_models()
 
         if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_embedding_models()
+            return CAIIModelProvider.list_embedding_models()
 
         if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_embedding_models()
+            return OpenAiModelProvider.list_embedding_models()
 
-        return BedrockModelProvider.get_embedding_models()
+        return BedrockModelProvider.list_embedding_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:
