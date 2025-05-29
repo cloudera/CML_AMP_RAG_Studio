@@ -78,8 +78,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   const queryClient = useQueryClient();
 
   const updateSession = useUpdateSessionMutation({
-    onError: (error) => {
-      console.error(error);
+    onError: () => {
       messageQueue.error("Failed to update session");
     },
     onSuccess: async () => {
