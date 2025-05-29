@@ -10,16 +10,6 @@
       "args": [
         "mcp-server-fetch"
       ]
-    },
-    {
-      "name": "text2sql2text",
-      "url": [
-        "http://localhost:8088/sse"
-      ],
-      "metadata": {
-        "display_name": "Text to SQL to Text",
-        "description": "text to sql"
-      }
     }
   ]
 }
