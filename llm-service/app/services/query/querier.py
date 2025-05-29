@@ -73,8 +73,6 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 logger = logging.getLogger(__name__)
 
 
-# a method that takes in a name of a mcp server, finds it in hte mcp.json, and returns
-# that mcp server as either a MCPServerAdapter or a StdioServerAdapter
 def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
     """
     Find an MCP server by name in the mcp.json file and return the appropriate adapter.
@@ -96,15 +94,16 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
     mcp_servers = mcp_config["mcp_servers"]
     server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
 
-    if "command" in server_config:
-        params = StdioServerParameters(
-            command=server_config["command"], args=server_config.get("args", [])
-        )
-        return MCPServerAdapter(serverparams=params)
-    elif "url" in server_config:
-        return MCPServerAdapter({"url": server_config["url"][0]})
-    else:
-        raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
+    if server_config:
+        if "command" in server_config:
+            params = StdioServerParameters(
+                command=server_config["command"], args=server_config.get("args", [])
+            )
+            return MCPServerAdapter(serverparams=params)
+        elif "url" in server_config:
+            return MCPServerAdapter({"url": server_config["url"][0]})
+
+    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
 
 def streaming_query(
@@ -119,7 +118,6 @@ def streaming_query(
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
 
-    # Add adapters for each tool specified in the configuration
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
             try:

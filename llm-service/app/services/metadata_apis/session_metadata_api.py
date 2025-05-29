@@ -79,7 +79,7 @@ class UpdatableSession:
     inferenceModel: str
     rerankModel: str
     responseChunks: int
-    queryConfiguration: dict[str, bool]
+    queryConfiguration: dict[str, bool | List[str]]
 
 
 def url_template() -> str:
@@ -117,7 +117,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
             enable_tool_calling=data["queryConfiguration"].get(
                 "enableToolCalling", False
             ),
-            selected_tools=data["queryConfiguration"]["selectedTools"] or []
+            selected_tools=data["queryConfiguration"]["selectedTools"] or [],
         ),
     )
 
@@ -135,7 +135,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableHyde": session.query_configuration.enable_hyde,
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
             "enableToolCalling": session.query_configuration.enable_tool_calling,
-            "selectedTools": session.query_configuration.selected_tools
+            "selectedTools": session.query_configuration.selected_tools,
         },
     )
     headers = {
