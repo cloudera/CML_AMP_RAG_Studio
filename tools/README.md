@@ -17,6 +17,9 @@ The `mcp.json` file has the following structure:
       "name": "server-name",
       "command": "command-to-execute",
       "args": ["arg1", "arg2"],
+      "env": {
+        "ENV_VAR_NAME": "env_var_value"
+      },
       "metadata": {
         "display_name": "Human-readable name",
         "description": "Description of the tool"
@@ -40,11 +43,24 @@ There are two types of server configurations supported:
 
 1. **Command-based servers**: These servers are executed as local commands.
    - Required fields: `name`, `command`, `metadata`
-   - Optional fields: `args` (array of command arguments)
+   - Optional fields: `args` (array of command arguments), `env` (object with environment variables)
 
 2. **URL-based servers**: These servers are accessed via HTTP.
    - Required fields: `name`, `url`, `metadata`
    - The `url` field should contain an array with at least one URL.
+
+## Environment Variables Support
+
+Command-based servers can use environment variables through the `env` field. This allows you to:
+
+- Configure tool behavior through environment variables
+- Override system environment variables specifically for this tool
+
+The `env` field is an object where:
+- Keys are environment variable names
+- Values are the corresponding environment variable values
+
+These environment variables are only set for the specific tool process and do not affect the global environment or other tools.
 
 ## How to Add a New Tool
 
@@ -62,6 +78,10 @@ To add a new tool to the `mcp.json` file:
   "name": "my-new-tool",
   "command": "tool-executable",
   "args": ["--option", "value"],
+  "env": {
+    "API_KEY": "your-api-key",
+    "DEBUG_MODE": "true"
+  },
   "metadata": {
     "display_name": "My New Tool",
     "description": "This tool performs a specific function"

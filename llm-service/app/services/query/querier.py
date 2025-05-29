@@ -97,7 +97,9 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
     if server_config:
         if "command" in server_config:
             params = StdioServerParameters(
-                command=server_config["command"], args=server_config.get("args", [])
+                command=server_config["command"],
+                args=server_config.get("args", []),
+                env=server_config["env"] if "env" in server_config else None,
             )
             return MCPServerAdapter(serverparams=params)
         elif "url" in server_config:
