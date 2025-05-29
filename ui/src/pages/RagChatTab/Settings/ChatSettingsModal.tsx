@@ -106,6 +106,12 @@ const ChatSettingsModal = ({
           id: activeSession.id,
           projectId: activeSession.projectId,
           dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
+          queryConfiguration: {
+            ...activeSession.queryConfiguration,
+            enableToolCalling: values.queryConfiguration.enableToolCalling,
+            enableHyde: values.queryConfiguration.enableHyde,
+            enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+          },
         };
         updateSession.mutate(request);
       })
