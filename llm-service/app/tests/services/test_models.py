@@ -75,7 +75,7 @@ def EnabledModelProvider(
     ModelProvider.__subclasses__(),
     indirect=True,
 )
-class TestGetAvailableModels:
+class TestListAvailableModels:
     @pytest.fixture(autouse=True)
     def caii_get_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Monkey patch fetching models from CAII."""
@@ -97,28 +97,19 @@ class TestGetAvailableModels:
 
         monkeypatch.setattr(caii, "get_models_with_task", lambda task_type: endpoints)
 
-    def test_get_available_embedding_models(
-        self,
-        EnabledModelProvider: type[ModelProvider],
-    ) -> None:
-        """Verify models.get_available_embedding_models() only returns models from the enabled model provider."""
+    def test_embedding(self, EnabledModelProvider: type[ModelProvider]) -> None:
+        """Verify models.Embedding.list_available() only returns models from the enabled model provider."""
         assert (
             models.Embedding.list_available()
             == EnabledModelProvider.get_embedding_models()
         )
 
-    def test_get_available_llm_models(
-        self,
-        EnabledModelProvider: type[ModelProvider],
-    ) -> None:
-        """Verify models.get_available_llm_models() only returns models from the enabled model provider."""
+    def test_llm(self, EnabledModelProvider: type[ModelProvider]) -> None:
+        """Verify models.LLM.list_available() only returns models from the enabled model provider."""
         assert models.LLM.list_available() == EnabledModelProvider.get_llm_models()
 
-    def test_get_available_rerank_models(
-        self,
-        EnabledModelProvider: type[ModelProvider],
-    ) -> None:
-        """Verify models.get_available_rerank_models() only returns models from the enabled model provider."""
+    def test_reranking(self, EnabledModelProvider: type[ModelProvider]) -> None:
+        """Verify models.Reranking.list_available() only returns models from the enabled model provider."""
         assert (
             models.Reranking.list_available()
             == EnabledModelProvider.get_reranking_models()
