@@ -41,6 +41,7 @@ import re
 from queue import Queue
 from typing import Optional, Tuple
 
+import litellm
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.tools.base_tool import BaseTool
@@ -73,7 +74,7 @@ if os.environ.get("ENABLE_OPIK") == "True":
     )
 
 logger = logging.getLogger(__name__)
-
+# litellm._turn_on_debug()
 poison_pill = "poison_pill"
 
 
@@ -112,7 +113,7 @@ def assemble_crew(
     crew_events_queue: Queue[CrewEvent],
     mcp_tools: Optional[list[BaseTool]] = None,
 ) -> Crew:
-    crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
+    crewai_llm = get_crewai_llm_object_direct(llm, llm.model)
     # Gather all the tools needed for the crew
 
     # Create a date tool to get the current date and time
