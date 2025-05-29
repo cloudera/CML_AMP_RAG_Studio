@@ -130,7 +130,8 @@ const ChatSettingsModal = ({
                 title="Tool Calling"
                 content={
                   <Typography style={{ width: 300 }}>
-                    Enable tool calling.
+                    Enable tool calling. This feature is highly dependent on the
+                    power of the selected response synthesizer model.
                   </Typography>
                 }
               >

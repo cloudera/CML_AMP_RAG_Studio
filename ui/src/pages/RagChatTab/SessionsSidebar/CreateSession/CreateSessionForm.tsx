@@ -84,7 +84,8 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                 title="Tool Calling"
                 content={
                   <Typography style={{ width: 300 }}>
-                    Enables tool calling.
+                    Enable tool calling. This feature is highly dependent on the
+                    power of the selected response synthesizer model.
                   </Typography>
                 }
               >
