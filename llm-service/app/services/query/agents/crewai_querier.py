@@ -41,7 +41,6 @@ import re
 from queue import Queue
 from typing import Optional, Tuple
 
-import litellm
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.tools.base_tool import BaseTool

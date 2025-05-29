@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import os
+from copy import copy
 from queue import Queue
 from typing import Optional, TYPE_CHECKING
 
@@ -95,11 +96,15 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
     server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
 
     if server_config:
+        environment: dict[str, str] | None = copy(dict(os.environ))
+        if "env" in server_config:
+            environment.update(server_config["env"])
+
         if "command" in server_config:
             params = StdioServerParameters(
                 command=server_config["command"],
                 args=server_config.get("args", []),
-                env=server_config["env"] if "env" in server_config else None,
+                env=environment,
             )
             return MCPServerAdapter(serverparams=params)
         elif "url" in server_config:
