@@ -41,6 +41,8 @@ from llama_index.llms.openai import OpenAI
 
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
+from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ....config import settings
 
 
 class OpenAiModelProvider(ModelProvider):
@@ -75,19 +77,27 @@ class OpenAiModelProvider(ModelProvider):
         return []
 
     @staticmethod
-    def get_llm_model(model_name: str) -> OpenAI:
-        """Return available LLM models."""
-        raise NotImplementedError
+    def get_llm_model(name: str) -> OpenAI:
+        return OpenAI(
+            model=name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            max_tokens=2048,
+            api_base=settings.openai_api_base,
+            api_key=settings.openai_api_key,
+        )
 
     @staticmethod
-    def get_embedding_model(model_name: str) -> OpenAIEmbedding:
-        """Return available embedding models."""
-        raise NotImplementedError
+    def get_embedding_model(name: str) -> OpenAIEmbedding:
+        return OpenAIEmbedding(
+            model_name=name,
+            api_key=settings.openai_api_key,
+            api_base=settings.openai_api_base,
+        )
 
     @staticmethod
-    def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
-        """Return available reranking models."""
-        raise NotImplementedError
+    def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
+        raise NotImplementedError("No reranking models available")
 
 
 # ensure interface is implemented

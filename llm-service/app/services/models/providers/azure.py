@@ -41,6 +41,8 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
 from ...query.simple_reranker import SimpleReranker
+from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ....config import settings
 
 
 class AzureModelProvider(ModelProvider):
@@ -79,19 +81,27 @@ class AzureModelProvider(ModelProvider):
         return []
 
     @staticmethod
-    def get_llm_model(model_name: str) -> AzureOpenAI:
-        """Return available LLM models."""
-        raise NotImplementedError
+    def get_llm_model(name: str) -> AzureOpenAI:
+        return AzureOpenAI(
+            model=name,
+            engine=name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            max_tokens=2048,
+        )
 
     @staticmethod
-    def get_embedding_model(model_name: str) -> AzureOpenAIEmbedding:
-        """Return available embedding models."""
-        raise NotImplementedError
+    def get_embedding_model(name: str) -> AzureOpenAIEmbedding:
+        return AzureOpenAIEmbedding(
+            model_name=name,
+            deployment_name=name,
+            # must be passed manually otherwise AzureOpenAIEmbedding checks OPENAI_API_KEY
+            api_key=settings.azure_openai_api_key,
+        )
 
     @staticmethod
-    def get_reranking_model(model_name: str, top_n: int) -> SimpleReranker:
-        """Return available reranking models."""
-        raise NotImplementedError
+    def get_reranking_model(name: str, top_n: int) -> SimpleReranker:
+        return SimpleReranker(top_n=top_n)
 
 
 # ensure interface is implemented

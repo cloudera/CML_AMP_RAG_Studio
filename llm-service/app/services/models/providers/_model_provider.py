@@ -60,35 +60,35 @@ class ModelProvider(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def list_llm_models() -> list[ModelResponse]:
-        """Return available LLM models."""
+        """Return names and IDs of available LLM models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
     def list_embedding_models() -> list[ModelResponse]:
-        """Return available embedding models."""
+        """Return names and IDs of available embedding models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
     def list_reranking_models() -> list[ModelResponse]:
-        """Return available reranking models."""
+        """Return names and IDs of available reranking models."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_llm_model(model_name: str) -> LLM:
-        """Return available LLM models."""
+    def get_llm_model(name: str) -> LLM:
+        """Return LLM model with `name`."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_embedding_model(model_name: str) -> BaseEmbedding:
-        """Return available embedding models."""
+    def get_embedding_model(name: str) -> BaseEmbedding:
+        """Return embedding model with `name`."""
         raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
-    def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
-        """Return available reranking models."""
+    def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
+        """Return reranking model with `name`."""
         raise NotImplementedError

@@ -51,10 +51,7 @@ from .providers import (
     CAIIModelProvider,
 )
 from .providers.openai import OpenAiModelProvider
-from ..caii.caii import get_llm as get_caii_llm
 from ..caii.types import ModelResponse
-from ..llama_utils import completion_to_prompt, messages_to_prompt
-from ...config import settings
 
 
 class LLM(_model_type.ModelType[llms.LLM]):
@@ -64,37 +61,15 @@ class LLM(_model_type.ModelType[llms.LLM]):
             model_name = cls.list_available()[0].model_id
 
         if AzureModelProvider.is_enabled():
-            return AzureOpenAI(
-                model=model_name,
-                engine=model_name,
-                messages_to_prompt=messages_to_prompt,
-                completion_to_prompt=completion_to_prompt,
-                max_tokens=2048,
-            )
+            return AzureModelProvider.get_llm_model(model_name)
 
         if OpenAiModelProvider.is_enabled():
-            return OpenAI(
-                model=model_name,
-                messages_to_prompt=messages_to_prompt,
-                completion_to_prompt=completion_to_prompt,
-                max_tokens=2048,
-                api_base=settings.openai_api_base,
-                api_key=settings.openai_api_key,
-            )
+            return OpenAiModelProvider.get_llm_model(model_name)
 
         if CAIIModelProvider.is_enabled():
-            return get_caii_llm(
-                endpoint_name=model_name,
-                messages_to_prompt=messages_to_prompt,
-                completion_to_prompt=completion_to_prompt,
-            )
+            return CAIIModelProvider.get_llm_model(model_name)
 
-        return BedrockConverse(
-            model=model_name,
-            messages_to_prompt=messages_to_prompt,
-            completion_to_prompt=completion_to_prompt,
-            max_tokens=2048,
-        )
+        return BedrockModelProvider.get_llm_model(model_name)
 
     @staticmethod
     def get_noop() -> llms.LLM:

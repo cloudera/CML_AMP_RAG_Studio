@@ -45,6 +45,7 @@ from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 from app.config import settings
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
+from ...llama_utils import completion_to_prompt, messages_to_prompt
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
@@ -141,19 +142,21 @@ class BedrockModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_llm_model(model_name: str) -> BedrockConverse:
-        """Return available LLM models."""
-        raise NotImplementedError
+    def get_llm_model(name: str) -> BedrockConverse:
+        return BedrockConverse(
+            model=name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            max_tokens=2048,
+        )
 
     @staticmethod
-    def get_embedding_model(model_name: str) -> BedrockEmbedding:
-        """Return available embedding models."""
-        raise NotImplementedError
+    def get_embedding_model(name: str) -> BedrockEmbedding:
+        return BedrockEmbedding(model_name=name)
 
     @staticmethod
-    def get_reranking_model(model_name: str, top_n: int) -> AWSBedrockRerank:
-        """Return available reranking models."""
-        raise NotImplementedError
+    def get_reranking_model(name: str, top_n: int) -> AWSBedrockRerank:
+        return AWSBedrockRerank(rerank_model_name=name, top_n=top_n)
 
 
 # ensure interface is implemented
