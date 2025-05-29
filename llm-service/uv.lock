@@ -915,6 +915,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/80/b91aa837d06edbb472445ea3c92d7619518894fd3049d480e5fffbf0c21b/crewai_tools-0.44.0-py3-none-any.whl", hash = "sha256:119e2365fe66ee16e18a5e8e222994b19f76bafcc8c1bb87f61609c1e39b2463", size = 583462 },
 ]
 
+[package.optional-dependencies]
+mcp = [
+    { name = "mcp" },
+    { name = "mcpadapt" },
+]
+
 [[package]]
 name = "cryptography"
 version = "44.0.1"
@@ -2956,6 +2962,7 @@ dependencies = [
     { name = "aiostream" },
     { name = "boto3" },
     { name = "crewai", extra = ["tools"] },
+    { name = "crewai-tools", extra = ["mcp"] },
     { name = "detect-secrets" },
     { name = "docling" },
     { name = "docx2txt" },
@@ -2978,6 +2985,7 @@ dependencies = [
     { name = "llama-index-vector-stores-opensearch" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
+    { name = "mcp", extra = ["cli"] },
     { name = "mlflow" },
     { name = "opik" },
     { name = "pandas" },
@@ -3009,6 +3017,7 @@ requires-dist = [
     { name = "aiostream", specifier = ">=0.6.4" },
     { name = "boto3", specifier = ">=1.36.1" },
     { name = "crewai", extras = ["tools"], specifier = ">=0.119.0" },
+    { name = "crewai-tools", extras = ["mcp"], specifier = ">=0.44.0" },
     { name = "detect-secrets", specifier = ">=1.5.0" },
     { name = "docling", specifier = ">=2.15.0" },
     { name = "docx2txt", specifier = ">=0.8" },
@@ -3031,6 +3040,7 @@ requires-dist = [
     { name = "llama-index-vector-stores-opensearch", specifier = ">=0.5.2" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.9.1" },
     { name = "mlflow", specifier = ">=2.20.1" },
     { name = "opik", specifier = ">=1.7.22" },
     { name = "pandas", specifier = ">=2.2.3" },
@@ -3331,6 +3341,47 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/99/5b/a36a337438a14116b16480db471ad061c36c3694df7c2084a0da7ba538b7/matplotlib_inline-0.1.7.tar.gz", hash = "sha256:8423b23ec666be3d16e16b60bdd8ac4e86e840ebd1dd11a30b9f117f2fa0ab90", size = 8159 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/8e/9ad090d3553c280a8060fbf6e24dc1c0c29704ee7d1c372f0c174aa59285/matplotlib_inline-0.1.7-py3-none-any.whl", hash = "sha256:df192d39a4ff8f21b1895d72e6a13f5fcc5099f00fa84384e0ea28c2cc0653ca", size = 9899 },
+]
+
+[[package]]
+name = "mcp"
+version = "1.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "httpx" },
+    { name = "httpx-sse" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-multipart" },
+    { name = "sse-starlette" },
+    { name = "starlette" },
+    { name = "uvicorn", marker = "sys_platform != 'emscripten'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e7/bc/54aec2c334698cc575ca3b3481eed627125fb66544152fa1af927b1a495c/mcp-1.9.1.tar.gz", hash = "sha256:19879cd6dde3d763297617242888c2f695a95dfa854386a6a68676a646ce75e4", size = 316247 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/c0/4ac795585a22a0a2d09cd2b1187b0252d2afcdebd01e10a68bbac4d34890/mcp-1.9.1-py3-none-any.whl", hash = "sha256:2900ded8ffafc3c8a7bfcfe8bc5204037e988e753ec398f371663e6a06ecd9a9", size = 130261 },
+]
+
+[package.optional-dependencies]
+cli = [
+    { name = "python-dotenv" },
+    { name = "typer" },
+]
+
+[[package]]
+name = "mcpadapt"
+version = "0.1.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jsonref" },
+    { name = "mcp" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9e/68/85c0946d567088d8d55f1c30cb942bcfec2585941a3f45b790e423b994c8/mcpadapt-0.1.9.tar.gz", hash = "sha256:03e601c4c083f3f4eb178e6a6bcd157bcb45e25c140ea0895567bab346b67645", size = 3540887 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/78/0310684763e5753a3a8128dab6c87ba1e20dd907b696680592bebebc84b6/mcpadapt-0.1.9-py3-none-any.whl", hash = "sha256:9f2a6ad1155efdf1a43c11e8449ae9258295c4e140c3c6ff672983a8ac8bde33", size = 17469 },
 ]
 
 [[package]]
@@ -5963,6 +6014,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/2d/85/8448fe874dd2042a4eceea5315cfff3af03ac77ff5073812071852c4e7e2/srsly-2.5.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:366b4708933cd8d6025c13c2cea3331f079c7bb5c25ec76fca392b6fc09818a0", size = 1098330 },
     { url = "https://files.pythonhosted.org/packages/ef/7e/04d0e1417da140b2ac4053a3d4fcfc86cd59bf4829f69d370bb899f74d5d/srsly-2.5.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:c8a0b03c64eb6e150d772c5149befbadd981cc734ab13184b0561c17c8cef9b1", size = 1110670 },
     { url = "https://files.pythonhosted.org/packages/96/1a/a8cd627eaa81a91feb6ceab50155f4ceff3eef6107916cb87ef796958427/srsly-2.5.1-cp312-cp312-win_amd64.whl", hash = "sha256:7952538f6bba91b9d8bf31a642ac9e8b9ccc0ccbb309feb88518bfb84bb0dc0d", size = 632598 },
+]
+
+[[package]]
+name = "sse-starlette"
+version = "2.3.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "starlette" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/10/5f/28f45b1ff14bee871bacafd0a97213f7ec70e389939a80c60c0fb72a9fc9/sse_starlette-2.3.5.tar.gz", hash = "sha256:228357b6e42dcc73a427990e2b4a03c023e2495ecee82e14f07ba15077e334b2", size = 17511 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/48/3e49cf0f64961656402c0023edbc51844fe17afe53ab50e958a6dbbbd499/sse_starlette-2.3.5-py3-none-any.whl", hash = "sha256:251708539a335570f10eaaa21d1848a10c42ee6dc3a9cf37ef42266cdb1c52a8", size = 10233 },
 ]
 
 [[package]]

@@ -44,7 +44,6 @@ from typing import Optional, Tuple
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.tools.base_tool import BaseTool
-from crewai_tools import SerperDevTool
 from llama_index.core import VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
@@ -53,18 +52,17 @@ from llama_index.core.llms import LLM
 from llama_index.core.schema import NodeWithScore
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
-from app.services.query.crew_events import CrewEvent, step_callback
-from app.services.query.tasks.calculation import build_calculation_task
-from app.services.query.tasks.date import build_date_task
-from app.services.query.tasks.retriever import build_retriever_task
-from app.services.query.tasks.search import build_search_task
-from app.services.query.tools.date import DateTool
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
+from app.services.query.crew_events import CrewEvent, step_callback
 from app.services.query.query_configuration import QueryConfiguration
+from app.services.query.tasks.calculation import build_calculation_task
+from app.services.query.tasks.date import build_date_task
+from app.services.query.tasks.retriever import build_retriever_task
+from app.services.query.tools.date import DateTool
 from app.services.query.tools.retriever import build_retriever_tool
 
 if os.environ.get("ENABLE_OPIK") == "True":
@@ -112,6 +110,7 @@ def assemble_crew(
     configuration: QueryConfiguration,
     data_source_id: Optional[int],
     crew_events_queue: Queue[CrewEvent],
+    mcp_tools: Optional[list[BaseTool]] = None,
 ) -> Crew:
     crewai_llm = get_crewai_llm_object_direct(llm, configuration.model_name)
     # Gather all the tools needed for the crew
@@ -132,12 +131,6 @@ def assemble_crew(
             llm,
         )
         research_tools.append(crewai_retriever_tool)
-
-    # Create a search tool if needed
-    search_tool = None
-    if configuration.tools and "search" in configuration.tools:
-        search_tool = SerperDevTool()
-        research_tools.append(search_tool)
 
     # Define the researcher agent
     researcher = Agent(
@@ -163,7 +156,6 @@ def assemble_crew(
     researcher_task_context = [date_task]
 
     # Add retriever task if needed
-    retriever_task = None
     if crewai_retriever_tool:
         retriever_task_context = [date_task]
         retriever_task = build_retriever_task(
@@ -176,25 +168,13 @@ def assemble_crew(
         )
         researcher_task_context.append(retriever_task)
 
-    # Add search task if needed
-    if search_tool:
-        search_task_context = [date_task]
-        if retriever_task:
-            search_task_context.append(retriever_task)
-        search_task = build_search_task(
-            researcher,
-            query_str,
-            chat_history,
-            search_task_context,
-            search_tool,
-            crew_events_queue,
-        )
-        researcher_task_context.append(search_task)
+    mcp_agent = None
+    mcp_task = None
 
     research_task = Task(
         name="ResearcherTask",
-        description="Research the user's question using the context available "
-        "and chat history. Based on the research return comprehensive research insights. "
+        description="Research the user's question using the context available, "
+        "chat history, and the tools provided. Based on the research return comprehensive research insights. "
         "Given below, is the user's question and the chat history: \n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
         agent=researcher,
@@ -215,6 +195,7 @@ def assemble_crew(
         callback=lambda output: step_callback(
             output, "Research Complete", crew_events_queue
         ),
+        tools=mcp_tools,
     )
 
     # Create a calculation task if needed
@@ -234,6 +215,11 @@ def assemble_crew(
         ),
         # verbose=True,
     )
+    response_context = []
+    if mcp_task:
+        response_context.append(mcp_task)
+    response_context.append(calculation_task)
+
     response_task = Task(
         name="ResponderTask",
         description="Formulate a comprehensive response based on the research findings and calculations, "
@@ -241,7 +227,7 @@ def assemble_crew(
         agent=responder,
         expected_output="A accurate response to the user's question. The links and citations are to be copied as is "
         "from the context. Do not format it, or change it in any way.",
-        context=[research_task, calculation_task],
+        context=response_context,
         callback=lambda _: crew_events_queue.put(
             CrewEvent(type=poison_pill, name="responder")
         ),
@@ -253,7 +239,11 @@ def assemble_crew(
 
     for task in researcher_task_context:
         tasks.append(task)
+    if mcp_agent:
+        agents.append(mcp_agent)
     agents.extend([researcher, responder])
+    if mcp_task:
+        tasks.append(mcp_task)
     tasks.extend(
         [
             research_task,

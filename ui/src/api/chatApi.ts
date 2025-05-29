@@ -80,7 +80,6 @@ export interface RagMessageV2 {
 export interface QueryConfiguration {
   exclude_knowledge_base: boolean;
   use_question_condensing: boolean;
-  tools?: string[];
 }
 
 export interface ChatMutationRequest {
@@ -262,12 +261,10 @@ export const replacePlaceholderInChatHistory = (
 
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean,
-  tools?: string[],
 ): QueryConfiguration => {
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
     use_question_condensing: false,
-    tools,
   };
 };
 
