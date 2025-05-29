@@ -67,7 +67,6 @@ const RagChatQueryInput = ({
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
-    activeSession,
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -114,10 +113,7 @@ const RagChatQueryInput = ({
         streamChatMutation.mutate({
           query: userInput,
           session_id: +sessionId,
-          configuration: createQueryConfiguration(
-            excludeKnowledgeBase,
-            activeSession?.queryConfiguration.selectedTools,
-          ),
+          configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
         newSessionCallback(userInput);

@@ -85,7 +85,6 @@ def stream_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
         use_tool_calling=session.query_configuration.enable_tool_calling,
-        tools=configuration.tools,
     )
 
     response_id = str(uuid.uuid4())
@@ -194,7 +193,7 @@ def build_streamer(
         query_configuration,
         chat_messages,
         crew_events_queue=crew_events_queue,
-        session=session
+        session=session,
     )
     return condensed_question, data_source_id, streaming_chat_response
 

@@ -40,10 +40,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.services.query.query_configuration import tool_types
-
 
 class RagPredictConfiguration(BaseModel):
     exclude_knowledge_base: Optional[bool] = False
     use_question_condensing: Optional[bool] = True
-    tools: Optional[list[tool_types]] = None

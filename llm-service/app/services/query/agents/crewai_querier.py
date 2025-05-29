@@ -44,7 +44,6 @@ from typing import Optional, Tuple
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput
 from crewai.tools.base_tool import BaseTool
-from crewai_tools import SerperDevTool
 from llama_index.core import VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
@@ -63,7 +62,6 @@ from app.services.query.query_configuration import QueryConfiguration
 from app.services.query.tasks.calculation import build_calculation_task
 from app.services.query.tasks.date import build_date_task
 from app.services.query.tasks.retriever import build_retriever_task
-from app.services.query.tasks.search import build_search_task
 from app.services.query.tools.date import DateTool
 from app.services.query.tools.retriever import build_retriever_tool
 
@@ -134,12 +132,6 @@ def assemble_crew(
         )
         research_tools.append(crewai_retriever_tool)
 
-    # Create a search tool if needed # TODO: fix this because we don't use configuration.tools any more!
-    search_tool = None
-    if configuration.tools and "search" in configuration.tools:
-        search_tool = SerperDevTool()
-        research_tools.append(search_tool)
-
     # Define the researcher agent
     researcher = Agent(
         role="Researcher",
@@ -164,7 +156,6 @@ def assemble_crew(
     researcher_task_context = [date_task]
 
     # Add retriever task if needed
-    retriever_task = None
     if crewai_retriever_tool:
         retriever_task_context = [date_task]
         retriever_task = build_retriever_task(
@@ -176,21 +167,6 @@ def assemble_crew(
             crew_events_queue,
         )
         researcher_task_context.append(retriever_task)
-
-    # Add search task if needed
-    if search_tool:
-        search_task_context = [date_task]
-        if retriever_task:
-            search_task_context.append(retriever_task)
-        search_task = build_search_task(
-            researcher,
-            query_str,
-            chat_history,
-            search_task_context,
-            search_tool,
-            crew_events_queue,
-        )
-        researcher_task_context.append(search_task)
 
     mcp_agent = None
     mcp_task = None
