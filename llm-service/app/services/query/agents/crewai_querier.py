@@ -112,7 +112,7 @@ def assemble_crew(
     crew_events_queue: Queue[CrewEvent],
     mcp_tools: Optional[list[BaseTool]] = None,
 ) -> Crew:
-    crewai_llm = get_crewai_llm_object_direct(llm, llm.model)
+    crewai_llm = get_crewai_llm_object_direct(llm, getattr(llm, "model", ""))
     # Gather all the tools needed for the crew
 
     # Create a date tool to get the current date and time
