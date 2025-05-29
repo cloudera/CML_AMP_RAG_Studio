@@ -39,9 +39,6 @@ from typing import Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
-from llama_index.embeddings.bedrock import BedrockEmbedding
-from llama_index.embeddings.openai import OpenAIEmbedding
 
 from . import _model_type, _noop
 from .providers import (
@@ -51,7 +48,6 @@ from .providers import (
 )
 from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
-from ...config import settings
 
 
 class Embedding(_model_type.ModelType[BaseEmbedding]):
@@ -62,13 +58,10 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
 
         if AzureModelProvider.is_enabled():
             return AzureModelProvider.get_embedding_model(model_name)
-
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.get_embedding_model(model_name)
-
         if OpenAiModelProvider.is_enabled():
             return OpenAiModelProvider.get_embedding_model(model_name)
-
         return BedrockModelProvider.get_embedding_model(model_name)
 
     @staticmethod
@@ -79,13 +72,10 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
             return AzureModelProvider.list_embedding_models()
-
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.list_embedding_models()
-
         if OpenAiModelProvider.is_enabled():
             return OpenAiModelProvider.list_embedding_models()
-
         return BedrockModelProvider.list_embedding_models()
 
     @classmethod

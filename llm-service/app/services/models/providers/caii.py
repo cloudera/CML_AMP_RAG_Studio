@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM

@@ -40,7 +40,6 @@ from typing import Optional
 from fastapi import HTTPException
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode
-from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 
 from . import _model_type
 from .providers import (
@@ -67,6 +66,8 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
             return AzureModelProvider.get_reranking_model(model_name, top_n)
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.get_reranking_model(model_name, top_n)
+        if OpenAiModelProvider.is_enabled():
+            pass  # no OpenAI reranking models available
         return BedrockModelProvider.get_reranking_model(model_name, top_n)
 
     @staticmethod
@@ -77,13 +78,10 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
             return AzureModelProvider.list_reranking_models()
-
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.list_reranking_models()
-
         if OpenAiModelProvider.is_enabled():
             return OpenAiModelProvider.list_reranking_models()
-
         return BedrockModelProvider.list_reranking_models()
 
     @classmethod

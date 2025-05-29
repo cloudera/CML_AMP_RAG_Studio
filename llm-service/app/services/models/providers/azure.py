@@ -40,8 +40,8 @@ from llama_index.llms.azure_openai import AzureOpenAI
 
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
-from ...query.simple_reranker import SimpleReranker
 from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ...query.simple_reranker import SimpleReranker
 from ....config import settings
 
 

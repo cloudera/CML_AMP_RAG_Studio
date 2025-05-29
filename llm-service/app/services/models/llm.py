@@ -40,9 +40,6 @@ from typing import Literal, Optional
 from fastapi import HTTPException
 from llama_index.core import llms
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
-from llama_index.llms.azure_openai import AzureOpenAI
-from llama_index.llms.bedrock_converse import BedrockConverse
-from llama_index.llms.openai import OpenAI
 
 from . import _model_type, _noop
 from .providers import (
@@ -62,13 +59,10 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
         if AzureModelProvider.is_enabled():
             return AzureModelProvider.get_llm_model(model_name)
-
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_llm_model(model_name)
-
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.get_llm_model(model_name)
-
+        if OpenAiModelProvider.is_enabled():
+            return OpenAiModelProvider.get_llm_model(model_name)
         return BedrockModelProvider.get_llm_model(model_name)
 
     @staticmethod
@@ -79,13 +73,10 @@ class LLM(_model_type.ModelType[llms.LLM]):
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
             return AzureModelProvider.list_llm_models()
-
         if CAIIModelProvider.is_enabled():
             return CAIIModelProvider.list_llm_models()
-
         if OpenAiModelProvider.is_enabled():
             return OpenAiModelProvider.list_llm_models()
-
         return BedrockModelProvider.list_llm_models()
 
     @classmethod
