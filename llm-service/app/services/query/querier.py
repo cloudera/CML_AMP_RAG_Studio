@@ -97,7 +97,7 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
 
     if server_config:
         environment: dict[str, str] | None = copy(dict(os.environ))
-        if "env" in server_config:
+        if "env" in server_config and environment:
             environment.update(server_config["env"])
 
         if "command" in server_config:
