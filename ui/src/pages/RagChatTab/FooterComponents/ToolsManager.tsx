@@ -117,7 +117,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   };
 
   return (
-    <Flex style={{ width: 400, height: 200, margin: 16 }} vertical>
+    <Flex style={{ width: 500, height: 300, margin: 8 }} vertical>
       <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
         Tools Manager
       </Typography.Title>
@@ -164,6 +164,7 @@ const ToolsManager = ({
       open={isOpen}
       trigger="click"
       onOpenChange={setIsOpen}
+      placement="topRight"
       content={<ToolsManagerContent activeSession={activeSession} />}
     >
       {children}
