@@ -140,7 +140,7 @@ def assemble_crew(
         backstory="You are an expert researcher who provides accurate and relevant information. "
         "You know when to use tools and when to answer directly.",
         llm=crewai_llm,
-        # verbose=True,
+        verbose=True,
     )
 
     # Define tasks for the researcher agents
@@ -214,7 +214,7 @@ def assemble_crew(
         step_callback=lambda output: step_callback(
             output, "Response Computed", crew_events_queue
         ),
-        # verbose=True,
+        verbose=True,
     )
     response_context = []
     if mcp_task:
