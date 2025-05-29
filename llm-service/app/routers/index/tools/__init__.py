@@ -44,6 +44,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 
 from .... import exceptions
+from ....config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +69,7 @@ class Tool(BaseModel):
 @exceptions.propagates
 def tools() -> list[Tool]:
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    mcp_json_path = os.path.join(
-        current_dir, "..", "..", "..", "services/query/mcp.json"
-    )
+    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
 
     with open(mcp_json_path, "r") as f:
         mcp_config = json.load(f)

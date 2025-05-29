@@ -49,6 +49,7 @@ from .agents.crewai_querier import (
 )
 from .crew_events import CrewEvent
 from ..metadata_apis.session_metadata_api import Session
+from ...config import settings
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -87,26 +88,20 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
     Raises:
         ValueError: If the server name is not found in the mcp.json file
     """
-    # Get the path to the mcp.json file (in the same directory as this file)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    mcp_json_path = os.path.join(current_dir, "mcp.json")
+    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
 
-    # Load the mcp.json file
     with open(mcp_json_path, "r") as f:
         mcp_config = json.load(f)
 
     mcp_servers = mcp_config["mcp_servers"]
     server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
 
-    # Determine the type of adapter to create based on the configuration
     if "command" in server_config:
-        # This is a StdioServerParameters configuration
         params = StdioServerParameters(
             command=server_config["command"], args=server_config.get("args", [])
         )
         return MCPServerAdapter(serverparams=params)
     elif "url" in server_config:
-        # This is a direct MCPServerAdapter configuration
         return MCPServerAdapter({"url": server_config["url"][0]})
     else:
         raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
@@ -119,7 +114,7 @@ def streaming_query(
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
-    session: Session
+    session: Session,
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
