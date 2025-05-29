@@ -171,8 +171,9 @@ def assemble_crew(
     research_task = Task(
         name="ResearcherTask",
         description="Research the user's question using the context available, "
-        "chat history, and the tools provided. Based on the research return comprehensive research insights. "
-        "If the answer is not available in the context or chat history, use the tools to gather information. "
+        "chat history, and the tools provided. Note that the date provided in the context is the current date. "
+        "Based on that, research and return comprehensive insights. If the answer is not available in the "
+        "context or chat history, use the tools to gather information. "
         "No need to use the tools if the answer is available in the context or chat history. \n"
         "Given below, is the user's question and the chat history: \n\n"
         f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
