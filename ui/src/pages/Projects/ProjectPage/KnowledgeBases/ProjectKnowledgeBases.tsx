@@ -216,7 +216,7 @@ const KnowledgeBaseCard = (props: { dataSource: DataSourceType }) => {
             </Typography.Title>
           }
           open={popoverVisible}
-          destroyTooltipOnHide={true}
+          destroyOnHidden={true}
           onOpenChange={setPopoverVisible}
           trigger="click"
           content={
@@ -275,7 +275,7 @@ export const ProjectKnowledgeBases = () => {
           onOpenChange={setPopoverVisible}
           trigger="click"
           placement="bottomRight"
-          destroyTooltipOnHide={true}
+          destroyOnHidden={true}
           content={
             <SelectKnowledgeBaseForm
               unusedDataSources={unusedDataSources}

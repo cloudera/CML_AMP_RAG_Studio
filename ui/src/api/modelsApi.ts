@@ -58,7 +58,16 @@ export const useGetModelById = (model_id?: string) => {
     queryKey: [QueryKeys.getModelById, { model_id }],
     queryFn: async () => {
       const llmModels = await getLlmModels();
-      return llmModels.find((model) => model.model_id === model_id);
+      const model = llmModels.find((model) => model.model_id === model_id);
+      if (!model) {
+        throw new ApiError(
+          model_id
+            ? `Model with ID ${model_id} not found`
+            : "No model ID provided",
+          404,
+        );
+      }
+      return model;
     },
     staleTime: 1000 * 60 * 60,
     enabled: !!model_id,

@@ -203,7 +203,7 @@ const RestartAppModal = ({
       cancelButtonProps={{ disabled: updateInProgress }}
       closable={false}
       open={confirmationModal.isModalOpen}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       loading={updateAmpConfig.isPending}
       maskClosable={!updateInProgress}
       onCancel={() => {

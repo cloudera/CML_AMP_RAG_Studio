@@ -146,7 +146,7 @@ const MoveSessionModal = ({
         disabled: !selectedProject,
       }}
       okText={"Move it"}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       width={1000}
     >
       <MoveSessionContext.Provider
