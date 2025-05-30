@@ -49,4 +49,4 @@ class DateTool(BaseTool):  # type: ignore[misc]
     description: str = "A tool that provides the current date and time."
 
     def _run(self) -> str:
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return f"The current date is {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"

@@ -158,7 +158,9 @@ class PlannerAgent:
 
             {additional_data_source_questions}
             
-            If the query is related to the content described or is in the knowledge base summary, use the retrieval strategy.
+            If the query is related to the content described in the knowledge base summary or is in \
+            the knowledge base summary, use the retrieval strategy i.e. use the retrieval strategy \
+            if the query is likely to be answered in the knowledge base. 
             Else, use the direct answer strategy. If the query can be answered directly based on the chat history, use the direct answer strategy.
             If there is no knowledge base summary, use the retrieval strategy first.
             """,

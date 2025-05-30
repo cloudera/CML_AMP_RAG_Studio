@@ -10,6 +10,21 @@
       "args": [
         "mcp-server-fetch"
       ]
+    },
+    {
+      "name": "serper-search",
+      "command": "npx",
+      "args": [
+        "-y",
+        "serper-search-scrape-mcp-server"
+      ],
+      "env": {
+        "SERPER_API_KEY": "e377f01c3005e90b5f18cb2e847b25c1b7b3cdcd"
+      },
+      "metadata": {
+        "display_name": "Serper Search",
+        "description": "Searches the web using Serper API, providing real-time search results and information retrieval."
+      }
     }
   ]
 }

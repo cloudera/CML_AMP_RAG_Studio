@@ -152,19 +152,43 @@ def assemble_crew(
         step_callback=lambda output: step_callback(
             output, "Tool Result", crew_events_queue
         ),
-        max_execution_time=10,
-        max_iter=1,
+        max_execution_time=30,
+        max_iter=5,
     )
 
     # Define tasks for the researcher agents
     date_task = build_date_task(researcher, date_tool, crew_events_queue)
 
+    crew_events_queue.put(
+        CrewEvent(
+            type="chat_history",
+            name="Providing chat history",
+            data=f"<Chat History>:\n{query_str}",
+        )
+    )
     chat_history = ""
-    for message in chat_messages:
-        if message.role == MessageRole.USER:
-            chat_history += f"User:\n{message.content}\n"
-        elif message.role == MessageRole.ASSISTANT:
-            chat_history += f"Assistant:\n{message.content}\n"
+    if chat_messages:
+        for message in chat_messages:
+            if message.role == MessageRole.USER:
+                chat_history += f"User:\n{message.content}\n"
+            elif message.role == MessageRole.ASSISTANT:
+                chat_history += f"Assistant:\n{message.content}\n"
+
+        crew_events_queue.put(
+            CrewEvent(
+                type="chat_history",
+                name="Chat history provided",
+                data=chat_history,
+            )
+        )
+    else:
+        crew_events_queue.put(
+            CrewEvent(
+                type="chat_history",
+                name="Chat history empty",
+                data="<Chat History>:\nNo chat history available.",
+            )
+        )
 
     # create a list of tasks for the researcher
     researcher_task_context = [date_task]
@@ -182,23 +206,23 @@ def assemble_crew(
         )
         researcher_task_context.append(retriever_task)
 
-    @tool("Chat history tool")
-    def chat_history_tool() -> str:
-        """A tool that provides the chat history."""
-        return f"<Chat History>:\n{chat_history}"
-
-    chat_history_task = Task(
-        name="ChatHistoryTask",
-        description="This task is to provide the chat history to the researcher agent.",
-        agent=researcher,
-        expected_output="The chat history provided to the researcher agent.  Prepend the chat history with a <Chat history> tag.",
-        tools=[chat_history_tool],
-        callback=lambda output: step_callback(
-            output, "Chat History Provided", crew_events_queue
-        ),
-    )
-
-    researcher_task_context.append(chat_history_task)
+    # @tool("Chat history tool")
+    # def chat_history_tool() -> str:
+    #     """A tool that provides the chat history."""
+    #     return f"<Chat History>:\n{chat_history}"
+    #
+    # chat_history_task = Task(
+    #     name="ChatHistoryTask",
+    #     description="This task is to provide the chat history to the researcher agent.",
+    #     agent=researcher,
+    #     expected_output="The chat history provided to the researcher agent.  Prepend the chat history with a <Chat history> tag.",
+    #     tools=[chat_history_tool],
+    #     callback=lambda output: step_callback(
+    #         output, "Chat History Provided", crew_events_queue
+    #     ),
+    # )
+    #
+    # researcher_task_context.append(chat_history_task)
 
     research_task = Task(
         name="ResearcherTask",
@@ -208,6 +232,7 @@ def assemble_crew(
         "context or chat history, use the tools to gather information. "
         "No need to use the tools if the answer is available in the context or chat history. \n"
         "Given below, is the user's question and the chat history: \n\n"
+        f"<Chat History>:\n{chat_history}\n\n"
         f"<Question>:\n{query_str}",
         agent=researcher,
         expected_output="A detailed analysis of the user's question based on the provided context and chat history, "
@@ -250,8 +275,8 @@ def assemble_crew(
             output, "Response Computed", crew_events_queue
         ),
         verbose=True,
-        max_execution_time=10,
-        max_iter=1,
+        max_execution_time=30,
+        max_iter=5,
     )
 
     response_context = [research_task, calculation_task]
@@ -315,12 +340,16 @@ Original query: {query_str}
 Research insights: {crew_result}
 
 Please provide a response to the original query, incorporating the insights from research with in-line citations. \
-If you cannot find relevant information in the research insights, answer the question directly and indicate that \
-you don't have enough information. If citations from the research insights are used, use the in-line links and \
+
+Adhere to the following guidelines:
+* If you cannot find relevant information in the research insights, answer the question directly and indicate that \
+you don't have enough information. 
+* If citations from the research insights are used, use the in-line links and \
 citations from the research insights as is. Keep markdown formatted links as is i.e. [<text>](<web_link>). \
-Keep the in-line citations of format `<a class='rag_citation' href='node_id'>node_id</a>` as is. Do not make up any \
-links or citations of the form `<a class='rag_citation' href='node_id'>node_id</a>` that are not present in the \
-research insights. Only use the links and citations from the research insights. \
+Keep the in-line citations of format `<a class='rag_citation' href='node_id'>node_id</a>` as is. 
+* Do not make up any links or citations of the form `<a class='rag_citation' href='node_id'>node_id</a>` \
+that are not present in the research insights. Do not make up any markdown links as well. Only use the \
+links and citations from the research insights. 
 """,
         source_node_ids_w_score,
     )

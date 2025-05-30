@@ -62,10 +62,13 @@ def build_calculation_task(
     """
     calculation_task = Task(
         name="CalculatorTask",
-        description="Perform any necessary calculations based on the research findings. If the query requires numerical analysis, perform the calculations and show your work. If no calculations are needed, simply state that no calculations are required.",
+        description="Perform any necessary calculations based on the research findings. If the query requires "
+        "numerical analysis, perform the calculations and show your work. If no calculations are needed, simply "
+        "state that no calculations are required.",
         agent=agent,
         context=calculation_task_context if calculation_task_context else None,
-        expected_output="Results of any calculations performed, with step-by-step workings",
+        expected_output="Results of any calculations performed, with step-by-step workings. If no calculations "
+        "are needed, state that no calculations are required. Do not return any other information.",
         callback=lambda output: step_callback(
             output, "Calculation Complete", crew_events_queue
         ),
