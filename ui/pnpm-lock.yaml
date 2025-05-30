@@ -54,8 +54,8 @@ importers:
         specifier: ^9.16.0
         version: 9.16.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-markdown:
-        specifier: ^10.1.0
-        version: 10.1.0(@types/react@19.1.6)(react@19.1.0)
+        specifier: ^9.0.1
+        version: 9.1.0(@types/react@19.1.6)(react@19.1.0)
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
@@ -3448,8 +3448,8 @@ packages:
   react-is@19.1.0:
     resolution: {integrity: sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==}
 
-  react-markdown@10.1.0:
-    resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
+  react-markdown@9.1.0:
+    resolution: {integrity: sha512-xaijuJB0kzGiUdG7nc2MOMDUDBWPyGAjZtUrow9XxUeua8IqeP+VlIfAZ3bphpcLTnSZXz6z9jcVC/TCwbfgdw==}
     peerDependencies:
       '@types/react': '>=18'
       react: '>=18'
@@ -8315,7 +8315,7 @@ snapshots:
 
   react-is@19.1.0: {}
 
-  react-markdown@10.1.0(@types/react@19.1.6)(react@19.1.0):
+  react-markdown@9.1.0(@types/react@19.1.6)(react@19.1.0):
     dependencies:
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
