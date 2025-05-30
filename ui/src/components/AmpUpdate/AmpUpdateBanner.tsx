@@ -126,7 +126,7 @@ const AmpUpdateBanner = ({
       ) : null}
       <Modal
         okButtonProps={{ style: { display: "none" } }}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         title="Update RAG Studio to the latest version?"
         open={updateModal.isModalOpen}
         maskClosable={updateAmpMutation.isSuccess}
