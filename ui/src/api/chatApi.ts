@@ -454,8 +454,8 @@ const streamChatMutation = async (
         const data = JSON.parse(msg.data) as ChatMutationResponse;
 
         if (data.error) {
-          ctrl.abort();
           onError(data.error);
+          ctrl.abort();
         }
 
         if (data.text) {

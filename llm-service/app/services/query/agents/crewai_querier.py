@@ -39,10 +39,11 @@ import logging
 import os
 import re
 from queue import Queue
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import opik
-from crewai import Task, Process, Crew, Agent, CrewOutput
+from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
+from crewai.tools import tool
 from crewai.tools.base_tool import BaseTool
 from llama_index.core import VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -75,6 +76,14 @@ if os.environ.get("ENABLE_OPIK") == "True":
 logger = logging.getLogger(__name__)
 # litellm._turn_on_debug()
 poison_pill = "poison_pill"
+
+
+def validate_with_context(result: TaskOutput) -> Tuple[bool, Any]:
+    try:
+        return True, result
+    except Exception as e:
+        print(f"Validation failed: {e}")
+        return False, str(e)
 
 
 def should_use_retrieval(
@@ -143,6 +152,8 @@ def assemble_crew(
         step_callback=lambda output: step_callback(
             output, "Tool Result", crew_events_queue
         ),
+        max_execution_time=10,
+        max_iter=1,
     )
 
     # Define tasks for the researcher agents
@@ -171,6 +182,24 @@ def assemble_crew(
         )
         researcher_task_context.append(retriever_task)
 
+    @tool("Chat history tool")
+    def chat_history_tool() -> str:
+        """A tool that provides the chat history."""
+        return f"<Chat History>:\n{chat_history}"
+
+    chat_history_task = Task(
+        name="ChatHistoryTask",
+        description="This task is to provide the chat history to the researcher agent.",
+        agent=researcher,
+        expected_output="The chat history provided to the researcher agent.  Prepend the chat history with a <Chat history> tag.",
+        tools=[chat_history_tool],
+        callback=lambda output: step_callback(
+            output, "Chat History Provided", crew_events_queue
+        ),
+    )
+
+    researcher_task_context.append(chat_history_task)
+
     research_task = Task(
         name="ResearcherTask",
         description="Research the user's question using the context available, "
@@ -179,7 +208,7 @@ def assemble_crew(
         "context or chat history, use the tools to gather information. "
         "No need to use the tools if the answer is available in the context or chat history. \n"
         "Given below, is the user's question and the chat history: \n\n"
-        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query_str}",
+        f"<Question>:\n{query_str}",
         agent=researcher,
         expected_output="A detailed analysis of the user's question based on the provided context and chat history, "
         "including relevant links and in-line citations."
@@ -201,6 +230,8 @@ def assemble_crew(
             output, "Research Complete", crew_events_queue
         ),
         tools=mcp_tools,
+        max_retries=3,
+        guardrail=validate_with_context,
     )
 
     # Create a calculation task if needed
@@ -219,6 +250,8 @@ def assemble_crew(
             output, "Response Computed", crew_events_queue
         ),
         verbose=True,
+        max_execution_time=10,
+        max_iter=1,
     )
 
     response_context = [research_task, calculation_task]
@@ -234,6 +267,8 @@ def assemble_crew(
         callback=lambda _: crew_events_queue.put(
             CrewEvent(type=poison_pill, name="responder")
         ),
+        max_retries=3,
+        guardrail=validate_with_context,
     )
 
     # Create a crew with the agents and tasks
