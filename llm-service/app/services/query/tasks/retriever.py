@@ -35,18 +35,49 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from datetime import datetime
 
+from queue import Queue
+
+from crewai import Agent, Task
 from crewai.tools import BaseTool
+from pydantic import BaseModel
+
+from app.services.query.crew_events import CrewEvent, step_callback
 
 
-class DateTool(BaseTool):  # type: ignore[misc]
-    """
-    A tool that provides the current date and time.
-    """
+class RetrieverResult(BaseModel):
+    node_id: str = ""
+    score: float = 0.0
+    content: str = ""
 
-    name: str = "date_tool"
-    description: str = "A tool that provides the current date and time."
 
-    def _run(self) -> str:
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+class RetrieverOutput(BaseModel):
+    retriever_results: list[RetrieverResult]
+
+
+def build_retriever_task(
+    agent: Agent,
+    query: str,
+    chat_history: str,
+    retriever_task_context: list[Task],
+    retriever_tool: BaseTool,
+    crew_events_queue: Queue[CrewEvent],
+) -> Task:
+    retriever_task = Task(
+        name="RetrieverTask",
+        description="Retrieve relevant information from the index based on the user's question.\n\n"
+        f"<Chat history>:\n{chat_history}\n\n<Question>:\n{query}\n\n"
+        "If needed, use the chat history to refine the user's question "
+        "to pass as input to the retriever tool.",
+        agent=agent,
+        tools=[retriever_tool],
+        context=retriever_task_context if retriever_task_context else None,
+        expected_output="Results of relevant information retrieved from the index. "
+        "If the question can be answered using the chat history or the context, do "
+        "not use the retriever tool and return an empty list of retriever results.",
+        output_json=RetrieverOutput,
+        callback=lambda output: step_callback(
+            output, "Retrieval Complete", crew_events_queue
+        ),
+    )
+    return retriever_task

@@ -44,6 +44,7 @@ from app.services.models.providers import (
     AzureModelProvider,
     CAIIModelProvider,
     BedrockModelProvider,
+    OpenAiModelProvider,
 )
 
 
@@ -55,6 +56,7 @@ def get_crewai_llm_object_direct(
             model="azure/" + model_name,
             api_key=config.settings.azure_openai_api_key,
             base_url=config.settings.azure_openai_endpoint,
+            api_version=config.settings.azure_openai_api_version,
         )
     elif CAIIModelProvider.is_enabled():
         if hasattr(language_model, "api_base"):
@@ -68,6 +70,12 @@ def get_crewai_llm_object_direct(
     elif BedrockModelProvider.is_enabled():
         return CrewAILLM(
             model="bedrock/" + model_name,
+        )
+    elif OpenAiModelProvider.is_enabled():
+        return CrewAILLM(
+            model="openai/" + model_name,
+            api_key=config.settings.openai_api_key,
+            base_url=config.settings.openai_api_base,
         )
     else:
         raise ValueError("Model type is not supported.")

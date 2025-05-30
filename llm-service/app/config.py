@@ -69,6 +69,10 @@ class _Settings:
         return os.environ.get("RAG_DATABASES_DIR", os.path.join("..", "databases"))
 
     @property
+    def tools_dir(self) -> str:
+        return os.path.join("..", "tools")
+
+    @property
     def caii_domain(self) -> str:
         return os.environ["CAII_DOMAIN"]
 
@@ -150,11 +154,16 @@ class _Settings:
         return os.environ.get("AZURE_OPENAI_ENDPOINT")
 
     @property
+    def azure_openai_api_version(self) -> Optional[str]:
+        return os.environ.get("AZURE_OPENAI_API_VERSION")
+
+    @property
     def openai_api_key(self) -> Optional[str]:
         return os.environ.get("OPENAI_API_KEY")
 
     @property
     def openai_api_base(self) -> Optional[str]:
         return os.environ.get("OPENAI_API_BASE")
+
 
 settings = _Settings()

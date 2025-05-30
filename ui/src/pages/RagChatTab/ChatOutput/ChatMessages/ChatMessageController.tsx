@@ -137,16 +137,24 @@ const ChatMessageController = () => {
 
   useEffect(() => {
     if (bottomElement.current) {
+      bottomElement.current.scrollIntoView({ behavior: "instant" });
+    }
+  }, [activeSession?.id]);
+
+  useEffect(() => {
+    if (bottomElement.current) {
       if (
         flatChatHistory.length > 0 &&
         isPlaceholder(flatChatHistory[flatChatHistory.length - 1])
       ) {
-        bottomElement.current.scrollIntoView({ behavior: "smooth" });
+        bottomElement.current.scrollIntoView({
+          behavior: "smooth",
+        });
       } else {
-        bottomElement.current.scrollIntoView({ behavior: "auto" });
+        bottomElement.current.scrollIntoView({ behavior: "instant" });
       }
     }
-  }, [bottomElement.current, flatChatHistory.length, activeSession?.id]);
+  }, [flatChatHistory.length]);
 
   if (chatHistoryStatus === "pending") {
     return <ChatLoading />;

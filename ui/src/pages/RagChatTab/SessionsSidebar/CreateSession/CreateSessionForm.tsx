@@ -76,6 +76,26 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       children: (
         <>
           <Form.Item<CreateSessionType>
+            name={["queryConfiguration", "enableToolCalling"]}
+            initialValue={false}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Tool Calling"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    Enable tool calling. This feature is highly dependent on the
+                    power of the selected response synthesizer model.
+                  </Typography>
+                }
+              >
+                Enable Tool Calling
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item<CreateSessionType>
             name={["queryConfiguration", "enableHyde"]}
             initialValue={false}
             valuePropName="checked"

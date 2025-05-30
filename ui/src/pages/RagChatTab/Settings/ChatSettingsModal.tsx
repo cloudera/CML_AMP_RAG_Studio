@@ -106,6 +106,12 @@ const ChatSettingsModal = ({
           id: activeSession.id,
           projectId: activeSession.projectId,
           dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
+          queryConfiguration: {
+            ...activeSession.queryConfiguration,
+            enableToolCalling: values.queryConfiguration.enableToolCalling,
+            enableHyde: values.queryConfiguration.enableHyde,
+            enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+          },
         };
         updateSession.mutate(request);
       })
@@ -121,6 +127,26 @@ const ChatSettingsModal = ({
       label: "Advanced Options",
       children: (
         <>
+          <Form.Item
+            name={["queryConfiguration", "enableToolCalling"]}
+            initialValue={activeSession.queryConfiguration.enableToolCalling}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Tool Calling"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    Enable tool calling. This feature is highly dependent on the
+                    power of the selected response synthesizer model.
+                  </Typography>
+                }
+              >
+                Enable Tool Calling
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
           <Form.Item
             name={["queryConfiguration", "enableHyde"]}
             initialValue={activeSession.queryConfiguration.enableHyde}

@@ -59,6 +59,7 @@ interface SessionQueryConfiguration {
   enableHyde: boolean;
   enableSummaryFilter: boolean;
   enableToolCalling: boolean;
+  selectedTools: string[];
 }
 
 export interface Session {

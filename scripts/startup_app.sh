@@ -72,6 +72,8 @@ qdrant/qdrant & 2>&1
 # start up the jarva
 scripts/startup_java.sh & 2>&1
 
+source scripts/load_nvm.sh > /dev/null
+
 # start Python backend
 cd llm-service
 mkdir -p $MLFLOW_RECONCILER_DATA_PATH
@@ -89,8 +91,6 @@ uv run reconciler/mlflow_reconciler.py &
 # start Node production server
 
 cd ..
-
-source scripts/load_nvm.sh > /dev/null
 
 cd ui
 node express/dist/index.js

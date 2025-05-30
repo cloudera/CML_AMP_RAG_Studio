@@ -36,6 +36,7 @@ const useCreateSessionAndRedirect = () => {
           enableHyde: false,
           enableSummaryFilter: true,
           enableToolCalling: false,
+          selectedTools: [],
         },
         projectId: projectId ? parseInt(projectId) : defaultProject.id,
       };

@@ -51,7 +51,7 @@ class RagContext(BaseModel):
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = chat_history_manager.retrieve_chat_history(session_id)[:10]
+    chat_history = chat_history_manager.retrieve_chat_history(session_id)[-10:]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(

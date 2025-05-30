@@ -40,8 +40,8 @@ import json
 import logging
 import queue
 import time
-from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Generator
+from concurrent.futures import Future, ThreadPoolExecutor
+from typing import Optional, Generator, Any
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -60,7 +60,8 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.crewai_querier import CrewEvent, poison_pill
+from ....services.query.agents.crewai_querier import poison_pill
+from ....services.query.crew_events import CrewEvent
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -232,8 +233,11 @@ def stream_chat_completion(
 
     crew_events_queue: queue.Queue[CrewEvent] = queue.Queue()
 
-    def crew_callback() -> Generator[str, None, None]:
+    def crew_callback(chat_future: Future[Any]) -> Generator[str, None, None]:
         while True:
+            if chat_future.done() and (e := chat_future.exception()):
+                raise e
+
             try:
                 event_data = crew_events_queue.get(block=True, timeout=1.0)
                 if event_data.type == poison_pill:
@@ -262,7 +266,7 @@ def stream_chat_completion(
                     crew_events_queue=crew_events_queue,
                 )
 
-                yield from crew_callback()
+                yield from crew_callback(future)
 
                 first_message = True
                 for response in future.result():
@@ -278,6 +282,9 @@ def stream_chat_completion(
                     json_delta = json.dumps({"text": response.delta})
                     yield f"data: {json_delta}\n\n"
                 yield f'data: {{"response_id" : "{response_id}"}}\n\n'
+        except TimeoutError:
+            logger.exception("Timeout: Failed to stream chat completion")
+            yield 'data: {{"error" : "Timeout: Failed to stream chat completion"}}\n\n'
         except Exception as e:
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'

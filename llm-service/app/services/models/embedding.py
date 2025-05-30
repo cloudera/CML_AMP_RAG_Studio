@@ -39,9 +39,6 @@ from typing import Optional
 
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
-from llama_index.embeddings.bedrock import BedrockEmbedding
-from llama_index.embeddings.openai import OpenAIEmbedding
 
 from . import _model_type, _noop
 from .providers import (
@@ -50,9 +47,7 @@ from .providers import (
     CAIIModelProvider,
 )
 from .providers.openai import OpenAiModelProvider
-from ..caii.caii import get_embedding_model as caii_embedding
 from ..caii.types import ModelResponse
-from ...config import settings
 
 
 class Embedding(_model_type.ModelType[BaseEmbedding]):
@@ -62,24 +57,12 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
             model_name = cls.list_available()[0].model_id
 
         if AzureModelProvider.is_enabled():
-            return AzureOpenAIEmbedding(
-                model_name=model_name,
-                deployment_name=model_name,
-                # must be passed manually otherwise AzureOpenAIEmbedding checks OPENAI_API_KEY
-                api_key=settings.azure_openai_api_key,
-            )
-
+            return AzureModelProvider.get_embedding_model(model_name)
         if CAIIModelProvider.is_enabled():
-            return caii_embedding(model_name=model_name)
-
+            return CAIIModelProvider.get_embedding_model(model_name)
         if OpenAiModelProvider.is_enabled():
-            return OpenAIEmbedding(
-                model_name=model_name,
-                api_key=settings.openai_api_key,
-                api_base=settings.openai_api_base,
-            )
-
-        return BedrockEmbedding(model_name=model_name)
+            return OpenAiModelProvider.get_embedding_model(model_name)
+        return BedrockModelProvider.get_embedding_model(model_name)
 
     @staticmethod
     def get_noop() -> BaseEmbedding:
@@ -88,15 +71,12 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
     @staticmethod
     def list_available() -> list[ModelResponse]:
         if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_embedding_models()
-
+            return AzureModelProvider.list_embedding_models()
         if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_embedding_models()
-
+            return CAIIModelProvider.list_embedding_models()
         if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_embedding_models()
-
-        return BedrockModelProvider.get_embedding_models()
+            return OpenAiModelProvider.list_embedding_models()
+        return BedrockModelProvider.list_embedding_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:
