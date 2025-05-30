@@ -43,7 +43,6 @@ from typing import Optional, Tuple, Any
 
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
-from crewai.tools import tool
 from crewai.tools.base_tool import BaseTool
 from llama_index.core import VectorStoreIndex
 from llama_index.core.base.embeddings.base import BaseEmbedding
