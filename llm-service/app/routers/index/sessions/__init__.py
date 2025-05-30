@@ -282,9 +282,9 @@ def stream_chat_completion(
                     json_delta = json.dumps({"text": response.delta})
                     yield f"data: {json_delta}\n\n"
                 yield f'data: {{"response_id" : "{response_id}"}}\n\n'
-        except TimeoutError as e:
+        except TimeoutError:
             logger.exception("Timeout: Failed to stream chat completion")
-            yield f'data: {{"error" : "Timeout occurred"}}\n\n'
+            yield 'data: {{"error" : "Timeout: Failed to stream chat completion"}}\n\n'
         except Exception as e:
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
