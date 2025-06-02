@@ -91,7 +91,7 @@ export const ModelProviderFields = ({
       name={["caii_config", "caii_domain"]}
       required={modelProvider === "CAII"}
       rules={[{ required: modelProvider === "CAII" }]}
-      tooltip="The domain of the Cloudera AI Inference service. This can be found within Cloudera AI > Administration > AI Inference Service."
+      tooltip="The domain of the Cloudera AI Inference service."
       hidden={modelProvider !== "CAII"}
     >
       <Input

@@ -43,6 +43,7 @@ import {
   Flex,
   List,
   Popover,
+  Tag,
   Tooltip,
   Typography,
 } from "antd";
@@ -55,36 +56,82 @@ import {
   useState,
 } from "react";
 import { ToolOutlined } from "@ant-design/icons";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
+import {
+  Session,
+  UpdateSessionRequest,
+  useUpdateSessionMutation,
+} from "src/api/sessionApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { QueryKeys } from "src/api/utils.ts";
+import { useQueryClient } from "@tanstack/react-query";
 
-const ToolsManagerContent = ({
-  selectedTools,
-  setSelectedTools,
-}: {
-  selectedTools: string[];
-  setSelectedTools: Dispatch<SetStateAction<string[]>>;
-}) => {
+const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   const { data, isLoading } = useToolsQuery();
 
   const toolsList = data?.map((tool) => ({
-    title: tool.name,
-    description: tool.description,
+    name: tool.name,
+    displayName: tool.metadata.display_name,
+    description: tool.metadata.description,
   }));
+
+  const queryClient = useQueryClient();
+
+  const updateSession = useUpdateSessionMutation({
+    onError: () => {
+      messageQueue.error("Failed to update session");
+    },
+    onSuccess: async () => {
+      messageQueue.success("Session updated successfully");
+      await queryClient.invalidateQueries({
+        queryKey: [QueryKeys.getSessions],
+      });
+    },
+  });
+
+  const handleUpdateSession = (selectedTools: string[]) => {
+    const request: UpdateSessionRequest = {
+      ...activeSession,
+      queryConfiguration: {
+        ...activeSession.queryConfiguration,
+        selectedTools: selectedTools,
+      },
+    };
+    updateSession.mutate(request);
+  };
 
   const handleCheck = (title: string, checked: boolean) => {
     if (checked) {
-      setSelectedTools((prev) => [...prev, title]);
+      handleUpdateSession([
+        ...activeSession.queryConfiguration.selectedTools,
+        title,
+      ]);
     } else {
-      setSelectedTools((prev) => prev.filter((tool) => tool !== title));
+      handleUpdateSession(
+        activeSession.queryConfiguration.selectedTools.filter(
+          (tool) => tool !== title,
+        ),
+      );
     }
   };
 
   return (
-    <Flex style={{ width: 400, height: 200, margin: 16 }} vertical>
-      <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
-        Tools Manager
-      </Typography.Title>
+    <Flex style={{ width: 500, height: 300, margin: 8 }} vertical>
+      <Flex align={"start"}>
+        <Tag
+          style={{
+            backgroundColor: cdlOrange500,
+            color: cdlWhite,
+            borderRadius: 10,
+          }}
+        >
+          &beta;
+        </Tag>
+        <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
+          Tools Manager
+        </Typography.Title>
+      </Flex>
       <List
         dataSource={toolsList}
         loading={isLoading}
@@ -92,13 +139,15 @@ const ToolsManagerContent = ({
         renderItem={(item) => (
           <List.Item>
             <List.Item.Meta
-              title={item.title}
+              title={item.displayName || item.name}
               description={item.description}
               avatar={
                 <Checkbox
-                  checked={selectedTools.includes(item.title)}
+                  checked={activeSession.queryConfiguration.selectedTools.includes(
+                    item.name,
+                  )}
                   onChange={(e: CheckboxChangeEvent) => {
-                    handleCheck(item.title, e.target.checked);
+                    handleCheck(item.name, e.target.checked);
                   }}
                 />
               }
@@ -113,40 +162,28 @@ const ToolsManagerContent = ({
 const ToolsManager = ({
   isOpen,
   setIsOpen,
-  selectedTools,
-  setSelectedTools,
   children,
+  activeSession,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  selectedTools: string[];
-  setSelectedTools: Dispatch<SetStateAction<string[]>>;
   children: ReactNode;
+  activeSession: Session;
 }) => {
   return (
     <Popover
       open={isOpen}
       trigger="click"
       onOpenChange={setIsOpen}
-      content={
-        <ToolsManagerContent
-          selectedTools={selectedTools}
-          setSelectedTools={setSelectedTools}
-        />
-      }
+      placement="topRight"
+      content={<ToolsManagerContent activeSession={activeSession} />}
     >
       {children}
     </Popover>
   );
 };
 
-const ToolsManagerButton = ({
-  selectedTools,
-  setSelectedTools,
-}: {
-  selectedTools: string[];
-  setSelectedTools: Dispatch<SetStateAction<string[]>>;
-}) => {
+const ToolsManagerButton = () => {
   const { activeSession } = useContext(RagChatContext);
   const [toolsManagerOpen, setToolsManagerOpen] = useState(false);
 
@@ -159,8 +196,7 @@ const ToolsManagerButton = ({
       <ToolsManager
         isOpen={toolsManagerOpen}
         setIsOpen={setToolsManagerOpen}
-        selectedTools={selectedTools}
-        setSelectedTools={setSelectedTools}
+        activeSession={activeSession}
       >
         <Button
           icon={<ToolOutlined />}

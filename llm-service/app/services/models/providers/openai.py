@@ -35,10 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import List
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.openai import OpenAI
 
-from app.services.caii.types import ModelResponse
-from app.services.models.providers._model_provider import ModelProvider
+from ._model_provider import ModelProvider
+from ...caii.types import ModelResponse
+from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ....config import settings
 
 
 class OpenAiModelProvider(ModelProvider):
@@ -47,7 +51,7 @@ class OpenAiModelProvider(ModelProvider):
         return {"OPENAI_API_KEY"}
 
     @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="gpt-4o",
@@ -56,20 +60,45 @@ class OpenAiModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="text-embedding-ada-002",
                 name="Text Embedding Ada 002",
-                available=True
             ),
             ModelResponse(
                 model_id="text-embedding-3-large",
                 name="Text Embedding 3 Large",
-                available=True
             ),
         ]
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         return []
+
+    @staticmethod
+    def get_llm_model(name: str) -> OpenAI:
+        return OpenAI(
+            model=name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            max_tokens=2048,
+            api_base=settings.openai_api_base,
+            api_key=settings.openai_api_key,
+        )
+
+    @staticmethod
+    def get_embedding_model(name: str) -> OpenAIEmbedding:
+        return OpenAIEmbedding(
+            model_name=name,
+            api_key=settings.openai_api_key,
+            api_base=settings.openai_api_base,
+        )
+
+    @staticmethod
+    def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
+        raise NotImplementedError("No reranking models available")
+
+
+# ensure interface is implemented
+_ = OpenAiModelProvider()

@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,13 +34,52 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
-from typing import Optional
+import time
+from queue import Queue
+from typing import Optional, Any
+
+from crewai import TaskOutput
+from crewai.agents.parser import AgentFinish
+from crewai.tools.tool_types import ToolResult
 
 from pydantic import BaseModel
 
 
-class RagPredictConfiguration(BaseModel):
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
+class CrewEvent(BaseModel):
+    type: str
+    name: str
+    data: Optional[str] = None
+    timestamp: float = time.time()
+
+
+def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) -> None:
+    if isinstance(output, AgentFinish):
+        crew_events_queue.put(
+            CrewEvent(
+                type="agent_finish",
+                name=agent,
+                data=output.thought,
+                timestamp=time.time(),
+            )
+        )
+    if isinstance(output, TaskOutput):
+        crew_events_queue.put(
+            CrewEvent(
+                type="task_completed",
+                name=agent,
+                data=output.raw,
+                timestamp=time.time(),
+            )
+        )
+
+    if isinstance(output, ToolResult):
+        crew_events_queue.put(
+            CrewEvent(
+                type="tool_result",
+                name=agent,
+                data=output.result,
+                timestamp=time.time(),
+            )
+        )

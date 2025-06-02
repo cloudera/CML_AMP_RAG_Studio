@@ -64,7 +64,8 @@ const SourceNodes = ({ data }: { data: ChatMessageType }) => {
   if (
     nodes.length === 0 &&
     activeSession &&
-    activeSession.dataSourceIds.length > 0
+    activeSession.dataSourceIds.length > 0 &&
+    !activeSession.queryConfiguration.enableToolCalling
   ) {
     return (
       <Flex

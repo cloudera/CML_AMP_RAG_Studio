@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,13 +34,25 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
-from typing import Optional
+from queue import Queue
 
-from pydantic import BaseModel
+from crewai import Agent, Task
+
+from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.tools.date import DateTool
 
 
-class RagPredictConfiguration(BaseModel):
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
+def build_date_task(
+    agent: Agent, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]
+) -> Task:
+    date_task = Task(
+        name="DateFinderTask",
+        description="Find the current date and time.",
+        agent=agent,
+        expected_output="The current date and time.",
+        tools=[date_tool],
+        callback=lambda output: step_callback(output, "Date Found", crew_events_queue),
+    )
+    return date_task

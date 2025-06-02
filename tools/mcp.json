@@ -1,0 +1,15 @@
+{
+  "mcp_servers": [
+    {
+      "name": "mcp-server-fetch",
+      "command": "uvx",
+      "metadata": {
+        "display_name": "Web Scraper",
+        "description": "Extracts and retrieves content from web pages. This tool enables you to incorporate live web data into your queries, enhancing responses with up-to-date information from specified URLs."
+      },
+      "args": [
+        "mcp-server-fetch"
+      ]
+    }
+  ]
+}

@@ -39,10 +39,12 @@
 import { getRequest, llmServicePath, QueryKeys } from "src/api/utils.ts";
 import { useQuery } from "@tanstack/react-query";
 
-export interface Tool {
-  id: string;
+interface Tool {
   name: string;
-  description: string;
+  metadata: {
+    description: string;
+    display_name: string;
+  };
 }
 
 export const useToolsQuery = () => {

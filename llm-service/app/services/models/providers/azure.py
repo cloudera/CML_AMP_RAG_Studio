@@ -35,11 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
+from llama_index.llms.azure_openai import AzureOpenAI
 
-from typing import List
-
-from ...caii.types import ModelResponse
 from ._model_provider import ModelProvider
+from ...caii.types import ModelResponse
+from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ...query.simple_reranker import SimpleReranker
+from ....config import settings
 
 
 class AzureModelProvider(ModelProvider):
@@ -48,7 +51,7 @@ class AzureModelProvider(ModelProvider):
         return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
 
     @staticmethod
-    def get_llm_models() -> List[ModelResponse]:
+    def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="gpt-4o",
@@ -61,7 +64,7 @@ class AzureModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_embedding_models() -> List[ModelResponse]:
+    def list_embedding_models() -> list[ModelResponse]:
         return [
             ModelResponse(
                 model_id="text-embedding-ada-002",
@@ -74,8 +77,31 @@ class AzureModelProvider(ModelProvider):
         ]
 
     @staticmethod
-    def get_reranking_models() -> List[ModelResponse]:
+    def list_reranking_models() -> list[ModelResponse]:
         return []
+
+    @staticmethod
+    def get_llm_model(name: str) -> AzureOpenAI:
+        return AzureOpenAI(
+            model=name,
+            engine=name,
+            messages_to_prompt=messages_to_prompt,
+            completion_to_prompt=completion_to_prompt,
+            max_tokens=2048,
+        )
+
+    @staticmethod
+    def get_embedding_model(name: str) -> AzureOpenAIEmbedding:
+        return AzureOpenAIEmbedding(
+            model_name=name,
+            deployment_name=name,
+            # must be passed manually otherwise AzureOpenAIEmbedding checks OPENAI_API_KEY
+            api_key=settings.azure_openai_api_key,
+        )
+
+    @staticmethod
+    def get_reranking_model(name: str, top_n: int) -> SimpleReranker:
+        return SimpleReranker(top_n=top_n)
 
 
 # ensure interface is implemented
