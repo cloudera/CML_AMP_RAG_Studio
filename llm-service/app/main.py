@@ -38,12 +38,14 @@
 
 import functools
 import logging
+import os
 import sys
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import opik
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.logging import DefaultFormatter
@@ -73,6 +75,16 @@ def _configure_logger() -> None:
 
 _configure_logger()
 
+if os.environ.get("ENABLE_OPIK") == "True":
+    opik.configure(
+        use_local=True, url=os.environ.get("OPIK_URL", "http://localhost:5174")
+    )
+
+    from llama_index.core import set_global_handler
+
+    # You should provide your OPIK API key and Workspace using the following environment variables:
+    # OPIK_API_KEY, OPIK_WORKSPACE
+    set_global_handler("opik")
 
 ###################################
 #  Lifespan events

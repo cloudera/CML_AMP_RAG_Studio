@@ -87,7 +87,7 @@ const DataSourceVisualization = () => {
           2d Chunk Vector Projection
         </Typography.Title>
         <Tooltip
-          overlayInnerStyle={{ width: 500 }}
+          styles={{ body: { width: 500 } }}
           title={
             "This graph shows a 2d projection of the chunks of data. Each dot represents a chunk of data from a document, and they are organized in a way such that every document has a consistent color."
           }

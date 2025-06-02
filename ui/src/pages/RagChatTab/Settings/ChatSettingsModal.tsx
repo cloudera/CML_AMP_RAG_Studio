@@ -46,6 +46,7 @@ import {
   Select,
   Slider,
   Switch,
+  Tag,
   Typography,
 } from "antd";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
@@ -63,6 +64,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
 
 import { formatDataSource } from "src/utils/formatters.ts";
+import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 
 const ChatSettingsModal = ({
   open,
@@ -106,6 +108,12 @@ const ChatSettingsModal = ({
           id: activeSession.id,
           projectId: activeSession.projectId,
           dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
+          queryConfiguration: {
+            ...activeSession.queryConfiguration,
+            enableToolCalling: values.queryConfiguration.enableToolCalling,
+            enableHyde: values.queryConfiguration.enableHyde,
+            enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+          },
         };
         updateSession.mutate(request);
       })
@@ -121,6 +129,35 @@ const ChatSettingsModal = ({
       label: "Advanced Options",
       children: (
         <>
+          <Form.Item
+            name={["queryConfiguration", "enableToolCalling"]}
+            initialValue={activeSession.queryConfiguration.enableToolCalling}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Tool Calling (Beta)"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    Enable tool calling. This feature is highly dependent on the
+                    power of the selected response synthesizer model.
+                  </Typography>
+                }
+              >
+                <Tag
+                  style={{
+                    backgroundColor: cdlOrange500,
+                    color: cdlWhite,
+                    borderRadius: 10,
+                  }}
+                >
+                  &beta;
+                </Tag>
+                Enable Tool Calling
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
           <Form.Item
             name={["queryConfiguration", "enableHyde"]}
             initialValue={activeSession.queryConfiguration.enableHyde}
@@ -176,7 +213,7 @@ const ChatSettingsModal = ({
       title={`Chat Settings: ${activeSession.name}`}
       open={open}
       onCancel={closeModal}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onOk={handleUpdateSession}
       maskClosable={false}
       width={600}

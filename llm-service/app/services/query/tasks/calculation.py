@@ -1,6 +1,6 @@
-# ##############################################################################
+#
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
 #  with an authorized and properly licensed third party, you do not
 #  have any rights to access nor to use this code.
 #
-#  Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+#  Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
 #  contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
 #  KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
 #  WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,13 +34,43 @@
 #  RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
-# ##############################################################################
+#
 
-from typing import Optional
+from queue import Queue
 
-from pydantic import BaseModel
+from crewai import Agent, Task
+
+from app.services.query.crew_events import CrewEvent, step_callback
 
 
-class RagPredictConfiguration(BaseModel):
-    exclude_knowledge_base: Optional[bool] = False
-    use_question_condensing: Optional[bool] = True
+def build_calculation_task(
+    agent: Agent,
+    calculation_task_context: list[Task],
+    crew_events_queue: Queue[CrewEvent],
+) -> Task:
+    """
+    Build a calculation task for the agent.
+    This task will perform any necessary calculations based on the research findings.
+
+    Args:
+        agent (Agent): The agent that will perform the calculations.
+        calculation_task_context (list[Task]): The list of Task objects that will be used as context for the calculation task.
+        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
+
+    Returns:
+        Task: The calculation task.
+    """
+    calculation_task = Task(
+        name="CalculatorTask",
+        description="Perform any necessary calculations based on the research findings. If the query requires "
+        "numerical analysis, perform the calculations and show your work. If no calculations are needed, simply "
+        "state that no calculations are required.",
+        agent=agent,
+        context=calculation_task_context if calculation_task_context else None,
+        expected_output="Results of any calculations performed, with step-by-step workings. If no calculations "
+        "are needed, state that no calculations are required. Do not return any other information.",
+        callback=lambda output: step_callback(
+            output, "Calculation Complete", crew_events_queue
+        ),
+    )
+    return calculation_task

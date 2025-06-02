@@ -102,7 +102,7 @@ export const ProjectsHeaderItem = () => {
       <Modal
         title="Create New Project"
         open={createProjectModal.isModalOpen}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         onCancel={() => {
           createProjectModal.setIsModalOpen(false);
         }}
