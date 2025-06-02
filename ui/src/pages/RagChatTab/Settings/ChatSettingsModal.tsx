@@ -46,6 +46,7 @@ import {
   Select,
   Slider,
   Switch,
+  Tag,
   Typography,
 } from "antd";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
@@ -63,6 +64,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
 
 import { formatDataSource } from "src/utils/formatters.ts";
+import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 
 const ChatSettingsModal = ({
   open,
@@ -133,7 +135,7 @@ const ChatSettingsModal = ({
             valuePropName="checked"
             label={
               <Popover
-                title="Tool Calling"
+                title="Tool Calling (Beta)"
                 content={
                   <Typography style={{ width: 300 }}>
                     Enable tool calling. This feature is highly dependent on the
@@ -141,6 +143,15 @@ const ChatSettingsModal = ({
                   </Typography>
                 }
               >
+                <Tag
+                  style={{
+                    backgroundColor: cdlOrange500,
+                    color: cdlWhite,
+                    borderRadius: 10,
+                  }}
+                >
+                  &beta;
+                </Tag>
                 Enable Tool Calling
               </Popover>
             }

@@ -43,6 +43,7 @@ import {
   Flex,
   List,
   Popover,
+  Tag,
   Tooltip,
   Typography,
 } from "antd";
@@ -55,7 +56,7 @@ import {
   useState,
 } from "react";
 import { ToolOutlined } from "@ant-design/icons";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   Session,
@@ -117,9 +118,20 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
 
   return (
     <Flex style={{ width: 500, height: 300, margin: 8 }} vertical>
-      <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
-        Tools Manager
-      </Typography.Title>
+      <Flex align={"start"}>
+        <Tag
+          style={{
+            backgroundColor: cdlOrange500,
+            color: cdlWhite,
+            borderRadius: 10,
+          }}
+        >
+          &beta;
+        </Tag>
+        <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
+          Tools Manager
+        </Typography.Title>
+      </Flex>
       <List
         dataSource={toolsList}
         loading={isLoading}
