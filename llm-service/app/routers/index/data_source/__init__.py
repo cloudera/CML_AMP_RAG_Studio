@@ -112,7 +112,7 @@ class DataSourceController:
     )
     @exceptions.propagates
     def chunk_contents(self, chunk_id: str) -> ChunkContentsResponse:
-        node = self.chunks_vector_store.get_chunk_contents([chunk_id])
+        node = self.chunks_vector_store.get_chunk_contents(chunk_id)
         return ChunkContentsResponse(
             text=node.get_content(),
             metadata=node.metadata,
