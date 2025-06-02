@@ -274,7 +274,7 @@ def build_configuration(
             ChatStoreProviderType,
             env.get("CHAT_STORE_PROVIDER", "Local"),
         ),
-        vector_store_provider=cast(
+        vector_db_provider=cast(
             VectorDbProviderType,
             env.get("VECTOR_DB_PROVIDER", "QDRANT"),
         ),

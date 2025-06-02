@@ -39,6 +39,7 @@ import { Alert, Button, Flex, Form, Typography } from "antd";
 import {
   ProjectConfig,
   useGetPollingAmpConfig,
+  VectorDBProvider,
 } from "src/api/ampMetadataApi.ts";
 import { ReactNode, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
@@ -52,6 +53,7 @@ import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { VectorDBFields } from "pages/Settings/VectorDBFields.tsx";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -70,6 +72,9 @@ const AmpSettingsPage = () => {
   const { data: projectConfig } = useGetPollingAmpConfig();
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
+  );
+  const [selectedVectorDB, setSelectedVectorDB] = useState<VectorDBProvider>(
+    projectConfig?.vector_db_provider ?? "QDRANT",
   );
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
@@ -122,6 +127,18 @@ const AmpSettingsPage = () => {
         <FileStorageFields
           selectedFileStorage={selectedFileStorage}
           setSelectedFileStorage={setSelectedFileStorage}
+          projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
+        />
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>Vector Database</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
+        <VectorDBFields
+          setSelectedVectorDB={setSelectedVectorDB}
+          selectedVectorDB={selectedVectorDB}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
         />
