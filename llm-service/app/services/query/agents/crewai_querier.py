@@ -205,24 +205,6 @@ def assemble_crew(
         )
         researcher_task_context.append(retriever_task)
 
-    # @tool("Chat history tool")
-    # def chat_history_tool() -> str:
-    #     """A tool that provides the chat history."""
-    #     return f"<Chat History>:\n{chat_history}"
-    #
-    # chat_history_task = Task(
-    #     name="ChatHistoryTask",
-    #     description="This task is to provide the chat history to the researcher agent.",
-    #     agent=researcher,
-    #     expected_output="The chat history provided to the researcher agent.  Prepend the chat history with a <Chat history> tag.",
-    #     tools=[chat_history_tool],
-    #     callback=lambda output: step_callback(
-    #         output, "Chat History Provided", crew_events_queue
-    #     ),
-    # )
-    #
-    # researcher_task_context.append(chat_history_task)
-
     research_task = Task(
         name="ResearcherTask",
         description="Research the user's question using the context available, "
