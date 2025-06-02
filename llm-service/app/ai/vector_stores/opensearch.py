@@ -66,7 +66,10 @@ def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
 
 
 def _get_low_level_client() -> OpensearchClient:
-    os_client = OpensearchClient(settings.opensearch_endpoint)
+    os_client = OpensearchClient(
+        settings.opensearch_endpoint,
+        http_auth=(settings.opensearch_username, settings.opensearch_password)
+     )
     return os_client
 
 
@@ -75,6 +78,7 @@ class OpenSearch(VectorStore, ABC):
 
     @staticmethod
     def for_chunks(data_source_id: int) -> "OpenSearch":
+        print("Returning OS client for chunks")
         return OpenSearch(
             data_source_id=data_source_id,
             table_name=f"index_{data_source_id}",
@@ -82,6 +86,7 @@ class OpenSearch(VectorStore, ABC):
 
     @staticmethod
     def for_summaries(data_source_id: int) -> "OpenSearch":
+        print("Returning OS client for summaries")
         return OpenSearch(
             data_source_id=data_source_id,
             table_name=f"summary_index_{data_source_id}",
@@ -106,7 +111,9 @@ class OpenSearch(VectorStore, ABC):
 
     def size(self) -> Optional[int]:
         os_client = self._low_level_client
-        return int(os_client.count(index=self.table_name)["count"])
+        result = int(os_client.count(index=self.table_name)["count"])
+        print(f"size: {result=}")
+        return result
 
     def delete(self) -> None:
         os_client = self._low_level_client
@@ -128,7 +135,9 @@ class OpenSearch(VectorStore, ABC):
 
     def exists(self) -> bool:
         os_client = self._low_level_client
-        return bool(os_client.indices.exists(index=self.table_name))
+        result = bool(os_client.indices.exists(index=self.table_name))
+        print(f"exists: {result=}")
+        return result
 
     def visualize(
         self, user_query: Optional[str] = None
