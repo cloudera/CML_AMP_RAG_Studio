@@ -56,21 +56,21 @@ from app.services.models import Embedding
 
 logger = logging.getLogger(__name__)
 
+
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
     return OpensearchVectorClient(
-        # username=os.environ.get("OPENSEARCH_USERNAME", "admin"),
-        # password=os.environ.get("OPENSEARCH_INITIAL_ADMIN_PASSWORD"),
         endpoint=settings.opensearch_endpoint,
         index=index,
         dim=dim,
+        http_auth=(settings.opensearch_username, settings.opensearch_password),
     )
 
 
 def _get_low_level_client() -> OpensearchClient:
     os_client = OpensearchClient(
         settings.opensearch_endpoint,
-        http_auth=(settings.opensearch_username, settings.opensearch_password)
-     )
+        http_auth=(settings.opensearch_username, settings.opensearch_password),
+    )
     return os_client
 
 
@@ -124,11 +124,13 @@ class OpenSearch(VectorStore, ABC):
             self._get_client(),
         )
 
-    def get_chunk_contents(self, chunk_id: str) -> BaseNode :
+    def get_chunk_contents(self, chunk_id: str) -> BaseNode:
         query = {"query": {"terms": {"_id": [chunk_id]}}}
         raw_results = self._low_level_client.search(index=self.table_name, body=query)
         # todo: handle the no results found case.
-        return TextNode(id_=chunk_id, text=raw_results['hits']['hits'][0]['_source']['content'])
+        return TextNode(
+            id_=chunk_id, text=raw_results["hits"]["hits"][0]["_source"]["content"]
+        )
 
     def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(

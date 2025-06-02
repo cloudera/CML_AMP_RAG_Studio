@@ -109,6 +109,14 @@ class _Settings:
         return os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
 
     @property
+    def opensearch_username(self) -> str:
+        return os.environ.get("OPENSEARCH_USERNAME", "admin")
+
+    @property
+    def opensearch_password(self) -> str:
+        return os.environ.get("OPENSEARCH_PASSWORD", "admin")
+
+    @property
     def document_bucket_prefix(self) -> str:
         return os.environ.get("S3_RAG_BUCKET_PREFIX", "")
 
