@@ -41,6 +41,7 @@ from abc import ABC
 from typing import Optional, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.schema import BaseNode
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.opensearch import (
     OpensearchVectorStore,
@@ -125,6 +126,14 @@ class OpenSearch(VectorStore, ABC):
         return OpensearchVectorStore(
             self._get_client(),
         )
+
+    def get_chunk_contents(self, chunk_id: str) -> BaseNode :
+        # todo: implement me with a raw query! This isn't implemented in the vector store impl for OpenSearch
+        query = {"query": {"bool": {"filter": []}}}
+        query["query"]["bool"]["filter"].append({"terms": {"_id": [chunk_id] or []}})
+        raw_results = self._low_level_client.search(index=self.table_name, body=query)
+        print(f"{raw_results=}")
+        return BaseNode()
 
     def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(
