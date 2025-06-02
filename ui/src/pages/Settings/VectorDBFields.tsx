@@ -37,21 +37,18 @@
  ******************************************************************************/
 
 import { ProjectConfig, VectorDBProvider } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio, Switch } from "antd";
-import {
-  FileStorage,
-  StyledHelperText,
-} from "pages/Settings/AmpSettingsPage.tsx";
+import { Flex, Form, Input, Radio } from "antd";
+import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 export const VectorDBFields = ({
   projectConfig,
-  setSelectedFileStorage,
-  selectedFileStorage,
+  setSelectedVectorDB,
+  selectedVectorDB,
   enableModification,
 }: {
   projectConfig?: ProjectConfig | null;
-  setSelectedFileStorage: (value: FileStorage) => void;
-  selectedFileStorage: FileStorage;
+  setSelectedVectorDB: (value: VectorDBProvider) => void;
+  selectedVectorDB: VectorDBProvider;
   enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
@@ -61,71 +58,60 @@ export const VectorDBFields = ({
       buttonStyle="solid"
       onChange={(e) => {
         if (e.target.value === "QDRANT" || e.target.value === "OPENSEARCH") {
-          setSelectedFileStorage(e.target.value as VectorDBProvider);
+          setSelectedVectorDB(e.target.value as VectorDBProvider);
         }
       }}
-      value={selectedFileStorage}
+      value={selectedVectorDB}
       options={[
-        { value: "Local", label: "Project Filesystem" },
-        { value: "AWS", label: "AWS S3" },
+        { value: "QDRANT", label: "Qdrant" },
+        { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
       ]}
       disabled={!enableModification}
     />
-    {selectedFileStorage === "Local" && (
+    {selectedVectorDB === "QDRANT" && (
       <StyledHelperText>
-        CAI Project file system will be used for file storage.
+        Qdrant will be used as the vector database.
       </StyledHelperText>
     )}
     <Form.Item
-      label={"Document Bucket Name"}
-      initialValue={projectConfig?.aws_config.document_bucket_name}
-      name={["aws_config", "document_bucket_name"]}
-      required={selectedFileStorage === "AWS"}
-      tooltip="The S3 bucket where uploaded documents are stored."
-      rules={[{ required: selectedFileStorage === "AWS" }]}
-      hidden={selectedFileStorage !== "AWS"}
+      label={"Endpoint"}
+      initialValue={projectConfig?.opensearch_config.opensearch_endpoint}
+      name={["opensearch_config", "opensearch_endpoint"]}
+      required={selectedVectorDB === "OPENSEARCH"}
+      tooltip="Cloudera Semantic Search instance endpoint."
+      rules={[{ required: selectedVectorDB === "OPENSEARCH" }]}
+      hidden={selectedVectorDB !== "OPENSEARCH"}
     >
       <Input
-        placeholder="document-bucket-name"
+        placeholder="http://localhost:9200/"
         disabled={!enableModification}
       />
     </Form.Item>
     <Form.Item
-      label={"Bucket Prefix"}
-      initialValue={projectConfig?.aws_config.bucket_prefix}
-      name={["aws_config", "bucket_prefix"]}
-      tooltip="A prefix added to all S3 paths used by RAG Studio."
-      hidden={selectedFileStorage !== "AWS"}
+      label={"Username"}
+      initialValue={projectConfig?.opensearch_config.opensearch_username}
+      name={["opensearch_config", "opensearch_username"]}
+      required={selectedVectorDB === "OPENSEARCH"}
+      tooltip="Cloudera Semantic Search username."
+      rules={[{ required: selectedVectorDB === "OPENSEARCH" }]}
+      hidden={selectedVectorDB !== "OPENSEARCH"}
     >
-      <Input placeholder="example-prefix" disabled={!enableModification} />
+      <Input placeholder="admin" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
-      label={"Store Document Summaries in S3"}
-      name={["summary_storage_provider"]}
-      tooltip="Only applies if document summarization is enabled for a knowledge base."
-      initialValue={projectConfig?.summary_storage_provider}
-      valuePropName={"checked"}
-      hidden={selectedFileStorage !== "AWS"}
-      getValueProps={(value) =>
-        value === "S3" ? { checked: true } : { checked: false }
-      }
-      normalize={(value) => (value ? "S3" : "Local")}
+      label={"Password"}
+      initialValue={projectConfig?.opensearch_config.opensearch_password}
+      name={["opensearch_config", "opensearch_password"]}
+      required={selectedVectorDB === "OPENSEARCH"}
+      tooltip="Cloudera Semantic Search password."
+      rules={[{ required: selectedVectorDB === "OPENSEARCH" }]}
+      hidden={selectedVectorDB !== "OPENSEARCH"}
     >
-      <Switch disabled={!enableModification} />
-    </Form.Item>
-    <Form.Item
-      label={"Store Chat History in S3"}
-      name={["chat_store_provider"]}
-      tooltip="The location of the chat history for each chat session."
-      initialValue={projectConfig?.chat_store_provider}
-      valuePropName={"checked"}
-      hidden={selectedFileStorage !== "AWS"}
-      getValueProps={(value) =>
-        value === "S3" ? { checked: true } : { checked: false }
-      }
-      normalize={(value) => (value ? "S3" : "Local")}
-    >
-      <Switch disabled={!enableModification} />
+      <Input
+        type="password"
+        placeholder="admin"
+        disabled={!enableModification}
+      />
     </Form.Item>
   </Flex>
 );
