@@ -39,7 +39,6 @@ import { Alert, Button, Flex, Form, Typography } from "antd";
 import {
   ProjectConfig,
   useGetPollingAmpConfig,
-  VectorDBProvider,
 } from "src/api/ampMetadataApi.ts";
 import { ReactNode, useState } from "react";
 import { ModelSource, useGetModelSource } from "src/api/modelsApi.ts";
@@ -72,9 +71,6 @@ const AmpSettingsPage = () => {
   const { data: projectConfig } = useGetPollingAmpConfig();
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
-  );
-  const [selectedVectorDB, setSelectedVectorDB] = useState<VectorDBProvider>(
-    projectConfig?.vector_db_provider ?? "QDRANT",
   );
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
@@ -137,8 +133,7 @@ const AmpSettingsPage = () => {
           </Typography.Text>
         </Flex>
         <VectorDBFields
-          setSelectedVectorDB={setSelectedVectorDB}
-          selectedVectorDB={selectedVectorDB}
+          selectedVectorDBProvider={form.getFieldValue("vector_db_provider")}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
         />

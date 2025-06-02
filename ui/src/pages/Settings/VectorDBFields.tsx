@@ -41,34 +41,31 @@ import { Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 export const VectorDBFields = ({
+  selectedVectorDBProvider,
   projectConfig,
-  setSelectedVectorDB,
-  selectedVectorDB,
   enableModification,
 }: {
+  selectedVectorDBProvider: VectorDBProvider;
   projectConfig?: ProjectConfig | null;
-  setSelectedVectorDB: (value: VectorDBProvider) => void;
-  selectedVectorDB: VectorDBProvider;
   enableModification?: boolean;
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
-    <Radio.Group
-      style={{ marginBottom: 20 }}
-      optionType="button"
-      buttonStyle="solid"
-      onChange={(e) => {
-        if (e.target.value === "QDRANT" || e.target.value === "OPENSEARCH") {
-          setSelectedVectorDB(e.target.value as VectorDBProvider);
-        }
-      }}
-      value={selectedVectorDB}
-      options={[
-        { value: "QDRANT", label: "Qdrant" },
-        { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
-      ]}
-      disabled={!enableModification}
-    />
-    {selectedVectorDB === "QDRANT" && (
+    <Form.Item
+      initialValue={projectConfig?.vector_db_provider}
+      name="vector_db_provider"
+    >
+      <Radio.Group
+        style={{ marginBottom: 20 }}
+        optionType="button"
+        buttonStyle="solid"
+        options={[
+          { value: "QDRANT", label: "Qdrant" },
+          { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
+        ]}
+        disabled={!enableModification}
+      />
+    </Form.Item>
+    {selectedVectorDBProvider === "QDRANT" && (
       <StyledHelperText>
         Qdrant will be used as the vector database.
       </StyledHelperText>
@@ -77,10 +74,10 @@ export const VectorDBFields = ({
       label={"Endpoint"}
       initialValue={projectConfig?.opensearch_config.opensearch_endpoint}
       name={["opensearch_config", "opensearch_endpoint"]}
-      required={selectedVectorDB === "OPENSEARCH"}
+      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="Cloudera Semantic Search instance endpoint."
-      rules={[{ required: selectedVectorDB === "OPENSEARCH" }]}
-      hidden={selectedVectorDB !== "OPENSEARCH"}
+      rules={[{ required: selectedVectorDBProvider === "OPENSEARCH" }]}
+      hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input
         placeholder="http://localhost:9200/"
@@ -91,10 +88,10 @@ export const VectorDBFields = ({
       label={"Username"}
       initialValue={projectConfig?.opensearch_config.opensearch_username}
       name={["opensearch_config", "opensearch_username"]}
-      required={selectedVectorDB === "OPENSEARCH"}
+      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="Cloudera Semantic Search username."
-      rules={[{ required: selectedVectorDB === "OPENSEARCH" }]}
-      hidden={selectedVectorDB !== "OPENSEARCH"}
+      rules={[{ required: selectedVectorDBProvider === "OPENSEARCH" }]}
+      hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input placeholder="admin" disabled={!enableModification} />
     </Form.Item>
@@ -102,10 +99,10 @@ export const VectorDBFields = ({
       label={"Password"}
       initialValue={projectConfig?.opensearch_config.opensearch_password}
       name={["opensearch_config", "opensearch_password"]}
-      required={selectedVectorDB === "OPENSEARCH"}
+      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="Cloudera Semantic Search password."
-      rules={[{ required: selectedVectorDB === "OPENSEARCH" }]}
-      hidden={selectedVectorDB !== "OPENSEARCH"}
+      rules={[{ required: selectedVectorDBProvider === "OPENSEARCH" }]}
+      hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input
         type="password"
