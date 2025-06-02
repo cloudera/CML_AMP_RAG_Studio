@@ -153,6 +153,7 @@ export const useChatHistoryQuery = ({
     initialPageParam: 0,
     getPreviousPageParam: (data) => data.next_id,
     getNextPageParam: (data) => data.previous_id,
+    refetchOnWindowFocus: false,
   });
 };
 
