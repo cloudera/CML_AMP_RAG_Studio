@@ -45,8 +45,7 @@ from app.config import settings
 class VectorStoreFactory:
     @staticmethod
     def for_chunks(data_source_id: int) -> VectorStore:
-        vector_db_provider = settings.vector_db_provider
-        if vector_db_provider == "OPENSEARCH":
+        if settings.vector_db_provider == "OPENSEARCH":
             return OpenSearch.for_chunks(data_source_id)
         return QdrantVectorStore.for_chunks(data_source_id)
 

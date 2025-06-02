@@ -57,11 +57,10 @@ logger = logging.getLogger(__name__)
 
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
     return OpensearchVectorClient(
-        # username=os.environ.get("OPENSEARCH_USERNAME", "admin"),
-        # password=os.environ.get("OPENSEARCH_INITIAL_ADMIN_PASSWORD"),
         endpoint=settings.opensearch_endpoint,
         index=index,
         dim=dim,
+        http_auth=(settings.opensearch_username, settings.opensearch_password)
     )
 
 
