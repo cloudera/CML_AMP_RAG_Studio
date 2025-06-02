@@ -147,6 +147,12 @@ export interface CaiiConfig {
   caii_domain?: string;
 }
 
+export interface OpenSearchConfig {
+  opensearch_username?: string;
+  opensearch_password?: string;
+  opensearch_endpoint?: string;
+}
+
 export interface ApplicationConfig {
   num_of_gpus: number;
   memory_size_gb: number;
@@ -156,10 +162,12 @@ export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
   summary_storage_provider: "Local" | "S3";
   chat_store_provider: "Local" | "S3";
+  vector_db_provider: "QDRANT" | "OPENSEARCH";
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   openai_config: OpenAIConfig;
   caii_config: CaiiConfig;
+  opensearch_config: OpenSearchConfig;
   is_valid_config: boolean;
   release_version: string;
   application_config: ApplicationConfig;

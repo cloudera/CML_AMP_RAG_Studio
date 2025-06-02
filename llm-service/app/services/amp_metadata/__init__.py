@@ -46,7 +46,7 @@ from app.config import (
     settings,
     SummaryStorageProviderType,
     ChatStoreProviderType,
-    VectorStoreProviderType,
+    VectorDbProviderType,
 )
 
 
@@ -91,9 +91,9 @@ class OpenAiConfig(BaseModel):
 
 class OpenSearchConfig(BaseModel):
 
-    username: str
-    password: str
-    endpoint: str
+    opensearch_username: Optional[str] = None
+    opensearch_password: Optional[str] = None
+    opensearch_endpoint: Optional[str] = None
 
 
 class ProjectConfig(BaseModel):
@@ -104,7 +104,7 @@ class ProjectConfig(BaseModel):
     use_enhanced_pdf_processing: Optional[bool] = False
     summary_storage_provider: SummaryStorageProviderType
     chat_store_provider: ChatStoreProviderType
-    vector_store_provider: VectorStoreProviderType
+    vector_db_provider: VectorDbProviderType
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -225,9 +225,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
         "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
         "CAII_DOMAIN": config.caii_config.caii_domain or "",
-        "OPENSEARCH_USERNAME": config.opensearch_config.username or "",
-        "OPENSEARCH_PASSWORD": config.opensearch_config.password or "",
-        "OPENSEARCH_ENDPOINT": config.opensearch_config.endpoint or "",
+        "OPENSEARCH_USERNAME": config.opensearch_config.opensearch_username or "",
+        "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
+        "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
         "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
         "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
     }
@@ -255,9 +255,11 @@ def build_configuration(
         caii_domain=env.get("CAII_DOMAIN"),
     )
     opensearch_config = OpenSearchConfig(
-        username=env.get("OPENSEARCH_USERNAME"),
-        password=env.get("OPENSEARCH_PASSWORD"),
-        endpoint=env.get("OPENSEARCH_ENDPOINT"),
+        opensearch_username=env.get(
+            "OPENSEARCH_USERNAME",
+        ),
+        opensearch_password=env.get("OPENSEARCH_PASSWORD"),
+        opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
     )
     return ProjectConfigPlus(
         use_enhanced_pdf_processing=cast(
@@ -273,7 +275,7 @@ def build_configuration(
             env.get("CHAT_STORE_PROVIDER", "Local"),
         ),
         vector_store_provider=cast(
-            VectorStoreProviderType,
+            VectorDbProviderType,
             env.get("VECTOR_DB_PROVIDER", "QDRANT"),
         ),
         aws_config=aws_config,
