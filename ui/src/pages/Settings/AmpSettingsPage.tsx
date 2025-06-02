@@ -81,6 +81,7 @@ const AmpSettingsPage = () => {
     "summary_storage_provider",
     form,
   );
+  const selectedVectorDBField = Form.useWatch("vector_db_provider", form);
   const enableSettingsModification =
     dataSourcesQuery.data.length === 0 && sessionsQuery.data.length === 0;
 
@@ -133,7 +134,7 @@ const AmpSettingsPage = () => {
           </Typography.Text>
         </Flex>
         <VectorDBFields
-          selectedVectorDBProvider={form.getFieldValue("vector_db_provider")}
+          selectedVectorDBProvider={selectedVectorDBField}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
         />

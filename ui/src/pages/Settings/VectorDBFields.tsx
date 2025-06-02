@@ -67,11 +67,11 @@ export const VectorDBFields = ({
     </Form.Item>
     {selectedVectorDBProvider === "QDRANT" && (
       <StyledHelperText>
-        Qdrant will be used as the vector database.
+        Embedded Qdrant will be used as the vector database.
       </StyledHelperText>
     )}
     <Form.Item
-      label={"Endpoint"}
+      label={"OpenSearch Endpoint"}
       initialValue={projectConfig?.opensearch_config.opensearch_endpoint}
       name={["opensearch_config", "opensearch_endpoint"]}
       required={selectedVectorDBProvider === "OPENSEARCH"}
@@ -85,23 +85,19 @@ export const VectorDBFields = ({
       />
     </Form.Item>
     <Form.Item
-      label={"Username"}
+      label={"OpenSearch Username"}
       initialValue={projectConfig?.opensearch_config.opensearch_username}
       name={["opensearch_config", "opensearch_username"]}
-      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="Cloudera Semantic Search username."
-      rules={[{ required: selectedVectorDBProvider === "OPENSEARCH" }]}
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input placeholder="admin" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
-      label={"Password"}
+      label={"OpenSearch Password"}
       initialValue={projectConfig?.opensearch_config.opensearch_password}
       name={["opensearch_config", "opensearch_password"]}
-      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="Cloudera Semantic Search password."
-      rules={[{ required: selectedVectorDBProvider === "OPENSEARCH" }]}
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input

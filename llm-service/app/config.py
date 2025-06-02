@@ -111,11 +111,11 @@ class _Settings:
 
     @property
     def opensearch_username(self) -> str:
-        return os.environ.get("OPENSEARCH_USERNAME", "admin")
+        return os.environ.get("OPENSEARCH_USERNAME", "")
 
     @property
     def opensearch_password(self) -> str:
-        return os.environ.get("OPENSEARCH_PASSWORD", "admin")
+        return os.environ.get("OPENSEARCH_PASSWORD", "")
 
     @property
     def document_bucket_prefix(self) -> str:
