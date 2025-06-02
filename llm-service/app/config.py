@@ -51,6 +51,7 @@ from typing import cast, Optional, Literal
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
+VectorStoreProviderType = Literal["QDRANT", "OPENSEARCH"]
 
 
 class _Settings:
