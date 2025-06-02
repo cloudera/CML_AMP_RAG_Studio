@@ -151,6 +151,7 @@ export interface OpenSearchConfig {
   opensearch_username?: string;
   opensearch_password?: string;
   opensearch_endpoint?: string;
+  opensearch_namespace?: string;
 }
 
 export interface ApplicationConfig {

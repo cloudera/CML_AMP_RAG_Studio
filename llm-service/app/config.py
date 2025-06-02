@@ -110,6 +110,10 @@ class _Settings:
         return os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
 
     @property
+    def opensearch_namespace(self) -> str:
+        return os.environ.get("OPENSEARCH_NAMESPACE", "rag_document_index")
+
+    @property
     def opensearch_username(self) -> str:
         return os.environ.get("OPENSEARCH_USERNAME", "")
 

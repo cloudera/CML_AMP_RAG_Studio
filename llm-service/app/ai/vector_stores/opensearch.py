@@ -81,14 +81,14 @@ class OpenSearch(VectorStore, ABC):
     def for_chunks(data_source_id: int) -> "OpenSearch":
         return OpenSearch(
             data_source_id=data_source_id,
-            table_name=f"index_{data_source_id}",
+            table_name=f"{settings.opensearch_namespace}__index_{data_source_id}",
         )
 
     @staticmethod
     def for_summaries(data_source_id: int) -> "OpenSearch":
         return OpenSearch(
             data_source_id=data_source_id,
-            table_name=f"summary_index_{data_source_id}",
+            table_name=f"{settings.opensearch_namespace}__summary_index_{data_source_id}",
         )
 
     def __init__(

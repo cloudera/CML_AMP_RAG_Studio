@@ -94,6 +94,7 @@ class OpenSearchConfig(BaseModel):
     opensearch_username: Optional[str] = None
     opensearch_password: Optional[str] = None
     opensearch_endpoint: Optional[str] = None
+    opensearch_namespace: Optional[str] = None
 
 
 class ProjectConfig(BaseModel):
@@ -228,6 +229,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "OPENSEARCH_USERNAME": config.opensearch_config.opensearch_username or "",
         "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
         "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
+        "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
         "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
         "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
     }
@@ -260,6 +262,7 @@ def build_configuration(
         ),
         opensearch_password=env.get("OPENSEARCH_PASSWORD"),
         opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
+        opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
     return ProjectConfigPlus(
         use_enhanced_pdf_processing=cast(

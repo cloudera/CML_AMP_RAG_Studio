@@ -85,6 +85,24 @@ export const VectorDBFields = ({
       />
     </Form.Item>
     <Form.Item
+      label={"OpenSearch Namespace"}
+      initialValue={projectConfig?.opensearch_config.opensearch_namespace}
+      name={["opensearch_config", "opensearch_namespace"]}
+      required={selectedVectorDBProvider === "OPENSEARCH"}
+      tooltip="The namespace or prefix to use for Cloudera Semantic Search."
+      rules={[
+        { required: selectedVectorDBProvider === "OPENSEARCH" },
+        {
+          pattern: /^[a-zA-Z0-9]+$/,
+          message: "Only alphanumeric characters are allowed",
+          warningOnly: false
+        }
+      ]}
+      hidden={selectedVectorDBProvider !== "OPENSEARCH"}
+    >
+      <Input placeholder="rag_document_index" disabled={!enableModification} />
+    </Form.Item>
+    <Form.Item
       label={"OpenSearch Username"}
       initialValue={projectConfig?.opensearch_config.opensearch_username}
       name={["opensearch_config", "opensearch_username"]}

@@ -191,6 +191,7 @@ const RestartAppModal = ({
             opensearch_username: undefined,
             opensearch_password: undefined,
             opensearch_endpoint: undefined,
+            opensearch_namespace: undefined,
           };
         }
 
