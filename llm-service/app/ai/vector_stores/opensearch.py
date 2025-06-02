@@ -41,7 +41,7 @@ from abc import ABC
 from typing import Optional, List
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.schema import BaseNode
+from llama_index.core.schema import BaseNode, TextNode
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.opensearch import (
     OpensearchVectorStore,
@@ -79,7 +79,6 @@ class OpenSearch(VectorStore, ABC):
 
     @staticmethod
     def for_chunks(data_source_id: int) -> "OpenSearch":
-        print("Returning OS client for chunks")
         return OpenSearch(
             data_source_id=data_source_id,
             table_name=f"index_{data_source_id}",
@@ -87,7 +86,6 @@ class OpenSearch(VectorStore, ABC):
 
     @staticmethod
     def for_summaries(data_source_id: int) -> "OpenSearch":
-        print("Returning OS client for summaries")
         return OpenSearch(
             data_source_id=data_source_id,
             table_name=f"summary_index_{data_source_id}",
@@ -112,9 +110,7 @@ class OpenSearch(VectorStore, ABC):
 
     def size(self) -> Optional[int]:
         os_client = self._low_level_client
-        result = int(os_client.count(index=self.table_name)["count"])
-        print(f"size: {result=}")
-        return result
+        return int(os_client.count(index=self.table_name)["count"])
 
     def delete(self) -> None:
         os_client = self._low_level_client
@@ -129,12 +125,10 @@ class OpenSearch(VectorStore, ABC):
         )
 
     def get_chunk_contents(self, chunk_id: str) -> BaseNode :
-        # todo: implement me with a raw query! This isn't implemented in the vector store impl for OpenSearch
-        query = {"query": {"bool": {"filter": []}}}
-        query["query"]["bool"]["filter"].append({"terms": {"_id": [chunk_id] or []}})
+        query = {"query": {"terms": {"_id": [chunk_id]}}}
         raw_results = self._low_level_client.search(index=self.table_name, body=query)
-        print(f"{raw_results=}")
-        return BaseNode()
+        # todo: handle the no results found case.
+        return TextNode(id_=chunk_id, text=raw_results['hits']['hits'][0]['_source']['content'])
 
     def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(
@@ -144,9 +138,7 @@ class OpenSearch(VectorStore, ABC):
 
     def exists(self) -> bool:
         os_client = self._low_level_client
-        result = bool(os_client.indices.exists(index=self.table_name))
-        print(f"exists: {result=}")
-        return result
+        return bool(os_client.indices.exists(index=self.table_name))
 
     def visualize(
         self, user_query: Optional[str] = None
