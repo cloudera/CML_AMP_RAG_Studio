@@ -91,7 +91,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                   </Typography>
                 }
               >
-                z
+                
                 <Tag
                   style={{
                     backgroundColor: cdlOrange500,
