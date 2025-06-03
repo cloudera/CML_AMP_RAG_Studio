@@ -45,6 +45,7 @@ import {
   Select,
   Slider,
   Switch,
+  Tag,
   Typography,
 } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
@@ -53,6 +54,7 @@ import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
+import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
@@ -81,7 +83,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
             valuePropName="checked"
             label={
               <Popover
-                title="Tool Calling"
+                title="Tool Calling (Beta)"
                 content={
                   <Typography style={{ width: 300 }}>
                     Enable tool calling. This feature is highly dependent on the
@@ -89,6 +91,16 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                   </Typography>
                 }
               >
+                z
+                <Tag
+                  style={{
+                    backgroundColor: cdlOrange500,
+                    color: cdlWhite,
+                    borderRadius: 10,
+                  }}
+                >
+                  &beta;
+                </Tag>
                 Enable Tool Calling
               </Popover>
             }
