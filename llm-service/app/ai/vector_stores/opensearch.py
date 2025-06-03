@@ -133,9 +133,14 @@ class OpenSearch(VectorStore, ABC):
         query = {"query": {"terms": {"_id": [chunk_id]}}}
         raw_results = self._low_level_client.search(index=self.table_name, body=query)
         if raw_results["hits"] and raw_results["hits"]["hits"]:
-            return TextNode(id_=chunk_id, text=raw_results["hits"]["hits"][0]["_source"]["content"])
+            return TextNode(
+                id_=chunk_id, text=raw_results["hits"]["hits"][0]["_source"]["content"]
+            )
         else:
-            raise fastapi.exceptions.HTTPException(404, "Chunk not found with id: " + chunk_id)
+            logger.error(f"Chunk not found for query: {query}")
+            raise fastapi.exceptions.HTTPException(
+                404, "Chunk not found with id: " + chunk_id
+            )
 
     def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(
