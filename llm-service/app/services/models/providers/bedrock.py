@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import concurrent.futures
 from typing import Optional, cast, Any, Literal
 from urllib.parse import unquote
 
@@ -89,7 +90,7 @@ class BedrockModelProvider(ModelProvider):
         )
         models = BedrockModelProvider.list_all_models(modality)
         available_models = []
-        requests = []
+        aws_requests = []
         for model in models:
             if (
                 "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
@@ -104,17 +105,32 @@ class BedrockModelProvider(ModelProvider):
                     request
                 )
 
-                requests.append((url, dict(request.headers)))
+                aws_requests.append((url, dict(request.headers)))
 
-        responses = []
-        for url, headers in requests:
-            response = requests.get(url, headers=dict(headers))
+        def get_aws_responses(url: str, headers: dict) -> list[dict[str, Any]]:
+            """Fetch responses from AWS for the given requests."""
+            response = requests.get(url, headers=headers)
             raise_for_http_error(response)
-            responses.append(response.json())
+            return response.json()
+
+        responses: list[dict[str, Any] | None] = [None for _ in aws_requests]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_index = {
+                executor.submit(get_aws_responses, url, headers): idx
+                for idx, (url, headers) in enumerate(aws_requests)
+            }
+            for future in concurrent.futures.as_completed(future_to_index):
+                idx = future_to_index[future]
+                try:
+                    responses[idx] = future.result()
+                except Exception as e:
+                    print(f"Error fetching data for request {idx}: {e}")
+                    responses[idx] = None
 
         for model, model_data in zip(models, responses):
-            if model_data["entitlementAvailability"] == "AVAILABLE":
-                available_models.append(model)
+            if model_data:
+                if model_data["entitlementAvailability"] == "AVAILABLE":
+                    available_models.append(model)
 
         return available_models
 
@@ -170,7 +186,6 @@ class BedrockModelProvider(ModelProvider):
     def list_embedding_models() -> list[ModelResponse]:
         modality = TypeAdapter(BedrockModality).validate_python("EMBEDDING")
         available_models = BedrockModelProvider.list_available_models(modality)
-        print(available_models)
 
         models = []
         for model in available_models:
