@@ -40,7 +40,7 @@ import os
 import socket
 from typing import Optional, cast, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from app.config import (
     settings,
@@ -265,21 +265,19 @@ def build_configuration(
         opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
     return ProjectConfigPlus(
-        use_enhanced_pdf_processing=cast(
-            bool,
+        use_enhanced_pdf_processing=TypeAdapter(bool).validate_python(
             env.get("USE_ENHANCED_PDF_PROCESSING", False),
         ),
-        summary_storage_provider=cast(
-            SummaryStorageProviderType,
+        summary_storage_provider=TypeAdapter(
+            SummaryStorageProviderType
+        ).validate_python(
             env.get("SUMMARY_STORAGE_PROVIDER", "Local"),
         ),
-        chat_store_provider=cast(
-            ChatStoreProviderType,
+        chat_store_provider=TypeAdapter(ChatStoreProviderType).validate_python(
             env.get("CHAT_STORE_PROVIDER", "Local"),
         ),
-        vector_db_provider=cast(
-            VectorDbProviderType,
-            env.get("VECTOR_DB_PROVIDER", "QDRANT"),
+        vector_db_provider=TypeAdapter(VectorDbProviderType).validate_python(
+            env.get("VECTOR_DB_PROVIDER", "QDRANT")
         ),
         aws_config=aws_config,
         azure_config=azure_config,
