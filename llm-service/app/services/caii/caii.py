@@ -35,9 +35,11 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import logging
+import os
 from typing import Callable, List, Sequence
 
+import httpx
 import requests
 from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -51,10 +53,8 @@ from .CaiiModel import DeepseekModel
 from .caii_reranking import CaiiRerankingModel
 from .types import Endpoint, ListEndpointEntry, ModelResponse
 from .utils import build_auth_headers, get_caii_access_token
-from ..utils import raise_for_http_error, body_to_json
 from ..llama_utils import completion_to_prompt, messages_to_prompt
-import logging
-
+from ..utils import raise_for_http_error, body_to_json
 from ...config import settings
 
 DEFAULT_NAMESPACE = "serving-default"
@@ -110,6 +110,11 @@ def get_llm(
     api_base = endpoint.url.removesuffix("/chat/completions")
 
     model = endpoint.model_name
+    if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
+        http_client = httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
+    else:
+        http_client = None
+
     # todo: test if the NVIDIA impl works with deepseek, too
     if "deepseek" in endpoint_name.lower():
         return DeepseekModel(
@@ -119,11 +124,13 @@ def get_llm(
             completion_to_prompt=completion_to_prompt,
             api_base=api_base,
             default_headers=(build_auth_headers()),
+            http_client=http_client,
         )
     return NVIDIA(
         api_key=get_caii_access_token(),
         base_url=api_base,
         model=model,
+        http_client=http_client
         # api_base=api_base, # todo: figure out how to integrate with Crew models
     )
 
@@ -131,8 +138,14 @@ def get_llm(
 def get_embedding_model(model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
     endpoint = describe_endpoint(endpoint_name=endpoint_name)
+
+    if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
+        http_client = httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
+    else:
+        http_client = None
+
     # todo: figure out if the Nvidia library can be made to work for embeddings as well.
-    return CaiiEmbeddingModel(endpoint=endpoint)
+    return CaiiEmbeddingModel(endpoint=endpoint, http_client=http_client)
 
 
 # task types from the MLServing proto definition
