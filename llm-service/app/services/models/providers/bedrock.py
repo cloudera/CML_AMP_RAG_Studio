@@ -35,20 +35,28 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Optional, cast
+from typing import Optional, cast, Any, Literal
+from urllib.parse import unquote
 
 import boto3
+import requests
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
+from pydantic import TypeAdapter
 
 from app.config import settings
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ...utils import raise_for_http_error
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
+
+BedrockModality = Literal["TEXT", "IMAGE", "EMBEDDING"]
 
 
 class BedrockModelProvider(ModelProvider):
@@ -57,39 +65,82 @@ class BedrockModelProvider(ModelProvider):
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
 
     @staticmethod
+    def list_all_models(
+        modality: Optional[BedrockModality] = None,
+    ) -> list[dict[str, Any]]:
+        bedrock_client = boto3.client(
+            "bedrock",
+            region_name=settings.aws_default_region,
+        )
+        foundation_models = bedrock_client.list_foundation_models(
+            byOutputModality=modality
+        )["modelSummaries"]
+
+        return foundation_models
+
+    @staticmethod
+    def list_available_models(
+        modality: Optional[BedrockModality] = None,
+    ) -> list[dict[str, Any]]:
+        credentials = boto3.Session().get_credentials().get_frozen_credentials()
+        base_url = (
+            f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
+            "foundation-model-availability/"
+        )
+        models = BedrockModelProvider.list_all_models(modality)
+        available_models = []
+        requests = []
+        for model in models:
+            if (
+                "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
+                or "ON_DEMAND" in model["inferenceTypesSupported"]
+            ):
+                model_id = model["modelId"]
+                url = unquote(f"{base_url}{model_id}")
+                request = AWSRequest(method="GET", url=url, headers={})
+
+                # Sign the request
+                SigV4Auth(credentials, "bedrock", settings.aws_default_region).add_auth(
+                    request
+                )
+
+                requests.append((url, dict(request.headers)))
+
+        responses = []
+        for url, headers in requests:
+            response = requests.get(url, headers=dict(headers))
+            raise_for_http_error(response)
+            responses.append(response.json())
+
+        for model, model_data in zip(models, responses):
+            if model_data["entitlementAvailability"] == "AVAILABLE":
+                available_models.append(model)
+
+        return available_models
+
+    @staticmethod
     def list_llm_models() -> list[ModelResponse]:
-        models = [
-            ModelResponse(
-                model_id=DEFAULT_BEDROCK_LLM_MODEL, name="Llama3.1 8B Instruct v1"
-            ),
-            ModelResponse(
-                model_id="meta.llama3-1-70b-instruct-v1:0",
-                name="Llama3.1 70B Instruct v1",
-            ),
-            ModelResponse(
-                model_id="cohere.command-r-plus-v1:0", name="Cohere Command R Plus v1"
-            ),
-        ]
+        modality = TypeAdapter(BedrockModality).validate_python("TEXT")
+        available_models = BedrockModelProvider.list_available_models(modality)
 
         model_arns = BedrockModelProvider._get_model_arns()
 
-        claude37sonnet = BedrockModelProvider._get_model_arn_by_profiles(
-            "anthropic.claude-3-7-sonnet-20250219-v1:0", model_arns
-        )
-        if claude37sonnet:
-            models.append(claude37sonnet)
-
-        llama323b = BedrockModelProvider._get_model_arn_by_profiles(
-            "meta.llama3-2-3b-instruct-v1:0", model_arns
-        )
-        if llama323b:
-            models.append(llama323b)
-
-        llama321b = BedrockModelProvider._get_model_arn_by_profiles(
-            "meta.llama3-2-1b-instruct-v1:0", model_arns
-        )
-        if llama321b:
-            models.append(llama321b)
+        models = []
+        for model in available_models:
+            if "rerank" not in model["modelId"].lower():
+                if "INFERENCE_PROFILE" in model["inferenceTypesSupported"]:
+                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
+                        model["modelId"], model_arns
+                    )
+                    if model_arn:
+                        models.append(model_arn)
+                else:
+                    models.append(
+                        ModelResponse(
+                            model_id=model["modelId"],
+                            name=model["modelName"],
+                        )
+                    )
 
         return models
 
@@ -117,16 +168,20 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def list_embedding_models() -> list[ModelResponse]:
-        return [
-            ModelResponse(
-                model_id="cohere.embed-english-v3",
-                name="Cohere Embed English v3",
-            ),
-            ModelResponse(
-                model_id="cohere.embed-multilingual-v3",
-                name="Cohere Embed Multilingual v3",
-            ),
-        ]
+        modality = TypeAdapter(BedrockModality).validate_python("EMBEDDING")
+        available_models = BedrockModelProvider.list_available_models(modality)
+        print(available_models)
+
+        models = []
+        for model in available_models:
+            models.append(
+                ModelResponse(
+                    model_id=model["modelId"],
+                    name=model["modelName"],
+                )
+            )
+
+        return models
 
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
