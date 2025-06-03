@@ -40,6 +40,8 @@ import logging
 from abc import ABC
 from typing import Optional, List
 
+import fastapi.exceptions
+import opensearchpy
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.schema import BaseNode, TextNode
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
@@ -114,7 +116,10 @@ class OpenSearch(VectorStore, ABC):
 
     def delete(self) -> None:
         os_client = self._low_level_client
-        os_client.indices.delete(index=self.table_name)
+        try:
+            os_client.indices.delete(index=self.table_name)
+        except opensearchpy.exceptions.NotFoundError:
+            raise fastapi.exceptions.HTTPException(404, "Index not found")
 
     def delete_document(self, document_id: str) -> None:
         self._get_client().delete_by_doc_id(document_id)

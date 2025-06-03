@@ -109,6 +109,10 @@ public class SimpleHttpClient {
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString());
       int statusCode = response.statusCode();
+      if (statusCode == 404) {
+        throw new NotFound("Failed to delete. Not Found");
+      }
+
       if (statusCode >= 400) {
         throw new RuntimeException(
             "Failed to delete " + path + " code: " + statusCode + ", body : " + response.body());
