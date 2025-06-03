@@ -111,5 +111,5 @@ class VectorStore(metaclass=ABCMeta):
             logger.error(f"Error during UMAP transformation: {e}")
             return []
 
-    def get_chunk_contents(self, chunk_id) -> BaseNode :
+    def get_chunk_contents(self, chunk_id: str) -> BaseNode :
         return self.llama_vector_store().get_nodes([chunk_id])[0]
