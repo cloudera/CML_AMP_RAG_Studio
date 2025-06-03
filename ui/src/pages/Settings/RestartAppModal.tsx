@@ -186,6 +186,15 @@ const RestartAppModal = ({
           values.chat_store_provider = "Local";
         }
 
+        if (values.vector_db_provider === "QDRANT") {
+          values.opensearch_config = {
+            opensearch_username: undefined,
+            opensearch_password: undefined,
+            opensearch_endpoint: undefined,
+            opensearch_namespace: undefined,
+          };
+        }
+
         updateAmpConfig.mutate(values);
       })
       .catch(() => {

@@ -40,9 +40,14 @@ import os
 import socket
 from typing import Optional, cast, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
-from app.config import settings, SummaryStorageProviderType, ChatStoreProviderType
+from app.config import (
+    settings,
+    SummaryStorageProviderType,
+    ChatStoreProviderType,
+    VectorDbProviderType,
+)
 
 
 class AwsConfig(BaseModel):
@@ -83,6 +88,15 @@ class OpenAiConfig(BaseModel):
     openai_api_key: Optional[str] = None
     openai_api_base: Optional[str] = None
 
+
+class OpenSearchConfig(BaseModel):
+
+    opensearch_username: Optional[str] = None
+    opensearch_password: Optional[str] = None
+    opensearch_endpoint: Optional[str] = None
+    opensearch_namespace: Optional[str] = None
+
+
 class ProjectConfig(BaseModel):
     """
     Model to represent the project configuration.
@@ -91,10 +105,12 @@ class ProjectConfig(BaseModel):
     use_enhanced_pdf_processing: Optional[bool] = False
     summary_storage_provider: SummaryStorageProviderType
     chat_store_provider: ChatStoreProviderType
+    vector_db_provider: VectorDbProviderType
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
     openai_config: OpenAiConfig
+    opensearch_config: OpenSearchConfig
     cdp_token: Optional[str] = None
 
 
@@ -200,6 +216,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
         "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
         "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
+        "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
         "AWS_DEFAULT_REGION": config.aws_config.region or "",
         "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
         "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -209,6 +226,10 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
         "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
         "CAII_DOMAIN": config.caii_config.caii_domain or "",
+        "OPENSEARCH_USERNAME": config.opensearch_config.opensearch_username or "",
+        "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
+        "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
+        "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
         "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
         "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
     }
@@ -235,22 +256,33 @@ def build_configuration(
     caii_config = CaiiConfig(
         caii_domain=env.get("CAII_DOMAIN"),
     )
+    opensearch_config = OpenSearchConfig(
+        opensearch_username=env.get(
+            "OPENSEARCH_USERNAME",
+        ),
+        opensearch_password=env.get("OPENSEARCH_PASSWORD"),
+        opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
+        opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
+    )
     return ProjectConfigPlus(
-        use_enhanced_pdf_processing=cast(
-            bool,
+        use_enhanced_pdf_processing=TypeAdapter(bool).validate_python(
             env.get("USE_ENHANCED_PDF_PROCESSING", False),
         ),
-        summary_storage_provider=cast(
-            SummaryStorageProviderType,
+        summary_storage_provider=TypeAdapter(
+            SummaryStorageProviderType
+        ).validate_python(
             env.get("SUMMARY_STORAGE_PROVIDER", "Local"),
         ),
-        chat_store_provider=cast(
-            ChatStoreProviderType,
+        chat_store_provider=TypeAdapter(ChatStoreProviderType).validate_python(
             env.get("CHAT_STORE_PROVIDER", "Local"),
+        ),
+        vector_db_provider=TypeAdapter(VectorDbProviderType).validate_python(
+            env.get("VECTOR_DB_PROVIDER", "QDRANT")
         ),
         aws_config=aws_config,
         azure_config=azure_config,
         caii_config=caii_config,
+        opensearch_config=opensearch_config,
         is_valid_config=validate(env),
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
         application_config=application_config,

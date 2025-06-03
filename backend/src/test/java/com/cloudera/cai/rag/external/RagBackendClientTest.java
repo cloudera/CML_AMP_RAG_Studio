@@ -214,6 +214,20 @@ class RagBackendClientTest {
   }
 
   @Test
+  void deleteDataSource_notFound() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(SimpleHttpClient.createNull(tracker, new NotFound("Not found!")));
+    client.deleteDataSource(1234L);
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.DELETE, "http://localhost:8081/data_sources/1234", null));
+  }
+
+  @Test
   void deleteDocument() {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
@@ -229,9 +243,39 @@ class RagBackendClientTest {
   }
 
   @Test
+  void deleteDocument_notFound() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(SimpleHttpClient.createNull(tracker, new NotFound("Not found!")));
+    client.deleteDocument(1234L, "documentId");
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.DELETE,
+                "http://localhost:8081/data_sources/1234/documents/documentId",
+                null));
+  }
+
+  @Test
   void deleteSession() {
     Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
     RagBackendClient client = new RagBackendClient(SimpleHttpClient.createNull(tracker));
+    client.deleteSession(1234L);
+    List<TrackedHttpRequest<?>> values = tracker.getValues();
+    assertThat(values)
+        .hasSize(1)
+        .contains(
+            new TrackedHttpRequest<>(
+                HttpMethod.DELETE, "http://localhost:8081/sessions/1234", null));
+  }
+
+  @Test
+  void deleteSession_notFound() {
+    Tracker<TrackedHttpRequest<?>> tracker = new Tracker<>();
+    RagBackendClient client =
+        new RagBackendClient(SimpleHttpClient.createNull(tracker, new NotFound("Not found!")));
     client.deleteSession(1234L);
     List<TrackedHttpRequest<?>> values = tracker.getValues();
     assertThat(values)

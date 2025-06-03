@@ -41,6 +41,7 @@ from typing import Optional, List, cast
 
 import umap
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.schema import BaseNode
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
 logger = logging.getLogger(__name__)
@@ -109,3 +110,6 @@ class VectorStore(metaclass=ABCMeta):
             # Log the error
             logger.error(f"Error during UMAP transformation: {e}")
             return []
+
+    def get_chunk_contents(self, chunk_id: str) -> BaseNode :
+        return self.llama_vector_store().get_nodes([chunk_id])[0]

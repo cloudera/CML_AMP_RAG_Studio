@@ -40,7 +40,10 @@ import logging
 from abc import ABC
 from typing import Optional, List
 
+import fastapi.exceptions
+import opensearchpy
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.schema import BaseNode, TextNode
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.opensearch import (
     OpensearchVectorStore,
@@ -55,18 +58,21 @@ from app.services.models import Embedding
 
 logger = logging.getLogger(__name__)
 
+
 def _new_opensearch_client(dim: int, index: str) -> OpensearchVectorClient:
     return OpensearchVectorClient(
-        # username=os.environ.get("OPENSEARCH_USERNAME", "admin"),
-        # password=os.environ.get("OPENSEARCH_INITIAL_ADMIN_PASSWORD"),
         endpoint=settings.opensearch_endpoint,
         index=index,
         dim=dim,
+        http_auth=(settings.opensearch_username, settings.opensearch_password),
     )
 
 
 def _get_low_level_client() -> OpensearchClient:
-    os_client = OpensearchClient(settings.opensearch_endpoint)
+    os_client = OpensearchClient(
+        settings.opensearch_endpoint,
+        http_auth=(settings.opensearch_username, settings.opensearch_password),
+    )
     return os_client
 
 
@@ -77,14 +83,14 @@ class OpenSearch(VectorStore, ABC):
     def for_chunks(data_source_id: int) -> "OpenSearch":
         return OpenSearch(
             data_source_id=data_source_id,
-            table_name=f"index_{data_source_id}",
+            table_name=f"{settings.opensearch_namespace}__index_{data_source_id}",
         )
 
     @staticmethod
     def for_summaries(data_source_id: int) -> "OpenSearch":
         return OpenSearch(
             data_source_id=data_source_id,
-            table_name=f"summary_index_{data_source_id}",
+            table_name=f"{settings.opensearch_namespace}__summary_index_{data_source_id}",
         )
 
     def __init__(
@@ -110,7 +116,10 @@ class OpenSearch(VectorStore, ABC):
 
     def delete(self) -> None:
         os_client = self._low_level_client
-        os_client.indices.delete(index=self.table_name)
+        try:
+            os_client.indices.delete(index=self.table_name)
+        except opensearchpy.exceptions.NotFoundError:
+            raise fastapi.exceptions.HTTPException(404, "Index not found")
 
     def delete_document(self, document_id: str) -> None:
         self._get_client().delete_by_doc_id(document_id)
@@ -119,6 +128,19 @@ class OpenSearch(VectorStore, ABC):
         return OpensearchVectorStore(
             self._get_client(),
         )
+
+    def get_chunk_contents(self, chunk_id: str) -> BaseNode:
+        query = {"query": {"terms": {"_id": [chunk_id]}}}
+        raw_results = self._low_level_client.search(index=self.table_name, body=query)
+        if raw_results["hits"] and raw_results["hits"]["hits"]:
+            return TextNode(
+                id_=chunk_id, text=raw_results["hits"]["hits"][0]["_source"]["content"]
+            )
+        else:
+            logger.error(f"Chunk not found for query: {query}")
+            raise fastapi.exceptions.HTTPException(
+                404, "Chunk not found with id: " + chunk_id
+            )
 
     def _get_client(self) -> OpensearchVectorClient:
         return _new_opensearch_client(

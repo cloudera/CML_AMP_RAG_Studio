@@ -52,6 +52,7 @@ import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
 import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
+import { VectorDBFields } from "pages/Settings/VectorDBFields.tsx";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -80,6 +81,7 @@ const AmpSettingsPage = () => {
     "summary_storage_provider",
     form,
   );
+  const selectedVectorDBField = Form.useWatch("vector_db_provider", form);
   const enableSettingsModification =
     dataSourcesQuery.data.length === 0 && sessionsQuery.data.length === 0;
 
@@ -122,6 +124,17 @@ const AmpSettingsPage = () => {
         <FileStorageFields
           selectedFileStorage={selectedFileStorage}
           setSelectedFileStorage={setSelectedFileStorage}
+          projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
+        />
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>Vector Database</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
+        <VectorDBFields
+          selectedVectorDBProvider={selectedVectorDBField}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
         />

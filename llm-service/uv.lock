@@ -2929,15 +2929,15 @@ wheels = [
 
 [[package]]
 name = "llama-index-vector-stores-opensearch"
-version = "0.5.2"
+version = "0.5.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "opensearch-py", extra = ["async"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7a/d7/0c0add889e5d7cddd942e7f9581969aa07516ada281b565eb32c4a21e3f8/llama_index_vector_stores_opensearch-0.5.2.tar.gz", hash = "sha256:b94ddd43dbadcc9e0bc908cdf32701b42a87650352ea7e15eb6aa31af8ef817e", size = 8861 }
+sdist = { url = "https://files.pythonhosted.org/packages/56/57/7fa6215e7142c1b2ece4a53d11404c072a8de256a767468fcf855ed185f5/llama_index_vector_stores_opensearch-0.5.5.tar.gz", hash = "sha256:a48cae955720a8f40f6aaffcb938481d209915e2598f907449a0129fbd6da53f", size = 10296 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/9a/733d9e504f47e9fef2f2c90278b27cc1ed18b9132c0aa544adc14a209b44/llama_index_vector_stores_opensearch-0.5.2-py3-none-any.whl", hash = "sha256:948fe4993d9481c9c5ca6c76f4f30ae9bf7e4f6664ab8eecb8c51a02ad09e6b8", size = 9264 },
+    { url = "https://files.pythonhosted.org/packages/82/8a/6259867f9f1a73c7cb71278e422df34c7eda25d5d6a5d36d3844102d46e4/llama_index_vector_stores_opensearch-0.5.5-py3-none-any.whl", hash = "sha256:a343e9482e2d60ac1989ca017ac587520824aaeef7bbbcf440cffd51b13c1a79", size = 10141 },
 ]
 
 [[package]]
@@ -3037,7 +3037,7 @@ requires-dist = [
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
     { name = "llama-index-storage-kvstore-s3", specifier = ">=0.3.0" },
-    { name = "llama-index-vector-stores-opensearch", specifier = ">=0.5.2" },
+    { name = "llama-index-vector-stores-opensearch", specifier = ">=0.5.5" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.9.1" },
