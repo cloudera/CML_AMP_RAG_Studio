@@ -36,7 +36,6 @@
 #  DATA.
 #
 import concurrent.futures
-import json
 from typing import Optional, cast, Any, Literal
 from urllib.parse import unquote
 
@@ -144,7 +143,7 @@ class BedrockModelProvider(ModelProvider):
                 if model_data["entitlementAvailability"] == "AVAILABLE":
                     available_models.append(model)
 
-        return cast(list[dict[str, Any]], available_models)
+        return available_models
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:
