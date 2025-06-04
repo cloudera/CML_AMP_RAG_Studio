@@ -42,6 +42,7 @@ import pytest
 from app.services import models
 from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
+from app.services.models.providers import BedrockModelProvider
 from app.services.models.providers._model_provider import ModelProvider
 
 
@@ -96,6 +97,13 @@ class TestListAvailableModels:
                 )
 
         monkeypatch.setattr(caii, "get_models_with_task", lambda task_type: endpoints)
+
+    @pytest.fixture(autouse=True)
+    def get_foundation_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Monkey patch fetching foundation models."""
+        monkeypatch.setattr(
+            BedrockModelProvider, "get_foundation_models", lambda modality: []
+        )
 
     def test_embedding(self, EnabledModelProvider: type[ModelProvider]) -> None:
         """Verify models.Embedding.list_available() only returns models from the enabled model provider."""
