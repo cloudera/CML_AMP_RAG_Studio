@@ -150,9 +150,7 @@ class BedrockModelProvider(ModelProvider):
                 try:
                     responses[idx] = future.result()
                 except Exception as e:
-                    print(
-                        f"Error fetching data for model {models[idx]['modelId']}: {e}"
-                    )
+                    logger.exception("Error fetching data for model %s", models[idx]['modelId'])
                     responses[idx] = None
 
         for model, model_data in zip(models, responses):
