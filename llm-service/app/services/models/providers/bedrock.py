@@ -155,7 +155,7 @@ class BedrockModelProvider(ModelProvider):
         models = [
             ModelResponse(
                 model_id=DEFAULT_BEDROCK_LLM_MODEL,
-                name="US Meta Llama 3.1 8B Instruct",
+                name="Meta Llama 3.1 8B Instruct",
             )
         ]
         for model in available_models:
