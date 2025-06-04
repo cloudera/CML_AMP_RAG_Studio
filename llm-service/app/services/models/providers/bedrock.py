@@ -36,6 +36,7 @@
 #  DATA.
 #
 import concurrent.futures
+import logging
 from typing import Optional, cast, Any, Literal
 from urllib.parse import unquote
 
@@ -53,6 +54,8 @@ from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import raise_for_http_error
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
@@ -150,7 +153,9 @@ class BedrockModelProvider(ModelProvider):
                 try:
                     responses[idx] = future.result()
                 except Exception as e:
-                    logger.exception("Error fetching data for model %s", models[idx]['modelId'])
+                    logger.exception(
+                        "Error fetching data for model %s", models[idx]["modelId"]
+                    )
                     responses[idx] = None
 
         for model, model_data in zip(models, responses):
