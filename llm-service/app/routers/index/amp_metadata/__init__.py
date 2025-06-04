@@ -35,9 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import json
 import os
 import subprocess
-import json
 from subprocess import CompletedProcess
 from typing import Annotated
 
@@ -46,7 +46,6 @@ from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
-from ....services import models
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
