@@ -56,6 +56,7 @@ class CaiiModel(OpenAI):
         messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
         completion_to_prompt: Callable[[str], str],
         default_headers: Dict[str, str],
+        **kwargs: Any
     ):
         super().__init__(
             model=model,
@@ -64,6 +65,7 @@ class CaiiModel(OpenAI):
             completion_to_prompt=completion_to_prompt,
             default_headers=default_headers,
             context=context,
+            kwargs=kwargs
         )
         self.context = context
 
@@ -87,6 +89,7 @@ class DeepseekModel(CaiiModel):
             messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
             completion_to_prompt: Callable[[str], str],
             default_headers: Dict[str, str],
+            **kwargs: Any
     ):
         super().__init__(
             model=model,
@@ -95,6 +98,7 @@ class DeepseekModel(CaiiModel):
             completion_to_prompt=completion_to_prompt,
             default_headers=default_headers,
             context=context,
+            kwargs=kwargs
         )
 
     def complete(self, prompt: str, formatted: bool = False, **kwargs: Any) -> CompletionResponse:
