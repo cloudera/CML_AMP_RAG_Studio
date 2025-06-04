@@ -69,7 +69,7 @@ class BedrockModelProvider(ModelProvider):
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
 
     @staticmethod
-    def list_all_models(
+    def get_foundation_models(
         modality: Optional[BedrockModality] = None,
     ) -> list[dict[str, Any]]:
         bedrock_client = boto3.client(
@@ -79,6 +79,13 @@ class BedrockModelProvider(ModelProvider):
         foundation_models = bedrock_client.list_foundation_models(
             byOutputModality=modality
         )["modelSummaries"]
+        return foundation_models
+
+    @staticmethod
+    def list_all_models(
+        modality: Optional[BedrockModality] = None,
+    ) -> list[dict[str, Any]]:
+        foundation_models = BedrockModelProvider.get_foundation_models(modality)
         valid_foundation_models = []
 
         # Filter models based on inference types supported
