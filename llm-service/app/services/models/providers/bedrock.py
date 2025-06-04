@@ -163,19 +163,19 @@ class BedrockModelProvider(ModelProvider):
                 "rerank" not in model["modelId"].lower()
                 and model["modelId"] != DEFAULT_BEDROCK_LLM_MODEL
             ):
-                if "INFERENCE_PROFILE" in model["inferenceTypesSupported"]:
-                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
-                        model["modelId"], model_arns
-                    )
-                    if model_arn:
-                        models.append(model_arn)
-                else:
+                if "ON_DEMAND" in model["inferenceTypesSupported"]:
                     models.append(
                         ModelResponse(
                             model_id=model["modelId"],
                             name=model["modelName"],
                         )
                     )
+                else:
+                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
+                        model["modelId"], model_arns
+                    )
+                    if model_arn:
+                        models.append(model_arn)
 
         return models
 
