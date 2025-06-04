@@ -57,6 +57,7 @@ from ....services.amp_metadata import (
     get_application_config,
 )
 from ....services.amp_update import does_amp_need_updating
+from ....services.models import CAIIModelProvider
 
 router = APIRouter(prefix="/amp", tags=["AMP"])
 
@@ -192,7 +193,7 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     """
     save_cdp_token(auth_token)
     try:
-        models.LLM.list_available()
+        CAIIModelProvider.list_llm_models()
     except Exception:
         os.remove("cdp_token")
         raise fastapi.HTTPException(
