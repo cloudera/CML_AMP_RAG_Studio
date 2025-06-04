@@ -65,7 +65,8 @@ class BotoObject:
 
 
 @pytest.fixture
-def qdrant_client() -> q_client.QdrantClient:
+def qdrant_client(monkeypatch: pytest.MonkeyPatch) -> q_client.QdrantClient:
+    monkeypatch.setenv("VECTOR_DB_PROVIDER", "QDRANT")
     return q_client.QdrantClient(":memory:")
 
 
