@@ -45,8 +45,14 @@ const helpText = {
   CAII: (
     <Typography>
       <ul>
-        <li>Cloudera AI models must be enabled in the Cloudera AI Model Hub</li>
-        <li>WIP</li>
+        <li>
+          Cloudera AI models must be enabled in the Cloudera AI Model Hub to use
+          them within RAG Studio.
+        </li>
+        <li>
+          At least one Inference and one Embedding model must available in the
+          Model Hub.
+        </li>
       </ul>
     </Typography>
   ),
@@ -72,7 +78,7 @@ const helpText = {
         <li>
           Access to Amazon Bedrock models may need to be granted within Bedrock.
         </li>
-        <li>All enabled inference and embedding will appear below.</li>
+        <li>All enabled Inference and Embedding models will appear below.</li>
         <li>
           For reranking models, we support the following models:
           <li>Cohere Rerank v3.5</li>
@@ -81,7 +87,29 @@ const helpText = {
       </ul>
     </Typography>
   ),
-  OpenAI: "",
+  OpenAI: (
+    <Typography>
+      <ul>
+        <li>
+          OpenAI models must be enabled in the OpenAI portal to use them within
+          RAG Studio.
+        </li>
+        <li>
+          At least one Inference and one Embedding model must available in the
+          OpenAI portal.
+        </li>
+        <li>
+          We support the follow models Inference models:
+          <li>gpt-4o</li>
+        </li>
+        <li>
+          We also support the following Embedding models:
+          <li>text-embedding-ada-002</li>
+          <li>text-embedding-3-large</li>
+        </li>
+      </ul>
+    </Typography>
+  ),
 };
 
 const getItems: (modelSource: ModelSource) => CollapseProps["items"] = (
