@@ -77,13 +77,16 @@ class BedrockModelProvider(ModelProvider):
             byOutputModality=modality
         )["modelSummaries"]
 
-        return foundation_models
+        return cast(list[dict[str, Any]], foundation_models)
 
     @staticmethod
     def list_available_models(
         modality: Optional[BedrockModality] = None,
     ) -> list[dict[str, Any]]:
-        credentials = boto3.Session().get_credentials().get_frozen_credentials()
+        credentials = boto3.Session().get_credentials()
+        if credentials is None:
+            raise RuntimeError("AWS credentials not found")
+        credentials = credentials.get_frozen_credentials()
         base_url = (
             f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
             "foundation-model-availability/"
@@ -91,6 +94,9 @@ class BedrockModelProvider(ModelProvider):
         models = BedrockModelProvider.list_all_models(modality)
         available_models = []
         aws_requests = []
+        aws_default_region = (
+            settings.aws_default_region if settings.aws_default_region else "us-west-2"
+        )
         for model in models:
             if (
                 "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
@@ -101,17 +107,17 @@ class BedrockModelProvider(ModelProvider):
                 request = AWSRequest(method="GET", url=url, headers={})
 
                 # Sign the request
-                SigV4Auth(credentials, "bedrock", settings.aws_default_region).add_auth(
-                    request
-                )
+                SigV4Auth(credentials, "bedrock", aws_default_region).add_auth(request)
 
                 aws_requests.append((url, dict(request.headers)))
 
-        def get_aws_responses(url: str, headers: dict) -> list[dict[str, Any]]:
+        def get_aws_responses(
+            unquoted_url: str, headers: dict[str, str]
+        ) -> dict[str, Any]:
             """Fetch responses from AWS for the given requests."""
-            response = requests.get(url, headers=headers)
+            response = requests.get(unquoted_url, headers=headers)
             raise_for_http_error(response)
-            return response.json()
+            return cast(dict[str, Any], response.json())
 
         responses: list[dict[str, Any] | None] = [None for _ in aws_requests]
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -132,11 +138,11 @@ class BedrockModelProvider(ModelProvider):
                 if model_data["entitlementAvailability"] == "AVAILABLE":
                     available_models.append(model)
 
-        return available_models
+        return cast(list[dict[str, Any]], available_models)
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:
-        modality = TypeAdapter(BedrockModality).validate_python("TEXT")
+        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python("TEXT")
         available_models = BedrockModelProvider.list_available_models(modality)
 
         model_arns = BedrockModelProvider._get_model_arns()
@@ -184,7 +190,9 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def list_embedding_models() -> list[ModelResponse]:
-        modality = TypeAdapter(BedrockModality).validate_python("EMBEDDING")
+        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python(
+            "EMBEDDING"
+        )
         available_models = BedrockModelProvider.list_available_models(modality)
 
         models = []
