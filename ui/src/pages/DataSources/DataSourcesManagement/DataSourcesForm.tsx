@@ -37,6 +37,7 @@
  ******************************************************************************/
 
 import {
+  Alert,
   Collapse,
   Divider,
   Form,
@@ -160,6 +161,16 @@ const DataSourcesForm = ({
       style={{ width: "100%" }}
       {...layout}
     >
+      {embeddingsModels.isSuccess && embeddingsModels.data.length === 0 ? (
+        <Alert
+          type="warning"
+          showIcon={true}
+          message={
+            "At least one embedding model must be available to create a knowledge base"
+          }
+          style={{ marginBottom: 16 }}
+        />
+      ) : null}
       <Form.Item
         name="name"
         label="Name"
