@@ -86,6 +86,21 @@ class BedrockModelProvider(ModelProvider):
             ):
                 valid_foundation_models.append(model)
 
+        # Order model according to provider in the given order - 1. Meta, 2. Anthropic, 3. Cohere, 4. Mistral, rest of the providers
+        sorted_valid_models = []
+        provider_order = ["meta", "anthropic", "cohere", "mistral ai"]
+
+        def provider_sort_key(foundation_model: dict[str, Any]) -> tuple[int, str]:
+            provider = foundation_model.get("providerName", "").lower()
+            try:
+                # Providers in the list get their index as sort key
+                return provider_order.index(provider), ""
+            except ValueError:
+                # Others get a large index and are sorted alphabetically after
+                return len(provider_order), provider
+
+        valid_foundation_models.sort(key=provider_sort_key)
+
         return cast(list[dict[str, Any]], valid_foundation_models)
 
     @staticmethod
@@ -155,17 +170,9 @@ class BedrockModelProvider(ModelProvider):
 
         model_arns = BedrockModelProvider._get_model_arns()
 
-        models = [
-            ModelResponse(
-                model_id=DEFAULT_BEDROCK_LLM_MODEL,
-                name="Meta Llama 3.1 8B Instruct",
-            )
-        ]
+        models = []
         for model in available_models:
-            if (
-                "rerank" not in model["modelId"].lower()
-                and model["modelId"] != DEFAULT_BEDROCK_LLM_MODEL
-            ):
+            if "rerank" not in model["modelId"].lower():
                 if "ON_DEMAND" in model["inferenceTypesSupported"]:
                     models.append(
                         ModelResponse(
