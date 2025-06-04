@@ -51,6 +51,7 @@ import {
   checkHandledCaiiError,
   ModelErrors,
 } from "pages/Models/ModelErrors.tsx";
+import ModelTips from "pages/Models/ModelTips.tsx";
 
 const ModelPage = () => {
   const {
@@ -68,7 +69,7 @@ const ModelPage = () => {
     isLoading: areRerankingModelsLoading,
     error: rerankingError,
   } = useGetRerankingModels();
-  const getModelSource = useGetModelSource();
+  const { data: modelSource } = useGetModelSource();
 
   return (
     <Flex vertical style={{ marginLeft: 60 }}>
@@ -76,8 +77,9 @@ const ModelPage = () => {
         inferenceError={inferenceError}
         embeddingError={embeddingError}
         rerankingError={rerankingError}
-        modelSource={getModelSource.data}
+        modelSource={modelSource}
       />
+      <ModelTips modelSource={modelSource} />
       <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
         {checkHandledCaiiError(
           inferenceError,

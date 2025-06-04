@@ -35,6 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import os
+from typing import Optional
+
+import httpx
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
@@ -77,6 +81,14 @@ class OpenAiModelProvider(ModelProvider):
         return []
 
     @staticmethod
+    def _http_client() -> Optional[httpx.Client]:
+        if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
+            return httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
+        else:
+            return None
+
+
+    @staticmethod
     def get_llm_model(name: str) -> OpenAI:
         return OpenAI(
             model=name,
@@ -85,6 +97,7 @@ class OpenAiModelProvider(ModelProvider):
             max_tokens=2048,
             api_base=settings.openai_api_base,
             api_key=settings.openai_api_key,
+            http_client=OpenAiModelProvider._http_client(),
         )
 
     @staticmethod
@@ -93,6 +106,7 @@ class OpenAiModelProvider(ModelProvider):
             model_name=name,
             api_key=settings.openai_api_key,
             api_base=settings.openai_api_base,
+            http_client=OpenAiModelProvider._http_client(),
         )
 
     @staticmethod

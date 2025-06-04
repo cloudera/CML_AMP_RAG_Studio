@@ -46,6 +46,7 @@ import { ApiError } from "./api/utils";
 import { Flex, Spin, Typography } from "antd";
 import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
 import { CustomUnhandledError } from "src/components/ErrorComponents/CustomUnhandledError.tsx";
+import "@ant-design/v5-patch-for-react-19";
 
 const queryClient = new QueryClient({
   defaultOptions: {

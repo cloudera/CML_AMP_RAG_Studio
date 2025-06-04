@@ -88,7 +88,7 @@ export const AuthenticationFields = ({
         ]}
         hidden={!usingAws}
       >
-        <Input placeholder="access-key-id" disabled={!enableModification} />
+        <Input placeholder="access-key-id" />
       </Form.Item>
       <Form.Item
         label={"AWS Secret Access Key"}
@@ -102,11 +102,7 @@ export const AuthenticationFields = ({
         ]}
         hidden={!usingAws}
       >
-        <Input
-          placeholder="secret-access-key"
-          type="password"
-          disabled={!enableModification}
-        />
+        <Input placeholder="secret-access-key" type="password" />
       </Form.Item>
       <Form.Item
         label={"Azure OpenAI Key"}
@@ -116,11 +112,7 @@ export const AuthenticationFields = ({
         rules={[{ required: modelProvider === "Azure" }]}
         hidden={modelProvider !== "Azure"}
       >
-        <Input
-          placeholder="azure-openai-key"
-          type="password"
-          disabled={!enableModification}
-        />
+        <Input placeholder="azure-openai-key" type="password" />
       </Form.Item>
       <Form.Item
         label={"OpenAI API Key"}
@@ -130,11 +122,7 @@ export const AuthenticationFields = ({
         rules={[{ required: modelProvider === "OpenAI" }]}
         hidden={modelProvider !== "OpenAI"}
       >
-        <Input
-          placeholder="openai-api-key"
-          type="password"
-          disabled={!enableModification}
-        />
+        <Input placeholder="openai-api-key" type="password" />
       </Form.Item>
       <Form.Item
         label={"CDP Auth Token"}
@@ -155,11 +143,7 @@ export const AuthenticationFields = ({
         }
         hidden={modelProvider !== "CAII"}
       >
-        <Input
-          placeholder="cdp-auth-token"
-          type="password"
-          disabled={!enableModification}
-        />
+        <Input placeholder="cdp-auth-token" type="password" />
       </Form.Item>
     </Flex>
   );

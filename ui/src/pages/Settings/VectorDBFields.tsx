@@ -95,8 +95,8 @@ export const VectorDBFields = ({
         {
           pattern: /^[a-zA-Z0-9]+$/,
           message: "Only alphanumeric characters are allowed",
-          warningOnly: false
-        }
+          warningOnly: false,
+        },
       ]}
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
@@ -109,7 +109,7 @@ export const VectorDBFields = ({
       tooltip="Cloudera Semantic Search username."
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
-      <Input placeholder="admin" disabled={!enableModification} />
+      <Input placeholder="admin" />
     </Form.Item>
     <Form.Item
       label={"OpenSearch Password"}
@@ -118,11 +118,7 @@ export const VectorDBFields = ({
       tooltip="Cloudera Semantic Search password."
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
-      <Input
-        type="password"
-        placeholder="admin"
-        disabled={!enableModification}
-      />
+      <Input type="password" placeholder="admin" />
     </Form.Item>
   </Flex>
 );

@@ -133,8 +133,9 @@ class OpenSearch(VectorStore, ABC):
         query = {"query": {"terms": {"_id": [chunk_id]}}}
         raw_results = self._low_level_client.search(index=self.table_name, body=query)
         if raw_results["hits"] and raw_results["hits"]["hits"]:
+            source = raw_results["hits"]["hits"][0]["_source"]
             return TextNode(
-                id_=chunk_id, text=raw_results["hits"]["hits"][0]["_source"]["content"]
+                id_=chunk_id, text=source["content"], metadata=source["metadata"]
             )
         else:
             logger.error(f"Chunk not found for query: {query}")

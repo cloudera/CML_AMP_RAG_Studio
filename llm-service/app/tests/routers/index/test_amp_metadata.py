@@ -43,6 +43,8 @@ from unittest.mock import patch, mock_open, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
+from app.services.models.providers import CAIIModelProvider
+
 
 @pytest.fixture()
 def mock_json_dump() -> Generator[Any, None, None]:
@@ -57,6 +59,11 @@ def mock_file() -> Generator[Any, None, None]:
 
 
 class TestAmpMetadata:
+    @pytest.fixture(autouse=True)
+    def list_caii_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Monkey patch fetching CAII models."""
+        monkeypatch.setattr(CAIIModelProvider, "list_llm_models", lambda: [])
+
     @staticmethod
     def test_save_auth_token(
         client: TestClient, mock_json_dump: MagicMock, mock_file: MagicMock

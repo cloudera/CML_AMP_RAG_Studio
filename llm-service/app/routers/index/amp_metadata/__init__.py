@@ -35,9 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
+import json
 import os
 import subprocess
-import json
 from subprocess import CompletedProcess
 from typing import Annotated
 
@@ -46,7 +46,6 @@ from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
-from ....services import models
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
@@ -57,6 +56,7 @@ from ....services.amp_metadata import (
     get_application_config,
 )
 from ....services.amp_update import does_amp_need_updating
+from ....services.models.providers import CAIIModelProvider
 
 router = APIRouter(prefix="/amp", tags=["AMP"])
 
@@ -192,7 +192,7 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     """
     save_cdp_token(auth_token)
     try:
-        models.LLM.list_available()
+        CAIIModelProvider.list_llm_models()
     except Exception:
         os.remove("cdp_token")
         raise fastapi.HTTPException(
