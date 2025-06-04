@@ -56,7 +56,7 @@ from ....services.amp_metadata import (
     get_application_config,
 )
 from ....services.amp_update import does_amp_need_updating
-from ....services.models import CAIIModelProvider
+from ....services.models.providers import CAIIModelProvider
 
 router = APIRouter(prefix="/amp", tags=["AMP"])
 

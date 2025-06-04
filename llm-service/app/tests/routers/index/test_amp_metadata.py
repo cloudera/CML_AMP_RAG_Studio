@@ -43,7 +43,7 @@ from unittest.mock import patch, mock_open, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from app.services.models import CAIIModelProvider
+from app.services.models.providers import CAIIModelProvider
 
 
 @pytest.fixture()
