@@ -35,6 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import concurrent.futures
+import logging
 from typing import Optional, cast, Any, Literal
 from urllib.parse import unquote
 
@@ -52,6 +54,8 @@ from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import raise_for_http_error
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
@@ -75,14 +79,42 @@ class BedrockModelProvider(ModelProvider):
         foundation_models = bedrock_client.list_foundation_models(
             byOutputModality=modality
         )["modelSummaries"]
+        valid_foundation_models = []
 
-        return foundation_models
+        # Filter models based on inference types supported
+        for model in foundation_models:
+            if (
+                "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
+                or "ON_DEMAND" in model["inferenceTypesSupported"]
+            ):
+                valid_foundation_models.append(model)
+
+        # Order model according to provider in the given order - 1. Meta, 2. Anthropic, 3. Cohere, 4. Mistral, rest of the providers
+        provider_order = ["meta", "anthropic", "cohere", "mistral ai"]
+
+        def provider_sort_key(foundation_model: dict[str, Any]) -> tuple[int, str]:
+            provider = foundation_model.get("providerName", "").lower()
+            try:
+                # Providers in the list get their index as sort key
+                return provider_order.index(provider), ""
+            except ValueError:
+                # Others get a large index and are sorted alphabetically after
+                return len(provider_order), provider
+
+        valid_foundation_models.sort(key=provider_sort_key)
+
+        return cast(list[dict[str, Any]], valid_foundation_models)
 
     @staticmethod
     def list_available_models(
         modality: Optional[BedrockModality] = None,
     ) -> list[dict[str, Any]]:
-        credentials = boto3.Session().get_credentials().get_frozen_credentials()
+        if settings.aws_default_region is None:
+            raise ValueError("AWS default region is not set")
+        credentials = boto3.Session().get_credentials()
+        if credentials is None:
+            raise ValueError("AWS credentials not set")
+        credentials = credentials.get_frozen_credentials()
         base_url = (
             f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
             "foundation-model-availability/"
@@ -91,36 +123,51 @@ class BedrockModelProvider(ModelProvider):
         available_models = []
         aws_requests = []
         for model in models:
-            if (
-                "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
-                or "ON_DEMAND" in model["inferenceTypesSupported"]
-            ):
-                model_id = model["modelId"]
-                url = unquote(f"{base_url}{model_id}")
-                request = AWSRequest(method="GET", url=url, headers={})
+            model_id = model["modelId"]
+            url = unquote(f"{base_url}{model_id}")
+            request = AWSRequest(method="GET", url=url, headers={})
 
-                # Sign the request
-                SigV4Auth(credentials, "bedrock", settings.aws_default_region).add_auth(
-                    request
-                )
+            # Sign the request
+            SigV4Auth(credentials, "bedrock", settings.aws_default_region).add_auth(
+                request
+            )
 
-                aws_requests.append((url, dict(request.headers)))
+            aws_requests.append((url, dict(request.headers)))
 
-        responses = []
-        for url, headers in aws_requests:
-            response = requests.get(url, headers=dict(headers))
+        def get_aws_responses(
+            unquoted_url: str, headers: dict[str, str]
+        ) -> dict[str, Any]:
+            """Fetch responses from AWS for the given requests."""
+            response = requests.get(unquoted_url, headers=headers)
             raise_for_http_error(response)
-            responses.append(response.json())
+            return cast(dict[str, Any], response.json())
+
+        responses: list[dict[str, Any] | None] = [None for _ in aws_requests]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_index = {
+                executor.submit(get_aws_responses, url, headers): idx
+                for idx, (url, headers) in enumerate(aws_requests)
+            }
+            for future in concurrent.futures.as_completed(future_to_index):
+                idx = future_to_index[future]
+                try:
+                    responses[idx] = future.result()
+                except Exception:
+                    logger.exception(
+                        "Error fetching data for model %s", models[idx]["modelId"]
+                    )
+                    responses[idx] = None
 
         for model, model_data in zip(models, responses):
-            if model_data["entitlementAvailability"] == "AVAILABLE":
-                available_models.append(model)
+            if model_data:
+                if model_data["entitlementAvailability"] == "AVAILABLE":
+                    available_models.append(model)
 
         return available_models
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:
-        modality = TypeAdapter(BedrockModality).validate_python("TEXT")
+        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python("TEXT")
         available_models = BedrockModelProvider.list_available_models(modality)
 
         model_arns = BedrockModelProvider._get_model_arns()
@@ -128,19 +175,19 @@ class BedrockModelProvider(ModelProvider):
         models = []
         for model in available_models:
             if "rerank" not in model["modelId"].lower():
-                if "INFERENCE_PROFILE" in model["inferenceTypesSupported"]:
-                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
-                        model["modelId"], model_arns
-                    )
-                    if model_arn:
-                        models.append(model_arn)
-                else:
+                if "ON_DEMAND" in model["inferenceTypesSupported"]:
                     models.append(
                         ModelResponse(
                             model_id=model["modelId"],
                             name=model["modelName"],
                         )
                     )
+                else:
+                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
+                        model["modelId"], model_arns
+                    )
+                    if model_arn:
+                        models.append(model_arn)
 
         return models
 
@@ -168,9 +215,10 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def list_embedding_models() -> list[ModelResponse]:
-        modality = TypeAdapter(BedrockModality).validate_python("EMBEDDING")
+        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python(
+            "EMBEDDING"
+        )
         available_models = BedrockModelProvider.list_available_models(modality)
-        print(available_models)
 
         models = []
         for model in available_models:
