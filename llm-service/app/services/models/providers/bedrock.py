@@ -152,7 +152,7 @@ class BedrockModelProvider(ModelProvider):
                 idx = future_to_index[future]
                 try:
                     responses[idx] = future.result()
-                except Exception as e:
+                except Exception:
                     logger.exception(
                         "Error fetching data for model %s", models[idx]["modelId"]
                     )
