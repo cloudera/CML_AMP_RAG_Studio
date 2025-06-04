@@ -152,9 +152,17 @@ class BedrockModelProvider(ModelProvider):
 
         model_arns = BedrockModelProvider._get_model_arns()
 
-        models = []
+        models = [
+            ModelResponse(
+                model_id=DEFAULT_BEDROCK_LLM_MODEL,
+                name="US Meta Llama 3.1 8B Instruct",
+            )
+        ]
         for model in available_models:
-            if "rerank" not in model["modelId"].lower():
+            if (
+                "rerank" not in model["modelId"].lower()
+                and model["modelId"] != DEFAULT_BEDROCK_LLM_MODEL
+            ):
                 if "INFERENCE_PROFILE" in model["inferenceTypesSupported"]:
                     model_arn = BedrockModelProvider._get_model_arn_by_profiles(
                         model["modelId"], model_arns
