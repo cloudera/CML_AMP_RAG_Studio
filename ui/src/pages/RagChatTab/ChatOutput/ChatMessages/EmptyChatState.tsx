@@ -36,24 +36,42 @@
  * DATA.
  */
 
-import { Alert, Image, Typography } from "antd";
+import { Alert, Button, Image, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
 import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
 import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
 import { useGetLlmModels } from "src/api/modelsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useNavigate } from "@tanstack/react-router";
 
 const EmptyChatState = () => {
   const { data: llmModels, isSuccess } = useGetLlmModels();
+  const navigate = useNavigate();
 
   return (
     <>
-      {isSuccess && llmModels.length === 0 && (
+      {isSuccess && llmModels.length === 0 ? (
         <Alert
           type="warning"
           showIcon
-          message={"At least one inference model must be available to chat"}
+          message={"One inference model must be available to chat"}
+          action={
+            <Button
+              style={{ marginLeft: 12 }}
+              onClick={() => {
+                navigate({
+                  to: "/settings",
+                  hash: "modelConfiguration",
+                }).catch(() => {
+                  messageQueue.error("Failed to navigate to models page");
+                });
+              }}
+            >
+              Model Config
+            </Button>
+          }
         />
-      )}
+      ) : null}
       <Image
         src={Images.BrandTalking}
         alt="Machines Chatting"

@@ -38,6 +38,7 @@
 
 import {
   Alert,
+  Button,
   Collapse,
   Divider,
   Form,
@@ -52,6 +53,8 @@ import { ConnectionType, DataSourceBaseType } from "src/api/dataSourceApi";
 import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import { useEffect } from "react";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { useNavigate } from "@tanstack/react-router";
+import messageQueue from "src/utils/messageQueue.ts";
 
 export const distanceMetricOptions = [
   {
@@ -144,6 +147,7 @@ const DataSourcesForm = ({
 }: DataSourcesFormProps) => {
   const embeddingsModels = useGetEmbeddingModels();
   const llmModels = useGetLlmModels();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (initialValues.embeddingModel) {
@@ -166,9 +170,23 @@ const DataSourcesForm = ({
           type="warning"
           showIcon={true}
           message={
-            "At least one embedding model must be available to create a knowledge base"
+            "One embedding model must be available to create a knowledge base"
           }
           style={{ marginBottom: 16 }}
+          action={
+            <Button
+              onClick={() => {
+                navigate({
+                  to: "/settings",
+                  hash: "modelConfiguration",
+                }).catch(() => {
+                  messageQueue.error("Failed to navigate to models page");
+                });
+              }}
+            >
+              Model Config
+            </Button>
+          }
         />
       ) : null}
       <Form.Item
