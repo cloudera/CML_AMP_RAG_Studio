@@ -92,9 +92,11 @@ class BedrockModelProvider(ModelProvider):
     def list_available_models(
         modality: Optional[BedrockModality] = None,
     ) -> list[dict[str, Any]]:
+        if settings.aws_default_region is None:
+            raise ValueError("AWS default region is not set")
         credentials = boto3.Session().get_credentials()
         if credentials is None:
-            raise RuntimeError("AWS credentials not found")
+            raise ValueError("AWS credentials not set")
         credentials = credentials.get_frozen_credentials()
         base_url = (
             f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
@@ -103,16 +105,15 @@ class BedrockModelProvider(ModelProvider):
         models = BedrockModelProvider.list_all_models(modality)
         available_models = []
         aws_requests = []
-        aws_default_region = (
-            settings.aws_default_region if settings.aws_default_region else "us-west-2"
-        )
         for model in models:
             model_id = model["modelId"]
             url = unquote(f"{base_url}{model_id}")
             request = AWSRequest(method="GET", url=url, headers={})
 
             # Sign the request
-            SigV4Auth(credentials, "bedrock", aws_default_region).add_auth(request)
+            SigV4Auth(credentials, "bedrock", settings.aws_default_region).add_auth(
+                request
+            )
 
             aws_requests.append((url, dict(request.headers)))
 
@@ -125,7 +126,7 @@ class BedrockModelProvider(ModelProvider):
             return cast(dict[str, Any], response.json())
 
         responses: list[dict[str, Any] | None] = [None for _ in aws_requests]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_index = {
                 executor.submit(get_aws_responses, url, headers): idx
                 for idx, (url, headers) in enumerate(aws_requests)
@@ -135,7 +136,9 @@ class BedrockModelProvider(ModelProvider):
                 try:
                     responses[idx] = future.result()
                 except Exception as e:
-                    print(f"Error fetching data for request {idx}: {e}")
+                    print(
+                        f"Error fetching data for model {models[idx]['modelId']}: {e}"
+                    )
                     responses[idx] = None
 
         for model, model_data in zip(models, responses):
