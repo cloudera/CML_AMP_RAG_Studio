@@ -76,9 +76,12 @@ class BedrockModelProvider(ModelProvider):
             "bedrock",
             region_name=settings.aws_default_region,
         )
-        foundation_models = bedrock_client.list_foundation_models(
-            byOutputModality=modality
-        )["modelSummaries"]
+        foundation_models = cast(
+            list[dict[str, Any]],
+            bedrock_client.list_foundation_models(byOutputModality=modality)[
+                "modelSummaries"
+            ],
+        )
         return foundation_models
 
     @staticmethod
@@ -110,7 +113,7 @@ class BedrockModelProvider(ModelProvider):
 
         valid_foundation_models.sort(key=provider_sort_key)
 
-        return cast(list[dict[str, Any]], valid_foundation_models)
+        return valid_foundation_models
 
     @staticmethod
     def list_available_models(
