@@ -87,7 +87,6 @@ class BedrockModelProvider(ModelProvider):
                 valid_foundation_models.append(model)
 
         # Order model according to provider in the given order - 1. Meta, 2. Anthropic, 3. Cohere, 4. Mistral, rest of the providers
-        sorted_valid_models = []
         provider_order = ["meta", "anthropic", "cohere", "mistral ai"]
 
         def provider_sort_key(foundation_model: dict[str, Any]) -> tuple[int, str]:
