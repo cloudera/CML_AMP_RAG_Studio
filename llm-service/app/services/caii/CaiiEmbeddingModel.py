@@ -35,26 +35,27 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import http.client as http_client
 import json
 from typing import Any, List
 
+import httpx
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
 
 from .types import Endpoint
 from .utils import build_auth_headers
-from ...config import settings
 
 
 class CaiiEmbeddingModel(BaseEmbedding):
     endpoint: Endpoint = Field(
         Endpoint, description="The endpoint to use for embeddings"
     )
+    http_client: httpx.Client = Field(httpx.Client, description="The http client to use for requests")
 
-    def __init__(self, endpoint: Endpoint):
+    def __init__(self, endpoint: Endpoint, http_client: httpx.Client | None = httpx.Client()):
         super().__init__()
         self.endpoint = endpoint
+        self.http_client = http_client or httpx.Client()
 
     def _get_text_embedding(self, text: str) -> Embedding:
         return self._get_embedding(text, "passage")
@@ -83,15 +84,11 @@ class CaiiEmbeddingModel(BaseEmbedding):
         return embedding
 
     def make_embedding_request(self, body: str) -> Any:
-        domain = settings.caii_domain
-
-        connection = http_client.HTTPSConnection(domain, 443)
         headers = build_auth_headers()
         headers["Content-Type"] = "application/json"
-        connection.request("POST", self.endpoint.url, body=body, headers=headers)
-        res = connection.getresponse()
-        data = res.read()
-        json_response = data.decode("utf-8")
+        response = self.http_client.post(url=self.endpoint.url, content=body, headers=headers)
+        res = response.content
+        json_response = res.decode("utf-8")
         structured_response = json.loads(json_response)
         return structured_response
 

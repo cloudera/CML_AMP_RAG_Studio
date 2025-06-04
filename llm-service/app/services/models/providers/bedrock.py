@@ -89,7 +89,7 @@ class BedrockModelProvider(ModelProvider):
         )
         models = BedrockModelProvider.list_all_models(modality)
         available_models = []
-        requests = []
+        aws_requests = []
         for model in models:
             if (
                 "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
@@ -104,10 +104,10 @@ class BedrockModelProvider(ModelProvider):
                     request
                 )
 
-                requests.append((url, dict(request.headers)))
+                aws_requests.append((url, dict(request.headers)))
 
         responses = []
-        for url, headers in requests:
+        for url, headers in aws_requests:
             response = requests.get(url, headers=dict(headers))
             raise_for_http_error(response)
             responses.append(response.json())
