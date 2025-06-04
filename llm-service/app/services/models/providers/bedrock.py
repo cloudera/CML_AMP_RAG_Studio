@@ -36,6 +36,7 @@
 #  DATA.
 #
 import concurrent.futures
+import json
 from typing import Optional, cast, Any, Literal
 from urllib.parse import unquote
 
@@ -76,8 +77,17 @@ class BedrockModelProvider(ModelProvider):
         foundation_models = bedrock_client.list_foundation_models(
             byOutputModality=modality
         )["modelSummaries"]
+        valid_foundation_models = []
 
-        return cast(list[dict[str, Any]], foundation_models)
+        # Filter models based on inference types supported
+        for model in foundation_models:
+            if (
+                "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
+                or "ON_DEMAND" in model["inferenceTypesSupported"]
+            ):
+                valid_foundation_models.append(model)
+
+        return cast(list[dict[str, Any]], valid_foundation_models)
 
     @staticmethod
     def list_available_models(
@@ -98,18 +108,14 @@ class BedrockModelProvider(ModelProvider):
             settings.aws_default_region if settings.aws_default_region else "us-west-2"
         )
         for model in models:
-            if (
-                "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
-                or "ON_DEMAND" in model["inferenceTypesSupported"]
-            ):
-                model_id = model["modelId"]
-                url = unquote(f"{base_url}{model_id}")
-                request = AWSRequest(method="GET", url=url, headers={})
+            model_id = model["modelId"]
+            url = unquote(f"{base_url}{model_id}")
+            request = AWSRequest(method="GET", url=url, headers={})
 
-                # Sign the request
-                SigV4Auth(credentials, "bedrock", aws_default_region).add_auth(request)
+            # Sign the request
+            SigV4Auth(credentials, "bedrock", aws_default_region).add_auth(request)
 
-                aws_requests.append((url, dict(request.headers)))
+            aws_requests.append((url, dict(request.headers)))
 
         def get_aws_responses(
             unquoted_url: str, headers: dict[str, str]
