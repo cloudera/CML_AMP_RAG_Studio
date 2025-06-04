@@ -98,15 +98,6 @@ const helpText = {
           At least one Inference and one Embedding model must available in the
           OpenAI portal.
         </li>
-        <li>
-          We support the follow models Inference models:
-          <li>gpt-4o</li>
-        </li>
-        <li>
-          We also support the following Embedding models:
-          <li>text-embedding-ada-002</li>
-          <li>text-embedding-3-large</li>
-        </li>
       </ul>
     </Typography>
   ),
