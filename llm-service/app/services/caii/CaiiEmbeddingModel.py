@@ -52,7 +52,7 @@ class CaiiEmbeddingModel(BaseEmbedding):
     )
     http_client: httpx.Client = Field(httpx.Client, description="The http client to use for requests")
 
-    def __init__(self, endpoint: Endpoint, http_client: httpx.Client):
+    def __init__(self, endpoint: Endpoint, http_client: httpx.Client | None = httpx.Client()):
         super().__init__()
         self.endpoint = endpoint
         self.http_client = http_client or httpx.Client()
