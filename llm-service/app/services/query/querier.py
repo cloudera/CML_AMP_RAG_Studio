@@ -248,12 +248,15 @@ def get_nodes_from_output(
                 extracted_source_nodes = vector_store.get_nodes(node_ids=node_ids)
 
                 # cast them into NodeWithScore with score 0.0
-                source_nodes = [
-                    NodeWithScore(
-                        node=node, score=source_node_ids_w_score.get(node.node_id, 0.0)
-                    )
-                    for node in extracted_source_nodes
-                ]
+                source_nodes.extend(
+                    [
+                        NodeWithScore(
+                            node=node,
+                            score=source_node_ids_w_score.get(node.node_id, 0.0),
+                        )
+                        for node in extracted_source_nodes
+                    ]
+                )
         except Exception as e:
             logger.warning(
                 "Failed to extract nodes from response citations (%s): %s",
