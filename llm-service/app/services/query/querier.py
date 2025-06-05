@@ -49,6 +49,7 @@ from .agents.crewai_querier import (
     poison_pill,
 )
 from .crew_events import CrewEvent
+from .flexible_retriever import FlexibleRetriever
 from ..metadata_apis.session_metadata_api import Session
 from ...config import settings
 
@@ -121,6 +122,7 @@ def streaming_query(
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
     session: Session,
+    retriever: Optional[FlexibleRetriever]
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
@@ -158,14 +160,12 @@ def streaming_query(
             crew = assemble_crew(
                 use_retrieval,
                 llm,
-                embedding_model,
                 chat_messages,
-                index,
                 query_str,
-                configuration,
                 data_source_id,
                 crew_events_queue,
                 mcp_tools,
+                retriever
             )
             enhanced_query, source_node_ids_w_score = launch_crew(
                 crew,
@@ -251,17 +251,11 @@ def query(
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[AgentChatResponse, str | None]:
-    qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-    vector_store = qdrant_store.llama_vector_store()
-    embedding_model = qdrant_store.get_embedding_model()
-    index = VectorStoreIndex.from_vector_store(
-        vector_store=vector_store,
-        embed_model=embedding_model,
-    )
     llm = models.LLM.get(model_name=configuration.model_name)
+    retriever = build_retriever(configuration, data_source_id, llm)
 
     chat_engine = build_flexible_chat_engine(
-        configuration, llm, embedding_model, index, data_source_id
+        configuration, llm, retriever
     )
 
     chat_messages = list(
@@ -286,3 +280,11 @@ def query(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
             detail=json_error["StatusReason"],
         ) from error
+
+
+def build_retriever(configuration, data_source_id, llm) -> Optional[FlexibleRetriever]:
+    embedding_model, vector_store = build_datasource_query_components(data_source_id)
+    retriever = FlexibleRetriever(
+        configuration, vector_store, embedding_model, data_source_id, llm
+    ) if embedding_model and vector_store else None
+    return retriever

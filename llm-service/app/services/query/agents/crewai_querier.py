@@ -58,6 +58,7 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
 from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 from app.services.query.tasks.calculation import build_calculation_task
 from app.services.query.tasks.date import build_date_task
@@ -108,18 +109,9 @@ def should_use_retrieval(
     return use_retrieval
 
 
-def assemble_crew(
-    use_retrieval: bool,
-    llm: LLM,
-    embedding_model: Optional[BaseEmbedding],
-    chat_messages: list[ChatMessage],
-    index: Optional[VectorStoreIndex],
-    query_str: str,
-    configuration: QueryConfiguration,
-    data_source_id: Optional[int],
-    crew_events_queue: Queue[CrewEvent],
-    mcp_tools: Optional[list[BaseTool]] = None,
-) -> Crew:
+def assemble_crew(use_retrieval: bool, llm: LLM, chat_messages: list[ChatMessage], query_str: str,
+                  data_source_id: Optional[int], crew_events_queue: Queue[CrewEvent],
+                  retriever: Optional[FlexibleRetriever], mcp_tools: Optional[list[BaseTool]] = None) -> Crew:
     crewai_llm = get_crewai_llm_object_direct(llm, getattr(llm, "model", ""))
     # Gather all the tools needed for the crew
 
@@ -129,14 +121,11 @@ def assemble_crew(
 
     # Create a retriever tool if needed
     crewai_retriever_tool = None
-    if use_retrieval and index and embedding_model and data_source_id:
+    if use_retrieval and retriever:
         logger.info("Planner decided to use retrieval")
         crewai_retriever_tool = build_retriever_tool(
-            configuration,
             data_source_id,
-            embedding_model,
-            index,
-            llm,
+            retriever
         )
         research_tools.append(crewai_retriever_tool)
 

@@ -60,12 +60,15 @@ from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
 from app.services.query.agents.crewai_querier import poison_pill
-from app.services.query.crew_events import CrewEvent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.querier import build_datasource_query_components
+from app.services.query.crew_events import CrewEvent
+from app.services.query.querier import (
+    build_datasource_query_components,
+    build_retriever,
+)
 from app.services.query.query_configuration import QueryConfiguration
 
 
@@ -162,16 +165,16 @@ def build_streamer(
         session.data_source_ids[0] if session.data_source_ids else None
     )
     llm = models.LLM.get(model_name=query_configuration.model_name)
-    embedding_model, vector_store = build_datasource_query_components(data_source_id)
+
+    retriever = build_retriever(query_configuration, data_source_id, llm)
+
     chat_engine: Optional[FlexibleContextChatEngine] = (
         build_flexible_chat_engine(
             query_configuration,
             llm,
-            embedding_model,
-            vector_store,
-            data_source_id,
+            retriever
         )
-        if data_source_id and embedding_model and vector_store
+        if retriever
         else None
     )
     chat_history = retrieve_chat_history(session.id)
@@ -194,6 +197,7 @@ def build_streamer(
         chat_messages,
         crew_events_queue=crew_events_queue,
         session=session,
+        retriever=retriever
     )
     return condensed_question, data_source_id, streaming_chat_response
 

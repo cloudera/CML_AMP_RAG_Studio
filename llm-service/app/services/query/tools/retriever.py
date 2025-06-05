@@ -136,27 +136,14 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         )
 
 
-def build_retriever_tool(
-    configuration: QueryConfiguration,
-    data_source_id: int,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    llm: LLM,
-) -> BaseTool:
-    base_retriever = FlexibleRetriever(
-        configuration=configuration,
-        index=index,
-        embedding_model=embedding_model,
-        data_source_id=data_source_id,
-        llm=llm,
-    )
+def build_retriever_tool(data_source_id: int, retriever: FlexibleRetriever) -> BaseTool:
     # fetch summary fromm index if available
     data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
     data_source_summary = None
     if data_source_summary_indexer:
         data_source_summary = data_source_summary_indexer.get_full_summary()
     retriever_tool = RetrieverToolWithNodeInfo(
-        retriever=base_retriever,
+        retriever=retriever,
         metadata=ToolMetadata(
             name="Retriever",
             description=(
