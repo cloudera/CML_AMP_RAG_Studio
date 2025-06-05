@@ -151,8 +151,10 @@ def assemble_crew(
         step_callback=lambda output: step_callback(
             output, "Tool Result", crew_events_queue
         ),
-        max_execution_time=30,
-        max_iter=5,
+        max_execution_time=60,
+        max_iter=15,
+        max_rpm=10,
+        max_retry_limit=5,
     )
 
     # Define tasks for the researcher agents
@@ -236,7 +238,7 @@ def assemble_crew(
             output, "Research Complete", crew_events_queue
         ),
         tools=mcp_tools,
-        max_retries=3,
+        max_retries=5,
         guardrail=validate_with_context,
     )
 
@@ -256,8 +258,10 @@ def assemble_crew(
             output, "Response Computed", crew_events_queue
         ),
         verbose=True,
-        max_execution_time=30,
-        max_iter=5,
+        max_execution_time=60,
+        max_iter=15,
+        max_rpm=10,
+        max_retry_limit=5,
     )
 
     response_context = [research_task, calculation_task]
