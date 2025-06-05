@@ -48,6 +48,7 @@ import { ModalHook } from "src/utils/useModal.ts";
 import { cdlBlue600, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
 import { ModelSource } from "src/api/modelsApi.ts";
 import { FileStorage } from "pages/Settings/AmpSettingsPage.tsx";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const PROGRESS_STATES = {
   WAITING: {
@@ -144,7 +145,7 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const { data: config } = useGetPollingAmpConfig(polling);
+  const { data: config } = useSuspenseQuery(useGetPollingAmpConfig(polling));
 
   const isRestarting = !config && polling;
 

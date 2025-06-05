@@ -185,7 +185,7 @@ export const useGetAmpConfig = () => {
 };
 
 export const useGetPollingAmpConfig = (poll?: boolean) => {
-  return useQuery({
+  return queryOptions({
     queryKey: [QueryKeys.getPollingAmpConfig],
     queryFn: getAmpConfig,
     refetchInterval: () => {
