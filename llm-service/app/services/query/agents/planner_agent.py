@@ -37,16 +37,16 @@
 #
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from crewai import Agent, Task, Crew, Process
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
 from pydantic import BaseModel, Field
 
+from app.services.models.providers import BedrockModelProvider, AzureModelProvider
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.query_configuration import QueryConfiguration
-from app.services.models.providers import BedrockModelProvider, AzureModelProvider
 
 logger = logging.getLogger(__name__)
 

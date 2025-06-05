@@ -66,7 +66,6 @@ from app.services.query.chat_engine import (
 )
 from app.services.query.crew_events import CrewEvent
 from app.services.query.querier import (
-    build_datasource_query_components,
     build_retriever,
 )
 from app.services.query.query_configuration import QueryConfiguration
@@ -166,11 +165,7 @@ def build_streamer(
     retriever = build_retriever(query_configuration, data_source_id, llm)
 
     chat_engine: Optional[FlexibleContextChatEngine] = (
-        build_flexible_chat_engine(
-            query_configuration,
-            llm,
-            retriever
-        )
+        build_flexible_chat_engine(query_configuration, llm, retriever)
         if retriever
         else None
     )
@@ -194,7 +189,7 @@ def build_streamer(
         chat_messages,
         crew_events_queue=crew_events_queue,
         session=session,
-        retriever=retriever
+        retriever=retriever,
     )
     return condensed_question, data_source_id, streaming_chat_response
 

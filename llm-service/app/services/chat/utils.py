@@ -36,13 +36,16 @@
 #  DATA.
 #
 
-from typing import List, Iterable, Optional
+from typing import List, Iterable
 
 from llama_index.core.base.llms.types import MessageRole
 from llama_index.core.chat_engine.types import AgentChatResponse
 from pydantic import BaseModel
 
-from app.services.chat_history.chat_history_manager import chat_history_manager, RagPredictSourceNode
+from app.services.chat_history.chat_history_manager import (
+    chat_history_manager,
+    RagPredictSourceNode,
+)
 
 
 class RagContext(BaseModel):

@@ -37,7 +37,6 @@
 #
 import logging
 import os
-import re
 from queue import Queue
 from typing import Optional, Tuple, Any
 

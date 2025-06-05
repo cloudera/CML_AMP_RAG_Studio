@@ -34,13 +34,13 @@ import os
 import re
 from copy import copy
 from queue import Queue
-from typing import Optional, TYPE_CHECKING, Tuple
+from typing import Optional, TYPE_CHECKING
 
 from crewai import CrewOutput
 from crewai.tools import BaseTool
 from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.schema import NodeWithScore, TextNode
+from llama_index.core.schema import NodeWithScore
 from mcp import StdioServerParameters
 
 from .agents.crewai_querier import (
