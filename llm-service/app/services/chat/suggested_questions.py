@@ -39,8 +39,6 @@
 from random import shuffle
 from typing import List, Optional
 
-from fastapi import HTTPException
-
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.services import llm_completion
 from app.services.chat.utils import retrieve_chat_history, process_response

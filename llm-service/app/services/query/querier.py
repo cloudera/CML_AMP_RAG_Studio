@@ -126,7 +126,7 @@ def streaming_query(
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
     session: Session,
-    retriever: Optional[FlexibleRetriever],
+    retriever: Optional[BaseRetriever],
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
@@ -330,7 +330,9 @@ def build_retriever(
 ) -> Optional[BaseRetriever]:
     retrievers: list[FlexibleRetriever] = []
     for data_source_id in data_source_ids:
-        embedding_model, vector_store = build_datasource_query_components(data_source_id)
+        embedding_model, vector_store = build_datasource_query_components(
+            data_source_id
+        )
         retriever = (
             FlexibleRetriever(
                 configuration, vector_store, embedding_model, data_source_id, llm
@@ -338,5 +340,6 @@ def build_retriever(
             if embedding_model and vector_store and data_source_id is not None
             else None
         )
-        retrievers.append(retriever)
+        if retriever:
+            retrievers.append(retriever)
     return MultiSourceRetriever(retrievers)

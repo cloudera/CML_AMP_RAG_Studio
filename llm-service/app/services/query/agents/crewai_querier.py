@@ -43,6 +43,7 @@ from typing import Optional, Tuple, Any
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
+from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
@@ -55,7 +56,6 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
 from app.services.query.crew_events import CrewEvent, step_callback
-from app.services.query.flexible_retriever import FlexibleRetriever
 from app.services.query.query_configuration import QueryConfiguration
 from app.services.query.tasks.calculation import build_calculation_task
 from app.services.query.tasks.date import build_date_task
@@ -112,7 +112,7 @@ def assemble_crew(
     chat_messages: list[ChatMessage],
     query_str: str,
     crew_events_queue: Queue[CrewEvent],
-    retriever: Optional[FlexibleRetriever],
+    retriever: Optional[BaseRetriever],
     data_source_summaries: dict[int, str],
     mcp_tools: Optional[list[BaseTool]] = None,
 ) -> Crew:

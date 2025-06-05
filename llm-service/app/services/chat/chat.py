@@ -40,7 +40,6 @@ import time
 import uuid
 from typing import Optional
 
-from fastapi import HTTPException
 from llama_index.core.chat_engine.types import AgentChatResponse
 
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory

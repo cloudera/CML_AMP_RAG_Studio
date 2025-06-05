@@ -50,7 +50,6 @@ from llama_index.core.response_synthesizers import CompactAndRefine
 from llama_index.core.schema import NodeWithScore, QueryBundle
 from llama_index.core.tools import ToolOutput
 
-from .flexible_retriever import FlexibleRetriever
 from .query_configuration import QueryConfiguration
 from .simple_reranker import SimpleReranker
 from .. import llm_completion, models
