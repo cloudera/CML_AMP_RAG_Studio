@@ -39,6 +39,7 @@ import logging
 from typing import Any, Optional, List, Tuple
 
 from llama_index.core import PromptTemplate
+from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import (
     CondensePlusContextChatEngine,
@@ -229,7 +230,7 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 def build_flexible_chat_engine(
     configuration: QueryConfiguration,
     llm: LLM,
-    retriever: Optional[FlexibleRetriever],
+    retriever: Optional[BaseRetriever],
 ) -> Optional[FlexibleContextChatEngine]:
     if not retriever:
         return None

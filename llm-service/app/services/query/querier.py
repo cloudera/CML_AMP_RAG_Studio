@@ -39,6 +39,7 @@ from typing import Optional, TYPE_CHECKING
 from crewai import CrewOutput
 from crewai.tools import BaseTool
 from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
+from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.schema import NodeWithScore
@@ -53,6 +54,7 @@ from .agents.crewai_querier import (
 )
 from .crew_events import CrewEvent
 from .flexible_retriever import FlexibleRetriever
+from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
 from ...config import settings
 
@@ -119,7 +121,6 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
 
 def streaming_query(
     chat_engine: Optional[FlexibleContextChatEngine],
-    data_source_id: Optional[int],
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
@@ -145,8 +146,6 @@ def streaming_query(
     try:
         for adapter in all_adapters:
             mcp_tools.extend(adapter.tools)
-
-        embedding_model, index = build_datasource_query_components(data_source_id)
 
         llm = models.LLM.get(model_name=configuration.model_name)
 
@@ -284,13 +283,13 @@ def build_datasource_query_components(
 
 
 def query(
-    data_source_id: int,
+    session: Session,
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
 ) -> tuple[AgentChatResponse, str | None]:
     llm = models.LLM.get(model_name=configuration.model_name)
-    retriever = build_retriever(configuration, data_source_id, llm)
+    retriever = build_retriever(configuration, session.data_source_ids, llm)
 
     chat_engine = build_flexible_chat_engine(configuration, llm, retriever)
 
@@ -326,15 +325,18 @@ def query(
 
 def build_retriever(
     configuration: QueryConfiguration,
-    data_source_id: Optional[int],
+    data_source_ids: list[int],
     llm: LLM,
-) -> Optional[FlexibleRetriever]:
-    embedding_model, vector_store = build_datasource_query_components(data_source_id)
-    retriever = (
-        FlexibleRetriever(
-            configuration, vector_store, embedding_model, data_source_id, llm
+) -> Optional[BaseRetriever]:
+    retrievers: list[FlexibleRetriever] = []
+    for data_source_id in data_source_ids:
+        embedding_model, vector_store = build_datasource_query_components(data_source_id)
+        retriever = (
+            FlexibleRetriever(
+                configuration, vector_store, embedding_model, data_source_id, llm
+            )
+            if embedding_model and vector_store and data_source_id is not None
+            else None
         )
-        if embedding_model and vector_store and data_source_id is not None
-        else None
-    )
-    return retriever
+        retrievers.append(retriever)
+    return MultiSourceRetriever(retrievers)

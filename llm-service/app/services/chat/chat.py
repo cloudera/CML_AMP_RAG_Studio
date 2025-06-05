@@ -106,14 +106,8 @@ def _run_chat(
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
 ) -> RagStudioChatMessage:
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400, detail="Only one datasource is supported for chat."
-        )
-
-    data_source_id: int = session.data_source_ids[0]
     response, condensed_question = querier.query(
-        data_source_id,
+        session,
         query,
         query_configuration,
         retrieve_chat_history(session.id),

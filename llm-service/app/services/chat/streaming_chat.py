@@ -105,7 +105,7 @@ def stream_chat(
             session, response_id, query, user_name, crew_events_queue
         )
 
-    condensed_question, data_source_id, streaming_chat_response = build_streamer(
+    condensed_question, streaming_chat_response = build_streamer(
         crew_events_queue, query, query_configuration, session
     )
     return _run_streaming_chat(
@@ -156,13 +156,10 @@ def build_streamer(
     query: str,
     query_configuration: QueryConfiguration,
     session: Session,
-) -> tuple[str | None, int | None, StreamingAgentChatResponse]:
-    data_source_id: Optional[int] = (
-        session.data_source_ids[0] if session.data_source_ids else None
-    )
+) -> tuple[str | None, StreamingAgentChatResponse]:
     llm = models.LLM.get(model_name=query_configuration.model_name)
 
-    retriever = build_retriever(query_configuration, data_source_id, llm)
+    retriever = build_retriever(query_configuration, session.data_source_ids, llm)
 
     chat_engine: Optional[FlexibleContextChatEngine] = (
         build_flexible_chat_engine(query_configuration, llm, retriever)
@@ -183,7 +180,6 @@ def build_streamer(
     )
     streaming_chat_response = querier.streaming_query(
         chat_engine,
-        data_source_id,
         query,
         query_configuration,
         chat_messages,
@@ -191,7 +187,7 @@ def build_streamer(
         session=session,
         retriever=retriever,
     )
-    return condensed_question, data_source_id, streaming_chat_response
+    return condensed_question, streaming_chat_response
 
 
 def _stream_direct_llm_chat(

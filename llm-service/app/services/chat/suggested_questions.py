@@ -98,12 +98,6 @@ def generate_suggested_questions(
     session = session_metadata_api.get_session(session_id, user_name)
     if len(session.data_source_ids) == 0:
         return _generate_suggested_questions_direct_llm(session)
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Only one datasource is supported for question suggestion.",
-        )
-    data_source_id = session.data_source_ids[0]
 
     total_data_sources_size: int = sum(
         map(
@@ -141,7 +135,7 @@ def generate_suggested_questions(
                 + chat_history[-1].content
             )
         response, _ = querier.query(
-            data_source_id,
+            session,
             query_str,
             QueryConfiguration(
                 top_k=session.response_chunks,
