@@ -180,11 +180,10 @@ class PlannerAgent:
             # task_callback=lambda task: logger.info(f"Task '{task=}'"),
         )
 
-        # Run the crew to get the decision
-        result = crew.kickoff()
-        logger.info(f"Planner agent result: {result}")
-
         try:
+            # Run the crew to get the decision
+            result = crew.kickoff()
+            logger.info(f"Planner agent result: {result}")
             if result.json_dict:
                 # If the result is already a JSON object, return it
                 return dict(result.json_dict)
