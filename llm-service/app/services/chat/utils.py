@@ -65,9 +65,7 @@ def retrieve_chat_history(session_id: int) -> List[RagContext]:
     return history
 
 
-def format_source_nodes(
-    response: AgentChatResponse, data_source_id: Optional[int]
-) -> List[RagPredictSourceNode]:
+def format_source_nodes(response: AgentChatResponse) -> List[RagPredictSourceNode]:
     response_source_nodes = []
     for source_node in response.source_nodes:
         doc_id = source_node.node.metadata.get("document_id", source_node.node.node_id)
@@ -77,7 +75,7 @@ def format_source_nodes(
                 doc_id=doc_id,
                 source_file_name=source_node.node.metadata["file_name"],
                 score=source_node.score or 0.0,
-                dataSourceId=data_source_id,
+                dataSourceId=source_node.node.metadata["data_source_id"],
             )
         )
     response_source_nodes = sorted(

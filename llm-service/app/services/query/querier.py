@@ -149,24 +149,16 @@ def streaming_query(
 
         chat_response: StreamingAgentChatResponse
         if configuration.use_tool_calling:
-            use_retrieval = should_use_retrieval(
+            use_retrieval, data_source_summaries = should_use_retrieval(
                 configuration,
-                data_source_id,
+                session.data_source_ids,
                 llm,
                 query_str,
                 chat_messages,
             )
 
-            crew = assemble_crew(
-                use_retrieval,
-                llm,
-                chat_messages,
-                query_str,
-                data_source_id,
-                crew_events_queue,
-                mcp_tools,
-                retriever
-            )
+            crew = assemble_crew(use_retrieval, llm, chat_messages, query_str, crew_events_queue, retriever,
+                                 data_source_summaries, mcp_tools)
             enhanced_query, source_node_ids_w_score = launch_crew(
                 crew,
                 query_str,

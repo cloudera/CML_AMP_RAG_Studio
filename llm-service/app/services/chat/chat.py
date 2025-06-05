@@ -121,7 +121,6 @@ def _run_chat(
     return finalize_response(
         response,
         condensed_question,
-        data_source_id,
         query,
         query_configuration,
         response_id,
@@ -133,7 +132,6 @@ def _run_chat(
 def finalize_response(
     chat_response: AgentChatResponse,
     condensed_question: str | None,
-    data_source_id: Optional[int],
     query: str,
     query_configuration: QueryConfiguration,
     response_id: str,
@@ -143,8 +141,7 @@ def finalize_response(
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
 
-    if data_source_id:
-        chat_response = extract_nodes_from_response_str(chat_response, data_source_id)
+    chat_response = extract_nodes_from_response_str(chat_response)
 
     evaluations = []
     if len(chat_response.source_nodes) != 0:
@@ -153,7 +150,7 @@ def finalize_response(
         )
         evaluations.append(Evaluation(name="relevance", value=relevance))
         evaluations.append(Evaluation(name="faithfulness", value=faithfulness))
-    response_source_nodes = format_source_nodes(chat_response, data_source_id)
+    response_source_nodes = format_source_nodes(chat_response)
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         session_id=session.id,
@@ -175,9 +172,7 @@ def finalize_response(
     return new_chat_message
 
 
-def extract_nodes_from_response_str(
-    chat_response: AgentChatResponse, data_source_id: int
-) -> AgentChatResponse:
+def extract_nodes_from_response_str(chat_response: AgentChatResponse) -> AgentChatResponse:
     # get nodes from response source nodes
     node_ids_present = set([node.node_id for node in chat_response.source_nodes])
     # pull the source nodes from the response citations
@@ -189,18 +184,20 @@ def extract_nodes_from_response_str(
     extracted_node_ids = [
         node_id for node_id in extracted_node_ids if node_id not in node_ids_present
     ]
+    extracted_data_source_ids = set([node.metadata["data_source_id"] for node in chat_response.source_nodes])
     if len(extracted_node_ids) > 0:
         try:
-            qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
-            vector_store = qdrant_store.llama_vector_store()
-            extracted_source_nodes = vector_store.get_nodes(node_ids=extracted_node_ids)
+            for ds_id in extracted_data_source_ids:
+                qdrant_store = VectorStoreFactory.for_chunks(ds_id)
+                vector_store = qdrant_store.llama_vector_store()
+                extracted_source_nodes = vector_store.get_nodes(node_ids=extracted_node_ids)
 
-            # cast them into NodeWithScore with score 0.0
-            extracted_source_nodes_w_score = [
-                NodeWithScore(node=node, score=0.0) for node in extracted_source_nodes
-            ]
-            # add the source nodes to the response
-            chat_response.source_nodes += extracted_source_nodes_w_score
+                # cast them into NodeWithScore with score 0.0
+                extracted_source_nodes_w_score = [
+                    NodeWithScore(node=node, score=0.0) for node in extracted_source_nodes
+                ]
+                # add the source nodes to the response
+                chat_response.source_nodes += extracted_source_nodes_w_score
         except Exception as e:
             logger.warning("Failed to extract nodes from response citations (%s): %s", extracted_node_ids, e)
             pass

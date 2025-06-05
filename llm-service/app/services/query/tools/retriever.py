@@ -136,12 +136,9 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         )
 
 
-def build_retriever_tool(data_source_id: int, retriever: FlexibleRetriever) -> BaseTool:
+def build_retriever_tool(retriever: FlexibleRetriever, summaries: dict[int, str]) -> BaseTool:
     # fetch summary fromm index if available
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
+    summary_str = "\n".join(summaries.values())
     retriever_tool = RetrieverToolWithNodeInfo(
         retriever=retriever,
         metadata=ToolMetadata(
@@ -149,8 +146,8 @@ def build_retriever_tool(data_source_id: int, retriever: FlexibleRetriever) -> B
             description=(
                 "A tool to retrieve relevant information from "
                 "the index. It takes a query of type string and returns relevant nodes from the index."
-                f"The index summary is: {data_source_summary}"
-                if data_source_summary
+                f"The index summaries are: {summary_str}"
+                if summary_str
                 else "Assume the index has relevant information about the user's question."
             ),
             fn_schema=RetrieverToolInput,

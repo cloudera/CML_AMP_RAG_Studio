@@ -116,7 +116,6 @@ def stream_chat(
         query_configuration,
         user_name,
         condensed_question=condensed_question,
-        data_source_id=data_source_id,
         streaming_chat_response=streaming_chat_response,
     )
 
@@ -128,7 +127,6 @@ def _run_streaming_chat(
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
     condensed_question: Optional[str] = None,
-    data_source_id: Optional[int] = None,
     streaming_chat_response: StreamingAgentChatResponse = None,
 ) -> Generator[ChatResponse, None, None]:
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
@@ -146,7 +144,6 @@ def _run_streaming_chat(
     finalize_response(
         chat_response,
         condensed_question,
-        data_source_id,
         query,
         query_configuration,
         response_id,

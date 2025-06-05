@@ -44,8 +44,6 @@ from typing import Optional, Tuple, Any
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
-from llama_index.core import VectorStoreIndex
-from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
@@ -88,30 +86,30 @@ def validate_with_context(result: TaskOutput) -> Tuple[bool, Any]:
 
 def should_use_retrieval(
     configuration: QueryConfiguration,
-    data_source_id: Optional[int],
+    data_source_ids: list[int],
     llm: LLM,
     query_str: str,
     chat_messages: list[ChatMessage],
-) -> bool:
-    if not data_source_id:
-        return False
+) -> tuple[bool, dict[int, str]]:
 
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
+    data_source_summaries: dict[int, str] = {}
+    for data_source_id in data_source_ids:
+        data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
+        if data_source_summary_indexer:
+            data_source_summary = data_source_summary_indexer.get_full_summary()
+            data_source_summaries[data_source_id] = data_source_summary
     # Create a planner agent to decide whether to use retrieval or answer directly
     planner = PlannerAgent(llm, configuration)
     planning_decision = planner.decide_retrieval_strategy(
-        query_str, chat_messages, data_source_summary
+        query_str, chat_messages, data_source_summaries
     )
     use_retrieval: bool = planning_decision.get("use_retrieval", True)
-    return use_retrieval
+    return use_retrieval, data_source_summaries
 
 
 def assemble_crew(use_retrieval: bool, llm: LLM, chat_messages: list[ChatMessage], query_str: str,
-                  data_source_id: Optional[int], crew_events_queue: Queue[CrewEvent],
-                  retriever: Optional[FlexibleRetriever], mcp_tools: Optional[list[BaseTool]] = None) -> Crew:
+                  crew_events_queue: Queue[CrewEvent], retriever: Optional[FlexibleRetriever],
+                  data_source_summaries: dict[int, str], mcp_tools: Optional[list[BaseTool]] = None) -> Crew:
     crewai_llm = get_crewai_llm_object_direct(llm, getattr(llm, "model", ""))
     # Gather all the tools needed for the crew
 
@@ -124,8 +122,8 @@ def assemble_crew(use_retrieval: bool, llm: LLM, chat_messages: list[ChatMessage
     if use_retrieval and retriever:
         logger.info("Planner decided to use retrieval")
         crewai_retriever_tool = build_retriever_tool(
-            data_source_id,
-            retriever
+            retriever,
+            data_source_summaries
         )
         research_tools.append(crewai_retriever_tool)
 

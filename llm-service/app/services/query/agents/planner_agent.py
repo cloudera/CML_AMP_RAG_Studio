@@ -102,7 +102,7 @@ class PlannerAgent:
         self,
         query: str,
         chat_messages: list[ChatMessage],
-        data_source_summary: Optional[str] = None,
+        data_source_summaries: dict[int, str],
     ) -> Dict[str, Any]:
         """
         Decide whether to use retrieval or answer directly.
@@ -110,7 +110,7 @@ class PlannerAgent:
         Args:
             query: The user query.
             chat_messages: The chat history.
-            data_source_summary: A summary of the data source content to help determine relevance.
+            data_source_summaries: Summaries of the data source content to help determine relevance.
 
         Returns:
             A dictionary with the decision and explanation.
@@ -134,10 +134,11 @@ class PlannerAgent:
                 chat_history += f"User:\n{message.content}\n"
             elif message.role == MessageRole.ASSISTANT:
                 chat_history += f"Assistant:\n{message.content}\n"
-        if data_source_summary:
+        if data_source_summaries:
+            summary_str = "\n".join(data_source_summaries.values())
             data_source_info = f"""
             ==================================================================
-            Knowledge Base Summary:\n{data_source_summary}
+            Knowledge Base Summaries:\n{summary_str}
             ==================================================================
             Chat History:\n{chat_history}
             ==================================================================
