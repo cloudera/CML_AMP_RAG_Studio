@@ -40,6 +40,7 @@ import os
 import re
 from queue import Queue
 from typing import Optional, Tuple, Any
+from urllib.parse import unquote
 
 import litellm
 import opik
@@ -342,7 +343,7 @@ def launch_crew(
         )
     except Exception as e:
         logger.error("Error running CrewAI crew: %s", e)
-        raise RuntimeError("Error running CrewAI crew: %s" % str(e)) from e
+        raise RuntimeError("Error running CrewAI crew: %s" % unquote(str(e))) from e
 
 
 def extract_node_ids_from_crew_result(
