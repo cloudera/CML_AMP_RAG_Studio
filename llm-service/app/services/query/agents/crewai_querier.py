@@ -342,9 +342,7 @@ def launch_crew(
         )
     except Exception as e:
         logger.error("Error running CrewAI crew: %s", e)
-        if isinstance(e, tuple(litellm.exceptions.LITELLM_EXCEPTION_TYPES)):
-            raise
-        raise RuntimeError("Failed to run CrewAI crew: %s" % str(e)) from e
+        raise RuntimeError("Error running CrewAI crew: %s" % str(e)) from e
 
 
 def extract_node_ids_from_crew_result(
