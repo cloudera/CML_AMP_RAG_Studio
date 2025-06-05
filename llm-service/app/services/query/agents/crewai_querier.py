@@ -259,7 +259,7 @@ def assemble_crew(
             output, "Response Computed", crew_events_queue
         ),
         verbose=True,
-        max_execution_time=60,
+        max_execution_time=120,
         max_iter=15,
         max_rpm=10,
         max_retry_limit=5,
