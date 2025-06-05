@@ -42,7 +42,6 @@ from queue import Queue
 from typing import Optional, Tuple, Any
 from urllib.parse import unquote
 
-import litellm
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
