@@ -31,14 +31,16 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from copy import copy
 from queue import Queue
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Tuple
 
+from crewai import CrewOutput
 from crewai.tools import BaseTool
 from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.schema import NodeWithScore
+from llama_index.core.schema import NodeWithScore, TextNode
 from mcp import StdioServerParameters
 
 from .agents.crewai_querier import (
@@ -122,7 +124,7 @@ def streaming_query(
     chat_messages: list[ChatMessage],
     crew_events_queue: Queue[CrewEvent],
     session: Session,
-    retriever: Optional[FlexibleRetriever]
+    retriever: Optional[FlexibleRetriever],
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
@@ -157,14 +159,22 @@ def streaming_query(
                 chat_messages,
             )
 
-            crew = assemble_crew(use_retrieval, llm, chat_messages, query_str, crew_events_queue, retriever,
-                                 data_source_summaries, mcp_tools)
-            enhanced_query, source_node_ids_w_score = launch_crew(
+            crew = assemble_crew(
+                use_retrieval,
+                llm,
+                chat_messages,
+                query_str,
+                crew_events_queue,
+                retriever,
+                data_source_summaries,
+                mcp_tools,
+            )
+            enhanced_query, crew_result = launch_crew(
                 crew,
                 query_str,
             )
 
-            source_nodes = get_nodes_from_citations(index, source_node_ids_w_score)
+            source_nodes = get_nodes_from_output(crew_result, session)
 
             chat_response = stream_chat(
                 use_retrieval,
@@ -199,26 +209,58 @@ def streaming_query(
             adapter.stop()
 
 
-def get_nodes_from_citations(
-    index: Optional[VectorStoreIndex], source_node_ids_w_score: list[tuple[str, float]]
+def get_nodes_from_output(
+    output: str | CrewOutput,
+    session: Session,
 ) -> list[NodeWithScore]:
-    # Extract node_ids from the source_node_ids_w_score
-    source_node_ids, scores = [node_id for node_id, _ in source_node_ids_w_score], [
-        score for _, score in source_node_ids_w_score
-    ]
-    # fetch the source nodes from the index using the extracted node_ids
-    source_nodes = []
-    if index:
-        nodes = index.vector_store.get_nodes(node_ids=source_node_ids)
-        if nodes:
-            nodes_w_score = [
-                NodeWithScore(
-                    node=node,
-                    score=score,
-                )
-                for node, score in zip(nodes, scores)
-            ]
-            source_nodes.extend(nodes_w_score)
+    source_node_ids_w_score: dict[str, float] = {}
+    if isinstance(output, CrewOutput):
+        # Extract the retriever results from the crew result
+        for task_output in output.tasks_output:
+            if task_output.name == "RetrieverTask":
+                if task_output.json_dict:
+                    json_output = task_output.json_dict["retriever_results"]
+                    for result in json_output:
+                        node_id = result["node_id"]
+                        score = result["score"]
+                        if node_id and score:
+                            # Append the node id and score to the list
+                            source_node_ids_w_score[node_id] = score
+
+    # Extract the node ids from string output
+    extracted_node_ids = re.findall(
+        r"<a class='rag_citation' href='(.*?)'>",
+        output,
+    )
+    # add the extracted node ids to the source node ids
+    for node_id in extracted_node_ids:
+        if node_id not in source_node_ids_w_score:
+            source_node_ids_w_score[node_id] = 0.0
+
+    extracted_data_source_ids = session.data_source_ids
+    source_nodes: list[NodeWithScore] = []
+    if len(source_node_ids_w_score) > 0:
+        try:
+            for ds_id in extracted_data_source_ids:
+                node_ids = list(source_node_ids_w_score.keys())
+                qdrant_store = VectorStoreFactory.for_chunks(ds_id)
+                vector_store = qdrant_store.llama_vector_store()
+                extracted_source_nodes = vector_store.get_nodes(node_ids=node_ids)
+
+                # cast them into NodeWithScore with score 0.0
+                source_nodes = [
+                    NodeWithScore(
+                        node=node, score=source_node_ids_w_score.get(node.node_id, 0.0)
+                    )
+                    for node in extracted_source_nodes
+                ]
+        except Exception as e:
+            logger.warning(
+                "Failed to extract nodes from response citations (%s): %s",
+                extracted_node_ids,
+                e,
+            )
+            pass
     return source_nodes
 
 
@@ -246,9 +288,7 @@ def query(
     llm = models.LLM.get(model_name=configuration.model_name)
     retriever = build_retriever(configuration, data_source_id, llm)
 
-    chat_engine = build_flexible_chat_engine(
-        configuration, llm, retriever
-    )
+    chat_engine = build_flexible_chat_engine(configuration, llm, retriever)
 
     chat_messages = list(
         map(
@@ -276,7 +316,11 @@ def query(
 
 def build_retriever(configuration, data_source_id, llm) -> Optional[FlexibleRetriever]:
     embedding_model, vector_store = build_datasource_query_components(data_source_id)
-    retriever = FlexibleRetriever(
-        configuration, vector_store, embedding_model, data_source_id, llm
-    ) if embedding_model and vector_store else None
+    retriever = (
+        FlexibleRetriever(
+            configuration, vector_store, embedding_model, data_source_id, llm
+        )
+        if embedding_model and vector_store
+        else None
+    )
     return retriever

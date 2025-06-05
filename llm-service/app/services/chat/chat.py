@@ -36,14 +36,12 @@
 #  DATA.
 #
 import logging
-import re
 import time
 import uuid
 from typing import Optional
 
 from fastapi import HTTPException
 from llama_index.core.chat_engine.types import AgentChatResponse
-from llama_index.core.schema import NodeWithScore
 
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
@@ -58,9 +56,11 @@ from app.services.chat_history.chat_history_manager import (
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
 from app.services.query import querier
+from app.services.query.querier import get_nodes_from_output
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
+
 
 def chat(
     session: Session,
@@ -141,7 +141,16 @@ def finalize_response(
     if condensed_question and (condensed_question.strip() == query.strip()):
         condensed_question = None
 
-    chat_response = extract_nodes_from_response_str(chat_response)
+    orig_source_nodes = chat_response.source_nodes
+    source_nodes = get_nodes_from_output(chat_response.response, session)
+
+    # if node with id present in orig_source_nodes, then don't add it again
+    node_ids_present = set([node.node_id for node in orig_source_nodes])
+    for node in source_nodes:
+        if node.node_id not in node_ids_present:
+            orig_source_nodes.append(node)
+
+    chat_response.source_nodes = orig_source_nodes
 
     evaluations = []
     if len(chat_response.source_nodes) != 0:
@@ -170,38 +179,6 @@ def finalize_response(
     chat_history_manager.append_to_history(session.id, [new_chat_message])
 
     return new_chat_message
-
-
-def extract_nodes_from_response_str(chat_response: AgentChatResponse) -> AgentChatResponse:
-    # get nodes from response source nodes
-    node_ids_present = set([node.node_id for node in chat_response.source_nodes])
-    # pull the source nodes from the response citations
-    extracted_node_ids = re.findall(
-        r"<a class='rag_citation' href='(.*?)'>",
-        chat_response.response,
-    )
-    # remove duplicates
-    extracted_node_ids = [
-        node_id for node_id in extracted_node_ids if node_id not in node_ids_present
-    ]
-    extracted_data_source_ids = set([node.metadata["data_source_id"] for node in chat_response.source_nodes])
-    if len(extracted_node_ids) > 0:
-        try:
-            for ds_id in extracted_data_source_ids:
-                qdrant_store = VectorStoreFactory.for_chunks(ds_id)
-                vector_store = qdrant_store.llama_vector_store()
-                extracted_source_nodes = vector_store.get_nodes(node_ids=extracted_node_ids)
-
-                # cast them into NodeWithScore with score 0.0
-                extracted_source_nodes_w_score = [
-                    NodeWithScore(node=node, score=0.0) for node in extracted_source_nodes
-                ]
-                # add the source nodes to the response
-                chat_response.source_nodes += extracted_source_nodes_w_score
-        except Exception as e:
-            logger.warning("Failed to extract nodes from response citations (%s): %s", extracted_node_ids, e)
-            pass
-    return chat_response
 
 
 def direct_llm_chat(

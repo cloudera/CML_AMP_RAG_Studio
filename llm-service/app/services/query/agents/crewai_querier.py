@@ -107,9 +107,16 @@ def should_use_retrieval(
     return use_retrieval, data_source_summaries
 
 
-def assemble_crew(use_retrieval: bool, llm: LLM, chat_messages: list[ChatMessage], query_str: str,
-                  crew_events_queue: Queue[CrewEvent], retriever: Optional[FlexibleRetriever],
-                  data_source_summaries: dict[int, str], mcp_tools: Optional[list[BaseTool]] = None) -> Crew:
+def assemble_crew(
+    use_retrieval: bool,
+    llm: LLM,
+    chat_messages: list[ChatMessage],
+    query_str: str,
+    crew_events_queue: Queue[CrewEvent],
+    retriever: Optional[FlexibleRetriever],
+    data_source_summaries: dict[int, str],
+    mcp_tools: Optional[list[BaseTool]] = None,
+) -> Crew:
     crewai_llm = get_crewai_llm_object_direct(llm, getattr(llm, "model", ""))
     # Gather all the tools needed for the crew
 
@@ -121,10 +128,7 @@ def assemble_crew(use_retrieval: bool, llm: LLM, chat_messages: list[ChatMessage
     crewai_retriever_tool = None
     if use_retrieval and retriever:
         logger.info("Planner decided to use retrieval")
-        crewai_retriever_tool = build_retriever_tool(
-            retriever,
-            data_source_summaries
-        )
+        crewai_retriever_tool = build_retriever_tool(retriever, data_source_summaries)
         research_tools.append(crewai_retriever_tool)
 
     # Define the researcher agent
@@ -298,12 +302,10 @@ def assemble_crew(use_retrieval: bool, llm: LLM, chat_messages: list[ChatMessage
 def launch_crew(
     crew: Crew,
     query_str: str,
-) -> Tuple[str, list[Tuple[str, float]]]:
+) -> Tuple[str, CrewOutput]:
     # Run the crew to get the enhanced response
     try:
         crew_result: CrewOutput = crew.kickoff()
-
-        source_node_ids_w_score = extract_node_ids_from_crew_result(crew_result)
 
         # Create an enhanced query that includes the CrewAI insights
         return (
@@ -324,41 +326,11 @@ def launch_crew(
     that are not present in the research insights. Do not make up any markdown links as well. Only use the \
     links and citations from the research insights. 
     """,
-            source_node_ids_w_score,
+            crew_result,
         )
     except Exception as e:
         logger.exception("Error running CrewAI crew")
         raise RuntimeError("Error running CrewAI crew: %s" % str(e)) from e
-
-
-def extract_node_ids_from_crew_result(
-    crew_result: CrewOutput,
-) -> list[Tuple[str, float]]:
-    # find if RetrieverTask in tasks_outputs
-    source_node_ids_w_score = []
-    # Extract the retriever results from the crew result
-    for task_output in crew_result.tasks_output:
-        if task_output.name == "RetrieverTask":
-            if task_output.json_dict:
-                json_output = task_output.json_dict["retriever_results"]
-                for result in json_output:
-                    node_id = result["node_id"]
-                    score = result["score"]
-                    if node_id and score:
-                        # Append the node id and score to the list
-                        source_node_ids_w_score.append((node_id, score))
-    # Extract the node ids from the crew result string
-    crew_result_str = crew_result.raw
-    extracted_node_ids = re.findall(
-        r"<a class='rag_citation' href='(.*?)'>",
-        crew_result_str,
-    )
-    # add the extracted node ids to the source node ids
-    source_node_ids = set([node_id for node_id, _ in source_node_ids_w_score])
-    for node_id in extracted_node_ids:
-        if node_id not in source_node_ids:
-            source_node_ids_w_score.append((node_id, 0.0))
-    return source_node_ids_w_score
 
 
 def stream_chat(
