@@ -341,7 +341,7 @@ def launch_crew(
             source_node_ids_w_score,
         )
     except Exception as e:
-        logger.error("Error running CrewAI crew: %s", e)
+        logger.exception("Error running CrewAI crew")
         raise RuntimeError("Error running CrewAI crew: %s" % unquote(str(e))) from e
 
 
