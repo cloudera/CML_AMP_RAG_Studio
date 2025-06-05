@@ -99,7 +99,12 @@ const RagChatQueryInput = ({
   });
 
   useEffect(() => {
-    if (inputRef.current) {
+    // Check if any modal is currently open
+    const isModalOpen = document.querySelector(
+      ".ant-modal-root, .ant-modal-mask",
+    );
+
+    if (inputRef.current && !isModalOpen) {
       inputRef.current.focus();
     }
   }, [inputRef.current, flatChatHistory.length]);
@@ -143,7 +148,6 @@ const RagChatQueryInput = ({
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <div style={{ position: "relative", width: "100%" }}>
             <TextArea
-              autoFocus
               ref={inputRef}
               placeholder={
                 dataSourceSize && dataSourceSize > 0
