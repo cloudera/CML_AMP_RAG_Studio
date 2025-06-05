@@ -40,6 +40,7 @@ from crewai import CrewOutput
 from crewai.tools import BaseTool
 from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core.llms import LLM
 from llama_index.core.schema import NodeWithScore
 from mcp import StdioServerParameters
 
@@ -293,6 +294,12 @@ def query(
 
     chat_engine = build_flexible_chat_engine(configuration, llm, retriever)
 
+    if not chat_engine:
+        raise HTTPException(
+            status_code=500,
+            detail="Chat engine is not initialized. Please check the configuration.",
+        )
+
     chat_messages = list(
         map(
             lambda message: ChatMessage(role=message.role, content=message.content),
@@ -317,13 +324,17 @@ def query(
         ) from error
 
 
-def build_retriever(configuration, data_source_id, llm) -> Optional[FlexibleRetriever]:
+def build_retriever(
+    configuration: QueryConfiguration,
+    data_source_id: Optional[int],
+    llm: LLM,
+) -> Optional[FlexibleRetriever]:
     embedding_model, vector_store = build_datasource_query_components(data_source_id)
     retriever = (
         FlexibleRetriever(
             configuration, vector_store, embedding_model, data_source_id, llm
         )
-        if embedding_model and vector_store
+        if embedding_model and vector_store and data_source_id is not None
         else None
     )
     return retriever

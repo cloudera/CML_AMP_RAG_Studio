@@ -229,8 +229,10 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 def build_flexible_chat_engine(
     configuration: QueryConfiguration,
     llm: LLM,
-    retriever: FlexibleRetriever,
-) -> FlexibleContextChatEngine:
+    retriever: Optional[FlexibleRetriever],
+) -> Optional[FlexibleContextChatEngine]:
+    if not retriever:
+        return None
     postprocessors = _create_node_postprocessors(configuration)
     chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         llm=llm,
