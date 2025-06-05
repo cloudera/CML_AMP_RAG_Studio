@@ -36,72 +36,55 @@
  * DATA.
  */
 
-import { Flex, Tabs, TabsProps } from "antd";
-import AmpSettingsPage from "pages/Settings/AmpSettingsPage.tsx";
-import ModelPage from "pages/Models/ModelPage.tsx";
-import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Alert, Button, Image, Typography } from "antd";
+import Images from "src/components/images/Images.ts";
+import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
+import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useNavigate } from "@tanstack/react-router";
 
-const modelConfigKey = "modelConfiguration";
-const ampSettingsKey = "ampSettings";
-
-const SettingsNavigation = () => {
+const EmptyChatState = () => {
+  const { data: llmModels, isSuccess } = useGetLlmModels();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
-
-  const handleNav = (key: string) => {
-    navigate({ hash: key }).catch((reason: unknown) => {
-      console.error(reason);
-    });
-  };
-
-  const tabItems: TabsProps["items"] = [
-    {
-      key: ampSettingsKey,
-      label: "Studio Settings",
-      children: <AmpSettingsPage />,
-      disabled: !config?.is_valid_config,
-    },
-    {
-      key: modelConfigKey,
-      label: "Model Configuration",
-      children: <ModelPage />,
-      disabled: !config?.is_valid_config,
-    },
-  ];
-
-  const defaultKey = config ? ampSettingsKey : modelConfigKey;
-  useEffect(() => {
-    if (location.hash) {
-      const tabsIncludeHash = tabItems.find(
-        (item) => item.key === location.hash,
-      );
-
-      if (!tabsIncludeHash) {
-        handleNav(defaultKey);
-      }
-    }
-  }, [location.hash, tabItems, navigate]);
 
   return (
-    <Flex
-      vertical
-      style={{ width: "80%", maxWidth: 1000, marginLeft: 50 }}
-      gap={20}
-    >
-      <Tabs
-        defaultActiveKey={defaultKey}
-        activeKey={location.hash || defaultKey}
-        items={tabItems}
-        onChange={(key) => {
-          handleNav(key);
-        }}
+    <>
+      {isSuccess && llmModels.length === 0 ? (
+        <Alert
+          type="warning"
+          showIcon
+          message={"One inference model must be available to chat"}
+          action={
+            <Button
+              style={{ marginLeft: 12 }}
+              onClick={() => {
+                navigate({
+                  to: "/settings",
+                  hash: "modelConfiguration",
+                }).catch(() => {
+                  messageQueue.error("Failed to navigate to models page");
+                });
+              }}
+            >
+              Model Config
+            </Button>
+          }
+        />
+      ) : null}
+      <Image
+        src={Images.BrandTalking}
+        alt="Machines Chatting"
+        style={{ width: 80 }}
+        preview={false}
       />
-    </Flex>
+      <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+        Welcome to RAG Studio
+      </Typography.Title>
+      <SuggestedQuestionsCards />
+      <NoDataSourcesState />
+    </>
   );
 };
 
-export default SettingsNavigation;
+export default EmptyChatState;

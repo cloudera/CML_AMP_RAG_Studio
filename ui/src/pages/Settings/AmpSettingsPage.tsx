@@ -68,7 +68,7 @@ const AmpSettingsPage = () => {
   const [form] = Form.useForm<ProjectConfig>();
   const { data: currentModelSource } = useGetModelSource();
   const confirmationModal = useModal();
-  const { data: projectConfig } = useGetPollingAmpConfig();
+  const { data: projectConfig } = useSuspenseQuery(useGetPollingAmpConfig());
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );

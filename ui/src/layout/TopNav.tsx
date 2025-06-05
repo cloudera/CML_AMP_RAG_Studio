@@ -54,11 +54,12 @@ import {
   ProjectConfig,
   useGetPollingAmpConfig,
 } from "src/api/ampMetadataApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const TopNav: React.FC = () => {
   const matchRoute = useMatchRoute();
   const navigate = useNavigate();
-  const { data: config } = useGetPollingAmpConfig();
+  const { data: config } = useSuspenseQuery(useGetPollingAmpConfig());
 
   const navigateTo = (path: string) => () => {
     navigate({ to: path }).catch(() => null);

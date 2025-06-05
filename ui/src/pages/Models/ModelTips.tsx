@@ -84,6 +84,10 @@ const helpText = {
           <li>Cohere Rerank v3.5</li>
           <li>Amazon Rerank v1</li>
         </li>
+        <li>
+          For model capabilities including tool calling, refer to the Amazon
+          Bedrock User Guide.
+        </li>
       </ul>
     </Typography>
   ),

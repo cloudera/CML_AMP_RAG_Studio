@@ -452,23 +452,31 @@ const streamChatMutation = async (
       }),
       signal: ctrl.signal,
       onmessage(msg: EventSourceMessage) {
-        const data = JSON.parse(msg.data) as ChatMutationResponse;
+        try {
+          const data = JSON.parse(msg.data) as ChatMutationResponse;
 
-        if (data.error) {
-          onError(data.error);
+          if (data.error) {
+            onError(data.error);
+            ctrl.abort();
+          }
+
+          if (data.text) {
+            onChunk(data.text);
+          }
+
+          if (data.event) {
+            onEvent(data.event);
+          }
+
+          if (data.response_id) {
+            responseId = data.response_id;
+          }
+        } catch (error) {
+          console.error("Error parsing message data:", error);
+          onError(
+            `An error occurred while processing the response. Original error message: ${JSON.stringify(msg)}. Error in parsing: ${JSON.stringify(error)}`,
+          );
           ctrl.abort();
-        }
-
-        if (data.text) {
-          onChunk(data.text);
-        }
-
-        if (data.event) {
-          onEvent(data.event);
-        }
-
-        if (data.response_id) {
-          responseId = data.response_id;
         }
       },
       onerror(err: unknown) {
