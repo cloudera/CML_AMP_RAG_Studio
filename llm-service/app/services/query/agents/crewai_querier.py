@@ -41,6 +41,7 @@ import re
 from queue import Queue
 from typing import Optional, Tuple, Any
 
+import litellm
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
@@ -258,7 +259,7 @@ def assemble_crew(
             output, "Response Computed", crew_events_queue
         ),
         verbose=True,
-        max_execution_time=120,
+        max_execution_time=60,
         max_iter=15,
         max_rpm=10,
         max_retry_limit=5,
@@ -313,31 +314,37 @@ def launch_crew(
     query_str: str,
 ) -> Tuple[str, list[Tuple[str, float]]]:
     # Run the crew to get the enhanced response
-    crew_result: CrewOutput = crew.kickoff()
+    try:
+        crew_result: CrewOutput = crew.kickoff()
 
-    source_node_ids_w_score = extract_node_ids_from_crew_result(crew_result)
+        source_node_ids_w_score = extract_node_ids_from_crew_result(crew_result)
 
-    # Create an enhanced query that includes the CrewAI insights
-    return (
-        f"""
-Original query: {query_str}
-
-Research insights: {crew_result}
-
-Please provide a response to the original query, incorporating the insights from research with in-line citations. \
-
-Adhere to the following guidelines:
-* If you cannot find relevant information in the research insights, answer the question directly and indicate that \
-you don't have enough information. 
-* If citations from the research insights are used, use the in-line links and \
-citations from the research insights as is. Keep markdown formatted links as is i.e. [<text>](<web_link>). \
-Keep the in-line citations of format `<a class='rag_citation' href='node_id'>node_id</a>` as is. 
-* Do not make up any links or citations of the form `<a class='rag_citation' href='node_id'>node_id</a>` \
-that are not present in the research insights. Do not make up any markdown links as well. Only use the \
-links and citations from the research insights. 
-""",
-        source_node_ids_w_score,
-    )
+        # Create an enhanced query that includes the CrewAI insights
+        return (
+            f"""
+    Original query: {query_str}
+    
+    Research insights: {crew_result}
+    
+    Please provide a response to the original query, incorporating the insights from research with in-line citations. \
+    
+    Adhere to the following guidelines:
+    * If you cannot find relevant information in the research insights, answer the question directly and indicate that \
+    you don't have enough information. 
+    * If citations from the research insights are used, use the in-line links and \
+    citations from the research insights as is. Keep markdown formatted links as is i.e. [<text>](<web_link>). \
+    Keep the in-line citations of format `<a class='rag_citation' href='node_id'>node_id</a>` as is. 
+    * Do not make up any links or citations of the form `<a class='rag_citation' href='node_id'>node_id</a>` \
+    that are not present in the research insights. Do not make up any markdown links as well. Only use the \
+    links and citations from the research insights. 
+    """,
+            source_node_ids_w_score,
+        )
+    except Exception as e:
+        logger.error("Error running CrewAI crew: %s", e)
+        if isinstance(e, tuple(litellm.exceptions.LITELLM_EXCEPTION_TYPES)):
+            raise
+        raise RuntimeError("Failed to run CrewAI crew: %s" % str(e)) from e
 
 
 def extract_node_ids_from_crew_result(
