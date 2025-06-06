@@ -91,7 +91,6 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                   </Typography>
                 }
               >
-                
                 <Tag
                   style={{
                     backgroundColor: cdlOrange500,
@@ -163,19 +162,10 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       form={form}
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
-      onValuesChange={(changedValues: CreateSessionType, allValues) => {
-        if (changedValues.dataSourceId && !allValues.name) {
-          const dataSource = dataSources?.find(
-            (value) => value.id === changedValues.dataSourceId,
-          );
-          form.setFieldsValue({
-            name: dataSource?.name,
-          });
-        }
-      }}
     >
-      <Form.Item name="dataSourceId" label="Knowledge Base">
+      <Form.Item name="dataSourceIds" label="Knowledge Base">
         <Select
+          mode="multiple"
           disabled={dataSources?.length === 0}
           allowClear={true}
           options={dataSources?.map((value) => formatDataSource(value))}

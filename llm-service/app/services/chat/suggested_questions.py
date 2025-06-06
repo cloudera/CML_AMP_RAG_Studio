@@ -39,8 +39,6 @@
 from random import shuffle
 from typing import List, Optional
 
-from fastapi import HTTPException
-
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.services import llm_completion
 from app.services.chat.utils import retrieve_chat_history, process_response
@@ -98,12 +96,6 @@ def generate_suggested_questions(
     session = session_metadata_api.get_session(session_id, user_name)
     if len(session.data_source_ids) == 0:
         return _generate_suggested_questions_direct_llm(session)
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Only one datasource is supported for question suggestion.",
-        )
-    data_source_id = session.data_source_ids[0]
 
     total_data_sources_size: int = sum(
         map(
@@ -141,7 +133,7 @@ def generate_suggested_questions(
                 + chat_history[-1].content
             )
         response, _ = querier.query(
-            data_source_id,
+            session,
             query_str,
             QueryConfiguration(
                 top_k=session.response_chunks,

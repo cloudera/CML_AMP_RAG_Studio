@@ -52,7 +52,7 @@ import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
 
 export interface CreateSessionType {
   name: string;
-  dataSourceId?: number;
+  dataSourceIds: number[];
   inferenceModel: string;
   rerankModel?: string;
   responseChunks: number;
@@ -109,7 +109,7 @@ const CreateSessionModal = ({
       .then((values) => {
         const requestBody: CreateSessionRequest = {
           name: values.name,
-          dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
+          dataSourceIds: values.dataSourceIds,
           inferenceModel: values.inferenceModel,
           rerankModel: values.rerankModel,
           responseChunks: values.responseChunks,

@@ -47,25 +47,19 @@ import CreateSessionModal from "pages/RagChatTab/SessionsSidebar/CreateSession/C
 
 const { Header } = Layout;
 
-function getHeaderTitle(
-  activeSession?: Session,
-  currentDataSource?: DataSourceType,
-): string {
-  if (!activeSession) {
-    return "";
+function getHeaderTitle(activeSession?: Session): string {
+  if (!activeSession?.name) {
+    return "...";
   }
-  if (!currentDataSource) {
-    return activeSession.name;
-  }
-  return `${activeSession.name} / ${currentDataSource.name}`;
+  return activeSession.name;
 }
 
 export const RagChatHeader = ({
   activeSession,
-  currentDataSource,
+  currentDataSources,
 }: {
   activeSession?: Session;
-  currentDataSource?: DataSourceType;
+  currentDataSources: DataSourceType[];
 }) => {
   const settingsModal = useModal();
 
@@ -76,18 +70,25 @@ export const RagChatHeader = ({
   return (
     <Header style={{ padding: 0, margin: 20, width: "95%" }}>
       <Flex justify="space-between">
-        <Typography.Title
-          type="secondary"
-          level={5}
-          style={{
-            fontWeight: "normal",
-            fontSize: 14,
-            marginTop: 5,
-            marginBottom: 0,
-          }}
-        >
-          {getHeaderTitle(activeSession, currentDataSource)}
-        </Typography.Title>
+        <Flex vertical>
+          <Typography.Title
+            level={5}
+            style={{
+              fontWeight: "normal",
+              fontSize: 14,
+              marginTop: 5,
+              marginBottom: 0,
+            }}
+          >
+            {getHeaderTitle(activeSession)}
+          </Typography.Title>
+          {currentDataSources.length > 0 ? (
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              Knowledge bases:{" "}
+              {currentDataSources.map((ds) => ds.name).join(", ")}
+            </Typography.Text>
+          ) : null}
+        </Flex>
         <Button
           style={{ width: 140, alignItems: "center" }}
           onClick={handleOpenModal}

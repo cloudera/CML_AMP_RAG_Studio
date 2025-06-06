@@ -114,7 +114,7 @@ const SuggestedQuestionsCards = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        createSessionAndRedirect(suggestedQuestion);
+        createSessionAndRedirect([], suggestedQuestion);
       }
     }
   };

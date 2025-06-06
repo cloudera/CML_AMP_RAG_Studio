@@ -44,6 +44,7 @@ import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
 import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 import { StyledChatLayoutWrapper } from "src/layout/StyledChatLayoutWrapper.tsx";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 const { Footer, Content } = Layout;
 
@@ -54,15 +55,15 @@ const RagChat = () => {
   } = useContext(RagChatContext);
   const createSessionAndRedirect = useCreateSessionAndRedirect();
 
-  const currentDataSource = dataSources.find((dataSource) => {
-    return dataSource.id === activeSession?.dataSourceIds[0];
-  });
+  const currentDataSources: DataSourceType[] = dataSources.filter((ds) =>
+    activeSession?.dataSourceIds.includes(ds.id),
+  );
   return (
     <Layout style={{ height: "100%", width: "100%" }}>
       <StyledChatLayoutWrapper>
         <RagChatHeader
           activeSession={activeSession}
-          currentDataSource={currentDataSource}
+          currentDataSources={currentDataSources}
         />
       </StyledChatLayoutWrapper>
       <Content
@@ -98,7 +99,7 @@ const RagChat = () => {
         >
           <RagChatQueryInput
             newSessionCallback={(userInput: string) => {
-              createSessionAndRedirect(userInput);
+              createSessionAndRedirect([], userInput);
             }}
           />
         </Footer>
