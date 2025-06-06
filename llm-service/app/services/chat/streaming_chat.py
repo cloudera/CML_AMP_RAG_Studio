@@ -161,10 +161,8 @@ def build_streamer(
 
     retriever = build_retriever(query_configuration, session.data_source_ids, llm)
 
-    chat_engine: Optional[FlexibleContextChatEngine] = (
-        build_flexible_chat_engine(query_configuration, llm, retriever)
-        if retriever
-        else None
+    chat_engine: Optional[FlexibleContextChatEngine] = build_flexible_chat_engine(
+        query_configuration, llm, retriever
     )
     chat_history = retrieve_chat_history(session.id)
     chat_messages = list(
