@@ -79,6 +79,8 @@ def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
         " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
         " Do not start like this - `Here are four questions that I can answer based on the context information`"
         " Only return the list."
+        " Only return plain text."
+        " Do not return any HTML tags or markdown formatting."
     )
     chat_response = llm_completion.completion(
         session.id, query_str, session.inference_model
@@ -117,6 +119,8 @@ def generate_suggested_questions(
             " There should be no more than four (4) questions."
             " Each question should be no longer than fifteen (15) words."
             " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
+            " Only return plain text."
+            " Do not return any HTML tags or markdown formatting."
             " Do not return questions based on the metadata of the document. Only the content."
             " Do not start like this - `Here are four questions that I can answer based on the context information`"
             " Only return the list."
