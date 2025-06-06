@@ -85,6 +85,9 @@ public class SessionService {
     if (input.rerankModel() != null && input.rerankModel().isEmpty()) {
       input = input.withRerankModel(null);
     }
+    if (input.dataSourceIds() == null) {
+      input = input.withDataSourceIds(List.of());
+    }
     return input;
   }
 

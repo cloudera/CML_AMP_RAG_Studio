@@ -77,9 +77,11 @@ class SessionServiceTest {
             TestData.createTestSessionInstance("test")
                 .withRerankModel("")
                 .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME),
+                .withUpdatedById(USERNAME)
+                .withDataSourceIds(null),
             USERNAME);
     assertThat(result.rerankModel()).isNull();
+    assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result).isNotNull();
   }
 
