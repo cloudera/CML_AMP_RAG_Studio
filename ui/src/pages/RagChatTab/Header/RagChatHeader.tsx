@@ -48,7 +48,7 @@ import CreateSessionModal from "pages/RagChatTab/SessionsSidebar/CreateSession/C
 const { Header } = Layout;
 
 function getHeaderTitle(activeSession?: Session): string {
-  if (!activeSession) {
+  if (!activeSession?.name) {
     return "...";
   }
   return activeSession.name;
