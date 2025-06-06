@@ -42,7 +42,7 @@ from typing import Dict, Any
 from crewai import Agent, Task, Crew, Process
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from app.services.models.providers import BedrockModelProvider, AzureModelProvider
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -66,20 +66,20 @@ class PlannerTaskOutput(BaseModel):
     The output of the planner agent.
     """
 
+    model_config = ConfigDict(json_schema_extra = {
+            "example": {
+                "use_retrieval": True,
+                "explanation": "The query is related to the content described in the knowledge base summary.",
+            }
+        }
+    )
+
     use_retrieval: bool = Field(
         ..., description="Whether to use retrieval or answer directly."
     )
     explanation: str = Field(
         ..., description="Explanation for the decision made by the planner agent."
     )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "use_retrieval": True,
-                "explanation": "The query is related to the content described in the knowledge base summary.",
-            }
-        }
 
 
 class PlannerAgent:
