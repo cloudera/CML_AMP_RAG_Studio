@@ -268,10 +268,8 @@ def get_nodes_from_output(
 
 
 def build_datasource_query_components(
-    data_source_id: Optional[int],
-) -> tuple[Optional[BaseEmbedding], Optional[VectorStoreIndex]]:
-    if data_source_id is None:
-        return None, None
+    data_source_id: int,
+) -> tuple[BaseEmbedding, VectorStoreIndex]:
     qdrant_store = VectorStoreFactory.for_chunks(data_source_id)
     vector_store = qdrant_store.llama_vector_store()
     embedding_model = qdrant_store.get_embedding_model()
