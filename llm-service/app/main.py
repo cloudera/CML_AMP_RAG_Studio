@@ -63,7 +63,7 @@ try:
     __import__("pysqlite3")
     sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 except Exception as e:
-    logger.info(f"Unable to swap out pysqllite3. Probably not installed on your platform.", e)
+    logger.info("Unable to swap out pysqllite3. Probably not installed on your platform.", e)
 
 def _configure_logger() -> None:
     """Configure this module's setup/teardown logging formatting and verbosity."""
