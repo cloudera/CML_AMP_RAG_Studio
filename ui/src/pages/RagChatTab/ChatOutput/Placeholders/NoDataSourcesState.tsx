@@ -70,7 +70,7 @@ const PlaceholderContainer = ({
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
-  const [form] = Form.useForm<{ dataSourceId: number }>();
+  const [form] = Form.useForm<{ dataSourceIds: number[] }>();
   const {
     activeSession,
     dataSourcesQuery: { dataSources, dataSourcesStatus },
@@ -83,8 +83,8 @@ const NoDataSourcesState = () => {
       .validateFields()
       .catch(() => null)
       .then((values) => {
-        if (values?.dataSourceId) {
-          createSessionAndRedirect(undefined, values.dataSourceId);
+        if (values?.dataSourceIds.length) {
+          createSessionAndRedirect(values.dataSourceIds);
         }
       })
       .catch(() => null);
@@ -100,12 +100,13 @@ const NoDataSourcesState = () => {
         <Form autoCorrect="off" form={form} clearOnDestroy={true}>
           <Flex gap={8}>
             <Form.Item
-              name="dataSourceId"
+              name="dataSourceIds"
               rules={[
-                { required: true, message: "Please select a Knowledge Base" },
+                { required: true, message: "Please select Knowledge Base(s)" },
               ]}
             >
               <Select
+                mode="multiple"
                 disabled={dataSources.length === 0}
                 style={{ width: 300 }}
                 options={dataSources.map((value) => {

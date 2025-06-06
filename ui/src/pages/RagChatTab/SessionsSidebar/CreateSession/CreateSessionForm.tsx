@@ -91,7 +91,6 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                   </Typography>
                 }
               >
-                
                 <Tag
                   style={{
                     backgroundColor: cdlOrange500,
@@ -174,8 +173,9 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         }
       }}
     >
-      <Form.Item name="dataSourceId" label="Knowledge Base">
+      <Form.Item name="dataSourceIds" label="Knowledge Base">
         <Select
+          mode="multiple"
           disabled={dataSources?.length === 0}
           allowClear={true}
           options={dataSources?.map((value) => formatDataSource(value))}

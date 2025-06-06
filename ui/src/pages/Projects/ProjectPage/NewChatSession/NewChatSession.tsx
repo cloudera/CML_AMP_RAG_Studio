@@ -48,7 +48,7 @@ export const NewChatSession = () => {
   const { project } = useProjectContext();
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { data: dataSources } = useGetDataSourcesForProject(project.id);
-  const [selectedDataSource, setSelectedDataSource] = useState<number>();
+  const [selectedDataSources, setSelectedDataSources] = useState<number[]>([]);
 
   return (
     <Card
@@ -59,12 +59,13 @@ export const NewChatSession = () => {
       }
       extra={
         <Select
+          mode="multiple"
           placeholder="Select a data source (optional)"
           disabled={!dataSources || dataSources.length === 0}
           style={{ width: 300 }}
           allowClear={true}
-          onChange={(id: DataSourceInputType["value"]) => {
-            setSelectedDataSource(id);
+          onChange={(ids: DataSourceInputType["value"][]) => {
+            setSelectedDataSources(ids);
           }}
           options={dataSources?.map((value) => {
             return formatDataSource(value);
@@ -74,7 +75,7 @@ export const NewChatSession = () => {
     >
       <RagChatQueryInput
         newSessionCallback={(userInput: string) => {
-          createSessionAndRedirect(userInput, selectedDataSource);
+          createSessionAndRedirect(selectedDataSources, userInput);
         }}
       />
     </Card>

@@ -107,7 +107,7 @@ const ChatSettingsModal = ({
           ...values,
           id: activeSession.id,
           projectId: activeSession.projectId,
-          dataSourceIds: values.dataSourceId ? [values.dataSourceId] : [],
+          dataSourceIds: values.dataSourceIds,
           queryConfiguration: {
             ...activeSession.queryConfiguration,
             enableToolCalling: values.queryConfiguration.enableToolCalling,
@@ -221,15 +221,12 @@ const ChatSettingsModal = ({
       <Flex vertical gap={10}>
         <Form autoCorrect="off" form={form} clearOnDestroy={true}>
           <Form.Item
-            name="dataSourceId"
+            name="dataSourceIds"
             label="Knowledge Base"
-            initialValue={
-              activeSession.dataSourceIds.length > 0
-                ? activeSession.dataSourceIds[0]
-                : null
-            }
+            initialValue={activeSession.dataSourceIds}
           >
             <Select
+              mode="multiple"
               disabled={dataSources.length === 0}
               allowClear={true}
               options={dataSources.map((value) => {

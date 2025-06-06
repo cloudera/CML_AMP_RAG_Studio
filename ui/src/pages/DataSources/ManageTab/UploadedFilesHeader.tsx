@@ -63,7 +63,7 @@ const UploadedFilesHeader = ({
   const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
 
   const handleCreateSession = () => {
-    createSessionAndRedirect(undefined, +dataSourceId);
+    createSessionAndRedirect([+dataSourceId]);
   };
 
   const fullyIndexed =
