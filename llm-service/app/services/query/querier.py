@@ -230,7 +230,7 @@ def get_nodes_from_output(
     # Extract the node ids from string output
     extracted_node_ids = re.findall(
         r"<a class='rag_citation' href='(.*?)'>",
-        output.__str__() if isinstance(output, CrewOutput) else output,
+        str(output) if isinstance(output, CrewOutput) else output,
     )
     # add the extracted node ids to the source node ids
     for node_id in extracted_node_ids:
