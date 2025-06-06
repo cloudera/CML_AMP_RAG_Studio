@@ -330,16 +330,14 @@ def build_retriever(
 ) -> Optional[BaseRetriever]:
     retrievers: list[FlexibleRetriever] = []
     for data_source_id in data_source_ids:
+        if data_source_id is None:
+            continue
+
         embedding_model, vector_store = build_datasource_query_components(
             data_source_id
         )
-        retriever = (
-            FlexibleRetriever(
-                configuration, vector_store, embedding_model, data_source_id, llm
-            )
-            if embedding_model and vector_store and data_source_id is not None
-            else None
+        retriever = FlexibleRetriever(
+            configuration, vector_store, embedding_model, data_source_id, llm
         )
-        if retriever:
-            retrievers.append(retriever)
+        retrievers.append(retriever)
     return MultiSourceRetriever(retrievers)
