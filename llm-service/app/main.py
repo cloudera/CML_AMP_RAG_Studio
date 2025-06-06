@@ -58,6 +58,9 @@ _APP_PKG_NAME = __name__.split(".", maxsplit=1)[0]
 logger = logging.getLogger(__name__)
 _request_received_logger = logging.getLogger(_APP_PKG_NAME + ".access")
 
+# Manual patch required for CrewAI compatability. DO NOT REMOVE. IT BREAKS ON OLD RUNTIMES IF YOU DO
+__import__("pysqlite3")
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 def _configure_logger() -> None:
     """Configure this module's setup/teardown logging formatting and verbosity."""
