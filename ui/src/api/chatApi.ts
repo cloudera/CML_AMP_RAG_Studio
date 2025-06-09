@@ -420,6 +420,42 @@ const handlePrepareController = (
   };
 };
 
+const handleStreamingSuccess = (
+  request: ChatMutationRequest,
+  messageId: string,
+  queryClient: QueryClient,
+  onSuccess:
+    | ((data: ChatMessageType, request?: unknown, context?: unknown) => unknown)
+    | undefined,
+  handleError: (request: ChatMutationRequest, error: Error) => void,
+  onError: ((error: Error) => void) | undefined,
+) => {
+  fetch(
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history/${messageId}`,
+  )
+    .then(async (res) => {
+      const message = (await res.json()) as ChatMessageType;
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: request.session_id,
+        }),
+        (cachedData) => replacePlaceholderInChatHistory(message, cachedData),
+      );
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(request.session_id),
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      onSuccess?.(message);
+    })
+    .catch((error: unknown) => {
+      handleError(request, error as Error);
+      onError?.(error as Error);
+    });
+};
+
 export const useStreamingChatMutation = ({
   onError,
   onSuccess,
@@ -467,31 +503,14 @@ export const useStreamingChatMutation = ({
       if (!messageId) {
         return;
       }
-      fetch(
-        `${llmServicePath}/sessions/${variables.session_id.toString()}/chat-history/${messageId}`,
-      )
-        .then(async (res) => {
-          const message = (await res.json()) as ChatMessageType;
-          queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-            chatHistoryQueryKey({
-              session_id: variables.session_id,
-            }),
-            (cachedData) =>
-              replacePlaceholderInChatHistory(message, cachedData),
-          );
-          queryClient
-            .invalidateQueries({
-              queryKey: suggestedQuestionKey(variables.session_id),
-            })
-            .catch((error: unknown) => {
-              console.error(error);
-            });
-          onSuccess?.(message);
-        })
-        .catch((error: unknown) => {
-          handleError(variables, error as Error);
-          onError?.(error as Error);
-        });
+      handleStreamingSuccess(
+        variables,
+        messageId,
+        queryClient,
+        onSuccess,
+        handleError,
+        onError,
+      );
     },
     onError: (error: Error, variables) => {
       handleError(variables, error);
