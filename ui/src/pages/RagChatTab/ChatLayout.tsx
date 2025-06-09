@@ -79,6 +79,8 @@ function ChatLayout() {
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
   const [streamedChat, setStreamedChat] = useState("");
   const [streamedEvent, setStreamedEvent] = useState<CrewEventResponse[]>([]);
+  const [streamedAbortController, setStreamedAbortController] =
+    useState<AbortController>();
   const {
     status: chatHistoryStatus,
     data: chatHistory,
@@ -116,6 +118,10 @@ function ChatLayout() {
         },
         streamedChatState: [streamedChat, setStreamedChat],
         streamedEventState: [streamedEvent, setStreamedEvent],
+        streamedAbortControllerState: [
+          streamedAbortController,
+          setStreamedAbortController,
+        ],
         dataSourceSize,
         dataSourcesQuery: {
           dataSources: dataSources ?? [],

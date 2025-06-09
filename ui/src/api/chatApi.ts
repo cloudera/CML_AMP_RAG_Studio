@@ -356,6 +356,7 @@ const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
 interface StreamingChatCallbacks {
   onChunk: (msg: string) => void;
   onEvent: (event: CrewEventResponse) => void;
+  getController?: (ctrl: AbortController) => void;
 }
 
 export const useStreamingChatMutation = ({
@@ -363,6 +364,7 @@ export const useStreamingChatMutation = ({
   onSuccess,
   onChunk,
   onEvent,
+  getController,
 }: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
   const handleError = (variables: ChatMutationRequest, error: Error) => {
@@ -383,7 +385,13 @@ export const useStreamingChatMutation = ({
         handleError(request, error);
         onError?.(error);
       };
-      return streamChatMutation(request, onChunk, onEvent, convertError);
+      return streamChatMutation(
+        request,
+        onChunk,
+        onEvent,
+        convertError,
+        getController,
+      );
     },
     onMutate: (variables) => {
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
@@ -436,8 +444,13 @@ const streamChatMutation = async (
   onChunk: (chunk: string) => void,
   onEvent: (event: CrewEventResponse) => void,
   onError: (error: string) => void,
+  getController?: (ctrl: AbortController) => void,
 ): Promise<string> => {
   const ctrl = new AbortController();
+  if (getController) {
+    debugger;
+    getController(ctrl);
+  }
   let responseId = "";
   await fetchEventSource(
     `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,

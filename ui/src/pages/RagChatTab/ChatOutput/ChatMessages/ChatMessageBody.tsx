@@ -51,9 +51,11 @@ import { MarkdownResponse } from "pages/RagChatTab/ChatOutput/ChatMessages/Markd
 export const ChatMessageBody = ({
   data,
   streamedEvents,
+  streamedAbortController,
 }: {
   data: ChatMessageType;
   streamedEvents?: CrewEventResponse[];
+  streamedAbortController?: AbortController;
 }) => {
   return (
     <div data-testid="chat-message">
@@ -92,7 +94,10 @@ export const ChatMessageBody = ({
               )}
             </div>
             <Flex vertical gap={8} style={{ width: "100%" }}>
-              <StreamedEvents streamedEvents={streamedEvents} />
+              <StreamedEvents
+                streamedEvents={streamedEvents}
+                streamedAbortController={streamedAbortController}
+              />
               <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
                 <MarkdownResponse data={data} />
               </Typography.Text>

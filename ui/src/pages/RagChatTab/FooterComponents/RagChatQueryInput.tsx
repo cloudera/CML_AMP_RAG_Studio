@@ -67,6 +67,7 @@ const RagChatQueryInput = ({
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    streamedAbortControllerState: [, setStreamedAbortController],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -95,6 +96,9 @@ const RagChatQueryInput = ({
     onSuccess: () => {
       setUserInput("");
       setStreamedChat("");
+    },
+    getController: (ctrl) => {
+      setStreamedAbortController(ctrl);
     },
   });
 

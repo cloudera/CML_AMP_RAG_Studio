@@ -65,6 +65,7 @@ const ChatMessageController = () => {
     },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    streamedAbortControllerState: [, setStreamedAbortControllerState],
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -89,6 +90,9 @@ const ChatMessageController = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
+    },
+    getController: (ctrl) => {
+      setStreamedAbortControllerState(ctrl);
     },
   });
 
