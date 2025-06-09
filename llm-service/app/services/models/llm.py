@@ -97,7 +97,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
         return cls.test_llm_chat(model_name)
 
     @classmethod
-    def test_llm_chat(cls, model_name) -> Literal["ok"]:
+    def test_llm_chat(cls, model_name: str) -> Literal["ok"]:
         cls.get(model_name).chat(
             messages=[
                 ChatMessage(
