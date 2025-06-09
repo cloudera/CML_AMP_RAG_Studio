@@ -194,14 +194,17 @@ class BedrockModelProvider(ModelProvider):
                         ModelResponse(
                             model_id=model["modelId"],
                             name=model["modelName"],
+                            available=True,
                         )
                     )
                 else:
-                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
-                        model["modelId"], model_arns
+                    arn_model_response = (
+                        BedrockModelProvider._get_model_arn_by_profiles(
+                            model["modelId"], model_arns
+                        )
                     )
-                    if model_arn:
-                        models.append(model_arn)
+                    if arn_model_response:
+                        models.append(arn_model_response)
 
         return models
 
@@ -215,6 +218,7 @@ class BedrockModelProvider(ModelProvider):
                 return ModelResponse(
                     model_id=profile["inferenceProfileId"],
                     name=profile["inferenceProfileName"],
+                    available=True,
                 )
         return None
 
@@ -238,8 +242,7 @@ class BedrockModelProvider(ModelProvider):
         for model in available_models:
             models.append(
                 ModelResponse(
-                    model_id=model["modelId"],
-                    name=model["modelName"],
+                    model_id=model["modelId"], name=model["modelName"], available=True
                 )
             )
 
