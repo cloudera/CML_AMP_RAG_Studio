@@ -47,6 +47,7 @@ from typing import Optional, Generator, Any
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from starlette.responses import ContentStream
 from starlette.types import Receive
 
 from app.services.chat.streaming_chat import stream_chat
@@ -70,12 +71,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 
 
-class CancellableStreamingResponse(StreamingResponse):
+class CancelableStreamingResponse(StreamingResponse):
     """
     A custom StreamingResponse that can detect client disconnection and cancel a running thread.
     """
 
-    def __init__(self, content_generator, cancel_event, *args, **kwargs):
+    def __init__(
+        self,
+        content_generator: ContentStream,
+        cancel_event: threading.Event,
+        *args: Any,
+        **kwargs: Any,
+    ):
         self.cancel_event = cancel_event
         super().__init__(content_generator, *args, **kwargs)
 
@@ -340,6 +347,6 @@ def stream_chat_completion(
             if executor:
                 executor.shutdown(wait=False)
 
-    return CancellableStreamingResponse(
+    return CancelableStreamingResponse(
         generate_stream(), cancel_event=cancel_event, media_type="text/event-stream"
     )
