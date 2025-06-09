@@ -44,7 +44,6 @@ import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.
 import "../tableMarkdown.css";
 import { ExclamationCircleTwoTone } from "@ant-design/icons";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
-import { JSX } from "react";
 import { cdlAmber500 } from "src/cuix/variables.ts";
 
 const isError = (data: ChatMessageType) => {
@@ -57,11 +56,11 @@ const isCanceled = (data: ChatMessageType) => {
 
 const WarningMessage = ({
   data,
-  icon,
+  color,
   alertType,
 }: {
   data: ChatMessageType;
-  icon: JSX.Element;
+  color: string;
   alertType: AlertProps["type"];
 }) => {
   return (
@@ -77,7 +76,7 @@ const WarningMessage = ({
           <div style={{ flex: 1 }}>
             <ExclamationCircleTwoTone
               type={alertType}
-              twoToneColor="#ff4d4f"
+              twoToneColor={color}
               style={{ fontSize: 22 }}
             />
           </div>
@@ -97,33 +96,11 @@ const WarningMessage = ({
 };
 const ChatMessage = ({ data }: { data: ChatMessageType }) => {
   if (isError(data)) {
-    return (
-      <WarningMessage
-        data={data}
-        icon={
-          <ExclamationCircleTwoTone
-            type="error"
-            twoToneColor="#ff4d4f"
-            style={{ fontSize: 22 }}
-          />
-        }
-        alertType={"error"}
-      />
-    );
+    return <WarningMessage data={data} color={"#ff4d4f"} alertType={"error"} />;
   }
   if (isCanceled(data)) {
     return (
-      <WarningMessage
-        data={data}
-        icon={
-          <ExclamationCircleTwoTone
-            type={"warning"}
-            twoToneColor={cdlAmber500}
-            style={{ fontSize: 22 }}
-          />
-        }
-        alertType={"warning"}
-      />
+      <WarningMessage data={data} color={cdlAmber500} alertType={"warning"} />
     );
   }
 
