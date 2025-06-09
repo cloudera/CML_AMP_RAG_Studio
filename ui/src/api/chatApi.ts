@@ -397,6 +397,29 @@ const modifyPlaceholderInChatHistory = (
   );
 };
 
+const handlePrepareController = (
+  getController: ((ctrl: AbortController) => void) | undefined,
+  queryClient: QueryClient,
+  request: ChatMutationRequest,
+) => {
+  return (ctrl: AbortController) => {
+    if (getController) {
+      getController(ctrl);
+
+      const onAbort = () => {
+        modifyPlaceholderInChatHistory(
+          queryClient,
+          request,
+          canceledChatMessage(request),
+        );
+        ctrl.signal.removeEventListener("abort", onAbort);
+      };
+
+      ctrl.signal.addEventListener("abort", onAbort);
+    }
+  };
+};
+
 export const useStreamingChatMutation = ({
   onError,
   onSuccess,
@@ -417,23 +440,11 @@ export const useStreamingChatMutation = ({
         handleError(request, error);
         onError?.(error);
       };
-
-      const handleGetController = (ctrl: AbortController) => {
-        if (getController) {
-          getController(ctrl);
-
-          const onAbort = () => {
-            modifyPlaceholderInChatHistory(
-              queryClient,
-              request,
-              canceledChatMessage(request),
-            );
-            ctrl.signal.removeEventListener("abort", onAbort);
-          };
-
-          ctrl.signal.addEventListener("abort", onAbort);
-        }
-      };
+      const handleGetController = handlePrepareController(
+        getController,
+        queryClient,
+        request,
+      );
 
       return streamChatMutation(
         request,
