@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Divider, Flex, Typography } from "antd";
+import { Alert, AlertProps, Divider, Flex, Typography } from "antd";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
@@ -44,42 +44,60 @@ import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.
 import "../tableMarkdown.css";
 import { ExclamationCircleTwoTone } from "@ant-design/icons";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
+import { JSX } from "react";
 
 const isError = (data: ChatMessageType) => {
   return data.id.startsWith("error-");
 };
 
+const CustomMessageHandler = ({
+  data,
+  icon,
+  alertType,
+}: {
+  data: ChatMessageType;
+  icon: JSX.Element;
+  alertType: AlertProps["type"];
+}) => {
+  return (
+    <div data-testid="chat-message">
+      <div>
+        <UserQuestion question={data.rag_message.user} />
+        <Flex
+          style={{ marginTop: 15 }}
+          align="baseline"
+          justify="space-between"
+          gap={8}
+        >
+          <div style={{ flex: 1 }}>{icon}</div>
+          <Flex vertical gap={8} style={{ width: "100%" }}>
+            <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+              <Alert
+                type={alertType}
+                message={data.rag_message.assistant.trimStart()}
+              />
+            </Typography.Text>
+          </Flex>
+        </Flex>
+        <Divider />
+      </div>
+    </div>
+  );
+};
 const ChatMessage = ({ data }: { data: ChatMessageType }) => {
   if (isError(data)) {
     return (
-      <div data-testid="chat-message">
-        <div>
-          <UserQuestion question={data.rag_message.user} />
-          <Flex
-            style={{ marginTop: 15 }}
-            align="baseline"
-            justify="space-between"
-            gap={8}
-          >
-            <div style={{ flex: 1 }}>
-              <ExclamationCircleTwoTone
-                type="error"
-                twoToneColor="#ff4d4f"
-                style={{ fontSize: 22 }}
-              />
-            </div>
-            <Flex vertical gap={8} style={{ width: "100%" }}>
-              <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
-                <Alert
-                  type="error"
-                  message={data.rag_message.assistant.trimStart()}
-                />
-              </Typography.Text>
-            </Flex>
-          </Flex>
-          <Divider />
-        </div>
-      </div>
+      <CustomMessageHandler
+        data={data}
+        icon={
+          <ExclamationCircleTwoTone
+            type="error"
+            twoToneColor="#ff4d4f"
+            style={{ fontSize: 22 }}
+          />
+        }
+        alertType={"error"}
+      />
     );
   }
 
