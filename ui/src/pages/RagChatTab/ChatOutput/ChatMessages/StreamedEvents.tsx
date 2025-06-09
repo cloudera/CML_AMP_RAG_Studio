@@ -75,10 +75,8 @@ const StreamedEvent = ({ event }: { event: CrewEventResponse }) => {
 
 const StreamedEvents = ({
   streamedEvents,
-  streamedAbortController,
 }: {
   streamedEvents?: CrewEventResponse[];
-  streamedAbortController?: AbortController;
 }) => {
   const [collapsed, setCollapsed] = useState(true);
 
@@ -99,9 +97,6 @@ const StreamedEvents = ({
             <Typography.Text type="secondary">
               {lastEvent.name} ({format(lastEvent.timestamp * 1000, "pp")})
             </Typography.Text>
-            <Button onClick={() => streamedAbortController?.abort()}>
-              Cancel
-            </Button>
           </div>
         </Flex>
       }

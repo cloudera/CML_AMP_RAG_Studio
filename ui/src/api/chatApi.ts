@@ -47,6 +47,7 @@ import {
 import {
   InfiniteData,
   keepPreviousData,
+  QueryClient,
   useInfiniteQuery,
   useMutation,
   useQueryClient,
@@ -213,13 +214,16 @@ export const appendPlaceholderToChatHistory = (
   });
 
   const lastPage = pages[pages.length - 1];
+  const filteredLastPageData = lastPage.data.filter(
+    (chatMessage) => !isPlaceholder(chatMessage),
+  );
   return {
     pageParams,
     pages: [
       ...pages.slice(0, -1),
       {
         ...lastPage,
-        data: [...lastPage.data, placeholderChatResponse(query)],
+        data: [...filteredLastPageData, placeholderChatResponse(query)],
       },
     ],
   };
@@ -337,20 +341,32 @@ export interface CrewEventResponse {
   timestamp: number;
 }
 
-const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
+const customChatMessage = (
+  variables: ChatMutationRequest,
+  message: string,
+  prefix: string,
+) => {
   const uuid = crypto.randomUUID();
-  const errorMessage: ChatMessageType = {
-    id: `error-${uuid}`,
+  const customMessage: ChatMessageType = {
+    id: `${prefix}-${uuid}`,
     session_id: variables.session_id,
     source_nodes: [],
     rag_message: {
       user: variables.query,
-      assistant: error.message,
+      assistant: message,
     },
     evaluations: [],
     timestamp: Date.now(),
   };
-  return errorMessage;
+  return customMessage;
+};
+
+const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
+  return customChatMessage(variables, error.message, "error");
+};
+
+const canceledChatMessage = (variables: ChatMutationRequest) => {
+  return customChatMessage(variables, "Request canceled by user", "canceled");
 };
 
 interface StreamingChatCallbacks {
@@ -358,6 +374,21 @@ interface StreamingChatCallbacks {
   onEvent: (event: CrewEventResponse) => void;
   getController?: (ctrl: AbortController) => void;
 }
+
+const modifyPlaceholderInChatHistory = (
+  queryClient: QueryClient,
+  variables: ChatMutationRequest,
+  replacementMessage: ChatMessageType,
+) => {
+  queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+    chatHistoryQueryKey({
+      session_id: variables.session_id,
+      offset: 0,
+    }),
+    (cachedData) =>
+      replacePlaceholderInChatHistory(replacementMessage, cachedData),
+  );
+};
 
 export const useStreamingChatMutation = ({
   onError,
@@ -369,13 +400,7 @@ export const useStreamingChatMutation = ({
   const queryClient = useQueryClient();
   const handleError = (variables: ChatMutationRequest, error: Error) => {
     const errorMessage = errorChatMessage(variables, error);
-    queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-      chatHistoryQueryKey({
-        session_id: variables.session_id,
-        offset: 0,
-      }),
-      (cachedData) => replacePlaceholderInChatHistory(errorMessage, cachedData),
-    );
+    modifyPlaceholderInChatHistory(queryClient, variables, errorMessage);
   };
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
@@ -385,12 +410,27 @@ export const useStreamingChatMutation = ({
         handleError(request, error);
         onError?.(error);
       };
+
+      const handleGetController = (ctrl: AbortController) => {
+        if (getController) {
+          getController(ctrl);
+
+          ctrl.signal.addEventListener("abort", () => {
+            modifyPlaceholderInChatHistory(
+              queryClient,
+              request,
+              canceledChatMessage(request),
+            );
+          });
+        }
+      };
+
       return streamChatMutation(
         request,
         onChunk,
         onEvent,
         convertError,
-        getController,
+        handleGetController,
       );
     },
     onMutate: (variables) => {
@@ -448,7 +488,6 @@ const streamChatMutation = async (
 ): Promise<string> => {
   const ctrl = new AbortController();
   if (getController) {
-    debugger;
     getController(ctrl);
   }
   let responseId = "";

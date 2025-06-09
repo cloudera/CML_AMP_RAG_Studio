@@ -45,7 +45,6 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   const {
     streamedChatState: [streamedChat],
     streamedEventState: [streamedEvent],
-    streamedAbortControllerState: [streamedAbortController],
   } = useContext(RagChatContext);
 
   const streamedMessage: ChatMessageType = {
@@ -61,11 +60,7 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   };
 
   return (
-    <ChatMessageBody
-      data={streamedMessage}
-      streamedEvents={streamedEvent}
-      streamedAbortController={streamedAbortController}
-    />
+    <ChatMessageBody data={streamedMessage} streamedEvents={streamedEvent} />
   );
 };
 
