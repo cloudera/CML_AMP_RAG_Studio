@@ -147,6 +147,7 @@ def generate_suggested_questions(
                 use_question_condensing=False,
                 use_hyde=False,
                 use_postprocessor=False,
+                use_tool_calling=False,
             ),
             [],
         )

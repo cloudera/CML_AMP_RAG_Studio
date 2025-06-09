@@ -84,6 +84,7 @@ wget "${RELEASE_URL}/node-dist.tar.gz" -O artifacts/node-dist.tar.gz
 
 # unzip the frontend tarball
 cd ui
+rm -rf dist
 tar -xzf ../artifacts/fe-dist.tar.gz
 
 cd express

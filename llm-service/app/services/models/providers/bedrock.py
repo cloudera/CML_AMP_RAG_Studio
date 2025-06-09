@@ -46,6 +46,7 @@ from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
+from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 from pydantic import TypeAdapter
 
@@ -184,20 +185,26 @@ class BedrockModelProvider(ModelProvider):
 
         models = []
         for model in available_models:
+            # Skip models that are not in the Llama-index BEDROCK_MODELS mapping
+            if BEDROCK_MODELS.get(model["modelId"]) is None:
+                continue
             if "rerank" not in model["modelId"].lower():
                 if "ON_DEMAND" in model["inferenceTypesSupported"]:
                     models.append(
                         ModelResponse(
                             model_id=model["modelId"],
                             name=model["modelName"],
+                            available=True,
                         )
                     )
                 else:
-                    model_arn = BedrockModelProvider._get_model_arn_by_profiles(
-                        model["modelId"], model_arns
+                    arn_model_response = (
+                        BedrockModelProvider._get_model_arn_by_profiles(
+                            model["modelId"], model_arns
+                        )
                     )
-                    if model_arn:
-                        models.append(model_arn)
+                    if arn_model_response:
+                        models.append(arn_model_response)
 
         return models
 
@@ -211,6 +218,7 @@ class BedrockModelProvider(ModelProvider):
                 return ModelResponse(
                     model_id=profile["inferenceProfileId"],
                     name=profile["inferenceProfileName"],
+                    available=True,
                 )
         return None
 
@@ -234,8 +242,7 @@ class BedrockModelProvider(ModelProvider):
         for model in available_models:
             models.append(
                 ModelResponse(
-                    model_id=model["modelId"],
-                    name=model["modelName"],
+                    model_id=model["modelId"], name=model["modelName"], available=True
                 )
             )
 
