@@ -348,7 +348,7 @@ const customChatMessage = (
 ) => {
   const uuid = crypto.randomUUID();
   const customMessage: ChatMessageType = {
-    id: `${prefix}-${uuid}`,
+    id: `${prefix}${uuid}`,
     session_id: variables.session_id,
     source_nodes: [],
     rag_message: {
@@ -361,12 +361,19 @@ const customChatMessage = (
   return customMessage;
 };
 
+export const ERROR_PREFIX_ID = "error-";
+export const CANCELED_PREFIX_ID = "canceled-";
+
 const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
-  return customChatMessage(variables, error.message, "error");
+  return customChatMessage(variables, error.message, ERROR_PREFIX_ID);
 };
 
 const canceledChatMessage = (variables: ChatMutationRequest) => {
-  return customChatMessage(variables, "Request canceled by user", "canceled");
+  return customChatMessage(
+    variables,
+    "Request canceled by user",
+    CANCELED_PREFIX_ID,
+  );
 };
 
 interface StreamingChatCallbacks {

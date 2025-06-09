@@ -38,7 +38,12 @@
 
 import { Alert, AlertProps, Divider, Flex, Typography } from "antd";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
-import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
+import {
+  CANCELED_PREFIX_ID,
+  ChatMessageType,
+  ERROR_PREFIX_ID,
+  isPlaceholder,
+} from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 
 import "../tableMarkdown.css";
@@ -47,11 +52,11 @@ import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMe
 import { cdlAmber500 } from "src/cuix/variables.ts";
 
 const isError = (data: ChatMessageType) => {
-  return data.id.startsWith("error-");
+  return data.id.startsWith(ERROR_PREFIX_ID);
 };
 
 const isCanceled = (data: ChatMessageType) => {
-  return data.id.startsWith("canceled-");
+  return data.id.startsWith(CANCELED_PREFIX_ID);
 };
 
 const WarningMessage = ({
