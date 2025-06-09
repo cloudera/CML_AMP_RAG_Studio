@@ -422,13 +422,16 @@ export const useStreamingChatMutation = ({
         if (getController) {
           getController(ctrl);
 
-          ctrl.signal.addEventListener("abort", () => {
+          const onAbort = () => {
             modifyPlaceholderInChatHistory(
               queryClient,
               request,
               canceledChatMessage(request),
             );
-          });
+            ctrl.signal.removeEventListener("abort", onAbort);
+          };
+
+          ctrl.signal.addEventListener("abort", onAbort);
         }
       };
 
