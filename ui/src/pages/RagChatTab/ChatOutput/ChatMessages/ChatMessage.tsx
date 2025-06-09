@@ -45,12 +45,17 @@ import "../tableMarkdown.css";
 import { ExclamationCircleTwoTone } from "@ant-design/icons";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
 import { JSX } from "react";
+import { cdlAmber500 } from "src/cuix/variables.ts";
 
 const isError = (data: ChatMessageType) => {
   return data.id.startsWith("error-");
 };
 
-const CustomMessageHandler = ({
+const isCanceled = (data: ChatMessageType) => {
+  return data.id.startsWith("canceled-");
+};
+
+const WarningMessage = ({
   data,
   icon,
   alertType,
@@ -69,7 +74,13 @@ const CustomMessageHandler = ({
           justify="space-between"
           gap={8}
         >
-          <div style={{ flex: 1 }}>{icon}</div>
+          <div style={{ flex: 1 }}>
+            <ExclamationCircleTwoTone
+              type={alertType}
+              twoToneColor="#ff4d4f"
+              style={{ fontSize: 22 }}
+            />
+          </div>
           <Flex vertical gap={8} style={{ width: "100%" }}>
             <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
               <Alert
@@ -87,7 +98,7 @@ const CustomMessageHandler = ({
 const ChatMessage = ({ data }: { data: ChatMessageType }) => {
   if (isError(data)) {
     return (
-      <CustomMessageHandler
+      <WarningMessage
         data={data}
         icon={
           <ExclamationCircleTwoTone
@@ -97,6 +108,21 @@ const ChatMessage = ({ data }: { data: ChatMessageType }) => {
           />
         }
         alertType={"error"}
+      />
+    );
+  }
+  if (isCanceled(data)) {
+    return (
+      <WarningMessage
+        data={data}
+        icon={
+          <ExclamationCircleTwoTone
+            type={"warning"}
+            twoToneColor={cdlAmber500}
+            style={{ fontSize: 22 }}
+          />
+        }
+        alertType={"warning"}
       />
     );
   }
