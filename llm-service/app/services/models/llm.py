@@ -91,13 +91,13 @@ class LLM(_model_type.ModelType[llms.LLM]):
                         raise HTTPException(status_code=503, detail="Model not ready")
         try:
             cls.get(model_name)
-        except:
+        except Exception:
             raise HTTPException(status_code=404, detail="Model not found")
 
         return cls.test_llm_chat(model_name)
 
     @classmethod
-    def test_llm_chat(cls, model_name) -> Literal["ok"]:
+    def test_llm_chat(cls, model_name: str) -> Literal["ok"]:
         cls.get(model_name).chat(
             messages=[
                 ChatMessage(
