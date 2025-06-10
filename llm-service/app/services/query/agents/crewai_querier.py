@@ -346,6 +346,7 @@ def stream_chat(
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
     print(f"{use_retrieval=}")
+    print(f"{chat_engine=}")
     print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
