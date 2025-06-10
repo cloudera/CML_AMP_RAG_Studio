@@ -37,19 +37,21 @@
 #
 import logging
 import os
+import time
 from queue import Queue
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, Generator
 
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
 from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import ToolMetadata
+from openai.types.chat import ChatCompletionChunk
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -350,15 +352,24 @@ def stream_chat(
     print(f"{use_retrieval=}")
     print(f"{chat_engine=}")
     print(f"{enhanced_query=}")
+    print(f"{llm.metadata.is_function_calling_model=}")
 
     if use_retrieval and chat_engine:
-        chat_response = StreamingAgentChatResponse(
-            chat_stream=llm.stream_chat_with_tools(
-                tools=[
+        chat_history = chat_messages.copy()
+        max_depth = 15
+        source_nodes = source_nodes or []
+
+        def gen() -> Generator[ChatResponse, None, None]:
+            depth = 0
+            resp = ChatResponse(message=ChatMessage(role="assistant", content=None))
+            while True:
+                if depth >= max_depth:
+                    break
+                tools = [
                     RetrieverToolWithNodeInfo(
                         retriever=chat_engine._retriever,
                         metadata=ToolMetadata(
-                            name="Retriever",
+                            name="retriever_tool",
                             description=(
                                 "A tool to retrieve relevant information from "
                                 "the index. It takes a query of type string and returns relevant nodes from the index."
@@ -368,11 +379,66 @@ def stream_chat(
                         ),
                         node_postprocessors=chat_engine._node_postprocessors,
                     )
-                ],
-                verbose=True,
-                user_msg=enhanced_query,
-                chat_history=chat_messages,
-            ),
+                ]
+                streamer = llm.stream_chat_with_tools(
+                    tools=tools,
+                    verbose=True,
+                    user_msg=enhanced_query,
+                    chat_history=chat_history,
+                    allow_parallel_tool_calls=True,
+                )
+
+                for chunk in streamer:
+                    resp = chunk
+                    if isinstance(resp.raw, ChatCompletionChunk):
+                        delta = resp.raw.choices[0].delta
+                        if not delta.tool_calls:
+                            yield resp
+
+                # append the LLM's tool call message to history
+                chat_history.append(resp.message)
+
+                # Check if the response contains tool calls
+                tool_calls = llm.get_tool_calls_from_response(
+                    resp, error_on_no_tool_call=False
+                )
+                if not tool_calls:
+                    break
+                # Call each tool and append result to chat history
+                for tool_call in tool_calls:
+                    tool = next(
+                        t for t in tools if t.metadata.name == tool_call.tool_name
+                    )
+                    tool_output = tool(**tool_call.tool_kwargs)
+                    if hasattr(tool_output, "raw_output"):
+                        if isinstance(tool_output.raw_output, list):
+                            # If the tool output is a list of nodes, we can use it as source nodes
+                            for node in tool_output.raw_output:
+                                source_nodes.append(node)
+                    chat_history.append(
+                        ChatMessage(
+                            role="tool",
+                            content=str(tool_output),
+                            additional_kwargs={"tool_call_id": tool_call.tool_id},
+                        )
+                    )
+                depth += 1
+            if depth >= max_depth:
+                logger.info(
+                    "Reached maximum depth of %d iterations, requesting final answer",
+                    max_depth,
+                )
+                # do one last call to the LLM to finalize the response if content is none
+                if resp.message.content is None:
+                    final_response = llm.stream_chat(
+                        messages=chat_history
+                        + [ChatMessage(role="user", content=enhanced_query)]
+                    )
+                    for resp_chunk in final_response:
+                        yield resp_chunk
+
+        chat_response = StreamingAgentChatResponse(
+            chat_stream=gen(),
             source_nodes=source_nodes,
             is_writing_to_memory=False,
         )
