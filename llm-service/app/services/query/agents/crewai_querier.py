@@ -345,16 +345,21 @@ def stream_chat(
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
+    print(f"{use_retrieval=}")
+    print(f"{enhanced_query=}")
+
     if use_retrieval and chat_engine:
         chat_response = StreamingAgentChatResponse(
             chat_stream=llm.stream_chat_with_tools(
                 tools=[
                     RetrieverToolWithNodeInfo.from_defaults(
                         retriever=chat_engine._retriever,
+                        node_postprocessors=chat_engine._node_postprocessors,
                         name="Retriever",
                         description="A tool to retrieve relevant information from the knowledge base.",
                     )
                 ],
+                verbose=True,
                 user_msg=enhanced_query,
                 chat_history=chat_messages,
             ),

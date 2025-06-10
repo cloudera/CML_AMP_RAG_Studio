@@ -34,7 +34,7 @@ import os
 import re
 from copy import copy
 from queue import Queue
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, cast
 
 from crewai import CrewOutput
 from crewai.tools import BaseTool
@@ -42,6 +42,7 @@ from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
+from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from mcp import StdioServerParameters
 
@@ -148,7 +149,7 @@ def streaming_query(
         llm = models.LLM.get(model_name=configuration.model_name)
 
         chat_response: StreamingAgentChatResponse
-        if configuration.use_tool_calling:
+        if configuration.use_tool_calling and llm.metadata.is_function_calling_model:
             use_retrieval, data_source_summaries = should_use_retrieval(
                 configuration,
                 session.data_source_ids,
@@ -176,12 +177,13 @@ def streaming_query(
 
             chat_response = stream_chat(
                 use_retrieval,
-                llm,
+                cast(FunctionCallingLLM, llm),
                 chat_engine,
                 query_str,
                 [],
                 chat_messages,
             )
+            crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
             return chat_response
         if not chat_engine:
             raise HTTPException(
