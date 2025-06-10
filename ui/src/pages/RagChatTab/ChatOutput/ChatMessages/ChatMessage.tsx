@@ -36,50 +36,76 @@
  * DATA.
  ******************************************************************************/
 
-import { Alert, Divider, Flex, Typography } from "antd";
+import { Alert, AlertProps, Divider, Flex, Typography } from "antd";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
-import { ChatMessageType, isPlaceholder } from "src/api/chatApi.ts";
+import {
+  CANCELED_PREFIX_ID,
+  ChatMessageType,
+  ERROR_PREFIX_ID,
+  isPlaceholder,
+} from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 
 import "../tableMarkdown.css";
 import { ExclamationCircleTwoTone } from "@ant-design/icons";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
+import { cdlAmber500 } from "src/cuix/variables.ts";
 
 const isError = (data: ChatMessageType) => {
-  return data.id.startsWith("error-");
+  return data.id.startsWith(ERROR_PREFIX_ID);
 };
 
+const isCanceled = (data: ChatMessageType) => {
+  return data.id.startsWith(CANCELED_PREFIX_ID);
+};
+
+const WarningMessage = ({
+  data,
+  color,
+  alertType,
+}: {
+  data: ChatMessageType;
+  color: string;
+  alertType: AlertProps["type"];
+}) => {
+  return (
+    <div data-testid="chat-message">
+      <div>
+        <UserQuestion question={data.rag_message.user} />
+        <Flex
+          style={{ marginTop: 15 }}
+          align="baseline"
+          justify="space-between"
+          gap={8}
+        >
+          <div style={{ flex: 1 }}>
+            <ExclamationCircleTwoTone
+              type={alertType}
+              twoToneColor={color}
+              style={{ fontSize: 22 }}
+            />
+          </div>
+          <Flex vertical gap={8} style={{ width: "100%" }}>
+            <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+              <Alert
+                type={alertType}
+                message={data.rag_message.assistant.trimStart()}
+              />
+            </Typography.Text>
+          </Flex>
+        </Flex>
+        <Divider />
+      </div>
+    </div>
+  );
+};
 const ChatMessage = ({ data }: { data: ChatMessageType }) => {
   if (isError(data)) {
+    return <WarningMessage data={data} color={"#ff4d4f"} alertType={"error"} />;
+  }
+  if (isCanceled(data)) {
     return (
-      <div data-testid="chat-message">
-        <div>
-          <UserQuestion question={data.rag_message.user} />
-          <Flex
-            style={{ marginTop: 15 }}
-            align="baseline"
-            justify="space-between"
-            gap={8}
-          >
-            <div style={{ flex: 1 }}>
-              <ExclamationCircleTwoTone
-                type="error"
-                twoToneColor="#ff4d4f"
-                style={{ fontSize: 22 }}
-              />
-            </div>
-            <Flex vertical gap={8} style={{ width: "100%" }}>
-              <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
-                <Alert
-                  type="error"
-                  message={data.rag_message.assistant.trimStart()}
-                />
-              </Typography.Text>
-            </Flex>
-          </Flex>
-          <Divider />
-        </div>
-      </div>
+      <WarningMessage data={data} color={cdlAmber500} alertType={"warning"} />
     );
   }
 

@@ -83,6 +83,7 @@ const SuggestedQuestionsCards = () => {
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    streamedAbortControllerState: [, setStreamedAbortController],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id;
   const {
@@ -102,6 +103,9 @@ const SuggestedQuestionsCards = () => {
       onEvent: getOnEvent(setStreamedEvent),
       onSuccess: () => {
         setStreamedChat("");
+      },
+      getController: (ctrl: AbortController) => {
+        setStreamedAbortController(ctrl);
       },
     });
 

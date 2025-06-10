@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
-import { DatabaseFilled, SendOutlined } from "@ant-design/icons";
+import { DatabaseFilled, SendOutlined, StopOutlined } from "@ant-design/icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
@@ -46,7 +46,7 @@ import {
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlRed600 } from "src/cuix/variables.ts";
 
 import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
@@ -67,6 +67,10 @@ const RagChatQueryInput = ({
     dataSourcesQuery: { dataSourcesStatus },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    streamedAbortControllerState: [
+      streamedAbortController,
+      setStreamedAbortController,
+    ],
   } = useContext(RagChatContext);
 
   const [userInput, setUserInput] = useState("");
@@ -96,6 +100,9 @@ const RagChatQueryInput = ({
       setUserInput("");
       setStreamedChat("");
     },
+    getController: (ctrl) => {
+      setStreamedAbortController(ctrl);
+    },
   });
 
   useEffect(() => {
@@ -108,6 +115,12 @@ const RagChatQueryInput = ({
       inputRef.current.focus();
     }
   }, [inputRef.current, flatChatHistory.length]);
+
+  useEffect(() => {
+    if (streamChatMutation.isSuccess) {
+      setStreamedAbortController(undefined);
+    }
+  }, [streamChatMutation.isSuccess, setStreamedAbortController]);
 
   const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
@@ -128,6 +141,16 @@ const RagChatQueryInput = ({
 
   const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
     setExcludeKnowledgeBase(() => !checked);
+  };
+
+  const handleCancelStream = () => {
+    if (streamedAbortController) {
+      streamedAbortController.abort();
+    }
+    setStreamedAbortController(undefined);
+    setStreamedChat("");
+    setStreamedEvent([]);
+    streamChatMutation.reset();
   };
 
   return (
@@ -181,26 +204,40 @@ const RagChatQueryInput = ({
                 zIndex: 1,
               }}
             >
-              <Flex gap={8} align="end">
-                <ToolsManagerButton />
-                <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
-                  <Switch
-                    checkedChildren={<DatabaseFilled />}
-                    value={!excludeKnowledgeBase}
-                    style={{ display: dataSourceSize ? "block" : "none" }}
-                    onChange={handleExcludeKnowledgeBase}
+              {streamChatMutation.isPending ? (
+                <Tooltip title="Stop streaming response">
+                  <Button
+                    icon={<StopOutlined />}
+                    type="text"
+                    size="small"
+                    style={{ color: cdlRed600 }}
+                    onClick={handleCancelStream}
                   />
                 </Tooltip>
-              </Flex>
-              <Button
-                size="small"
-                type="text"
-                onClick={() => {
-                  handleChat(userInput);
-                }}
-                icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-                disabled={streamChatMutation.isPending}
-              />
+              ) : (
+                <Flex gap={4}>
+                  <Flex gap={8} align="end">
+                    <ToolsManagerButton />
+                    <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
+                      <Switch
+                        checkedChildren={<DatabaseFilled />}
+                        value={!excludeKnowledgeBase}
+                        style={{ display: dataSourceSize ? "block" : "none" }}
+                        onChange={handleExcludeKnowledgeBase}
+                      />
+                    </Tooltip>
+                  </Flex>
+                  <Button
+                    size="small"
+                    type="text"
+                    onClick={() => {
+                      handleChat(userInput);
+                    }}
+                    icon={<SendOutlined style={{ color: cdlBlue600 }} />}
+                    disabled={streamChatMutation.isPending}
+                  />
+                </Flex>
+              )}
             </div>
           </div>
         </Flex>
