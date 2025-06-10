@@ -40,13 +40,13 @@ from queue import Queue
 
 from crewai import Agent, Task
 
-from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.crew_events import ChatEvents, step_callback
 
 
 def build_calculation_task(
     agent: Agent,
     calculation_task_context: list[Task],
-    crew_events_queue: Queue[CrewEvent],
+    crew_events_queue: Queue[ChatEvents],
 ) -> Task:
     """
     Build a calculation task for the agent.
@@ -55,7 +55,7 @@ def build_calculation_task(
     Args:
         agent (Agent): The agent that will perform the calculations.
         calculation_task_context (list[Task]): The list of Task objects that will be used as context for the calculation task.
-        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
+        crew_events_queue (Queue[ChatEvents]): The queue to send events to.
 
     Returns:
         Task: The calculation task.

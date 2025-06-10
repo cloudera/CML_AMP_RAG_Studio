@@ -46,13 +46,11 @@ from llama_index.core.schema import NodeWithScore
 from mcp import StdioServerParameters
 
 from .agents.crewai_querier import (
-    assemble_crew,
     should_use_retrieval,
-    launch_crew,
     stream_chat,
     poison_pill,
 )
-from .crew_events import CrewEvent
+from .crew_events import ChatEvents
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
@@ -124,7 +122,7 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    crew_events_queue: Queue[CrewEvent],
+    crew_events_queue: Queue[ChatEvents],
     session: Session,
     retriever: Optional[BaseRetriever],
 ) -> StreamingAgentChatResponse:
@@ -159,29 +157,29 @@ def streaming_query(
                 chat_messages,
             )
 
-            crew = assemble_crew(
-                use_retrieval,
-                llm,
-                chat_messages,
-                query_str,
-                crew_events_queue,
-                retriever,
-                data_source_summaries,
-                mcp_tools,
-            )
-            enhanced_query, crew_result = launch_crew(
-                crew,
-                query_str,
-            )
+            # crew = assemble_crew(
+            #     use_retrieval,
+            #     llm,
+            #     chat_messages,
+            #     query_str,
+            #     crew_events_queue,
+            #     retriever,
+            #     data_source_summaries,
+            #     mcp_tools,
+            # )
+            # enhanced_query, crew_result = launch_crew(
+            #     crew,
+            #     query_str,
+            # )
 
-            source_nodes = get_nodes_from_output(crew_result, session)
+            # source_nodes = get_nodes_from_output(crew_result, session)
 
             chat_response = stream_chat(
                 use_retrieval,
                 llm,
                 chat_engine,
-                enhanced_query,
-                source_nodes,
+                query_str,
+                [],
                 chat_messages,
             )
             return chat_response
@@ -193,7 +191,7 @@ def streaming_query(
 
         try:
             chat_response = chat_engine.stream_chat(query_str, chat_messages)
-            crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
+            crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
             logger.debug("query response received from chat engine")
         except botocore.exceptions.ClientError as error:
             logger.warning(error.response)

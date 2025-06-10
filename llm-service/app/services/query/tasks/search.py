@@ -42,7 +42,7 @@ from crewai import Agent, Task
 from crewai_tools.tools.serper_dev_tool.serper_dev_tool import SerperDevTool
 from pydantic import BaseModel
 
-from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.crew_events import ChatEvents, step_callback
 
 
 class SearchResult(BaseModel):
@@ -60,7 +60,7 @@ def build_search_task(
     chat_history: str,
     search_task_context: list[Task],
     search_tool: SerperDevTool,
-    crew_events_queue: Queue[CrewEvent],
+    crew_events_queue: Queue[ChatEvents],
 ) -> Task:
     """
     Build a search task for the agent.
@@ -72,7 +72,7 @@ def build_search_task(
         chat_history (list[str | None]): The chat history.
         search_task_context (list[Task]): The list of Task objects that will be used as context for the search task.
         search_tool (SerperDevTool): The search tool to be used.
-        crew_events_queue (Queue[CrewEvent]): The queue to send events to.
+        crew_events_queue (Queue[ChatEvents]): The queue to send events to.
 
     Returns:
         Task: The search task.
