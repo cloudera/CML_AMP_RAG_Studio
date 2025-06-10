@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import asyncio
 import logging
 import os
 from queue import Queue
@@ -49,7 +50,7 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import ToolMetadata
+from llama_index.core.tools import ToolMetadata, FunctionTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -57,6 +58,7 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
 from app.services.query.crew_events import ChatEvents, step_callback
+from app.services.query.function_calling_agent import FuncationCallingAgent
 from app.services.query.query_configuration import QueryConfiguration
 from app.services.query.tasks.calculation import build_calculation_task
 from app.services.query.tasks.date import build_date_task
@@ -315,11 +317,11 @@ def launch_crew(
         return (
             f"""
     Original query: {query_str}
-    
+
     Research insights: {crew_result}
-    
+
     Please provide a response to the original query, incorporating the insights from research with in-line citations. \
-    
+
     Adhere to the following guidelines:
     * If you cannot find relevant information in the research insights, answer the question directly and indicate that \
     you don't have enough information. 
@@ -352,30 +354,66 @@ def stream_chat(
     print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
-        chat_response = StreamingAgentChatResponse(
-            chat_stream=llm.stream_chat_with_tools(
-                tools=[
-                    RetrieverToolWithNodeInfo(
-                        retriever=chat_engine._retriever,
-                        metadata=ToolMetadata(
-                            name="Retriever",
-                            description=(
-                                "A tool to retrieve relevant information from "
-                                "the index. It takes a query of type string and returns relevant nodes from the index."
-                                "Assume the index has relevant information about the user's question."
-                            ),
-                            fn_schema=RetrieverToolInput,
-                        ),
-                        node_postprocessors=chat_engine._node_postprocessors,
-                    )
-                ],
-                verbose=True,
-                user_msg=enhanced_query,
-                chat_history=chat_messages,
-            ),
-            source_nodes=source_nodes,
-            is_writing_to_memory=False,
-        )
+
+        def add(x: int, y: int) -> int:
+            print("ADDING")
+            """Useful function to add two numbers."""
+            return x + y
+
+        def multiply(x: int, y: int) -> int:
+            print("MULTIPLYING")
+            """Useful function to multiply two numbers."""
+            return x * y
+
+        tools = [
+            FunctionTool.from_defaults(add),
+            FunctionTool.from_defaults(multiply),
+        ]
+        print("agent tools:", tools)
+        agent = FuncationCallingAgent(llm=llm, tools=tools, timeout=120, verbose=True)
+
+        # Create a helper async function to await the Future
+        async def get_result_async():
+            workflow_handler = agent.run(input=enhanced_query)
+            # Wait for the Future to complete
+            return await workflow_handler
+
+        # Create a new event loop for this thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            res = loop.run_until_complete(get_result_async())
+            print(res)
+            chat_response = StreamingAgentChatResponse(
+                chat_stream=res["response"],
+            )
+        finally:
+            loop.close()
+
+        # chat_response = StreamingAgentChatResponse(
+        #     chat_stream=llm.stream_chat_with_tools(
+        #         tools=[
+        #             RetrieverToolWithNodeInfo(
+        #                 retriever=chat_engine._retriever,
+        #                 metadata=ToolMetadata(
+        #                     name="Retriever",
+        #                     description=(
+        #                         "A tool to retrieve relevant information from "
+        #                         "the index. It takes a query of type string and returns relevant nodes from the index."
+        #                         "Assume the index has relevant information about the user's question."
+        #                     ),
+        #                     fn_schema=RetrieverToolInput,
+        #                 ),
+        #                 node_postprocessors=chat_engine._node_postprocessors,
+        #             )
+        #         ],
+        #         verbose=True,
+        #         user_msg=enhanced_query,
+        #         chat_history=chat_messages,
+        #     ),
+        #     source_nodes=source_nodes,
+        #     is_writing_to_memory=False,
+        # )
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")
