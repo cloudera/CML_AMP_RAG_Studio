@@ -49,6 +49,7 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
+from llama_index.core.tools import ToolMetadata
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -64,6 +65,7 @@ from app.services.query.tools.date import DateTool
 from app.services.query.tools.retriever import (
     build_retriever_tool,
     RetrieverToolWithNodeInfo,
+    RetrieverToolInput,
 )
 
 if os.environ.get("ENABLE_OPIK") == "True":
@@ -353,11 +355,18 @@ def stream_chat(
         chat_response = StreamingAgentChatResponse(
             chat_stream=llm.stream_chat_with_tools(
                 tools=[
-                    RetrieverToolWithNodeInfo.from_defaults(
+                    RetrieverToolWithNodeInfo(
                         retriever=chat_engine._retriever,
+                        metadata=ToolMetadata(
+                            name="Retriever",
+                            description=(
+                                "A tool to retrieve relevant information from "
+                                "the index. It takes a query of type string and returns relevant nodes from the index."
+                                "Assume the index has relevant information about the user's question."
+                            ),
+                            fn_schema=RetrieverToolInput,
+                        ),
                         node_postprocessors=chat_engine._node_postprocessors,
-                        name="Retriever",
-                        description="A tool to retrieve relevant information from the knowledge base.",
                     )
                 ],
                 verbose=True,
