@@ -47,17 +47,19 @@ from crewai.tools.tool_types import ToolResult
 from pydantic import BaseModel
 
 
-class CrewEvent(BaseModel):
+class ChatEvents(BaseModel):
     type: str
     name: str
     data: Optional[str] = None
     timestamp: float = time.time()
 
 
-def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) -> None:
+def step_callback(
+    output: Any, agent: str, crew_events_queue: Queue[ChatEvents]
+) -> None:
     if isinstance(output, AgentFinish):
         crew_events_queue.put(
-            CrewEvent(
+            ChatEvents(
                 type="agent_finish",
                 name=agent,
                 data=output.thought,
@@ -66,7 +68,7 @@ def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) 
         )
     if isinstance(output, TaskOutput):
         crew_events_queue.put(
-            CrewEvent(
+            ChatEvents(
                 type="task_completed",
                 name=agent,
                 data=output.raw,
@@ -76,7 +78,7 @@ def step_callback(output: Any, agent: str, crew_events_queue: Queue[CrewEvent]) 
 
     if isinstance(output, ToolResult):
         crew_events_queue.put(
-            CrewEvent(
+            ChatEvents(
                 type="tool_result",
                 name=agent,
                 data=output.result,

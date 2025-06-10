@@ -40,12 +40,12 @@ from queue import Queue
 
 from crewai import Agent, Task
 
-from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.crew_events import ChatEvents, step_callback
 from app.services.query.tools.date import DateTool
 
 
 def build_date_task(
-    agent: Agent, date_tool: DateTool, crew_events_queue: Queue[CrewEvent]
+    agent: Agent, date_tool: DateTool, crew_events_queue: Queue[ChatEvents]
 ) -> Task:
     date_task = Task(
         name="DateFinderTask",

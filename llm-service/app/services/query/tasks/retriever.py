@@ -42,7 +42,7 @@ from crewai import Agent, Task
 from crewai.tools import BaseTool
 from pydantic import BaseModel
 
-from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.crew_events import ChatEvents, step_callback
 
 
 class RetrieverResult(BaseModel):
@@ -61,7 +61,7 @@ def build_retriever_task(
     chat_history: str,
     retriever_task_context: list[Task],
     retriever_tool: BaseTool,
-    crew_events_queue: Queue[CrewEvent],
+    crew_events_queue: Queue[ChatEvents],
 ) -> Task:
     retriever_task = Task(
         name="RetrieverTask",

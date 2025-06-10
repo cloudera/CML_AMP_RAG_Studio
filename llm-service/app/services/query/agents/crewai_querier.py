@@ -47,21 +47,24 @@ from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
+from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
-from app.services.query.agents.planner_agent import PlannerAgent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
-from app.services.query.crew_events import CrewEvent, step_callback
+from app.services.query.crew_events import ChatEvents, step_callback
 from app.services.query.query_configuration import QueryConfiguration
 from app.services.query.tasks.calculation import build_calculation_task
 from app.services.query.tasks.date import build_date_task
 from app.services.query.tasks.retriever import build_retriever_task
 from app.services.query.tools.date import DateTool
-from app.services.query.tools.retriever import build_retriever_tool
+from app.services.query.tools.retriever import (
+    build_retriever_tool,
+    RetrieverToolWithNodeInfo,
+)
 
 if os.environ.get("ENABLE_OPIK") == "True":
     from opik.integrations.crewai import track_crewai
@@ -98,12 +101,12 @@ def should_use_retrieval(
             data_source_summary = data_source_summary_indexer.get_full_summary()
             data_source_summaries[data_source_id] = data_source_summary
     # Create a planner agent to decide whether to use retrieval or answer directly
-    planner = PlannerAgent(llm, configuration)
-    planning_decision = planner.decide_retrieval_strategy(
-        query_str, chat_messages, data_source_summaries
-    )
-    use_retrieval: bool = planning_decision.get("use_retrieval", True)
-    return use_retrieval, data_source_summaries
+    # planner = PlannerAgent(llm, configuration)
+    # planning_decision = planner.decide_retrieval_strategy(
+    #     query_str, chat_messages, data_source_summaries
+    # )
+    # use_retrieval: bool = planning_decision.get("use_retrieval", True)
+    return len(data_source_ids) > 0, data_source_summaries
 
 
 def assemble_crew(
@@ -111,7 +114,7 @@ def assemble_crew(
     llm: LLM,
     chat_messages: list[ChatMessage],
     query_str: str,
-    crew_events_queue: Queue[CrewEvent],
+    crew_events_queue: Queue[ChatEvents],
     retriever: Optional[BaseRetriever],
     data_source_summaries: dict[int, str],
     mcp_tools: Optional[list[BaseTool]] = None,
@@ -151,7 +154,7 @@ def assemble_crew(
     date_task = build_date_task(researcher, date_tool, crew_events_queue)
 
     crew_events_queue.put(
-        CrewEvent(
+        ChatEvents(
             type="chat_history",
             name="Providing chat history",
             data=f"<Chat History>:\n{query_str}",
@@ -166,7 +169,7 @@ def assemble_crew(
                 chat_history += f"Assistant:\n{message.content}\n"
 
         crew_events_queue.put(
-            CrewEvent(
+            ChatEvents(
                 type="chat_history",
                 name="Chat history provided",
                 data=chat_history,
@@ -174,7 +177,7 @@ def assemble_crew(
         )
     else:
         crew_events_queue.put(
-            CrewEvent(
+            ChatEvents(
                 type="chat_history",
                 name="Chat history empty",
                 data="<Chat History>:\nNo chat history available.",
@@ -265,7 +268,7 @@ def assemble_crew(
         "from the context. Do not format it, or change it in any way.",
         context=response_context,
         callback=lambda _: crew_events_queue.put(
-            CrewEvent(type=poison_pill, name="responder")
+            ChatEvents(type=poison_pill, name="responder")
         ),
         max_retries=3,
         guardrail=validate_with_context,
@@ -334,7 +337,7 @@ def launch_crew(
 
 def stream_chat(
     use_retrieval: bool,
-    llm: LLM,
+    llm: FunctionCallingLLM,
     chat_engine: Optional[FlexibleContextChatEngine],
     enhanced_query: str,
     source_nodes: list[NodeWithScore],
@@ -344,9 +347,16 @@ def stream_chat(
     chat_response: StreamingAgentChatResponse
     if use_retrieval and chat_engine:
         chat_response = StreamingAgentChatResponse(
-            chat_stream=llm.stream_chat(
-                messages=chat_messages
-                + [ChatMessage(role="user", content=enhanced_query)],
+            chat_stream=llm.stream_chat_with_tools(
+                tools=[
+                    RetrieverToolWithNodeInfo.from_defaults(
+                        retriever=chat_engine._retriever,
+                        name="Retriever",
+                        description="A tool to retrieve relevant information from the knowledge base.",
+                    )
+                ],
+                user_msg=enhanced_query,
+                chat_history=chat_messages,
             ),
             source_nodes=source_nodes,
             is_writing_to_memory=False,

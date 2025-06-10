@@ -64,7 +64,7 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.crew_events import CrewEvent
+from app.services.query.crew_events import ChatEvents
 from app.services.query.querier import (
     build_retriever,
 )
@@ -76,7 +76,7 @@ def stream_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-    crew_events_queue: Queue[CrewEvent],
+    crew_events_queue: Queue[ChatEvents],
 ) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -100,10 +100,8 @@ def stream_chat(
         len(session.data_source_ids) == 0 or total_data_sources_size == 0
     ):
         # put a poison pill in the queue to stop the crew events stream
-        crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
-        return _stream_direct_llm_chat(
-            session, response_id, query, user_name, crew_events_queue
-        )
+        crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
+        return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
         crew_events_queue, query, query_configuration, session
@@ -152,7 +150,7 @@ def _run_streaming_chat(
 
 
 def build_streamer(
-    crew_events_queue: Queue[CrewEvent],
+    chat_events_queue: Queue[ChatEvents],
     query: str,
     query_configuration: QueryConfiguration,
     session: Session,
@@ -181,7 +179,7 @@ def build_streamer(
         query,
         query_configuration,
         chat_messages,
-        crew_events_queue=crew_events_queue,
+        crew_events_queue=chat_events_queue,
         session=session,
         retriever=retriever,
     )
@@ -193,7 +191,6 @@ def _stream_direct_llm_chat(
     response_id: str,
     query: str,
     user_name: Optional[str],
-    queue: Queue[CrewEvent],
 ) -> Generator[ChatResponse, None, None]:
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
