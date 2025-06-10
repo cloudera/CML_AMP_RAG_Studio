@@ -534,6 +534,7 @@ const streamChatMutation = async (
   await fetchEventSource(
     `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,
     {
+      openWhenHidden: true,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
