@@ -40,18 +40,11 @@ from typing import Any
 
 from crewai.tools import BaseTool
 from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
-
-from llama_index.core import QueryBundle, VectorStoreIndex
+from llama_index.core import QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.embeddings.base import BaseEmbedding
-from llama_index.core.llms import LLM
-from llama_index.core.schema import TextNode
+from llama_index.core.schema import TextNode, Node, NodeWithScore
 from llama_index.core.tools import RetrieverTool, ToolOutput, ToolMetadata
 from pydantic import BaseModel, Field
-
-from app.ai.indexing.summary_indexer import SummaryIndexer
-from app.services.query.flexible_retriever import FlexibleRetriever
-from app.services.query.query_configuration import QueryConfiguration
 
 
 class RetrieverToolInput(BaseModel):
@@ -76,7 +69,22 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
             node postprocessors.
     """
 
+    @staticmethod
+    def _get_content_str(docs: list[NodeWithScore]) -> str:
+        content = ""
+        for doc in docs:
+            assert isinstance(doc.node, (Node, TextNode))
+            node_copy = doc.node.model_copy()
+            content += (
+                f"node_id = {node_copy.node_id}\n"
+                + f"score = {doc.score}\n"
+                + node_copy.get_content()
+                + "\n\n"
+            )
+        return content
+
     def call(self, *args: Any, **kwargs: Any) -> ToolOutput:
+        print("Calling RetrieverTool with args:", args, "and kwargs:", kwargs)
         query_str = ""
         if args is not None:
             query_str += ", ".join([str(arg) for arg in args]) + "\n"
@@ -89,18 +97,7 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
 
         docs = self._retriever.retrieve(query_str)
         docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
-        content = ""
-        for doc in docs:
-            node_copy = doc.node.model_copy()
-            if isinstance(node_copy, TextNode):
-                node_copy.text_template = "{metadata_str}\n{content}"
-                node_copy.metadata_template = "{key} = {value}"
-                content += (
-                    f"node_id = {node_copy.node_id}\n"
-                    + f"score = {doc.score}\n"
-                    + node_copy.get_content()
-                    + "\n\n"
-                )
+        content = self._get_content_str(docs)
         return ToolOutput(
             content=content,
             tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
@@ -109,6 +106,7 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         )
 
     async def acall(self, *args: Any, **kwargs: Any) -> ToolOutput:
+        print("Async Calling RetrieverTool with args:", args, "and kwargs:", kwargs)
         query_str = ""
         if args is not None:
             query_str += ", ".join([str(arg) for arg in args]) + "\n"
@@ -119,19 +117,8 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         if query_str == "":
             raise ValueError("Cannot call query engine without inputs")
         docs = await self._retriever.aretrieve(query_str)
-        content = ""
         docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
-        for doc in docs:
-            node_copy = doc.node.model_copy()
-            if isinstance(node_copy, TextNode):
-                node_copy.text_template = "{metadata_str}\n{content}"
-                node_copy.metadata_template = "{key} = {value}"
-                content += (
-                    f"node_id = {node_copy.node_id}\n"
-                    + f"score = {doc.score}\n"
-                    + node_copy.get_content()
-                    + "\n\n"
-                )
+        content = self._get_content_str(docs)
         return ToolOutput(
             content=content,
             tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
