@@ -127,8 +127,9 @@ def _run_streaming_chat(
     streaming_chat_response: StreamingAgentChatResponse = None,
 ) -> Generator[ChatResponse, None, None]:
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
-    if streaming_chat_response.chat_stream:
-        for response in streaming_chat_response.chat_stream:
+    stream = streaming_chat_response.chat_stream
+    if stream:
+        for response in stream:
             response.additional_kwargs["response_id"] = response_id
             yield response
 

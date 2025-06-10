@@ -315,7 +315,8 @@ def stream_chat_completion(
                 return
 
             first_message = True
-            for response in future.result():
+            stream = future.result()
+            for response in stream:
                 # Check for cancellation between each response
                 if cancel_event.is_set():
                     logger.info("Client disconnected during result processing")

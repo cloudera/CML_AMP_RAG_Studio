@@ -43,6 +43,8 @@ from typing import Optional, Tuple, Any
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
+from llama_index.agent.openai import OpenAIAgent
+from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
@@ -352,9 +354,8 @@ def stream_chat(
     print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
-        chat_response = StreamingAgentChatResponse(
-            chat_stream=llm.stream_chat_with_tools(
-                tools=[
+        agent = OpenAIAgent.from_tools(
+            tools=[
                     RetrieverToolWithNodeInfo(
                         retriever=chat_engine._retriever,
                         metadata=ToolMetadata(
@@ -368,21 +369,17 @@ def stream_chat(
                         ),
                         node_postprocessors=chat_engine._node_postprocessors,
                     )
-                ],
-                verbose=True,
-                user_msg=enhanced_query,
-                chat_history=chat_messages,
-            ),
-            source_nodes=source_nodes,
-            is_writing_to_memory=False,
-        )
+            ],
+            llm=llm,
+            verbose=True)
+        return agent.stream_chat(message=enhanced_query, chat_history=chat_messages)
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")
         logger.debug("querying llm directly with enhanced query: \n%s", enhanced_query)
 
         # Use the chat engine to answer directly without retrieval context
-        chat_response = StreamingAgentChatResponse(
+        return StreamingAgentChatResponse(
             chat_stream=llm.stream_chat(
                 messages=chat_messages
                 + [ChatMessage(role="user", content=enhanced_query)],
@@ -391,5 +388,3 @@ def stream_chat(
             source_nodes=[],
             is_writing_to_memory=False,
         )
-
-    return chat_response
