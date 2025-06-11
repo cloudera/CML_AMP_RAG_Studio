@@ -207,9 +207,9 @@ def streaming_query(
                 cast(FunctionCallingLLM, llm),
                 chat_engine,
                 query_str,
-                [],
                 chat_messages,
-                all_tools
+                all_tools,
+                data_source_summaries
             )
             crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
             return chat_response

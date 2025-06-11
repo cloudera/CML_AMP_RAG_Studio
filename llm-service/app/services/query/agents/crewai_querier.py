@@ -48,8 +48,7 @@ from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatRespo
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
-from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import ToolMetadata, BaseTool
+from llama_index.core.tools import BaseTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -64,8 +63,6 @@ from app.services.query.tasks.retriever import build_retriever_task
 from app.services.query.tools.date import DateTool
 from app.services.query.tools.retriever import (
     build_retriever_tool,
-    RetrieverToolWithNodeInfo,
-    RetrieverToolInput,
 )
 
 if os.environ.get("ENABLE_OPIK") == "True":
@@ -337,15 +334,9 @@ def launch_crew(
         raise RuntimeError("Error running CrewAI crew: %s" % str(e)) from e
 
 
-def stream_chat(
-    use_retrieval: bool,
-    llm: FunctionCallingLLM,
-    chat_engine: Optional[FlexibleContextChatEngine],
-    enhanced_query: str,
-    source_nodes: list[NodeWithScore],
-    chat_messages: list[ChatMessage],
-    additional_tools: list[BaseTool],
-) -> StreamingAgentChatResponse:
+def stream_chat(use_retrieval: bool, llm: FunctionCallingLLM, chat_engine: Optional[FlexibleContextChatEngine],
+                enhanced_query: str, chat_messages: list[ChatMessage],
+                additional_tools: list[BaseTool], data_source_summaries: dict[int, str]) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
     print(f"{use_retrieval=}")
@@ -353,19 +344,7 @@ def stream_chat(
     print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
-        retrieval_tool = RetrieverToolWithNodeInfo(
-            retriever=chat_engine._retriever,
-            metadata=ToolMetadata(
-                name="Retriever",
-                description=(
-                    "A tool to retrieve relevant information from "
-                    "the index. It takes a query of type string and returns relevant nodes from the index."
-                    "Assume the index has relevant information about the user's question."
-                ),
-                fn_schema=RetrieverToolInput,
-            ),
-            node_postprocessors=chat_engine._node_postprocessors,
-        )
+        retrieval_tool = build_retriever_tool(retriever=chat_engine._retriever, summaries = data_source_summaries)
         tools: list[BaseTool] = [DateTool(), retrieval_tool]
         tools.extend(additional_tools)
         agent = OpenAIAgent.from_tools(

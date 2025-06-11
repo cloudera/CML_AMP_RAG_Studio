@@ -38,12 +38,10 @@
 
 from typing import Any
 
-from crewai.tools import BaseTool
-from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 from llama_index.core import QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.schema import TextNode, Node, NodeWithScore
-from llama_index.core.tools import RetrieverTool, ToolOutput, ToolMetadata
+from llama_index.core.tools import RetrieverTool, ToolOutput, ToolMetadata, BaseTool
 from pydantic import BaseModel, Field
 
 
@@ -146,5 +144,4 @@ def build_retriever_tool(
             fn_schema=RetrieverToolInput,
         ),
     )
-    crewai_retriever_tool = LlamaIndexTool.from_tool(retriever_tool)
-    return crewai_retriever_tool
+    return retriever_tool
