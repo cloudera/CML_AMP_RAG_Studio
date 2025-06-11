@@ -38,15 +38,14 @@
 import logging
 import os
 from queue import Queue
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, Generator
 
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
 from llama_index.agent.openai import OpenAIAgent
-from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -356,23 +355,43 @@ def stream_chat(
     if use_retrieval and chat_engine:
         agent = OpenAIAgent.from_tools(
             tools=[
-                    RetrieverToolWithNodeInfo(
-                        retriever=chat_engine._retriever,
-                        metadata=ToolMetadata(
-                            name="Retriever",
-                            description=(
-                                "A tool to retrieve relevant information from "
-                                "the index. It takes a query of type string and returns relevant nodes from the index."
-                                "Assume the index has relevant information about the user's question."
-                            ),
-                            fn_schema=RetrieverToolInput,
+                RetrieverToolWithNodeInfo(
+                    retriever=chat_engine._retriever,
+                    metadata=ToolMetadata(
+                        name="Retriever",
+                        description=(
+                            "A tool to retrieve relevant information from "
+                            "the index. It takes a query of type string and returns relevant nodes from the index."
+                            "Assume the index has relevant information about the user's question."
                         ),
-                        node_postprocessors=chat_engine._node_postprocessors,
-                    )
+                        fn_schema=RetrieverToolInput,
+                    ),
+                    node_postprocessors=chat_engine._node_postprocessors,
+                )
             ],
             llm=llm,
-            verbose=True)
-        return agent.stream_chat(message=enhanced_query, chat_history=chat_messages)
+            verbose=True,
+        )
+
+        def gen() -> Generator[ChatResponse, None, None]:
+            response = ""
+            stream_chat: StreamingAgentChatResponse = agent.stream_chat(
+                message=enhanced_query, chat_history=chat_messages
+            )
+            res = stream_chat.response_gen
+            for chunk in res:
+                print(f"Received chunk: {chunk}")
+                response += chunk
+                finalize_response = ChatResponse(
+                    message=ChatMessage(role="assistant", content=response), delta=chunk
+                )
+                yield finalize_response
+
+        # stream_chat: StreamingAgentChatResponse = agent.stream_chat(
+        #     message=enhanced_query, chat_history=chat_messages
+        # )
+        # res = stream_chat.response_gen
+        return StreamingAgentChatResponse(chat_stream=gen())
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")
