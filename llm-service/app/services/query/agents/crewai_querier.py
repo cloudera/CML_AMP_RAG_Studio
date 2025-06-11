@@ -375,15 +375,18 @@ The sky is red in the evening and blue in the morning.
 Source: 2
 Water is wet when the sky is red.
 
-Source: www.example.com
-The sky is red in the evening and blue in the morning. 
+Source 3: www.example1.com
+The sky is red in the evening and blue in the morning.
+
+Source 4: www.example2.com
+Only in the evenings, is the water wet.
 
 <Query>
 When is water wet?
 
 <Answer> 
 Water will be wet when the sky is red<a class="rag_citation" href="1"></a> \
-[example.com](www.example.com), which occurs in the evening<a class="rag_citation" href="2"></a>.
+[example.com](www.example.com), which occurs in the [evening](www.example2.com) <a class="rag_citation" href="2"></a>.
 """
 
 
