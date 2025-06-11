@@ -29,6 +29,7 @@
 # ##############################################################################
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -44,7 +45,9 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from mcp import StdioServerParameters
+from llama_index.core.tools import FunctionTool
+from llama_index.core.tools import BaseTool as LLamaTool
+from mcp import StdioServerParameters, ListToolsResult
 
 from .agents.crewai_querier import (
     should_use_retrieval,
@@ -75,6 +78,7 @@ from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
+from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +121,45 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
 
     raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
+def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
+    """
+    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
+
+    Args:
+        server_name: The name of the MCP server to find
+
+    Returns:
+        An MCPServerAdapter configured for the specified server
+
+    Raises:
+        ValueError: If the server name is not found in the mcp.json file
+    """
+    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
+
+    with open(mcp_json_path, "r") as f:
+        mcp_config = json.load(f)
+
+    mcp_servers = mcp_config["mcp_servers"]
+    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
+
+    if server_config:
+        environment: dict[str, str] | None = copy(dict(os.environ))
+        if "env" in server_config and environment:
+            environment.update(server_config["env"])
+
+        if "command" in server_config:
+            client = BasicMCPClient(command_or_url=server_config["command"], args=server_config.get("args", []), env=environment)
+        elif "url" in server_config:
+            client = BasicMCPClient(command_or_url=server_config["url"])
+        else:
+            raise ValueError("Not configured right...fixme")
+        tool_spec = McpToolSpec(client=client)
+        return tool_spec.to_tool_list()
+
+
+    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
+
+
 
 def streaming_query(
     chat_engine: Optional[FlexibleContextChatEngine],
@@ -129,15 +172,16 @@ def streaming_query(
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
+    all_tools: list[LLamaTool] =[]
 
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
             try:
-                adapter = get_mcp_server_adapter(tool_name)
-                print(
-                    f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
-                )
-                all_adapters.append(adapter)
+                llama_tools = get_llama_index_tools(tool_name)
+                # print(
+                #     f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
+                # )
+                all_tools.extend(llama_tools)
             except ValueError as e:
                 logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
                 continue
@@ -158,23 +202,6 @@ def streaming_query(
                 chat_messages,
             )
 
-            # crew = assemble_crew(
-            #     use_retrieval,
-            #     llm,
-            #     chat_messages,
-            #     query_str,
-            #     crew_events_queue,
-            #     retriever,
-            #     data_source_summaries,
-            #     mcp_tools,
-            # )
-            # enhanced_query, crew_result = launch_crew(
-            #     crew,
-            #     query_str,
-            # )
-
-            # source_nodes = get_nodes_from_output(crew_result, session)
-
             chat_response = stream_chat(
                 use_retrieval,
                 cast(FunctionCallingLLM, llm),
@@ -182,6 +209,7 @@ def streaming_query(
                 query_str,
                 [],
                 chat_messages,
+                all_tools
             )
             crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
             return chat_response

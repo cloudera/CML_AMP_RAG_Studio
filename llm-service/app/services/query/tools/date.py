@@ -36,17 +36,27 @@
 #  DATA.
 #
 from datetime import datetime
+from typing import Any
 
-from crewai.tools import BaseTool
+from llama_index.core.tools import BaseTool, ToolOutput, ToolMetadata
+from pydantic import BaseModel
 
+
+class DateToolInput(BaseModel):
+    """
+    Input schema for the DateTool
+    """
+    input_: None = None
 
 class DateTool(BaseTool):  # type: ignore[misc]
     """
     A tool that provides the current date and time.
     """
+    @property
+    def metadata(self) -> ToolMetadata:
+        return ToolMetadata(name="date_tool", description="A tool that provides the current date and time.", fn_schema=DateToolInput)
 
-    name: str = "date_tool"
-    description: str = "A tool that provides the current date and time."
+    def __call__(self, input_: Any) -> ToolOutput:
+        now = datetime.now()
+        return ToolOutput(content=f"The current date is {now.strftime('%Y-%m-%d %H:%M:%S')}", tool_name="date_tool", raw_input={}, raw_output=now)
 
-    def _run(self) -> str:
-        return f"The current date is {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"

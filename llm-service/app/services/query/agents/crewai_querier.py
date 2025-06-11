@@ -42,7 +42,6 @@ from typing import Optional, Tuple, Any, Generator
 
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
-from crewai.tools.base_tool import BaseTool
 from llama_index.agent.openai import OpenAIAgent
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
@@ -50,7 +49,7 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import ToolMetadata
+from llama_index.core.tools import ToolMetadata, BaseTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -345,6 +344,7 @@ def stream_chat(
     enhanced_query: str,
     source_nodes: list[NodeWithScore],
     chat_messages: list[ChatMessage],
+    additional_tools: list[BaseTool],
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
@@ -353,45 +353,44 @@ def stream_chat(
     print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
+        retrieval_tool = RetrieverToolWithNodeInfo(
+            retriever=chat_engine._retriever,
+            metadata=ToolMetadata(
+                name="Retriever",
+                description=(
+                    "A tool to retrieve relevant information from "
+                    "the index. It takes a query of type string and returns relevant nodes from the index."
+                    "Assume the index has relevant information about the user's question."
+                ),
+                fn_schema=RetrieverToolInput,
+            ),
+            node_postprocessors=chat_engine._node_postprocessors,
+        )
+        tools: list[BaseTool] = [DateTool(), retrieval_tool]
+        tools.extend(additional_tools)
         agent = OpenAIAgent.from_tools(
-            tools=[
-                RetrieverToolWithNodeInfo(
-                    retriever=chat_engine._retriever,
-                    metadata=ToolMetadata(
-                        name="Retriever",
-                        description=(
-                            "A tool to retrieve relevant information from "
-                            "the index. It takes a query of type string and returns relevant nodes from the index."
-                            "Assume the index has relevant information about the user's question."
-                        ),
-                        fn_schema=RetrieverToolInput,
-                    ),
-                    node_postprocessors=chat_engine._node_postprocessors,
-                )
-            ],
+            tools=tools,
             llm=llm,
             verbose=True,
         )
 
+        stream_chat_response: StreamingAgentChatResponse = agent.stream_chat(
+            message=enhanced_query, chat_history=chat_messages
+        )
+
         def gen() -> Generator[ChatResponse, None, None]:
             response = ""
-            stream_chat: StreamingAgentChatResponse = agent.stream_chat(
-                message=enhanced_query, chat_history=chat_messages
-            )
-            res = stream_chat.response_gen
+            res = stream_chat_response.response_gen
             for chunk in res:
-                print(f"Received chunk: {chunk}")
                 response += chunk
                 finalize_response = ChatResponse(
                     message=ChatMessage(role="assistant", content=response), delta=chunk
                 )
                 yield finalize_response
 
-        # stream_chat: StreamingAgentChatResponse = agent.stream_chat(
-        #     message=enhanced_query, chat_history=chat_messages
-        # )
-        # res = stream_chat.response_gen
-        return StreamingAgentChatResponse(chat_stream=gen())
+        return StreamingAgentChatResponse(
+            chat_stream=gen(), source_nodes=stream_chat_response.source_nodes
+        )
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")
