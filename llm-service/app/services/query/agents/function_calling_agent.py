@@ -35,8 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import asyncio
 import uuid
-from typing import Optional, Any, List
+from functools import partial
+from typing import Optional, Any, List, Union, Dict
 
 from llama_index.agent.openai.base import DEFAULT_MAX_FUNCTION_CALLS
 from llama_index.core.agent import FunctionCallingAgentWorker
@@ -44,16 +46,19 @@ from llama_index.core.agent.function_calling import FunctionCallingAgent
 from llama_index.core.agent.runner.base import AgentState
 from llama_index.core.agent.utils import add_user_step_to_memory
 from llama_index.core.base.agent.types import TaskStep, TaskStepOutput, Task
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.base.llms.types import ChatMessage, ChatResponse
 from llama_index.core.callbacks import trace_method, CallbackManager
 from llama_index.core.chat_engine.types import (
     AgentChatResponse,
     StreamingAgentChatResponse,
+    AGENT_CHAT_RESPONSE_TYPE,
+    ChatResponseMode,
 )
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.memory import BaseMemory
 from llama_index.core.objects import ObjectRetriever
 from llama_index.core.tools import BaseTool, ToolOutput
+from llama_index.core.types import Thread
 
 
 class FunctionCallingAgentWithStreamer(FunctionCallingAgent):
@@ -121,6 +126,91 @@ class FunctionCallingAgentWithStreamerWorker(FunctionCallingAgentWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    @staticmethod
+    def _process_message(self, task, chat_response):
+        ai_message = chat_response.message
+        task.extra_state["new_memory"].put(ai_message)
+        return AgentChatResponse(
+            response=str(ai_message.content),
+            sources=task.extra_state["sources"],
+        )
+
+    def _get_stream_ai_response(
+        self, task: Task, **llm_chat_kwargs: Any
+    ) -> StreamingAgentChatResponse:
+        chat_stream_response = StreamingAgentChatResponse(
+            chat_stream=self._llm.stream_chat(**llm_chat_kwargs),
+            sources=task.extra_state["sources"],
+        )
+        # Get the response in a separate thread so we can yield the response
+        thread = Thread(
+            target=chat_stream_response.write_response_to_history,
+            args=(task.extra_state["new_memory"],),
+            kwargs={"on_stream_end_fn": partial(self.finalize_task, task)},
+        )
+        thread.start()
+        # Wait for the event to be set
+        chat_stream_response.is_function_not_none_thread_event.wait()
+        # If it is executing an openAI function, wait for the thread to finish
+        if chat_stream_response.is_function:
+            thread.join()
+
+        # if it's false, return the answer (to stream)
+        return chat_stream_response
+
+    async def _get_async_stream_ai_response(
+        self, task: Task, **llm_chat_kwargs: Any
+    ) -> StreamingAgentChatResponse:
+        chat_stream_response = StreamingAgentChatResponse(
+            achat_stream=await self._llm.astream_chat(**llm_chat_kwargs),
+            sources=task.extra_state["sources"],
+        )
+        # create task to write chat response to history
+        chat_stream_response.awrite_response_to_history_task = asyncio.create_task(
+            chat_stream_response.awrite_response_to_history(
+                task.extra_state["new_memory"],
+                on_stream_end_fn=partial(self.afinalize_task, task),
+            )
+        )
+        chat_stream_response._ensure_async_setup()
+
+        # wait until openAI functions stop executing
+        await chat_stream_response.is_function_false_event.wait()
+
+        # return response stream
+        return chat_stream_response
+
+    def _get_agent_response(
+        self, task: Task, mode: ChatResponseMode, **llm_chat_kwargs: Any
+    ) -> AGENT_CHAT_RESPONSE_TYPE:
+        if mode == ChatResponseMode.WAIT:
+            chat_response: ChatResponse = self._llm.chat(**llm_chat_kwargs)
+            return self._process_message(task, chat_response)
+        elif mode == ChatResponseMode.STREAM:
+            return self._get_stream_ai_response(task, **llm_chat_kwargs)
+        else:
+            raise NotImplementedError
+
+    async def _get_async_agent_response(
+        self, task: Task, mode: ChatResponseMode, **llm_chat_kwargs: Any
+    ) -> AGENT_CHAT_RESPONSE_TYPE:
+        if mode == ChatResponseMode.WAIT:
+            chat_response: ChatResponse = await self._llm.achat(**llm_chat_kwargs)
+            return self._process_message(task, chat_response)
+        elif mode == ChatResponseMode.STREAM:
+            return await self._get_async_stream_ai_response(task, **llm_chat_kwargs)
+        else:
+            raise NotImplementedError
+
+    def _get_llm_chat_kwargs(
+        self,
+        task: Task,
+        tools: Optional[List[BaseTool]] = None,
+        tool_choice: Union[str, dict] = "auto",
+    ) -> Dict[str, Any]:
+        llm_chat_kwargs: dict = {"messages": self.get_all_messages(task)}
+        return llm_chat_kwargs
+
     @trace_method("run_step")
     def run_step(self, step: TaskStep, task: Task, **kwargs: Any) -> TaskStepOutput:
         """Run step."""
@@ -132,7 +222,7 @@ class FunctionCallingAgentWithStreamerWorker(FunctionCallingAgentWorker):
         tools = self.get_tools(task.input)
 
         # get response and tool call (if exists)
-        response = self._llm.stream_chat_with_tools(
+        response = self._llm.chat_with_tools(
             tools=tools,
             user_msg=None,
             chat_history=self.get_all_messages(task),
