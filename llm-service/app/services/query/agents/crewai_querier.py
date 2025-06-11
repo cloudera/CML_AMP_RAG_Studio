@@ -35,16 +35,17 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import asyncio
 import logging
 import os
 from queue import Queue
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, Generator
 
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from crewai.tools.base_tool import BaseTool
 from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -53,6 +54,7 @@ from llama_index.core.tools import ToolMetadata
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
+from app.services.query.agents.workflow import run_workflow
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
@@ -315,11 +317,11 @@ def launch_crew(
         return (
             f"""
     Original query: {query_str}
-    
+
     Research insights: {crew_result}
-    
+
     Please provide a response to the original query, incorporating the insights from research with in-line citations. \
-    
+
     Adhere to the following guidelines:
     * If you cannot find relevant information in the research insights, answer the question directly and indicate that \
     you don't have enough information. 
@@ -352,13 +354,13 @@ def stream_chat(
     print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
-        chat_response = StreamingAgentChatResponse(
-            chat_stream=llm.stream_chat_with_tools(
+        res = asyncio.run(
+            run_workflow(
                 tools=[
                     RetrieverToolWithNodeInfo(
                         retriever=chat_engine._retriever,
                         metadata=ToolMetadata(
-                            name="Retriever",
+                            name="retriever_tool",
                             description=(
                                 "A tool to retrieve relevant information from "
                                 "the index. It takes a query of type string and returns relevant nodes from the index."
@@ -368,14 +370,22 @@ def stream_chat(
                         ),
                         node_postprocessors=chat_engine._node_postprocessors,
                     )
-                ],
-                verbose=True,
-                user_msg=enhanced_query,
-                chat_history=chat_messages,
-            ),
-            source_nodes=source_nodes,
-            is_writing_to_memory=False,
+                ]
+            )
         )
+
+        def gen() -> Generator[ChatResponse, None, None]:
+            response = ""
+            for chunk in res:
+                print(res)
+                response += chunk
+                finalize_response = ChatResponse(
+                    message=ChatMessage(role="assistant", content=response)
+                )
+                yield finalize_response
+
+        print(res)
+        chat_response = StreamingAgentChatResponse(chat_stream=gen())
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")

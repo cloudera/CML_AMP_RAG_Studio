@@ -3092,6 +3092,19 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-utils-workflow"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+    { name = "pyvis" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/76/8bea745b8de0f1fa63ba398de03875ccc77935f472e30b43e741be85d09a/llama_index_utils_workflow-0.3.2.tar.gz", hash = "sha256:f70f068109cf8fb17b7e0149caf5b53e2c231ef2fddb4de82fe426e586d842b5", size = 4214 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/f5/afad45f646cf85ecec97ccf478e3ad8c57866c7fc56547ef5db12814e3cd/llama_index_utils_workflow-0.3.2-py3-none-any.whl", hash = "sha256:7e9b29a15481aa43039f89acb306652980dd9c1ba2252e0dbaeac6042873d004", size = 3795 },
+]
+
+[[package]]
 name = "llama-index-vector-stores-opensearch"
 version = "0.5.5"
 source = { registry = "https://pypi.org/simple" }
@@ -3146,6 +3159,7 @@ dependencies = [
     { name = "llama-index-postprocessor-nvidia-rerank" },
     { name = "llama-index-readers-file" },
     { name = "llama-index-storage-kvstore-s3" },
+    { name = "llama-index-utils-workflow" },
     { name = "llama-index-vector-stores-opensearch" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
@@ -3202,6 +3216,7 @@ requires-dist = [
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
     { name = "llama-index-storage-kvstore-s3", specifier = ">=0.3.0" },
+    { name = "llama-index-utils-workflow", specifier = ">=0.3.2" },
     { name = "llama-index-vector-stores-opensearch", specifier = ">=0.5.5" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },
