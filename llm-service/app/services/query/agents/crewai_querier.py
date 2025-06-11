@@ -45,6 +45,7 @@ import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from llama_index.agent.openai import OpenAIAgent
 from llama_index.core import PromptTemplate
+from llama_index.core.agent import FunctionCallingAgent
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
@@ -52,8 +53,12 @@ from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool, ToolOutput
+from llama_index.llms.openai import OpenAI
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.query.agents.function_calling_agent import (
+    FunctionCallingAgentWithStreamer,
+)
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
@@ -410,7 +415,14 @@ def stream_chat(
         )
         tools: list[BaseTool] = [DateTool(), retrieval_tool]
         tools.extend(additional_tools)
-        agent = OpenAIAgent.from_tools(
+        # agent = OpenAIAgent.from_tools(
+        #     tools=tools,
+        #     llm=llm,
+        #     verbose=True,
+        #     system_prompt=DEFAULT_AGENT_PROMPT,
+        # )
+
+        agent = FunctionCallingAgentWithStreamer.from_tools(
             tools=tools,
             llm=llm,
             verbose=True,
