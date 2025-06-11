@@ -81,23 +81,32 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
     @classmethod
     def test(cls, model_name: str) -> Literal["ok"]:
-        models = cls.list_available()
-        for model in models:
-            if model.model_id == model_name:
-                if not CAIIModelProvider.is_enabled() or model.available:
-                    cls.get(model_name).chat(
-                        messages=[
-                            ChatMessage(
-                                role=MessageRole.USER,
-                                content="Are you available to answer questions?",
-                            )
-                        ]
-                    )
-                    return "ok"
-                else:
-                    raise HTTPException(status_code=503, detail="Model not ready")
+        if CAIIModelProvider.is_enabled():
+            models = cls.list_available()
+            for model in models:
+                if model.model_id == model_name:
+                    if model.available:
+                        return cls.test_llm_chat(model_name)
+                    else:
+                        raise HTTPException(status_code=503, detail="Model not ready")
+        try:
+            cls.get(model_name)
+        except Exception:
+            raise HTTPException(status_code=404, detail="Model not found")
 
-        raise HTTPException(status_code=404, detail="Model not found")
+        return cls.test_llm_chat(model_name)
+
+    @classmethod
+    def test_llm_chat(cls, model_name: str) -> Literal["ok"]:
+        cls.get(model_name).chat(
+            messages=[
+                ChatMessage(
+                    role=MessageRole.USER,
+                    content="Are you available to answer questions?",
+                )
+            ]
+        )
+        return "ok"
 
 
 # ensure interface is implemented

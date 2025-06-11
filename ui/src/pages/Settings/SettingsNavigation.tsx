@@ -41,7 +41,8 @@ import AmpSettingsPage from "pages/Settings/AmpSettingsPage.tsx";
 import ModelPage from "pages/Models/ModelPage.tsx";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useGetAmpConfig } from "src/api/ampMetadataApi.ts";
+import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const modelConfigKey = "modelConfiguration";
 const ampSettingsKey = "ampSettings";
@@ -49,7 +50,7 @@ const ampSettingsKey = "ampSettings";
 const SettingsNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data: config } = useGetAmpConfig();
+  const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
   const handleNav = (key: string) => {
     navigate({ hash: key }).catch((reason: unknown) => {

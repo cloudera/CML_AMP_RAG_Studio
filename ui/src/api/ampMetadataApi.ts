@@ -147,19 +147,30 @@ export interface CaiiConfig {
   caii_domain?: string;
 }
 
+export interface OpenSearchConfig {
+  opensearch_username?: string;
+  opensearch_password?: string;
+  opensearch_endpoint?: string;
+  opensearch_namespace?: string;
+}
+
 export interface ApplicationConfig {
   num_of_gpus: number;
   memory_size_gb: number;
 }
 
+export type VectorDBProvider = "QDRANT" | "OPENSEARCH";
+
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
   summary_storage_provider: "Local" | "S3";
   chat_store_provider: "Local" | "S3";
+  vector_db_provider: VectorDBProvider;
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   openai_config: OpenAIConfig;
   caii_config: CaiiConfig;
+  opensearch_config: OpenSearchConfig;
   is_valid_config: boolean;
   release_version: string;
   application_config: ApplicationConfig;
@@ -174,7 +185,7 @@ export const useGetAmpConfig = () => {
 };
 
 export const useGetPollingAmpConfig = (poll?: boolean) => {
-  return useQuery({
+  return queryOptions({
     queryKey: [QueryKeys.getPollingAmpConfig],
     queryFn: getAmpConfig,
     refetchInterval: () => {

@@ -39,8 +39,6 @@
 from random import shuffle
 from typing import List, Optional
 
-from fastapi import HTTPException
-
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.services import llm_completion
 from app.services.chat.utils import retrieve_chat_history, process_response
@@ -81,6 +79,8 @@ def _generate_suggested_questions_direct_llm(session: Session) -> List[str]:
         " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
         " Do not start like this - `Here are four questions that I can answer based on the context information`"
         " Only return the list."
+        " Only return plain text."
+        " Do not return any HTML tags or markdown formatting."
     )
     chat_response = llm_completion.completion(
         session.id, query_str, session.inference_model
@@ -98,12 +98,6 @@ def generate_suggested_questions(
     session = session_metadata_api.get_session(session_id, user_name)
     if len(session.data_source_ids) == 0:
         return _generate_suggested_questions_direct_llm(session)
-    if len(session.data_source_ids) != 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Only one datasource is supported for question suggestion.",
-        )
-    data_source_id = session.data_source_ids[0]
 
     total_data_sources_size: int = sum(
         map(
@@ -125,6 +119,8 @@ def generate_suggested_questions(
             " There should be no more than four (4) questions."
             " Each question should be no longer than fifteen (15) words."
             " The response should be a bulleted list, using an asterisk (*) to denote the bullet item."
+            " Only return plain text."
+            " Do not return any HTML tags or markdown formatting."
             " Do not return questions based on the metadata of the document. Only the content."
             " Do not start like this - `Here are four questions that I can answer based on the context information`"
             " Only return the list."
@@ -141,7 +137,7 @@ def generate_suggested_questions(
                 + chat_history[-1].content
             )
         response, _ = querier.query(
-            data_source_id,
+            session,
             query_str,
             QueryConfiguration(
                 top_k=session.response_chunks,
@@ -151,6 +147,7 @@ def generate_suggested_questions(
                 use_question_condensing=False,
                 use_hyde=False,
                 use_postprocessor=False,
+                use_tool_calling=False,
             ),
             [],
         )

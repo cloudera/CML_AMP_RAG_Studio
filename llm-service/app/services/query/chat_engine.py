@@ -38,8 +38,8 @@
 import logging
 from typing import Any, Optional, List, Tuple
 
-from llama_index.core import VectorStoreIndex, PromptTemplate
-from llama_index.core.base.embeddings.base import BaseEmbedding
+from llama_index.core import PromptTemplate
+from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine import (
     CondensePlusContextChatEngine,
@@ -50,11 +50,9 @@ from llama_index.core.response_synthesizers import CompactAndRefine
 from llama_index.core.schema import NodeWithScore, QueryBundle
 from llama_index.core.tools import ToolOutput
 
-from .flexible_retriever import FlexibleRetriever
 from .query_configuration import QueryConfiguration
 from .simple_reranker import SimpleReranker
 from .. import llm_completion, models
-from ..metadata_apis.data_sources_metadata_api import get_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -231,16 +229,11 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 def build_flexible_chat_engine(
     configuration: QueryConfiguration,
     llm: LLM,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    data_source_id: int,
-) -> FlexibleContextChatEngine:
-    retriever = FlexibleRetriever(
-        configuration, index, embedding_model, data_source_id, llm
-    )
-    postprocessors = _create_node_postprocessors(
-        configuration, data_source_id=data_source_id
-    )
+    retriever: Optional[BaseRetriever],
+) -> Optional[FlexibleContextChatEngine]:
+    if not retriever:
+        return None
+    postprocessors = _create_node_postprocessors(configuration)
     chat_engine: FlexibleContextChatEngine = FlexibleContextChatEngine.from_defaults(
         llm=llm,
         context_prompt=CUSTOM_CONTEXT_PROMPT,
@@ -268,13 +261,11 @@ class DebugNodePostProcessor(BaseNodePostprocessor):
 
 def _create_node_postprocessors(
     configuration: QueryConfiguration,
-    data_source_id: int,
 ) -> list[BaseNodePostprocessor]:
     if not configuration.use_postprocessor:
         return []
 
-    data_source = get_metadata(data_source_id=data_source_id)
-    if data_source.summarization_model is None:
+    if configuration.rerank_model_name is None:
         return [SimpleReranker(top_n=configuration.top_k)]
 
     return [

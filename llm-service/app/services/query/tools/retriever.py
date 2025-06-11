@@ -42,8 +42,10 @@ from crewai.tools import BaseTool
 from crewai_tools.tools.llamaindex_tool.llamaindex_tool import LlamaIndexTool
 
 from llama_index.core import QueryBundle, VectorStoreIndex
+from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
+from llama_index.core.schema import TextNode
 from llama_index.core.tools import RetrieverTool, ToolOutput, ToolMetadata
 from pydantic import BaseModel, Field
 
@@ -90,14 +92,15 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         content = ""
         for doc in docs:
             node_copy = doc.node.model_copy()
-            node_copy.text_template = "{metadata_str}\n{content}"
-            node_copy.metadata_template = "{key} = {value}"
-            content += (
-                f"node_id = {node_copy.node_id}\n"
-                + f"score = {doc.score}\n"
-                + node_copy.get_content()
-                + "\n\n"
-            )
+            if isinstance(node_copy, TextNode):
+                node_copy.text_template = "{metadata_str}\n{content}"
+                node_copy.metadata_template = "{key} = {value}"
+                content += (
+                    f"node_id = {node_copy.node_id}\n"
+                    + f"score = {doc.score}\n"
+                    + node_copy.get_content()
+                    + "\n\n"
+                )
         return ToolOutput(
             content=content,
             tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
@@ -120,14 +123,15 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         docs = self._apply_node_postprocessors(docs, QueryBundle(query_str))
         for doc in docs:
             node_copy = doc.node.model_copy()
-            node_copy.text_template = "{metadata_str}\n{content}"
-            node_copy.metadata_template = "{key} = {value}"
-            content += (
-                f"node_id = {node_copy.node_id}\n"
-                + f"score = {doc.score}\n"
-                + node_copy.get_content()
-                + "\n\n"
-            )
+            if isinstance(node_copy, TextNode):
+                node_copy.text_template = "{metadata_str}\n{content}"
+                node_copy.metadata_template = "{key} = {value}"
+                content += (
+                    f"node_id = {node_copy.node_id}\n"
+                    + f"score = {doc.score}\n"
+                    + node_copy.get_content()
+                    + "\n\n"
+                )
         return ToolOutput(
             content=content,
             tool_name=self.metadata.name if self.metadata.name else "RetrieverTool",
@@ -137,33 +141,19 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
 
 
 def build_retriever_tool(
-    configuration: QueryConfiguration,
-    data_source_id: int,
-    embedding_model: BaseEmbedding,
-    index: VectorStoreIndex,
-    llm: LLM,
+    retriever: BaseRetriever, summaries: dict[int, str]
 ) -> BaseTool:
-    base_retriever = FlexibleRetriever(
-        configuration=configuration,
-        index=index,
-        embedding_model=embedding_model,
-        data_source_id=data_source_id,
-        llm=llm,
-    )
     # fetch summary fromm index if available
-    data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
-    data_source_summary = None
-    if data_source_summary_indexer:
-        data_source_summary = data_source_summary_indexer.get_full_summary()
+    summary_str = "\n".join(summaries.values())
     retriever_tool = RetrieverToolWithNodeInfo(
-        retriever=base_retriever,
+        retriever=retriever,
         metadata=ToolMetadata(
             name="Retriever",
             description=(
                 "A tool to retrieve relevant information from "
                 "the index. It takes a query of type string and returns relevant nodes from the index."
-                f"The index summary is: {data_source_summary}"
-                if data_source_summary
+                f"The index summaries are: {summary_str}"
+                if summary_str
                 else "Assume the index has relevant information about the user's question."
             ),
             fn_schema=RetrieverToolInput,

@@ -47,6 +47,7 @@ import {
 import {
   InfiniteData,
   keepPreviousData,
+  QueryClient,
   useInfiniteQuery,
   useMutation,
   useQueryClient,
@@ -153,6 +154,7 @@ export const useChatHistoryQuery = ({
     initialPageParam: 0,
     getPreviousPageParam: (data) => data.next_id,
     getNextPageParam: (data) => data.previous_id,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -212,13 +214,16 @@ export const appendPlaceholderToChatHistory = (
   });
 
   const lastPage = pages[pages.length - 1];
+  const filteredLastPageData = lastPage.data.filter(
+    (chatMessage) => !isPlaceholder(chatMessage),
+  );
   return {
     pageParams,
     pages: [
       ...pages.slice(0, -1),
       {
         ...lastPage,
-        data: [...lastPage.data, placeholderChatResponse(query)],
+        data: [...filteredLastPageData, placeholderChatResponse(query)],
       },
     ],
   };
@@ -336,43 +341,132 @@ export interface CrewEventResponse {
   timestamp: number;
 }
 
-const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
+const customChatMessage = (
+  variables: ChatMutationRequest,
+  message: string,
+  prefix: string,
+) => {
   const uuid = crypto.randomUUID();
-  const errorMessage: ChatMessageType = {
-    id: `error-${uuid}`,
+  const customMessage: ChatMessageType = {
+    id: `${prefix}${uuid}`,
     session_id: variables.session_id,
     source_nodes: [],
     rag_message: {
       user: variables.query,
-      assistant: error.message,
+      assistant: message,
     },
     evaluations: [],
     timestamp: Date.now(),
   };
-  return errorMessage;
+  return customMessage;
+};
+
+export const ERROR_PREFIX_ID = "error-";
+export const CANCELED_PREFIX_ID = "canceled-";
+
+const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
+  return customChatMessage(variables, error.message, ERROR_PREFIX_ID);
+};
+
+const canceledChatMessage = (variables: ChatMutationRequest) => {
+  return customChatMessage(
+    variables,
+    "Request canceled by user",
+    CANCELED_PREFIX_ID,
+  );
 };
 
 interface StreamingChatCallbacks {
   onChunk: (msg: string) => void;
   onEvent: (event: CrewEventResponse) => void;
+  getController?: (ctrl: AbortController) => void;
 }
+
+const modifyPlaceholderInChatHistory = (
+  queryClient: QueryClient,
+  variables: ChatMutationRequest,
+  replacementMessage: ChatMessageType,
+) => {
+  queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+    chatHistoryQueryKey({
+      session_id: variables.session_id,
+      offset: 0,
+    }),
+    (cachedData) =>
+      replacePlaceholderInChatHistory(replacementMessage, cachedData),
+  );
+};
+
+const handlePrepareController = (
+  getController: ((ctrl: AbortController) => void) | undefined,
+  queryClient: QueryClient,
+  request: ChatMutationRequest,
+) => {
+  return (ctrl: AbortController) => {
+    if (getController) {
+      getController(ctrl);
+
+      const onAbort = () => {
+        modifyPlaceholderInChatHistory(
+          queryClient,
+          request,
+          canceledChatMessage(request),
+        );
+        ctrl.signal.removeEventListener("abort", onAbort);
+      };
+
+      ctrl.signal.addEventListener("abort", onAbort);
+    }
+  };
+};
+
+const handleStreamingSuccess = (
+  request: ChatMutationRequest,
+  messageId: string,
+  queryClient: QueryClient,
+  onSuccess:
+    | ((data: ChatMessageType, request?: unknown, context?: unknown) => unknown)
+    | undefined,
+  handleError: (request: ChatMutationRequest, error: Error) => void,
+  onError: ((error: Error) => void) | undefined,
+) => {
+  fetch(
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history/${messageId}`,
+  )
+    .then(async (res) => {
+      const message = (await res.json()) as ChatMessageType;
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({
+          session_id: request.session_id,
+        }),
+        (cachedData) => replacePlaceholderInChatHistory(message, cachedData),
+      );
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(request.session_id),
+        })
+        .catch((error: unknown) => {
+          console.error(error);
+        });
+      onSuccess?.(message);
+    })
+    .catch((error: unknown) => {
+      handleError(request, error as Error);
+      onError?.(error as Error);
+    });
+};
 
 export const useStreamingChatMutation = ({
   onError,
   onSuccess,
   onChunk,
   onEvent,
+  getController,
 }: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
   const handleError = (variables: ChatMutationRequest, error: Error) => {
     const errorMessage = errorChatMessage(variables, error);
-    queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-      chatHistoryQueryKey({
-        session_id: variables.session_id,
-        offset: 0,
-      }),
-      (cachedData) => replacePlaceholderInChatHistory(errorMessage, cachedData),
-    );
+    modifyPlaceholderInChatHistory(queryClient, variables, errorMessage);
   };
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
@@ -382,7 +476,19 @@ export const useStreamingChatMutation = ({
         handleError(request, error);
         onError?.(error);
       };
-      return streamChatMutation(request, onChunk, onEvent, convertError);
+      const handleGetController = handlePrepareController(
+        getController,
+        queryClient,
+        request,
+      );
+
+      return streamChatMutation(
+        request,
+        onChunk,
+        onEvent,
+        convertError,
+        handleGetController,
+      );
     },
     onMutate: (variables) => {
       queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
@@ -397,31 +503,14 @@ export const useStreamingChatMutation = ({
       if (!messageId) {
         return;
       }
-      fetch(
-        `${llmServicePath}/sessions/${variables.session_id.toString()}/chat-history/${messageId}`,
-      )
-        .then(async (res) => {
-          const message = (await res.json()) as ChatMessageType;
-          queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-            chatHistoryQueryKey({
-              session_id: variables.session_id,
-            }),
-            (cachedData) =>
-              replacePlaceholderInChatHistory(message, cachedData),
-          );
-          queryClient
-            .invalidateQueries({
-              queryKey: suggestedQuestionKey(variables.session_id),
-            })
-            .catch((error: unknown) => {
-              console.error(error);
-            });
-          onSuccess?.(message);
-        })
-        .catch((error: unknown) => {
-          handleError(variables, error as Error);
-          onError?.(error as Error);
-        });
+      handleStreamingSuccess(
+        variables,
+        messageId,
+        queryClient,
+        onSuccess,
+        handleError,
+        onError,
+      );
     },
     onError: (error: Error, variables) => {
       handleError(variables, error);
@@ -435,12 +524,17 @@ const streamChatMutation = async (
   onChunk: (chunk: string) => void,
   onEvent: (event: CrewEventResponse) => void,
   onError: (error: string) => void,
+  getController?: (ctrl: AbortController) => void,
 ): Promise<string> => {
   const ctrl = new AbortController();
+  if (getController) {
+    getController(ctrl);
+  }
   let responseId = "";
   await fetchEventSource(
     `${llmServicePath}/sessions/${request.session_id.toString()}/stream-completion`,
     {
+      openWhenHidden: true,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -451,23 +545,31 @@ const streamChatMutation = async (
       }),
       signal: ctrl.signal,
       onmessage(msg: EventSourceMessage) {
-        const data = JSON.parse(msg.data) as ChatMutationResponse;
+        try {
+          const data = JSON.parse(msg.data) as ChatMutationResponse;
 
-        if (data.error) {
-          onError(data.error);
+          if (data.error) {
+            onError(data.error);
+            ctrl.abort();
+          }
+
+          if (data.text) {
+            onChunk(data.text);
+          }
+
+          if (data.event) {
+            onEvent(data.event);
+          }
+
+          if (data.response_id) {
+            responseId = data.response_id;
+          }
+        } catch (error) {
+          console.error("Error parsing message data:", error);
+          onError(
+            `An error occurred while processing the response. Original error message: ${JSON.stringify(msg)}. Error in parsing: ${JSON.stringify(error)}`,
+          );
           ctrl.abort();
-        }
-
-        if (data.text) {
-          onChunk(data.text);
-        }
-
-        if (data.event) {
-          onEvent(data.event);
-        }
-
-        if (data.response_id) {
-          responseId = data.response_id;
         }
       },
       onerror(err: unknown) {

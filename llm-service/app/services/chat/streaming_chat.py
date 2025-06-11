@@ -60,12 +60,14 @@ from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
 from app.services.query.agents.crewai_querier import poison_pill
-from app.services.query.crew_events import CrewEvent
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.querier import build_datasource_query_components
+from app.services.query.crew_events import CrewEvent
+from app.services.query.querier import (
+    build_retriever,
+)
 from app.services.query.query_configuration import QueryConfiguration
 
 
@@ -103,7 +105,7 @@ def stream_chat(
             session, response_id, query, user_name, crew_events_queue
         )
 
-    condensed_question, data_source_id, streaming_chat_response = build_streamer(
+    condensed_question, streaming_chat_response = build_streamer(
         crew_events_queue, query, query_configuration, session
     )
     return _run_streaming_chat(
@@ -113,7 +115,6 @@ def stream_chat(
         query_configuration,
         user_name,
         condensed_question=condensed_question,
-        data_source_id=data_source_id,
         streaming_chat_response=streaming_chat_response,
     )
 
@@ -125,7 +126,6 @@ def _run_streaming_chat(
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
     condensed_question: Optional[str] = None,
-    data_source_id: Optional[int] = None,
     streaming_chat_response: StreamingAgentChatResponse = None,
 ) -> Generator[ChatResponse, None, None]:
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
@@ -143,7 +143,6 @@ def _run_streaming_chat(
     finalize_response(
         chat_response,
         condensed_question,
-        data_source_id,
         query,
         query_configuration,
         response_id,
@@ -157,22 +156,13 @@ def build_streamer(
     query: str,
     query_configuration: QueryConfiguration,
     session: Session,
-) -> tuple[str | None, int | None, StreamingAgentChatResponse]:
-    data_source_id: Optional[int] = (
-        session.data_source_ids[0] if session.data_source_ids else None
-    )
+) -> tuple[str | None, StreamingAgentChatResponse]:
     llm = models.LLM.get(model_name=query_configuration.model_name)
-    embedding_model, vector_store = build_datasource_query_components(data_source_id)
-    chat_engine: Optional[FlexibleContextChatEngine] = (
-        build_flexible_chat_engine(
-            query_configuration,
-            llm,
-            embedding_model,
-            vector_store,
-            data_source_id,
-        )
-        if data_source_id and embedding_model and vector_store
-        else None
+
+    retriever = build_retriever(query_configuration, session.data_source_ids, llm)
+
+    chat_engine: Optional[FlexibleContextChatEngine] = build_flexible_chat_engine(
+        query_configuration, llm, retriever
     )
     chat_history = retrieve_chat_history(session.id)
     chat_messages = list(
@@ -188,14 +178,14 @@ def build_streamer(
     )
     streaming_chat_response = querier.streaming_query(
         chat_engine,
-        data_source_id,
         query,
         query_configuration,
         chat_messages,
         crew_events_queue=crew_events_queue,
         session=session,
+        retriever=retriever,
     )
-    return condensed_question, data_source_id, streaming_chat_response
+    return condensed_question, streaming_chat_response
 
 
 def _stream_direct_llm_chat(

@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -34,50 +34,57 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-import { Card, Select, Typography } from "antd";
-import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
-import { useGetDataSourcesForProject } from "src/api/projectsApi.ts";
-import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { DataSourceInputType, formatDataSource } from "src/utils/formatters.ts";
-import { useState } from "react";
+import { Alert, Button, Image, Typography } from "antd";
+import Images from "src/components/images/Images.ts";
+import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
+import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useNavigate } from "@tanstack/react-router";
 
-export const NewChatSession = () => {
-  const { project } = useProjectContext();
-  const createSessionAndRedirect = useCreateSessionAndRedirect();
-  const { data: dataSources } = useGetDataSourcesForProject(project.id);
-  const [selectedDataSources, setSelectedDataSources] = useState<number[]>([]);
+const EmptyChatState = () => {
+  const { data: llmModels, isSuccess } = useGetLlmModels();
+  const navigate = useNavigate();
 
   return (
-    <Card
-      title={
-        <Typography.Title level={5} style={{ margin: 0 }}>
-          Start a new chat session
-        </Typography.Title>
-      }
-      extra={
-        <Select
-          mode="multiple"
-          placeholder="Select a data source (optional)"
-          disabled={!dataSources || dataSources.length === 0}
-          style={{ width: 300 }}
-          allowClear={true}
-          onChange={(ids: DataSourceInputType["value"][]) => {
-            setSelectedDataSources(ids);
-          }}
-          options={dataSources?.map((value) => {
-            return formatDataSource(value);
-          })}
+    <>
+      {isSuccess && llmModels.length === 0 ? (
+        <Alert
+          type="warning"
+          showIcon
+          message={"One inference model must be available to chat"}
+          action={
+            <Button
+              style={{ marginLeft: 12 }}
+              onClick={() => {
+                navigate({
+                  to: "/settings",
+                  hash: "modelConfiguration",
+                }).catch(() => {
+                  messageQueue.error("Failed to navigate to models page");
+                });
+              }}
+            >
+              Model Config
+            </Button>
+          }
         />
-      }
-    >
-      <RagChatQueryInput
-        newSessionCallback={(userInput: string) => {
-          createSessionAndRedirect(selectedDataSources, userInput);
-        }}
+      ) : null}
+      <Image
+        src={Images.BrandTalking}
+        alt="Machines Chatting"
+        style={{ width: 80 }}
+        preview={false}
       />
-    </Card>
+      <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
+        Welcome to RAG Studio
+      </Typography.Title>
+      <SuggestedQuestionsCards />
+      <NoDataSourcesState />
+    </>
   );
 };
+
+export default EmptyChatState;

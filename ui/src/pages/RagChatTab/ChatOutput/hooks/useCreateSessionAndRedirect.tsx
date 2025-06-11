@@ -25,11 +25,11 @@ const useCreateSessionAndRedirect = () => {
     },
   });
 
-  return (question?: string, dataSourceId?: number) => {
+  return (dataSourceIds: number[], question?: string) => {
     if (models) {
       const requestBody: CreateSessionRequest = {
         name: "",
-        dataSourceIds: dataSourceId ? [dataSourceId] : [],
+        dataSourceIds: dataSourceIds,
         inferenceModel: models[0].model_id,
         responseChunks: 10,
         queryConfiguration: {

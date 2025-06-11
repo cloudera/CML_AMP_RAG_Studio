@@ -35,56 +35,24 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import List
 
-"""Integration tests for app/routers/index/amp_metadata/."""
-from typing import Generator, Any
-from unittest.mock import patch, mock_open, MagicMock
+from llama_index.core import QueryBundle
+from llama_index.core.base.base_retriever import BaseRetriever
+from llama_index.core.schema import NodeWithScore
 
-import pytest
-from fastapi.testclient import TestClient
-
-from app.services.models.providers import CAIIModelProvider
+from app.services.query.flexible_retriever import FlexibleRetriever
 
 
-@pytest.fixture()
-def mock_json_dump() -> Generator[Any, None, None]:
-    with patch("json.dump") as mock:
-        yield mock
+class MultiSourceRetriever(BaseRetriever):
+    def __init__(self, retrievers: list[FlexibleRetriever]):
+        super().__init__()
+        self.retrievers = retrievers
+
+    def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
+        results: list[NodeWithScore] = []
+        for retriever in self.retrievers:
+            results.extend(retriever.retrieve(query_bundle))
+        return results
 
 
-@pytest.fixture()
-def mock_file() -> Generator[Any, None, None]:
-    with patch("builtins.open", new_callable=mock_open()) as m:
-        yield m
-
-
-class TestAmpMetadata:
-    @pytest.fixture(autouse=True)
-    def list_caii_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Monkey patch fetching CAII models."""
-        monkeypatch.setattr(CAIIModelProvider, "list_llm_models", lambda: [])
-
-    @staticmethod
-    def test_save_auth_token(
-        client: TestClient, mock_json_dump: MagicMock, mock_file: MagicMock
-    ) -> None:
-        """Test POST /amp/config/auth-token."""
-        test_token = "test_auth_token_value"
-
-        response = client.post(
-            "/amp/config/cdp-auth-token",
-            json={"auth_token": test_token},
-        )
-
-        assert response.status_code == 200
-        assert response.json() == "Auth token saved successfully"
-
-        # Verify the file was opened correctly
-        mock_file.assert_called_once_with("cdp_token", "w")
-
-        # Verify the correct data was written to the file
-        mock_json_dump.assert_called_once()
-        args, _ = mock_json_dump.call_args
-        assert args[0] == {"access_token": test_token}
-        # todo: verify the file content
-        # assert args[1] == mock_file()

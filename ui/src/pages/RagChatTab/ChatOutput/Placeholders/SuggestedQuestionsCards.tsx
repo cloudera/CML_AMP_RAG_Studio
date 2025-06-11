@@ -83,6 +83,7 @@ const SuggestedQuestionsCards = () => {
     excludeKnowledgeBaseState: [excludeKnowledgeBase],
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    streamedAbortControllerState: [, setStreamedAbortController],
   } = useContext(RagChatContext);
   const sessionId = activeSession?.id;
   const {
@@ -103,6 +104,9 @@ const SuggestedQuestionsCards = () => {
       onSuccess: () => {
         setStreamedChat("");
       },
+      getController: (ctrl: AbortController) => {
+        setStreamedAbortController(ctrl);
+      },
     });
 
   const handleAskSample = (suggestedQuestion: string) => {
@@ -114,7 +118,7 @@ const SuggestedQuestionsCards = () => {
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        createSessionAndRedirect(suggestedQuestion);
+        createSessionAndRedirect([], suggestedQuestion);
       }
     }
   };

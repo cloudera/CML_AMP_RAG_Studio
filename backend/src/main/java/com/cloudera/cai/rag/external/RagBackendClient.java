@@ -45,6 +45,7 @@ import com.cloudera.cai.util.SimpleHttpClient;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.ClientError;
 import com.cloudera.cai.util.exceptions.HttpError;
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.exceptions.ServerError;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,9 +54,11 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class RagBackendClient {
   private static final String AUTH_TOKEN = System.getenv("CDSW_APIV2_KEY");
@@ -125,22 +128,34 @@ public class RagBackendClient {
   }
 
   public void deleteDataSource(Long dataSourceId) {
-    client.delete(
-        getLlmServiceUrl() + "/data_sources/" + dataSourceId,
-        "Authorization",
-        "Bearer " + AUTH_TOKEN);
+    try {
+      client.delete(
+          getLlmServiceUrl() + "/data_sources/" + dataSourceId,
+          "Authorization",
+          "Bearer " + AUTH_TOKEN);
+    } catch (NotFound e) {
+      log.info("Data source not found. Deletion not necessary.");
+    }
   }
 
   public void deleteDocument(long dataSourceId, String documentId) {
-    client.delete(
-        getLlmServiceUrl() + "/data_sources/" + dataSourceId + "/documents/" + documentId,
-        "Authorization",
-        "Bearer " + AUTH_TOKEN);
+    try {
+      client.delete(
+          getLlmServiceUrl() + "/data_sources/" + dataSourceId + "/documents/" + documentId,
+          "Authorization",
+          "Bearer " + AUTH_TOKEN);
+    } catch (NotFound e) {
+      log.info("Document not found. Deletion not necessary.");
+    }
   }
 
   public void deleteSession(Long sessionId) {
-    client.delete(
-        getLlmServiceUrl() + "/sessions/" + sessionId, "Authorization", "Bearer " + AUTH_TOKEN);
+    try {
+      client.delete(
+          getLlmServiceUrl() + "/sessions/" + sessionId, "Authorization", "Bearer " + AUTH_TOKEN);
+    } catch (NotFound e) {
+      log.info("Session not found. Deletion not necessary.");
+    }
   }
 
   record IndexRequest(

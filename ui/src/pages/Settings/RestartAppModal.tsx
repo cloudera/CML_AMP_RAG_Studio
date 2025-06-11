@@ -48,6 +48,7 @@ import { ModalHook } from "src/utils/useModal.ts";
 import { cdlBlue600, cdlGray200, cdlGreen600 } from "src/cuix/variables.ts";
 import { ModelSource } from "src/api/modelsApi.ts";
 import { FileStorage } from "pages/Settings/AmpSettingsPage.tsx";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 const PROGRESS_STATES = {
   WAITING: {
@@ -144,7 +145,7 @@ const RestartAppModal = ({
       restartApplication.mutate({});
     },
   });
-  const { data: config } = useGetPollingAmpConfig(polling);
+  const { data: config } = useSuspenseQuery(useGetPollingAmpConfig(polling));
 
   const isRestarting = !config && polling;
 
@@ -184,6 +185,15 @@ const RestartAppModal = ({
           values.aws_config.bucket_prefix = undefined;
           values.summary_storage_provider = "Local";
           values.chat_store_provider = "Local";
+        }
+
+        if (values.vector_db_provider === "QDRANT") {
+          values.opensearch_config = {
+            opensearch_username: undefined,
+            opensearch_password: undefined,
+            opensearch_endpoint: undefined,
+            opensearch_namespace: undefined,
+          };
         }
 
         updateAmpConfig.mutate(values);

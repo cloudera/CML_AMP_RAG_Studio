@@ -40,11 +40,9 @@ import { useContext, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { Image, Skeleton, Typography } from "antd";
-import Images from "src/components/images/Images.ts";
+import { Skeleton } from "antd";
 import PendingRagOutputSkeleton from "pages/RagChatTab/ChatOutput/Loaders/PendingRagOutputSkeleton.tsx";
 import { ChatLoading } from "pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx";
-import SuggestedQuestionsCards from "pages/RagChatTab/ChatOutput/Placeholders/SuggestedQuestionsCards.tsx";
 import { useSearch } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
@@ -54,7 +52,7 @@ import {
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
-import NoDataSourcesState from "pages/RagChatTab/ChatOutput/Placeholders/NoDataSourcesState.tsx";
+import EmptyChatState from "pages/RagChatTab/ChatOutput/ChatMessages/EmptyChatState.tsx";
 
 const ChatMessageController = () => {
   const {
@@ -67,6 +65,7 @@ const ChatMessageController = () => {
     },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
+    streamedAbortControllerState: [, setStreamedAbortControllerState],
     activeSession,
   } = useContext(RagChatContext);
   const { ref: refToFetchNextPage, inView } = useInView({ threshold: 0 });
@@ -91,6 +90,9 @@ const ChatMessageController = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
+    },
+    getController: (ctrl) => {
+      setStreamedAbortControllerState(ctrl);
     },
   });
 
@@ -166,21 +168,7 @@ const ChatMessageController = () => {
     if (isFetchingHistory) {
       return <ChatLoading />;
     }
-    return (
-      <>
-        <Image
-          src={Images.BrandTalking}
-          alt="Machines Chatting"
-          style={{ width: 80 }}
-          preview={false}
-        />
-        <Typography.Title level={4} style={{ fontWeight: 300, margin: 0 }}>
-          Welcome to RAG Studio
-        </Typography.Title>
-        <SuggestedQuestionsCards />
-        <NoDataSourcesState />
-      </>
-    );
+    return <EmptyChatState />;
   }
 
   return (

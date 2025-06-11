@@ -39,6 +39,7 @@ import base64
 import json
 import logging
 import queue
+import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Optional, Generator, Any
@@ -46,6 +47,8 @@ from typing import Optional, Generator, Any
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from starlette.responses import ContentStream
+from starlette.types import Receive
 
 from app.services.chat.streaming_chat import stream_chat
 from .... import exceptions
@@ -66,6 +69,30 @@ from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+
+
+class CancelableStreamingResponse(StreamingResponse):
+    """
+    A custom StreamingResponse that can detect client disconnection and cancel a running thread.
+    """
+
+    def __init__(
+        self,
+        content_generator: ContentStream,
+        cancel_event: threading.Event,
+        *args: Any,
+        **kwargs: Any,
+    ):
+        self.cancel_event = cancel_event
+        super().__init__(content_generator, *args, **kwargs)
+
+    async def listen_for_disconnect(self, receive: Receive) -> None:
+        while True:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                logger.info("Client disconnected, cancelling stream")
+                self.cancel_event.set()
+                break
 
 
 class RagSuggestedQuestionsResponse(BaseModel):
@@ -232,9 +259,19 @@ def stream_chat_completion(
     configuration = request.configuration or RagPredictConfiguration()
 
     crew_events_queue: queue.Queue[CrewEvent] = queue.Queue()
+    # Create a cancellation event to signal when the client disconnects
+    cancel_event = threading.Event()
 
     def crew_callback(chat_future: Future[Any]) -> Generator[str, None, None]:
         while True:
+            # Check if client has disconnected
+            if cancel_event.is_set():
+                logger.info("Client disconnected, stopping crew callback")
+                # Try to cancel the future if it's still running
+                if not chat_future.done():
+                    chat_future.cancel()
+                break
+
             if chat_future.done() and (e := chat_future.exception()):
                 raise e
 
@@ -255,38 +292,61 @@ def stream_chat_completion(
 
     def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
+        executor = None
+        future = None
+
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(
-                    stream_chat,
-                    session=session,
-                    query=request.query,
-                    configuration=configuration,
-                    user_name=origin_remote_user,
-                    crew_events_queue=crew_events_queue,
-                )
+            executor = ThreadPoolExecutor(max_workers=1)
+            future = executor.submit(
+                stream_chat,
+                session=session,
+                query=request.query,
+                configuration=configuration,
+                user_name=origin_remote_user,
+                crew_events_queue=crew_events_queue,
+            )
 
-                yield from crew_callback(future)
+            # Yield from crew_callback, which will check for cancellation
+            yield from crew_callback(future)
 
-                first_message = True
-                for response in future.result():
-                    # send an initial message to let the client know the response stream is starting
-                    if first_message:
-                        done = CrewEvent(
-                            type="done", name="done", timestamp=time.time()
-                        )
-                        event_json = json.dumps({"event": done.model_dump()})
-                        yield f"data: {event_json}\n\n"
-                        first_message = False
-                    response_id = response.additional_kwargs["response_id"]
-                    json_delta = json.dumps({"text": response.delta})
-                    yield f"data: {json_delta}\n\n"
+            # If we get here and the cancel_event is set, the client has disconnected
+            if cancel_event.is_set():
+                logger.info("Client disconnected, not processing results")
+                return
+
+            first_message = True
+            for response in future.result():
+                # Check for cancellation between each response
+                if cancel_event.is_set():
+                    logger.info("Client disconnected during result processing")
+                    break
+
+                # send an initial message to let the client know the response stream is starting
+                if first_message:
+                    done = CrewEvent(type="done", name="done", timestamp=time.time())
+                    event_json = json.dumps({"event": done.model_dump()})
+                    yield f"data: {event_json}\n\n"
+                    first_message = False
+                response_id = response.additional_kwargs["response_id"]
+                json_delta = json.dumps({"text": response.delta})
+                yield f"data: {json_delta}\n\n"
+
+            if not cancel_event.is_set() and response_id:
                 yield f'data: {{"response_id" : "{response_id}"}}\n\n'
+
         except TimeoutError:
             logger.exception("Timeout: Failed to stream chat completion")
             yield 'data: {{"error" : "Timeout: Failed to stream chat completion"}}\n\n'
         except Exception as e:
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
+        finally:
+            # Clean up resources
+            if future and not future.done():
+                future.cancel()
+            if executor:
+                executor.shutdown(wait=False)
 
-    return StreamingResponse(generate_stream(), media_type="text/event-stream")
+    return CancelableStreamingResponse(
+        generate_stream(), cancel_event=cancel_event, media_type="text/event-stream"
+    )

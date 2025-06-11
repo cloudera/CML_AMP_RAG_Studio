@@ -37,16 +37,16 @@
 #
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from crewai import Agent, Task, Crew, Process
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 from llama_index.core.llms import LLM
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
+from app.services.models.providers import BedrockModelProvider, AzureModelProvider
 from app.services.query.agents.models import get_crewai_llm_object_direct
 from app.services.query.query_configuration import QueryConfiguration
-from app.services.models.providers import BedrockModelProvider, AzureModelProvider
 
 logger = logging.getLogger(__name__)
 
@@ -66,20 +66,20 @@ class PlannerTaskOutput(BaseModel):
     The output of the planner agent.
     """
 
+    model_config = ConfigDict(json_schema_extra = {
+            "example": {
+                "use_retrieval": True,
+                "explanation": "The query is related to the content described in the knowledge base summary.",
+            }
+        }
+    )
+
     use_retrieval: bool = Field(
         ..., description="Whether to use retrieval or answer directly."
     )
     explanation: str = Field(
         ..., description="Explanation for the decision made by the planner agent."
     )
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "use_retrieval": True,
-                "explanation": "The query is related to the content described in the knowledge base summary.",
-            }
-        }
 
 
 class PlannerAgent:
@@ -102,7 +102,7 @@ class PlannerAgent:
         self,
         query: str,
         chat_messages: list[ChatMessage],
-        data_source_summary: Optional[str] = None,
+        data_source_summaries: dict[int, str],
     ) -> Dict[str, Any]:
         """
         Decide whether to use retrieval or answer directly.
@@ -110,7 +110,7 @@ class PlannerAgent:
         Args:
             query: The user query.
             chat_messages: The chat history.
-            data_source_summary: A summary of the data source content to help determine relevance.
+            data_source_summaries: Summaries of the data source content to help determine relevance.
 
         Returns:
             A dictionary with the decision and explanation.
@@ -121,7 +121,7 @@ class PlannerAgent:
             role="Planner",
             goal="Decide whether to use retrieval or answer directly",
             backstory="You are an expert planner who decides the most efficient way to answer a query.",
-            llm=get_crewai_llm_object_direct(self.llm, self.configuration.model_name),
+            llm=get_crewai_llm_object_direct(self.llm, getattr(self.llm, "model", "")),
             # verbose=True,
         )
 
@@ -134,10 +134,11 @@ class PlannerAgent:
                 chat_history += f"User:\n{message.content}\n"
             elif message.role == MessageRole.ASSISTANT:
                 chat_history += f"Assistant:\n{message.content}\n"
-        if data_source_summary:
+        if data_source_summaries:
+            summary_str = "\n".join(data_source_summaries.values())
             data_source_info = f"""
             ==================================================================
-            Knowledge Base Summary:\n{data_source_summary}
+            Knowledge Base Summaries:\n{summary_str}
             ==================================================================
             Chat History:\n{chat_history}
             ==================================================================
@@ -179,11 +180,10 @@ class PlannerAgent:
             # task_callback=lambda task: logger.info(f"Task '{task=}'"),
         )
 
-        # Run the crew to get the decision
-        result = crew.kickoff()
-        logger.info(f"Planner agent result: {result}")
-
         try:
+            # Run the crew to get the decision
+            result = crew.kickoff()
+            logger.info(f"Planner agent result: {result}")
             if result.json_dict:
                 # If the result is already a JSON object, return it
                 return dict(result.json_dict)

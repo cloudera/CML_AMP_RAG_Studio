@@ -46,7 +46,8 @@ if [ -z "$IS_COMPOSABLE" ]; then
 fi
 
 export DB_URL=$DB_URL_LOCATION
-export JAVA_ROOT=`ls ${RAG_STUDIO_INSTALL_DIR}/java-home`
+# grab the most recent java installation and use it for java home
+export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
 
 for i in {1..3}; do

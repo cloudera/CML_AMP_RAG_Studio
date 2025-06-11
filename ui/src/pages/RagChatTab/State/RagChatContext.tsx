@@ -68,6 +68,10 @@ export interface RagChatContextType {
     CrewEventResponse[],
     Dispatch<SetStateAction<CrewEventResponse[]>>,
   ];
+  streamedAbortControllerState: [
+    AbortController | undefined,
+    Dispatch<SetStateAction<AbortController | undefined>>,
+  ];
   dataSourcesQuery: {
     dataSources: DataSourceType[];
     dataSourcesStatus?: "error" | "success" | "pending";
@@ -90,6 +94,7 @@ export const RagChatContext = createContext<RagChatContextType>({
   },
   streamedChatState: ["", () => null],
   streamedEventState: [[], () => null],
+  streamedAbortControllerState: [undefined, () => null],
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],

@@ -51,6 +51,7 @@ from typing import cast, Optional, Literal
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
+VectorDbProviderType = Literal["QDRANT", "OPENSEARCH"]
 
 
 class _Settings:
@@ -107,6 +108,18 @@ class _Settings:
     @property
     def opensearch_endpoint(self) -> str:
         return os.environ.get("OPENSEARCH_ENDPOINT", "http://localhost:9200")
+
+    @property
+    def opensearch_namespace(self) -> str:
+        return os.environ.get("OPENSEARCH_NAMESPACE", "rag_document_index")
+
+    @property
+    def opensearch_username(self) -> str:
+        return os.environ.get("OPENSEARCH_USERNAME", "")
+
+    @property
+    def opensearch_password(self) -> str:
+        return os.environ.get("OPENSEARCH_PASSWORD", "")
 
     @property
     def document_bucket_prefix(self) -> str:
