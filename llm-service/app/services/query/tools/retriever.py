@@ -40,6 +40,7 @@ from typing import Any
 
 from llama_index.core import QueryBundle
 from llama_index.core.base.base_retriever import BaseRetriever
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import TextNode, Node, NodeWithScore
 from llama_index.core.tools import RetrieverTool, ToolOutput, ToolMetadata, BaseTool
 from pydantic import BaseModel, Field
@@ -82,7 +83,6 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         return content
 
     def call(self, *args: Any, **kwargs: Any) -> ToolOutput:
-        print("Calling RetrieverTool with args:", args, "and kwargs:", kwargs)
         query_str = ""
         if args is not None:
             query_str += ", ".join([str(arg) for arg in args]) + "\n"
@@ -104,7 +104,6 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
         )
 
     async def acall(self, *args: Any, **kwargs: Any) -> ToolOutput:
-        print("Async Calling RetrieverTool with args:", args, "and kwargs:", kwargs)
         query_str = ""
         if args is not None:
             query_str += ", ".join([str(arg) for arg in args]) + "\n"
@@ -126,7 +125,9 @@ class RetrieverToolWithNodeInfo(RetrieverTool):
 
 
 def build_retriever_tool(
-    retriever: BaseRetriever, summaries: dict[int, str]
+    retriever: BaseRetriever,
+    summaries: dict[int, str],
+    node_postprocessors: list[BaseNodePostprocessor],
 ) -> BaseTool:
     # fetch summary fromm index if available
     summary_str = "\n".join(summaries.values())
@@ -143,5 +144,6 @@ def build_retriever_tool(
             ),
             fn_schema=RetrieverToolInput,
         ),
+        node_postprocessors=node_postprocessors,
     )
     return retriever_tool

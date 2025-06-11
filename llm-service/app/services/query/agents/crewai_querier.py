@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import json
 import logging
 import os
 from queue import Queue
@@ -43,12 +44,14 @@ from typing import Optional, Tuple, Any, Generator
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from llama_index.agent.openai import OpenAIAgent
+from llama_index.core import PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
-from llama_index.core.tools import BaseTool
+from llama_index.core.schema import NodeWithScore
+from llama_index.core.tools import BaseTool, ToolOutput
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.query.agents.models import get_crewai_llm_object_direct
@@ -334,23 +337,81 @@ def launch_crew(
         raise RuntimeError("Error running CrewAI crew: %s" % str(e)) from e
 
 
-def stream_chat(use_retrieval: bool, llm: FunctionCallingLLM, chat_engine: Optional[FlexibleContextChatEngine],
-                enhanced_query: str, chat_messages: list[ChatMessage],
-                additional_tools: list[BaseTool], data_source_summaries: dict[int, str]) -> StreamingAgentChatResponse:
+DEFAULT_AGENT_PROMPT = """\
+You are an expert agent that can answer questions with the help of tools. \
+If you do not know the answer to a question, you truthfully say \
+it does not know.
+
+As the agent, you will provide an answer based solely on the provided sources with \
+citations to the paragraphs. When referencing information from a source, \
+cite the appropriate source(s) using their corresponding ids. \
+Every answer/paragraph should include at least one source citation. \
+Only cite a source when you are explicitly referencing it. \
+The citations with node_ids should be the href of an anchor tag \
+(<a class="rag_citation" href=CITATION_HERE></a>), \
+and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
+If none of the sources are helpful, you should indicate that. \
+Do not make up source ids for citations. 
+
+Note for in-line citations:
+* Use the citations from the chat history as is. 
+* Use links if needed to answer the question and cite them in-line \
+in the given format: the link should be in markdown format. For example: \
+Refer to the example in [example.com](https://example.com). Do not make up links that are not \
+present. 
+* Cite from nodes in the given format: the node_id \
+should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. \
+Do not use filenames as citations. Only node ids should be used. \
+For example: <a class='rag_citation' href='2'>2</a>. Do not make up node ids that are not present 
+in the context.
+* All citations should be either in-line citations or markdown links. 
+
+For example:
+
+<Contexts>
+Source: 1
+The sky is red in the evening and blue in the morning.
+
+Source: 2
+Water is wet when the sky is red.
+
+Source: www.example.com
+The sky is red in the evening and blue in the morning. 
+
+<Query>
+When is water wet?
+
+<Answer> 
+Water will be wet when the sky is red<a class="rag_citation" href="1"></a> \
+[example.com](www.example.com), which occurs in the evening<a class="rag_citation" href="2"></a>.
+"""
+
+
+def stream_chat(
+    use_retrieval: bool,
+    llm: FunctionCallingLLM,
+    chat_engine: Optional[FlexibleContextChatEngine],
+    enhanced_query: str,
+    chat_messages: list[ChatMessage],
+    additional_tools: list[BaseTool],
+    data_source_summaries: dict[int, str],
+) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
-    print(f"{use_retrieval=}")
-    print(f"{chat_engine=}")
-    print(f"{enhanced_query=}")
 
     if use_retrieval and chat_engine:
-        retrieval_tool = build_retriever_tool(retriever=chat_engine._retriever, summaries = data_source_summaries)
+        retrieval_tool = build_retriever_tool(
+            retriever=chat_engine._retriever,
+            summaries=data_source_summaries,
+            node_postprocessors=chat_engine._node_postprocessors,
+        )
         tools: list[BaseTool] = [DateTool(), retrieval_tool]
         tools.extend(additional_tools)
         agent = OpenAIAgent.from_tools(
             tools=tools,
             llm=llm,
             verbose=True,
+            system_prompt=DEFAULT_AGENT_PROMPT,
         )
 
         stream_chat_response: StreamingAgentChatResponse = agent.stream_chat(
@@ -367,9 +428,21 @@ def stream_chat(use_retrieval: bool, llm: FunctionCallingLLM, chat_engine: Optio
                 )
                 yield finalize_response
 
-        return StreamingAgentChatResponse(
-            chat_stream=gen(), source_nodes=stream_chat_response.source_nodes
-        )
+        source_nodes = []
+        if stream_chat_response.sources:
+            for tool_output in stream_chat_response.sources:
+                if isinstance(tool_output, ToolOutput):
+                    if (
+                        tool_output.raw_output
+                        and isinstance(tool_output.raw_output, list)
+                        and all(
+                            isinstance(elem, NodeWithScore)
+                            for elem in tool_output.raw_output
+                        )
+                    ):
+                        source_nodes.extend(tool_output.raw_output)
+
+        return StreamingAgentChatResponse(chat_stream=gen(), source_nodes=source_nodes)
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")

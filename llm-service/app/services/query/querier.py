@@ -121,6 +121,7 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
 
     raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
+
 def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
     """
     Find an MCP server by name in the mcp.json file and return the appropriate adapter.
@@ -148,7 +149,11 @@ def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
             environment.update(server_config["env"])
 
         if "command" in server_config:
-            client = BasicMCPClient(command_or_url=server_config["command"], args=server_config.get("args", []), env=environment)
+            client = BasicMCPClient(
+                command_or_url=server_config["command"],
+                args=server_config.get("args", []),
+                env=environment,
+            )
         elif "url" in server_config:
             client = BasicMCPClient(command_or_url=server_config["url"])
         else:
@@ -156,9 +161,7 @@ def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
         tool_spec = McpToolSpec(client=client)
         return tool_spec.to_tool_list()
 
-
     raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
-
 
 
 def streaming_query(
@@ -172,7 +175,7 @@ def streaming_query(
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     all_adapters: list[MCPServerAdapter] = []
-    all_tools: list[LLamaTool] =[]
+    all_tools: list[LLamaTool] = []
 
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
@@ -209,7 +212,7 @@ def streaming_query(
                 query_str,
                 chat_messages,
                 all_tools,
-                data_source_summaries
+                data_source_summaries,
             )
             crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
             return chat_response
@@ -238,28 +241,17 @@ def streaming_query(
 
 
 def get_nodes_from_output(
-    output: str | CrewOutput,
+    output: str,
     session: Session,
 ) -> list[NodeWithScore]:
     source_node_ids_w_score: dict[str, float] = {}
-    if isinstance(output, CrewOutput):
-        # Extract the retriever results from the crew result
-        for task_output in output.tasks_output:
-            if task_output.name == "RetrieverTask":
-                if task_output.json_dict:
-                    json_output = task_output.json_dict["retriever_results"]
-                    for result in json_output:
-                        node_id = result["node_id"]
-                        score = result["score"]
-                        if node_id and score:
-                            # Append the node id and score to the list
-                            source_node_ids_w_score[node_id] = score
 
     # Extract the node ids from string output
     extracted_node_ids = re.findall(
-        r"<a class='rag_citation' href='(.*?)'>",
-        str(output) if isinstance(output, CrewOutput) else output,
+        r"<a class=\"rag_citation\" href=\"(.*?)\">",
+        output,
     )
+
     # add the extracted node ids to the source node ids
     for node_id in extracted_node_ids:
         if node_id not in source_node_ids_w_score:
