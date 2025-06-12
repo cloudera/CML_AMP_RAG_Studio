@@ -40,7 +40,7 @@ import { createContext, Dispatch, SetStateAction } from "react";
 import {
   ChatHistoryResponse,
   ChatMessageType,
-  CrewEventResponse,
+  ToolEventResponse,
 } from "src/api/chatApi.ts";
 import { Session } from "src/api/sessionApi.ts";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
@@ -65,8 +65,8 @@ export interface RagChatContextType {
   };
   streamedChatState: [string, Dispatch<SetStateAction<string>>];
   streamedEventState: [
-    CrewEventResponse[],
-    Dispatch<SetStateAction<CrewEventResponse[]>>,
+    ToolEventResponse[],
+    Dispatch<SetStateAction<ToolEventResponse[]>>,
   ];
   streamedAbortControllerState: [
     AbortController | undefined,

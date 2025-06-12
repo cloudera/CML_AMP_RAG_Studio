@@ -49,7 +49,7 @@ from .agents.tool_calling_querier import (
     stream_chat,
     poison_pill,
 )
-from .chat_events import ChatEvents
+from .chat_events import ToolEvent
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
@@ -125,7 +125,7 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    tool_events_queue: Queue[ChatEvents],
+    tool_events_queue: Queue[ToolEvent],
     session: Session,
 ) -> StreamingAgentChatResponse:
     all_tools: list[LLamaTool] = []
@@ -159,7 +159,7 @@ def streaming_query(
             all_tools,
             data_source_summaries,
         )
-        tool_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
+        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         return chat_response
     if not chat_engine:
         raise HTTPException(
@@ -169,7 +169,7 @@ def streaming_query(
 
     try:
         chat_response = chat_engine.stream_chat(query_str, chat_messages)
-        tool_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
+        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         logger.debug("query response received from chat engine")
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)

@@ -64,7 +64,7 @@ from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.query.agents.tool_calling_querier import poison_pill
-from ....services.query.chat_events import ChatEvents
+from ....services.query.chat_events import ToolEvent
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -258,7 +258,7 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    tool_events_queue: queue.Queue[ChatEvents] = queue.Queue()
+    tool_events_queue: queue.Queue[ToolEvent] = queue.Queue()
     # Create a cancellation event to signal when the client disconnects
     cancel_event = threading.Event()
 
@@ -283,7 +283,7 @@ def stream_chat_completion(
                 yield f"data: {event_json}\n\n"
             except queue.Empty:
                 # Send a heartbeat event every second to keep the connection alive
-                heartbeat = ChatEvents(
+                heartbeat = ToolEvent(
                     type="event", name="Processing", timestamp=time.time()
                 )
                 event_json = json.dumps({"event": heartbeat.model_dump()})
@@ -324,7 +324,7 @@ def stream_chat_completion(
 
                 # send an initial message to let the client know the response stream is starting
                 if first_message:
-                    done = ChatEvents(type="done", name="done", timestamp=time.time())
+                    done = ToolEvent(type="done", name="done", timestamp=time.time())
                     event_json = json.dumps({"event": done.model_dump()})
                     yield f"data: {event_json}\n\n"
                     first_message = False

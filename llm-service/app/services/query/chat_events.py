@@ -43,7 +43,7 @@ from typing import Optional, Any
 from pydantic import BaseModel
 
 
-class ChatEvents(BaseModel):
+class ToolEvent(BaseModel):
     type: str
     name: str
     data: Optional[str] = None
@@ -51,7 +51,7 @@ class ChatEvents(BaseModel):
 
 
 def step_callback(
-    output: Any, agent: str, tool_events_queue: Queue[ChatEvents]
+    output: Any, agent: str, tool_events_queue: Queue[ToolEvent]
 ) -> None:
     # todo: hook this up
     return None

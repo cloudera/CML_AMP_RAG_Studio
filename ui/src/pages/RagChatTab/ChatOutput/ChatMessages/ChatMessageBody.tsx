@@ -36,7 +36,7 @@
  * DATA.
  */
 
-import { ChatMessageType, CrewEventResponse } from "src/api/chatApi.ts";
+import { ChatMessageType, ToolEventResponse } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Divider, Flex, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
@@ -53,7 +53,7 @@ export const ChatMessageBody = ({
   streamedEvents,
 }: {
   data: ChatMessageType;
-  streamedEvents?: CrewEventResponse[];
+  streamedEvents?: ToolEventResponse[];
 }) => {
   return (
     <div data-testid="chat-message">

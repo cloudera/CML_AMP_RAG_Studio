@@ -64,7 +64,7 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.chat_events import ChatEvents
+from app.services.query.chat_events import ToolEvent
 from app.services.query.querier import (
     build_retriever,
 )
@@ -76,7 +76,7 @@ def stream_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-    tool_events_queue: Queue[ChatEvents],
+    tool_events_queue: Queue[ToolEvent],
 ) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -99,8 +99,8 @@ def stream_chat(
     if not query_configuration.use_tool_calling and (
         len(session.data_source_ids) == 0 or total_data_sources_size == 0
     ):
-        # put a poison pill in the queue to stop the crew events stream
-        tool_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
+        # put a poison pill in the queue to stop the tool events stream
+        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
@@ -151,7 +151,7 @@ def _run_streaming_chat(
 
 
 def build_streamer(
-    chat_events_queue: Queue[ChatEvents],
+    chat_events_queue: Queue[ToolEvent],
     query: str,
     query_configuration: QueryConfiguration,
     session: Session,
