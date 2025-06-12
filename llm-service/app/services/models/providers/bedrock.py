@@ -44,6 +44,7 @@ import boto3
 import requests
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
+from fastapi import HTTPException
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
@@ -160,6 +161,9 @@ class BedrockModelProvider(ModelProvider):
                 for idx, (url, headers) in enumerate(aws_requests)
             }
             for future in concurrent.futures.as_completed(future_to_index):
+                if future.exception():
+                    responses[idx] = None
+                    continue
                 idx = future_to_index[future]
                 try:
                     responses[idx] = future.result()
