@@ -17,6 +17,7 @@ on:
           - main
           - mob/main
           - release/1
+          - customer-hotfix
 jobs:
   build:
 
