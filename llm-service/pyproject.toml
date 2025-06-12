@@ -40,13 +40,13 @@ dependencies = [
     "llama-index-llms-nvidia>=0.3.2",
     "llama-index-storage-kvstore-s3>=0.3.0",
     "llama-index-vector-stores-opensearch>=0.5.5",
-    "crewai[tools]>=0.119.0",
     "aiostream>=0.6.4",
     "opik>=1.7.22",
     "llama-index-callbacks-opik>=1.1.0",
     "mcp[cli]>=1.9.1",
-    "crewai-tools[mcp]>=0.44.0",
     "pysqlite3-binary==0.5.4; platform_system == 'Linux'",
+    "llama-index-agent-openai>=0.4.8",
+    "llama-index-tools-mcp>=0.2.5",
 ]
 requires-python = ">=3.10,<=3.12"
 readme = "README.md"
@@ -67,6 +67,7 @@ dev = [
     "hypothesis>=6.122.1",
     "black>=24.10.0",
     "types-boto3-s3>=1.36.1",
+    "types-requests>=2.32.0"
 ]
 
 [tool.pytest.ini_options]
