@@ -420,7 +420,7 @@ def stream_chat(
                 chat_messages, enhanced_query, llm, source_nodes, tools
             )
 
-        return StreamingAgentChatResponse(chat_stream=gen(), source_nodes=source_nodes)
+        return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
     else:
         # If the planner decides to answer directly, bypass retrieval
         logger.debug("Planner decided to answer directly without retrieval")
@@ -492,7 +492,7 @@ def _run_non_openai_streamer(
         for item in asyncio.run(collect()):
             yield item
 
-    return gen
+    return gen()
 
 
 def _openai_agent_streamer(
@@ -535,4 +535,4 @@ def _openai_agent_streamer(
                     )
                 ):
                     source_nodes.extend(tool_output.raw_output)
-    return gen
+    return gen()
