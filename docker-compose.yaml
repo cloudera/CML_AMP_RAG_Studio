@@ -53,6 +53,7 @@ services:
       - S3_RAG_DOCUMENT_BUCKET=cloudera-ai-rag-dev-us-west-2
       - QDRANT_HOST=qdrant
       - API_URL=http://api:8080
+      - MLFLOW_RECONCILER_DATA_PATH=/tmp
     depends_on:
       - qdrant
   db:

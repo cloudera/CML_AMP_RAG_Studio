@@ -46,7 +46,7 @@ dependencies = [
     "llama-index-callbacks-opik>=1.1.0",
     "mcp[cli]>=1.9.1",
     "crewai-tools[mcp]>=0.44.0",
-    "pysqlite3-binary==0.5.4; platform_system == 'Linux'",
+    "pysqlite3-binary==0.5.4; platform_system == 'Linux' and platform_machine != 'aarch64'",
 ]
 requires-python = ">=3.10,<=3.12"
 readme = "README.md"
