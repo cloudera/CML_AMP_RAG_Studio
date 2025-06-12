@@ -63,8 +63,8 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.crewai_querier import poison_pill
-from ....services.query.crew_events import ChatEvents
+from ....services.query.agents.tool_calling_querier import poison_pill
+from ....services.query.chat_events import ChatEvents
 from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
@@ -258,15 +258,15 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    crew_events_queue: queue.Queue[ChatEvents] = queue.Queue()
+    tool_events_queue: queue.Queue[ChatEvents] = queue.Queue()
     # Create a cancellation event to signal when the client disconnects
     cancel_event = threading.Event()
 
-    def crew_callback(chat_future: Future[Any]) -> Generator[str, None, None]:
+    def tools_callback(chat_future: Future[Any]) -> Generator[str, None, None]:
         while True:
             # Check if client has disconnected
             if cancel_event.is_set():
-                logger.info("Client disconnected, stopping crew callback")
+                logger.info("Client disconnected, stopping tool callback")
                 # Try to cancel the future if it's still running
                 if not chat_future.done():
                     chat_future.cancel()
@@ -276,7 +276,7 @@ def stream_chat_completion(
                 raise e
 
             try:
-                event_data = crew_events_queue.get(block=True, timeout=1.0)
+                event_data = tool_events_queue.get(block=True, timeout=1.0)
                 if event_data.type == poison_pill:
                     break
                 event_json = json.dumps({"event": event_data.model_dump()})
@@ -303,11 +303,11 @@ def stream_chat_completion(
                 query=request.query,
                 configuration=configuration,
                 user_name=origin_remote_user,
-                crew_events_queue=crew_events_queue,
+                tool_events_queue=tool_events_queue,
             )
 
-            # Yield from crew_callback, which will check for cancellation
-            yield from crew_callback(future)
+            # Yield from tools_callback, which will check for cancellation
+            yield from tools_callback(future)
 
             # If we get here and the cancel_event is set, the client has disconnected
             if cancel_event.is_set():

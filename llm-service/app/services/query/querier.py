@@ -29,7 +29,6 @@
 # ##############################################################################
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 import re
@@ -37,24 +36,20 @@ from copy import copy
 from queue import Queue
 from typing import Optional, TYPE_CHECKING, cast
 
-from crewai import CrewOutput
-from crewai.tools import BaseTool
-from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import FunctionTool
 from llama_index.core.tools import BaseTool as LLamaTool
-from mcp import StdioServerParameters, ListToolsResult
+from llama_index.core.tools import FunctionTool
 
-from .agents.crewai_querier import (
+from .agents.tool_calling_querier import (
     should_use_retrieval,
     stream_chat,
     poison_pill,
 )
-from .crew_events import ChatEvents
+from .chat_events import ChatEvents
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
@@ -81,45 +76,6 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 
 logger = logging.getLogger(__name__)
-
-
-def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
-    """
-    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
-
-    Args:
-        server_name: The name of the MCP server to find
-
-    Returns:
-        An MCPServerAdapter configured for the specified server
-
-    Raises:
-        ValueError: If the server name is not found in the mcp.json file
-    """
-    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
-
-    with open(mcp_json_path, "r") as f:
-        mcp_config = json.load(f)
-
-    mcp_servers = mcp_config["mcp_servers"]
-    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
-
-    if server_config:
-        environment: dict[str, str] | None = copy(dict(os.environ))
-        if "env" in server_config and environment:
-            environment.update(server_config["env"])
-
-        if "command" in server_config:
-            params = StdioServerParameters(
-                command=server_config["command"],
-                args=server_config.get("args", []),
-                env=environment,
-            )
-            return MCPServerAdapter(serverparams=params)
-        elif "url" in server_config:
-            return MCPServerAdapter({"url": server_config["url"][0]})
-
-    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
 
 def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
@@ -169,12 +125,9 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    crew_events_queue: Queue[ChatEvents],
+    tool_events_queue: Queue[ChatEvents],
     session: Session,
-    retriever: Optional[BaseRetriever],
 ) -> StreamingAgentChatResponse:
-    mcp_tools: list[BaseTool] = []
-    all_adapters: list[MCPServerAdapter] = []
     all_tools: list[LLamaTool] = []
 
     if session.query_configuration and session.query_configuration.selected_tools:
@@ -189,55 +142,44 @@ def streaming_query(
                 logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
                 continue
 
-    try:
-        for adapter in all_adapters:
-            mcp_tools.extend(adapter.tools)
+    llm = models.LLM.get(model_name=configuration.model_name)
 
-        llm = models.LLM.get(model_name=configuration.model_name)
+    chat_response: StreamingAgentChatResponse
+    if configuration.use_tool_calling and llm.metadata.is_function_calling_model:
+        use_retrieval, data_source_summaries = should_use_retrieval(
+            session.data_source_ids,
+        )
 
-        chat_response: StreamingAgentChatResponse
-        if configuration.use_tool_calling and llm.metadata.is_function_calling_model:
-            use_retrieval, data_source_summaries = should_use_retrieval(
-                configuration,
-                session.data_source_ids,
-                llm,
-                query_str,
-                chat_messages,
-            )
-
-            chat_response = stream_chat(
-                use_retrieval,
-                cast(FunctionCallingLLM, llm),
-                chat_engine,
-                query_str,
-                chat_messages,
-                all_tools,
-                data_source_summaries,
-            )
-            crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
-            return chat_response
-        if not chat_engine:
-            raise HTTPException(
-                status_code=500,
-                detail="Chat engine is not initialized. Please check the configuration.",
-            )
-
-        try:
-            chat_response = chat_engine.stream_chat(query_str, chat_messages)
-            crew_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
-            logger.debug("query response received from chat engine")
-        except botocore.exceptions.ClientError as error:
-            logger.warning(error.response)
-            json_error = error.response
-            raise HTTPException(
-                status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-                detail=json_error["StatusReason"],
-            ) from error
-
+        chat_response = stream_chat(
+            use_retrieval,
+            cast(FunctionCallingLLM, llm),
+            chat_engine,
+            query_str,
+            chat_messages,
+            all_tools,
+            data_source_summaries,
+        )
+        tool_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
         return chat_response
-    finally:
-        for adapter in all_adapters:
-            adapter.stop()
+    if not chat_engine:
+        raise HTTPException(
+            status_code=500,
+            detail="Chat engine is not initialized. Please check the configuration.",
+        )
+
+    try:
+        chat_response = chat_engine.stream_chat(query_str, chat_messages)
+        tool_events_queue.put(ChatEvents(type=poison_pill, name="no-op"))
+        logger.debug("query response received from chat engine")
+    except botocore.exceptions.ClientError as error:
+        logger.warning(error.response)
+        json_error = error.response
+        raise HTTPException(
+            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+            detail=json_error["StatusReason"],
+        ) from error
+
+    return chat_response
 
 
 def get_nodes_from_output(

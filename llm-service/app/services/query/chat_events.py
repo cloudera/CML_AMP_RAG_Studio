@@ -35,47 +35,23 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from crewai import LLM as CrewAILLM
-from llama_index.core.llms import LLM as LlamaIndexLLM
 
-from app import config
-from app.services.caii.utils import get_caii_access_token
-from app.services.models.providers import (
-    AzureModelProvider,
-    CAIIModelProvider,
-    BedrockModelProvider,
-    OpenAiModelProvider,
-)
+import time
+from queue import Queue
+from typing import Optional, Any
+
+from pydantic import BaseModel
 
 
-def get_crewai_llm_object_direct(
-    language_model: LlamaIndexLLM, model_name: str
-) -> CrewAILLM:
-    if AzureModelProvider.is_enabled():
-        return CrewAILLM(
-            model="azure/" + model_name,
-            api_key=config.settings.azure_openai_api_key,
-            base_url=config.settings.azure_openai_endpoint,
-            api_version=config.settings.azure_openai_api_version,
-        )
-    elif CAIIModelProvider.is_enabled():
-        if hasattr(language_model, "api_base"):
-            return CrewAILLM(
-                model="openai/" + model_name,
-                api_key=get_caii_access_token(),
-                base_url=language_model.api_base,
-            )
-        else:
-            raise ValueError("Model type is not supported.")
-    elif BedrockModelProvider.is_enabled():
-        return CrewAILLM(
-            model="bedrock/" + model_name,
-        )
-    elif OpenAiModelProvider.is_enabled():
-        return CrewAILLM(
-            model="openai/" + model_name,
-            api_key=config.settings.openai_api_key,
-            base_url=config.settings.openai_api_base,
-        )
-    else:
-        raise ValueError("Model type is not supported.")
+class ChatEvents(BaseModel):
+    type: str
+    name: str
+    data: Optional[str] = None
+    timestamp: float = time.time()
+
+
+def step_callback(
+    output: Any, agent: str, tool_events_queue: Queue[ChatEvents]
+) -> None:
+    # todo: hook this up
+    return None
