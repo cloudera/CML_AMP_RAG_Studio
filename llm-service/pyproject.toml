@@ -67,6 +67,7 @@ dev = [
     "hypothesis>=6.122.1",
     "black>=24.10.0",
     "types-boto3-s3>=1.36.1",
+    "types-requests>=2.32.0"
 ]
 
 [tool.pytest.ini_options]

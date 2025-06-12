@@ -38,7 +38,7 @@
 import asyncio
 import logging
 import os
-from typing import Optional, Generator, AsyncGenerator
+from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
 from llama_index.agent.openai import OpenAIAgent
@@ -144,7 +144,6 @@ def stream_chat(
     data_source_summaries: dict[int, str],
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
-    chat_response: StreamingAgentChatResponse
     source_nodes: list[NodeWithScore] = []
     if use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
@@ -187,9 +186,9 @@ def _run_non_openai_streamer(
     llm: FunctionCallingLLM,
     source_nodes: list[NodeWithScore],
     tools: list[BaseTool],
-):
+)-> Generator[ChatResponse, None, None]:
     agent = FunctionAgent(
-        tools=tools,
+        tools=cast(list[BaseTool | Callable[[], Any]], tools),
         llm=llm,
         system_prompt=DEFAULT_AGENT_PROMPT,
     )
@@ -227,8 +226,8 @@ def _run_non_openai_streamer(
                     )
 
     def gen() -> Generator[ChatResponse, None, None]:
-        async def collect():
-            results = []
+        async def collect() -> list[ChatResponse]:
+            results: list[ChatResponse] = []
             async for chunk in agen():
                 results.append(chunk)
             return results

@@ -48,7 +48,7 @@ class DateToolInput(BaseModel):
     """
     input_: None = None
 
-class DateTool(BaseTool):  # type: ignore[misc]
+class DateTool(BaseTool):
     """
     A tool that provides the current date and time.
     """

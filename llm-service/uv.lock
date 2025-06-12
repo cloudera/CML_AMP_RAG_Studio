@@ -2395,6 +2395,7 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
     { name = "types-boto3-s3" },
+    { name = "types-requests" },
 ]
 
 [package.metadata]
@@ -2451,6 +2452,7 @@ dev = [
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "ruff", specifier = ">=0.7.4" },
     { name = "types-boto3-s3", specifier = ">=1.36.1" },
+    { name = "types-requests", specifier = ">=2.32.0" },
 ]
 
 [[package]]
@@ -5486,6 +5488,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ab/fa/0b19cbe1479fe2d29733fe3e6a5d5a1a0b2a9c3a5347e94d25db7cc7aa95/types_boto3_s3-1.38.26.tar.gz", hash = "sha256:bbf1037df3de68f044623a48cbd1bdbb8257431968d103b1f17cb3a478459015", size = 73377 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/23/a0/c48b8649437ec1c0a17a4c6865a1948514884849477dd561847eefd84ad2/types_boto3_s3-1.38.26-py3-none-any.whl", hash = "sha256:6ca004d5d1263a76819f7e258cb49b26d1060e083de282cc91688d9892c0d707", size = 80136 },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.4.20250611"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/7f/73b3a04a53b0fd2a911d4ec517940ecd6600630b559e4505cc7b68beb5a0/types_requests-2.32.4.20250611.tar.gz", hash = "sha256:741c8777ed6425830bf51e54d6abe245f79b4dcb9019f1622b773463946bf826", size = 23118 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/ea/0be9258c5a4fa1ba2300111aa5a0767ee6d18eb3fd20e91616c12082284d/types_requests-2.32.4.20250611-py3-none-any.whl", hash = "sha256:ad2fe5d3b0cb3c2c902c8815a70e7fb2302c4b8c1f77bdcd738192cdb3878072", size = 20643 },
 ]
 
 [[package]]

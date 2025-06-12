@@ -123,14 +123,15 @@ def _run_streaming_chat(
     query: str,
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
+    streaming_chat_response: StreamingAgentChatResponse,
     condensed_question: Optional[str] = None,
-    streaming_chat_response: StreamingAgentChatResponse = None,
 ) -> Generator[ChatResponse, None, None]:
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
 
-    for response in streaming_chat_response.chat_stream:
-        response.additional_kwargs["response_id"] = response_id
-        yield response
+    if streaming_chat_response.chat_stream:
+        for response in streaming_chat_response.chat_stream:
+            response.additional_kwargs["response_id"] = response_id
+            yield response
 
     chat_response = AgentChatResponse(
         response=response.message.content or "",
