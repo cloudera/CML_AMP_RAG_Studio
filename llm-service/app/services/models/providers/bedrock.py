@@ -47,9 +47,7 @@ from botocore.awsrequest import AWSRequest
 from fastapi import HTTPException
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
-from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
-from pydantic import TypeAdapter
 
 from app.config import settings
 from ._model_provider import ModelProvider
@@ -59,8 +57,8 @@ from ...utils import raise_for_http_error
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
-DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
+DEFAULT_BEDROCK_LLM_MODEL = "us.anthropic.claude-3-5-sonnet-20240620-v1:0"
+DEFAULT_BEDROCK_RERANK_MODEL = "amazon.titan-embed-text-v2:0"
 
 BedrockModality = Literal["TEXT", "IMAGE", "EMBEDDING"]
 
@@ -174,7 +172,7 @@ class BedrockModelProvider(ModelProvider):
                     )
                     responses.append(None)
                     continue
-                except Exception as e:
+                except:
                     logger.exception(
                         "Unexpected error fetching data: %s",
                         e,
@@ -190,33 +188,27 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:
-        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python("TEXT")
-        available_models = BedrockModelProvider.list_available_models(modality)
-
-        model_arns = BedrockModelProvider._get_model_arns()
+        model_ids = [
+            "us.amazon.nova-pro-v1:0",
+            "us.amazon.nova-premier-v1:0",
+            "us.amazon.nova-lite-v1:0",
+            "us.amazon.nova-micro-v1:0",
+            "us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+            "us.anthropic.claude-3-haiku-20240307-v1:0",
+            "amazon.titan-text-lite-v1",
+            "amazon.titan-text-express-v1",
+        ]
 
         models = []
-        for model in available_models:
-            # Skip models that are not in the Llama-index BEDROCK_MODELS mapping
-            if BEDROCK_MODELS.get(model["modelId"]) is None:
-                continue
-            if "rerank" not in model["modelId"].lower():
-                if "ON_DEMAND" in model["inferenceTypesSupported"]:
-                    models.append(
-                        ModelResponse(
-                            model_id=model["modelId"],
-                            name=model["modelName"],
-                            available=True,
-                        )
-                    )
-                else:
-                    arn_model_response = (
-                        BedrockModelProvider._get_model_arn_by_profiles(
-                            model["modelId"], model_arns
-                        )
-                    )
-                    if arn_model_response:
-                        models.append(arn_model_response)
+        for model_id in model_ids:
+            name = " ".join([x.title().replace("-", " ") for x in model_id.split(".")])
+            models.append(
+                ModelResponse(
+                    model_id=model_id,
+                    name=name,
+                    available=True,
+                )
+            )
 
         return models
 
@@ -245,16 +237,16 @@ class BedrockModelProvider(ModelProvider):
 
     @staticmethod
     def list_embedding_models() -> list[ModelResponse]:
-        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python(
-            "EMBEDDING"
-        )
-        available_models = BedrockModelProvider.list_available_models(modality)
+        model_ids = ["amazon.titan-embed-text-v2:0", "amazon.titan-embed-text-v1"]
 
         models = []
-        for model in available_models:
+        for model_id in model_ids:
+            name = " ".join([x.title().replace("-", " ") for x in model_id.split(".")])
             models.append(
                 ModelResponse(
-                    model_id=model["modelId"], name=model["modelName"], available=True
+                    model_id=model_id,
+                    name=name,
+                    available=True,
                 )
             )
 
