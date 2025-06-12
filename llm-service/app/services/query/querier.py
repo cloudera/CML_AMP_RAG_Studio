@@ -147,7 +147,7 @@ def streaming_query(
     chat_response: StreamingAgentChatResponse
     if configuration.use_tool_calling and llm.metadata.is_function_calling_model:
         use_retrieval, data_source_summaries = should_use_retrieval(
-            session.data_source_ids,
+            session.data_source_ids, configuration.exclude_knowledge_base
         )
 
         chat_response = stream_chat(

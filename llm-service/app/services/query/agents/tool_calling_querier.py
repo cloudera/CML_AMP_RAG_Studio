@@ -76,7 +76,10 @@ poison_pill = "poison_pill"
 
 def should_use_retrieval(
     data_source_ids: list[int],
+    exclude_knowledge_base: bool | None = None,
 ) -> tuple[bool, dict[int, str]]:
+    if exclude_knowledge_base:
+        return False, {}
     data_source_summaries: dict[int, str] = {}
     for data_source_id in data_source_ids:
         data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
@@ -143,65 +146,50 @@ def stream_chat(
     data_source_summaries: dict[int, str],
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
-    source_nodes: list[NodeWithScore] = []
+    tools: list[BaseTool] = [DateTool()]
     if use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
             retriever=chat_engine._retriever,
             summaries=data_source_summaries,
             node_postprocessors=chat_engine._node_postprocessors,
         )
-        tools: list[BaseTool] = [DateTool(), retrieval_tool]
-        tools.extend(additional_tools)
-        if isinstance(llm, OpenAI):
-            gen = _openai_agent_streamer(
-                chat_messages, enhanced_query, llm, source_nodes, tools
-            )
-        else:
-            gen = _run_non_openai_streamer(
-                chat_messages, enhanced_query, llm, source_nodes, tools
-            )
-
-        return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
-    else:
-        # If the planner decides to answer directly, bypass retrieval
-        logger.debug("Planner decided to answer directly without retrieval")
-        logger.debug("querying llm directly with enhanced query: \n%s", enhanced_query)
-
-        # Use the chat engine to answer directly without retrieval context
-        return StreamingAgentChatResponse(
-            chat_stream=llm.stream_chat(
-                messages=chat_messages
-                + [ChatMessage(role="user", content=enhanced_query)],
-            ),
-            sources=[],
-            source_nodes=[],
-            is_writing_to_memory=False,
+        tools.append(retrieval_tool)
+    tools.extend(additional_tools)
+    if isinstance(llm, OpenAI):
+        gen, source_nodes = _openai_agent_streamer(
+            chat_messages, enhanced_query, llm, tools
         )
+    else:
+        gen, source_nodes = _run_non_openai_streamer(
+            chat_messages, enhanced_query, llm, tools
+        )
+
+    return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
 def _run_non_openai_streamer(
     chat_messages: list[ChatMessage],
     enhanced_query: str,
     llm: FunctionCallingLLM,
-    source_nodes: list[NodeWithScore],
     tools: list[BaseTool],
     verbose: bool = True,
-) -> Generator[ChatResponse, None, None]:
+) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent = FunctionAgent(
         tools=cast(list[BaseTool | Callable[[], Any]], tools),
         llm=llm,
         system_prompt=DEFAULT_AGENT_PROMPT,
     )
 
+    source_nodes = []
+
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
-        print()
         async for event in handler.stream_events():
             if isinstance(event, ToolCall):
                 if verbose and not isinstance(event, ToolCallResult):
                     print("=== Calling Function ===")
                     print(
-                        f"Calling function: {event.tool_name} with args: {str(', '.join(list(event.tool_kwargs.values())))}"
+                        f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
                     )
             if isinstance(event, ToolCallResult):
                 if verbose:
@@ -255,17 +243,16 @@ def _run_non_openai_streamer(
             )
             print("========================")
 
-    return gen()
+    return gen(), source_nodes
 
 
 def _openai_agent_streamer(
     chat_messages: list[ChatMessage],
     enhanced_query: str,
     llm: OpenAI,
-    source_nodes: list[NodeWithScore],
     tools: list[BaseTool],
     verbose: bool = True,
-) -> Generator[ChatResponse, None, None]:
+) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent = OpenAIAgent.from_tools(
         tools=tools,
         llm=llm,
@@ -287,6 +274,7 @@ def _openai_agent_streamer(
             )
             yield finalize_response
 
+    source_nodes = []
     if stream_chat_response.sources:
         for tool_output in stream_chat_response.sources:
             if isinstance(tool_output, ToolOutput):
@@ -299,4 +287,4 @@ def _openai_agent_streamer(
                     )
                 ):
                     source_nodes.extend(tool_output.raw_output)
-    return gen()
+    return gen(), source_nodes
