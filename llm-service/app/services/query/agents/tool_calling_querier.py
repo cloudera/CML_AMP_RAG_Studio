@@ -250,7 +250,9 @@ def _run_non_openai_streamer(
             yield item
         if verbose:
             print("=== LLM Response ===")
-            print(f"{item.message.content.strip()}")
+            print(
+                f"{item.message.content.strip() if item.message.content else 'No content'}"
+            )
             print("========================")
 
     return gen()
