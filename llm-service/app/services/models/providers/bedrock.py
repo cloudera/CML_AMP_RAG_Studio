@@ -156,7 +156,10 @@ class BedrockModelProvider(ModelProvider):
 
         responses: list[dict[str, Any] | None] = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            results = executor.map(lambda url_and_headers: get_aws_responses(*url_and_headers), aws_requests)
+            results = executor.map(
+                lambda url_and_headers: get_aws_responses(*url_and_headers),
+                aws_requests,
+            )
             while True:
                 try:
                     result = next(results)
