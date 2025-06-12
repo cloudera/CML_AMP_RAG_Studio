@@ -44,13 +44,14 @@ from typing import Optional, Tuple, Any, Generator, AsyncGenerator
 import opik
 from crewai import Task, Process, Crew, Agent, CrewOutput, TaskOutput
 from llama_index.agent.openai import OpenAIAgent
-from llama_index.core.agent.workflow import FunctionAgent, AgentStream
+from llama_index.core.agent.workflow import FunctionAgent, AgentStream, ToolCall
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
-from llama_index.core.tools import BaseTool
+from llama_index.core.schema import NodeWithScore
+from llama_index.core.tools import BaseTool, ToolOutput
 from llama_index.llms.openai import OpenAI
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
@@ -386,7 +387,7 @@ When is water wet?
 
 <Answer> 
 Water will be wet when the sky is red<a class="rag_citation" href="1"></a> \
-[example.com](www.example.com), which occurs in the [evening](www.example2.com) <a class="rag_citation" href="2"></a>.
+[example.com](www.example.com), which occurs in the evening. [example2](www.example2.com) <a class="rag_citation" href="2"></a>.
 """
 
 
@@ -401,7 +402,7 @@ def stream_chat(
 ) -> StreamingAgentChatResponse:
     # Use the existing chat engine with the enhanced query for streaming response
     chat_response: StreamingAgentChatResponse
-
+    source_nodes: list[NodeWithScore] = []
     if use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
             retriever=chat_engine._retriever,
@@ -411,70 +412,13 @@ def stream_chat(
         tools: list[BaseTool] = [DateTool(), retrieval_tool]
         tools.extend(additional_tools)
         if isinstance(llm, OpenAI):
-            agent = OpenAIAgent.from_tools(
-                tools=tools,
-                llm=llm,
-                verbose=True,
-                system_prompt=DEFAULT_AGENT_PROMPT,
+            gen = _openai_agent_streamer(
+                chat_messages, enhanced_query, llm, source_nodes, tools
             )
         else:
-            agent = FunctionAgent(
-                tools=tools,
-                llm=llm,
-                system_prompt=DEFAULT_AGENT_PROMPT,
+            gen = _run_non_openai_streamer(
+                chat_messages, enhanced_query, llm, source_nodes, tools
             )
-
-        async def agen() -> AsyncGenerator[ChatResponse, None]:
-            handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
-
-            async for event in handler.stream_events():
-                if isinstance(event, AgentStream):
-                    # Yield the delta response as a ChatResponse
-                    yield ChatResponse(
-                        message=ChatMessage(
-                            role=MessageRole.ASSISTANT,
-                            content=event.response,
-                        ),
-                        delta=event.delta,
-                        raw=event.raw,
-                        additional_kwargs={
-                            "tool_calls": event.tool_calls,
-                        },
-                    )
-
-        def gen() -> Generator[ChatResponse, None, None]:
-            async def collect():
-                results = []
-                async for chunk in agen():
-                    results.append(chunk)
-                return results
-
-            for item in asyncio.run(collect()):
-                yield item
-
-        # def gen() -> Generator[ChatResponse, None, None]:
-        #     response = ""
-        #     res = stream_chat_response.response_gen
-        #     for chunk in res:
-        #         response += chunk
-        #         finalize_response = ChatResponse(
-        #             message=ChatMessage(role="assistant", content=response), delta=chunk
-        #         )
-        #         yield finalize_response
-
-        source_nodes = []
-        # if stream_chat_response.sources:
-        #     for tool_output in stream_chat_response.sources:
-        #         if isinstance(tool_output, ToolOutput):
-        #             if (
-        #                 tool_output.raw_output
-        #                 and isinstance(tool_output.raw_output, list)
-        #                 and all(
-        #                     isinstance(elem, NodeWithScore)
-        #                     for elem in tool_output.raw_output
-        #                 )
-        #             ):
-        #                 source_nodes.extend(tool_output.raw_output)
 
         return StreamingAgentChatResponse(chat_stream=gen(), source_nodes=source_nodes)
     else:
@@ -492,3 +436,103 @@ def stream_chat(
             source_nodes=[],
             is_writing_to_memory=False,
         )
+
+
+def _run_non_openai_streamer(
+    chat_messages: list[ChatMessage],
+    enhanced_query: str,
+    llm: FunctionCallingLLM,
+    source_nodes: list[NodeWithScore],
+    tools: list[BaseTool],
+):
+    agent = FunctionAgent(
+        tools=tools,
+        llm=llm,
+        system_prompt=DEFAULT_AGENT_PROMPT,
+    )
+
+    async def agen() -> AsyncGenerator[ChatResponse, None]:
+        handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
+
+        async for event in handler.stream_events():
+            if isinstance(event, ToolCall):
+                if hasattr(event, "tool_output") and isinstance(
+                    event.tool_output, ToolOutput
+                ):
+                    if (
+                        event.tool_output.raw_output
+                        and isinstance(event.tool_output.raw_output, list)
+                        and all(
+                            isinstance(elem, NodeWithScore)
+                            for elem in event.tool_output.raw_output
+                        )
+                    ):
+                        source_nodes.extend(event.tool_output.raw_output)
+            if isinstance(event, AgentStream):
+                # Yield the delta response as a ChatResponse
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.ASSISTANT,
+                        content=event.response,
+                    ),
+                    delta=event.delta,
+                    raw=event.raw,
+                    additional_kwargs={
+                        "tool_calls": event.tool_calls,
+                    },
+                )
+
+    def gen() -> Generator[ChatResponse, None, None]:
+        async def collect():
+            results = []
+            async for chunk in agen():
+                results.append(chunk)
+            return results
+
+        for item in asyncio.run(collect()):
+            yield item
+
+    return gen
+
+
+def _openai_agent_streamer(
+    chat_messages: list[ChatMessage],
+    enhanced_query: str,
+    llm: OpenAI,
+    source_nodes: list[NodeWithScore],
+    tools: list[BaseTool],
+) -> Generator[ChatResponse, None, None]:
+    agent = OpenAIAgent.from_tools(
+        tools=tools,
+        llm=llm,
+        verbose=True,
+        system_prompt=DEFAULT_AGENT_PROMPT,
+    )
+    stream_chat_response: StreamingAgentChatResponse = agent.stream_chat(
+        message=enhanced_query, chat_history=chat_messages
+    )
+
+    def gen() -> Generator[ChatResponse, None, None]:
+        response = ""
+        res = stream_chat_response.response_gen
+        for chunk in res:
+            response += chunk
+            finalize_response = ChatResponse(
+                message=ChatMessage(role="assistant", content=response),
+                delta=chunk,
+            )
+            yield finalize_response
+
+    if stream_chat_response.sources:
+        for tool_output in stream_chat_response.sources:
+            if isinstance(tool_output, ToolOutput):
+                if (
+                    tool_output.raw_output
+                    and isinstance(tool_output.raw_output, list)
+                    and all(
+                        isinstance(elem, NodeWithScore)
+                        for elem in tool_output.raw_output
+                    )
+                ):
+                    source_nodes.extend(tool_output.raw_output)
+    return gen
