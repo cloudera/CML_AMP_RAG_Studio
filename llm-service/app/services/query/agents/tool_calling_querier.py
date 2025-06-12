@@ -42,7 +42,12 @@ from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
 from llama_index.agent.openai import OpenAIAgent
-from llama_index.core.agent.workflow import FunctionAgent, AgentStream, ToolCall
+from llama_index.core.agent.workflow import (
+    FunctionAgent,
+    AgentStream,
+    ToolCall,
+    ToolCallResult,
+)
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
@@ -83,30 +88,22 @@ def should_use_retrieval(
 
 DEFAULT_AGENT_PROMPT = """\
 You are an expert agent that can answer questions with the help of tools. \
-If you do not know the answer to a question, you truthfully say \
-it does not know.
-
-As the agent, you will provide an answer based solely on the provided sources with \
-citations to the paragraphs. When referencing information from a source, \
-cite the appropriate source(s) using their corresponding ids. \
-Every answer/paragraph should include at least one source citation. \
-Only cite a source when you are explicitly referencing it. \
-The citations with node_ids should be the href of an anchor tag \
-(<a class="rag_citation" href=CITATION_HERE></a>), \
-and (IMPORTANT) in-line with the text. No footnotes or endnotes. \
-If none of the sources are helpful, you should indicate that. \
-Do not make up source ids for citations. 
+Go through the tools available and use them appropriately to answer the \
+user's question. If you do not know the answer to a question, you \
+truthfully say it does not know. As the agent, you will provide an \
+answer based solely on the provided sources with citations to the \
+paragraphs. 
 
 Note for in-line citations:
 * Use the citations from the chat history as is. 
-* Use links if needed to answer the question and cite them in-line \
+* Use links provided by the tools if needed to answer the question and cite them in-line \
 in the given format: the link should be in markdown format. For example: \
 Refer to the example in [example.com](https://example.com). Do not make up links that are not \
 present. 
-* Cite from nodes in the given format: the node_id \
+* Cite from node_ids in the given format: the node_id \
 should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. \
 Do not use filenames as citations. Only node ids should be used. \
-For example: <a class='rag_citation' href='2'>2</a>. Do not make up node ids that are not present 
+For example: <a class="rag_citation" href="2">2</a>. Do not make up node ids that are not present 
 in the context.
 * All citations should be either in-line citations or markdown links. 
 
@@ -119,10 +116,12 @@ The sky is red in the evening and blue in the morning.
 Source: 2
 Water is wet when the sky is red.
 
-Source 3: www.example1.com
+Source: 3 
+www.example1.com
 The sky is red in the evening and blue in the morning.
 
-Source 4: www.example2.com
+Source: 4 
+www.example2.com
 Only in the evenings, is the water wet.
 
 <Query>
@@ -186,7 +185,8 @@ def _run_non_openai_streamer(
     llm: FunctionCallingLLM,
     source_nodes: list[NodeWithScore],
     tools: list[BaseTool],
-)-> Generator[ChatResponse, None, None]:
+    verbose: bool = True,
+) -> Generator[ChatResponse, None, None]:
     agent = FunctionAgent(
         tools=cast(list[BaseTool | Callable[[], Any]], tools),
         llm=llm,
@@ -195,21 +195,27 @@ def _run_non_openai_streamer(
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
-
+        print()
         async for event in handler.stream_events():
             if isinstance(event, ToolCall):
-                if hasattr(event, "tool_output") and isinstance(
-                    event.tool_output, ToolOutput
+                if verbose and not isinstance(event, ToolCallResult):
+                    print("=== Calling Function ===")
+                    print(
+                        f"Calling function: {event.tool_name} with args: {str(', '.join(list(event.tool_kwargs.values())))}"
+                    )
+            if isinstance(event, ToolCallResult):
+                if verbose:
+                    print(f"Got output: {event.tool_output!s}")
+                    print("========================")
+                if (
+                    event.tool_output.raw_output
+                    and isinstance(event.tool_output.raw_output, list)
+                    and all(
+                        isinstance(elem, NodeWithScore)
+                        for elem in event.tool_output.raw_output
+                    )
                 ):
-                    if (
-                        event.tool_output.raw_output
-                        and isinstance(event.tool_output.raw_output, list)
-                        and all(
-                            isinstance(elem, NodeWithScore)
-                            for elem in event.tool_output.raw_output
-                        )
-                    ):
-                        source_nodes.extend(event.tool_output.raw_output)
+                    source_nodes.extend(event.tool_output.raw_output)
             if isinstance(event, AgentStream):
                 if event.response:
                     # Yield the delta response as a ChatResponse
@@ -232,8 +238,19 @@ def _run_non_openai_streamer(
                 results.append(chunk)
             return results
 
+        item = ChatResponse(
+            message=ChatMessage(role=MessageRole.ASSISTANT, content=""),
+            delta="",
+            raw=None,
+            additional_kwargs={
+                "tool_calls": [],
+            },
+        )
         for item in asyncio.run(collect()):
             yield item
+        if verbose:
+            print("=== LLM Response ===")
+            print(f"{item.message.content.strip()}")
 
     return gen()
 
@@ -244,11 +261,12 @@ def _openai_agent_streamer(
     llm: OpenAI,
     source_nodes: list[NodeWithScore],
     tools: list[BaseTool],
+    verbose: bool = True,
 ) -> Generator[ChatResponse, None, None]:
     agent = OpenAIAgent.from_tools(
         tools=tools,
         llm=llm,
-        verbose=True,
+        verbose=verbose,
         system_prompt=DEFAULT_AGENT_PROMPT,
     )
     stream_chat_response: StreamingAgentChatResponse = agent.stream_chat(
