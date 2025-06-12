@@ -70,7 +70,7 @@ poison_pill = "poison_pill"
 
 
 def should_use_retrieval(
-        data_source_ids: list[int],
+    data_source_ids: list[int],
 ) -> tuple[bool, dict[int, str]]:
     data_source_summaries: dict[int, str] = {}
     for data_source_id in data_source_ids:
@@ -212,18 +212,19 @@ def _run_non_openai_streamer(
                     ):
                         source_nodes.extend(event.tool_output.raw_output)
             if isinstance(event, AgentStream):
-                # Yield the delta response as a ChatResponse
-                yield ChatResponse(
-                    message=ChatMessage(
-                        role=MessageRole.ASSISTANT,
-                        content=event.response,
-                    ),
-                    delta=event.delta,
-                    raw=event.raw,
-                    additional_kwargs={
-                        "tool_calls": event.tool_calls,
-                    },
-                )
+                if event.response:
+                    # Yield the delta response as a ChatResponse
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=MessageRole.ASSISTANT,
+                            content=event.response,
+                        ),
+                        delta=event.delta,
+                        raw=event.raw,
+                        additional_kwargs={
+                            "tool_calls": event.tool_calls,
+                        },
+                    )
 
     def gen() -> Generator[ChatResponse, None, None]:
         async def collect():
