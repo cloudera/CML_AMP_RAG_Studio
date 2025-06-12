@@ -36,6 +36,7 @@
 #  DATA.
 # ##############################################################################
 
+# ruff: noqa: E402
 import sys
 import logging
 import platform
