@@ -30,7 +30,6 @@
 from __future__ import annotations
 
 import re
-from queue import Queue
 from typing import Optional, TYPE_CHECKING, cast
 
 from llama_index.core.base.base_retriever import BaseRetriever
@@ -43,7 +42,6 @@ from .agents.tool_calling_querier import (
     should_use_retrieval,
     stream_chat,
 )
-from .chat_events import ChatEvent
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
@@ -75,7 +73,6 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    chat_event_queue: Queue[ChatEvent],
     session: Session,
 ) -> StreamingAgentChatResponse:
     llm = models.LLM.get(model_name=configuration.model_name)
@@ -94,7 +91,6 @@ def streaming_query(
             chat_messages,
             session,
             data_source_summaries,
-            chat_event_queue,
         )
         return chat_response
     if not chat_engine:

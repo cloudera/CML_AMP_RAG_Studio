@@ -37,7 +37,6 @@
 #
 import time
 import uuid
-from queue import Queue
 from typing import Optional, Generator
 
 from llama_index.core.base.llms.types import ChatResponse, ChatMessage
@@ -63,7 +62,6 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.chat_events import ChatEvent
 from app.services.query.querier import (
     build_retriever,
 )
@@ -75,7 +73,6 @@ def stream_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-    chat_event_queue: Queue[ChatEvent],
 ) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -102,7 +99,7 @@ def stream_chat(
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
-        chat_event_queue, query, query_configuration, session
+        query, query_configuration, session
     )
 
     return _run_streaming_chat(
@@ -149,7 +146,6 @@ def _run_streaming_chat(
 
 
 def build_streamer(
-    chat_events_queue: Queue[ChatEvent],
     query: str,
     query_configuration: QueryConfiguration,
     session: Session,
@@ -178,7 +174,6 @@ def build_streamer(
         query,
         query_configuration,
         chat_messages,
-        chat_event_queue=chat_events_queue,
         session=session,
     )
     return condensed_question, streaming_chat_response

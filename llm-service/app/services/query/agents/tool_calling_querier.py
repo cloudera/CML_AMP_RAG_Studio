@@ -38,7 +38,6 @@
 import asyncio
 import logging
 import os
-from queue import Queue
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
@@ -57,7 +56,6 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool, ToolOutput
-from llama_index.core.workflow import StopEvent
 from llama_index.llms.openai import OpenAI
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
@@ -114,7 +112,7 @@ present.
 * Cite from node_ids in the given format: the node_id \
 should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. \
 Do not use filenames as citations. Only node ids should be used. \
-For example: <a class="rag_citation" href="2">2</a>. Do not make up node ids that are not present 
+For example: <a class="rag_citation" href="2" ></a>. Do not make up node ids that are not present 
 in the context.
 * All citations should be either in-line citations or markdown links. 
 
@@ -152,7 +150,6 @@ def stream_chat(
     chat_messages: list[ChatMessage],
     session: Session,
     data_source_summaries: dict[int, str],
-    chat_event_queue: Queue[ChatEvent],
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     if session.query_configuration and session.query_configuration.selected_tools:
@@ -333,7 +330,7 @@ def _run_non_openai_streamer(
                 logger.info(f"Unhandled event of type: {type(event)}: {event}")
         await handler
         if e := handler.exception():
-           raise e
+            raise e
         if handler.ctx:
             await handler.ctx.shutdown()
 

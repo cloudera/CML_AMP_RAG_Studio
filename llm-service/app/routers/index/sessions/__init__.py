@@ -38,11 +38,10 @@
 import base64
 import json
 import logging
-import queue
 import threading
 import time
-from concurrent.futures import Future, ThreadPoolExecutor
-from typing import Optional, Generator, Any, cast
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional, Generator, Any
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -64,7 +63,6 @@ from ....services.chat_history.chat_history_manager import (
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
-from ....services.query.agents.tool_calling_querier import poison_pill
 from ....services.query.chat_events import ChatEvent
 from ....services.session import rename_session
 
@@ -259,7 +257,6 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    chat_event_queue: queue.Queue[ChatEvent] = queue.Queue()
     # Create a cancellation event to signal when the client disconnects
     cancel_event = threading.Event()
 
@@ -276,7 +273,6 @@ def stream_chat_completion(
                 query=request.query,
                 configuration=configuration,
                 user_name=origin_remote_user,
-                chat_event_queue=chat_event_queue,
             )
 
             # If we get here and the cancel_event is set, the client has disconnected
@@ -299,7 +295,9 @@ def stream_chat_completion(
                     continue
                 # send an initial message to let the client know the response stream is starting
                 if first_message:
-                    done = ChatEvent(type="done", name="agent_done", timestamp=time.time())
+                    done = ChatEvent(
+                        type="done", name="agent_done", timestamp=time.time()
+                    )
                     event_json = json.dumps({"event": done.model_dump()})
                     yield f"data: {event_json}\n\n"
                     first_message = False
