@@ -204,7 +204,7 @@ def _run_non_openai_streamer(
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
         async for event in handler.stream_events():
             if isinstance(event, AgentSetup):
-                data = f"Agent {event.current_agent_name} setup with input: {event.input!s}"
+                data = f"Agent {event.current_agent_name} setup with input: {event.input[-1].content!s}"
                 if verbose:
                     logger.info("=== Agent Setup ===")
                     logger.info(data)
@@ -225,7 +225,7 @@ def _run_non_openai_streamer(
                     },
                 )
             if isinstance(event, AgentInput):
-                data = f"Agent {event.current_agent_name} started with input: {event.input!s}"
+                data = f"Agent {event.current_agent_name} started with input: {event.input[-1].content!s}"
                 if verbose:
                     logger.info("=== Agent Input ===")
                     logger.info(data)
