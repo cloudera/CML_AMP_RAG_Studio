@@ -263,35 +263,6 @@ def stream_chat_completion(
     # Create a cancellation event to signal when the client disconnects
     cancel_event = threading.Event()
 
-    def tools_callback(chat_future: Future[Any]) -> Generator[str, None, None]:
-        while True:
-            # Check if client has disconnected
-            if cancel_event.is_set():
-                logger.info("Client disconnected, stopping tool callback")
-                # Try to cancel the future if it's still running
-                if not chat_future.done():
-                    chat_future.cancel()
-                break
-
-            if chat_future.done() and (e := chat_future.exception()):
-                raise e
-
-            try:
-                event_data = chat_event_queue.get(block=True, timeout=1.0)
-                print(event_data)
-                if event_data.type == poison_pill:
-                    break
-                event_json = json.dumps({"event": event_data.model_dump()})
-                yield f"data: {event_json}\n\n"
-            except queue.Empty:
-                # Send a heartbeat event every second to keep the connection alive
-                heartbeat = ChatEvent(
-                    type="event", name="Processing", timestamp=time.time()
-                )
-                event_json = json.dumps({"event": heartbeat.model_dump()})
-                yield f"data: {event_json}\n\n"
-                time.sleep(1)
-
     def generate_stream() -> Generator[str, None, None]:
         response_id: str = ""
         executor = None

@@ -234,7 +234,7 @@ def _run_non_openai_streamer(
                 yield ChatResponse(
                     message=ChatMessage(
                         role=MessageRole.FUNCTION,
-                        content=data,
+                        content="",
                     ),
                     delta="",
                     raw="",
