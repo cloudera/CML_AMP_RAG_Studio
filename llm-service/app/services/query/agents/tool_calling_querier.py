@@ -57,6 +57,7 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool, ToolOutput
+from llama_index.core.workflow import StopEvent
 from llama_index.llms.openai import OpenAI
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
@@ -178,7 +179,7 @@ def stream_chat(
         )
     else:
         gen, source_nodes = _run_non_openai_streamer(
-            chat_messages, enhanced_query, llm, tools, chat_event_queue
+            chat_messages, enhanced_query, llm, tools
         )
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
@@ -189,7 +190,6 @@ def _run_non_openai_streamer(
     enhanced_query: str,
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
-    chat_event_queue: Queue[ChatEvent],
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent = FunctionAgent(
@@ -202,6 +202,7 @@ def _run_non_openai_streamer(
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
+
         async for event in handler.stream_events():
             if isinstance(event, AgentSetup):
                 data = f"Agent {event.current_agent_name} setup with input: {event.input[-1].content!s}"
@@ -224,7 +225,7 @@ def _run_non_openai_streamer(
                         ),
                     },
                 )
-            if isinstance(event, AgentInput):
+            elif isinstance(event, AgentInput):
                 data = f"Agent {event.current_agent_name} started with input: {event.input[-1].content!s}"
                 if verbose:
                     logger.info("=== Agent Input ===")
@@ -245,7 +246,7 @@ def _run_non_openai_streamer(
                         ),
                     },
                 )
-            if isinstance(event, ToolCall) and not isinstance(event, ToolCallResult):
+            elif isinstance(event, ToolCall) and not isinstance(event, ToolCallResult):
                 data = f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
                 if verbose:
                     logger.info("=== Calling Function ===")
@@ -263,7 +264,7 @@ def _run_non_openai_streamer(
                         ),
                     },
                 )
-            if isinstance(event, ToolCallResult):
+            elif isinstance(event, ToolCallResult):
                 data = f"Got output: {event.tool_output!s}"
                 if verbose:
                     logger.info(data)
@@ -292,7 +293,7 @@ def _run_non_openai_streamer(
                         ),
                     },
                 )
-            if isinstance(event, AgentOutput):
+            elif isinstance(event, AgentOutput):
                 data = f"Agent {event.current_agent_name} response: {event.response!s}"
                 if verbose:
                     logger.info("=== LLM Response ===")
@@ -317,7 +318,7 @@ def _run_non_openai_streamer(
                         ),
                     },
                 )
-            if isinstance(event, AgentStream):
+            elif isinstance(event, AgentStream):
                 if event.response:
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
@@ -328,6 +329,11 @@ def _run_non_openai_streamer(
                         delta=event.delta,
                         raw=event.raw,
                     )
+            else:
+                logger.info(f"Unhandled event of type: {type(event)}: {event}")
+        await handler
+        if e := handler.exception():
+           raise e
         if handler.ctx:
             await handler.ctx.shutdown()
 
