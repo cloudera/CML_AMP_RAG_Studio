@@ -106,14 +106,14 @@ def stream_chat(
     condensed_question, streaming_chat_response = build_streamer(
         chat_event_queue, query, query_configuration, session
     )
-
+    chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
+    
     return _run_streaming_chat(
         session,
         response_id,
         query,
         query_configuration,
         user_name,
-        chat_event_queue,
         condensed_question=condensed_question,
         streaming_chat_response=streaming_chat_response,
     )
@@ -125,7 +125,6 @@ def _run_streaming_chat(
     query: str,
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
-    chat_event_queue: Queue[ChatEvent],
     streaming_chat_response: StreamingAgentChatResponse,
     condensed_question: Optional[str] = None,
 ) -> Generator[ChatResponse, None, None]:

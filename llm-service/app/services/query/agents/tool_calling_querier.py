@@ -248,7 +248,6 @@ def _run_non_openai_streamer(
                 )
             if isinstance(event, AgentStream):
                 if event.response:
-                    chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
                         message=ChatMessage(
