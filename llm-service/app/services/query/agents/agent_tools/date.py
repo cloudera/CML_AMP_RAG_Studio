@@ -36,7 +36,6 @@
 #  DATA.
 #
 from datetime import datetime
-from typing import Any
 
 from llama_index.core.tools import BaseTool, ToolOutput, ToolMetadata
 from pydantic import BaseModel
@@ -46,17 +45,28 @@ class DateToolInput(BaseModel):
     """
     Input schema for the DateTool
     """
+
     input: None = None
+
 
 class DateTool(BaseTool):
     """
     A tool that provides the current date and time.
     """
+
     @property
     def metadata(self) -> ToolMetadata:
-        return ToolMetadata(name="date_tool", description="A tool that provides the current date and time.", fn_schema=DateToolInput)
+        return ToolMetadata(
+            name="date_tool",
+            description="A tool that provides the current date and time.",
+            fn_schema=DateToolInput,
+        )
 
-    def __call__(self, input_: Any) -> ToolOutput:
+    def __call__(self, input) -> ToolOutput:
         now = datetime.now()
-        return ToolOutput(content=f"The current date is {now.strftime('%Y-%m-%d %H:%M:%S')}", tool_name="date_tool", raw_input={}, raw_output=now)
-
+        return ToolOutput(
+            content=f"The current date is {now.strftime('%Y-%m-%d %H:%M:%S')}",
+            tool_name="date_tool",
+            raw_input={},
+            raw_output=now,
+        )

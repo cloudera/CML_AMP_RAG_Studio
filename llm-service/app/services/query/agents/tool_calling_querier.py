@@ -374,6 +374,10 @@ def _openai_agent_streamer(
 
     completed_tasks = agent.get_completed_tasks()
     print(f"Completed tasks: {completed_tasks}")
+    for task in completed_tasks:
+        print(f"Task {task.input} completed with result: {task.task_id}")
+        completed_steps = agent.get_completed_steps(task_id=task.task_id)
+        print(f"Completed steps: {completed_steps}")
 
     def gen() -> Generator[ChatResponse, None, None]:
         response = ""
