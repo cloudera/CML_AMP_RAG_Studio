@@ -61,8 +61,8 @@ from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
-from app.services.query.tools.date import DateTool
-from app.services.query.tools.retriever import (
+from app.services.query.agents.agent_tools.date import DateTool
+from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
 )
 
