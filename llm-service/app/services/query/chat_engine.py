@@ -225,6 +225,14 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 
         return response_synthesizer, context_source, context_nodes
 
+    @property
+    def retriever(self) -> BaseRetriever:
+        return self._retriever
+
+    @property
+    def node_postprocessors(self) -> List[BaseNodePostprocessor]:
+        return self._node_postprocessors
+
 
 def build_flexible_chat_engine(
     configuration: QueryConfiguration,

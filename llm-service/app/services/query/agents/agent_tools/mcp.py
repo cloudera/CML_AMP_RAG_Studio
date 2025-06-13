@@ -35,28 +35,53 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from datetime import datetime
-from typing import Any
+import json
+import os
+from copy import copy
 
-from llama_index.core.tools import BaseTool, ToolOutput, ToolMetadata
-from pydantic import BaseModel
+from llama_index.core.tools import FunctionTool
+from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
+
+from app.config import settings
 
 
-class DateToolInput(BaseModel):
+def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
     """
-    Input schema for the DateTool
-    """
-    input_: None = None
+    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
 
-class DateTool(BaseTool):
-    """
-    A tool that provides the current date and time.
-    """
-    @property
-    def metadata(self) -> ToolMetadata:
-        return ToolMetadata(name="date_tool", description="A tool that provides the current date and time.", fn_schema=DateToolInput)
+    Args:
+        server_name: The name of the MCP server to find
 
-    def __call__(self, input_: Any) -> ToolOutput:
-        now = datetime.now()
-        return ToolOutput(content=f"The current date is {now.strftime('%Y-%m-%d %H:%M:%S')}", tool_name="date_tool", raw_input={}, raw_output=now)
+    Returns:
+        An MCPServerAdapter configured for the specified server
 
+    Raises:
+        ValueError: If the server name is not found in the mcp.json file
+    """
+    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
+
+    with open(mcp_json_path, "r") as f:
+        mcp_config = json.load(f)
+
+    mcp_servers = mcp_config["mcp_servers"]
+    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
+
+    if server_config:
+        environment: dict[str, str] | None = copy(dict(os.environ))
+        if "env" in server_config and environment:
+            environment.update(server_config["env"])
+
+        if "command" in server_config:
+            client = BasicMCPClient(
+                command_or_url=server_config["command"],
+                args=server_config.get("args", []),
+                env=environment,
+            )
+        elif "url" in server_config:
+            client = BasicMCPClient(command_or_url=server_config["url"])
+        else:
+            raise ValueError("Not configured right...fixme")
+        tool_spec = McpToolSpec(client=client)
+        return tool_spec.to_tool_list()
+
+    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")

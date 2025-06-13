@@ -41,28 +41,32 @@ import os
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
-from llama_index.agent.openai import OpenAIAgent
 from llama_index.core.agent.workflow import (
     FunctionAgent,
     AgentStream,
     ToolCall,
     ToolCallResult,
+    AgentOutput,
+    AgentInput,
+    AgentSetup,
 )
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import BaseTool, ToolOutput
-from llama_index.llms.openai import OpenAI
+from llama_index.core.tools import BaseTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.metadata_apis.session_metadata_api import Session
+from app.services.query.agents.agent_tools.date import DateTool
+from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
+from app.services.query.agents.agent_tools.retriever import (
+    build_retriever_tool,
+)
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
-from app.services.query.tools.date import DateTool
-from app.services.query.tools.retriever import (
-    build_retriever_tool,
-)
+from app.services.query.chat_events import ChatEvent
 
 if os.environ.get("ENABLE_OPIK") == "True":
     opik.configure(
@@ -70,7 +74,7 @@ if os.environ.get("ENABLE_OPIK") == "True":
     )
 
 logger = logging.getLogger(__name__)
-# litellm._turn_on_debug()
+
 poison_pill = "poison_pill"
 
 
@@ -106,7 +110,7 @@ present.
 * Cite from node_ids in the given format: the node_id \
 should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. \
 Do not use filenames as citations. Only node ids should be used. \
-For example: <a class="rag_citation" href="2">2</a>. Do not make up node ids that are not present 
+For example: <a class="rag_citation" href="2" ></a>. Do not make up node ids that are not present 
 in the context.
 * All citations should be either in-line citations or markdown links. 
 
@@ -142,32 +146,35 @@ def stream_chat(
     chat_engine: Optional[FlexibleContextChatEngine],
     enhanced_query: str,
     chat_messages: list[ChatMessage],
-    additional_tools: list[BaseTool],
+    session: Session,
     data_source_summaries: dict[int, str],
 ) -> StreamingAgentChatResponse:
+    mcp_tools: list[BaseTool] = []
+    if session.query_configuration and session.query_configuration.selected_tools:
+        for tool_name in session.query_configuration.selected_tools:
+            try:
+                mcp_tools.extend(get_llama_index_tools(tool_name))
+            except ValueError as e:
+                logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
+                continue
+
     # Use the existing chat engine with the enhanced query for streaming response
     tools: list[BaseTool] = [DateTool()]
     if use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
-            retriever=chat_engine._retriever,
+            retriever=chat_engine.retriever,
             summaries=data_source_summaries,
-            node_postprocessors=chat_engine._node_postprocessors,
+            node_postprocessors=chat_engine.node_postprocessors,
         )
         tools.append(retrieval_tool)
-    tools.extend(additional_tools)
-    if isinstance(llm, OpenAI):
-        gen, source_nodes = _openai_agent_streamer(
-            chat_messages, enhanced_query, llm, tools
-        )
-    else:
-        gen, source_nodes = _run_non_openai_streamer(
-            chat_messages, enhanced_query, llm, tools
-        )
+    tools.extend(mcp_tools)
+
+    gen, source_nodes = _run_streamer(chat_messages, enhanced_query, llm, tools)
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
-def _run_non_openai_streamer(
+def _run_streamer(
     chat_messages: list[ChatMessage],
     enhanced_query: str,
     llm: FunctionCallingLLM,
@@ -184,17 +191,73 @@ def _run_non_openai_streamer(
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
+
         async for event in handler.stream_events():
-            if isinstance(event, ToolCall):
-                if verbose and not isinstance(event, ToolCallResult):
-                    print("=== Calling Function ===")
-                    print(
-                        f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
-                    )
-            if isinstance(event, ToolCallResult):
+            if isinstance(event, AgentSetup):
+                data = f"Agent {event.current_agent_name} setup with input: {event.input[-1].content!s}"
                 if verbose:
-                    print(f"Got output: {event.tool_output!s}")
-                    print("========================")
+                    logger.info("=== Agent Setup ===")
+                    logger.info(data)
+                    logger.info("========================")
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.FUNCTION,
+                        content="",
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "chat_event": ChatEvent(
+                            type="agent_setup",
+                            name=event.current_agent_name,
+                            data=data,
+                        ),
+                    },
+                )
+            elif isinstance(event, AgentInput):
+                data = f"Agent {event.current_agent_name} started with input: {event.input[-1].content!s}"
+                if verbose:
+                    logger.info("=== Agent Input ===")
+                    logger.info(data)
+                    logger.info("========================")
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.FUNCTION,
+                        content="",
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "chat_event": ChatEvent(
+                            type="agent_input",
+                            name=event.current_agent_name,
+                            data=data,
+                        ),
+                    },
+                )
+            elif isinstance(event, ToolCall) and not isinstance(event, ToolCallResult):
+                data = f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
+                if verbose:
+                    logger.info("=== Calling Function ===")
+                    logger.info(data)
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.TOOL,
+                        content="",
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "chat_event": ChatEvent(
+                            type="tool_call", name=event.tool_name, data=data
+                        ),
+                    },
+                )
+            elif isinstance(event, ToolCallResult):
+                data = f"Got output: {event.tool_output!s}"
+                if verbose:
+                    logger.info(data)
+                    logger.info("========================")
                 if (
                     event.tool_output.raw_output
                     and isinstance(event.tool_output.raw_output, list)
@@ -204,7 +267,47 @@ def _run_non_openai_streamer(
                     )
                 ):
                     source_nodes.extend(event.tool_output.raw_output)
-            if isinstance(event, AgentStream):
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.TOOL,
+                        content="",
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "chat_event": ChatEvent(
+                            type="tool_result",
+                            name=event.tool_name,
+                            data=data,
+                        ),
+                    },
+                )
+            elif isinstance(event, AgentOutput):
+                data = f"Agent {event.current_agent_name} response: {event.response!s}"
+                if verbose:
+                    logger.info("=== LLM Response ===")
+                    logger.info(
+                        f"{str(event.response) if event.response else 'No content'}"
+                    )
+                    logger.info("========================")
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.TOOL,
+                        content=(
+                            event.response.content if event.response.content else ""
+                        ),
+                    ),
+                    delta="",
+                    raw=event.raw,
+                    additional_kwargs={
+                        "chat_event": ChatEvent(
+                            type="agent_response",
+                            name=event.current_agent_name,
+                            data=data,
+                        ),
+                    },
+                )
+            elif isinstance(event, AgentStream):
                 if event.response:
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
@@ -214,77 +317,31 @@ def _run_non_openai_streamer(
                         ),
                         delta=event.delta,
                         raw=event.raw,
-                        additional_kwargs={
-                            "tool_calls": event.tool_calls,
-                        },
                     )
+            else:
+                logger.info(f"Unhandled event of type: {type(event)}: {event}")
+        await handler
+        if e := handler.exception():
+            raise e
+        if handler.ctx:
+            await handler.ctx.shutdown()
 
     def gen() -> Generator[ChatResponse, None, None]:
-        async def collect() -> list[ChatResponse]:
-            results: list[ChatResponse] = []
-            async for chunk in agen():
-                results.append(chunk)
-            return results
+        loop = asyncio.new_event_loop()
+        astream = agen()
+        try:
+            while True:
+                item = loop.run_until_complete(anext(astream))
+                yield item
+        except (StopAsyncIteration, GeneratorExit):
+            pass
+        finally:
+            try:
+                loop.run_until_complete(astream.aclose())
+            except Exception as e:
+                logger.warning(f"Exception during async generator close: {e}")
+            if not loop.is_closed():
+                loop.stop()
+                loop.close()
 
-        item = ChatResponse(
-            message=ChatMessage(role=MessageRole.ASSISTANT, content=""),
-            delta="",
-            raw=None,
-            additional_kwargs={
-                "tool_calls": [],
-            },
-        )
-        for item in asyncio.run(collect()):
-            yield item
-        if verbose:
-            print("=== LLM Response ===")
-            print(
-                f"{item.message.content.strip() if item.message.content else 'No content'}"
-            )
-            print("========================")
-
-    return gen(), source_nodes
-
-
-def _openai_agent_streamer(
-    chat_messages: list[ChatMessage],
-    enhanced_query: str,
-    llm: OpenAI,
-    tools: list[BaseTool],
-    verbose: bool = True,
-) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
-    agent = OpenAIAgent.from_tools(
-        tools=tools,
-        llm=llm,
-        verbose=verbose,
-        system_prompt=DEFAULT_AGENT_PROMPT,
-    )
-    stream_chat_response: StreamingAgentChatResponse = agent.stream_chat(
-        message=enhanced_query, chat_history=chat_messages
-    )
-
-    def gen() -> Generator[ChatResponse, None, None]:
-        response = ""
-        res = stream_chat_response.response_gen
-        for chunk in res:
-            response += chunk
-            finalize_response = ChatResponse(
-                message=ChatMessage(role="assistant", content=response),
-                delta=chunk,
-            )
-            yield finalize_response
-
-    source_nodes = []
-    if stream_chat_response.sources:
-        for tool_output in stream_chat_response.sources:
-            if isinstance(tool_output, ToolOutput):
-                if (
-                    tool_output.raw_output
-                    and isinstance(tool_output.raw_output, list)
-                    and all(
-                        isinstance(elem, NodeWithScore)
-                        for elem in tool_output.raw_output
-                    )
-                ):
-                    source_nodes.extend(tool_output.raw_output)
     return gen(), source_nodes

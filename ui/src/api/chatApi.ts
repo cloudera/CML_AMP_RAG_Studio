@@ -331,10 +331,10 @@ export interface ChatMutationResponse {
   text?: string;
   response_id?: string;
   error?: string;
-  event?: ToolEventResponse;
+  event?: ChatEvent;
 }
 
-export interface ToolEventResponse {
+export interface ChatEvent {
   type: string;
   name: string;
   data?: string;
@@ -378,7 +378,7 @@ const canceledChatMessage = (variables: ChatMutationRequest) => {
 
 interface StreamingChatCallbacks {
   onChunk: (msg: string) => void;
-  onEvent: (event: ToolEventResponse) => void;
+  onEvent: (event: ChatEvent) => void;
   getController?: (ctrl: AbortController) => void;
 }
 
@@ -522,7 +522,7 @@ export const useStreamingChatMutation = ({
 const streamChatMutation = async (
   request: ChatMutationRequest,
   onChunk: (chunk: string) => void,
-  onEvent: (event: ToolEventResponse) => void,
+  onEvent: (event: ChatEvent) => void,
   onError: (error: string) => void,
   getController?: (ctrl: AbortController) => void,
 ): Promise<string> => {
@@ -598,9 +598,9 @@ const streamChatMutation = async (
 };
 
 export const getOnEvent = (
-  setStreamedEvent: Dispatch<SetStateAction<ToolEventResponse[]>>,
+  setStreamedEvent: Dispatch<SetStateAction<ChatEvent[]>>,
 ) => {
-  return (event: ToolEventResponse) => {
+  return (event: ChatEvent) => {
     if (event.type === "done") {
       setStreamedEvent([]);
     } else {

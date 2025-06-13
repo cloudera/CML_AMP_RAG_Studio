@@ -35,21 +35,38 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from datetime import datetime
 
-import time
-from queue import Queue
-from typing import Optional, Any
-
-from pydantic import BaseModel, Field
+from llama_index.core.tools import BaseTool, ToolOutput, ToolMetadata
+from pydantic import BaseModel
 
 
-class ChatEvent(BaseModel):
-    type: str
-    name: str
-    data: Optional[str] = None
-    timestamp: float = Field(default_factory=lambda : time.time())
+class DateToolInput(BaseModel):
+    """
+    Input schema for the DateTool
+    """
+
+    input: None = None
 
 
-def step_callback(output: Any, agent: str, tool_events_queue: Queue[ChatEvent]) -> None:
-    # todo: hook this up
-    return None
+class DateTool(BaseTool):
+    """
+    A tool that provides the current date and time.
+    """
+
+    @property
+    def metadata(self) -> ToolMetadata:
+        return ToolMetadata(
+            name="date_tool",
+            description="A tool that provides the current date and time.",
+            fn_schema=DateToolInput,
+        )
+
+    def __call__(self, input: None=None) -> ToolOutput:
+        now = datetime.now()
+        return ToolOutput(
+            content=f"The current date is {now.strftime('%Y-%m-%d %H:%M:%S')}",
+            tool_name="date_tool",
+            raw_input={},
+            raw_output=now,
+        )
