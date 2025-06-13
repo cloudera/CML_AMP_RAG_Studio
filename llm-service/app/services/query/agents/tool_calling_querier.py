@@ -212,12 +212,16 @@ def _run_non_openai_streamer(
                 yield ChatResponse(
                     message=ChatMessage(
                         role=MessageRole.FUNCTION,
-                        content=data,
+                        content="",
                     ),
                     delta="",
                     raw="",
                     additional_kwargs={
-                        "tool_calls": [],
+                        "chat_event": ChatEvent(
+                            type="agent_setup",
+                            name=event.current_agent_name,
+                            data=data,
+                        ),
                     },
                 )
             if isinstance(event, AgentInput):
@@ -234,7 +238,11 @@ def _run_non_openai_streamer(
                     delta="",
                     raw="",
                     additional_kwargs={
-                        "tool_calls": [],
+                        "chat_event": ChatEvent(
+                            type="agent_input",
+                            name=event.current_agent_name,
+                            data=data,
+                        ),
                     },
                 )
             if isinstance(event, ToolCall) and not isinstance(event, ToolCallResult):
@@ -250,14 +258,13 @@ def _run_non_openai_streamer(
                     delta="",
                     raw="",
                     additional_kwargs={
-                        "chat_event": ChatEvent(type="tool_call", name=event.tool_name, data=data),
+                        "chat_event": ChatEvent(
+                            type="tool_call", name=event.tool_name, data=data
+                        ),
                     },
                 )
             if isinstance(event, ToolCallResult):
                 data = f"Got output: {event.tool_output!s}"
-                chat_event_queue.put(
-                    ChatEvent(type="tool_result", name=event.tool_name, data=data)
-                )
                 if verbose:
                     logger.info(data)
                     logger.info("========================")
@@ -278,7 +285,11 @@ def _run_non_openai_streamer(
                     delta="",
                     raw="",
                     additional_kwargs={
-                        "tool_calls": [event],
+                        "chat_event": ChatEvent(
+                            type="tool_result",
+                            name=event.tool_name,
+                            data=data,
+                        ),
                     },
                 )
             if isinstance(event, AgentOutput):
@@ -291,7 +302,7 @@ def _run_non_openai_streamer(
                     logger.info("========================")
                 yield ChatResponse(
                     message=ChatMessage(
-                        role=MessageRole.DEVELOPER,
+                        role=MessageRole.TOOL,
                         content=(
                             event.response.content if event.response.content else ""
                         ),
@@ -299,7 +310,11 @@ def _run_non_openai_streamer(
                     delta="",
                     raw=event.raw,
                     additional_kwargs={
-                        "tool_calls": event.tool_calls,
+                        "chat_event": ChatEvent(
+                            type="agent_response",
+                            name=event.current_agent_name,
+                            data=data,
+                        ),
                     },
                 )
             if isinstance(event, AgentStream):

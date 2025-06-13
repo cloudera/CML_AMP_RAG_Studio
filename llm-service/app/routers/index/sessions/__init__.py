@@ -42,7 +42,7 @@ import queue
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
-from typing import Optional, Generator, Any
+from typing import Optional, Generator, Any, cast
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
@@ -315,14 +315,15 @@ def stream_chat_completion(
 
             first_message = True
             stream = future.result()
-            for response in stream:
+            for item in stream:
+                response = cast(ChatResponse, item)
                 # Check for cancellation between each response
                 if cancel_event.is_set():
                     logger.info("Client disconnected during result processing")
                     break
-                if isinstance(response, ChatResponse):
-                    tool_call = response.additional_kwargs.get("chat_event")
-                    event_json = json.dumps({"event": tool_call.model_dump()})
+                if "chat_event" in response.additional_kwargs:
+                    chat_event = response.additional_kwargs.get("chat_event")
+                    event_json = json.dumps({"event": chat_event.model_dump()})
                     yield f"data: {event_json}\n\n"
                     continue
                 # send an initial message to let the client know the response stream is starting
