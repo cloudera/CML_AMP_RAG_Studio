@@ -40,14 +40,14 @@ import time
 from queue import Queue
 from typing import Optional, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ChatEvent(BaseModel):
     type: str
     name: str
     data: Optional[str] = None
-    timestamp: float = time.time()
+    timestamp: float = Field(default_factory=lambda : time.time())
 
 
 def step_callback(output: Any, agent: str, tool_events_queue: Queue[ChatEvent]) -> None:
