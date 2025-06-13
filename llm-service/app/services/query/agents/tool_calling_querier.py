@@ -328,6 +328,7 @@ def _run_non_openai_streamer(
                         delta=event.delta,
                         raw=event.raw,
                     )
+        await handler.ctx.shutdown()
 
     def gen() -> Generator[ChatResponse, None, None]:
         loop = asyncio.new_event_loop()
@@ -336,11 +337,16 @@ def _run_non_openai_streamer(
             while True:
                 item = loop.run_until_complete(anext(astream))
                 yield item
-        except StopAsyncIteration:
+        except (StopAsyncIteration, GeneratorExit):
             pass
         finally:
-            loop.stop()
-            loop.close()
+            try:
+                loop.run_until_complete(astream.aclose())
+            except Exception as e:
+                logger.warning(f"Exception during async generator close: {e}")
+            if not loop.is_closed():
+                loop.stop()
+                loop.close()
 
     return gen(), source_nodes
 
