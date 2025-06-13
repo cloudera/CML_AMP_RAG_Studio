@@ -328,7 +328,8 @@ def _run_non_openai_streamer(
                         delta=event.delta,
                         raw=event.raw,
                     )
-        await handler.ctx.shutdown()
+        if handler.ctx:
+            await handler.ctx.shutdown()
 
     def gen() -> Generator[ChatResponse, None, None]:
         loop = asyncio.new_event_loop()

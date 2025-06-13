@@ -46,7 +46,7 @@ from typing import Optional, Generator, Any, cast
 
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
-from llama_index.core.base.llms.types import ChatResponse, MessageRole
+from llama_index.core.base.llms.types import ChatResponse
 from pydantic import BaseModel
 from starlette.responses import ContentStream
 from starlette.types import Receive
@@ -316,13 +316,13 @@ def stream_chat_completion(
             first_message = True
             stream = future.result()
             for item in stream:
-                response = cast(ChatResponse, item)
+                response: ChatResponse = item
                 # Check for cancellation between each response
                 if cancel_event.is_set():
                     logger.info("Client disconnected during result processing")
                     break
                 if "chat_event" in response.additional_kwargs:
-                    chat_event = response.additional_kwargs.get("chat_event")
+                    chat_event: ChatEvent = response.additional_kwargs.get("chat_event")
                     event_json = json.dumps({"event": chat_event.model_dump()})
                     yield f"data: {event_json}\n\n"
                     continue
