@@ -34,25 +34,22 @@ import os
 import re
 from copy import copy
 from queue import Queue
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, cast
 
-from crewai import CrewOutput
-from crewai.tools import BaseTool
-from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
+from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from mcp import StdioServerParameters
+from llama_index.core.tools import BaseTool as LLamaTool
+from llama_index.core.tools import FunctionTool
 
-from .agents.crewai_querier import (
-    assemble_crew,
+from .agents.tool_calling_querier import (
     should_use_retrieval,
-    launch_crew,
     stream_chat,
     poison_pill,
 )
-from .crew_events import CrewEvent
+from .chat_events import ToolEvent
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
@@ -76,11 +73,12 @@ from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
+from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 
 logger = logging.getLogger(__name__)
 
 
-def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
+def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
     """
     Find an MCP server by name in the mcp.json file and return the appropriate adapter.
 
@@ -107,14 +105,17 @@ def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
             environment.update(server_config["env"])
 
         if "command" in server_config:
-            params = StdioServerParameters(
-                command=server_config["command"],
+            client = BasicMCPClient(
+                command_or_url=server_config["command"],
                 args=server_config.get("args", []),
                 env=environment,
             )
-            return MCPServerAdapter(serverparams=params)
         elif "url" in server_config:
-            return MCPServerAdapter({"url": server_config["url"][0]})
+            client = BasicMCPClient(command_or_url=server_config["url"])
+        else:
+            raise ValueError("Not configured right...fixme")
+        tool_spec = McpToolSpec(client=client)
+        return tool_spec.to_tool_list()
 
     raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
@@ -124,114 +125,75 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    crew_events_queue: Queue[CrewEvent],
+    tool_events_queue: Queue[ToolEvent],
     session: Session,
-    retriever: Optional[BaseRetriever],
 ) -> StreamingAgentChatResponse:
-    mcp_tools: list[BaseTool] = []
-    all_adapters: list[MCPServerAdapter] = []
+    all_tools: list[LLamaTool] = []
 
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
             try:
-                adapter = get_mcp_server_adapter(tool_name)
-                print(
-                    f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
-                )
-                all_adapters.append(adapter)
+                llama_tools = get_llama_index_tools(tool_name)
+                # print(
+                #     f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
+                # )
+                all_tools.extend(llama_tools)
             except ValueError as e:
                 logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
                 continue
 
-    try:
-        for adapter in all_adapters:
-            mcp_tools.extend(adapter.tools)
+    llm = models.LLM.get(model_name=configuration.model_name)
 
-        llm = models.LLM.get(model_name=configuration.model_name)
+    chat_response: StreamingAgentChatResponse
+    if configuration.use_tool_calling and llm.metadata.is_function_calling_model:
+        use_retrieval, data_source_summaries = should_use_retrieval(
+            session.data_source_ids, configuration.exclude_knowledge_base
+        )
 
-        chat_response: StreamingAgentChatResponse
-        if configuration.use_tool_calling:
-            use_retrieval, data_source_summaries = should_use_retrieval(
-                configuration,
-                session.data_source_ids,
-                llm,
-                query_str,
-                chat_messages,
-            )
-
-            crew = assemble_crew(
-                use_retrieval,
-                llm,
-                chat_messages,
-                query_str,
-                crew_events_queue,
-                retriever,
-                data_source_summaries,
-                mcp_tools,
-            )
-            enhanced_query, crew_result = launch_crew(
-                crew,
-                query_str,
-            )
-
-            source_nodes = get_nodes_from_output(crew_result, session)
-
-            chat_response = stream_chat(
-                use_retrieval,
-                llm,
-                chat_engine,
-                enhanced_query,
-                source_nodes,
-                chat_messages,
-            )
-            return chat_response
-        if not chat_engine:
-            raise HTTPException(
-                status_code=500,
-                detail="Chat engine is not initialized. Please check the configuration.",
-            )
-
-        try:
-            chat_response = chat_engine.stream_chat(query_str, chat_messages)
-            crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
-            logger.debug("query response received from chat engine")
-        except botocore.exceptions.ClientError as error:
-            logger.warning(error.response)
-            json_error = error.response
-            raise HTTPException(
-                status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-                detail=json_error["StatusReason"],
-            ) from error
-
+        chat_response = stream_chat(
+            use_retrieval,
+            cast(FunctionCallingLLM, llm),
+            chat_engine,
+            query_str,
+            chat_messages,
+            all_tools,
+            data_source_summaries,
+        )
+        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         return chat_response
-    finally:
-        for adapter in all_adapters:
-            adapter.stop()
+    if not chat_engine:
+        raise HTTPException(
+            status_code=500,
+            detail="Chat engine is not initialized. Please check the configuration.",
+        )
+
+    try:
+        chat_response = chat_engine.stream_chat(query_str, chat_messages)
+        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
+        logger.debug("query response received from chat engine")
+    except botocore.exceptions.ClientError as error:
+        logger.warning(error.response)
+        json_error = error.response
+        raise HTTPException(
+            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+            detail=json_error["StatusReason"],
+        ) from error
+
+    return chat_response
 
 
 def get_nodes_from_output(
-    output: str | CrewOutput,
+    output: str,
     session: Session,
 ) -> list[NodeWithScore]:
     source_node_ids_w_score: dict[str, float] = {}
-    if isinstance(output, CrewOutput):
-        # Extract the retriever results from the crew result
-        for task_output in output.tasks_output:
-            if task_output.name == "RetrieverTask":
-                if task_output.json_dict:
-                    json_output = task_output.json_dict["retriever_results"]
-                    for result in json_output:
-                        node_id = result["node_id"]
-                        score = result["score"]
-                        if node_id and score:
-                            # Append the node id and score to the list
-                            source_node_ids_w_score[node_id] = score
 
     # Extract the node ids from string output
     extracted_node_ids = re.findall(
-        r"<a class='rag_citation' href='(.*?)'>",
-        str(output) if isinstance(output, CrewOutput) else output,
+        r"<a class=\"rag_citation\" href=\"(.*?)\">",
+        output,
     )
+
     # add the extracted node ids to the source node ids
     for node_id in extracted_node_ids:
         if node_id not in source_node_ids_w_score:

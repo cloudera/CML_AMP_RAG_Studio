@@ -266,7 +266,7 @@ def _create_node_postprocessors(
         return []
 
     if configuration.rerank_model_name is None:
-        return [SimpleReranker(top_n=configuration.top_k)]
+        return [DebugNodePostProcessor(), SimpleReranker(top_n=configuration.top_k)]
 
     return [
         DebugNodePostProcessor(),

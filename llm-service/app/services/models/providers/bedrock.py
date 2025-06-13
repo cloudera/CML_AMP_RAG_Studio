@@ -44,6 +44,7 @@ import boto3
 import requests
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
+from fastapi import HTTPException
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
@@ -153,22 +154,33 @@ class BedrockModelProvider(ModelProvider):
             raise_for_http_error(response)
             return cast(dict[str, Any], response.json())
 
-        responses: list[dict[str, Any] | None] = [None for _ in aws_requests]
+        responses: list[dict[str, Any] | None] = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_index = {
-                executor.submit(get_aws_responses, url, headers): idx
-                for idx, (url, headers) in enumerate(aws_requests)
-            }
-            for future in concurrent.futures.as_completed(future_to_index):
-                idx = future_to_index[future]
+            results = executor.map(
+                lambda url_and_headers: get_aws_responses(*url_and_headers),
+                aws_requests,
+            )
+            while True:
                 try:
-                    responses[idx] = future.result()
-                except Exception:
+                    result = next(results)
+                    responses.append(result)
+                except StopIteration:
+                    break
+                except HTTPException as e:
+                    model_id = str(e).split("/")[-1]
                     logger.exception(
-                        "Error fetching data for model %s", models[idx]["modelId"]
+                        "Error fetching data for model %s",
+                        model_id,
                     )
-                    responses[idx] = None
-
+                    responses.append(None)
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        "Unexpected error fetching data: %s",
+                        e,
+                    )
+                    responses.append(None)
+                    continue
         for model, model_data in zip(models, responses):
             if model_data:
                 if model_data["entitlementAvailability"] == "AVAILABLE":
