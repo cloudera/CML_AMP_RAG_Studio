@@ -29,10 +29,7 @@
 # ##############################################################################
 from __future__ import annotations
 
-import json
-import os
 import re
-from copy import copy
 from queue import Queue
 from typing import Optional, TYPE_CHECKING, cast
 
@@ -41,8 +38,6 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import BaseTool as LLamaTool
-from llama_index.core.tools import FunctionTool
 
 from .agents.tool_calling_querier import (
     should_use_retrieval,
@@ -53,7 +48,6 @@ from .chat_events import ToolEvent
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
-from ...config import settings
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -73,51 +67,8 @@ from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
-from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 
 logger = logging.getLogger(__name__)
-
-
-def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
-    """
-    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
-
-    Args:
-        server_name: The name of the MCP server to find
-
-    Returns:
-        An MCPServerAdapter configured for the specified server
-
-    Raises:
-        ValueError: If the server name is not found in the mcp.json file
-    """
-    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
-
-    with open(mcp_json_path, "r") as f:
-        mcp_config = json.load(f)
-
-    mcp_servers = mcp_config["mcp_servers"]
-    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
-
-    if server_config:
-        environment: dict[str, str] | None = copy(dict(os.environ))
-        if "env" in server_config and environment:
-            environment.update(server_config["env"])
-
-        if "command" in server_config:
-            client = BasicMCPClient(
-                command_or_url=server_config["command"],
-                args=server_config.get("args", []),
-                env=environment,
-            )
-        elif "url" in server_config:
-            client = BasicMCPClient(command_or_url=server_config["url"])
-        else:
-            raise ValueError("Not configured right...fixme")
-        tool_spec = McpToolSpec(client=client)
-        return tool_spec.to_tool_list()
-
-    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
 
 def streaming_query(
@@ -128,20 +79,6 @@ def streaming_query(
     tool_events_queue: Queue[ToolEvent],
     session: Session,
 ) -> StreamingAgentChatResponse:
-    all_tools: list[LLamaTool] = []
-
-    if session.query_configuration and session.query_configuration.selected_tools:
-        for tool_name in session.query_configuration.selected_tools:
-            try:
-                llama_tools = get_llama_index_tools(tool_name)
-                # print(
-                #     f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
-                # )
-                all_tools.extend(llama_tools)
-            except ValueError as e:
-                logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
-                continue
-
     llm = models.LLM.get(model_name=configuration.model_name)
 
     chat_response: StreamingAgentChatResponse
@@ -156,7 +93,7 @@ def streaming_query(
             chat_engine,
             query_str,
             chat_messages,
-            all_tools,
+            session,
             data_source_summaries,
         )
         tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))

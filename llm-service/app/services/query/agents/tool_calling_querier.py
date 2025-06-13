@@ -56,6 +56,8 @@ from llama_index.core.tools import BaseTool, ToolOutput
 from llama_index.llms.openai import OpenAI
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.services.metadata_apis.session_metadata_api import Session
+from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
@@ -70,7 +72,7 @@ if os.environ.get("ENABLE_OPIK") == "True":
     )
 
 logger = logging.getLogger(__name__)
-# litellm._turn_on_debug()
+
 poison_pill = "poison_pill"
 
 
@@ -142,19 +144,28 @@ def stream_chat(
     chat_engine: Optional[FlexibleContextChatEngine],
     enhanced_query: str,
     chat_messages: list[ChatMessage],
-    additional_tools: list[BaseTool],
+    session: Session,
     data_source_summaries: dict[int, str],
 ) -> StreamingAgentChatResponse:
+    mcp_tools: list[BaseTool] = []
+    if session.query_configuration and session.query_configuration.selected_tools:
+        for tool_name in session.query_configuration.selected_tools:
+            try:
+                mcp_tools.extend(get_llama_index_tools(tool_name))
+            except ValueError as e:
+                logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
+                continue
+
     # Use the existing chat engine with the enhanced query for streaming response
     tools: list[BaseTool] = [DateTool()]
     if use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
-            retriever=chat_engine._retriever,
+            retriever=chat_engine.retriever,
             summaries=data_source_summaries,
-            node_postprocessors=chat_engine._node_postprocessors,
+            node_postprocessors=chat_engine.node_postprocessors,
         )
         tools.append(retrieval_tool)
-    tools.extend(additional_tools)
+    tools.extend(mcp_tools)
     if isinstance(llm, OpenAI):
         gen, source_nodes = _openai_agent_streamer(
             chat_messages, enhanced_query, llm, tools
@@ -187,14 +198,14 @@ def _run_non_openai_streamer(
         async for event in handler.stream_events():
             if isinstance(event, ToolCall):
                 if verbose and not isinstance(event, ToolCallResult):
-                    print("=== Calling Function ===")
-                    print(
+                    logger.info("=== Calling Function ===")
+                    logger.info(
                         f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
                     )
             if isinstance(event, ToolCallResult):
                 if verbose:
-                    print(f"Got output: {event.tool_output!s}")
-                    print("========================")
+                    logger.info(f"Got output: {event.tool_output!s}")
+                    logger.info("========================")
                 if (
                     event.tool_output.raw_output
                     and isinstance(event.tool_output.raw_output, list)
@@ -237,11 +248,11 @@ def _run_non_openai_streamer(
         for item in asyncio.run(collect()):
             yield item
         if verbose:
-            print("=== LLM Response ===")
-            print(
+            logger.info("=== LLM Response ===")
+            logger.info(
                 f"{item.message.content.strip() if item.message.content else 'No content'}"
             )
-            print("========================")
+            logger.info("========================")
 
     return gen(), source_nodes
 
