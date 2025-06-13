@@ -250,7 +250,7 @@ def _run_non_openai_streamer(
                     delta="",
                     raw="",
                     additional_kwargs={
-                        "tool_calls": [event],
+                        "chat_event": ChatEvent(type="tool_call", name=event.tool_name, data=data),
                     },
                 )
             if isinstance(event, ToolCallResult):
