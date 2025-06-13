@@ -50,7 +50,10 @@ from llama_index.core.agent.workflow import (
     ToolCallResult,
     AgentOutput,
     AgentInput,
+<<<<<<< Updated upstream
     AgentSetup,
+=======
+>>>>>>> Stashed changes
 )
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
@@ -180,6 +183,10 @@ def stream_chat(
         gen, source_nodes = _run_non_openai_streamer(
             chat_messages, enhanced_query, llm, tools, chat_event_queue
         )
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
@@ -238,6 +245,7 @@ def _run_non_openai_streamer(
                 )
             if isinstance(event, ToolCall):
                 data = f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
+<<<<<<< Updated upstream
                 if verbose and not isinstance(event, ToolCallResult):
                     logger.info("=== Calling Function ===")
                     logger.info(data)
@@ -252,6 +260,14 @@ def _run_non_openai_streamer(
                             "tool_calls": [event],
                         },
                     )
+=======
+                chat_event_queue.put(
+                    ChatEvent(type="tool_call", name=event.tool_name, data=data)
+                )
+                if verbose and not isinstance(event, ToolCallResult):
+                    logger.info("=== Calling Function ===")
+                    logger.info(data)
+>>>>>>> Stashed changes
             if isinstance(event, ToolCallResult):
                 data = f"Got output: {event.tool_output!s}"
                 chat_event_queue.put(
@@ -283,9 +299,13 @@ def _run_non_openai_streamer(
             if isinstance(event, AgentOutput):
                 data = f"Agent {event.current_agent_name} response: {event.response!s}"
                 chat_event_queue.put(
+<<<<<<< Updated upstream
                     ChatEvent(
                         type="agent_output", name=event.current_agent_name, data=data
                     )
+=======
+                    ChatEvent(type="agent_output", name=event.tool_name, data=data)
+>>>>>>> Stashed changes
                 )
                 if verbose:
                     logger.info("=== LLM Response ===")
@@ -293,6 +313,7 @@ def _run_non_openai_streamer(
                         f"{str(event.response) if event.response else 'No content'}"
                     )
                     logger.info("========================")
+<<<<<<< Updated upstream
                 yield ChatResponse(
                     message=ChatMessage(
                         role=MessageRole.DEVELOPER,
@@ -305,6 +326,12 @@ def _run_non_openai_streamer(
                     additional_kwargs={
                         "tool_calls": event.tool_calls,
                     },
+=======
+            if isinstance(event, AgentInput):
+                data = f"Agent {event.current_agent_name} started execution: {event.input!s}"
+                chat_event_queue.put(
+                    ChatEvent(type="agent_input", name=event.tool_name, data=data)
+>>>>>>> Stashed changes
                 )
             if isinstance(event, AgentStream):
                 if event.response:

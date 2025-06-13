@@ -51,5 +51,10 @@ class ChatEvent(BaseModel):
 
 
 def step_callback(output: Any, agent: str, tool_events_queue: Queue[ChatEvent]) -> None:
+<<<<<<< Updated upstream
 
     return
+=======
+    # todo: hook this up
+    return None
+>>>>>>> Stashed changes
