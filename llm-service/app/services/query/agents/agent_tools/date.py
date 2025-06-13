@@ -62,7 +62,7 @@ class DateTool(BaseTool):
             fn_schema=DateToolInput,
         )
 
-    def __call__(self, input=None) -> ToolOutput:
+    def __call__(self, input: None=None) -> ToolOutput:
         now = datetime.now()
         return ToolOutput(
             content=f"The current date is {now.strftime('%Y-%m-%d %H:%M:%S')}",
