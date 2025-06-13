@@ -50,6 +50,7 @@ from llama_index.core.agent.workflow import (
     ToolCallResult,
     AgentOutput,
     AgentInput,
+    AgentSetup,
 )
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
@@ -201,14 +202,56 @@ def _run_non_openai_streamer(
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
         async for event in handler.stream_events():
+            if isinstance(event, AgentSetup):
+                data = f"Agent {event.current_agent_name} setup with input: {event.input!s}"
+                if verbose:
+                    logger.info("=== Agent Setup ===")
+                    logger.info(data)
+                    logger.info("========================")
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.FUNCTION,
+                        content=data,
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "tool_calls": [],
+                    },
+                )
+            if isinstance(event, AgentInput):
+                data = f"Agent {event.current_agent_name} started with input: {event.input!s}"
+                if verbose:
+                    logger.info("=== Agent Input ===")
+                    logger.info(data)
+                    logger.info("========================")
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.FUNCTION,
+                        content=data,
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "tool_calls": [],
+                    },
+                )
             if isinstance(event, ToolCall):
                 data = f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
-                chat_event_queue.put(
-                    ChatEvent(type="tool_call", name=event.tool_name, data=data)
-                )
                 if verbose and not isinstance(event, ToolCallResult):
                     logger.info("=== Calling Function ===")
                     logger.info(data)
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=MessageRole.TOOL,
+                            content="",
+                        ),
+                        delta="",
+                        raw="",
+                        additional_kwargs={
+                            "tool_calls": [event],
+                        },
+                    )
             if isinstance(event, ToolCallResult):
                 data = f"Got output: {event.tool_output!s}"
                 chat_event_queue.put(
@@ -226,6 +269,17 @@ def _run_non_openai_streamer(
                     )
                 ):
                     source_nodes.extend(event.tool_output.raw_output)
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.TOOL,
+                        content="",
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "tool_calls": [event],
+                    },
+                )
             if isinstance(event, AgentOutput):
                 data = f"Agent {event.current_agent_name} response: {event.response!s}"
                 chat_event_queue.put(
@@ -239,12 +293,18 @@ def _run_non_openai_streamer(
                         f"{str(event.response) if event.response else 'No content'}"
                     )
                     logger.info("========================")
-            if isinstance(event, AgentInput):
-                data = f"Agent {event.current_agent_name} started execution with input: {event.input!s}"
-                chat_event_queue.put(
-                    ChatEvent(
-                        type="agent_input", name=event.current_agent_name, data=data
-                    )
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.DEVELOPER,
+                        content=(
+                            event.response.content if event.response.content else ""
+                        ),
+                    ),
+                    delta="",
+                    raw=event.raw,
+                    additional_kwargs={
+                        "tool_calls": event.tool_calls,
+                    },
                 )
             if isinstance(event, AgentStream):
                 if event.response:
