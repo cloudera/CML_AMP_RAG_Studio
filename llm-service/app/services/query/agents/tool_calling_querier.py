@@ -327,9 +327,6 @@ def _run_non_openai_streamer(
                         ),
                         delta=event.delta,
                         raw=event.raw,
-                        additional_kwargs={
-                            "tool_calls": event.tool_calls,
-                        },
                     )
 
     def gen() -> Generator[ChatResponse, None, None]:

@@ -328,7 +328,7 @@ def stream_chat_completion(
                     continue
                 # send an initial message to let the client know the response stream is starting
                 if first_message:
-                    done = ChatEvent(type="done", name="done", timestamp=time.time())
+                    done = ChatEvent(type="done", name="agent_done", timestamp=time.time())
                     event_json = json.dumps({"event": done.model_dump()})
                     yield f"data: {event_json}\n\n"
                     first_message = False
@@ -337,6 +337,9 @@ def stream_chat_completion(
                 yield f"data: {json_delta}\n\n"
 
             if not cancel_event.is_set() and response_id:
+                done = ChatEvent(type="done", name="chat_done", timestamp=time.time())
+                event_json = json.dumps({"event": done.model_dump()})
+                yield f"data: {event_json}\n\n"
                 yield f'data: {{"response_id" : "{response_id}"}}\n\n'
 
         except TimeoutError:
