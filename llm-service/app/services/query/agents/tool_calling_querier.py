@@ -330,14 +330,17 @@ def _run_non_openai_streamer(
                     )
 
     def gen() -> Generator[ChatResponse, None, None]:
-        async def collect() -> list[ChatResponse]:
-            results: list[ChatResponse] = []
-            async for chunk in agen():
-                results.append(chunk)
-            return results
-
-        for item in asyncio.run(collect()):
-            yield item
+        loop = asyncio.new_event_loop()
+        astream = agen()
+        try:
+            while True:
+                item = loop.run_until_complete(anext(astream))
+                yield item
+        except StopAsyncIteration:
+            pass
+        finally:
+            loop.stop()
+            loop.close()
 
     return gen(), source_nodes
 
