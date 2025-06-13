@@ -46,7 +46,7 @@ class DateToolInput(BaseModel):
     """
     Input schema for the DateTool
     """
-    input_: None = None
+    input: None = None
 
 class DateTool(BaseTool):
     """

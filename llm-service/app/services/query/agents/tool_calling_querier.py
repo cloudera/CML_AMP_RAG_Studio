@@ -217,7 +217,7 @@ def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: s
                     source_nodes.extend(event.tool_output.raw_output)
             if isinstance(event, AgentOutput):
                 data = f"Agent {event.current_agent_name} response: {event.response!s}"
-                chat_event_queue.put(ChatEvent(type="agent_output", name=event.tool_name, data=data))
+                chat_event_queue.put(ChatEvent(type="agent_output", name=event.current_agent_name, data=data))
                 if verbose:
                     logger.info("=== LLM Response ===")
                     logger.info(
@@ -225,8 +225,8 @@ def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: s
                     )
                     logger.info("========================")
             if isinstance(event, AgentInput):
-                data = f"Agent {event.current_agent_name} response: {event.response!s}"
-                chat_event_queue.put(ChatEvent(type="agent_input", name=event.tool_name, data=data))
+                data = f"Agent {event.current_agent_name} started execution with input: {event.input!s}"
+                chat_event_queue.put(ChatEvent(type="agent_input", name=event.current_agent_name, data=data))
             if isinstance(event, AgentStream):
                 if event.response:
                     # Yield the delta response as a ChatResponse
@@ -249,14 +249,6 @@ def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: s
                 results.append(chunk)
             return results
 
-        item = ChatResponse(
-            message=ChatMessage(role=MessageRole.ASSISTANT, content=""),
-            delta="",
-            raw=None,
-            additional_kwargs={
-                "tool_calls": [],
-            },
-        )
         for item in asyncio.run(collect()):
             yield item
 
