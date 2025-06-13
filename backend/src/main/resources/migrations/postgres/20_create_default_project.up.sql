@@ -38,6 +38,6 @@
 
 BEGIN;
 
-INSERT INTO project (name, created_by_id, updated_by_id) VALUES ('Default', 'admin', 'admin');
+INSERT INTO project (name, DEFAULT_PROJECT, created_by_id, updated_by_id) VALUES ('Default', true,'admin', 'admin');
 
 COMMIT;

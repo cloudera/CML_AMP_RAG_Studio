@@ -36,8 +36,6 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
 DELETE from project_data_source where project_id = (select id from project where default_project = true);

@@ -7,7 +7,7 @@ WORKDIR /app
 
 FROM base AS server-deps
 WORKDIR /app/express
-RUN npm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 FROM base AS frontend-deps
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
