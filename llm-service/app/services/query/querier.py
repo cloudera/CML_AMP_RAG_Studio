@@ -95,6 +95,7 @@ def streaming_query(
             chat_messages,
             session,
             data_source_summaries,
+            chat_event_queue
         )
         chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
         return chat_response
