@@ -123,11 +123,11 @@ public class ProjectRepository {
               SELECT *
                 FROM project
                 WHERE created_by_id = :createdById
-                OR default_project = true
+                OR default_project = :default
               """;
           handle.registerRowMapper(ConstructorMapper.factory(Project.class));
           try (Query query = handle.createQuery(sql)) {
-            query.bind("createdById", username);
+            query.bind("createdById", username).bind("default", true);
             return query.mapTo(Project.class).list();
           }
         });
@@ -145,11 +145,12 @@ public class ProjectRepository {
               """
                SELECT *
                  FROM project
-               WHERE default_project = true
+               WHERE default_project = :default
               """;
           handle.registerRowMapper(ConstructorMapper.factory(Project.class));
           try (Query query = handle.createQuery(sql)) {
             return query
+                .bind("default", true)
                 .mapTo(Project.class)
                 .findOne()
                 .orElseThrow(() -> new NotFound("Default project not found"));

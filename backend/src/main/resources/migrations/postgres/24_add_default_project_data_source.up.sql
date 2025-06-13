@@ -36,8 +36,6 @@
  * DATA.
  */
 
-SET MODE MYSQL;
-
 BEGIN;
 
 INSERT INTO project_data_source (project_id, data_source_id)

@@ -44,7 +44,7 @@ dependencies = [
     "opik>=1.7.22",
     "llama-index-callbacks-opik>=1.1.0",
     "mcp[cli]>=1.9.1",
-    "pysqlite3-binary==0.5.4; platform_system == 'Linux'",
+    "pysqlite3-binary==0.5.4; platform_system == 'Linux' and platform_machine != 'aarch64'",
     "llama-index-agent-openai>=0.4.8",
     "llama-index-tools-mcp>=0.2.5",
 ]

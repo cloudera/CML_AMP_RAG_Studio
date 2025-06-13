@@ -40,10 +40,9 @@ BEGIN;
 
 CREATE TABLE project_data_source
 (
-    id              BIGINT auto_increment NOT NULL,
+    id SERIAL PRIMARY KEY,
     project_id      BIGINT                NOT NULL,
-    data_source_id  BIGINT                NOT NULL,
-    CONSTRAINT PK_project_ds PRIMARY KEY (id)
+    data_source_id  BIGINT                NOT NULL
 );
 
 COMMIT;
