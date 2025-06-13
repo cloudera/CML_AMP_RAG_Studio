@@ -362,6 +362,9 @@ def _openai_agent_streamer(
         message=enhanced_query, chat_history=chat_messages
     )
 
+    completed_tasks = agent.get_completed_tasks()
+    print(f"Completed tasks: {completed_tasks}")
+
     def gen() -> Generator[ChatResponse, None, None]:
         response = ""
         res = stream_chat_response.response_gen
