@@ -258,7 +258,7 @@ def stream_chat_completion(
     session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
-    tool_events_queue: queue.Queue[ChatEvent] = queue.Queue()
+    chat_event_queue: queue.Queue[ChatEvent] = queue.Queue()
     # Create a cancellation event to signal when the client disconnects
     cancel_event = threading.Event()
 
@@ -276,7 +276,8 @@ def stream_chat_completion(
                 raise e
 
             try:
-                event_data = tool_events_queue.get(block=True, timeout=1.0)
+                event_data = chat_event_queue.get(block=True, timeout=1.0)
+                print(event_data)
                 if event_data.type == poison_pill:
                     break
                 event_json = json.dumps({"event": event_data.model_dump()})
@@ -303,7 +304,7 @@ def stream_chat_completion(
                 query=request.query,
                 configuration=configuration,
                 user_name=origin_remote_user,
-                tool_events_queue=tool_events_queue,
+                chat_event_queue=chat_event_queue,
             )
 
             # Yield from tools_callback, which will check for cancellation

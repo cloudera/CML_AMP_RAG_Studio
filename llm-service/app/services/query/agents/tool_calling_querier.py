@@ -47,7 +47,9 @@ from llama_index.core.agent.workflow import (
     FunctionAgent,
     AgentStream,
     ToolCall,
-    ToolCallResult, AgentOutput, AgentInput,
+    ToolCallResult,
+    AgentOutput,
+    AgentInput,
 )
 from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
@@ -148,7 +150,7 @@ def stream_chat(
     chat_messages: list[ChatMessage],
     session: Session,
     data_source_summaries: dict[int, str],
-        chat_event_queue: Queue[ChatEvent],
+    chat_event_queue: Queue[ChatEvent],
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     if session.query_configuration and session.query_configuration.selected_tools:
@@ -174,13 +176,21 @@ def stream_chat(
             chat_messages, enhanced_query, llm, tools
         )
     else:
-        gen, source_nodes = _run_non_openai_streamer(chat_messages, enhanced_query, llm, tools, chat_event_queue)
+        gen, source_nodes = _run_non_openai_streamer(
+            chat_messages, enhanced_query, llm, tools, chat_event_queue
+        )
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
-def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: str, llm: FunctionCallingLLM,
-                             tools: list[BaseTool], chat_event_queue: Queue[ChatEvent], verbose: bool = True) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
+def _run_non_openai_streamer(
+    chat_messages: list[ChatMessage],
+    enhanced_query: str,
+    llm: FunctionCallingLLM,
+    tools: list[BaseTool],
+    chat_event_queue: Queue[ChatEvent],
+    verbose: bool = True,
+) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent = FunctionAgent(
         tools=cast(list[BaseTool | Callable[[], Any]], tools),
         llm=llm,
@@ -194,15 +204,17 @@ def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: s
         async for event in handler.stream_events():
             if isinstance(event, ToolCall):
                 data = f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
-                chat_event_queue.put(ChatEvent(type="tool_call", name=event.tool_name, data=data))
+                chat_event_queue.put(
+                    ChatEvent(type="tool_call", name=event.tool_name, data=data)
+                )
                 if verbose and not isinstance(event, ToolCallResult):
                     logger.info("=== Calling Function ===")
-                    logger.info(
-                        data
-                    )
+                    logger.info(data)
             if isinstance(event, ToolCallResult):
                 data = f"Got output: {event.tool_output!s}"
-                chat_event_queue.put(ChatEvent(type="tool_result", name=event.tool_name, data=data))
+                chat_event_queue.put(
+                    ChatEvent(type="tool_result", name=event.tool_name, data=data)
+                )
                 if verbose:
                     logger.info(data)
                     logger.info("========================")
@@ -217,7 +229,11 @@ def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: s
                     source_nodes.extend(event.tool_output.raw_output)
             if isinstance(event, AgentOutput):
                 data = f"Agent {event.current_agent_name} response: {event.response!s}"
-                chat_event_queue.put(ChatEvent(type="agent_output", name=event.current_agent_name, data=data))
+                chat_event_queue.put(
+                    ChatEvent(
+                        type="agent_output", name=event.current_agent_name, data=data
+                    )
+                )
                 if verbose:
                     logger.info("=== LLM Response ===")
                     logger.info(
@@ -226,7 +242,11 @@ def _run_non_openai_streamer(chat_messages: list[ChatMessage], enhanced_query: s
                     logger.info("========================")
             if isinstance(event, AgentInput):
                 data = f"Agent {event.current_agent_name} started execution with input: {event.input!s}"
-                chat_event_queue.put(ChatEvent(type="agent_input", name=event.current_agent_name, data=data))
+                chat_event_queue.put(
+                    ChatEvent(
+                        type="agent_input", name=event.current_agent_name, data=data
+                    )
+                )
             if isinstance(event, AgentStream):
                 if event.response:
                     # Yield the delta response as a ChatResponse

@@ -50,8 +50,6 @@ class ChatEvent(BaseModel):
     timestamp: float = time.time()
 
 
-def step_callback(
-    output: Any, agent: str, tool_events_queue: Queue[ChatEvent]
-) -> None:
-    # todo: hook this up
-    return None
+def step_callback(output: Any, agent: str, tool_events_queue: Queue[ChatEvent]) -> None:
+
+    return

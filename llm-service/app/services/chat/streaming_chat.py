@@ -76,7 +76,7 @@ def stream_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-    tool_events_queue: Queue[ChatEvent],
+    chat_event_queue: Queue[ChatEvent],
 ) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -100,18 +100,20 @@ def stream_chat(
         len(session.data_source_ids) == 0 or total_data_sources_size == 0
     ):
         # put a poison pill in the queue to stop the tool events stream
-        tool_events_queue.put(ChatEvent(type=poison_pill, name="no-op"))
+        chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
-        tool_events_queue, query, query_configuration, session
+        chat_event_queue, query, query_configuration, session
     )
+    chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
     return _run_streaming_chat(
         session,
         response_id,
         query,
         query_configuration,
         user_name,
+        chat_event_queue,
         condensed_question=condensed_question,
         streaming_chat_response=streaming_chat_response,
     )
@@ -123,11 +125,11 @@ def _run_streaming_chat(
     query: str,
     query_configuration: QueryConfiguration,
     user_name: Optional[str],
+    chat_event_queue: Queue[ChatEvent],
     streaming_chat_response: StreamingAgentChatResponse,
     condensed_question: Optional[str] = None,
 ) -> Generator[ChatResponse, None, None]:
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
-
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
             response.additional_kwargs["response_id"] = response_id
