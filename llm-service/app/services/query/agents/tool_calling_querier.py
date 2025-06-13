@@ -41,7 +41,6 @@ import os
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
-from llama_index.agent.openai import OpenAIAgent
 from llama_index.core.agent.workflow import (
     FunctionAgent,
     AgentStream,
@@ -55,8 +54,7 @@ from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatRespo
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import BaseTool, ToolOutput
-from llama_index.llms.openai import OpenAI
+from llama_index.core.tools import BaseTool
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -170,19 +168,13 @@ def stream_chat(
         )
         tools.append(retrieval_tool)
     tools.extend(mcp_tools)
-    if isinstance(llm, OpenAI):
-        gen, source_nodes = _openai_agent_streamer(
-            chat_messages, enhanced_query, llm, tools
-        )
-    else:
-        gen, source_nodes = _run_non_openai_streamer(
-            chat_messages, enhanced_query, llm, tools
-        )
+
+    gen, source_nodes = _run_streamer(chat_messages, enhanced_query, llm, tools)
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
-def _run_non_openai_streamer(
+def _run_streamer(
     chat_messages: list[ChatMessage],
     enhanced_query: str,
     llm: FunctionCallingLLM,
@@ -352,55 +344,4 @@ def _run_non_openai_streamer(
                 loop.stop()
                 loop.close()
 
-    return gen(), source_nodes
-
-
-def _openai_agent_streamer(
-    chat_messages: list[ChatMessage],
-    enhanced_query: str,
-    llm: OpenAI,
-    tools: list[BaseTool],
-    verbose: bool = True,
-) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
-    agent = OpenAIAgent.from_tools(
-        tools=tools,
-        llm=llm,
-        verbose=verbose,
-        system_prompt=DEFAULT_AGENT_PROMPT,
-    )
-    stream_chat_response: StreamingAgentChatResponse = agent.stream_chat(
-        message=enhanced_query, chat_history=chat_messages
-    )
-
-    completed_tasks = agent.get_completed_tasks()
-    print(f"Completed tasks: {completed_tasks}")
-    for task in completed_tasks:
-        print(f"Task {task.input} completed with result: {task.task_id}")
-        completed_steps = agent.get_completed_steps(task_id=task.task_id)
-        print(f"Completed steps: {completed_steps}")
-
-    def gen() -> Generator[ChatResponse, None, None]:
-        response = ""
-        res = stream_chat_response.response_gen
-        for chunk in res:
-            response += chunk
-            finalize_response = ChatResponse(
-                message=ChatMessage(role="assistant", content=response),
-                delta=chunk,
-            )
-            yield finalize_response
-
-    source_nodes = []
-    if stream_chat_response.sources:
-        for tool_output in stream_chat_response.sources:
-            if isinstance(tool_output, ToolOutput):
-                if (
-                    tool_output.raw_output
-                    and isinstance(tool_output.raw_output, list)
-                    and all(
-                        isinstance(elem, NodeWithScore)
-                        for elem in tool_output.raw_output
-                    )
-                ):
-                    source_nodes.extend(tool_output.raw_output)
     return gen(), source_nodes
