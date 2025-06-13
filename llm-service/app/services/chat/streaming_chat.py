@@ -106,7 +106,7 @@ def stream_chat(
     condensed_question, streaming_chat_response = build_streamer(
         chat_event_queue, query, query_configuration, session
     )
-    chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
+
     return _run_streaming_chat(
         session,
         response_id,

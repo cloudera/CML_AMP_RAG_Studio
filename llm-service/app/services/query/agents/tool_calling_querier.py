@@ -179,7 +179,6 @@ def stream_chat(
         gen, source_nodes = _run_non_openai_streamer(
             chat_messages, enhanced_query, llm, tools, chat_event_queue
         )
-
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
@@ -249,6 +248,7 @@ def _run_non_openai_streamer(
                 )
             if isinstance(event, AgentStream):
                 if event.response:
+                    chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
                         message=ChatMessage(
