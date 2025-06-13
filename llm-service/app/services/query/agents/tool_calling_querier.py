@@ -237,23 +237,22 @@ def _run_non_openai_streamer(
                         "tool_calls": [],
                     },
                 )
-            if isinstance(event, ToolCall):
+            if isinstance(event, ToolCall) and not isinstance(event, ToolCallResult):
                 data = f"Calling function: {event.tool_name} with args: {event.tool_kwargs}"
                 if verbose:
                     logger.info("=== Calling Function ===")
                     logger.info(data)
-                if not isinstance(event, ToolCallResult):
-                    yield ChatResponse(
-                        message=ChatMessage(
-                            role=MessageRole.TOOL,
-                            content="",
-                        ),
-                        delta="",
-                        raw="",
-                        additional_kwargs={
-                            "tool_calls": [event],
-                        },
-                    )
+                yield ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.TOOL,
+                        content="",
+                    ),
+                    delta="",
+                    raw="",
+                    additional_kwargs={
+                        "tool_calls": [event],
+                    },
+                )
             if isinstance(event, ToolCallResult):
                 data = f"Got output: {event.tool_output!s}"
                 chat_event_queue.put(

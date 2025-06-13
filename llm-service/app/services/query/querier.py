@@ -42,7 +42,6 @@ from llama_index.core.schema import NodeWithScore
 from .agents.tool_calling_querier import (
     should_use_retrieval,
     stream_chat,
-    poison_pill,
 )
 from .chat_events import ChatEvent
 from .flexible_retriever import FlexibleRetriever
@@ -106,7 +105,6 @@ def streaming_query(
 
     try:
         chat_response = chat_engine.stream_chat(query_str, chat_messages)
-        chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
         logger.debug("query response received from chat engine")
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)

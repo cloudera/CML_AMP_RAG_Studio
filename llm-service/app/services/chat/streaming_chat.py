@@ -59,7 +59,6 @@ from app.services.chat_history.chat_history_manager import (
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
-from app.services.query.agents.tool_calling_querier import poison_pill
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
@@ -100,14 +99,12 @@ def stream_chat(
         len(session.data_source_ids) == 0 or total_data_sources_size == 0
     ):
         # put a poison pill in the queue to stop the tool events stream
-        chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
         chat_event_queue, query, query_configuration, session
     )
-    chat_event_queue.put(ChatEvent(type=poison_pill, name="no-op"))
-    
+
     return _run_streaming_chat(
         session,
         response_id,

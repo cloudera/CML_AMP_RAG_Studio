@@ -307,9 +307,6 @@ def stream_chat_completion(
                 chat_event_queue=chat_event_queue,
             )
 
-            # Yield from tools_callback, which will check for cancellation
-            yield from tools_callback(future)
-
             # If we get here and the cancel_event is set, the client has disconnected
             if cancel_event.is_set():
                 logger.info("Client disconnected, not processing results")
