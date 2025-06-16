@@ -35,22 +35,26 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Any, List
 
-from llama_index.core.node_parser import MarkdownNodeParser
+from docling.datamodel.document import ConversionResult
+from docling.document_converter import DocumentConverter
+from docling_core.transforms.chunker import HierarchicalChunker, BaseChunk
+from docling_core.transforms.serializer.base import BaseSerializerProvider, BaseDocSerializer, SerializationResult
+from docling_core.transforms.serializer.markdown import MarkdownDocSerializer, MarkdownTableSerializer
+from docling_core.types import DoclingDocument
 from llama_index.core.schema import Document, TextNode, BaseNode, NodeRelationship
 from llama_index.node_parser.docling import DoclingNodeParser
 from llama_index.readers.docling import DoclingReader
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
+from typing_extensions import override
 
-
-from ....exceptions import DocumentParseError
 from .base_reader import BaseReader, ChunksResult
-from .docling import load_chunks
 from .markdown import MdReader
+from ....exceptions import DocumentParseError
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +96,15 @@ class PageTracker:
                 chunk.metadata["page_number"] = chunk_label
 
 
+class MarkdownSerializerProvider(BaseSerializerProvider):
+    """Serializer provider used for chunking purposes."""
+
+    @override
+    def get_serializer(self, doc: DoclingDocument) -> BaseDocSerializer:
+        """Get the associated serializer."""
+        return MarkdownDocSerializer(doc=doc)
+
+
 class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -105,30 +118,39 @@ class PDFReader(BaseReader):
         logger.info(f"{docling_enabled=}")
         try:
             if docling_enabled:
-                logger.debug(f"{file_path=}")
-                reader = DoclingReader(export_type=DoclingReader.ExportType.JSON, md_export_kwargs={"image_placeholder": "", "page_no":1})
-                parser = DoclingNodeParser()
-                docs: list[Document] = reader.load_data(file_path)
-                document = docs[0]
-                sub_nodes: list[BaseNode] = parser.get_nodes_from_documents(docs)
+                document = Document()
                 document.id_ = self.document_id
                 self._add_document_metadata(document, file_path)
                 parent = document.as_related_node_info()
-                for i, chunk in enumerate(sub_nodes):
-                    print(f"{chunk.metadata=}")
-                    page_number = chunk.metadata["doc_items"][0]["prov"][0]["page_no"]
-                    chunk.metadata["page_number"] = page_number
-                    chunk.metadata["file_name"] = document.metadata["file_name"]
-                    chunk.metadata["document_id"] = document.metadata["document_id"]
-                    chunk.metadata["data_source_id"] = document.metadata["data_source_id"]
-                    chunk.metadata["chunk_number"] = i
-                    chunk.relationships.update(
+
+                converted_chunks: List[TextNode] = []
+                logger.debug(f"{file_path=}")
+                docling_doc: ConversionResult = DocumentConverter().convert(file_path)
+                chunky_chunks = HierarchicalChunker(serializer_provider=MarkdownSerializerProvider()).chunk(docling_doc.document)
+                chunky_chunk: BaseChunk
+                serializer = MarkdownDocSerializer(doc=docling_doc.document)
+                for i, chunky_chunk in enumerate(chunky_chunks):
+                    text = ""
+                    page_number: int = 0
+                    for item in chunky_chunk.meta.doc_items:
+                        page_number= item.prov[0].page_no
+                        item_ser: SerializationResult = serializer.serialize(item=item)
+                        text += item_ser.text
+                        # print(f"{item_ser.text=}")
+                    node = TextNode(text=text)
+                    print(f'{chunky_chunk.meta=}')
+                    # page_number = chunky_chunk.meta.prov[0].page_no
+                    # print(f"{chunky_chunk.text=}")
+                    node.metadata["page_number"] = page_number
+                    node.metadata["file_name"] = document.metadata["file_name"]
+                    node.metadata["document_id"] = document.metadata["document_id"]
+                    node.metadata["data_source_id"] = document.metadata["data_source_id"]
+                    node.metadata["chunk_number"] = i
+                    node.metadata["chunk_format"] = "markdown"
+                    node.relationships.update(
                         {NodeRelationship.SOURCE: parent}
                     )
-                converted_chunks: List[TextNode] = []
-                for chunk in sub_nodes:
-                    assert isinstance(chunk, TextNode)
-                    converted_chunks.append(chunk)
+                    converted_chunks.append(node)
 
                 return ChunksResult(converted_chunks)
         except DocumentParseError as e:
