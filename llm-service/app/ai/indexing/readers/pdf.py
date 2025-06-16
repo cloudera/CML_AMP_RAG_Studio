@@ -36,23 +36,18 @@
 #  DATA.
 #
 import logging
-import os
 from pathlib import Path
 from typing import Any, List
 
-from docling.datamodel.document import ConversionResult
-from docling.document_converter import DocumentConverter
-from docling_core.transforms.chunker import HierarchicalChunker, BaseChunk
-from docling_core.transforms.serializer.base import BaseSerializerProvider, BaseDocSerializer, SerializationResult
+from docling_core.transforms.serializer.base import BaseSerializerProvider, BaseDocSerializer
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 from docling_core.types import DoclingDocument
-from llama_index.core.schema import Document, TextNode, NodeRelationship
+from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 from typing_extensions import override
 
 from .base_reader import BaseReader, ChunksResult
 from .markdown import MdReader
-from ....exceptions import DocumentParseError
 
 logger = logging.getLogger(__name__)
 
@@ -110,46 +105,6 @@ class PDFReader(BaseReader):
         self.markdown_reader = MdReader(*args, **kwargs)
 
     def load_chunks(self, file_path: Path) -> ChunksResult:
-        docling_enabled: bool = (
-            os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
-        )
-        logger.info(f"{docling_enabled=}")
-        try:
-            if docling_enabled:
-                document = Document()
-                document.id_ = self.document_id
-                self._add_document_metadata(document, file_path)
-                parent = document.as_related_node_info()
-
-                converted_chunks: List[TextNode] = []
-                logger.debug(f"{file_path=}")
-                docling_doc: ConversionResult = DocumentConverter().convert(file_path)
-                chunky_chunks = HierarchicalChunker(serializer_provider=MarkdownSerializerProvider()).chunk(docling_doc.document)
-                chunky_chunk: BaseChunk
-                serializer = MarkdownDocSerializer(doc=docling_doc.document)
-                for i, chunky_chunk in enumerate(chunky_chunks):
-                    text = ""
-                    page_number: int = 0
-                    for item in chunky_chunk.meta.doc_items:
-                        page_number= item.prov[0].page_no
-                        item_ser: SerializationResult = serializer.serialize(item=item)
-                        text += item_ser.text
-                    node = TextNode(text=text)
-                    node.metadata["page_number"] = page_number
-                    node.metadata["file_name"] = document.metadata["file_name"]
-                    node.metadata["document_id"] = document.metadata["document_id"]
-                    node.metadata["data_source_id"] = document.metadata["data_source_id"]
-                    node.metadata["chunk_number"] = i
-                    node.metadata["chunk_format"] = "markdown"
-                    node.relationships.update(
-                        {NodeRelationship.SOURCE: parent}
-                    )
-                    converted_chunks.append(node)
-
-                return ChunksResult(converted_chunks)
-        except DocumentParseError as e:
-            logger.warning(f"Failed to parse document with docling: {e}")
-
         ret = ChunksResult()
 
         pages: list[Document] = self.inner.load_data(file_path)
