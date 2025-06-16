@@ -44,11 +44,9 @@ from docling.datamodel.document import ConversionResult
 from docling.document_converter import DocumentConverter
 from docling_core.transforms.chunker import HierarchicalChunker, BaseChunk
 from docling_core.transforms.serializer.base import BaseSerializerProvider, BaseDocSerializer, SerializationResult
-from docling_core.transforms.serializer.markdown import MarkdownDocSerializer, MarkdownTableSerializer
+from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 from docling_core.types import DoclingDocument
-from llama_index.core.schema import Document, TextNode, BaseNode, NodeRelationship
-from llama_index.node_parser.docling import DoclingNodeParser
-from llama_index.readers.docling import DoclingReader
+from llama_index.core.schema import Document, TextNode, NodeRelationship
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 from typing_extensions import override
 
@@ -136,11 +134,7 @@ class PDFReader(BaseReader):
                         page_number= item.prov[0].page_no
                         item_ser: SerializationResult = serializer.serialize(item=item)
                         text += item_ser.text
-                        # print(f"{item_ser.text=}")
                     node = TextNode(text=text)
-                    print(f'{chunky_chunk.meta=}')
-                    # page_number = chunky_chunk.meta.prov[0].page_no
-                    # print(f"{chunky_chunk.text=}")
                     node.metadata["page_number"] = page_number
                     node.metadata["file_name"] = document.metadata["file_name"]
                     node.metadata["document_id"] = document.metadata["document_id"]
