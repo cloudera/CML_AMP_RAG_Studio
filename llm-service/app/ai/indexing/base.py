@@ -34,6 +34,11 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".png": ImagesReader,
 }
 
+DOCLING_READERS: Dict[str, Type[BaseReader]] = {
+    ".pdf": DoclingReader,
+    ".html": DoclingReader,
+}
+
 
 @dataclass
 class NotSupportedFileExtensionError(Exception):
@@ -55,7 +60,7 @@ class BaseTextIndexer:
 
     def _get_reader_class(self, file_path: Path) -> Type[BaseReader]:
         file_extension = os.path.splitext(file_path)[1]
-        if settings.advanced_pdf_parsing:
+        if settings.advanced_pdf_parsing and DOCLING_READERS.get(file_extension):
             try:
                 reader_cls = DoclingReader
             except Exception as e:
@@ -70,21 +75,3 @@ class BaseTextIndexer:
             raise NotSupportedFileExtensionError(file_extension)
 
         return reader_cls
-
-
-def get_reader_class(file_path: Path) -> Type[BaseReader]:
-    file_extension = os.path.splitext(file_path)[1]
-    if settings.advanced_pdf_parsing:
-        try:
-            reader_cls = DoclingReader
-        except Exception as e:
-            logger.error(
-                "Error initializing DoclingReader, falling back to default readers", e
-            )
-            reader_cls = READERS.get(file_extension)
-    else:
-        reader_cls = READERS.get(file_extension)
-    if not reader_cls:
-        raise NotSupportedFileExtensionError(file_extension)
-
-    return reader_cls
