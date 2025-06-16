@@ -40,8 +40,12 @@ import logging
 from pathlib import Path
 from typing import Any, List
 
-from llama_index.core.schema import Document, TextNode
+from llama_index.core.node_parser import MarkdownNodeParser
+from llama_index.core.schema import Document, TextNode, BaseNode, NodeRelationship
+from llama_index.node_parser.docling import DoclingNodeParser
+from llama_index.readers.docling import DoclingReader
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
+
 
 from ....exceptions import DocumentParseError
 from .base_reader import BaseReader, ChunksResult
@@ -102,10 +106,32 @@ class PDFReader(BaseReader):
         try:
             if docling_enabled:
                 logger.debug(f"{file_path=}")
-                chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
-                if chunks:
-                    # todo: handle pii & secrets
-                    return ChunksResult(chunks=chunks)
+                reader = DoclingReader(export_type=DoclingReader.ExportType.JSON, md_export_kwargs={"image_placeholder": "", "page_no":1})
+                parser = DoclingNodeParser()
+                docs: list[Document] = reader.load_data(file_path)
+                document = docs[0]
+                sub_nodes: list[BaseNode] = parser.get_nodes_from_documents(docs)
+                document.id_ = self.document_id
+                self._add_document_metadata(document, file_path)
+                parent = document.as_related_node_info()
+                for i, chunk in enumerate(sub_nodes):
+                    print(f"{chunk.metadata=}")
+                    page_number = chunk.metadata["doc_items"][0]["prov"][0]["page_no"]
+                    chunk.metadata["page_number"] = page_number
+                    chunk.metadata["file_name"] = document.metadata["file_name"]
+                    chunk.metadata["document_id"] = document.metadata["document_id"]
+                    chunk.metadata["data_source_id"] = document.metadata["data_source_id"]
+                    chunk.metadata["chunk_number"] = i
+                    chunk.relationships.update(
+                        {NodeRelationship.SOURCE: parent}
+                    )
+                parent_node = TextNode(parent)
+                converted_chunks: List[TextNode] = [parent_node]
+                for chunk in sub_nodes:
+                    assert isinstance(chunk, TextNode)
+                    converted_chunks.append(chunk)
+
+                return ChunksResult(converted_chunks)
         except DocumentParseError as e:
             logger.warning(f"Failed to parse document with docling: {e}")
 

@@ -2230,6 +2230,19 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-node-parser-docling"
+version = "0.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docling-core" },
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/20/db/16f07c8af509f57ce787a2d2800254a78d43cf0aad7c1bb6a514e6dc687b/llama_index_node_parser_docling-0.3.2.tar.gz", hash = "sha256:380fe944bce73cecd3ab30427af0e824829f89254392ee5cbfdc618165f2a27d", size = 4508 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/cb/274af0ce9105941290ec21ddb0ed84d4dd00f8c7d3042dd20663fb368599/llama_index_node_parser_docling-0.3.2-py3-none-any.whl", hash = "sha256:2079272a9bcb4db950457a4ce44a0c74949fc0d0815877794454d8854df86173", size = 4054 },
+]
+
+[[package]]
 name = "llama-index-postprocessor-bedrock-rerank"
 version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2252,6 +2265,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/5a/19/5ba8ea06d28e17c4a69c64518ebf69e95c83245406207f21a6eeed64428c/llama_index_postprocessor_nvidia_rerank-0.4.3.tar.gz", hash = "sha256:1490769bcc18f9e75f5ea5e617b7f54b34c0dc83d3cea1191995595f3a8e5cfc", size = 9884 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/df/6a/edbd7cc330433d74866f41ffaacf577dcc184b40781dece9c422a5d8cf31/llama_index_postprocessor_nvidia_rerank-0.4.3-py3-none-any.whl", hash = "sha256:db057109f5a1dd864e20ed12bde13c2c5f953e595d87c7072bd912307da1cac3", size = 9490 },
+]
+
+[[package]]
+name = "llama-index-readers-docling"
+version = "0.3.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docling" },
+    { name = "docling-core" },
+    { name = "llama-index-core" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9c/eb/04bda6376819207df2337723d1ef1ee6eeb73f8ad05b9f5f63cc339d52cf/llama_index_readers_docling-0.3.3.tar.gz", hash = "sha256:e61cf60d1beda2ebd7cee077f1c9835cd1154fa49660985c68e26302dc92d741", size = 4824 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/e4/29e545e082a8268804c231933af909277360dbabcaf4ab30481a825d5225/llama_index_readers_docling-0.3.3-py3-none-any.whl", hash = "sha256:4e1341999ee7707d8e1d9d50e9ff8d558f4fa357dd96c177598369f845061d49", size = 4387 },
 ]
 
 [[package]]
@@ -2346,8 +2374,10 @@ dependencies = [
     { name = "llama-index-llms-bedrock-converse" },
     { name = "llama-index-llms-nvidia" },
     { name = "llama-index-llms-openai" },
+    { name = "llama-index-node-parser-docling" },
     { name = "llama-index-postprocessor-bedrock-rerank" },
     { name = "llama-index-postprocessor-nvidia-rerank" },
+    { name = "llama-index-readers-docling" },
     { name = "llama-index-readers-file" },
     { name = "llama-index-storage-kvstore-s3" },
     { name = "llama-index-tools-mcp" },
@@ -2402,8 +2432,10 @@ requires-dist = [
     { name = "llama-index-llms-bedrock-converse", specifier = ">=0.4.10" },
     { name = "llama-index-llms-nvidia", specifier = ">=0.3.2" },
     { name = "llama-index-llms-openai", specifier = ">=0.1.31" },
+    { name = "llama-index-node-parser-docling", specifier = ">=0.3.2" },
     { name = "llama-index-postprocessor-bedrock-rerank", specifier = ">=0.3.1" },
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
+    { name = "llama-index-readers-docling", specifier = ">=0.3.3" },
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
     { name = "llama-index-storage-kvstore-s3", specifier = ">=0.3.0" },
     { name = "llama-index-tools-mcp", specifier = ">=0.2.5" },
