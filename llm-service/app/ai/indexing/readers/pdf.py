@@ -125,8 +125,7 @@ class PDFReader(BaseReader):
                     chunk.relationships.update(
                         {NodeRelationship.SOURCE: parent}
                     )
-                parent_node = TextNode(parent)
-                converted_chunks: List[TextNode] = [parent_node]
+                converted_chunks: List[TextNode] = []
                 for chunk in sub_nodes:
                     assert isinstance(chunk, TextNode)
                     converted_chunks.append(chunk)
