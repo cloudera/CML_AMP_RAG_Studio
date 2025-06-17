@@ -105,9 +105,10 @@ def streaming_query(
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response
+        detail = json_error["Error"].get("Message", None)
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["StatusReason"],
+            detail=detail if detail else json_error["StatusReason"],
         ) from error
 
     return chat_response
@@ -211,9 +212,10 @@ def query(
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response
+        detail = json_error["Error"].get("Message", None)
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["StatusReason"],
+            detail=detail if detail else json_error["StatusReason"],
         ) from error
 
 
