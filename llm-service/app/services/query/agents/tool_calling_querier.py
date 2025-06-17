@@ -208,7 +208,7 @@ def _run_streamer(
                     raw="",
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="Agent_setup",
+                            type="agent_setup",
                             name=event.current_agent_name,
                             data=data,
                         ),
@@ -229,7 +229,7 @@ def _run_streamer(
                     raw="",
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="Agent_input",
+                            type="agent_input",
                             name=event.current_agent_name,
                             data=data,
                         ),
@@ -276,7 +276,7 @@ def _run_streamer(
                     raw="",
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="Tool_result",
+                            type="tool_result",
                             name=event.tool_name,
                             data=data,
                         ),
@@ -301,7 +301,7 @@ def _run_streamer(
                     raw=event.raw,
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="Agent_response",
+                            type="agent_response",
                             name=event.current_agent_name,
                             data=data,
                         ),
@@ -320,11 +320,11 @@ def _run_streamer(
                             role=MessageRole.TOOL,
                             content=event.response,
                         ),
-                        delta="",
+                        delta=event.delta,
                         raw=event.raw,
                         additional_kwargs={
                             "chat_event": ChatEvent(
-                                type="Agent_response",
+                                type="agent_response",
                                 name=event.current_agent_name,
                             ),
                         },
@@ -334,7 +334,7 @@ def _run_streamer(
                     yield ChatResponse(
                         message=ChatMessage(
                             role=MessageRole.ASSISTANT,
-                            content=event.response,
+                            content="\n\n" + str(event.response),
                         ),
                         delta=event.delta,
                         raw=event.raw,
