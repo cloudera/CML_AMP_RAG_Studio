@@ -1,9 +1,8 @@
-import pytest
-from typing import List
 import random
 
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import TextNode
+
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.models import LLM, Embedding
 
@@ -68,7 +67,7 @@ def test_large_input() -> None:
     sampled_nodes = indexer.sample_nodes(nodes)
 
     # Verify that we get at most 1000 nodes
-    assert len(sampled_nodes) <= 1000
+    assert len(sampled_nodes) == 1000
 
     # Verify that we get contiguous blocks
     # This is hard to test directly since the blocks are randomly selected
@@ -102,7 +101,7 @@ def test_contiguous_blocks() -> None:
     indices.sort()
 
     # Check that we have contiguous blocks of 20
-    # We should have gaps between blocks, but within each block, 
+    # We should have gaps between blocks, but within each block,
     # indices should be consecutive
     # Note: Two blocks might be contiguous (e.g., one block ends at index 19 and the next starts at index 20)
     # This is valid, but we need to ensure each block has at most 20 nodes
@@ -110,7 +109,7 @@ def test_contiguous_blocks() -> None:
     current_block = [indices[0]]
 
     for i in range(1, len(indices)):
-        if indices[i] == indices[i-1] + 1:
+        if indices[i] == indices[i - 1] + 1:
             # This is part of the current block
             current_block.append(indices[i])
 

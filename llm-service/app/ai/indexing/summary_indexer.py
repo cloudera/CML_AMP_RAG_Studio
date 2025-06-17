@@ -363,9 +363,11 @@ class SummaryIndexer(BaseTextIndexer):
         global_summary_store.insert_nodes(new_nodes)
         global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
 
-    def sample_nodes(self, nodes: List[TextNode], max_number_to_sample=1000, sample_block_size=20) -> List[TextNode]:
+    def sample_nodes(
+        self, nodes: List[TextNode], max_number_to_sample=1000, sample_block_size=20
+    ) -> List[TextNode]:
         """
-        Sample 1000 nodes in contiguous blocks of 20 if we have more than 1000 nodes.
+        Sample max_number_to_sample in contiguous blocks of sample_block_size if we have more than max_number_to_sample nodes.
         This sampling helps reduce processing time for very large documents while maintaining context coherence.
 
         Args:
@@ -400,7 +402,9 @@ class SummaryIndexer(BaseTextIndexer):
 
             # Remove this index and all indices that would create overlapping blocks
             # (i.e., all indices within block_size of the selected index)
-            for i in range(max(0, idx - block_size + 1), min(len(nodes), idx + block_size)):
+            for i in range(
+                max(0, idx - block_size + 1), min(len(nodes), idx + block_size)
+            ):
                 if i in available_indices:
                     available_indices.remove(i)
 
@@ -411,11 +415,14 @@ class SummaryIndexer(BaseTextIndexer):
         # Extract blocks of block_size contiguous nodes
         sampled_nodes = []
         for start_idx in block_start_indices:
-            sampled_nodes.extend(nodes[start_idx:start_idx + block_size])
+            sampled_nodes.extend(nodes[start_idx : start_idx + block_size])
 
         # If we couldn't get enough blocks (if document is not large enough)
         # but still larger than 1000, take the first 1000
-        if len(sampled_nodes) < max_number_to_sample and len(nodes) >= max_number_to_sample:
+        if (
+            len(sampled_nodes) < max_number_to_sample
+            and len(nodes) >= max_number_to_sample
+        ):
             return nodes[:max_number_to_sample]
         else:
             return sampled_nodes
