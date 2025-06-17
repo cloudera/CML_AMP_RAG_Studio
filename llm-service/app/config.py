@@ -102,6 +102,10 @@ class _Settings:
         return int(os.environ.get("QDRANT_PORT", "6333"))
 
     @property
+    def advanced_pdf_parsing(self) -> bool:
+        return os.environ.get("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
+
+    @property
     def vector_db_provider(self) -> Optional[str]:
         return os.environ.get("VECTOR_DB_PROVIDER")
 

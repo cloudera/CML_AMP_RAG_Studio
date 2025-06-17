@@ -35,17 +35,18 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import os
 import logging
 from pathlib import Path
 from typing import Any, List
 
+from docling_core.transforms.serializer.base import BaseSerializerProvider, BaseDocSerializer
+from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
+from docling_core.types.doc.document import DoclingDocument
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
+from typing_extensions import override
 
-from ....exceptions import DocumentParseError
 from .base_reader import BaseReader, ChunksResult
-from .docling import load_chunks
 from .markdown import MdReader
 
 logger = logging.getLogger(__name__)
@@ -88,6 +89,15 @@ class PageTracker:
                 chunk.metadata["page_number"] = chunk_label
 
 
+class MarkdownSerializerProvider(BaseSerializerProvider):
+    """Serializer provider used for chunking purposes."""
+
+    @override
+    def get_serializer(self, doc: DoclingDocument) -> BaseDocSerializer:
+        """Get the associated serializer."""
+        return MarkdownDocSerializer(doc=doc)
+
+
 class PDFReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -95,20 +105,6 @@ class PDFReader(BaseReader):
         self.markdown_reader = MdReader(*args, **kwargs)
 
     def load_chunks(self, file_path: Path) -> ChunksResult:
-        docling_enabled: bool = (
-            os.getenv("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
-        )
-        logger.info(f"{docling_enabled=}")
-        try:
-            if docling_enabled:
-                logger.debug(f"{file_path=}")
-                chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
-                if chunks:
-                    # todo: handle pii & secrets
-                    return ChunksResult(chunks=chunks)
-        except DocumentParseError as e:
-            logger.warning(f"Failed to parse document with docling: {e}")
-
         ret = ChunksResult()
 
         pages: list[Document] = self.inner.load_data(file_path)

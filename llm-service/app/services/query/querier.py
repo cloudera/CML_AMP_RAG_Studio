@@ -178,6 +178,7 @@ def query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
+    should_condense_question: bool = True,
 ) -> tuple[AgentChatResponse, str | None]:
     llm = models.LLM.get(model_name=configuration.model_name)
     retriever = build_retriever(configuration, session.data_source_ids, llm)
@@ -197,9 +198,11 @@ def query(
         )
     )
 
-    condensed_question: str = chat_engine.condense_question(
-        chat_messages, query_str
-    ).strip()
+    condensed_question: str | None = None
+    if should_condense_question:
+        condensed_question = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
 
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
