@@ -155,7 +155,7 @@ def test_fallback_behavior() -> None:
     # This simulates the case where we can't get 50 blocks
     original_sample = random.sample
 
-    def mock_sample(population, k):
+    def mock_sample(population: list[int], k: int) -> list[int]:
         # Return only 10 indices, which would give us 200 nodes (10 blocks of 20)
         return original_sample(population, min(k, 10))
 

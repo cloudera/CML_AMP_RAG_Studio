@@ -60,6 +60,7 @@ class BaseTextIndexer:
 
     def _get_reader_class(self, file_path: Path) -> Type[BaseReader]:
         file_extension = os.path.splitext(file_path)[1]
+        reader_cls: Optional[Type[BaseReader]] = None
         if settings.advanced_pdf_parsing and DOCLING_READERS.get(file_extension):
             try:
                 reader_cls = DoclingReader

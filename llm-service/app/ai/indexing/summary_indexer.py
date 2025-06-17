@@ -364,7 +364,10 @@ class SummaryIndexer(BaseTextIndexer):
         global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
 
     def sample_nodes(
-        self, nodes: List[TextNode], max_number_to_sample=1000, sample_block_size=20
+        self,
+        nodes: List[TextNode],
+        max_number_to_sample: int = 1000,
+        sample_block_size: int = 20,
     ) -> List[TextNode]:
         """
         Sample max_number_to_sample in contiguous blocks of sample_block_size if we have more than max_number_to_sample nodes.
@@ -390,7 +393,7 @@ class SummaryIndexer(BaseTextIndexer):
         # Randomly select starting indices for blocks, ensuring they're at least block_size apart
         # to avoid overlapping blocks
         available_indices = list(range(max_block_start_index + 1))
-        block_start_indices = []
+        block_start_indices: list[int] = []
 
         # Try to get num_blocks non-overlapping blocks
         while len(block_start_indices) < num_blocks and available_indices:

@@ -42,7 +42,8 @@ from typing import List, Any
 
 from docling.datamodel.document import ConversionResult
 from docling.document_converter import DocumentConverter
-from docling_core.transforms.chunker import HierarchicalChunker, BaseChunk
+from docling_core.transforms.chunker.hierarchical_chunker import HierarchicalChunker
+from docling_core.transforms.chunker.base import BaseChunk
 from docling_core.transforms.serializer.base import SerializationResult
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 from llama_index.core.schema import Document, TextNode, NodeRelationship
@@ -72,6 +73,9 @@ class DoclingReader(BaseReader):
         for i, chunky_chunk in enumerate(chunky_chunks):
             text = ""
             page_number: int = 0
+            if not hasattr(chunky_chunk.meta, "doc_items"):
+                logger.warning(f"Chunk {i} is empty, skipping")
+                continue
             for item in chunky_chunk.meta.doc_items:
                 page_number= item.prov[0].page_no if item.prov else None
                 item_ser: SerializationResult = serializer.serialize(item=item)

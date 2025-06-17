@@ -41,7 +41,7 @@ from typing import Any, List
 
 from docling_core.transforms.serializer.base import BaseSerializerProvider, BaseDocSerializer
 from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
-from docling_core.types import DoclingDocument
+from docling_core.types.doc.document import DoclingDocument
 from llama_index.core.schema import Document, TextNode
 from llama_index.readers.file import PDFReader as LlamaIndexPDFReader
 from typing_extensions import override
