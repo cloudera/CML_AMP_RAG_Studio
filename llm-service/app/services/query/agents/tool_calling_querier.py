@@ -36,6 +36,7 @@
 #  DATA.
 #
 import asyncio
+import datetime
 import logging
 import os
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
@@ -55,10 +56,11 @@ from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool
+from llama_index.core.workflow import StopEvent
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
-from app.services.query.agents.agent_tools.date import DateTool
+from app.services.models.providers import BedrockModelProvider
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
@@ -94,6 +96,8 @@ def should_use_retrieval(
 
 
 DEFAULT_AGENT_PROMPT = """\
+Today's date is {date} and the current time is {time}. \
+
 You are an expert agent that can answer questions with the help of tools. \
 Go through the tools available and use them appropriately to answer the \
 user's question. If you do not know the answer to a question, you \
@@ -159,7 +163,7 @@ def stream_chat(
                 continue
 
     # Use the existing chat engine with the enhanced query for streaming response
-    tools: list[BaseTool] = [DateTool()]
+    tools: list[BaseTool] = []
     if use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
             retriever=chat_engine.retriever,
@@ -184,7 +188,10 @@ def _run_streamer(
     agent = FunctionAgent(
         tools=cast(list[BaseTool | Callable[[], Any]], tools),
         llm=llm,
-        system_prompt=DEFAULT_AGENT_PROMPT,
+        system_prompt=DEFAULT_AGENT_PROMPT.format(
+            date=datetime.datetime.now().strftime("%Y-%m-%d"),
+            time=datetime.datetime.now().strftime("%H:%M:%S"),
+        ),
     )
 
     source_nodes = []
@@ -194,7 +201,7 @@ def _run_streamer(
 
         async for event in handler.stream_events():
             if isinstance(event, AgentSetup):
-                data = f"Agent {event.current_agent_name} setup with input: {event.input[-1].content!s}"
+                data = f"{event.current_agent_name} setup with input: {event.input[-1].content!s}"
                 if verbose:
                     logger.info("=== Agent Setup ===")
                     logger.info(data)
@@ -215,7 +222,7 @@ def _run_streamer(
                     },
                 )
             elif isinstance(event, AgentInput):
-                data = f"Agent {event.current_agent_name} started with input: {event.input[-1].content!s}"
+                data = f"{event.current_agent_name} started with input: {event.input[-1].content!s}"
                 if verbose:
                     logger.info("=== Agent Input ===")
                     logger.info(data)
@@ -283,7 +290,7 @@ def _run_streamer(
                     },
                 )
             elif isinstance(event, AgentOutput):
-                data = f"Agent {event.current_agent_name} response: {event.response!s}"
+                data = f"{event.current_agent_name} response: {event.response!s}"
                 if verbose:
                     logger.info("=== LLM Response ===")
                     logger.info(
@@ -309,38 +316,34 @@ def _run_streamer(
                 )
             elif isinstance(event, AgentStream):
                 if len(event.tool_calls) > 0:
-                    if verbose:
-                        logger.info("=== Agent Stream with Tool Call ===")
-                        logger.info(
-                            f"Agent {event.current_agent_name} response: {event.response!s} and tool calls: {event.tool_calls!s}"
-                        )
-                        logger.info("========================")
-                    yield ChatResponse(
-                        message=ChatMessage(
-                            role=MessageRole.TOOL,
-                            content=str(event.response),
-                        ),
-                        delta=event.delta,
-                        raw=event.raw,
-                        additional_kwargs={
-                            "chat_event": ChatEvent(
-                                type="agent_response",
-                                name=event.current_agent_name,
-                            ),
-                        },
-                    )
+                    continue
                 else:
+                    delta = event.delta or ""
+
+                    # if delta is empty and response is empty,
+                    # it is a start to a tool call stream
+                    if BedrockModelProvider.is_enabled():
+                        delta = event.delta or ""
+                        if "contentBlockStart" in event.raw:
+                            # check the contentBlockIndex in the raw response
+                            if event.raw["contentBlockStart"]["contentBlockIndex"]:
+                                # If contentBlockIndex is > 0, prepend a newline to the delta
+                                delta = "\n\n" + delta
+
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
                         message=ChatMessage(
                             role=MessageRole.ASSISTANT,
                             content=event.response,
                         ),
-                        delta=event.delta,
+                        delta=delta,
                         raw=event.raw,
                     )
+            elif isinstance(event, StopEvent):
+                pass
             else:
                 logger.info(f"Unhandled event of type: {type(event)}: {event}")
+
         await handler
         if e := handler.exception():
             raise e
