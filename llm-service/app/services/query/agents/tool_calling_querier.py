@@ -79,6 +79,11 @@ logger = logging.getLogger(__name__)
 
 poison_pill = "poison_pill"
 
+NON_SYSTEM_MESSAGE_MODELS = {
+    "mistral.mistral-7b-instruct-v0:2",
+    "mistral.mixtral-8x7b-instruct-v0:1",
+}
+
 
 def should_use_retrieval(
     data_source_ids: list[int],
@@ -185,14 +190,7 @@ def _run_streamer(
     tools: list[BaseTool],
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
-    agent = FunctionAgent(
-        tools=cast(list[BaseTool | Callable[[], Any]], tools),
-        llm=llm,
-        system_prompt=DEFAULT_AGENT_PROMPT.format(
-            date=datetime.datetime.now().strftime("%Y-%m-%d"),
-            time=datetime.datetime.now().strftime("%H:%M:%S"),
-        ),
-    )
+    agent, enhanced_query = build_function_agent(enhanced_query, llm, tools)
 
     source_nodes = []
 
@@ -369,3 +367,34 @@ def _run_streamer(
                 loop.close()
 
     return gen(), source_nodes
+
+
+def build_function_agent(
+    enhanced_query: str, llm: FunctionCallingLLM, tools: list[BaseTool]
+) -> tuple[FunctionAgent, str]:
+    if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
+        agent = FunctionAgent(
+            tools=cast(list[BaseTool | Callable[[], Any]], tools),
+            llm=llm,
+        )
+        enhanced_query = (
+            "ROLE DESCRIPTION =========================================\n"
+            + DEFAULT_AGENT_PROMPT.format(
+                date=datetime.datetime.now().strftime("%Y-%m-%d"),
+                time=datetime.datetime.now().strftime("%H:%M:%S"),
+            )
+            + "=========================================================\n"
+            "USER QUERY ==============================================\n"
+            + enhanced_query
+        )
+    else:
+        agent = FunctionAgent(
+            tools=cast(list[BaseTool | Callable[[], Any]], tools),
+            llm=llm,
+            system_prompt=DEFAULT_AGENT_PROMPT.format(
+                date=datetime.datetime.now().strftime("%Y-%m-%d"),
+                time=datetime.datetime.now().strftime("%H:%M:%S"),
+            ),
+        )
+
+    return agent, enhanced_query
