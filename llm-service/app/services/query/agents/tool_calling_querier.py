@@ -312,13 +312,13 @@ def _run_streamer(
                     if verbose:
                         logger.info("=== Agent Stream with Tool Call ===")
                         logger.info(
-                            f"Agent {event.current_agent_name} response: {event.response!s}"
+                            f"Agent {event.current_agent_name} response: {event.response!s} and tool calls: {event.tool_calls!s}"
                         )
                         logger.info("========================")
                     yield ChatResponse(
                         message=ChatMessage(
                             role=MessageRole.TOOL,
-                            content=event.response,
+                            content=str(event.response),
                         ),
                         delta=event.delta,
                         raw=event.raw,
@@ -329,12 +329,12 @@ def _run_streamer(
                             ),
                         },
                     )
-                elif event.response:
+                else:
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
                         message=ChatMessage(
                             role=MessageRole.ASSISTANT,
-                            content="\n\n" + str(event.response),
+                            content=event.response,
                         ),
                         delta=event.delta,
                         raw=event.raw,
