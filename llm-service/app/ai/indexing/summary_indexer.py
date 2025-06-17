@@ -279,6 +279,7 @@ class SummaryIndexer(BaseTextIndexer):
         nodes: List[TextNode] = chunks.chunks
 
         nodes = self.sample_nodes(nodes, 1000, 20)
+        print(f"{len(nodes)=}")
         logger.debug(f"Using {len(nodes)} nodes from {len(chunks.chunks)} total nodes")
 
         if not nodes:
@@ -405,6 +406,7 @@ class SummaryIndexer(BaseTextIndexer):
 
         # Sort the indices to maintain order
         block_start_indices.sort()
+        print(f"{block_start_indices=}")
 
         # Extract blocks of block_size contiguous nodes
         sampled_nodes = []
