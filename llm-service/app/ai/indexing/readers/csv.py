@@ -76,10 +76,11 @@ class CSVReader(BaseReader):
         if secrets is not None:
             return [ChunksResult(secret_types=secrets)]
 
-        pii_found = False
+        ret = ChunksResult()
+
         anonymized_text = self._anonymize_pii(content)
         if anonymized_text is not None:
-            pii_found = True
+            ret.pii_found = True
             content = anonymized_text
 
         document = Document(text=content)
@@ -92,15 +93,8 @@ class CSVReader(BaseReader):
             rows = local_splitter.get_nodes_from_documents([document])
         except Exception as e:
             logger.error(f"Error processing CSV file {file_path}: {e}")
-            return [ChunksResult()]
+            return [ret]
 
-        batch_size = 1000
-
-        chunk_results = []
-
-        batch_result = ChunksResult()
-        batch_result.pii_found = pii_found
-        batch: List[TextNode] = []
         for i, row in enumerate(rows):
             row.metadata["file_name"] = document.metadata["file_name"]
             row.metadata["document_id"] = document.metadata["document_id"]
@@ -108,16 +102,11 @@ class CSVReader(BaseReader):
             row.metadata["chunk_number"] = i
             row.metadata["row_number"] = i + 1
             row.metadata["chunk_format"] = "json"
+
+        converted_rows: List[TextNode] = []
+        for row in rows:
             assert isinstance(row, TextNode)
-            batch.append(row)
-            if i > 0 and i % batch_size == 0:
-                batch_result.chunks = batch
-                chunk_results.append(batch_result)
-                batch_result = ChunksResult()
-                batch_result.pii_found = pii_found
-                batch = []
+            converted_rows.append(row)
 
-        batch_result.chunks = batch
-        chunk_results.append(batch_result)
-
-        return chunk_results
+        ret.chunks = converted_rows
+        return [ret]
