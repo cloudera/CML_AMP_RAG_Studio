@@ -252,7 +252,11 @@ class DataSourceController:
             try:
                 indexer.index_file(file_path, doc_id)
                 summary = indexer.get_summary(doc_id)
-                assert summary is not None
+                if summary is None:
+                    raise HTTPException(
+                        status_code=HTTPStatus.BAD_REQUEST,
+                        detail="No content to summarize.",
+                    )
                 return summary
             except NotSupportedFileExtensionError as e:
                 raise HTTPException(

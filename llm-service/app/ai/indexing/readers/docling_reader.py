@@ -88,5 +88,4 @@ class DoclingReader(BaseReader):
                 {NodeRelationship.SOURCE: parent}
             )
             converted_chunks.append(node)
-
         return ChunksResult(converted_chunks)
