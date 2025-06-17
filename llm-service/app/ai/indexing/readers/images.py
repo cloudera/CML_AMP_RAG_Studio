@@ -51,8 +51,8 @@ class ImagesReader(BaseReader):
         super().__init__(*args, **kwargs)
         self.markdown_reader = MdReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> ChunksResult:
+    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
         chunks: list[TextNode] = load_chunks(self.markdown_reader, file_path)
         # todo: what should we do if there are no chunks?
         # todo: handle PII & secrets
-        return ChunksResult(chunks=chunks)
+        return [ChunksResult(chunks=chunks)]

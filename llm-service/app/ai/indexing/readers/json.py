@@ -48,13 +48,13 @@ logger = logging.getLogger(__name__)
 
 
 class JSONReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> ChunksResult:
+    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
         with open(file_path, "r") as f:
             content = json.load(f)
 
         secrets = self._block_secrets([content])
         if secrets is not None:
-            return ChunksResult(secret_types=secrets)
+            return [ChunksResult(secret_types=secrets)]
 
         ret = ChunksResult()
         anonymized_text = self._anonymize_pii(content)
@@ -66,9 +66,9 @@ class JSONReader(BaseReader):
             document = Document(text=json.dumps(content, sort_keys=True))
         except Exception as e:
             logger.error(f"Error parsing JSON file {file_path}: {e}")
-            return ret
+            return [ret]
 
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
         ret.chunks = self._chunks_in_document(document)
-        return ret
+        return [ret]

@@ -87,31 +87,31 @@ class EmbeddingIndexer(BaseTextIndexer):
 
         logger.debug(f"Parsing file: {file_path}")
 
-        chunks: ChunksResult = reader.load_chunks(file_path)
+        chunks: list[ChunksResult] = reader.load_chunks(file_path)
+        for chunk in chunks:
+            nodes: list[TextNode] = chunk.chunks
+            if not nodes:
+                logger.warning(f"No chunks found in file: {file_path}")
+                return
 
-        nodes: list[TextNode] = chunks.chunks
-        if not nodes:
-            logger.warning(f"No chunks found in file: {file_path}")
-            return
+            logger.debug(f"Embedding {len(nodes)} chunks")
 
-        logger.debug(f"Embedding {len(nodes)} chunks")
+            chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
-        chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
+            acc = 0
+            for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
+                acc += len(chunk_batch)
+                logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
 
-        acc = 0
-        for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
-            acc += len(chunk_batch)
-            logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
+                # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
+                # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because
+                # we're capturing "text".
+                converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
 
-            # We have to explicitly convert here even though the types are compatible (TextNode inherits from BaseNode)
-            # because the "add" annotation uses List instead of Sequence. We need to use TextNode explicitly because
-            # we're capturing "text".
-            converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
+                chunks_vector_store = self.chunks_vector_store.llama_vector_store()
+                chunks_vector_store.add(converted_chunks)
 
-            chunks_vector_store = self.chunks_vector_store.llama_vector_store()
-            chunks_vector_store.add(converted_chunks)
-
-        logger.debug(f"Indexing file: {file_path} completed")
+            logger.debug(f"Indexing file: {file_path} completed")
 
     def _compute_embeddings(
         self, chunks: List[TextNode]
