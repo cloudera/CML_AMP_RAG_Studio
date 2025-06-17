@@ -274,23 +274,22 @@ class SummaryIndexer(BaseTextIndexer):
 
         logger.debug(f"Parsing file: {file_path}")
 
-        chunks: list[ChunksResult] = reader.load_chunks(file_path)
-        for chunk in chunks:
-            nodes: List[TextNode] = chunk.chunks
+        chunks: ChunksResult = reader.load_chunks(file_path)
+        nodes: List[TextNode] = chunks.chunks
 
-            if not nodes:
-                logger.warning(f"No chunks found for file {file_path}")
-                return
+        if not nodes:
+            logger.warning(f"No chunks found for file {file_path}")
+            return
 
-            with _write_lock:
-                persist_dir = self.__persist_dir()
-                summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
-                summary_store.insert_nodes(nodes)
-                summary_store.storage_context.persist(persist_dir=persist_dir)
+        with _write_lock:
+            persist_dir = self.__persist_dir()
+            summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
+            summary_store.insert_nodes(nodes)
+            summary_store.storage_context.persist(persist_dir=persist_dir)
 
-                self.__update_global_summary_store(summary_store, added_node_id=document_id)
+            self.__update_global_summary_store(summary_store, added_node_id=document_id)
 
-            logger.debug(f"Summary for file {file_path} created")
+        logger.debug(f"Summary for file {file_path} created")
 
     def __update_global_summary_store(
         self,

@@ -104,7 +104,7 @@ class PDFReader(BaseReader):
         self.inner = LlamaIndexPDFReader(return_full_document=False)
         self.markdown_reader = MdReader(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         ret = ChunksResult()
 
         pages: list[Document] = self.inner.load_data(file_path)
@@ -115,7 +115,7 @@ class PDFReader(BaseReader):
         secrets = self._block_secrets([content])
         if secrets is not None:
             ret.secret_types = secrets
-            return [ret]
+            return ret
 
         anonymized_text = self._anonymize_pii(content)
         if anonymized_text is not None:
@@ -131,4 +131,4 @@ class PDFReader(BaseReader):
         page_counter.populate_chunk_page_numbers(chunks)
 
         ret.chunks = chunks
-        return [ret]
+        return ret

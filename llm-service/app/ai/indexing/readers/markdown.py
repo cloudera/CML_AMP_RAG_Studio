@@ -51,13 +51,13 @@ class MdReader(BaseReader):
         super().__init__(*args, **kwargs)
         self.inner = MarkdownReader()
 
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         with open(file_path, "r") as f:
             content = f.read()
 
         secrets = self._block_secrets([content])
         if secrets is not None:
-            return [ChunksResult(secret_types=secrets)]
+            return ChunksResult(secret_types=secrets)
 
         ret = ChunksResult()
 
@@ -85,4 +85,4 @@ class MdReader(BaseReader):
                 )
                 results.append(text_node)
         ret.chunks = results
-        return [ret]
+        return ret

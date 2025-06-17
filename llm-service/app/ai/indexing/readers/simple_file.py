@@ -44,14 +44,14 @@ from .base_reader import BaseReader, ChunksResult
 
 
 class SimpleFileReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
 
         with open(file_path, "r") as f:
             content = f.read()
 
         secrets = self._block_secrets([content])
         if secrets is not None:
-            return [ChunksResult(secret_types=secrets)]
+            return ChunksResult(secret_types=secrets)
 
         ret = ChunksResult()
         anonymized_text = self._anonymize_pii(content)
@@ -64,4 +64,4 @@ class SimpleFileReader(BaseReader):
         self._add_document_metadata(document, file_path)
 
         ret.chunks = self._chunks_in_document(document)
-        return [ret]
+        return ret

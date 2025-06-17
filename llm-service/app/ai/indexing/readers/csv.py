@@ -66,7 +66,7 @@ class _CsvSplitter(MetadataAwareTextSplitter):
 
 
 class CSVReader(BaseReader):
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
 
         # Create the base document
         with open(file_path, "r") as f:
@@ -74,7 +74,7 @@ class CSVReader(BaseReader):
 
         secrets = self._block_secrets([content])
         if secrets is not None:
-            return [ChunksResult(secret_types=secrets)]
+            return ChunksResult(secret_types=secrets)
 
         ret = ChunksResult()
 
@@ -93,7 +93,7 @@ class CSVReader(BaseReader):
             rows = local_splitter.get_nodes_from_documents([document])
         except Exception as e:
             logger.error(f"Error processing CSV file {file_path}: {e}")
-            return [ret]
+            return ret
 
         for i, row in enumerate(rows):
             row.metadata["file_name"] = document.metadata["file_name"]
@@ -109,4 +109,4 @@ class CSVReader(BaseReader):
             converted_rows.append(row)
 
         ret.chunks = converted_rows
-        return [ret]
+        return ret

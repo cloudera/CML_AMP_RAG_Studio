@@ -50,7 +50,7 @@ class PptxReader(BaseReader):
         super().__init__(*args, **kwargs)
         self.inner = LlamaIndexPptxReader()
 
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
 
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
@@ -61,7 +61,7 @@ class PptxReader(BaseReader):
 
         secrets = self._block_secrets([document_text])
         if secrets is not None:
-            return [ChunksResult(secret_types=secrets)]
+            return ChunksResult(secret_types=secrets)
 
         ret = ChunksResult()
 
@@ -74,4 +74,4 @@ class PptxReader(BaseReader):
 
         self._add_document_metadata(document, file_path)
         ret.chunks = self._chunks_in_document(document)
-        return [ret]
+        return ret

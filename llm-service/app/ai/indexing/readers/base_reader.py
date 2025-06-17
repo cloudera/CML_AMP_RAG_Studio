@@ -42,7 +42,7 @@ class BaseReader(ABC):
         self.config = config or ReaderConfig()
 
     @abstractmethod
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         pass
 
     def _add_document_metadata(self, node: BaseNode, file_path: Path) -> None:

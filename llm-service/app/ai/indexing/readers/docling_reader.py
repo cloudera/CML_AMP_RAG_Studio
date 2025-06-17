@@ -57,7 +57,7 @@ class DoclingReader(BaseReader):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def load_chunks(self, file_path: Path) -> list[ChunksResult]:
+    def load_chunks(self, file_path: Path) -> ChunksResult:
         document = Document()
         document.id_ = self.document_id
         self._add_document_metadata(document, file_path)
@@ -89,4 +89,4 @@ class DoclingReader(BaseReader):
             )
             converted_chunks.append(node)
 
-        return [ChunksResult(converted_chunks)]
+        return ChunksResult(converted_chunks)
