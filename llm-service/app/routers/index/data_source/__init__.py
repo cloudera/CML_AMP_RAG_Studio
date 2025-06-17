@@ -254,7 +254,7 @@ class DataSourceController:
                 summary = indexer.get_summary(doc_id)
                 if summary is None:
                     raise HTTPException(
-                        status_code=HTTPStatus.BAD_REQUEST,
+                        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                         detail="No content to summarize.",
                     )
                 return summary
