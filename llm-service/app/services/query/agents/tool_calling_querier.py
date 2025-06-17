@@ -208,7 +208,7 @@ def _run_streamer(
                     raw="",
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="agent_setup",
+                            type="Agent_setup",
                             name=event.current_agent_name,
                             data=data,
                         ),
@@ -229,7 +229,7 @@ def _run_streamer(
                     raw="",
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="agent_input",
+                            type="Agent_input",
                             name=event.current_agent_name,
                             data=data,
                         ),
@@ -276,7 +276,7 @@ def _run_streamer(
                     raw="",
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="tool_result",
+                            type="Tool_result",
                             name=event.tool_name,
                             data=data,
                         ),
@@ -301,14 +301,35 @@ def _run_streamer(
                     raw=event.raw,
                     additional_kwargs={
                         "chat_event": ChatEvent(
-                            type="agent_response",
+                            type="Agent_response",
                             name=event.current_agent_name,
                             data=data,
                         ),
                     },
                 )
             elif isinstance(event, AgentStream):
-                if event.response:
+                if len(event.tool_calls) > 0:
+                    if verbose:
+                        logger.info("=== Agent Stream with Tool Call ===")
+                        logger.info(
+                            f"Agent {event.current_agent_name} response: {event.response!s}"
+                        )
+                        logger.info("========================")
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=MessageRole.TOOL,
+                            content=event.response,
+                        ),
+                        delta="",
+                        raw=event.raw,
+                        additional_kwargs={
+                            "chat_event": ChatEvent(
+                                type="Agent_response",
+                                name=event.current_agent_name,
+                            ),
+                        },
+                    )
+                elif event.response:
                     # Yield the delta response as a ChatResponse
                     yield ChatResponse(
                         message=ChatMessage(
