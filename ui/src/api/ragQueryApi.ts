@@ -75,6 +75,7 @@ export const useSuggestQuestions = (
     queryFn: () => suggestQuestionsQuery(request),
     enabled: enable,
     gcTime: 0,
+    retry: 5,
   });
 };
 
