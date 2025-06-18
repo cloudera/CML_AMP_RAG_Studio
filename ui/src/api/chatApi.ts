@@ -567,7 +567,7 @@ const streamChatMutation = async (
         } catch (error) {
           console.error("Error parsing message data:", error);
           onError(
-            `An error occurred while processing the response. Original error message: ${JSON.stringify(msg)}. Error in parsing: ${JSON.stringify(error)}`,
+            `An error occurred while processing the response.  Error message: ${JSON.stringify(msg)}. Error details: ${JSON.stringify(error)}.`,
           );
           ctrl.abort();
         }

@@ -279,7 +279,6 @@ class SummaryIndexer(BaseTextIndexer):
         nodes: List[TextNode] = chunks.chunks
 
         nodes = self.sample_nodes(nodes, 1000, 20)
-        print(f"{len(nodes)=}")
         logger.debug(f"Using {len(nodes)} nodes from {len(chunks.chunks)} total nodes")
 
         if not nodes:
