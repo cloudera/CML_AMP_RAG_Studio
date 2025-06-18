@@ -79,7 +79,7 @@ logger = logging.getLogger(__name__)
 
 poison_pill = "poison_pill"
 
-NON_SYSTEM_MESSAGE_MODELS = {
+BEDROCK_NON_SYSTEM_MESSAGE_MODELS = {
     "mistral.mistral-7b-instruct-v0:2",
     "mistral.mixtral-8x7b-instruct-v0:1",
 }
@@ -178,9 +178,81 @@ def stream_chat(
         tools.append(retrieval_tool)
     tools.extend(mcp_tools)
 
-    gen, source_nodes = _run_streamer(chat_messages, enhanced_query, llm, tools)
+    gen, source_nodes = _run_non_streamer(chat_messages, enhanced_query, llm, tools)
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
+
+
+def _run_non_streamer(
+    chat_messages: list[ChatMessage],
+    enhanced_query: str,
+    llm: FunctionCallingLLM,
+    tools: list[BaseTool],
+    verbose: bool = True,
+) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
+    """
+    Run the agent in a non-streaming mode.
+    This is useful for models that do not support streaming.
+    """
+    agent, enhanced_query = build_function_agent(enhanced_query, llm, tools)
+    source_nodes: list[NodeWithScore] = []
+
+    # If no tools are provided, we can directly stream the chat response
+    if not tools:
+        chat_gen = llm.stream_chat(
+            messages=chat_messages
+            + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+        )
+        return chat_gen, source_nodes
+
+    async def agen() -> AsyncGenerator[ChatResponse, None]:
+        handler = agent.run(
+            user_msg=enhanced_query, chat_history=chat_messages, stepwise=True
+        )
+        while not handler.is_done():
+            ev = await handler.run_step()
+            print(f"Event: {ev}")
+            yield ChatResponse(
+                message=ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="EVENT",
+                )
+            )
+            handler.ctx.send_event(ev)
+        if handler.is_done():
+            result = handler.result()
+            print(result)
+            yield ChatResponse(
+                message=ChatMessage(
+                    role=MessageRole.ASSISTANT,
+                    content="RESULT",
+                )
+            )
+
+        if e := handler.exception():
+            raise e
+        if handler.ctx:
+            await handler.ctx.shutdown()
+
+    def gen() -> Generator[ChatResponse, None, None]:
+        loop = asyncio.new_event_loop()
+        astream = agen()
+        try:
+            while True:
+                item = loop.run_until_complete(anext(astream))
+                yield item
+        except (StopAsyncIteration, GeneratorExit):
+            pass
+        finally:
+            try:
+                loop.run_until_complete(astream.aclose())
+            except Exception as e:
+                logger.warning(f"Exception during async generator close: {e}")
+            if not loop.is_closed():
+                loop.stop()
+                loop.close()
+
+    return gen(), source_nodes
 
 
 def _run_streamer(
@@ -380,7 +452,10 @@ def _run_streamer(
 def build_function_agent(
     enhanced_query: str, llm: FunctionCallingLLM, tools: list[BaseTool]
 ) -> tuple[FunctionAgent, str]:
-    if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
+    if (
+        BedrockModelProvider.is_enabled()
+        and llm.metadata.model_name in BEDROCK_NON_SYSTEM_MESSAGE_MODELS
+    ):
         agent = FunctionAgent(
             tools=cast(list[BaseTool | Callable[[], Any]], tools),
             llm=llm,
