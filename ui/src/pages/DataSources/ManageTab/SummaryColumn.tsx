@@ -77,7 +77,7 @@ const SummaryPopover = ({
       onOpenChange={setVisible}
     >
       {documentSummary.isLoading ? (
-        <Spin size="small" />
+        <Spin size="small" aria-label="Loading summary" />
       ) : (
         <Icon
           component={DocumentationIcon}
