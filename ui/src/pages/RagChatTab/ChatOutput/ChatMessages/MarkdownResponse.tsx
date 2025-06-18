@@ -80,7 +80,7 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
             }
           }
           return (
-            <a href={href} className={className} {...other}>
+            <a href={href} className={className} {...other} target="_blank">
               {children}
             </a>
           );
