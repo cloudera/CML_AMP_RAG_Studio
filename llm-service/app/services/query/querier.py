@@ -38,7 +38,6 @@ from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.llms.bedrock_converse.utils import BEDROCK_FUNCTION_CALLING_MODELS
-from llama_index.llms.openai import OpenAI
 from llama_index.llms.openai.utils import (
     is_function_calling_model,
     ALL_AVAILABLE_MODELS,
@@ -51,8 +50,11 @@ from .agents.tool_calling_querier import (
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
-from ..models import OpenAiModelProvider, AzureModelProvider, CAIIModelProvider
-from ..models.providers import BedrockModelProvider
+from ..models.providers import (
+    BedrockModelProvider,
+    OpenAiModelProvider,
+    AzureModelProvider,
+)
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -87,28 +89,7 @@ def streaming_query(
 
     chat_response: StreamingAgentChatResponse
     if configuration.use_tool_calling:
-        if (
-            BedrockModelProvider.is_enabled()
-            and not llm.metadata.is_function_calling_model
-        ):
-            raise HTTPException(
-                status_code=422,
-                detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling.  "
-                f"The following models support tool calling: {', '.join(list(BEDROCK_FUNCTION_CALLING_MODELS))}.",
-            )
-        if (
-            OpenAiModelProvider.is_enabled() or AzureModelProvider.is_enabled()
-        ) and not llm.metadata.is_function_calling_model:
-            openai_function_calling_models = [
-                model_name
-                for model_name in ALL_AVAILABLE_MODELS.keys()
-                if is_function_calling_model(model_name)
-            ]
-            raise HTTPException(
-                status_code=422,
-                detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling. "
-                f"The following models support tool calling: {', '.join(list(openai_function_calling_models))}.",
-            )
+        check_for_tool_calling_support(llm)
 
         use_retrieval, data_source_summaries = should_use_retrieval(
             session.data_source_ids, configuration.exclude_knowledge_base
@@ -143,6 +124,28 @@ def streaming_query(
         ) from error
 
     return chat_response
+
+
+def check_for_tool_calling_support(llm: LLM) -> None:
+    if BedrockModelProvider.is_enabled() and not llm.metadata.is_function_calling_model:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling.  "
+            f"The following models support tool calling: {', '.join(list(BEDROCK_FUNCTION_CALLING_MODELS))}.",
+        )
+    if (
+        OpenAiModelProvider.is_enabled() or AzureModelProvider.is_enabled()
+    ) and not llm.metadata.is_function_calling_model:
+        openai_function_calling_models = [
+            model_name
+            for model_name in ALL_AVAILABLE_MODELS.keys()
+            if is_function_calling_model(model_name)
+        ]
+        raise HTTPException(
+            status_code=422,
+            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling. "
+            f"The following models support tool calling: {', '.join(list(openai_function_calling_models))}.",
+        )
 
 
 def get_nodes_from_output(
