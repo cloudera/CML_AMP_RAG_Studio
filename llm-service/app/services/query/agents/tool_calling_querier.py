@@ -192,7 +192,15 @@ def _run_streamer(
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent, enhanced_query = build_function_agent(enhanced_query, llm, tools)
 
-    source_nodes = []
+    source_nodes: list[NodeWithScore] = []
+
+    # If no tools are provided, we can directly stream the chat response
+    if not tools:
+        chat_gen = llm.stream_chat(
+            messages=chat_messages
+            + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+        )
+        return chat_gen, source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
