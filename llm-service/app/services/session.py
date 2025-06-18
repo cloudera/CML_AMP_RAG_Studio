@@ -35,9 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import logging
 from typing import Optional
-
-from fastapi import HTTPException
 
 from . import models
 from .chat_history.chat_history_manager import (
@@ -45,6 +44,8 @@ from .chat_history.chat_history_manager import (
     RagStudioChatMessage,
 )
 from .metadata_apis import session_metadata_api
+
+logger = logging.getLogger(__name__)
 
 RENAME_SESSION_PROMPT_TEMPLATE = """
 You are tasked with suggesting an apt name for a chat session based on its first interaction between a User and an Assistant. 
@@ -89,7 +90,8 @@ def rename_session(session_id: int, user_name: Optional[str]) -> str:
         chat_history_manager.retrieve_chat_history(session_id=session_id)
     )
     if not chat_history:
-        raise HTTPException(status_code=400, detail="No chat history found")
+        logger.info("No chat history found for session ID %s", session_id)
+        return ""
     first_interaction = chat_history[0].rag_message
     session_metadata = session_metadata_api.get_session(session_id, user_name)
     llm = models.LLM.get(session_metadata.inference_model)
