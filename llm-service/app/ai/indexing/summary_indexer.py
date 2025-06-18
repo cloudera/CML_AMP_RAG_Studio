@@ -412,7 +412,6 @@ class SummaryIndexer(BaseTextIndexer):
 
         # Sort the indices to maintain order
         block_start_indices.sort()
-        print(f"{block_start_indices=}")
 
         # Extract blocks of block_size contiguous nodes
         sampled_nodes = []
