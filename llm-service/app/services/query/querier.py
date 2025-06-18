@@ -29,11 +29,7 @@
 # ##############################################################################
 from __future__ import annotations
 
-import json
-import os
 import re
-from copy import copy
-from queue import Queue
 from typing import Optional, TYPE_CHECKING, cast
 
 from llama_index.core.base.base_retriever import BaseRetriever
@@ -41,19 +37,24 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.core.tools import BaseTool as LLamaTool
-from llama_index.core.tools import FunctionTool
+from llama_index.llms.bedrock_converse.utils import BEDROCK_FUNCTION_CALLING_MODELS
+from llama_index.llms.openai.utils import (
+    is_function_calling_model,
+    ALL_AVAILABLE_MODELS,
+)
 
 from .agents.tool_calling_querier import (
     should_use_retrieval,
     stream_chat,
-    poison_pill,
 )
-from .chat_events import ToolEvent
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
-from ...config import settings
+from ..models.providers import (
+    BedrockModelProvider,
+    OpenAiModelProvider,
+    AzureModelProvider,
+)
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -73,51 +74,8 @@ from app.services import models
 from app.services.query.query_configuration import QueryConfiguration
 from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
-from llama_index.tools.mcp import BasicMCPClient, McpToolSpec
 
 logger = logging.getLogger(__name__)
-
-
-def get_llama_index_tools(server_name: str) -> list[FunctionTool]:
-    """
-    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
-
-    Args:
-        server_name: The name of the MCP server to find
-
-    Returns:
-        An MCPServerAdapter configured for the specified server
-
-    Raises:
-        ValueError: If the server name is not found in the mcp.json file
-    """
-    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
-
-    with open(mcp_json_path, "r") as f:
-        mcp_config = json.load(f)
-
-    mcp_servers = mcp_config["mcp_servers"]
-    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
-
-    if server_config:
-        environment: dict[str, str] | None = copy(dict(os.environ))
-        if "env" in server_config and environment:
-            environment.update(server_config["env"])
-
-        if "command" in server_config:
-            client = BasicMCPClient(
-                command_or_url=server_config["command"],
-                args=server_config.get("args", []),
-                env=environment,
-            )
-        elif "url" in server_config:
-            client = BasicMCPClient(command_or_url=server_config["url"])
-        else:
-            raise ValueError("Not configured right...fixme")
-        tool_spec = McpToolSpec(client=client)
-        return tool_spec.to_tool_list()
-
-    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
 
 
 def streaming_query(
@@ -125,27 +83,14 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    tool_events_queue: Queue[ToolEvent],
     session: Session,
 ) -> StreamingAgentChatResponse:
-    all_tools: list[LLamaTool] = []
-
-    if session.query_configuration and session.query_configuration.selected_tools:
-        for tool_name in session.query_configuration.selected_tools:
-            try:
-                llama_tools = get_llama_index_tools(tool_name)
-                # print(
-                #     f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
-                # )
-                all_tools.extend(llama_tools)
-            except ValueError as e:
-                logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
-                continue
-
     llm = models.LLM.get(model_name=configuration.model_name)
 
     chat_response: StreamingAgentChatResponse
-    if configuration.use_tool_calling and llm.metadata.is_function_calling_model:
+    if configuration.use_tool_calling:
+        check_for_tool_calling_support(llm)
+
         use_retrieval, data_source_summaries = should_use_retrieval(
             session.data_source_ids, configuration.exclude_knowledge_base
         )
@@ -156,10 +101,9 @@ def streaming_query(
             chat_engine,
             query_str,
             chat_messages,
-            all_tools,
+            session,
             data_source_summaries,
         )
-        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         return chat_response
     if not chat_engine:
         raise HTTPException(
@@ -169,17 +113,39 @@ def streaming_query(
 
     try:
         chat_response = chat_engine.stream_chat(query_str, chat_messages)
-        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         logger.debug("query response received from chat engine")
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response
+        detail = json_error["Error"].get("Message", None)
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["StatusReason"],
+            detail=detail if detail else json_error["StatusReason"],
         ) from error
 
     return chat_response
+
+
+def check_for_tool_calling_support(llm: LLM) -> None:
+    if BedrockModelProvider.is_enabled() and not llm.metadata.is_function_calling_model:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling.  "
+            f"The following models support tool calling: {', '.join(list(BEDROCK_FUNCTION_CALLING_MODELS))}.",
+        )
+    if (
+        OpenAiModelProvider.is_enabled() or AzureModelProvider.is_enabled()
+    ) and not llm.metadata.is_function_calling_model:
+        openai_function_calling_models = [
+            model_name
+            for model_name in ALL_AVAILABLE_MODELS.keys()
+            if is_function_calling_model(model_name)
+        ]
+        raise HTTPException(
+            status_code=422,
+            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling. "
+            f"The following models support tool calling: {', '.join(list(openai_function_calling_models))}.",
+        )
 
 
 def get_nodes_from_output(
@@ -247,6 +213,7 @@ def query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
+    should_condense_question: bool = True,
 ) -> tuple[AgentChatResponse, str | None]:
     llm = models.LLM.get(model_name=configuration.model_name)
     retriever = build_retriever(configuration, session.data_source_ids, llm)
@@ -266,9 +233,11 @@ def query(
         )
     )
 
-    condensed_question: str = chat_engine.condense_question(
-        chat_messages, query_str
-    ).strip()
+    condensed_question: str | None = None
+    if should_condense_question:
+        condensed_question = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
 
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
@@ -277,9 +246,10 @@ def query(
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response
+        detail = json_error["Error"].get("Message", None)
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["StatusReason"],
+            detail=detail if detail else json_error["StatusReason"],
         ) from error
 
 

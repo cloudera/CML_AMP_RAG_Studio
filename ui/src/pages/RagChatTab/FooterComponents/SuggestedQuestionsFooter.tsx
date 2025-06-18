@@ -36,7 +36,15 @@
  * DATA.
  ******************************************************************************/
 
-import { Collapse, Flex, Skeleton, Tag, Tooltip, Typography } from "antd";
+import {
+  Alert,
+  Collapse,
+  Flex,
+  Skeleton,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import { useState } from "react";
 import { SendOutlined } from "@ant-design/icons";
 import { cdlBlue600, cdlOrange500 } from "src/cuix/variables.ts";
@@ -91,11 +99,13 @@ const SuggestedQuestionsFooter = ({
   handleChat,
   questions,
   condensedQuestion,
+  error,
 }: {
   isLoading: boolean;
   handleChat: (input: string) => void;
   questions: string[];
   condensedQuestion?: string;
+  error?: Error | null;
 }) => {
   const [toggleCollapse, setToggleCollapse] = useState(false);
 
@@ -139,6 +149,12 @@ const SuggestedQuestionsFooter = ({
                     handleChat={handleChat}
                     rewritten={true}
                     key={condensedQuestion}
+                  />
+                ) : null}
+                {error ? (
+                  <Alert
+                    type="error"
+                    message={`Error fetching suggested questions: ${error}`}
                   />
                 ) : null}
                 {isLoading ? (

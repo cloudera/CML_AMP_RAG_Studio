@@ -45,8 +45,9 @@ dependencies = [
     "llama-index-callbacks-opik>=1.1.0",
     "mcp[cli]>=1.9.1",
     "pysqlite3-binary==0.5.4; platform_system == 'Linux' and platform_machine != 'aarch64'",
-    "llama-index-agent-openai>=0.4.8",
     "llama-index-tools-mcp>=0.2.5",
+    "llama-index-readers-docling>=0.3.3",
+    "llama-index-node-parser-docling>=0.3.2",
 ]
 requires-python = ">=3.10,<=3.12"
 readme = "README.md"

@@ -35,9 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import logging
 from typing import Optional
-
-from fastapi import HTTPException
 
 from . import models
 from .chat_history.chat_history_manager import (
@@ -46,10 +45,16 @@ from .chat_history.chat_history_manager import (
 )
 from .metadata_apis import session_metadata_api
 
-RENAME_SESSION_PROMPT_TEMPLATE = """
-You are tasked with suggesting an apt name for a chat session based on its first interaction. Only return the name of the session. 
+logger = logging.getLogger(__name__)
 
-========================================
+RENAME_SESSION_PROMPT_TEMPLATE = """
+You are tasked with suggesting an apt name for a chat session based on its first interaction between a User and an Assistant. 
+
+# Instructions
+IMPORTANTLY, ONLY RETURN THE NAME OF THE SESSION.  Only return a single line and sessions name, without any additional text or formatting.
+Use the below interactions as a guide but do not include them in your response.
+
+### Example 1:
 First Interaction:
 ```
 User: What is your name?
@@ -59,7 +64,7 @@ Assistant: My name is Assistant.
 Session Name:
 Introduction
 
-========================================
+### Example 2:
 First Interaction:
 ```
 User: What do you know about the Moon?
@@ -69,7 +74,7 @@ Assistant: The Moon is Earth's only natural satellite. It is the fifth-largest s
 Session Name:
 Facts about the Moon
 
-========================================
+# Your turn:
 First Interaction:
 ```
 User: {}
@@ -81,9 +86,12 @@ Session Name:
 
 
 def rename_session(session_id: int, user_name: Optional[str]) -> str:
-    chat_history: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(session_id=session_id)
+    chat_history: list[RagStudioChatMessage] = (
+        chat_history_manager.retrieve_chat_history(session_id=session_id)
+    )
     if not chat_history:
-        raise HTTPException(status_code=400, detail="No chat history found")
+        logger.info("No chat history found for session ID %s", session_id)
+        return ""
     first_interaction = chat_history[0].rag_message
     session_metadata = session_metadata_api.get_session(session_id, user_name)
     llm = models.LLM.get(session_metadata.inference_model)
@@ -91,9 +99,8 @@ def rename_session(session_id: int, user_name: Optional[str]) -> str:
         first_interaction.user,
         first_interaction.assistant,
     )
-
     response = llm.complete(prompt=prompt)
-    session_name = response.text.strip()
+    session_name = response.text.strip().split("\n")[0]
     session_metadata.name = session_name
     updated_session = session_metadata_api.update_session(session_metadata, user_name)
     return updated_session.name

@@ -37,7 +37,6 @@
 #
 import time
 import uuid
-from queue import Queue
 from typing import Optional, Generator
 
 from llama_index.core.base.llms.types import ChatResponse, ChatMessage
@@ -59,12 +58,10 @@ from app.services.chat_history.chat_history_manager import (
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
-from app.services.query.agents.tool_calling_querier import poison_pill
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
     build_flexible_chat_engine,
 )
-from app.services.query.chat_events import ToolEvent
 from app.services.query.querier import (
     build_retriever,
 )
@@ -76,7 +73,6 @@ def stream_chat(
     query: str,
     configuration: RagPredictConfiguration,
     user_name: Optional[str],
-    tool_events_queue: Queue[ToolEvent],
 ) -> Generator[ChatResponse, None, None]:
     query_configuration = QueryConfiguration(
         top_k=session.response_chunks,
@@ -100,12 +96,12 @@ def stream_chat(
         len(session.data_source_ids) == 0 or total_data_sources_size == 0
     ):
         # put a poison pill in the queue to stop the tool events stream
-        tool_events_queue.put(ToolEvent(type=poison_pill, name="no-op"))
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
-        tool_events_queue, query, query_configuration, session
+        query, query_configuration, session
     )
+
     return _run_streaming_chat(
         session,
         response_id,
@@ -127,7 +123,6 @@ def _run_streaming_chat(
     condensed_question: Optional[str] = None,
 ) -> Generator[ChatResponse, None, None]:
     response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
-
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
             response.additional_kwargs["response_id"] = response_id
@@ -151,7 +146,6 @@ def _run_streaming_chat(
 
 
 def build_streamer(
-    chat_events_queue: Queue[ToolEvent],
     query: str,
     query_configuration: QueryConfiguration,
     session: Session,
@@ -180,7 +174,6 @@ def build_streamer(
         query,
         query_configuration,
         chat_messages,
-        tool_events_queue=chat_events_queue,
         session=session,
     )
     return condensed_question, streaming_chat_response
