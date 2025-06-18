@@ -38,7 +38,7 @@
 
 import { useState } from "react";
 import { useGetDocumentSummary } from "src/api/summaryApi.ts";
-import { Popover, Tooltip, theme } from "antd";
+import { Popover, Spin, theme, Tooltip } from "antd";
 import Icon, {
   ExclamationCircleOutlined,
   HourglassOutlined,
@@ -76,15 +76,19 @@ const SummaryPopover = ({
       open={visible && documentSummary.isSuccess}
       onOpenChange={setVisible}
     >
-      <Icon
-        component={DocumentationIcon}
-        style={{
-          fontSize: 20,
-          color: theme.getDesignToken().colorLink,
-          cursor: "pointer",
-        }}
-        data-testid="documentation-icon"
-      />
+      {documentSummary.isLoading ? (
+        <Spin size="small" />
+      ) : (
+        <Icon
+          component={DocumentationIcon}
+          style={{
+            fontSize: 20,
+            color: theme.getDesignToken().colorLink,
+            cursor: "pointer",
+          }}
+          data-testid="documentation-icon"
+        />
+      )}
     </Popover>
   );
 };
