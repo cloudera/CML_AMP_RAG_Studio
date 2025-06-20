@@ -148,7 +148,7 @@ def check_for_tool_calling_support(llm: LLM) -> None:
     ):
         raise HTTPException(
             status_code=422,
-            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling.  "
+            detail=f"Tool calling is enabled, but the model {get_model_name(llm.metadata.model_name)} does not support tool calling.  "
             f"The following models support tool calling: {', '.join(list(MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS))}.",
         )
     if (
