@@ -110,6 +110,7 @@ jobs:
             git config --local user.name actions-user
             git config --local user.email "actions@github.com"
             echo "export RELEASE_TAG=${{ github.event.inputs.VERSION }}" > scripts/release_version.txt
+            mkdir -p artifacts
             cp backend/build/libs/rag-api.jar artifacts/
             cp ui/fe-dist.tar.gz artifacts/
             cp ui/express/node-dist.tar.gz artifacts/
