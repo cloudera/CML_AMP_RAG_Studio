@@ -57,6 +57,7 @@ from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
+from llama_index.llms.bedrock_converse import BedrockConverse
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -64,6 +65,9 @@ from app.services.models.providers import BedrockModelProvider
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
+)
+from app.services.query.agents.non_streamer_bedrock_converse import (
+    FakeStreamBedrockConverse,
 )
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
@@ -396,13 +400,25 @@ def build_function_agent(
             + enhanced_query
         )
     else:
-        agent = FunctionAgent(
-            tools=cast(list[BaseTool | Callable[[], Any]], tools),
-            llm=llm,
-            system_prompt=DEFAULT_AGENT_PROMPT.format(
-                date=datetime.datetime.now().strftime("%Y-%m-%d"),
-                time=datetime.datetime.now().strftime("%H:%M:%S"),
-            ),
-        )
+        # TODO : Handle BedrockConverse streaming properly
+        if isinstance(llm, BedrockConverse):
+            fake_stream_llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
+            agent = FunctionAgent(
+                tools=cast(list[BaseTool | Callable[[], Any]], tools),
+                llm=fake_stream_llm,
+                system_prompt=DEFAULT_AGENT_PROMPT.format(
+                    date=datetime.datetime.now().strftime("%Y-%m-%d"),
+                    time=datetime.datetime.now().strftime("%H:%M:%S"),
+                ),
+            )
+        else:
+            agent = FunctionAgent(
+                tools=cast(list[BaseTool | Callable[[], Any]], tools),
+                llm=llm,
+                system_prompt=DEFAULT_AGENT_PROMPT.format(
+                    date=datetime.datetime.now().strftime("%Y-%m-%d"),
+                    time=datetime.datetime.now().strftime("%H:%M:%S"),
+                ),
+            )
 
     return agent, enhanced_query
