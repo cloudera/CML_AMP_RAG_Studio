@@ -407,8 +407,8 @@ def build_function_agent(
         enhanced_query = (
             "ROLE DESCRIPTION =========================================\n"
             + DEFAULT_AGENT_PROMPT.format(
-                date=datetime.datetime.now().strftime("%Y-%m-%d"),
-                time=datetime.datetime.now().strftime("%H:%M:%S"),
+                date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                time=datetime.datetime.now().strftime("%H:%M:%S %p"),
             )
             + "=========================================================\n"
             "USER QUERY ==============================================\n"
@@ -426,8 +426,8 @@ def build_function_agent(
                 tools=cast(list[BaseTool | Callable[[], Any]], tools),
                 llm=fake_stream_llm,
                 system_prompt=DEFAULT_AGENT_PROMPT.format(
-                    date=datetime.datetime.now().strftime("%Y-%m-%d"),
-                    time=datetime.datetime.now().strftime("%H:%M:%S"),
+                    date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                    time=datetime.datetime.now().strftime("%H:%M:%S %p"),
                 ),
             )
         else:
@@ -435,8 +435,8 @@ def build_function_agent(
                 tools=cast(list[BaseTool | Callable[[], Any]], tools),
                 llm=llm,
                 system_prompt=DEFAULT_AGENT_PROMPT.format(
-                    date=datetime.datetime.now().strftime("%Y-%m-%d"),
-                    time=datetime.datetime.now().strftime("%H:%M:%S"),
+                    date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                    time=datetime.datetime.now().strftime("%I:%M:%S %p"),
                 ),
             )
 
