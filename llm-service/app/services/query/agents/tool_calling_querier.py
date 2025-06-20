@@ -88,6 +88,15 @@ NON_SYSTEM_MESSAGE_MODELS = {
     "mistral.mixtral-8x7b-instruct-v0:1",
 }
 
+BEDROCK_STREAMING_TOOL_MODELS = {
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "us.anthropic.claude-sonnet-4-20250514-v1:0",
+    "us.anthropic.claude-opus-4-20250514-v1:0",
+    "us.amazon.nova-pro-v1:0",
+    "cohere.command-r-plus-v1:0",
+    "cohere.command-r-v1:0"
+}
 
 def should_use_retrieval(
     data_source_ids: list[int],
@@ -401,7 +410,7 @@ def build_function_agent(
         )
     else:
         # TODO : Handle BedrockConverse streaming properly
-        if isinstance(llm, BedrockConverse):
+        if isinstance(llm, BedrockConverse) and not llm.metadata.model_name in BEDROCK_STREAMING_TOOL_MODELS:
             fake_stream_llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
             agent = FunctionAgent(
                 tools=cast(list[BaseTool | Callable[[], Any]], tools),
