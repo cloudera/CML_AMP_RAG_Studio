@@ -58,6 +58,7 @@ from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
 from llama_index.llms.bedrock_converse import BedrockConverse
+from llama_index.llms.bedrock_converse.utils import get_model_name
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -90,13 +91,14 @@ NON_SYSTEM_MESSAGE_MODELS = {
 
 BEDROCK_STREAMING_TOOL_MODELS = {
     "anthropic.claude-3-5-sonnet-20241022-v2:0",
-    "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-    "us.anthropic.claude-sonnet-4-20250514-v1:0",
-    "us.anthropic.claude-opus-4-20250514-v1:0",
-    "us.amazon.nova-pro-v1:0",
+    "anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "anthropic.claude-sonnet-4-20250514-v1:0",
+    "anthropic.claude-opus-4-20250514-v1:0",
+    "amazon.nova-pro-v1:0",
     "cohere.command-r-plus-v1:0",
-    "cohere.command-r-v1:0"
+    "cohere.command-r-v1:0",
 }
+
 
 def should_use_retrieval(
     data_source_ids: list[int],
@@ -410,7 +412,11 @@ def build_function_agent(
         )
     else:
         # TODO : Handle BedrockConverse streaming properly
-        if isinstance(llm, BedrockConverse) and llm.metadata.model_name not in BEDROCK_STREAMING_TOOL_MODELS:
+        if (
+            isinstance(llm, BedrockConverse)
+            and not get_model_name(llm.metadata.model_name)
+            in BEDROCK_STREAMING_TOOL_MODELS
+        ):
             fake_stream_llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
             agent = FunctionAgent(
                 tools=cast(list[BaseTool | Callable[[], Any]], tools),
