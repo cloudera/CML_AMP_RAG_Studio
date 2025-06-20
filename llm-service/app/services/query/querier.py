@@ -30,7 +30,7 @@
 from __future__ import annotations
 
 import re
-from typing import Optional, TYPE_CHECKING, cast, Tuple
+from typing import Optional, TYPE_CHECKING, cast
 
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -59,15 +59,6 @@ from ..models.providers import (
     AzureModelProvider,
 )
 
-LLAMA_3_2_NON_FUNCTION_CALLING_MODELS = {
-    "meta.llama3-2-1b-instruct-v1:0",
-    "meta.llama3-2-3b-instruct-v1:0",
-}
-
-MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS = tuple(
-    set(BEDROCK_FUNCTION_CALLING_MODELS) - LLAMA_3_2_NON_FUNCTION_CALLING_MODELS
-)
-
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
 
@@ -88,6 +79,15 @@ from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
+
+LLAMA_3_2_NON_FUNCTION_CALLING_MODELS = {
+    "meta.llama3-2-1b-instruct-v1:0",
+    "meta.llama3-2-3b-instruct-v1:0",
+}
+
+MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS = tuple(
+    set(BEDROCK_FUNCTION_CALLING_MODELS) - LLAMA_3_2_NON_FUNCTION_CALLING_MODELS
+)
 
 
 def streaming_query(

@@ -414,8 +414,8 @@ def build_function_agent(
         # TODO : Handle BedrockConverse streaming properly
         if (
             isinstance(llm, BedrockConverse)
-            and not get_model_name(llm.metadata.model_name)
-            in BEDROCK_STREAMING_TOOL_MODELS
+            and get_model_name(llm.metadata.model_name)
+            not in BEDROCK_STREAMING_TOOL_MODELS
         ):
             fake_stream_llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
             agent = FunctionAgent(
