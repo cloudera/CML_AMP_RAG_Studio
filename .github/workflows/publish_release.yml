@@ -29,6 +29,13 @@ jobs:
         with:
           ref: ${{ github.event.inputs.BRANCH }}
           ssh-key: ${{ secrets.DEPLOY_KEY }}
+          lfs: true
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update && sudo apt-get install git-lfs
+      - name: Initialize Git LFS
+        run: git lfs install
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -102,14 +109,18 @@ jobs:
         run: |
             git config --local user.name actions-user
             git config --local user.email "actions@github.com"
-            echo "export RELEASE_TAG=${{ github.event.inputs.VERSION }}" > release_version.txt
-            git add release_version.txt
+            echo "export RELEASE_TAG=${{ github.event.inputs.VERSION }}" > scripts/release_version.txt
+            mkdir -p prebuilt_artifacts
+            cp backend/build/libs/rag-api.jar prebuilt_artifacts/
+            cp ui/fe-dist.tar.gz prebuilt_artifacts/
+            cp ui/express/node-dist.tar.gz prebuilt_artifacts/
+            git add prebuilt_artifacts
+            git add scripts/release_version.txt
             if ! git diff --cached --quiet; then
               git commit -m "Update release version to ${{ github.event.inputs.VERSION }}"
               git push
             else
               echo "No changes to commit"
             fi
-        working-directory: scripts
         env:
           GITHUB_TOKEN: ${{ github.token }}
