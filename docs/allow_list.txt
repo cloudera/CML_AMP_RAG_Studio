@@ -7,10 +7,6 @@ Node 22:
 https://nodejs.org/dist/v22.15.0/node-v22.15.0-darwin-arm64.tar.xz
 
 RAG Studio artifacts:
-# note: these first 3 redirect to the specific release url (eg. releases/download/1.16.0/...)
-https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download/rag-api.jar
-https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download/fe-dist.tar.gz
-https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download/node-dist.tar.gz
 https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth
 https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth
 
