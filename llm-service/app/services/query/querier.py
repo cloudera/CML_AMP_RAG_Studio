@@ -30,14 +30,17 @@
 from __future__ import annotations
 
 import re
-from typing import Optional, TYPE_CHECKING, cast
+from typing import Optional, TYPE_CHECKING, cast, Tuple
 
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.llms.bedrock_converse.utils import BEDROCK_FUNCTION_CALLING_MODELS
+from llama_index.llms.bedrock_converse.utils import (
+    BEDROCK_FUNCTION_CALLING_MODELS,
+    get_model_name,
+)
 from llama_index.llms.openai.utils import (
     is_function_calling_model,
     ALL_AVAILABLE_MODELS,
@@ -54,6 +57,15 @@ from ..models.providers import (
     BedrockModelProvider,
     OpenAiModelProvider,
     AzureModelProvider,
+)
+
+LLAMA_3_2_NON_FUNCTION_CALLING_MODELS = {
+    "meta.llama3-2-1b-instruct-v1:0",
+    "meta.llama3-2-3b-instruct-v1:0",
+}
+
+MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS = tuple(
+    set(BEDROCK_FUNCTION_CALLING_MODELS) - LLAMA_3_2_NON_FUNCTION_CALLING_MODELS
 )
 
 if TYPE_CHECKING:
@@ -126,12 +138,18 @@ def streaming_query(
     return chat_response
 
 
+def is_bedrock_function_calling_model_v2(model_name: str) -> bool:
+    return get_model_name(model_name) in MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS
+
+
 def check_for_tool_calling_support(llm: LLM) -> None:
-    if BedrockModelProvider.is_enabled() and not llm.metadata.is_function_calling_model:
+    if BedrockModelProvider.is_enabled() and not is_bedrock_function_calling_model_v2(
+        llm.metadata.model_name
+    ):
         raise HTTPException(
             status_code=422,
             detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling.  "
-            f"The following models support tool calling: {', '.join(list(BEDROCK_FUNCTION_CALLING_MODELS))}.",
+            f"The following models support tool calling: {', '.join(list(MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS))}.",
         )
     if (
         OpenAiModelProvider.is_enabled() or AzureModelProvider.is_enabled()
