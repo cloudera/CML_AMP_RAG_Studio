@@ -110,11 +110,11 @@ jobs:
             git config --local user.name actions-user
             git config --local user.email "actions@github.com"
             echo "export RELEASE_TAG=${{ github.event.inputs.VERSION }}" > scripts/release_version.txt
-            mkdir -p artifacts
-            cp backend/build/libs/rag-api.jar artifacts/
-            cp ui/fe-dist.tar.gz artifacts/
-            cp ui/express/node-dist.tar.gz artifacts/
-            git add artifacts
+            mkdir -p prebuilt_artifacts
+            cp backend/build/libs/rag-api.jar prebuilt_artifacts/
+            cp ui/fe-dist.tar.gz prebuilt_artifacts/
+            cp ui/express/node-dist.tar.gz prebuilt_artifacts/
+            git add prebuilt_artifacts
             git add scripts/release_version.txt
             if ! git diff --cached --quiet; then
               git commit -m "Update release version to ${{ github.event.inputs.VERSION }}"

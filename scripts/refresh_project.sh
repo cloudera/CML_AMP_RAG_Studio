@@ -85,11 +85,11 @@ cd ..
 # unzip the frontend tarball
 cd ui
 rm -rf dist
-tar -xzf ../artifacts/fe-dist.tar.gz
+tar -xzf ../prebuilt_artifacts/fe-dist.tar.gz
 
 cd express
 rm -rf node_modules
-tar -xzf ../../artifacts/node-dist.tar.gz
+tar -xzf ../../prebuilt_artifacts/node-dist.tar.gz
 
 cd ../../scripts
 #python install_qdrant_app.py
