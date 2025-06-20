@@ -57,6 +57,8 @@ from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
+from llama_index.llms.bedrock_converse import BedrockConverse
+from llama_index.llms.bedrock_converse.utils import get_model_name
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -64,6 +66,9 @@ from app.services.models.providers import BedrockModelProvider
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
+)
+from app.services.query.agents.non_streamer_bedrock_converse import (
+    FakeStreamBedrockConverse,
 )
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
@@ -84,6 +89,16 @@ NON_SYSTEM_MESSAGE_MODELS = {
     "mistral.mixtral-8x7b-instruct-v0:1",
 }
 
+BEDROCK_STREAMING_TOOL_MODELS = {
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "anthropic.claude-sonnet-4-20250514-v1:0",
+    "anthropic.claude-opus-4-20250514-v1:0",
+    "amazon.nova-pro-v1:0",
+    "cohere.command-r-plus-v1:0",
+    "cohere.command-r-v1:0",
+}
+
 
 def should_use_retrieval(
     data_source_ids: list[int],
@@ -101,14 +116,18 @@ def should_use_retrieval(
 
 
 DEFAULT_AGENT_PROMPT = """\
-Today's date is {date} and the current time is {time}. \
+Today's date is {date} and the current time is {time}. This date and time \
+is considered the current date and time for all responses. \
 
 You are an expert agent that can answer questions with the help of tools. \
+Use the date and time accordingly to answer or refine the user's question. \
 Go through the tools available and use them appropriately to answer the \
-user's question. If you do not know the answer to a question, you \
-truthfully say it does not know. As the agent, you will provide an \
-answer based solely on the provided sources with citations to the \
-paragraphs. 
+user's question. Do not use the tools if you can answer the question \
+without them. Only use the tools when necessary. If you do not know \
+the answer to a question, you truthfully say it does not know. As \
+the agent, you will provide an answer based solely on the provided \
+sources with citations to the paragraphs. Only return the answer \
+to the user, do not return any other information. \
 
 Note for in-line citations:
 * Use the citations from the chat history as is. 
@@ -388,21 +407,37 @@ def build_function_agent(
         enhanced_query = (
             "ROLE DESCRIPTION =========================================\n"
             + DEFAULT_AGENT_PROMPT.format(
-                date=datetime.datetime.now().strftime("%Y-%m-%d"),
-                time=datetime.datetime.now().strftime("%H:%M:%S"),
+                date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                time=datetime.datetime.now().strftime("%H:%M:%S %p"),
             )
             + "=========================================================\n"
             "USER QUERY ==============================================\n"
             + enhanced_query
         )
     else:
-        agent = FunctionAgent(
-            tools=cast(list[BaseTool | Callable[[], Any]], tools),
-            llm=llm,
-            system_prompt=DEFAULT_AGENT_PROMPT.format(
-                date=datetime.datetime.now().strftime("%Y-%m-%d"),
-                time=datetime.datetime.now().strftime("%H:%M:%S"),
-            ),
-        )
+        # TODO : Handle BedrockConverse streaming properly
+        if (
+            isinstance(llm, BedrockConverse)
+            and get_model_name(llm.metadata.model_name)
+            not in BEDROCK_STREAMING_TOOL_MODELS
+        ):
+            fake_stream_llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
+            agent = FunctionAgent(
+                tools=cast(list[BaseTool | Callable[[], Any]], tools),
+                llm=fake_stream_llm,
+                system_prompt=DEFAULT_AGENT_PROMPT.format(
+                    date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                    time=datetime.datetime.now().strftime("%H:%M:%S %p"),
+                ),
+            )
+        else:
+            agent = FunctionAgent(
+                tools=cast(list[BaseTool | Callable[[], Any]], tools),
+                llm=llm,
+                system_prompt=DEFAULT_AGENT_PROMPT.format(
+                    date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                    time=datetime.datetime.now().strftime("%I:%M:%S %p"),
+                ),
+            )
 
     return agent, enhanced_query

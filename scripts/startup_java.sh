@@ -52,7 +52,7 @@ export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
 
 for i in {1..3}; do
   echo "Starting Java application..."
-  "$JAVA_HOME"/bin/java -jar artifacts/rag-api.jar
+  "$JAVA_HOME"/bin/java -jar prebuilt_artifacts/rag-api.jar
   echo "Java application crashed, retrying ($i/3)..."
   sleep 5
 done
