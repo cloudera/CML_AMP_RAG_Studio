@@ -109,18 +109,17 @@ jobs:
         run: |
             git config --local user.name actions-user
             git config --local user.email "actions@github.com"
-            echo "export RELEASE_TAG=${{ github.event.inputs.VERSION }}" > release_version.txt
+            echo "export RELEASE_TAG=${{ github.event.inputs.VERSION }}" > scripts/release_version.txt
             cp backend/build/libs/rag-api.jar artifacts/
             cp ui/fe-dist.tar.gz artifacts/
             cp ui/express/node-dist.tar.gz artifacts/
             git add artifacts
-            git add release_version.txt
+            git add scripts/release_version.txt
             if ! git diff --cached --quiet; then
               git commit -m "Update release version to ${{ github.event.inputs.VERSION }}"
               git push
             else
               echo "No changes to commit"
             fi
-        working-directory: scripts
         env:
           GITHUB_TOKEN: ${{ github.token }}
