@@ -29,6 +29,13 @@ jobs:
         with:
           ref: ${{ github.event.inputs.BRANCH }}
           ssh-key: ${{ secrets.DEPLOY_KEY }}
+          lfs: true
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update && sudo apt-get install git-lfs
+      - name: Initialize Git LFS
+        run: git lfs install
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
