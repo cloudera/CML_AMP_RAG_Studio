@@ -21,12 +21,6 @@ class FakeStreamBedrockConverse(BedrockConverse):
     This class is used to create a non-streaming version of the BedrockConverse.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Initialize the FakeStreamBedrockConverse class.
-        """
-        super().__init__(*args, **kwargs)
-
     async def astream_chat_with_tools(
         self,
         tools: Sequence["BaseTool"],
