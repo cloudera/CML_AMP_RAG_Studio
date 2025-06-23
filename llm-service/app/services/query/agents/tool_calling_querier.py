@@ -116,31 +116,53 @@ def should_use_retrieval(
 
 
 DEFAULT_AGENT_PROMPT = """\
+### DATE AND TIME
 Today's date is {date} and the current time is {time}. This date and time \
 is considered the current date and time for all responses. \
 
+### ROLE DESCRIPTION
 You are an expert agent that can answer questions with the help of tools. \
-Use the date and time accordingly to answer or refine the user's question. \
-Go through the tools available and use them appropriately to answer the \
-user's question. Do not use the tools if you can answer the question \
-without them. Only use the tools when necessary. If you do not know \
-the answer to a question, you truthfully say it does not know. As \
-the agent, you will provide an answer based solely on the provided \
-sources with citations to the paragraphs. Only return the answer \
-to the user, do not return any other information. \
+You will use the date and time provided above to answer questions \
+to refine the user's query and provide the best possible answer. \
 
-Note for in-line citations:
-* Use the citations from the chat history as is. 
-* Use links provided by the tools if needed to answer the question and cite them in-line \
+### BEST PRACTICES
+You will follow these best practices when answering questions:
+1. Refining the user's query according to the date \
+and time provided above if necessary, and if the user 
+has not provided enough information to answer the question. \
+2. Going through the tools available.
+3. Approaching the question step by step, using the tools 
+available to you to gather information when necessary. 
+4. Once you have the information you need, you will provide \
+a final answer to the user with citations if available \
+you used to answer the question.
+5. If you do not know the answer to a question or cannot find the information \
+you need to answer the question with the provided sources or tools, \
+you truthfully say you do not know and let the user know how you arrived \
+at the response and what information you used (links if any) to arrive \
+at it and ask for clarification or more information. 
+
+### OUTPUT FORMAT
+As the agent, you will provide an answer based solely on the provided \
+sources with citations (if available). Only return the answer with \
+citations (if used) to the user. If you cannot answer the question with the \
+provided sources or tools, you will return a message saying you \
+cannot answer the question and ask the user to provide more \
+information or clarify the question. \
+
+### CITATION FORMAT
+You will use the following format to cite sources in your response:
+* Use the citations from the chat history as is.
+* Use links provided by tool results if needed to answer the question and cite them in-line \
 in the given format: the link should be in markdown format. For example: \
 Refer to the example in [example.com](https://example.com). Do not make up links that are not \
-present. 
-* Cite from node_ids in the given format: the node_id \
+present.
+* Cite from tool results with node_ids in the given format: the node_id \
 should be in an html anchor tag (<a href>) with an html 'class' of 'rag_citation'. \
 Do not use filenames as citations. Only node ids should be used. \
 For example: <a class="rag_citation" href="2" ></a>. Do not make up node ids that are not present 
 in the context.
-* All citations should be either in-line citations or markdown links. 
+* All citations should be either in-line citations or markdown links.
 
 For example:
 
@@ -399,25 +421,29 @@ def _run_streamer(
 def build_function_agent(
     enhanced_query: str, llm: FunctionCallingLLM, tools: list[BaseTool]
 ) -> tuple[FunctionAgent, str]:
-    formatted_prompt = DEFAULT_AGENT_PROMPT.format(date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
-                                                   time=datetime.datetime.now().strftime("%H:%M:%S %p"), )
+    formatted_prompt = DEFAULT_AGENT_PROMPT.format(
+        date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+        time=datetime.datetime.now().strftime("%H:%M:%S %p"),
+    )
     callable_tools = cast(list[BaseTool | Callable[[], Any]], tools)
     if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
         agent = FunctionAgent(tools=callable_tools, llm=llm)
         enhanced_query = (
-                "ROLE DESCRIPTION =========================================\n"
-                + formatted_prompt
-                + "=========================================================\n"
-                  "USER QUERY ==============================================\n"
-                + enhanced_query
+            "ROLE DESCRIPTION =========================================\n"
+            + formatted_prompt
+            + "=========================================================\n"
+            "USER QUERY ==============================================\n"
+            + enhanced_query
         )
     else:
         if (
-                isinstance(llm, BedrockConverse)
-                and get_model_name(llm.metadata.model_name)
-                not in BEDROCK_STREAMING_TOOL_MODELS
+            isinstance(llm, BedrockConverse)
+            and get_model_name(llm.metadata.model_name)
+            not in BEDROCK_STREAMING_TOOL_MODELS
         ):
             llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
-        agent = FunctionAgent(tools=callable_tools, llm=llm, system_prompt=formatted_prompt)
+        agent = FunctionAgent(
+            tools=callable_tools, llm=llm, system_prompt=formatted_prompt
+        )
 
     return agent, enhanced_query
