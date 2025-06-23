@@ -70,27 +70,13 @@ fi
 uv sync --no-dev
 
 cd ..
-mkdir -p artifacts
-
-RELEASE_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/latest/download
-if  [ -n "${RELEASE_TAG}" ] && [ "${RELEASE_TAG}" != "latest" ]; then
-    RELEASE_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/${RELEASE_TAG}
-fi
-
-echo "Downloading release artifacts from ${RELEASE_URL}"
-wget "${RELEASE_URL}/rag-api.jar" -O artifacts/rag-api.jar
-wget "${RELEASE_URL}/fe-dist.tar.gz" -O artifacts/fe-dist.tar.gz
-wget "${RELEASE_URL}/node-dist.tar.gz" -O artifacts/node-dist.tar.gz
-
 # unzip the frontend tarball
 cd ui
 rm -rf dist
-tar -xzf ../artifacts/fe-dist.tar.gz
+tar -xzf ../prebuilt_artifacts/fe-dist.tar.gz
 
 cd express
 rm -rf node_modules
-tar -xzf ../../artifacts/node-dist.tar.gz
+tar -xzf ../../prebuilt_artifacts/node-dist.tar.gz
 
 cd ../../scripts
-#python install_qdrant_app.py
-#python install_metadata_app.py
