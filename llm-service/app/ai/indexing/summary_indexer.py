@@ -66,7 +66,6 @@ from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore
 from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
-from llama_index.llms.openai import OpenAI
 from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
@@ -76,8 +75,7 @@ from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import settings
 from ...services.metadata_apis import data_sources_metadata_api
-from ...services.models import AzureModelProvider, OpenAiModelProvider
-from ...services.models.providers import CAIIModelProvider
+from ...services.models.providers import CAIIModelProvider, AzureModelProvider, OpenAiModelProvider
 
 logger = logging.getLogger(__name__)
 
