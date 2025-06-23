@@ -37,16 +37,9 @@ class FakeStreamBedrockConverse(BedrockConverse):
         tool_required: bool = False,
         **kwargs: Any,
     ) -> AsyncGenerator[ChatResponse, None]:
-        """
-        Override of astream_chat_with_tools method from FunctionCallingLLM.
-        Implementation will be provided separately.
-        """
-        """Async stream chat with function calling."""
-
         # This method is overridden to provide a non-streaming version of the chat with tools.
         # Here we yield a single ChatResponse object instead of streaming multiple responses.
         async def _fake_stream() -> AsyncGenerator[ChatResponse, None]:
-            # Create a ChatResponse object with a dummy message
             response = await self.achat_with_tools(
                 tools=tools,
                 user_msg=user_msg,
