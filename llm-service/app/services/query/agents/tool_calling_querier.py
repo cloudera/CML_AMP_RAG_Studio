@@ -399,45 +399,25 @@ def _run_streamer(
 def build_function_agent(
     enhanced_query: str, llm: FunctionCallingLLM, tools: list[BaseTool]
 ) -> tuple[FunctionAgent, str]:
+    formatted_prompt = DEFAULT_AGENT_PROMPT.format(date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
+                                                   time=datetime.datetime.now().strftime("%H:%M:%S %p"), )
+    tools = cast(list[BaseTool | Callable[[], Any]], tools)
     if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
-        agent = FunctionAgent(
-            tools=cast(list[BaseTool | Callable[[], Any]], tools),
-            llm=llm,
-        )
+        agent = FunctionAgent(tools=tools, llm=llm)
         enhanced_query = (
-            "ROLE DESCRIPTION =========================================\n"
-            + DEFAULT_AGENT_PROMPT.format(
-                date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
-                time=datetime.datetime.now().strftime("%H:%M:%S %p"),
-            )
-            + "=========================================================\n"
-            "USER QUERY ==============================================\n"
-            + enhanced_query
+                "ROLE DESCRIPTION =========================================\n"
+                + formatted_prompt
+                + "=========================================================\n"
+                  "USER QUERY ==============================================\n"
+                + enhanced_query
         )
     else:
-        # TODO : Handle BedrockConverse streaming properly
         if (
-            isinstance(llm, BedrockConverse)
-            and get_model_name(llm.metadata.model_name)
-            not in BEDROCK_STREAMING_TOOL_MODELS
+                isinstance(llm, BedrockConverse)
+                and get_model_name(llm.metadata.model_name)
+                not in BEDROCK_STREAMING_TOOL_MODELS
         ):
-            fake_stream_llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
-            agent = FunctionAgent(
-                tools=cast(list[BaseTool | Callable[[], Any]], tools),
-                llm=fake_stream_llm,
-                system_prompt=DEFAULT_AGENT_PROMPT.format(
-                    date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
-                    time=datetime.datetime.now().strftime("%H:%M:%S %p"),
-                ),
-            )
-        else:
-            agent = FunctionAgent(
-                tools=cast(list[BaseTool | Callable[[], Any]], tools),
-                llm=llm,
-                system_prompt=DEFAULT_AGENT_PROMPT.format(
-                    date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
-                    time=datetime.datetime.now().strftime("%I:%M:%S %p"),
-                ),
-            )
+            llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
+        agent = FunctionAgent(tools=tools, llm=llm, system_prompt=formatted_prompt)
 
     return agent, enhanced_query
