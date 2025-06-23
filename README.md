@@ -150,6 +150,18 @@ the Node service locally, you can do so by following these steps:
 docker run -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 ```
 
+#### Modifying UI in CML
+
+* This is an unsupported workflow, but it is possible to modify the UI code in CML.
+
+- Start a CML Session from a CML Project that has the RAG Studio AMP installed.
+- Open the terminal in the CML Session and navigate to the `ui` directory.
+- Run `source ~/.bashrc` to ensure the Node environment variables are loaded.
+- Install PNPM using `npm install -g pnpm`.  Docs on PNPM can be found here: https://pnpm.io/installation#using-npm
+- Run `pnpm install` to install the dependencies.
+- Make your changes to the UI code in the `ui` directory.
+- Run `pnpm build` to build the new UI bundle.
+
 ## The Fine Print
 
 IMPORTANT: Please read the following before proceeding. This AMP includes or otherwise depends on certain third party software packages. Information about such third party software packages are made available in the notice file associated with this AMP. By configuring and launching this AMP, you will cause such third party software packages to be downloaded and installed into your environment, in some instances, from third parties' websites. For each third party software package, please see the notice file and the applicable websites for more information, including the applicable license terms. If you do not wish to download and install the third party software packages, do not configure, launch or otherwise use this AMP. By configuring, launching or otherwise using the AMP, you acknowledge the foregoing statement and agree that Cloudera is not responsible or liable in any way for the third party software packages.
