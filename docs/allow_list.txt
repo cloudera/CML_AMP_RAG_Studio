@@ -4,7 +4,7 @@ NVM:
 https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh
 
 Node 22:
-https://nodejs.org/dist/v22.15.0/node-v22.15.0-darwin-arm64.tar.xz
+https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-x64.tar.gz
 
 RAG Studio artifacts:
 https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth

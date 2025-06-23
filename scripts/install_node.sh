@@ -51,7 +51,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
 
 ### allow-list entry:
-### https://nodejs.org/dist/v22.15.0/node-v22.15.0-darwin-arm64.tar.xz
+### https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-x64.tar.gz
 nvm install v22.15.0
 nvm use 22
 
