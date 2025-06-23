@@ -401,9 +401,9 @@ def build_function_agent(
 ) -> tuple[FunctionAgent, str]:
     formatted_prompt = DEFAULT_AGENT_PROMPT.format(date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
                                                    time=datetime.datetime.now().strftime("%H:%M:%S %p"), )
-    tools = cast(list[BaseTool | Callable[[], Any]], tools)
+    callable_tools = cast(list[BaseTool | Callable[[], Any]], tools)
     if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
-        agent = FunctionAgent(tools=tools, llm=llm)
+        agent = FunctionAgent(tools=callable_tools, llm=llm)
         enhanced_query = (
                 "ROLE DESCRIPTION =========================================\n"
                 + formatted_prompt
@@ -418,6 +418,6 @@ def build_function_agent(
                 not in BEDROCK_STREAMING_TOOL_MODELS
         ):
             llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
-        agent = FunctionAgent(tools=tools, llm=llm, system_prompt=formatted_prompt)
+        agent = FunctionAgent(tools=callable_tools, llm=llm, system_prompt=formatted_prompt)
 
     return agent, enhanced_query
