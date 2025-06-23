@@ -138,6 +138,8 @@ def streaming_query(
     return chat_response
 
 
+# LlamaIndex's list of function-calling models appears out of date,
+# so we have a modified version
 def is_bedrock_function_calling_model_v2(model_name: str) -> bool:
     return get_model_name(model_name) in MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS
 
