@@ -66,6 +66,7 @@ from llama_index.core.storage.docstore.keyval_docstore import KVDocumentStore
 from llama_index.core.storage.index_store.keyval_index_store import KVIndexStore
 from llama_index.core.vector_stores import SimpleVectorStore
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
+from llama_index.llms.openai import OpenAI
 from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
@@ -75,6 +76,7 @@ from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import settings
 from ...services.metadata_apis import data_sources_metadata_api
+from ...services.models import AzureModelProvider, OpenAiModelProvider
 from ...services.models.providers import CAIIModelProvider
 
 logger = logging.getLogger(__name__)
@@ -132,9 +134,11 @@ class SummaryIndexer(BaseTextIndexer):
         embed_summaries: bool = True,
     ) -> Dict[str, Any]:
         prompt_helper: Optional[PromptHelper] = None
-        # if we're using CAII, let's be conservative, and use a small context window to account for mistral's small context
+        # if we're using CAII, let's be conservative and use a small context window to account for mistral's small context
         if CAIIModelProvider.is_enabled():
             prompt_helper = PromptHelper(context_window=3000)
+        if AzureModelProvider.is_enabled() or OpenAiModelProvider.is_enabled():
+            prompt_helper = PromptHelper(context_window=min(llm.metadata.context_window, 10000))
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
