@@ -119,15 +119,17 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   return (
     <Flex style={{ width: 500, height: 300, margin: 8 }} vertical>
       <Flex align={"start"}>
-        <Tag
-          style={{
-            backgroundColor: cdlOrange500,
-            color: cdlWhite,
-            borderRadius: 10,
-          }}
-        >
-          &beta;
-        </Tag>
+        <Tooltip title="Tool Calling (Beta)">
+          <Tag
+            style={{
+              backgroundColor: cdlOrange500,
+              color: cdlWhite,
+              borderRadius: 10,
+            }}
+          >
+            &beta;
+          </Tag>
+        </Tooltip>
         <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
           Tools Manager{" "}
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
