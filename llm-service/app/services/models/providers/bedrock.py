@@ -214,10 +214,8 @@ class BedrockModelProvider(ModelProvider):
                             model_id=model["modelId"],
                             name=model["modelName"],
                             available=True,
-                            tool_calling_supported=(
-                                True
-                                if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS
-                                else False
+                            tool_calling_supported=BedrockModelProvider._is_tool_calling_supported(
+                                model
                             ),
                         )
                     )
@@ -229,13 +227,15 @@ class BedrockModelProvider(ModelProvider):
                     )
                     if arn_model_response:
                         arn_model_response.tool_calling_supported = (
-                            True
-                            if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS
-                            else False
+                            BedrockModelProvider._is_tool_calling_supported(model)
                         )
                         models.append(arn_model_response)
 
         return models
+
+    @staticmethod
+    def _is_tool_calling_supported(model: dict[str, Any]) -> bool:
+        return True if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS else False
 
     @staticmethod
     def _get_model_arn_by_profiles(
