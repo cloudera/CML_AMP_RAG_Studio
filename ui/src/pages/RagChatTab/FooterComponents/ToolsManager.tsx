@@ -209,12 +209,12 @@ const ToolsManagerButton = () => {
   }
 
   return (
-    <Tooltip title={!toolsManagerOpen ? "Tools manager" : ""}>
-      <ToolsManager
-        isOpen={toolsManagerOpen}
-        setIsOpen={setToolsManagerOpen}
-        activeSession={activeSession}
-      >
+    <ToolsManager
+      isOpen={toolsManagerOpen}
+      setIsOpen={setToolsManagerOpen}
+      activeSession={activeSession}
+    >
+      <Tooltip title={!toolsManagerOpen ? "Tools Manager" : ""}>
         <Button
           icon={<ToolOutlined />}
           type="text"
@@ -224,8 +224,8 @@ const ToolsManagerButton = () => {
             setToolsManagerOpen(!toolsManagerOpen);
           }}
         />
-      </ToolsManager>
-    </Tooltip>
+      </Tooltip>
+    </ToolsManager>
   );
 };
 
