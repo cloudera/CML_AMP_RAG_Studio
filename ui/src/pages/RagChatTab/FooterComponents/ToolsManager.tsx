@@ -129,7 +129,22 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
           &beta;
         </Tag>
         <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
-          Tools Manager
+          Tools Manager{" "}
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            (See{" "}
+            <Typography.Link
+              onClick={() => {
+                window.open(
+                  "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
+                  "_blank",
+                );
+              }}
+              style={{ fontSize: 12 }}
+            >
+              docs
+            </Typography.Link>{" "}
+            for adding additional tools)
+          </Typography.Text>
         </Typography.Title>
       </Flex>
       <List
