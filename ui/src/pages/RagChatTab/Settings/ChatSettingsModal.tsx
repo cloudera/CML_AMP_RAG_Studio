@@ -55,6 +55,7 @@ import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSli
 import { useContext, useEffect } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
+  SessionQueryConfiguration,
   UpdateSessionRequest,
   useUpdateSessionMutation,
 } from "src/api/sessionApi.ts";
@@ -112,9 +113,12 @@ const ChatSettingsModal = ({
       return model.model_id === form.getFieldValue("inferenceModel");
     });
 
-    if (activeSession.inferenceModel) {
+    if (model?.tool_calling_supported) {
+      const queryConfiguration: SessionQueryConfiguration = form.getFieldValue(
+        "queryConfiguration",
+      ) as SessionQueryConfiguration;
       form.setFieldsValue({
-        name: activeSession.name,
+        queryConfiguration: { ...queryConfiguration, enableToolCalling: true },
       });
     }
   }, [form.getFieldValue("inferenceModel")]);

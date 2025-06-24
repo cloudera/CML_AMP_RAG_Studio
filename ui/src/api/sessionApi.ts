@@ -55,7 +55,7 @@ import {
 } from "src/api/utils.ts";
 import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
 
-interface SessionQueryConfiguration {
+export interface SessionQueryConfiguration {
   enableHyde: boolean;
   enableSummaryFilter: boolean;
   enableToolCalling: boolean;

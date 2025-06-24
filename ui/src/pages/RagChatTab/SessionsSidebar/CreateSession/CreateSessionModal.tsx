@@ -42,6 +42,7 @@ import CreateSessionForm from "./CreateSessionForm.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
   CreateSessionRequest,
+  SessionQueryConfiguration,
   useCreateSessionMutation,
 } from "src/api/sessionApi.ts";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -56,12 +57,7 @@ export interface CreateSessionType {
   inferenceModel: string;
   rerankModel?: string;
   responseChunks: number;
-  queryConfiguration: {
-    enableHyde: boolean;
-    enableSummaryFilter: boolean;
-    enableToolCalling: boolean;
-    selectedTools: string[];
-  };
+  queryConfiguration: SessionQueryConfiguration;
 }
 
 const CreateSessionModal = ({
