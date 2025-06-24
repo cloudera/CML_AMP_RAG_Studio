@@ -55,7 +55,6 @@ import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSli
 import { useContext, useEffect } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
-  SessionQueryConfiguration,
   UpdateSessionRequest,
   useUpdateSessionMutation,
 } from "src/api/sessionApi.ts";
@@ -107,25 +106,6 @@ const ChatSettingsModal = ({
       });
     }
   }, [activeSession.name, form.setFieldsValue]);
-
-  useEffect(() => {
-    const model = llmModels?.find((model) => {
-      return model.model_id === form.getFieldValue("inferenceModel");
-    });
-
-    if (model?.tool_calling_supported) {
-      const queryConfiguration: SessionQueryConfiguration = form.getFieldValue(
-        "queryConfiguration",
-      ) as SessionQueryConfiguration;
-      form.setFieldsValue({
-        queryConfiguration: { ...queryConfiguration, enableToolCalling: true },
-      });
-    }
-  }, [
-    form.getFieldValue("inferenceModel"),
-    llmModels,
-    form.getFieldValue("queryConfiguration"),
-  ]);
 
   const handleUpdateSession = () => {
     form
@@ -236,6 +216,18 @@ const ChatSettingsModal = ({
     },
   ];
 
+  const onValuesChange = (_: any, allValues: Omit<CreateSessionType, "id">) => {
+    if (allValues.inferenceModel) {
+      const model = llmModels?.find(
+        (model) => model.model_id === allValues.inferenceModel,
+      );
+      form.setFieldValue(
+        ["queryConfiguration", "enableToolCalling"],
+        model?.tool_calling_supported ?? false,
+      );
+    }
+  };
+
   return (
     <Modal
       title={`Chat Settings: ${activeSession.name}`}
@@ -247,7 +239,12 @@ const ChatSettingsModal = ({
       width={600}
     >
       <Flex vertical gap={10}>
-        <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+        <Form
+          autoCorrect="off"
+          form={form}
+          clearOnDestroy={true}
+          onValuesChange={onValuesChange}
+        >
           <Form.Item
             name="dataSourceIds"
             label="Knowledge Base"
