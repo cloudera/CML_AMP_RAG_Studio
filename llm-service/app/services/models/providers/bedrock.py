@@ -227,12 +227,12 @@ class BedrockModelProvider(ModelProvider):
                             model["modelId"], model_arns
                         )
                     )
-                    arn_model_response.tool_calling_supported = (
-                        True
-                        if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS
-                        else False
-                    )
                     if arn_model_response:
+                        arn_model_response.tool_calling_supported = (
+                            True
+                            if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS
+                            else False
+                        )
                         models.append(arn_model_response)
 
         return models
