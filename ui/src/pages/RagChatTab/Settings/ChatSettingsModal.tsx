@@ -216,13 +216,10 @@ const ChatSettingsModal = ({
     },
   ];
 
-  const onValuesChange = (
-    changedValues: any,
-    allValues: Omit<CreateSessionType, "id">,
+  const onInferenceModelChange = (
+    changedValues: Partial<Omit<CreateSessionType, "id">>,
   ) => {
-    if (
-      changedValues?.inferenceModel satisfies CreateSessionType["inferenceModel"]
-    ) {
+    if (changedValues.inferenceModel) {
       const model = llmModels?.find(
         (model) => model.model_id === changedValues.inferenceModel,
       );
@@ -248,7 +245,7 @@ const ChatSettingsModal = ({
           autoCorrect="off"
           form={form}
           clearOnDestroy={true}
-          onValuesChange={onValuesChange}
+          onValuesChange={onInferenceModelChange}
         >
           <Form.Item
             name="dataSourceIds"

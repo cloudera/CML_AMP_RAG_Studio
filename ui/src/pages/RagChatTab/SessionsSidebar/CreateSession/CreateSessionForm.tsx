@@ -67,7 +67,7 @@ const layout = {
 };
 
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
-  const { data } = useGetLlmModels();
+  const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
 
   const advancedOptions = () => [
@@ -79,7 +79,11 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         <>
           <Form.Item<CreateSessionType>
             name={["queryConfiguration", "enableToolCalling"]}
-            initialValue={false}
+            initialValue={
+              llmModels === undefined || llmModels.length === 0
+                ? false
+                : llmModels[0].tool_calling_supported
+            }
             valuePropName="checked"
             label={
               <Popover
@@ -156,12 +160,27 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
     },
   ];
 
+  const onInferenceModelChange = (
+    changedValues: Partial<Omit<CreateSessionType, "id">>,
+  ) => {
+    if (changedValues.inferenceModel) {
+      const model = llmModels?.find(
+        (model) => model.model_id === changedValues.inferenceModel,
+      );
+      form.setFieldValue(
+        ["queryConfiguration", "enableToolCalling"],
+        model?.tool_calling_supported ?? false,
+      );
+    }
+  };
+
   return (
     <Form
       id="create-new-session"
       form={form}
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
+      onValuesChange={onInferenceModelChange}
     >
       <Form.Item name="dataSourceIds" label="Knowledge Base">
         <Select
@@ -181,13 +200,15 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       </Form.Item>
       <Form.Item<CreateSessionType>
         initialValue={
-          data === undefined || data.length === 0 ? "" : data[0].model_id
+          llmModels === undefined || llmModels.length === 0
+            ? ""
+            : llmModels[0].model_id
         }
         name="inferenceModel"
         label="Response synthesizer model"
         rules={[{ required: true }]}
       >
-        <Select options={transformModelOptions(data)} />
+        <Select options={transformModelOptions(llmModels)} />
       </Form.Item>
       <Form.Item
         name="rerankModel"
