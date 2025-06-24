@@ -107,6 +107,18 @@ const ChatSettingsModal = ({
     }
   }, [activeSession.name, form.setFieldsValue]);
 
+  useEffect(() => {
+    const model = llmModels?.find((model) => {
+      return model.model_id === form.getFieldValue("inferenceModel");
+    });
+
+    if (activeSession.inferenceModel) {
+      form.setFieldsValue({
+        name: activeSession.name,
+      });
+    }
+  }, [form.getFieldValue("inferenceModel")]);
+
   const handleUpdateSession = () => {
     form
       .validateFields()

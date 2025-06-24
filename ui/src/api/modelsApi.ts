@@ -51,6 +51,7 @@ export interface Model {
   model_id: string;
   available: boolean | null;
   replica_count?: number;
+  tool_calling_supported: boolean;
 }
 
 export const useGetModelById = (model_id?: string) => {
