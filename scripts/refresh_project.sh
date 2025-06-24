@@ -69,6 +69,8 @@ if [ $return_code -ne 0 ]; then
 fi
 uv sync --no-dev
 
+set +e
+
 cd ..
 # unzip the frontend tarball
 cd ui
