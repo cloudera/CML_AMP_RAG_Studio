@@ -37,7 +37,10 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from llama_index.llms.bedrock_converse.utils import BEDROCK_FUNCTION_CALLING_MODELS
+from llama_index.llms.bedrock_converse.utils import (
+    BEDROCK_FUNCTION_CALLING_MODELS,
+    get_model_name,
+)
 from llama_index.llms.openai.utils import (
     is_function_calling_model,
     ALL_AVAILABLE_MODELS,
@@ -76,6 +79,15 @@ from .chat_engine import build_flexible_chat_engine, FlexibleContextChatEngine
 from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
+
+LLAMA_3_2_NON_FUNCTION_CALLING_MODELS = {
+    "meta.llama3-2-1b-instruct-v1:0",
+    "meta.llama3-2-3b-instruct-v1:0",
+}
+
+MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS = tuple(
+    set(BEDROCK_FUNCTION_CALLING_MODELS) - LLAMA_3_2_NON_FUNCTION_CALLING_MODELS
+)
 
 
 def streaming_query(
@@ -126,12 +138,20 @@ def streaming_query(
     return chat_response
 
 
+# LlamaIndex's list of function-calling models appears out of date,
+# so we have a modified version
+def is_bedrock_function_calling_model_v2(model_name: str) -> bool:
+    return get_model_name(model_name) in MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS
+
+
 def check_for_tool_calling_support(llm: LLM) -> None:
-    if BedrockModelProvider.is_enabled() and not llm.metadata.is_function_calling_model:
+    if BedrockModelProvider.is_enabled() and not is_bedrock_function_calling_model_v2(
+        llm.metadata.model_name
+    ):
         raise HTTPException(
             status_code=422,
-            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling.  "
-            f"The following models support tool calling: {', '.join(list(BEDROCK_FUNCTION_CALLING_MODELS))}.",
+            detail=f"Tool calling is enabled, but the model {get_model_name(llm.metadata.model_name)} does not support tool calling.  "
+            f"The following models support tool calling: {', '.join(list(MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS))}.",
         )
     if (
         OpenAiModelProvider.is_enabled() or AzureModelProvider.is_enabled()

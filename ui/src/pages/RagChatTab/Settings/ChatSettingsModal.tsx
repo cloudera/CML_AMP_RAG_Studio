@@ -52,7 +52,7 @@ import {
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   UpdateSessionRequest,
@@ -77,8 +77,8 @@ const ChatSettingsModal = ({
   const { data: rerankingModels } = useGetRerankingModels();
   const {
     dataSourcesQuery: { dataSources },
+    activeSession,
   } = useContext(RagChatContext);
-  const { activeSession } = useContext(RagChatContext);
   const [form] = Form.useForm<Omit<CreateSessionType, "id">>();
   const queryClient = useQueryClient();
   const updateSession = useUpdateSessionMutation({
@@ -98,6 +98,14 @@ const ChatSettingsModal = ({
   if (!activeSession) {
     return null;
   }
+
+  useEffect(() => {
+    if (activeSession.name) {
+      form.setFieldsValue({
+        name: activeSession.name,
+      });
+    }
+  }, [activeSession.name, form.setFieldsValue]);
 
   const handleUpdateSession = () => {
     form

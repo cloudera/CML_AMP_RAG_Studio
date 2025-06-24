@@ -302,8 +302,9 @@ def stream_chat_completion(
                     yield f"data: {event_json}\n\n"
                     first_message = False
                 response_id = response.additional_kwargs["response_id"]
-                json_delta = json.dumps({"text": response.delta})
-                yield f"data: {json_delta}\n\n"
+                if response.delta:
+                    json_delta = json.dumps({"text": response.delta})
+                    yield f"data: {json_delta}\n\n"
 
             if not cancel_event.is_set() and response_id:
                 done = ChatEvent(type="done", name="chat_done", timestamp=time.time())
