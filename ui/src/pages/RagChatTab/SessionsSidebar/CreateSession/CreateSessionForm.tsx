@@ -55,6 +55,7 @@ import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSli
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
 import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
+import { onInferenceModelChange } from "pages/RagChatTab/Settings/ChatSettingsModal.tsx";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
@@ -160,27 +161,17 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
     },
   ];
 
-  const onInferenceModelChange = (
-    changedValues: Partial<Omit<CreateSessionType, "id">>,
-  ) => {
-    if (changedValues.inferenceModel) {
-      const model = llmModels?.find(
-        (model) => model.model_id === changedValues.inferenceModel,
-      );
-      form.setFieldValue(
-        ["queryConfiguration", "enableToolCalling"],
-        model?.tool_calling_supported ?? false,
-      );
-    }
-  };
-
   return (
     <Form
       id="create-new-session"
       form={form}
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
-      onValuesChange={onInferenceModelChange}
+      onValuesChange={(
+        changedValues: Partial<Omit<CreateSessionType, "id">>,
+      ) => {
+        onInferenceModelChange(changedValues, form, llmModels);
+      }}
     >
       <Form.Item name="dataSourceIds" label="Knowledge Base">
         <Select

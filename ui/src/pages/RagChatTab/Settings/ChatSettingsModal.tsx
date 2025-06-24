@@ -40,6 +40,7 @@ import {
   Collapse,
   Flex,
   Form,
+  FormInstance,
   Input,
   Modal,
   Popover,
@@ -49,7 +50,11 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
+import {
+  Model,
+  useGetLlmModels,
+  useGetRerankingModels,
+} from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useContext, useEffect } from "react";
@@ -65,6 +70,22 @@ import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSessio
 
 import { formatDataSource } from "src/utils/formatters.ts";
 import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
+
+export const onInferenceModelChange = (
+  changedValues: Partial<Omit<CreateSessionType, "id">>,
+  form: FormInstance<Omit<CreateSessionType, "id">>,
+  llmModels?: Model[],
+) => {
+  if (changedValues.inferenceModel) {
+    const model = llmModels?.find(
+      (model) => model.model_id === changedValues.inferenceModel,
+    );
+    form.setFieldValue(
+      ["queryConfiguration", "enableToolCalling"],
+      model?.tool_calling_supported ?? false,
+    );
+  }
+};
 
 const ChatSettingsModal = ({
   open,
@@ -216,20 +237,6 @@ const ChatSettingsModal = ({
     },
   ];
 
-  const onInferenceModelChange = (
-    changedValues: Partial<Omit<CreateSessionType, "id">>,
-  ) => {
-    if (changedValues.inferenceModel) {
-      const model = llmModels?.find(
-        (model) => model.model_id === changedValues.inferenceModel,
-      );
-      form.setFieldValue(
-        ["queryConfiguration", "enableToolCalling"],
-        model?.tool_calling_supported ?? false,
-      );
-    }
-  };
-
   return (
     <Modal
       title={`Chat Settings: ${activeSession.name}`}
@@ -245,7 +252,11 @@ const ChatSettingsModal = ({
           autoCorrect="off"
           form={form}
           clearOnDestroy={true}
-          onValuesChange={onInferenceModelChange}
+          onValuesChange={(
+            changedValues: Partial<Omit<CreateSessionType, "id">>,
+          ) => {
+            onInferenceModelChange(changedValues, form, llmModels);
+          }}
         >
           <Form.Item
             name="dataSourceIds"
