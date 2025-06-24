@@ -69,8 +69,7 @@ if [ $return_code -ne 0 ]; then
 fi
 uv sync --no-dev
 
-set +e
-
+echo "Unzipping prebuilt artifacts..."
 cd ..
 # unzip the frontend tarball
 cd ui
