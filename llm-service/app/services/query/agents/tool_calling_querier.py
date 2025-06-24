@@ -209,15 +209,15 @@ def stream_chat(
                 continue
 
     # Use the existing chat engine with the enhanced query for streaming response
-    tools: list[BaseTool] = []
-    if use_retrieval and chat_engine:
+    tools: list[BaseTool] = mcp_tools
+    # Use tool calling only if retrieval is not the only tool to optimize performance
+    if tools and use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
             retriever=chat_engine.retriever,
             summaries=data_source_summaries,
             node_postprocessors=chat_engine.node_postprocessors,
         )
-        tools.append(retrieval_tool)
-    tools.extend(mcp_tools)
+        tools.insert(0, retrieval_tool)
 
     gen, source_nodes = _run_streamer(chat_messages, enhanced_query, llm, tools)
 
