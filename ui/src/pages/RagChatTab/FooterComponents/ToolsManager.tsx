@@ -66,7 +66,6 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 
 const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   const { data, isLoading } = useToolsQuery();
@@ -120,21 +119,31 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   return (
     <Flex style={{ width: 500, height: 300, margin: 8 }} vertical>
       <Flex align={"start"}>
-        <Tooltip title="Tool Calling (Beta)">
-          <Tag
-            style={{
-              backgroundColor: cdlOrange500,
-              color: cdlWhite,
-              borderRadius: 10,
-            }}
-          >
-            &beta;
-          </Tag>
-        </Tooltip>
+        <Tag
+          style={{
+            backgroundColor: cdlOrange500,
+            color: cdlWhite,
+            borderRadius: 10,
+          }}
+        >
+          &beta;
+        </Tag>
         <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
           Tools Manager{" "}
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            (Manage available tools <Link to={"/tools"}>here</Link>)
+            (See{" "}
+            <Typography.Link
+              onClick={() => {
+                window.open(
+                  "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
+                  "_blank",
+                );
+              }}
+              style={{ fontSize: 12 }}
+            >
+              docs
+            </Typography.Link>{" "}
+            for adding additional tools)
           </Typography.Text>
         </Typography.Title>
       </Flex>
@@ -198,12 +207,12 @@ const ToolsManagerButton = () => {
   }
 
   return (
-    <ToolsManager
-      isOpen={toolsManagerOpen}
-      setIsOpen={setToolsManagerOpen}
-      activeSession={activeSession}
-    >
-      <Tooltip title={!toolsManagerOpen ? "Tools Manager" : ""}>
+    <Tooltip title={!toolsManagerOpen ? "Tools manager" : ""}>
+      <ToolsManager
+        isOpen={toolsManagerOpen}
+        setIsOpen={setToolsManagerOpen}
+        activeSession={activeSession}
+      >
         <Button
           icon={<ToolOutlined />}
           type="text"
@@ -213,8 +222,8 @@ const ToolsManagerButton = () => {
             setToolsManagerOpen(!toolsManagerOpen);
           }}
         />
-      </Tooltip>
-    </ToolsManager>
+      </ToolsManager>
+    </Tooltip>
   );
 };
 
