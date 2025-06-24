@@ -121,7 +121,11 @@ const ChatSettingsModal = ({
         queryConfiguration: { ...queryConfiguration, enableToolCalling: true },
       });
     }
-  }, [form.getFieldValue("inferenceModel")]);
+  }, [
+    form.getFieldValue("inferenceModel"),
+    llmModels,
+    form.getFieldValue("queryConfiguration"),
+  ]);
 
   const handleUpdateSession = () => {
     form
