@@ -216,10 +216,15 @@ const ChatSettingsModal = ({
     },
   ];
 
-  const onValuesChange = (_: any, allValues: Omit<CreateSessionType, "id">) => {
-    if (allValues.inferenceModel) {
+  const onValuesChange = (
+    changedValues: any,
+    allValues: Omit<CreateSessionType, "id">,
+  ) => {
+    if (
+      changedValues?.inferenceModel satisfies CreateSessionType["inferenceModel"]
+    ) {
       const model = llmModels?.find(
-        (model) => model.model_id === allValues.inferenceModel,
+        (model) => model.model_id === changedValues.inferenceModel,
       );
       form.setFieldValue(
         ["queryConfiguration", "enableToolCalling"],
