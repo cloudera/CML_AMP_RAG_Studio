@@ -64,6 +64,13 @@ DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 BedrockModality = Literal["TEXT", "IMAGE", "EMBEDDING"]
 
+BEDROCK_TOOL_CALLING_MODELS = {
+    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "anthropic.claude-sonnet-4-20250514-v1:0",
+}
+
 
 class BedrockModelProvider(ModelProvider):
     @staticmethod
@@ -207,6 +214,9 @@ class BedrockModelProvider(ModelProvider):
                             model_id=model["modelId"],
                             name=model["modelName"],
                             available=True,
+                            tool_calling_supported=BedrockModelProvider._is_tool_calling_supported(
+                                model
+                            ),
                         )
                     )
                 else:
@@ -216,9 +226,16 @@ class BedrockModelProvider(ModelProvider):
                         )
                     )
                     if arn_model_response:
+                        arn_model_response.tool_calling_supported = (
+                            BedrockModelProvider._is_tool_calling_supported(model)
+                        )
                         models.append(arn_model_response)
 
         return models
+
+    @staticmethod
+    def _is_tool_calling_supported(model: dict[str, Any]) -> bool:
+        return True if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS else False
 
     @staticmethod
     def _get_model_arn_by_profiles(

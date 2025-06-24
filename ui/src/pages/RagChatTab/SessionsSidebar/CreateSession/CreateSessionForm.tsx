@@ -55,6 +55,7 @@ import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSli
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
 import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
+import { onInferenceModelChange } from "pages/RagChatTab/Settings/ChatSettingsModal.tsx";
 
 export interface CreateSessionFormProps {
   form: FormInstance<CreateSessionType>;
@@ -67,7 +68,7 @@ const layout = {
 };
 
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
-  const { data } = useGetLlmModels();
+  const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
 
   const advancedOptions = () => [
@@ -79,7 +80,11 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         <>
           <Form.Item<CreateSessionType>
             name={["queryConfiguration", "enableToolCalling"]}
-            initialValue={false}
+            initialValue={
+              llmModels === undefined || llmModels.length === 0
+                ? false
+                : llmModels[0].tool_calling_supported
+            }
             valuePropName="checked"
             label={
               <Popover
@@ -162,6 +167,11 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       form={form}
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
+      onValuesChange={(
+        changedValues: Partial<Omit<CreateSessionType, "id">>,
+      ) => {
+        onInferenceModelChange(changedValues, form, llmModels);
+      }}
     >
       <Form.Item name="dataSourceIds" label="Knowledge Base">
         <Select
@@ -181,13 +191,15 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       </Form.Item>
       <Form.Item<CreateSessionType>
         initialValue={
-          data === undefined || data.length === 0 ? "" : data[0].model_id
+          llmModels === undefined || llmModels.length === 0
+            ? ""
+            : llmModels[0].model_id
         }
         name="inferenceModel"
         label="Response synthesizer model"
         rules={[{ required: true }]}
       >
-        <Select options={transformModelOptions(data)} />
+        <Select options={transformModelOptions(llmModels)} />
       </Form.Item>
       <Form.Item
         name="rerankModel"

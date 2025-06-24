@@ -56,6 +56,7 @@ class AzureModelProvider(ModelProvider):
             ModelResponse(
                 model_id="gpt-4o",
                 name="OpenAI GPT-4o",
+                tool_calling_supported=True,
             ),
             ModelResponse(
                 model_id="gpt-4o-mini",

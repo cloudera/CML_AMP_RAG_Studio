@@ -70,7 +70,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class Endpoint(BaseModel):
-    model_config = ConfigDict(protected_namespaces=(), extra='ignore')
+    model_config = ConfigDict(protected_namespaces=(), extra="ignore")
     namespace: str
     name: str
     url: str
@@ -95,7 +95,7 @@ class Endpoint(BaseModel):
 
 
 class ListEndpointEntry(BaseModel):
-    model_config = ConfigDict(extra='ignore')
+    model_config = ConfigDict(extra="ignore")
     namespace: str
     name: str
     url: str
@@ -112,3 +112,4 @@ class ModelResponse:
     name: str
     available: Optional[bool] = None
     replica_count: Optional[int] = None
+    tool_calling_supported: bool = False

@@ -60,6 +60,7 @@ class OpenAiModelProvider(ModelProvider):
             ModelResponse(
                 model_id="gpt-4o",
                 name="OpenAI GPT-4o",
+                tool_calling_supported=True,
             ),
         ]
 
@@ -86,7 +87,6 @@ class OpenAiModelProvider(ModelProvider):
             return httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
         else:
             return None
-
 
     @staticmethod
     def get_llm_model(name: str) -> OpenAI:
