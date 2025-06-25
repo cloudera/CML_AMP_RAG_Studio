@@ -20,7 +20,6 @@ on:
           - customer-hotfix
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -124,3 +123,25 @@ jobs:
             fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.BRANCH }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          lfs: true
+
+      - name: Build Docker image
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker build -t rag-studio-runtime:${{ github.event.inputs.VERSION }} -t rag-studio-runtime:latest -f runtime.Dockerfile .
+          docker push ghcr.io/rag-studio-runtime:${{ github.event.inputs.VERSION }}
+        working-directory: llm-service
