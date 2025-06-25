@@ -63,7 +63,7 @@ export interface AddToolFormValues {
   command?: string;
   url?: string;
   args?: string;
-  env?: string;
+  env?: { key: string; value: string }[];
   display_name: string;
   description: string;
 }
