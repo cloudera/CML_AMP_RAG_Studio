@@ -42,6 +42,7 @@ import {
   DatabaseOutlined,
   LineChartOutlined,
   SettingOutlined,
+  ToolOutlined,
 } from "@ant-design/icons";
 import {
   Flex,
@@ -90,6 +91,10 @@ const Sidebar: React.FC = () => {
 
   const navToSettings = () => {
     navigate({ to: "/settings" }).catch(() => null);
+  };
+
+  const navToTools = () => {
+    navigate({ to: "/tools" }).catch(() => null);
   };
 
   const isValidConfig = Boolean(config && !config.is_valid_config);
@@ -181,9 +186,19 @@ const Sidebar: React.FC = () => {
     config,
   });
 
+  const toolsItem = getItem({
+    label: <div data-testid="tools-nav">Tools</div>,
+    key: "tools",
+    disabled: enableFullUsage,
+    onClick: navToTools,
+    icon: <ToolOutlined />,
+    config,
+  });
+
   const items = [...baseItems, analyticsItem];
 
   if (config) {
+    items.push(toolsItem);
     items.push(settingsItem);
   }
 
@@ -198,6 +213,8 @@ const Sidebar: React.FC = () => {
       return ["projects"];
     } else if (matchRoute({ to: "/settings", fuzzy: true })) {
       return ["settings"];
+    } else if (matchRoute({ to: "/tools", fuzzy: true })) {
+      return ["tools"];
     } else {
       return ["chat"];
     }
