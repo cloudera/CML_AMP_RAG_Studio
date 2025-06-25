@@ -67,6 +67,8 @@ set -e
 if [ $return_code -ne 0 ]; then
   pip install uv
 fi
+
+export VIRTUAL_ENV=/app/.venv
 uv sync --no-dev
 
 echo "Unzipping prebuilt artifacts..."
