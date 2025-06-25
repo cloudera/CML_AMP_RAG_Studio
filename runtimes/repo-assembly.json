@@ -1,0 +1,18 @@
+{
+  "assembly_metadata_version": 1,
+  "runtimes": [
+    {
+      "image_identifier": "ghcr.io/cloudera/rag-studio-runtime:latest",
+      "runtime_metadata_version": 2,
+      "editor": "JupyterLab",
+      "edition": "RAG Studio Runtime",
+      "description": "This runtime includes a virtual environment with the necessary dependencies to run the RAG Studio application.",
+      "kernel": "Python 3.12",
+      "full_version": "0.1.1",
+      "short_version": "0.1",
+      "maintenance_version": 1,
+      "git_hash": "25ac39f9f3d2cc7da6435e7f12fd7cda754da5fe",
+      "gbn": 64692867
+    }
+  ]
+}
