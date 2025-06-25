@@ -66,6 +66,7 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   const { data, isLoading } = useToolsQuery();
@@ -133,19 +134,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
         <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
           Tools Manager{" "}
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            (See{" "}
-            <Typography.Link
-              onClick={() => {
-                window.open(
-                  "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
-                  "_blank",
-                );
-              }}
-              style={{ fontSize: 12 }}
-            >
-              docs
-            </Typography.Link>{" "}
-            for adding additional tools)
+            (Manage available tools <Link to={"/tools"}>here</Link>)
           </Typography.Text>
         </Typography.Title>
       </Flex>
