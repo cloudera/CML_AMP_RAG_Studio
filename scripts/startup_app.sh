@@ -78,7 +78,9 @@ source scripts/load_nvm.sh > /dev/null
 cd llm-service
 mkdir -p $MLFLOW_RECONCILER_DATA_PATH
 
+export VIRTUAL_ENV=/app/.venv
 uv run fastapi run --host 127.0.0.1 --port 8081 2>&1 &
+
 PY_BACKGROUND_PID=$!
 # wait for the python backend to be ready
 while ! curl --output /dev/null --silent --fail http://localhost:8081/amp; do
