@@ -38,7 +38,7 @@
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any, Optional, cast
 from urllib.parse import unquote
 
 import re
@@ -73,10 +73,10 @@ class Tool(ToolMetadata):
     env: Optional[dict[str, str]] = None
 
 
-mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
+mcp_json_path: str = os.path.join(settings.tools_dir, "mcp.json")
 
 
-def get_mcp_config() -> dict:
+def get_mcp_config() -> dict[str, Any]:
     """
     Reads the MCP configuration from the mcp.json file.
     """
@@ -84,7 +84,7 @@ def get_mcp_config() -> dict:
         raise FileNotFoundError(f"MCP configuration file not found at {mcp_json_path}")
 
     with open(mcp_json_path, "r") as f:
-        return json.load(f)
+        return cast(dict[str, Any], json.load(f))
 
 
 @router.get(
