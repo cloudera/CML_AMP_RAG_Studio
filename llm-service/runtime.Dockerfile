@@ -1,12 +1,14 @@
 FROM docker.repository.cloudera.com/cloudera/cdsw/ml-runtime-pbj-jupyterlab-python3.12-standard:2025.01.3-b8
 
+RUN mkdir -p /app
+RUN chown -R cdsw:cdsw /app
+RUN pip install uv
 USER cdsw
 
-RUN pip install uv
 COPY ./pyproject.toml /app/
 COPY ./uv.lock /app/
 WORKDIR /app
-RUN uv sync
+RUN uv sync -n
 
 COPY ./app /app
 COPY ./scripts /scripts
