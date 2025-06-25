@@ -1,1 +1,1 @@
-export RELEASE_TAG=dev-testing-3
+export RELEASE_TAG=dev-testing-4
