@@ -10,6 +10,11 @@ COPY ./uv.lock /app/
 WORKDIR /app
 RUN uv sync -n -p /usr/local/bin/python3.12
 
+RUN wget https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz -O amazon-corretto-21-x64-linux-jdk.tar.gz
+RUN wget https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth -O craft_mlt_25k.pth
+RUN wget https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth -O latin_g2.pth
+RUN wget https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64-unknown-linux-musl.tar.gz -O qdrant.tar.gz
+
 COPY ./app /app
 COPY ./scripts /scripts
 ENV PATH="/app/.venv/bin:$PATH"
@@ -19,7 +24,7 @@ ENTRYPOINT []
 
 ENV ML_RUNTIME_EDITION="RAG Studio Runtime" \
        	ML_RUNTIME_SHORT_VERSION="0.1" \
-        ML_RUNTIME_MAINTENANCE_VERSION=2 \
+        ML_RUNTIME_MAINTENANCE_VERSION=3 \
         ML_RUNTIME_DESCRIPTION="This runtime includes a virtual environment with the necessary dependencies to run the RAG Studio application."
 ENV ML_RUNTIME_FULL_VERSION="${ML_RUNTIME_SHORT_VERSION}.${ML_RUNTIME_MAINTENANCE_VERSION}"
 LABEL com.cloudera.ml.runtime.edition=$ML_RUNTIME_EDITION \

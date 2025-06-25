@@ -2,7 +2,7 @@
   "assembly_metadata_version": 1,
   "runtimes": [
     {
-      "image_identifier": "ghcr.io/cloudera/rag-studio-runtime:dev-testing-2",
+      "image_identifier": "ghcr.io/cloudera/rag-studio-runtime:dev-testing-3",
       "runtime_metadata_version": 2,
       "editor": "JupyterLab",
       "edition": "RAG Studio Runtime",
@@ -10,7 +10,7 @@
       "kernel": "Python 3.12",
       "full_version": "0.1.2",
       "short_version": "0.1",
-      "maintenance_version": 2,
+      "maintenance_version": 3,
       "git_hash": "25ac39f9f3d2cc7da6435e7f12fd7cda754da5fe",
       "gbn": 64692867
     }
