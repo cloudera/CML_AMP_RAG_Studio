@@ -63,7 +63,7 @@ const CommandFormFields = () => {
 
       <Flex gap={6} vertical={true}>
         <Typography.Text>Environment Variables</Typography.Text>
-        <Form.List name="env" initialValue={[{ key: "", value: "" }]}>
+        <Form.List name="env">
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
@@ -207,7 +207,14 @@ export const AddNewToolModal = ({
         <Form.Item
           name="name"
           label="Internal Name"
-          rules={[{ required: true, message: "Please enter a name" }]}
+          rules={[
+            { required: true, message: "Please enter a name" },
+            {
+              pattern: /^[a-zA-Z0-9\\-]+$/,
+              message: "Only alphanumeric characters and dashes are allowed",
+              warningOnly: false,
+            },
+          ]}
         >
           <Input placeholder="my-tool-name" />
         </Form.Item>

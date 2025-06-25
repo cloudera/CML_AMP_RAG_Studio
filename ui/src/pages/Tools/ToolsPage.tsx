@@ -65,7 +65,12 @@ const ToolsPage = () => {
 
   const columns = [
     {
-      title: "Name",
+      title: "Internal Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Display Name",
       dataIndex: ["metadata", "display_name"],
       key: "display_name",
     },
@@ -121,6 +126,20 @@ const ToolsPage = () => {
             Manage external tools and services that can be used by the RAG
             Studio application. These tools can be used during query processing
             to enhance the capabilities of the system.
+            <br />
+            <br />
+            See{" "}
+            <Typography.Link
+              onClick={() => {
+                window.open(
+                  "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
+                  "_blank",
+                );
+              }}
+            >
+              docs
+            </Typography.Link>{" "}
+            for manually adding additional tools.
           </Typography.Paragraph>
 
           <Card>
@@ -147,6 +166,7 @@ const ToolsPage = () => {
               columns={columns}
               rowKey="name"
               loading={isLoading}
+              scroll={{ x: 1 }}
             />
           </Card>
           <AddNewToolModal

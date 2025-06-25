@@ -39,7 +39,9 @@ import json
 import logging
 import os
 from typing import Any, Optional
+from urllib.parse import unquote
 
+import re
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -112,6 +114,12 @@ def add_tool(tool: Tool) -> Tool:
 
     # Check if a tool with the same name already exists
     for server in mcp_config["mcp_servers"]:
+        pattern = r"^[a-zA-Z0-9-]+$"
+        if not bool(re.fullmatch(pattern, tool.name)):
+            raise ValueError(
+                f"Tool name '{tool.name}' contains invalid characters. "
+                "Only alphanumeric characters and hyphens are allowed."
+            )
         if server["name"] == tool.name:
             raise ValueError(f"Tool with name '{tool.name}' already exists")
 
@@ -132,7 +140,8 @@ def add_tool(tool: Tool) -> Tool:
 )
 @exceptions.propagates
 def delete_tool(name: str) -> None:
-
+    decoded_name = unquote(name)
+    print(f"Deleting tool with name: {decoded_name}")
     mcp_config = get_mcp_config()
 
     # Find the tool with the given name
@@ -140,11 +149,11 @@ def delete_tool(name: str) -> None:
     mcp_config["mcp_servers"] = [
         server
         for server in mcp_config["mcp_servers"]
-        if not (server["name"] == name and (tool_found := True))
+        if not (server["name"] == decoded_name and (tool_found := True))
     ]
 
     if not tool_found:
-        raise ValueError(f"Tool with name '{name}' not found")
+        raise ValueError(f"Tool with name '{decoded_name}' not found")
 
     # Write the updated config back to the file
     with open(mcp_json_path, "w") as f:
