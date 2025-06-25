@@ -8,7 +8,7 @@ USER cdsw
 COPY ./pyproject.toml /app/
 COPY ./uv.lock /app/
 WORKDIR /app
-RUN uv sync -n
+RUN uv sync -n -p /usr/local/bin/python3.12
 
 COPY ./app /app
 COPY ./scripts /scripts
@@ -19,7 +19,7 @@ ENTRYPOINT []
 
 ENV ML_RUNTIME_EDITION="RAG Studio Runtime" \
        	ML_RUNTIME_SHORT_VERSION="0.1" \
-        ML_RUNTIME_MAINTENANCE_VERSION=1 \
+        ML_RUNTIME_MAINTENANCE_VERSION=2 \
         ML_RUNTIME_DESCRIPTION="This runtime includes a virtual environment with the necessary dependencies to run the RAG Studio application."
 ENV ML_RUNTIME_FULL_VERSION="${ML_RUNTIME_SHORT_VERSION}.${ML_RUNTIME_MAINTENANCE_VERSION}"
 LABEL com.cloudera.ml.runtime.edition=$ML_RUNTIME_EDITION \
