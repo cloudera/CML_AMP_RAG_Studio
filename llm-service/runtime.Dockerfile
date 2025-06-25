@@ -1,5 +1,7 @@
 FROM docker.repository.cloudera.com/cloudera/cdsw/ml-runtime-pbj-jupyterlab-python3.12-standard:2025.01.3-b8
 
+USER cdsw
+
 RUN pip install uv
 COPY ./pyproject.toml /app/
 COPY ./uv.lock /app/
