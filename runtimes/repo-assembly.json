@@ -8,9 +8,9 @@
       "edition": "RAG Studio Runtime",
       "description": "This runtime includes a virtual environment with the necessary dependencies to run the RAG Studio application.",
       "kernel": "Python 3.12",
-      "full_version": "0.1.3",
+      "full_version": "0.1.4",
       "short_version": "0.1",
-      "maintenance_version": 3,
+      "maintenance_version": 4,
       "git_hash": "25ac39f9f3d2cc7da6435e7f12fd7cda754da5fe",
       "gbn": 64692867
     }
