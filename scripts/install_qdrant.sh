@@ -45,6 +45,10 @@ mkdir qdrant 2>/dev/null
 cd qdrant
 
 ## Install Qdrant ##
-wget --no-verbose -O ${QDRANT_TGZ} ${DL_URL}
+if [ -f /app/${QDRANT_TGZ} ]; then
+    cp /app/${QDRANT_TGZ} ${QDRANT_TGZ}
+else
+    wget --no-verbose -O ${QDRANT_TGZ} ${DL_URL}
+fi
 tar xzf ${QDRANT_TGZ} && rm ${QDRANT_TGZ}
 
