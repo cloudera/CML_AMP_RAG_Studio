@@ -68,7 +68,10 @@ if [ $return_code -ne 0 ]; then
   pip install uv
 fi
 
-export VIRTUAL_ENV=/app/.venv
+if [ -e /app/.venv ]; then
+  echo "Using existing virtual environment at /app/.venv"
+  export UV_PROJECT_ENVIRONMENT=/app/.venv
+fi
 uv sync --no-dev
 
 echo "Unzipping prebuilt artifacts..."
