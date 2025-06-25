@@ -15,6 +15,14 @@ RUN wget https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_
 RUN wget https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth -O latin_g2.pth
 RUN wget https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64-unknown-linux-musl.tar.gz -O qdrant.tar.gz
 
+USER root
+WORKDIR /tmp
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh
+RUN bash nodesource_setup.sh
+RUN apt-get install -y nodejs
+
+USER cdsw
+
 COPY ./app /app
 COPY ./scripts /scripts
 ENV PATH="/app/.venv/bin:$PATH"
