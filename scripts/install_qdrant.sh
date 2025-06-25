@@ -44,7 +44,7 @@ DL_URL="https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64
 mkdir qdrant 2>/dev/null
 cd qdrant
 
-## Install Qdrant ##
+## Install Qdrant if it isn't already in the base image ##
 if [ -f /app/${QDRANT_TGZ} ]; then
     cp /app/${QDRANT_TGZ} ${QDRANT_TGZ}
 else
