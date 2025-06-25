@@ -144,6 +144,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t rag-studio-runtime:${{ github.event.inputs.VERSION }} -t rag-studio-runtime:latest -f runtime.Dockerfile .
+          docker build -t ghcr.io/rag-studio-runtime:${{ github.event.inputs.VERSION }} -t ghcr.io/rag-studio-runtime:latest -f runtime.Dockerfile .
           docker push ghcr.io/rag-studio-runtime:${{ github.event.inputs.VERSION }}
+          docker push ghcr.io/rag-studio-runtime:latest
         working-directory: llm-service
