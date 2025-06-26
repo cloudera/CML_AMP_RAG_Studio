@@ -130,7 +130,9 @@ const ToolsPage = () => {
       }}
     >
       <Flex vertical gap={20}>
-        <Typography.Title level={3}>MCP Tools Management</Typography.Title>
+        <Typography.Title level={3}>
+          (Beta) MCP Tools Management
+        </Typography.Title>
         <Typography.Paragraph>
           Manage external tools and services that can be used by the RAG Studio
           application. These tools can be used during query processing to
