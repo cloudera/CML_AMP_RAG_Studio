@@ -37,7 +37,16 @@
  */
 
 import { useState } from "react";
-import { Button, Card, Flex, Layout, Modal, Table, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Flex,
+  Layout,
+  Modal,
+  Table,
+  Typography,
+} from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Tool,
@@ -50,7 +59,7 @@ import { AddNewToolModal } from "pages/Tools/AddNewToolModal.tsx";
 
 const ToolsPage = () => {
   const confirmDeleteModal = useModal();
-  const { data: tools = [], isLoading } = useToolsQuery();
+  const { data: tools = [], isLoading, error: toolsError } = useToolsQuery();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const deleteToolMutation = useDeleteToolMutation({
@@ -142,33 +151,37 @@ const ToolsPage = () => {
           for manually adding additional tools.
         </Typography.Paragraph>
 
-        <Card>
-          <Flex
-            justify="space-between"
-            align="center"
-            style={{ marginBottom: 16 }}
-          >
-            <Typography.Title level={4} style={{ margin: 0 }}>
-              Available Tools
-            </Typography.Title>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setIsModalVisible(true);
-              }}
+        {toolsError ? (
+          <Alert type="error" description={toolsError.message} />
+        ) : (
+          <Card>
+            <Flex
+              justify="space-between"
+              align="center"
+              style={{ marginBottom: 16 }}
             >
-              Add Tool
-            </Button>
-          </Flex>
-          <Table
-            dataSource={tools}
-            columns={columns}
-            rowKey="name"
-            loading={isLoading}
-            scroll={{ x: 1 }}
-          />
-        </Card>
+              <Typography.Title level={4} style={{ margin: 0 }}>
+                Available Tools
+              </Typography.Title>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setIsModalVisible(true);
+                }}
+              >
+                Add Tool
+              </Button>
+            </Flex>
+            <Table
+              dataSource={tools}
+              columns={columns}
+              rowKey="name"
+              loading={isLoading}
+              scroll={{ x: 1 }}
+            />
+          </Card>
+        )}
         <AddNewToolModal
           setIsModalVisible={setIsModalVisible}
           isModalVisible={isModalVisible}

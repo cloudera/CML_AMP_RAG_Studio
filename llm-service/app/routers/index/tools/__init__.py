@@ -82,10 +82,19 @@ def get_mcp_config() -> dict[str, Any]:
     Reads the MCP configuration from the mcp.json file.
     """
     if not os.path.exists(mcp_json_path):
-        raise FileNotFoundError(f"MCP configuration file not found at {mcp_json_path}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"MCP configuration file not found at {mcp_json_path}",
+        )
 
-    with open(mcp_json_path, "r") as f:
-        return cast(dict[str, Any], json.load(f))
+    try:
+        with open(mcp_json_path, "r") as f:
+            return cast(dict[str, Any], json.load(f))
+    except:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Failed to parse MCP configuration file at {mcp_json_path}",
+        )
 
 
 @router.get(
