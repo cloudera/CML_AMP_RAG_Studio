@@ -44,6 +44,13 @@ LATIN_G2_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/mo
 mkdir -p .EasyOCR/model
 cd .EasyOCR/model
 
-wget --no-verbose -O craft_mlt_25k.pth ${CRAFT_MLT_MODEL_URL}
-wget --no-verbose -O latin_g2.pth ${LATIN_G2_URL}
+if [ -f /app/craft_mlt_25k.pth ]; then
+    cp /app/craft_mlt_25k.pth craft_mlt_25k.pth
+    cp /app/latin_g2.pth latin_g2.pth
+else
+    wget --no-verbose -O craft_mlt_25k.pth ${CRAFT_MLT_MODEL_URL}
+    wget --no-verbose -O latin_g2.pth ${LATIN_G2_URL}
+fi
+
+
 

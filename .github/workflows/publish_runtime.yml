@@ -1,0 +1,41 @@
+name: publish_runtime.yml
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: 'Version of runtime to release'
+        required: true
+      BRANCH:
+        description: 'Branch to use for runtime build'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - mob/main
+          - release/1
+          - customer-hotfix
+jobs:
+  runtime-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.BRANCH }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          lfs: true
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/cloudera/rag-studio-runtime:${{ github.event.inputs.VERSION }} -t ghcr.io/cloudera/rag-studio-runtime:latest -f runtime.Dockerfile .
+          docker push ghcr.io/cloudera/rag-studio-runtime:${{ github.event.inputs.VERSION }}
+          docker push ghcr.io/cloudera/rag-studio-runtime:latest
+        working-directory: llm-service

@@ -49,7 +49,7 @@ dependencies = [
     "llama-index-readers-docling>=0.3.3",
     "llama-index-node-parser-docling>=0.3.2",
 ]
-requires-python = ">=3.10,<=3.12"
+requires-python = ">=3.10,<3.13"
 readme = "README.md"
 license = {text = "APACHE"}
 
@@ -63,7 +63,7 @@ override-dependencies = [
 dev = [
     "pytest>=8.3.3",
     "ruff>=0.7.4",
-    "mypy>=1.13.0",
+    "mypy>=1.16.1",
     "lipsum>=0.1.2",
     "hypothesis>=6.122.1",
     "black>=24.10.0",

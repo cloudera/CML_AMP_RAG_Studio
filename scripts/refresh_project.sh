@@ -46,16 +46,21 @@ source scripts/release_version.txt || true
 set +e
 source scripts/load_nvm.sh > /dev/null
 
-# Need to install node for legacy installations before node was used
-nvm use 22
+# check to see if node is already installed.
+node --version
 return_code=$?
-set -e
 if [ $return_code -ne 0 ]; then
-    echo "NVM or required Node version not found.  Installing and using..."
-    bash scripts/install_node.sh
-    source scripts/load_nvm.sh > /dev/null
+  # Need to install node for legacy installations before node was used
+  nvm use 22
+  return_code=$?
+  set -e
+  if [ $return_code -ne 0 ]; then
+      echo "NVM or required Node version not found.  Installing and using..."
+      bash scripts/install_node.sh
+      source scripts/load_nvm.sh > /dev/null
 
-    nvm use 22
+      nvm use 22
+  fi
 fi
 
 cd llm-service
@@ -67,8 +72,14 @@ set -e
 if [ $return_code -ne 0 ]; then
   pip install uv
 fi
+
+if [ -e /app/.venv ]; then
+  echo "Using existing virtual environment at /app/.venv"
+  export UV_PROJECT_ENVIRONMENT=/app/.venv
+fi
 uv sync --no-dev
 
+echo "Unzipping prebuilt artifacts..."
 cd ..
 # unzip the frontend tarball
 cd ui

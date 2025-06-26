@@ -45,6 +45,11 @@ mkdir java-home 2>/dev/null
 cd java-home
 
 ## Install Java ##
-wget --no-verbose -O ${JAVA_TGZ} ${JAVA_DL_URL}
+if [ -f /app/${JAVA_TGZ} ]; then
+    cp /app/${JAVA_TGZ} ${JAVA_TGZ}
+else
+    wget --no-verbose -O ${JAVA_TGZ} ${JAVA_DL_URL}
+fi
+
 tar xzf ${JAVA_TGZ} && rm ${JAVA_TGZ}
 
