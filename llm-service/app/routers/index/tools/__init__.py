@@ -38,27 +38,63 @@
 import json
 import logging
 import os
-from typing import Any
-from pydantic import BaseModel
+from typing import Any, Optional, cast, Annotated
+from urllib.parse import unquote
 
-from fastapi import APIRouter
+import re
+from fastapi import APIRouter, Header, HTTPException
+from pydantic import BaseModel
 
 from .... import exceptions
 from ....config import settings
+from ....services.utils import has_admin_rights
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/tools", tags=["Tools"])
 
 
-class Tool(BaseModel):
+class ToolMetadata(BaseModel):
+    """
+    Represents a tool metadata in the MCP configuration.
+    """
+
+    name: str
+    metadata: dict[str, Any]
+
+
+class Tool(ToolMetadata):
     """
     Represents a tool in the MCP configuration.
     """
 
-    name: str
+    command: Optional[str] = None
+    url: Optional[list[str]] = None
+    args: Optional[list[str]] = None
+    env: Optional[dict[str, str]] = None
 
-    metadata: dict[str, Any]
+
+mcp_json_path: str = os.path.join(settings.tools_dir, "mcp.json")
+
+
+def get_mcp_config() -> dict[str, Any]:
+    """
+    Reads the MCP configuration from the mcp.json file.
+    """
+    if not os.path.exists(mcp_json_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"MCP configuration file not found at {mcp_json_path}",
+        )
+
+    try:
+        with open(mcp_json_path, "r") as f:
+            return cast(dict[str, Any], json.load(f))
+    except Exception:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Failed to parse MCP configuration file at {mcp_json_path}",
+        )
 
 
 @router.get(
@@ -67,10 +103,89 @@ class Tool(BaseModel):
     response_model=None,
 )
 @exceptions.propagates
-def tools() -> list[Tool]:
+def tools() -> list[ToolMetadata]:
 
-    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
+    mcp_config = get_mcp_config()
+    return [ToolMetadata(**server) for server in mcp_config["mcp_servers"]]
 
-    with open(mcp_json_path, "r") as f:
-        mcp_config = json.load(f)
-    return [Tool(**server) for server in mcp_config["mcp_servers"]]
+
+@router.post(
+    "",
+    summary="Adds a new tool to the MCP configuration.",
+    response_model=Tool,
+)
+@exceptions.propagates
+def add_tool(
+    tool: Tool,
+    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> Tool:
+    if not has_admin_rights(origin_remote_user, remote_user_perm):
+        raise HTTPException(
+            status_code=401, detail="You do not have permission to add tools."
+        )
+
+    mcp_config = get_mcp_config()
+
+    # Convert the tool to a dictionary
+    tool_dict = tool.model_dump(exclude_none=True)
+
+    # Check if a tool with the same name already exists
+    for server in mcp_config["mcp_servers"]:
+        pattern = r"^[a-zA-Z0-9-]+$"
+        if not bool(re.fullmatch(pattern, tool.name)):
+            raise ValueError(
+                f"Tool name '{tool.name}' contains invalid characters. "
+                "Only alphanumeric characters and hyphens are allowed."
+            )
+        if server["name"] == tool.name:
+            raise ValueError(f"Tool with name '{tool.name}' already exists")
+
+    # Add the new tool to the mcp_servers list
+    mcp_config["mcp_servers"].append(tool_dict)
+
+    # Write the updated config back to the file
+    with open(mcp_json_path, "w") as f:
+        json.dump(mcp_config, f, indent=2)
+
+    return tool
+
+
+@router.delete(
+    "/{name}",
+    summary="Deletes a tool from the MCP configuration.",
+    response_model=None,
+)
+@exceptions.propagates
+def delete_tool(
+    name: str,
+    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> None:
+    if not has_admin_rights(origin_remote_user, remote_user_perm):
+        raise HTTPException(
+            status_code=401, detail="You do not have permission to delete tools."
+        )
+
+    decoded_name = unquote(name)
+
+    mcp_config = get_mcp_config()
+
+    # Find the tool with the given name
+    tool_found = False
+    updated_servers = []
+    for server in mcp_config["mcp_servers"]:
+        if server["name"] == decoded_name:
+            tool_found = True
+        else:
+            updated_servers.append(server)
+    mcp_config["mcp_servers"] = updated_servers
+
+    if not tool_found:
+        raise ValueError(f"Tool with name '{decoded_name}' not found")
+
+    # Write the updated config back to the file
+    with open(mcp_json_path, "w") as f:
+        json.dump(mcp_config, f, indent=2)
+
+    return None

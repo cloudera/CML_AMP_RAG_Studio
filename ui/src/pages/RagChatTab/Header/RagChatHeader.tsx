@@ -107,7 +107,7 @@ export const RagChatHeader = ({
       </Flex>{" "}
       {activeSession ? (
         <ChatSettingsModal
-          open={settingsModal.isModalOpen}
+          modelIsOpen={settingsModal.isModalOpen}
           closeModal={() => {
             settingsModal.setIsModalOpen(false);
           }}

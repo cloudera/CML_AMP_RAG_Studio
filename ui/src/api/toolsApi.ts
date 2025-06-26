@@ -36,16 +36,41 @@
  * DATA.
  */
 
-import { getRequest, llmServicePath, QueryKeys } from "src/api/utils.ts";
-import { useQuery } from "@tanstack/react-query";
+import {
+  deleteRequest,
+  getRequest,
+  llmServicePath,
+  postRequest,
+  QueryKeys,
+  UseMutationType,
+} from "src/api/utils.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface Tool {
+export interface Tool {
   name: string;
+  command?: string;
+  url?: string[];
+  args?: string[];
+  env?: Record<string, string>;
   metadata: {
     description: string;
     display_name: string;
   };
 }
+
+export interface AddToolFormValues {
+  name: string;
+  command?: string;
+  url?: string;
+  args?: string;
+  env?: { key: string; value: string }[];
+  display_name: string;
+  description: string;
+}
+
+export const getTools = async (): Promise<Tool[]> => {
+  return getRequest(`${llmServicePath}/tools`);
+};
 
 export const useToolsQuery = () => {
   return useQuery({
@@ -54,6 +79,44 @@ export const useToolsQuery = () => {
   });
 };
 
-export const getTools = async (): Promise<Tool[]> => {
-  return getRequest(`${llmServicePath}/tools`);
+export const addTool = async (tool: Tool): Promise<Tool> => {
+  return postRequest(`${llmServicePath}/tools`, tool);
+};
+
+export const useAddToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<Tool>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addTool,
+    onSuccess: (tool) => {
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
+      if (onSuccess) {
+        onSuccess(tool);
+      }
+    },
+    onError,
+  });
+};
+
+export const deleteTool = async (name: string): Promise<void> => {
+  return deleteRequest(`${llmServicePath}/tools/${name}`);
+};
+
+export const useDeleteToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<void>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTool,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
+      if (onSuccess) {
+        onSuccess();
+      }
+    },
+    onError,
+  });
 };
