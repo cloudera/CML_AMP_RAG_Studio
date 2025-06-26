@@ -90,7 +90,7 @@ def get_mcp_config() -> dict[str, Any]:
     try:
         with open(mcp_json_path, "r") as f:
             return cast(dict[str, Any], json.load(f))
-    except:
+    except Exception:
         raise HTTPException(
             status_code=422,
             detail=f"Failed to parse MCP configuration file at {mcp_json_path}",
