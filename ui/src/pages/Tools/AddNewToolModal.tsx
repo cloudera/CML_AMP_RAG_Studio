@@ -259,7 +259,7 @@ export const AddNewToolModal = ({
           </Space>
         </Form.Item>
 
-        {toolType === "command" ? CommandFormFields() : UrlFormFields()}
+        {toolType === "command" ? <CommandFormFields /> : <UrlFormFields />}
       </Form>
     </Modal>
   );
