@@ -91,7 +91,7 @@ export const useAddToolMutation = ({
   return useMutation({
     mutationFn: addTool,
     onSuccess: (tool) => {
-      void queryClient.invalidateQueries({ queryKey: ["getTools"] });
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
       if (onSuccess) {
         onSuccess(tool);
       }
