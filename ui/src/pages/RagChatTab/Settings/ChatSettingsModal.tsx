@@ -88,10 +88,10 @@ export const onInferenceModelChange = (
 };
 
 const ChatSettingsModal = ({
-  open,
+  modelIsOpen,
   closeModal,
 }: {
-  open: boolean;
+  modelIsOpen: boolean;
   closeModal: () => void;
 }) => {
   const { data: llmModels } = useGetLlmModels();
@@ -121,12 +121,12 @@ const ChatSettingsModal = ({
   }
 
   useEffect(() => {
-    if (activeSession.name) {
+    if (modelIsOpen && activeSession.name) {
       form.setFieldsValue({
         name: activeSession.name,
       });
     }
-  }, [activeSession.name, form.setFieldsValue]);
+  }, [activeSession.name, form.setFieldsValue, modelIsOpen]);
 
   const handleUpdateSession = () => {
     form
@@ -240,7 +240,7 @@ const ChatSettingsModal = ({
   return (
     <Modal
       title={`Chat Settings: ${activeSession.name}`}
-      open={open}
+      open={modelIsOpen}
       onCancel={closeModal}
       destroyOnHidden={true}
       onOk={handleUpdateSession}
