@@ -68,6 +68,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   private final RagBackendClient ragBackendClient;
   private final RagDataSourceRepository ragDataSourceRepository;
   private final RagFileRepository ragFileRepository;
+  private final RagFileSummaryReconciler ragFileSummaryReconciler;
 
   @Autowired
   public RagFileIndexReconciler(
@@ -77,13 +78,15 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       RagDataSourceRepository ragDataSourceRepository,
       @Qualifier("singleWorkerReconcilerConfig") ReconcilerConfig reconcilerConfig,
       RagFileRepository ragFileRepository,
-      OpenTelemetry openTelemetry) {
+      OpenTelemetry openTelemetry,
+      RagFileSummaryReconciler ragFileSummaryReconciler) {
     super(reconcilerConfig, openTelemetry);
     this.bucketName = bucketName;
     this.jdbi = jdbi;
     this.ragBackendClient = ragBackendClient;
     this.ragDataSourceRepository = ragDataSourceRepository;
     this.ragFileRepository = ragFileRepository;
+    this.ragFileSummaryReconciler = ragFileSummaryReconciler;
   }
 
   @Override
@@ -120,6 +123,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
       RagDocument finalDocument = doIndexing(document, indexConfiguration);
       updateFinalStatus(finalDocument);
+      ragFileSummaryReconciler.resync();
     }
     return new ReconcileResult();
   }
@@ -194,6 +198,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
         RagDataSourceRepository.createNull(),
         ReconcilerConfig.builder().isTestReconciler(true).build(),
         RagFileRepository.createNull(),
-        OpenTelemetry.noop());
+        OpenTelemetry.noop(),
+        RagFileSummaryReconciler.createNull());
   }
 }
