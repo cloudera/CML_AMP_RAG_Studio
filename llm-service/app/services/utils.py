@@ -41,6 +41,8 @@ from typing import Generator, List, Sequence, Tuple, TypeVar, Union, Any
 
 import requests
 
+from app.services.amp_metadata import get_project_environment
+
 
 # TODO delete this if it's not being used
 
@@ -180,3 +182,12 @@ def raise_for_http_error(response: requests.Response) -> None:
                 cause = "Unexpected"
             message = f"{response.status_code} {cause} Error: {reason} for url: {response.url}"
             raise requests.HTTPError(message, response=response)
+
+
+def has_admin_rights(
+    origin_remote_user: str | None, remote_user_perm: str | None
+) -> bool:
+    env = get_project_environment()
+    project_owner = env.get("PROJECT_OWNER", "unknown")
+
+    return origin_remote_user == project_owner or remote_user_perm == "RW"

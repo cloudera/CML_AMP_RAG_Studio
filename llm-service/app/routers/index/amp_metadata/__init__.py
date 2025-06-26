@@ -57,6 +57,7 @@ from ....services.amp_metadata import (
 )
 from ....services.amp_update import does_amp_need_updating
 from ....services.models.providers import CAIIModelProvider
+from ....services.utils import has_admin_rights
 
 router = APIRouter(prefix="/amp", tags=["AMP"])
 
@@ -71,10 +72,7 @@ def amp_up_to_date_status(
     origin_remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> bool:
-    env = get_project_environment()
-    project_owner = env.get("PROJECT_OWNER", "unknown")
-
-    if origin_remote_user == project_owner or remote_user_perm == "RW":
+    if has_admin_rights(origin_remote_user, remote_user_perm):
         # noinspection PyBroadException
         try:
             return does_amp_need_updating()
@@ -125,14 +123,13 @@ def get_configuration(
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigPlus:
     env = get_project_environment()
-    project_owner = env.get("PROJECT_OWNER", "unknown")
     application_config = get_application_config()
 
-    if origin_remote_user == project_owner or remote_user_perm == "RW":
+    if has_admin_rights(origin_remote_user, remote_user_perm):
         return build_configuration(env, application_config)
 
     raise fastapi.HTTPException(
-        status_code=403,
+        status_code=401,
         detail="You do not have permission to access application configuration.",
     )
 
@@ -144,14 +141,12 @@ def update_configuration(
     origin_remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigPlus:
-    existing_env = get_project_environment()
-    project_owner = existing_env.get("PROJECT_OWNER", "unknown")
-    application_config = get_application_config()
-
-    if origin_remote_user == project_owner or remote_user_perm == "RW":
+    if has_admin_rights(origin_remote_user, remote_user_perm):
         if config.cdp_token:
             save_cdp_token(config.cdp_token)
         # merge the new configuration with the existing one
+        existing_env = get_project_environment()
+        application_config = get_application_config()
         updated_env = config_to_env(config)
         env_to_save = existing_env | updated_env
         update_project_environment(env_to_save)
@@ -159,7 +154,7 @@ def update_configuration(
         return build_configuration(get_project_environment(), application_config)
 
     raise fastapi.HTTPException(
-        status_code=403,
+        status_code=401,
         detail="You do not have permission to access application configuration.",
     )
 
