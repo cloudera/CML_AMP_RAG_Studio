@@ -112,7 +112,7 @@ export const useDeleteToolMutation = ({
   return useMutation({
     mutationFn: deleteTool,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["getTools"] });
+      void queryClient.invalidateQueries({ queryKey: QueryKeys.getTools });
       if (onSuccess) {
         onSuccess();
       }
