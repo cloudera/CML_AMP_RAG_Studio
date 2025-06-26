@@ -137,7 +137,11 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
           Tool Selection{" "}
           {config ? (
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              (Manage available tools <Link to={"/tools"}>here</Link>)
+              (Manage available tools{" "}
+              <Link to={"/settings"} hash={"tools"}>
+                here
+              </Link>
+              )
             </Typography.Text>
           ) : null}
         </Typography.Title>

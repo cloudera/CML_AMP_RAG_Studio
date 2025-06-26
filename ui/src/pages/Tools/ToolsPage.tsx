@@ -117,10 +117,11 @@ const ToolsPage = () => {
       style={{
         alignItems: "center",
         width: "100%",
+        paddingLeft: 60,
       }}
     >
-      <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-        <Typography.Title level={2}>MCP Tools Management</Typography.Title>
+      <Flex vertical gap={20}>
+        <Typography.Title level={3}>MCP Tools Management</Typography.Title>
         <Typography.Paragraph>
           Manage external tools and services that can be used by the RAG Studio
           application. These tools can be used during query processing to

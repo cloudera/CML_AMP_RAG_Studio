@@ -42,7 +42,6 @@ import {
   DatabaseOutlined,
   LineChartOutlined,
   SettingOutlined,
-  ToolOutlined,
 } from "@ant-design/icons";
 import { Flex, Menu, MenuProps, Tag, Tooltip, Typography } from "antd";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
@@ -142,18 +141,8 @@ const TopNav: React.FC = () => {
     icon: <SettingOutlined />,
   });
 
-  const toolsItem = getItem({
-    label: <span data-testid="tools-nav">Tools</span>,
-    key: "tools",
-    disabled: enableFullUsage,
-    onClick: navigateTo("/tools"),
-    icon: <ToolOutlined />,
-    config,
-  });
-
   const items = [...baseItems, analyticsItem];
   if (config) {
-    items.push(toolsItem);
     items.push(settingsItem);
   }
 
