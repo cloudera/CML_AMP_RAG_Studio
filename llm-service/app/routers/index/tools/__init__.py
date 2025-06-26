@@ -38,15 +38,16 @@
 import json
 import logging
 import os
-from typing import Any, Optional, cast
+from typing import Any, Optional, cast, Annotated
 from urllib.parse import unquote
 
 import re
-from fastapi import APIRouter
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....config import settings
+from ....services.utils import has_admin_rights
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,15 @@ def tools() -> list[ToolMetadata]:
     response_model=Tool,
 )
 @exceptions.propagates
-def add_tool(tool: Tool) -> Tool:
+def add_tool(
+    tool: Tool,
+    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> Tool:
+    if not has_admin_rights(origin_remote_user, remote_user_perm):
+        raise HTTPException(
+            status_code=401, detail="You do not have permission to add tools."
+        )
 
     mcp_config = get_mcp_config()
 
@@ -139,9 +148,18 @@ def add_tool(tool: Tool) -> Tool:
     response_model=None,
 )
 @exceptions.propagates
-def delete_tool(name: str) -> None:
+def delete_tool(
+    name: str,
+    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> None:
+    if not has_admin_rights(origin_remote_user, remote_user_perm):
+        raise HTTPException(
+            status_code=401, detail="You do not have permission to delete tools."
+        )
+
     decoded_name = unquote(name)
-    print(f"Deleting tool with name: {decoded_name}")
+
     mcp_config = get_mcp_config()
 
     # Find the tool with the given name
