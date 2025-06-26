@@ -54,7 +54,7 @@ const CommandFormFields = () => {
         label="Command"
         rules={[{ required: true, message: "Please enter a command" }]}
       >
-        <Input placeholder="tool-executable" />
+        <Input placeholder="tool executable (ex. uvx, npx)" />
       </Form.Item>
 
       <Form.Item name="args" label="Arguments (comma-separated)">
