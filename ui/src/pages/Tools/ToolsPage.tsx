@@ -119,61 +119,59 @@ const ToolsPage = () => {
         width: "100%",
       }}
     >
-      <Flex align="center" vertical={true}>
-        <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
-          <Typography.Title level={2}>MCP Tools Management</Typography.Title>
-          <Typography.Paragraph>
-            Manage external tools and services that can be used by the RAG
-            Studio application. These tools can be used during query processing
-            to enhance the capabilities of the system.
-            <br />
-            <br />
-            See{" "}
-            <Typography.Link
+      <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
+        <Typography.Title level={2}>MCP Tools Management</Typography.Title>
+        <Typography.Paragraph>
+          Manage external tools and services that can be used by the RAG Studio
+          application. These tools can be used during query processing to
+          enhance the capabilities of the system.
+          <br />
+          <br />
+          See{" "}
+          <Typography.Link
+            onClick={() => {
+              window.open(
+                "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
+                "_blank",
+              );
+            }}
+          >
+            docs
+          </Typography.Link>{" "}
+          for manually adding additional tools.
+        </Typography.Paragraph>
+
+        <Card>
+          <Flex
+            justify="space-between"
+            align="center"
+            style={{ marginBottom: 16 }}
+          >
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              Available Tools
+            </Typography.Title>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={() => {
-                window.open(
-                  "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
-                  "_blank",
-                );
+                setIsModalVisible(true);
               }}
             >
-              docs
-            </Typography.Link>{" "}
-            for manually adding additional tools.
-          </Typography.Paragraph>
-
-          <Card>
-            <Flex
-              justify="space-between"
-              align="center"
-              style={{ marginBottom: 16 }}
-            >
-              <Typography.Title level={4} style={{ margin: 0 }}>
-                Available Tools
-              </Typography.Title>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setIsModalVisible(true);
-                }}
-              >
-                Add Tool
-              </Button>
-            </Flex>
-            <Table
-              dataSource={tools}
-              columns={columns}
-              rowKey="name"
-              loading={isLoading}
-              scroll={{ x: 1 }}
-            />
-          </Card>
-          <AddNewToolModal
-            setIsModalVisible={setIsModalVisible}
-            isModalVisible={isModalVisible}
+              Add Tool
+            </Button>
+          </Flex>
+          <Table
+            dataSource={tools}
+            columns={columns}
+            rowKey="name"
+            loading={isLoading}
+            scroll={{ x: 1 }}
           />
-        </Flex>
+        </Card>
+        <AddNewToolModal
+          setIsModalVisible={setIsModalVisible}
+          isModalVisible={isModalVisible}
+        />
       </Flex>
     </Layout>
   );
