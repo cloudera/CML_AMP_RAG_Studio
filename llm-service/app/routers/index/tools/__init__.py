@@ -173,11 +173,13 @@ def delete_tool(
 
     # Find the tool with the given name
     tool_found = False
-    mcp_config["mcp_servers"] = [
-        server
-        for server in mcp_config["mcp_servers"]
-        if not (server["name"] == decoded_name and (tool_found := True))
-    ]
+    updated_servers = []
+    for server in mcp_config["mcp_servers"]:
+        if server["name"] == decoded_name:
+            tool_found = True
+        else:
+            updated_servers.append(server)
+    mcp_config["mcp_servers"] = updated_servers
 
     if not tool_found:
         raise ValueError(f"Tool with name '{decoded_name}' not found")
