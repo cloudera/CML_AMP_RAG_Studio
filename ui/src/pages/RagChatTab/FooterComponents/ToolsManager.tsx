@@ -134,7 +134,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
           </Tag>
         </Tooltip>
         <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
-          Tools Manager{" "}
+          Tool Selection{" "}
           {config ? (
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               (Manage available tools <Link to={"/tools"}>here</Link>)
@@ -207,7 +207,7 @@ const ToolsManagerButton = () => {
       setIsOpen={setToolsManagerOpen}
       activeSession={activeSession}
     >
-      <Tooltip title={!toolsManagerOpen ? "Tools Manager" : ""}>
+      <Tooltip title={!toolsManagerOpen ? "Tool Selection" : ""}>
         <Button
           icon={<ToolOutlined />}
           type="text"
