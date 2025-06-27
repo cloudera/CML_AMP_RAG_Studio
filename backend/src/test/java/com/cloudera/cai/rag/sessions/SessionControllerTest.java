@@ -185,7 +185,7 @@ class SessionControllerTest {
 
     var input = TestData.createSessionInstance("test");
     var createdSession = sessionController.create(input, request);
-    sessionController.delete(createdSession.id());
+    sessionController.delete(createdSession.id(), request);
     assertThatThrownBy(() -> sessionService.getSessionById(createdSession.id(), "test-user"))
         .isInstanceOf(NotFound.class);
   }
