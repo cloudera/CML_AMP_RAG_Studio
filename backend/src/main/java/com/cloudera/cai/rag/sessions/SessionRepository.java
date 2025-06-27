@@ -111,8 +111,9 @@ public class SessionRepository {
               handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
               var sql =
                   """
-                SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
+                SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
                 LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
                 WHERE cs.ID = :id AND cs.DELETED IS NULL AND cs.created_by_id = :username
               """;
               return querySessions(
@@ -146,7 +147,9 @@ public class SessionRepository {
                             .timeUpdated(rowView.getColumn("time_updated", Instant.class))
                             .lastInteractionTime(
                                 rowView.getColumn("last_interaction_time", Instant.class))
-                            .projectId(rowView.getColumn("project_id", Long.class));
+                            .projectId(rowView.getColumn("project_id", Long.class))
+                            .associatedDataSourceId(
+                                rowView.getColumn("associated_data_source_id", Long.class));
                       } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                       }
@@ -180,8 +183,9 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-                SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
+                SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
                 LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
                 WHERE cs.DELETED IS NULL AND cs.created_by_id = :username
                 ORDER BY last_interaction_time DESC, time_created DESC
               """;
@@ -196,8 +200,9 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-                SELECT cs.*, csds.data_source_id FROM CHAT_SESSION cs
+                SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
                 LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
                 WHERE cs.DELETED IS NULL AND cs.project_id = :projectId
                 ORDER BY last_interaction_time DESC, time_created DESC
               """;
