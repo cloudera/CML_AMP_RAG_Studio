@@ -10,6 +10,21 @@
       "args": [
         "mcp-server-fetch"
       ]
+    },
+    {
+      "name": "serper",
+      "metadata": {
+        "display_name": "serper",
+        "description": "search"
+      },
+      "command": "npx",
+      "args": [
+        "-y",
+        "serper-search-scrape-mcp-server"
+      ],
+      "env": {
+        "SERPER_API_KEY": "c7dd076265a14fe2c19aaa1a4f04769dc17b660e"
+      }
     }
   ]
 }
