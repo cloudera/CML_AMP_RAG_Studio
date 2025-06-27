@@ -43,9 +43,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.rag.datasources.RagDataSourceService;
 import com.cloudera.cai.rag.projects.ProjectRepository;
 import com.cloudera.cai.rag.projects.ProjectService;
+import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -54,32 +57,41 @@ class SessionServiceTest {
   private static final String USERNAME = "test-user";
   private final RagDataSourceRepository ragDataSourceRepository =
       RagDataSourceRepository.createNull();
+  private final RagDataSourceService ragDataSourceService = RagDataSourceService.createNull();
 
   @Test
   void create() {
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-    Types.Session result =
-        sessionService.create(
-            TestData.createTestSessionInstance("test")
-                .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME),
-            USERNAME);
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
+    var input = TestData.createSessionInstance("test").withEmbeddingModel("embeddingModelTest");
+    Types.Session result = sessionService.create(input, USERNAME);
+
     assertThat(result).isNotNull();
+    assertThat(result.associatedDataSourceId()).isNotNull();
+
+    Types.RagDataSource ragDataSourceById =
+        ragDataSourceService.getRagDataSourceById(result.associatedDataSourceId());
+
+    assertThat(ragDataSourceById).isNotNull();
+    assertThat(ragDataSourceById.embeddingModel()).isEqualTo("embeddingModelTest");
+    assertThat(ragDataSourceById.summarizationModel()).isEqualTo(input.inferenceModel());
   }
 
   @Test
   void create_cleanData() {
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-    Types.Session result =
-        sessionService.create(
-            TestData.createTestSessionInstance("test")
-                .withRerankModel("")
-                .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME)
-                .withDataSourceIds(null),
-            USERNAME);
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
+    var input = TestData.createSessionInstance("test").withRerankModel("").withDataSourceIds(null);
+    Types.Session result = sessionService.create(input, USERNAME);
+
     assertThat(result.rerankModel()).isNull();
     assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result).isNotNull();
@@ -90,7 +102,11 @@ class SessionServiceTest {
     // Create repositories
     ProjectRepository projectRepository = ProjectRepository.createNull();
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), projectRepository);
+        new SessionService(
+            SessionRepository.createNull(),
+            projectRepository,
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
 
     // Create a project
     ProjectService projectService = ProjectService.createNull();
@@ -101,15 +117,10 @@ class SessionServiceTest {
 
     // Add data source ID 4L to the project
     projectRepository.addDataSourceToProject(project.id(), dataSourceId);
+    var input = TestData.createSessionInstance("test").withProjectId(project.id());
 
     // Create a session with the project ID
-    Types.Session result =
-        sessionService.create(
-            TestData.createTestSessionInstance("test")
-                .withProjectId(project.id())
-                .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME),
-            USERNAME);
+    Types.Session result = sessionService.create(input, USERNAME);
 
     // Update the session with dataSourceId
     var updated = result.withRerankModel("").withDataSourceIds(List.of(dataSourceId));
@@ -123,33 +134,37 @@ class SessionServiceTest {
   @Test
   void delete() {
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-    var input =
-        TestData.createTestSessionInstance("test")
-            .withCreatedById(USERNAME)
-            .withUpdatedById(USERNAME);
-    var createdSession = sessionService.create(input, USERNAME);
-    sessionService.delete(createdSession.id());
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
+    var createSession =
+        TestData.createSessionInstance("test").withEmbeddingModel("embeddingModelTest");
+    var createdSession = sessionService.create(createSession, USERNAME);
+    sessionService.delete(createdSession.id(), USERNAME);
     assertThat(sessionService.getSessions("fake-user")).doesNotContain(createdSession);
+    assertThatThrownBy(
+            () ->
+                ragDataSourceService.getRagDataSourceById(createdSession.associatedDataSourceId()))
+        .isInstanceOf(NotFound.class);
   }
 
   @Test
   void getSessions() {
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
     String username1 = UUID.randomUUID().toString();
     String username2 = UUID.randomUUID().toString();
     String username3 = UUID.randomUUID().toString();
-    var input =
-        TestData.createTestSessionInstance("test")
-            .withCreatedById(username1)
-            .withUpdatedById(username1);
-    var input2 =
-        TestData.createTestSessionInstance("test2")
-            .withCreatedById(username2)
-            .withUpdatedById(username2);
-    sessionService.create(input, username1);
-    sessionService.create(input2, username2);
+    var createSession1 = TestData.createSessionInstance("test");
+    var createSession2 = TestData.createSessionInstance("test2");
+    sessionService.create(createSession1, username1);
+    sessionService.create(createSession2, username2);
 
     assertThat(sessionService.getSessions(username1)).hasSizeGreaterThanOrEqualTo(1);
     assertThat(sessionService.getSessions(username2)).hasSizeGreaterThanOrEqualTo(1);
@@ -159,7 +174,11 @@ class SessionServiceTest {
   @Test
   void getSessionsByProjectId() {
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
     ProjectService projectService = ProjectService.createNull();
 
     var project =
@@ -169,30 +188,17 @@ class SessionServiceTest {
 
     // Create sessions with different project IDs
     String user1 = "user1";
-    var session1 =
-        TestData.createTestSessionInstance("test1")
-            .withProjectId(project.id())
-            .withCreatedById(user1)
-            .withUpdatedById(user1);
-
+    var createSession1 = TestData.createSessionInstance("test1").withProjectId(project.id());
     String user2 = "user2";
-    var session2 =
-        TestData.createTestSessionInstance("test2")
-            .withProjectId(project.id())
-            .withCreatedById(user2)
-            .withUpdatedById(user2);
+    var createSession2 = TestData.createSessionInstance("test2").withProjectId(project.id());
 
     String user3 = "user3";
-    var session3 =
-        TestData.createTestSessionInstance("test3")
-            .withProjectId(project2.id())
-            .withCreatedById(user3)
-            .withUpdatedById(user3);
+    var createSession3 = TestData.createSessionInstance("test3").withProjectId(project2.id());
 
     // Save the sessions
-    sessionService.create(session1, user1);
-    sessionService.create(session2, user2);
-    sessionService.create(session3, user3);
+    sessionService.create(createSession1, user1);
+    sessionService.create(createSession2, user2);
+    sessionService.create(createSession3, user3);
 
     var projectOneSessions = sessionService.getSessionsByProjectId(project.id());
 
@@ -217,23 +223,17 @@ class SessionServiceTest {
   void create_withInvalidDataSourceId() {
     // Create a session service with null repositories
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-
-    // Create a project to get a valid project ID
-    ProjectService projectService = ProjectService.createNull();
-    var project =
-        projectService.createProject(TestData.createTestProjectInstance("test-project", false));
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
 
     // Create a session with an invalid data source ID (not in the project)
-    var sessionWithInvalidDataSource =
-        TestData.createTestSessionInstance("test-session")
-            .withProjectId(project.id())
-            .withDataSourceIds(List.of(999L)) // Invalid data source ID
-            .withCreatedById(USERNAME)
-            .withUpdatedById(USERNAME);
+    var input = TestData.createSessionInstance("test-session").withDataSourceIds(List.of(999L));
 
     // Verify that creating a session with an invalid data source ID throws an exception
-    assertThatThrownBy(() -> sessionService.create(sessionWithInvalidDataSource, USERNAME))
+    assertThatThrownBy(() -> sessionService.create(input, USERNAME))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid data source IDs provided.");
   }
@@ -242,23 +242,17 @@ class SessionServiceTest {
   void update_withInvalidDataSourceId() {
     // Create a session service with null repositories
     SessionService sessionService =
-        new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
+        new SessionService(
+            SessionRepository.createNull(),
+            ProjectRepository.createNull(),
+            JdbiConfiguration.createNull(),
+            RagDataSourceRepository.createNull());
 
-    // Create a project to get a valid project ID
-    ProjectService projectService = ProjectService.createNull();
-    var project =
-        projectService.createProject(TestData.createTestProjectInstance("test-project", false));
-
+    var input = TestData.createSessionInstance("test-session");
     // Create a session with no data source IDs
-    var session =
-        TestData.createTestSessionInstance("test-session")
-            .withProjectId(project.id())
-            .withDataSourceIds(List.of()) // No data source IDs
-            .withCreatedById(USERNAME)
-            .withUpdatedById(USERNAME);
 
     // Create the session
-    var createdSession = sessionService.create(session, USERNAME);
+    var createdSession = sessionService.create(input, USERNAME);
 
     // Update the session with an invalid data source ID
     var updatedSession = createdSession.withDataSourceIds(List.of(999L)); // Invalid data source ID

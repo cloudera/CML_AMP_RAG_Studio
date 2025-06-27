@@ -47,6 +47,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RagDataSourceService {
+  public static final int DEFAULT_CHUNK_OVERLAP = 10;
+  public static final int DEFAULT_CHUNK_SIZE = 512;
   private final RagDataSourceRepository ragDataSourceRepository;
 
   public RagDataSourceService(RagDataSourceRepository ragDataSourceRepository) {
@@ -55,7 +57,10 @@ public class RagDataSourceService {
 
   public RagDataSource createRagDataSource(RagDataSource input) {
     if (input.chunkOverlapPercent() == null) {
-      input = input.withChunkOverlapPercent(10);
+      input = input.withChunkOverlapPercent(DEFAULT_CHUNK_OVERLAP);
+    }
+    if (input.chunkSize() == null) {
+      input = input.withChunkSize(DEFAULT_CHUNK_SIZE);
     }
     var id =
         ragDataSourceRepository.createRagDataSource(

@@ -39,10 +39,14 @@
 package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.JdbiConfiguration;
+import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.rag.datasources.RagDataSourceService;
 import com.cloudera.cai.rag.projects.ProjectRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.jdbi.v3.core.Jdbi;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -50,16 +54,57 @@ public class SessionService {
 
   private final SessionRepository sessionRepository;
   private final ProjectRepository projectRepository;
+  private final Jdbi jdbi;
+  private final RagDataSourceRepository ragDataSourceRepository;
 
-  public SessionService(SessionRepository sessionRepository, ProjectRepository projectRepository) {
+  public SessionService(
+      SessionRepository sessionRepository,
+      ProjectRepository projectRepository,
+      Jdbi jdbi,
+      RagDataSourceRepository ragDataSourceRepository) {
     this.sessionRepository = sessionRepository;
     this.projectRepository = projectRepository;
+    this.jdbi = jdbi;
+    this.ragDataSourceRepository = ragDataSourceRepository;
   }
 
-  public Types.Session create(Types.Session input, String username) {
-    validateDataSourceIds(input);
-    var id = sessionRepository.create(cleanInputs(input));
-    return sessionRepository.getSessionById(id, username);
+  public Types.Session create(Types.CreateSession createSession, String username) {
+    return jdbi.inTransaction(
+        handle -> {
+          var session = Types.Session.fromCreateRequest(createSession, username);
+          validateDataSourceIds(session);
+          var id = sessionRepository.create(handle, cleanInputs(session));
+          session = sessionRepository.getSessionById(handle, id, username);
+          if (createSession.embeddingModel() != null) {
+            Types.RagDataSource newDataSource =
+                createDataSourceInstance(createSession, username, id);
+            Long ragDataSourceId =
+                ragDataSourceRepository.createRagDataSource(handle, newDataSource);
+            session = session.withAssociatedDataSourceId(ragDataSourceId);
+          }
+          sessionRepository.update(handle, cleanInputs(session));
+          return sessionRepository.getSessionById(handle, session.id(), username);
+        });
+  }
+
+  private static Types.RagDataSource createDataSourceInstance(
+      Types.CreateSession createSession, String username, Long sessionId) {
+    return new Types.RagDataSource(
+        null,
+        "session-" + sessionId,
+        createSession.embeddingModel(),
+        createSession.inferenceModel(),
+        RagDataSourceService.DEFAULT_CHUNK_SIZE,
+        RagDataSourceService.DEFAULT_CHUNK_OVERLAP,
+        null,
+        null,
+        username,
+        username,
+        Types.ConnectionType.MANUAL,
+        null,
+        null,
+        false,
+        sessionId);
   }
 
   private void validateDataSourceIds(Types.Session input) {
@@ -103,11 +148,20 @@ public class SessionService {
     return sessionRepository.getSessionById(id, username);
   }
 
-  public void delete(Long id) {
-    sessionRepository.delete(id);
+  public void delete(Long id, String username) {
+    Types.Session session = sessionRepository.getSessionById(id, username);
+    jdbi.useTransaction(
+        handle -> {
+          ragDataSourceRepository.deleteDataSource(handle, session.associatedDataSourceId());
+          sessionRepository.delete(handle, id);
+        });
   }
 
   public static SessionService createNull() {
-    return new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
+    return new SessionService(
+        SessionRepository.createNull(),
+        ProjectRepository.createNull(),
+        JdbiConfiguration.createNull(),
+        RagDataSourceRepository.createNull());
   }
 }

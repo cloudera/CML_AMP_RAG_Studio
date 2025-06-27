@@ -87,7 +87,10 @@ class DeleteDataSourceReconcilerTest {
     ragFileRepository.insertDocumentMetadata(document);
     reconciler.resync();
     await().until(reconciler::isEmpty);
-    ragDataSourceRepository.deleteDataSource(dataSourceId);
+    jdbi.useHandle(
+        handle -> {
+          ragDataSourceRepository.deleteDataSource(handle, dataSourceId);
+        });
 
     reconciler.resync();
     await().until(reconciler::isEmpty);

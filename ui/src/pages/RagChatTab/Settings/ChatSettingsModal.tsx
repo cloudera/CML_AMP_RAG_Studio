@@ -60,20 +60,20 @@ import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSli
 import { useContext, useEffect } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
+  CreateSessionRequest,
   UpdateSessionRequest,
   useUpdateSessionMutation,
 } from "src/api/sessionApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
 
 import { formatDataSource } from "src/utils/formatters.ts";
 import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 
 export const onInferenceModelChange = (
-  changedValues: Partial<Omit<CreateSessionType, "id">>,
-  form: FormInstance<Omit<CreateSessionType, "id">>,
+  changedValues: Partial<Omit<CreateSessionRequest, "id">>,
+  form: FormInstance<Omit<CreateSessionRequest, "id">>,
   llmModels?: Model[],
 ) => {
   if (changedValues.inferenceModel) {
@@ -100,7 +100,7 @@ const ChatSettingsModal = ({
     dataSourcesQuery: { dataSources },
     activeSession,
   } = useContext(RagChatContext);
-  const [form] = Form.useForm<Omit<CreateSessionType, "id">>();
+  const [form] = Form.useForm<Omit<CreateSessionRequest, "id">>();
   const queryClient = useQueryClient();
   const updateSession = useUpdateSessionMutation({
     onError: (error) => {
@@ -209,7 +209,7 @@ const ChatSettingsModal = ({
           >
             <Switch />
           </Form.Item>
-          <Form.Item<CreateSessionType>
+          <Form.Item<CreateSessionRequest>
             name={["queryConfiguration", "enableSummaryFilter"]}
             initialValue={activeSession.queryConfiguration.enableSummaryFilter}
             valuePropName="checked"
@@ -253,7 +253,7 @@ const ChatSettingsModal = ({
           form={form}
           clearOnDestroy={true}
           onValuesChange={(
-            changedValues: Partial<Omit<CreateSessionType, "id">>,
+            changedValues: Partial<Omit<CreateSessionRequest, "id">>,
           ) => {
             onInferenceModelChange(changedValues, form, llmModels);
           }}

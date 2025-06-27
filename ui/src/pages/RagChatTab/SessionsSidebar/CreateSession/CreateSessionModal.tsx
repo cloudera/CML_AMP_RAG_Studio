@@ -42,23 +42,14 @@ import CreateSessionForm from "./CreateSessionForm.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 import {
   CreateSessionRequest,
-  SessionQueryConfiguration,
   useCreateSessionMutation,
 } from "src/api/sessionApi.ts";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useNavigate } from "@tanstack/react-router";
+import { useGetEmbeddingModels } from "src/api/modelsApi.ts";
 import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
-
-export interface CreateSessionType {
-  name: string;
-  dataSourceIds: number[];
-  inferenceModel: string;
-  rerankModel?: string;
-  responseChunks: number;
-  queryConfiguration: SessionQueryConfiguration;
-}
 
 const CreateSessionModal = ({
   handleCancel,
@@ -69,15 +60,17 @@ const CreateSessionModal = ({
   isModalOpen: boolean;
   setIsModalOpen: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const [form] = Form.useForm<CreateSessionType>();
+  const [form] = Form.useForm<CreateSessionRequest>();
   const queryClient = useQueryClient();
+  const { data: embeddingModel } = useGetEmbeddingModels();
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
   const {
     dataSourcesQuery: { dataSources },
   } = useContext(RagChatContext);
   const navigate = useNavigate();
-  const { data: defaultProject } = useSuspenseQuery(
-    getDefaultProjectQueryOptions,
-  );
+
   const { mutate: createSessionMutation } = useCreateSessionMutation({
     onSuccess: async (data) => {
       setIsModalOpen(false);
@@ -103,21 +96,13 @@ const CreateSessionModal = ({
     form
       .validateFields()
       .then((values) => {
-        const requestBody: CreateSessionRequest = {
-          name: values.name,
-          dataSourceIds: values.dataSourceIds,
-          inferenceModel: values.inferenceModel,
-          rerankModel: values.rerankModel,
-          responseChunks: values.responseChunks,
-          queryConfiguration: {
-            enableHyde: values.queryConfiguration.enableHyde,
-            enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
-            enableToolCalling: values.queryConfiguration.enableToolCalling,
-            selectedTools: values.queryConfiguration.selectedTools,
-          },
+        createSessionMutation({
+          ...values,
           projectId: defaultProject.id,
-        };
-        createSessionMutation(requestBody);
+          embeddingModel: embeddingModel?.length
+            ? embeddingModel[0].model_id
+            : undefined,
+        });
       })
       .catch(() => {
         messageQueue.error("Please fill all the required fields.");
