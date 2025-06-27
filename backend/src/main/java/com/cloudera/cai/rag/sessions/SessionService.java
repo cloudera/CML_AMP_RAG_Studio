@@ -39,6 +39,8 @@
 package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.JdbiConfiguration;
+import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.datasources.RagDataSourceService;
 import com.cloudera.cai.rag.projects.ProjectRepository;
 import java.util.HashSet;
@@ -54,15 +56,18 @@ public class SessionService {
   private final ProjectRepository projectRepository;
   private final RagDataSourceService ragDataSourceService;
   private final Jdbi jdbi;
+  private final RagDataSourceRepository ragDataSourceRepository;
 
   public SessionService(
           SessionRepository sessionRepository,
           ProjectRepository projectRepository,
-          RagDataSourceService ragDataSourceService, Jdbi jdbi) {
+          RagDataSourceService ragDataSourceService,
+          Jdbi jdbi, RagDataSourceRepository ragDataSourceRepository) {
     this.sessionRepository = sessionRepository;
     this.projectRepository = projectRepository;
     this.ragDataSourceService = ragDataSourceService;
-      this.jdbi = jdbi;
+    this.jdbi = jdbi;
+    this.ragDataSourceRepository = ragDataSourceRepository;
   }
 
   public Types.Session create(Types.CreateSession createSession, String username) {
@@ -137,14 +142,19 @@ public class SessionService {
 
   public void delete(Long id, String username) {
     Types.Session session = sessionRepository.getSessionById(id, username);
-    ragDataSourceService.deleteDataSource(session.associatedDataSourceId());
-    sessionRepository.delete(id);
+    jdbi.useTransaction(
+            handle -> {
+              ragDataSourceRepository.deleteDataSource(handle, session.associatedDataSourceId());
+              sessionRepository.delete(handle, id);
+            }
+    );
   }
 
   public static SessionService createNull() {
     return new SessionService(
         SessionRepository.createNull(),
         ProjectRepository.createNull(),
-        RagDataSourceService.createNull(), JdbiConfiguration.createNull());
+        RagDataSourceService.createNull(),
+        JdbiConfiguration.createNull());
   }
 }

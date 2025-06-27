@@ -43,6 +43,8 @@ import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.util.ResourceUtils;
 import java.io.IOException;
 import java.util.List;
+
+import org.jdbi.v3.core.Handle;
 import org.springframework.stereotype.Component;
 
 @Component

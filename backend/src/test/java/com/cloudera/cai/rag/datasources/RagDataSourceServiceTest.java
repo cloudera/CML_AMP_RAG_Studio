@@ -131,7 +131,7 @@ class RagDataSourceServiceTest {
                 .withCreatedById("abc")
                 .withUpdatedById("abc"));
     assertThat(ragDataSource).isNotNull();
-    ragDataSourceService.deleteDataSource(ragDataSource.id());
+    ragDataSourceService.deleteDataSource(handle, ragDataSource.id());
     assertThatThrownBy(() -> ragDataSourceService.getRagDataSourceById(ragDataSource.id()))
         .isInstanceOf(NotFound.class);
   }

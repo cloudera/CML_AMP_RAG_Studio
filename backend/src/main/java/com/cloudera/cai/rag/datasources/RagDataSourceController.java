@@ -91,7 +91,7 @@ public class RagDataSourceController {
   @DeleteMapping(value = "/{id}")
   public void deleteDataSource(@PathVariable long id) {
     log.debug("Deleting DataSource with id: {}", id);
-    dataSourceService.deleteDataSource(id);
+    dataSourceService.deleteDataSource(handle, id);
   }
 
   @GetMapping(produces = "application/json")
