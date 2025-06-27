@@ -136,13 +136,10 @@ class ProjectControllerTest {
     controller.addDataSourceToProject(newProject.id(), dataSourceId);
 
     // Create a session for the project
-    Types.CreateSession createSession = TestData.createSessionInstance("test-session");
+    Types.CreateSession createSession =
+        TestData.createSessionInstance("test-session").withProjectId(newProject.id());
     String username = "test-user";
-    var session =
-        sessionService.create(
-            Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
-            username,
-            createSession);
+    var session = sessionService.create(username, createSession);
 
     // Verify the data source is associated with the project
     List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
@@ -283,25 +280,16 @@ class ProjectControllerTest {
     var project2 = controller.create(createProject2, request);
 
     // Create sessions with different project IDs
-    var createSession1 =
-            TestData.createSessionInstance("session1");
+    var createSession1 = TestData.createSessionInstance("session1").withProjectId(project.id());
 
-    var session1 = Session.fromCreateRequest(createSession1, "user1").withProjectId(project.id());
+    var createSession2 = TestData.createSessionInstance("session2").withProjectId(project.id());
 
-    var createSession2 =
-            TestData.createSessionInstance("session2");
-
-    var session2 = Session.fromCreateRequest(createSession2, "user2").withProjectId(project.id());
-
-    var createSession3 =
-        TestData.createSessionInstance("session3");
-
-    var session3 = Session.fromCreateRequest(createSession3, "user3").withProjectId(project2.id());
+    var createSession3 = TestData.createSessionInstance("session3").withProjectId(project2.id());
 
     // Save the sessions
-    sessionService.create(session1, "user1", input);
-    sessionService.create(session2, "user2", input);
-    sessionService.create(session3, "user3", input);
+    sessionService.create("user1", createSession1);
+    sessionService.create("user2", createSession2);
+    sessionService.create("user3", createSession3);
 
     // Get sessions for the first project
     List<Session> projectSessions = controller.getSessionsForProject(project.id());
@@ -351,12 +339,7 @@ class ProjectControllerTest {
     Types.CreateSession createSession =
         TestData.createSessionInstance("test-session", List.of(dataSourceId), newProject.id());
     String username = "test-user";
-    var session =
-        sessionService.create(
-            Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
-            username,
-            input);
-
+    var session = sessionService.create(username, createSession);
     // Verify the data source is in the session's list of data sources
     assertThat(session.dataSourceIds()).contains(dataSourceId);
 
