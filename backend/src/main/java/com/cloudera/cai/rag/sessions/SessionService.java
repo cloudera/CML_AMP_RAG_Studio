@@ -56,7 +56,7 @@ public class SessionService {
     this.projectRepository = projectRepository;
   }
 
-  public Types.Session create(Types.Session input, String username) {
+  public Types.Session create(Types.Session input, String username, Types.CreateSession createSession) {
     validateDataSourceIds(input);
     var id = sessionRepository.create(cleanInputs(input));
     return sessionRepository.getSessionById(id, username);
