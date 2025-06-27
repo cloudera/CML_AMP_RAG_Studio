@@ -60,10 +60,10 @@ public class RagDataSourceRepository {
   }
 
   public Long createRagDataSource(RagDataSource input) {
-    return jdbi.inTransaction(handle -> createRagDataSource(input, handle));
+    return jdbi.inTransaction(handle -> createRagDataSource(handle, input));
   }
 
-  public Long createRagDataSource(RagDataSource input, Handle handle) {
+  public Long createRagDataSource(Handle handle, RagDataSource input) {
     RagDataSource cleanedInputs = cleanInputs(input);
     var sql =
         """
@@ -154,17 +154,18 @@ public class RagDataSourceRepository {
         handle -> {
           var sql =
               """
-                                    SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
-                                    EXISTS(
-                                        SELECT 1 from project_data_source pds
-                                        WHERE pds.data_source_id = rds.id
-                                          AND pds.project_id = 1
-                                    ) as available_for_default_project
-                                    FROM rag_data_source rds
-                                             LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
-                                    WHERE rds.deleted IS NULL
-                                    GROUP BY rds.ID
-                                    """;
+                SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
+                EXISTS(
+                    SELECT 1 from project_data_source pds
+                    WHERE pds.data_source_id = rds.id
+                      AND pds.project_id = 1
+                ) as available_for_default_project
+                FROM rag_data_source rds
+                         LEFT JOIN RAG_DATA_SOURCE_DOCUMENT rdsd ON rds.id = rdsd.data_source_id
+                WHERE rds.deleted IS NULL
+                  AND rds.ASSOCIATED_SESSION_ID IS NULL
+                GROUP BY rds.ID
+                """;
           handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
           try (Query query = handle.createQuery(sql)) {
             return query.mapTo(RagDataSource.class).list();
