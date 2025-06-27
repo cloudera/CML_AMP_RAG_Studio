@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.datasources.RagDataSourceService;
 import com.cloudera.cai.rag.projects.ProjectRepository;
 import java.util.HashSet;
 import java.util.List;
@@ -50,16 +51,25 @@ public class SessionService {
 
   private final SessionRepository sessionRepository;
   private final ProjectRepository projectRepository;
+  private final RagDataSourceService ragDataSourceService;
 
-  public SessionService(SessionRepository sessionRepository, ProjectRepository projectRepository) {
+  public SessionService(
+      SessionRepository sessionRepository,
+      ProjectRepository projectRepository,
+      RagDataSourceService ragDataSourceService) {
     this.sessionRepository = sessionRepository;
     this.projectRepository = projectRepository;
+    this.ragDataSourceService = ragDataSourceService;
   }
 
-  public Types.Session create(String username, Types.CreateSession createSession) {
+  public Types.Session create(Types.CreateSession createSession, String username) {
     var session = Types.Session.fromCreateRequest(createSession, username);
     validateDataSourceIds(session);
     var id = sessionRepository.create(cleanInputs(session));
+    if (createSession.embeddingModel() != null) {
+      Types.RagDataSource newDataSource = new Types.RagDataSource();
+      ragDataSourceService.createRagDataSource(newDataSource);
+    }
     return sessionRepository.getSessionById(id, username);
   }
 
@@ -109,6 +119,9 @@ public class SessionService {
   }
 
   public static SessionService createNull() {
-    return new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
+    return new SessionService(
+        SessionRepository.createNull(),
+        ProjectRepository.createNull(),
+        RagDataSourceService.createNull());
   }
 }
