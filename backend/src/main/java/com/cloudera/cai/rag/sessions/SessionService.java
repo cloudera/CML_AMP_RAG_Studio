@@ -67,10 +67,26 @@ public class SessionService {
     validateDataSourceIds(session);
     var id = sessionRepository.create(cleanInputs(session));
     if (createSession.embeddingModel() != null) {
-      Types.RagDataSource newDataSource = new Types.RagDataSource();
-      ragDataSourceService.createRagDataSource(newDataSource);
+      Types.RagDataSource newDataSource =
+          new Types.RagDataSource(
+              null,
+              "session-" + id,
+              createSession.embeddingModel(),
+              createSession.inferenceModel(),
+              null,
+              null,
+              null,
+              null,
+              username,
+              username,
+              Types.ConnectionType.MANUAL,
+              null,
+              null,
+              false);
+      Types.RagDataSource ragDataSource = ragDataSourceService.createRagDataSource(newDataSource);
+      session = session.withAssociatedDataSourceId(ragDataSource.id()),
     }
-    return sessionRepository.getSessionById(id, username);
+    return update(session, username);
   }
 
   private void validateDataSourceIds(Types.Session input) {
