@@ -49,16 +49,18 @@ import {
   Typography,
 } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSession/CreateSessionModal.tsx";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
 import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 import { onInferenceModelChange } from "pages/RagChatTab/Settings/ChatSettingsModal.tsx";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
+import { CreateSessionRequest } from "src/api/sessionApi.ts";
 
 export interface CreateSessionFormProps {
-  form: FormInstance<CreateSessionType>;
+  form: FormInstance<CreateSessionRequest>;
   dataSources?: DataSourceType[];
 }
 
@@ -70,6 +72,9 @@ const layout = {
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
+  const { data: defaultProject } = useSuspenseQuery(
+    getDefaultProjectQueryOptions,
+  );
 
   const advancedOptions = () => [
     {
@@ -78,7 +83,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       label: "Advanced Options",
       children: (
         <>
-          <Form.Item<CreateSessionType>
+          <Form.Item<CreateSessionRequest>
             name={["queryConfiguration", "enableToolCalling"]}
             initialValue={
               llmModels === undefined || llmModels.length === 0
@@ -111,7 +116,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
           >
             <Switch />
           </Form.Item>
-          <Form.Item<CreateSessionType>
+          <Form.Item<CreateSessionRequest>
             name={["queryConfiguration", "enableHyde"]}
             initialValue={false}
             valuePropName="checked"
@@ -133,7 +138,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
           >
             <Switch />
           </Form.Item>
-          <Form.Item<CreateSessionType>
+          <Form.Item<CreateSessionRequest>
             name={["queryConfiguration", "enableSummaryFilter"]}
             initialValue={true}
             valuePropName="checked"
@@ -167,8 +172,9 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       form={form}
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
+      initialValues={{ projectId: defaultProject.id }}
       onValuesChange={(
-        changedValues: Partial<Omit<CreateSessionType, "id">>,
+        changedValues: Partial<Omit<CreateSessionRequest, "id">>,
       ) => {
         onInferenceModelChange(changedValues, form, llmModels);
       }}
@@ -189,7 +195,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       >
         <Input />
       </Form.Item>
-      <Form.Item<CreateSessionType>
+      <Form.Item<CreateSessionRequest>
         initialValue={
           llmModels === undefined || llmModels.length === 0
             ? ""
@@ -210,7 +216,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       >
         <Select allowClear options={transformModelOptions(rerankingModels)} />
       </Form.Item>
-      <Form.Item<CreateSessionType>
+      <Form.Item<CreateSessionRequest>
         name="responseChunks"
         initialValue={10}
         label="Maximum number of documents"
