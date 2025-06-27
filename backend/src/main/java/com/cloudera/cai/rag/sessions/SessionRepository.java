@@ -212,7 +212,7 @@ public class SessionRepository {
         });
   }
 
-  public void delete(Long id) {
+  public void delete(Handle handle, Long id) {
     jdbi.useHandle(
         handle -> handle.execute("UPDATE CHAT_SESSION SET DELETED = ? WHERE ID = ?", true, id));
   }

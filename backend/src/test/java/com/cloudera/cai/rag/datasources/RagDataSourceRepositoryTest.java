@@ -138,7 +138,7 @@ class RagDataSourceRepositoryTest {
                 assertThat(projectRepository.getDataSourceIdsForProject(projectId))
                     .containsExactly(dataSourceId));
 
-    repository.deleteDataSource(dataSourceId);
+    repository.deleteDataSource(handle, dataSourceId);
     assertThatThrownBy(() -> repository.getRagDataSourceById(dataSourceId))
         .isInstanceOf(NotFound.class);
 

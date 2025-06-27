@@ -112,7 +112,7 @@ class SessionRepositoryTest {
                 .withUpdatedById(username));
     assertThat(sessionRepository.getSessionById(id, username)).isNotNull();
 
-    sessionRepository.delete(id);
+    sessionRepository.delete(handle, id);
     assertThatThrownBy(() -> sessionRepository.getSessionById(id, username))
         .isInstanceOf(NotFound.class);
   }
