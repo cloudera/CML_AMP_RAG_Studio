@@ -66,10 +66,10 @@ public class SessionRepository {
   }
 
   public Long create(Types.Session input) {
-    return jdbi.inTransaction((handle) -> create(input, handle));
+    return jdbi.inTransaction((handle) -> create(handle, input));
   }
 
-  public Long create(Types.Session input, Handle handle) {
+  public Long create(Handle handle, Types.Session input) {
     var sql =
         """
                           INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration, project_id)
@@ -107,10 +107,10 @@ public class SessionRepository {
   }
 
   public Types.Session getSessionById(Long id, String username) {
-    return jdbi.withHandle(handle -> getSessionById(id, username, handle));
+    return jdbi.withHandle(handle -> getSessionById(handle, id, username));
   }
 
-  public Types.Session getSessionById(Long id, String username, Handle handle) {
+  public Types.Session getSessionById(Handle handle, Long id, String username) {
 
     handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
     var sql =
@@ -225,11 +225,11 @@ public class SessionRepository {
   public void update(Types.Session input) {
     jdbi.useTransaction(
         handle -> {
-          update(input, handle);
+          update(handle, input);
         });
   }
 
-  public void update(Types.Session input, Handle handle) {
+  public void update(Handle handle, Types.Session input) {
     var updatedInput = input.withTimeUpdated(Instant.now());
     String json = serializeQueryConfiguration(input);
     var sql =

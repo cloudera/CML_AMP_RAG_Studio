@@ -73,17 +73,17 @@ public class SessionService {
         handle -> {
           var session = Types.Session.fromCreateRequest(createSession, username);
           validateDataSourceIds(session);
-          var id = sessionRepository.create(cleanInputs(session), handle);
-          session = sessionRepository.getSessionById(id, username, handle);
+          var id = sessionRepository.create(handle, cleanInputs(session));
+          session = sessionRepository.getSessionById(handle, id, username);
           if (createSession.embeddingModel() != null) {
             Types.RagDataSource newDataSource =
                 createDataSourceInstance(createSession, username, id);
             Long ragDataSourceId =
-                ragDataSourceRepository.createRagDataSource(newDataSource, handle);
+                ragDataSourceRepository.createRagDataSource(handle, newDataSource);
             session = session.withAssociatedDataSourceId(ragDataSourceId);
           }
-          sessionRepository.update(cleanInputs(session), handle);
-          return sessionRepository.getSessionById(session.id(), username, handle);
+          sessionRepository.update(handle, cleanInputs(session));
+          return sessionRepository.getSessionById(handle, session.id(), username);
         });
   }
 

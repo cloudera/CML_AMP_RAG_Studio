@@ -48,6 +48,7 @@ import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.projects.ProjectRepository;
 import com.cloudera.cai.rag.sessions.SessionRepository;
+import com.cloudera.cai.rag.sessions.SessionService;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.time.Duration;
 import java.time.Instant;
@@ -70,6 +71,34 @@ class RagDataSourceRepositoryTest {
     assertThat(savedDataSource.updatedById()).isEqualTo("abc");
     assertThat(savedDataSource.embeddingModel()).isEqualTo("test-embedding-model");
     assertThat(savedDataSource.availableForDefaultProject()).isTrue();
+  }
+
+  @Test
+  void getDataSources() {
+    RagDataSourceRepository repository =
+        new RagDataSourceRepository(JdbiConfiguration.createNull());
+    var id1 =
+        repository.createRagDataSource(
+            TestData.createTestDataSourceInstance("test-name1", 512, 10, MANUAL)
+                .withCreatedById("abc")
+                .withUpdatedById("abc")
+                .withEmbeddingModel("test-embedding-model"));
+    var id2 =
+        repository.createRagDataSource(
+            TestData.createTestDataSourceInstance("test-name2", 512, 10, MANUAL)
+                .withCreatedById("abc")
+                .withUpdatedById("abc")
+                .withEmbeddingModel("test-embedding-model"));
+    SessionService sessionService = SessionService.createNull();
+    var session =
+        sessionService.create(
+            TestData.createSessionInstance("abc").withEmbeddingModel("test-embedding-model"),
+            "abc");
+    var nonSessionDataSources = repository.getRagDataSources();
+    assertThat(nonSessionDataSources)
+        .extracting("id")
+        .contains(id1, id2)
+        .doesNotContain(session.associatedDataSourceId());
   }
 
   @Test
