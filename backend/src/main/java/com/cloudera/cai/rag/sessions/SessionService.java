@@ -59,10 +59,11 @@ public class SessionService {
   private final RagDataSourceRepository ragDataSourceRepository;
 
   public SessionService(
-          SessionRepository sessionRepository,
-          ProjectRepository projectRepository,
-          RagDataSourceService ragDataSourceService,
-          Jdbi jdbi, RagDataSourceRepository ragDataSourceRepository) {
+      SessionRepository sessionRepository,
+      ProjectRepository projectRepository,
+      RagDataSourceService ragDataSourceService,
+      Jdbi jdbi,
+      RagDataSourceRepository ragDataSourceRepository) {
     this.sessionRepository = sessionRepository;
     this.projectRepository = projectRepository;
     this.ragDataSourceService = ragDataSourceService;
@@ -76,27 +77,31 @@ public class SessionService {
     var id = sessionRepository.create(cleanInputs(session));
     session = sessionRepository.getSessionById(id, username);
     if (createSession.embeddingModel() != null) {
-      Types.RagDataSource newDataSource =
-          new Types.RagDataSource(
-              null,
-              "session-" + id,
-              createSession.embeddingModel(),
-              createSession.inferenceModel(),
-              null,
-              null,
-              null,
-              null,
-              username,
-              username,
-              Types.ConnectionType.MANUAL,
-              null,
-              null,
-              false,
-              id);
+      Types.RagDataSource newDataSource = createDataSourceInstance(createSession, username, id);
       Types.RagDataSource ragDataSource = ragDataSourceService.createRagDataSource(newDataSource);
       session = session.withAssociatedDataSourceId(ragDataSource.id());
     }
     return update(session, username);
+  }
+
+  private static Types.RagDataSource createDataSourceInstance(
+      Types.CreateSession createSession, String username, Long sessionId) {
+    return new Types.RagDataSource(
+        null,
+        "session-" + sessionId,
+        createSession.embeddingModel(),
+        createSession.inferenceModel(),
+        null,
+        null,
+        null,
+        null,
+        username,
+        username,
+        Types.ConnectionType.MANUAL,
+        null,
+        null,
+        false,
+        sessionId);
   }
 
   private void validateDataSourceIds(Types.Session input) {
@@ -143,11 +148,10 @@ public class SessionService {
   public void delete(Long id, String username) {
     Types.Session session = sessionRepository.getSessionById(id, username);
     jdbi.useTransaction(
-            handle -> {
-              ragDataSourceRepository.deleteDataSource(handle, session.associatedDataSourceId());
-              sessionRepository.delete(handle, id);
-            }
-    );
+        handle -> {
+          ragDataSourceRepository.deleteDataSource(handle, session.associatedDataSourceId());
+          sessionRepository.delete(handle, id);
+        });
   }
 
   public static SessionService createNull() {
@@ -155,6 +159,7 @@ public class SessionService {
         SessionRepository.createNull(),
         ProjectRepository.createNull(),
         RagDataSourceService.createNull(),
-        JdbiConfiguration.createNull());
+        JdbiConfiguration.createNull(),
+        RagDataSourceRepository.createNull());
   }
 }

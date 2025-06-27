@@ -41,10 +41,8 @@ package com.cloudera.cai.rag.datasources;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
-
 import java.time.Instant;
 import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
@@ -55,78 +53,78 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class RagDataSourceRepository {
-    private final Jdbi jdbi;
+  private final Jdbi jdbi;
 
-    public RagDataSourceRepository(Jdbi jdbi) {
-        this.jdbi = jdbi;
-    }
+  public RagDataSourceRepository(Jdbi jdbi) {
+    this.jdbi = jdbi;
+  }
 
-    public Long createRagDataSource(RagDataSource input) {
-        RagDataSource cleanedInputs = cleanInputs(input);
-        return jdbi.inTransaction(
-                handle -> {
-                    var sql =
-                            """
+  public Long createRagDataSource(RagDataSource input) {
+    RagDataSource cleanedInputs = cleanInputs(input);
+    return jdbi.inTransaction(
+        handle -> {
+          var sql =
+              """
                                       INSERT INTO rag_data_source (name, chunk_size, chunk_overlap_percent, created_by_id, updated_by_id, connection_type, embedding_model, summarization_model, ASSOCIATED_SESSION_ID)
                                       VALUES (:name, :chunkSize, :chunkOverlapPercent, :createdById, :updatedById, :connectionType, :embeddingModel, :summarizationModel, :associatedSessionId)
                                     """;
-                    Long result;
-                    try (var update = handle.createUpdate(sql)) {
-                        update.bindMethods(cleanedInputs);
-                        result = update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
-                    }
-                    if (input.availableForDefaultProject()) {
-                        handle.execute(
-                                "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
-                                result);
-                    }
-                    return result;
-                });
-    }
+          Long result;
+          try (var update = handle.createUpdate(sql)) {
+            update.bindMethods(cleanedInputs);
+            result = update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
+          }
+          if (input.availableForDefaultProject()) {
+            handle.execute(
+                "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
+                result);
+          }
+          return result;
+        });
+  }
 
-    private static RagDataSource cleanInputs(RagDataSource input) {
-        if (input.summarizationModel() != null && input.summarizationModel().isEmpty()) {
-            input = input.withSummarizationModel(null);
-        }
-        return input;
+  private static RagDataSource cleanInputs(RagDataSource input) {
+    if (input.summarizationModel() != null && input.summarizationModel().isEmpty()) {
+      input = input.withSummarizationModel(null);
     }
+    return input;
+  }
 
-    public void updateRagDataSource(RagDataSource input) {
-        RagDataSource cleanedInputs = cleanInputs(input);
-        jdbi.useTransaction(
-                handle -> {
-                    var sql =
-                            """
+  public void updateRagDataSource(RagDataSource input) {
+    RagDataSource cleanedInputs = cleanInputs(input);
+    jdbi.useTransaction(
+        handle -> {
+          var sql =
+              """
                                         UPDATE rag_data_source
                                         SET name = :name, connection_type = :connectionType, updated_by_id = :updatedById, summarization_model = :summarizationModel, time_updated = :now
                                         WHERE id = :id AND deleted IS NULL
                                     """;
-                    try (var update = handle.createUpdate(sql)) {
-                        update
-                                .bind("name", cleanedInputs.name())
-                                .bind("updatedById", cleanedInputs.updatedById())
-                                .bind("connectionType", cleanedInputs.connectionType())
-                                .bind("id", cleanedInputs.id())
-                                .bind("summarizationModel", cleanedInputs.summarizationModel())
-                                .bind("now", Instant.now())
-                                .execute();
-                    }
-                    handle.execute(
-                            "DELETE FROM project_data_source WHERE data_source_id = ? AND project_id = 1",
-                            input.id());
-                    if (input.availableForDefaultProject()) {
-                        handle.execute(
-                                "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
-                                input.id());
-                    }
-                });
-    }
+          try (var update = handle.createUpdate(sql)) {
+            update
+                .bind("name", cleanedInputs.name())
+                .bind("updatedById", cleanedInputs.updatedById())
+                .bind("connectionType", cleanedInputs.connectionType())
+                .bind("id", cleanedInputs.id())
+                .bind("summarizationModel", cleanedInputs.summarizationModel())
+                .bind("now", Instant.now())
+                .execute();
+          }
+          handle.execute(
+              "DELETE FROM project_data_source WHERE data_source_id = ? AND project_id = 1",
+              input.id());
+          if (input.availableForDefaultProject()) {
+            handle.execute(
+                "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
+                input.id());
+          }
+        });
+  }
 
-    public RagDataSource getRagDataSourceById(Long id) {
-        return jdbi.withHandle(
-                handle -> {
-                    var sql =
-                            """
+  public RagDataSource getRagDataSourceById(Long id) {
+    return jdbi.withHandle(
+        handle -> {
+          var sql =
+              """
                                     SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
                                     EXISTS(
                                         SELECT 1 from project_data_source pds
@@ -139,23 +137,23 @@ public class RagDataSourceRepository {
                                      AND rds.id = :id
                                     GROUP BY rds.ID
                                     """;
-                    handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
-                    try (Query query = handle.createQuery(sql)) {
-                        query.bind("id", id);
-                        return query
-                                .mapTo(RagDataSource.class)
-                                .findOne()
-                                .orElseThrow(() -> new NotFound("Data source not found with id: " + id));
-                    }
-                });
-    }
+          handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
+          try (Query query = handle.createQuery(sql)) {
+            query.bind("id", id);
+            return query
+                .mapTo(RagDataSource.class)
+                .findOne()
+                .orElseThrow(() -> new NotFound("Data source not found with id: " + id));
+          }
+        });
+  }
 
-    public List<RagDataSource> getRagDataSources() {
-        log.debug("Getting all RagDataSources");
-        return jdbi.withHandle(
-                handle -> {
-                    var sql =
-                            """
+  public List<RagDataSource> getRagDataSources() {
+    log.debug("Getting all RagDataSources");
+    return jdbi.withHandle(
+        handle -> {
+          var sql =
+              """
                                     SELECT rds.*, count(rdsd.ID) as document_count, sum(rdsd.SIZE_IN_BYTES) as total_doc_size,
                                     EXISTS(
                                         SELECT 1 from project_data_source pds
@@ -167,38 +165,36 @@ public class RagDataSourceRepository {
                                     WHERE rds.deleted IS NULL
                                     GROUP BY rds.ID
                                     """;
-                    handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
-                    try (Query query = handle.createQuery(sql)) {
-                        return query.mapTo(RagDataSource.class).list();
-                    }
-                });
-    }
+          handle.registerRowMapper(ConstructorMapper.factory(RagDataSource.class));
+          try (Query query = handle.createQuery(sql)) {
+            return query.mapTo(RagDataSource.class).list();
+          }
+        });
+  }
 
-    public void deleteDataSource(Long id) {
-        jdbi.useTransaction(
-                handle -> deleteDataSource(handle, id)
-        );
-    }
+  public void deleteDataSource(Long id) {
+    jdbi.useTransaction(handle -> deleteDataSource(handle, id));
+  }
 
-    public void deleteDataSource(Handle handle, Long id) {
-        handle.execute("UPDATE RAG_DATA_SOURCE SET DELETED = ? where ID = ?", true, id);
-        handle.execute("DELETE FROM PROJECT_DATA_SOURCE WHERE DATA_SOURCE_ID = ?", id);
-        handle.execute("DELETE FROM CHAT_SESSION_DATA_SOURCE WHERE DATA_SOURCE_ID = ?", id);
-    }
+  public void deleteDataSource(Handle handle, Long id) {
+    handle.execute("UPDATE RAG_DATA_SOURCE SET DELETED = ? where ID = ?", true, id);
+    handle.execute("DELETE FROM PROJECT_DATA_SOURCE WHERE DATA_SOURCE_ID = ?", id);
+    handle.execute("DELETE FROM CHAT_SESSION_DATA_SOURCE WHERE DATA_SOURCE_ID = ?", id);
+  }
 
-    public int getNumberOfDataSources() {
-        return jdbi.withHandle(
-                handle -> {
-                    try (var query = handle.createQuery("SELECT count(*) FROM RAG_DATA_SOURCE")) {
-                        return query.mapTo(Integer.class).one();
-                    }
-                });
-    }
+  public int getNumberOfDataSources() {
+    return jdbi.withHandle(
+        handle -> {
+          try (var query = handle.createQuery("SELECT count(*) FROM RAG_DATA_SOURCE")) {
+            return query.mapTo(Integer.class).one();
+          }
+        });
+  }
 
-    // Nullables stuff below here.
+  // Nullables stuff below here.
 
-    public static RagDataSourceRepository createNull() {
-        // the db configuration will use in-memory db based on env vars.
-        return new RagDataSourceRepository(new JdbiConfiguration().jdbi());
-    }
+  public static RagDataSourceRepository createNull() {
+    // the db configuration will use in-memory db based on env vars.
+    return new RagDataSourceRepository(new JdbiConfiguration().jdbi());
+  }
 }
