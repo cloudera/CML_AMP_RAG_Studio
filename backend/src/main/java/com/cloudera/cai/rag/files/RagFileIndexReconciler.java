@@ -123,7 +123,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       IndexConfiguration indexConfiguration = fetchIndexConfiguration(document.dataSourceId());
       RagDocument finalDocument = doIndexing(document, indexConfiguration);
       updateFinalStatus(finalDocument);
-      ragFileSummaryReconciler.resync();
+      ragFileSummaryReconciler.submit(finalDocument);
     }
     return new ReconcileResult();
   }
