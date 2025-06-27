@@ -77,8 +77,9 @@ public class SessionController {
   }
 
   @DeleteMapping(path = "/{id}")
-  public void delete(@PathVariable Long id) {
-    sessionService.delete(id);
+  public void delete(@PathVariable Long id, HttpServletRequest request) {
+    String username = usernameExtractor.extractUsername(request);
+    sessionService.delete(id, username);
   }
 
   @GetMapping(produces = "application/json")

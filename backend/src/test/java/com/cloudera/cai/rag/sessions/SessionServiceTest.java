@@ -43,10 +43,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.datasources.RagDataSourceService;
 import com.cloudera.cai.rag.projects.ProjectRepository;
 import com.cloudera.cai.rag.projects.ProjectService;
+import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -63,7 +65,7 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
     var input = TestData.createSessionInstance("test").withEmbeddingModel("embeddingModelTest");
     Types.Session result = sessionService.create(input, USERNAME);
 
@@ -84,7 +86,7 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
     var input = TestData.createSessionInstance("test").withRerankModel("").withDataSourceIds(null);
     Types.Session result = sessionService.create(input, USERNAME);
 
@@ -99,7 +101,7 @@ class SessionServiceTest {
     ProjectRepository projectRepository = ProjectRepository.createNull();
     SessionService sessionService =
         new SessionService(
-            SessionRepository.createNull(), projectRepository, RagDataSourceService.createNull());
+            SessionRepository.createNull(), projectRepository, RagDataSourceService.createNull(), JdbiConfiguration.createNull());
 
     // Create a project
     ProjectService projectService = ProjectService.createNull();
@@ -130,11 +132,16 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
-    var createSession = TestData.createSessionInstance("test");
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
+    var createSession =
+        TestData.createSessionInstance("test").withEmbeddingModel("embeddingModelTest");
     var createdSession = sessionService.create(createSession, USERNAME);
-    sessionService.delete(createdSession.id());
+    sessionService.delete(createdSession.id(), USERNAME);
     assertThat(sessionService.getSessions("fake-user")).doesNotContain(createdSession);
+    assertThatThrownBy(
+            () ->
+                ragDataSourceService.getRagDataSourceById(createdSession.associatedDataSourceId()))
+        .isInstanceOf(NotFound.class);
   }
 
   @Test
@@ -143,7 +150,7 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
     String username1 = UUID.randomUUID().toString();
     String username2 = UUID.randomUUID().toString();
     String username3 = UUID.randomUUID().toString();
@@ -163,7 +170,7 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
     ProjectService projectService = ProjectService.createNull();
 
     var project =
@@ -211,7 +218,7 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
 
     // Create a session with an invalid data source ID (not in the project)
     var input = TestData.createSessionInstance("test-session").withDataSourceIds(List.of(999L));
@@ -229,7 +236,7 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull());
+            RagDataSourceService.createNull(), JdbiConfiguration.createNull());
 
     var input = TestData.createSessionInstance("test-session");
     // Create a session with no data source IDs
