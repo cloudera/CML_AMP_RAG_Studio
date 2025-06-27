@@ -69,16 +69,22 @@ public class SessionService {
   }
 
   public Types.Session create(Types.CreateSession createSession, String username) {
-    var session = Types.Session.fromCreateRequest(createSession, username);
-    validateDataSourceIds(session);
-    var id = sessionRepository.create(cleanInputs(session));
-    session = sessionRepository.getSessionById(id, username);
-    if (createSession.embeddingModel() != null) {
-      Types.RagDataSource newDataSource = createDataSourceInstance(createSession, username, id);
-      Long ragDataSourceId = ragDataSourceRepository.createRagDataSource(newDataSource);
-      session = session.withAssociatedDataSourceId(ragDataSourceId);
-    }
-    return update(session, username);
+    return jdbi.inTransaction(
+        handle -> {
+          var session = Types.Session.fromCreateRequest(createSession, username);
+          validateDataSourceIds(session);
+          var id = sessionRepository.create(cleanInputs(session), handle);
+          session = sessionRepository.getSessionById(id, username, handle);
+          if (createSession.embeddingModel() != null) {
+            Types.RagDataSource newDataSource =
+                createDataSourceInstance(createSession, username, id);
+            Long ragDataSourceId =
+                ragDataSourceRepository.createRagDataSource(newDataSource, handle);
+            session = session.withAssociatedDataSourceId(ragDataSourceId);
+          }
+          sessionRepository.update(cleanInputs(session), handle);
+          return sessionRepository.getSessionById(session.id(), username, handle);
+        });
   }
 
   private static Types.RagDataSource createDataSourceInstance(
