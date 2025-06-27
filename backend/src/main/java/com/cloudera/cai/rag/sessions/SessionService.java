@@ -41,7 +41,6 @@ package com.cloudera.cai.rag.sessions;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.datasources.RagDataSourceService;
 import com.cloudera.cai.rag.projects.ProjectRepository;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,7 +66,7 @@ public class SessionService {
     var session = Types.Session.fromCreateRequest(createSession, username);
     validateDataSourceIds(session);
     var id = sessionRepository.create(cleanInputs(session));
-    session = getSessionById(id, username);
+    session = sessionRepository.getSessionById(id, username);
     if (createSession.embeddingModel() != null) {
       Types.RagDataSource newDataSource =
           new Types.RagDataSource(
@@ -84,14 +83,9 @@ public class SessionService {
               Types.ConnectionType.MANUAL,
               null,
               null,
-              false,
-              id);
+              false);
       Types.RagDataSource ragDataSource = ragDataSourceService.createRagDataSource(newDataSource);
-      var projectId = createSession.projectId();
-      projectRepository.addDataSourceToProject(projectId, ragDataSource.id());
-      var dataSourceIds = new ArrayList<>(session.dataSourceIds());
-      dataSourceIds.add(ragDataSource.id());
-      session = session.withDataSourceIds(dataSourceIds);
+      session = session.withAssociatedDataSourceId(ragDataSource.id());
     }
     return update(session, username);
   }
