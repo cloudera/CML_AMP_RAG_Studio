@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useGetLlmModels } from "src/api/modelsApi";
+import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi";
 import {
   CreateSessionRequest,
   useCreateSessionMutation,
@@ -15,6 +15,7 @@ const useCreateSessionAndRedirect = () => {
     getDefaultProjectQueryOptions,
   );
 
+  const { data: embeddingModels } = useGetEmbeddingModels();
   const { data: models } = useGetLlmModels();
   const createSession = useCreateSessionMutation({
     onSuccess: () => {
@@ -38,6 +39,9 @@ const useCreateSessionAndRedirect = () => {
           enableToolCalling: false,
           selectedTools: [],
         },
+        embeddingModel: embeddingModels?.length
+          ? embeddingModels[0].model_id
+          : undefined,
         projectId: projectId ? parseInt(projectId) : defaultProject.id,
       };
       createSession

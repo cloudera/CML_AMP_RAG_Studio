@@ -67,6 +67,7 @@ export interface Session {
   name: string;
   dataSourceIds: number[];
   inferenceModel?: string;
+  embeddingModel?: string;
   rerankModel?: string;
   responseChunks: number;
   timeCreated: number;
@@ -83,6 +84,7 @@ export type CreateSessionRequest = Pick<
   | "name"
   | "dataSourceIds"
   | "inferenceModel"
+  | "embeddingModel"
   | "rerankModel"
   | "responseChunks"
   | "queryConfiguration"
