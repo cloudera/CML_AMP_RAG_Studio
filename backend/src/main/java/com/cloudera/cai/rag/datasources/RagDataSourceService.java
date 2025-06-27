@@ -57,6 +57,9 @@ public class RagDataSourceService {
     if (input.chunkOverlapPercent() == null) {
       input = input.withChunkOverlapPercent(10);
     }
+    if (input.chunkSize() == null) {
+      input = input.withChunkSize(512);
+    }
     var id =
         ragDataSourceRepository.createRagDataSource(
             input.withCreatedById(input.createdById()).withUpdatedById(input.updatedById()));

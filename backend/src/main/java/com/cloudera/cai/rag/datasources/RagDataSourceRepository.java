@@ -72,7 +72,7 @@ public class RagDataSourceRepository {
             update.bindMethods(cleanedInputs);
             result = update.executeAndReturnGeneratedKeys("id").mapTo(Long.class).one();
           }
-          if (Boolean.TRUE.equals(input.availableForDefaultProject())) {
+          if (input.availableForDefaultProject()) {
             handle.execute(
                 "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
                 result);
@@ -111,7 +111,7 @@ public class RagDataSourceRepository {
           handle.execute(
               "DELETE FROM project_data_source WHERE data_source_id = ? AND project_id = 1",
               input.id());
-          if (Boolean.TRUE.equals(input.availableForDefaultProject())) {
+          if (input.availableForDefaultProject()) {
             handle.execute(
                 "INSERT INTO project_data_source (data_source_id, project_id) VALUES (?, 1)",
                 input.id());
