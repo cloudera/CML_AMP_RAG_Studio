@@ -121,6 +121,7 @@ public class Types {
       String updatedById,
       Instant lastInteractionTime,
       String inferenceModel,
+      Long associatedDataSourceId,
       String rerankModel,
       Integer responseChunks,
       QueryConfiguration queryConfiguration) {
@@ -137,6 +138,7 @@ public class Types {
           username,
           null,
           input.inferenceModel(),
+          null,
           input.rerankModel(),
           input.responseChunks(),
           input.queryConfiguration());
@@ -148,6 +150,7 @@ public class Types {
       String name,
       @Singular List<Long> dataSourceIds,
       String inferenceModel,
+      String embeddingModel,
       String rerankModel,
       Integer responseChunks,
       QueryConfiguration queryConfiguration,

@@ -49,3 +49,5 @@
 24_add_default_project_data_source.up.sql
 25_alter_datasource_config.down.sql
 25_alter_datasource_config.up.sql
+26_add_session_data_source.down.sql
+26_add_session_data_source.up.sql

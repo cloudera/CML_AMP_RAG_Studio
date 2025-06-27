@@ -141,7 +141,7 @@ class ProjectControllerTest {
     var session =
         sessionService.create(
             Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
-            username);
+            username, input);
 
     // Verify the data source is associated with the project
     List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
@@ -301,9 +301,9 @@ class ProjectControllerTest {
             .withUpdatedById("user3");
 
     // Save the sessions
-    sessionService.create(session1, "user1");
-    sessionService.create(session2, "user2");
-    sessionService.create(session3, "user3");
+    sessionService.create(session1, "user1", input);
+    sessionService.create(session2, "user2", input);
+    sessionService.create(session3, "user3", input);
 
     // Get sessions for the first project
     List<Session> projectSessions = controller.getSessionsForProject(project.id());
@@ -356,7 +356,7 @@ class ProjectControllerTest {
     var session =
         sessionService.create(
             Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
-            username);
+            username, input);
 
     // Verify the data source is in the session's list of data sources
     assertThat(session.dataSourceIds()).contains(dataSourceId);

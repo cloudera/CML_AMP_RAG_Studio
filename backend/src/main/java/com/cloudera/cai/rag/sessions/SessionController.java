@@ -67,7 +67,7 @@ public class SessionController {
   public Session create(@RequestBody CreateSession input, HttpServletRequest request) {
     String username = usernameExtractor.extractUsername(request);
     Session toCreate = Session.fromCreateRequest(input, username);
-    return sessionService.create(toCreate, username);
+    return sessionService.create(toCreate, username, input);
   }
 
   @PostMapping(path = "/{id}", consumes = "application/json", produces = "application/json")

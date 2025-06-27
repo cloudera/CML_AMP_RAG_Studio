@@ -80,6 +80,7 @@ public class TestData {
         TEST_USER_NAME,
         null,
         "test-model",
+        null,
         "test-rerank-model",
         3,
         new Types.QueryConfiguration(false, true, true, List.of()));
@@ -95,6 +96,7 @@ public class TestData {
         sessionName,
         dataSourceIds,
         "test-model",
+        null,
         "test-rerank-model",
         3,
         new Types.QueryConfiguration(false, true, true, List.of()),
