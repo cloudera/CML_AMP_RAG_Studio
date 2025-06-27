@@ -59,13 +59,9 @@ class SessionServiceTest {
   void create() {
     SessionService sessionService =
         new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-    Types.Session result =
-        sessionService.create(
-            TestData.createTestSessionInstance("test")
-                .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME),
-            USERNAME,
-            input);
+    var input = TestData.createSessionInstance("test");
+
+    Types.Session result = sessionService.create(USERNAME, input);
     assertThat(result).isNotNull();
   }
 
@@ -73,15 +69,9 @@ class SessionServiceTest {
   void create_cleanData() {
     SessionService sessionService =
         new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-    Types.Session result =
-        sessionService.create(
-            TestData.createTestSessionInstance("test")
-                .withRerankModel("")
-                .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME)
-                .withDataSourceIds(null),
-            USERNAME,
-            input);
+    var input = TestData.createSessionInstance("test").withRerankModel("").withDataSourceIds(null);
+    Types.Session result = sessionService.create(USERNAME, input);
+
     assertThat(result.rerankModel()).isNull();
     assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result).isNotNull();
@@ -103,16 +93,10 @@ class SessionServiceTest {
 
     // Add data source ID 4L to the project
     projectRepository.addDataSourceToProject(project.id(), dataSourceId);
+    var input = TestData.createSessionInstance("test").withProjectId(project.id());
 
     // Create a session with the project ID
-    Types.Session result =
-        sessionService.create(
-            TestData.createTestSessionInstance("test")
-                .withProjectId(project.id())
-                .withCreatedById(USERNAME)
-                .withUpdatedById(USERNAME),
-            USERNAME,
-            input);
+    Types.Session result = sessionService.create(USERNAME, input);
 
     // Update the session with dataSourceId
     var updated = result.withRerankModel("").withDataSourceIds(List.of(dataSourceId));
@@ -127,11 +111,8 @@ class SessionServiceTest {
   void delete() {
     SessionService sessionService =
         new SessionService(SessionRepository.createNull(), ProjectRepository.createNull());
-    var input =
-        TestData.createTestSessionInstance("test")
-            .withCreatedById(USERNAME)
-            .withUpdatedById(USERNAME);
-    var createdSession = sessionService.create(input, USERNAME, input);
+    var createSession = TestData.createSessionInstance("test");
+    var createdSession = sessionService.create(USERNAME, createSession);
     sessionService.delete(createdSession.id());
     assertThat(sessionService.getSessions("fake-user")).doesNotContain(createdSession);
   }
@@ -143,16 +124,10 @@ class SessionServiceTest {
     String username1 = UUID.randomUUID().toString();
     String username2 = UUID.randomUUID().toString();
     String username3 = UUID.randomUUID().toString();
-    var input =
-        TestData.createTestSessionInstance("test")
-            .withCreatedById(username1)
-            .withUpdatedById(username1);
-    var input2 =
-        TestData.createTestSessionInstance("test2")
-            .withCreatedById(username2)
-            .withUpdatedById(username2);
-    sessionService.create(input, username1, input);
-    sessionService.create(input2, username2, input);
+    var createSession1 = TestData.createSessionInstance("test");
+    var createSession2 = TestData.createSessionInstance("test2");
+    sessionService.create(username1, createSession1);
+    sessionService.create(username2, createSession2);
 
     assertThat(sessionService.getSessions(username1)).hasSizeGreaterThanOrEqualTo(1);
     assertThat(sessionService.getSessions(username2)).hasSizeGreaterThanOrEqualTo(1);
@@ -172,30 +147,17 @@ class SessionServiceTest {
 
     // Create sessions with different project IDs
     String user1 = "user1";
-    var session1 =
-        TestData.createTestSessionInstance("test1")
-            .withProjectId(project.id())
-            .withCreatedById(user1)
-            .withUpdatedById(user1);
-
+    var createSession1 = TestData.createSessionInstance("test1").withProjectId(project.id());
     String user2 = "user2";
-    var session2 =
-        TestData.createTestSessionInstance("test2")
-            .withProjectId(project.id())
-            .withCreatedById(user2)
-            .withUpdatedById(user2);
+    var createSession2 = TestData.createSessionInstance("test2").withProjectId(project.id());
 
     String user3 = "user3";
-    var session3 =
-        TestData.createTestSessionInstance("test3")
-            .withProjectId(project2.id())
-            .withCreatedById(user3)
-            .withUpdatedById(user3);
+    var createSession3 = TestData.createSessionInstance("test3").withProjectId(project2.id());
 
     // Save the sessions
-    sessionService.create(session1, user1, input);
-    sessionService.create(session2, user2, input);
-    sessionService.create(session3, user3, input);
+    sessionService.create(user1, createSession1);
+    sessionService.create(user2, createSession2);
+    sessionService.create(user3, createSession3);
 
     var projectOneSessions = sessionService.getSessionsByProjectId(project.id());
 
@@ -228,15 +190,13 @@ class SessionServiceTest {
         projectService.createProject(TestData.createTestProjectInstance("test-project", false));
 
     // Create a session with an invalid data source ID (not in the project)
-    var sessionWithInvalidDataSource =
-        TestData.createTestSessionInstance("test-session")
+    var input =
+        TestData.createSessionInstance("test-session")
             .withProjectId(project.id())
-            .withDataSourceIds(List.of(999L)) // Invalid data source ID
-            .withCreatedById(USERNAME)
-            .withUpdatedById(USERNAME);
+            .withDataSourceIds(List.of(999L));
 
     // Verify that creating a session with an invalid data source ID throws an exception
-    assertThatThrownBy(() -> sessionService.create(sessionWithInvalidDataSource, USERNAME, input))
+    assertThatThrownBy(() -> sessionService.create(USERNAME, input))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid data source IDs provided.");
   }
@@ -252,16 +212,11 @@ class SessionServiceTest {
     var project =
         projectService.createProject(TestData.createTestProjectInstance("test-project", false));
 
+    var input = TestData.createSessionInstance("test-session");
     // Create a session with no data source IDs
-    var session =
-        TestData.createTestSessionInstance("test-session")
-            .withProjectId(project.id())
-            .withDataSourceIds(List.of()) // No data source IDs
-            .withCreatedById(USERNAME)
-            .withUpdatedById(USERNAME);
 
     // Create the session
-    var createdSession = sessionService.create(session, USERNAME, input);
+    var createdSession = sessionService.create(USERNAME, input);
 
     // Update the session with an invalid data source ID
     var updatedSession = createdSession.withDataSourceIds(List.of(999L)); // Invalid data source ID

@@ -56,10 +56,10 @@ public class SessionService {
     this.projectRepository = projectRepository;
   }
 
-  public Types.Session create(
-      Types.Session input, String username, Types.CreateSession createSession) {
-    validateDataSourceIds(input);
-    var id = sessionRepository.create(cleanInputs(input));
+  public Types.Session create(String username, Types.CreateSession createSession) {
+    var session = Types.Session.fromCreateRequest(createSession, username);
+    validateDataSourceIds(session);
+    var id = sessionRepository.create(cleanInputs(session));
     return sessionRepository.getSessionById(id, username);
   }
 
