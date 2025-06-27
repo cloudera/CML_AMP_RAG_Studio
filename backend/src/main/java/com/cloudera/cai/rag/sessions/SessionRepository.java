@@ -72,9 +72,9 @@ public class SessionRepository {
   public Long create(Types.Session input, Handle handle) {
     var sql =
         """
-            INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration, project_id)
-            VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration, :projectId)
-          """;
+                          INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration, project_id)
+                          VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration, :projectId)
+                        """;
     Long id = insertSession(input, handle, sql);
     insertSessionDataSources(handle, id, input.dataSourceIds());
     return id;
@@ -83,9 +83,9 @@ public class SessionRepository {
   private void insertSessionDataSources(Handle handle, Long sessionId, List<Long> dataSourceId) {
     var otherSql =
         """
-              INSERT INTO CHAT_SESSION_DATA_SOURCE (chat_session_id, data_source_id)
-              VALUES (:id, :data_source_id)
-            """;
+                          INSERT INTO CHAT_SESSION_DATA_SOURCE (chat_session_id, data_source_id)
+                          VALUES (:id, :data_source_id)
+                        """;
     try (var update = handle.createUpdate(otherSql)) {
       for (Long dataSource : dataSourceId) {
         update.bind("id", sessionId).bind("data_source_id", dataSource);
@@ -106,24 +106,24 @@ public class SessionRepository {
     }
   }
 
-    public Types.Session getSessionById(Long id, String username) {
-      return jdbi.withHandle(handle -> getSessionById(id, username, handle));
-    }
+  public Types.Session getSessionById(Long id, String username) {
+    return jdbi.withHandle(handle -> getSessionById(id, username, handle));
+  }
 
-    public Types.Session getSessionById(Long id, String username, Handle handle) {
+  public Types.Session getSessionById(Long id, String username, Handle handle) {
 
-              handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
-              var sql =
-                  """
-                SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
-                LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
-                LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
-                WHERE cs.ID = :id AND cs.DELETED IS NULL AND cs.created_by_id = :username
-              """;
-              return querySessions(
-                      handle.createQuery(sql).bind("id", id).bind("username", username))
-                  .findFirst()
-                  .orElseThrow(() -> new NotFound("Session not found")).build();
+    handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
+    var sql =
+        """
+                  SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
+                  LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                  LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
+                  WHERE cs.ID = :id AND cs.DELETED IS NULL AND cs.created_by_id = :username
+                """;
+    return querySessions(handle.createQuery(sql).bind("id", id).bind("username", username))
+        .findFirst()
+        .orElseThrow(() -> new NotFound("Session not found"))
+        .build();
   }
 
   private Stream<Types.Session.SessionBuilder> querySessions(Query query) {
@@ -185,12 +185,12 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-                SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
-                LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
-                LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
-                WHERE cs.DELETED IS NULL AND cs.created_by_id = :username
-                ORDER BY last_interaction_time DESC, time_created DESC
-              """;
+                                      SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
+                                      LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                                      LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
+                                      WHERE cs.DELETED IS NULL AND cs.created_by_id = :username
+                                      ORDER BY last_interaction_time DESC, time_created DESC
+                                    """;
           return querySessions(handle.createQuery(sql).bind("username", username))
               .map(Types.Session.SessionBuilder::build)
               .toList();
@@ -202,12 +202,12 @@ public class SessionRepository {
         handle -> {
           var sql =
               """
-                SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
-                LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
-                LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
-                WHERE cs.DELETED IS NULL AND cs.project_id = :projectId
-                ORDER BY last_interaction_time DESC, time_created DESC
-              """;
+                                      SELECT cs.*, csds.data_source_id, rds.id as associated_data_source_id FROM CHAT_SESSION cs
+                                      LEFT JOIN CHAT_SESSION_DATA_SOURCE csds ON cs.id=csds.chat_session_id
+                                      LEFT JOIN RAG_DATA_SOURCE rds ON cs.id=rds.associated_session_id
+                                      WHERE cs.DELETED IS NULL AND cs.project_id = :projectId
+                                      ORDER BY last_interaction_time DESC, time_created DESC
+                                    """;
           return querySessions(handle.createQuery(sql).bind("projectId", projectId))
               .map(Types.Session.SessionBuilder::build)
               .toList();
@@ -223,28 +223,28 @@ public class SessionRepository {
   }
 
   public void update(Types.Session input) {
-    var updatedInput = input.withTimeUpdated(Instant.now());
-    String json = serializeQueryConfiguration(input);
     jdbi.useTransaction(
         handle -> {
-          var sql =
-              """
+          update(input, handle);
+        });
+  }
+
+  public void update(Types.Session input, Handle handle) {
+    var updatedInput = input.withTimeUpdated(Instant.now());
+    String json = serializeQueryConfiguration(input);
+    var sql =
+        """
                   UPDATE CHAT_SESSION
                   SET name = :name, updated_by_id = :updatedById, inference_model = :inferenceModel, query_configuration = :queryConfiguration,
                       response_chunks = :responseChunks, time_updated = :timeUpdated, rerank_model = :rerankModel, project_id = :projectId
                   WHERE id = :id
                 """;
-          handle
-              .createUpdate(sql)
-              .bind("queryConfiguration", json)
-              .bindMethods(updatedInput)
-              .execute();
-          handle
-              .createUpdate("DELETE FROM CHAT_SESSION_DATA_SOURCE WHERE CHAT_SESSION_ID = :id")
-              .bind("id", input.id())
-              .execute();
-          insertSessionDataSources(handle, input.id(), input.dataSourceIds());
-        });
+    handle.createUpdate(sql).bind("queryConfiguration", json).bindMethods(updatedInput).execute();
+    handle
+        .createUpdate("DELETE FROM CHAT_SESSION_DATA_SOURCE WHERE CHAT_SESSION_ID = :id")
+        .bind("id", input.id())
+        .execute();
+    insertSessionDataSources(handle, input.id(), input.dataSourceIds());
   }
 
   private String serializeQueryConfiguration(Types.Session input) {
