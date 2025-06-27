@@ -141,7 +141,8 @@ class ProjectControllerTest {
     var session =
         sessionService.create(
             Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
-            username, input);
+            username,
+            createSession);
 
     // Verify the data source is associated with the project
     List<RagDataSource> dataSources = controller.getDataSourcesForProject(newProject.id());
@@ -282,23 +283,20 @@ class ProjectControllerTest {
     var project2 = controller.create(createProject2, request);
 
     // Create sessions with different project IDs
-    var session1 =
-        TestData.createTestSessionInstance("session1")
-            .withProjectId(project.id())
-            .withCreatedById("user1")
-            .withUpdatedById("user1");
+    var createSession1 =
+            TestData.createSessionInstance("session1");
 
-    var session2 =
-        TestData.createTestSessionInstance("session2")
-            .withProjectId(project.id())
-            .withCreatedById("user2")
-            .withUpdatedById("user2");
+    var session1 = Session.fromCreateRequest(createSession1, "user1").withProjectId(project.id());
 
-    var session3 =
-        TestData.createTestSessionInstance("session3")
-            .withProjectId(project2.id())
-            .withCreatedById("user3")
-            .withUpdatedById("user3");
+    var createSession2 =
+            TestData.createSessionInstance("session2");
+
+    var session2 = Session.fromCreateRequest(createSession2, "user2").withProjectId(project.id());
+
+    var createSession3 =
+        TestData.createSessionInstance("session3");
+
+    var session3 = Session.fromCreateRequest(createSession3, "user3").withProjectId(project2.id());
 
     // Save the sessions
     sessionService.create(session1, "user1", input);
@@ -356,7 +354,8 @@ class ProjectControllerTest {
     var session =
         sessionService.create(
             Types.Session.fromCreateRequest(createSession, username).withProjectId(newProject.id()),
-            username, input);
+            username,
+            input);
 
     // Verify the data source is in the session's list of data sources
     assertThat(session.dataSourceIds()).contains(dataSourceId);

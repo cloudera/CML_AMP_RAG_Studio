@@ -64,7 +64,8 @@ class SessionServiceTest {
             TestData.createTestSessionInstance("test")
                 .withCreatedById(USERNAME)
                 .withUpdatedById(USERNAME),
-            USERNAME, input);
+            USERNAME,
+            input);
     assertThat(result).isNotNull();
   }
 
@@ -79,7 +80,8 @@ class SessionServiceTest {
                 .withCreatedById(USERNAME)
                 .withUpdatedById(USERNAME)
                 .withDataSourceIds(null),
-            USERNAME, input);
+            USERNAME,
+            input);
     assertThat(result.rerankModel()).isNull();
     assertThat(result.dataSourceIds()).isEmpty();
     assertThat(result).isNotNull();
@@ -109,7 +111,8 @@ class SessionServiceTest {
                 .withProjectId(project.id())
                 .withCreatedById(USERNAME)
                 .withUpdatedById(USERNAME),
-            USERNAME, input);
+            USERNAME,
+            input);
 
     // Update the session with dataSourceId
     var updated = result.withRerankModel("").withDataSourceIds(List.of(dataSourceId));
