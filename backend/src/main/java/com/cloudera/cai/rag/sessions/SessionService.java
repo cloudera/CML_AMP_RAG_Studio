@@ -54,19 +54,16 @@ public class SessionService {
 
   private final SessionRepository sessionRepository;
   private final ProjectRepository projectRepository;
-  private final RagDataSourceService ragDataSourceService;
   private final Jdbi jdbi;
   private final RagDataSourceRepository ragDataSourceRepository;
 
   public SessionService(
       SessionRepository sessionRepository,
       ProjectRepository projectRepository,
-      RagDataSourceService ragDataSourceService,
       Jdbi jdbi,
       RagDataSourceRepository ragDataSourceRepository) {
     this.sessionRepository = sessionRepository;
     this.projectRepository = projectRepository;
-    this.ragDataSourceService = ragDataSourceService;
     this.jdbi = jdbi;
     this.ragDataSourceRepository = ragDataSourceRepository;
   }
@@ -78,8 +75,8 @@ public class SessionService {
     session = sessionRepository.getSessionById(id, username);
     if (createSession.embeddingModel() != null) {
       Types.RagDataSource newDataSource = createDataSourceInstance(createSession, username, id);
-      Types.RagDataSource ragDataSource = ragDataSourceService.createRagDataSource(newDataSource);
-      session = session.withAssociatedDataSourceId(ragDataSource.id());
+      Long ragDataSourceId = ragDataSourceRepository.createRagDataSource(newDataSource);
+      session = session.withAssociatedDataSourceId(ragDataSourceId);
     }
     return update(session, username);
   }
@@ -91,8 +88,8 @@ public class SessionService {
         "session-" + sessionId,
         createSession.embeddingModel(),
         createSession.inferenceModel(),
-        null,
-        null,
+        RagDataSourceService.DEFAULT_CHUNK_SIZE,
+        RagDataSourceService.DEFAULT_CHUNK_OVERLAP,
         null,
         null,
         username,
@@ -158,7 +155,6 @@ public class SessionService {
     return new SessionService(
         SessionRepository.createNull(),
         ProjectRepository.createNull(),
-        RagDataSourceService.createNull(),
         JdbiConfiguration.createNull(),
         RagDataSourceRepository.createNull());
   }

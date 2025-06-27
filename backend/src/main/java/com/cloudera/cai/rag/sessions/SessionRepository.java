@@ -66,17 +66,18 @@ public class SessionRepository {
   }
 
   public Long create(Types.Session input) {
-    return jdbi.inTransaction(
-        handle -> {
-          var sql =
-              """
+    return jdbi.inTransaction((handle) -> create(input, handle));
+  }
+
+  public Long create(Types.Session input, Handle handle) {
+    var sql =
+        """
             INSERT INTO CHAT_SESSION (name, created_by_id, updated_by_id, inference_model, rerank_model, response_chunks, query_configuration, project_id)
             VALUES (:name, :createdById, :updatedById, :inferenceModel, :rerankModel, :responseChunks, :queryConfiguration, :projectId)
           """;
-          Long id = insertSession(input, handle, sql);
-          insertSessionDataSources(handle, id, input.dataSourceIds());
-          return id;
-        });
+    Long id = insertSession(input, handle, sql);
+    insertSessionDataSources(handle, id, input.dataSourceIds());
+    return id;
   }
 
   private void insertSessionDataSources(Handle handle, Long sessionId, List<Long> dataSourceId) {
@@ -105,9 +106,12 @@ public class SessionRepository {
     }
   }
 
-  public Types.Session getSessionById(Long id, String username) {
-    return jdbi.withHandle(
-            handle -> {
+    public Types.Session getSessionById(Long id, String username) {
+      return jdbi.withHandle(handle -> getSessionById(id, username, handle));
+    }
+
+    public Types.Session getSessionById(Long id, String username, Handle handle) {
+
               handle.registerRowMapper(ConstructorMapper.factory(Types.Session.class));
               var sql =
                   """
@@ -119,9 +123,7 @@ public class SessionRepository {
               return querySessions(
                       handle.createQuery(sql).bind("id", id).bind("username", username))
                   .findFirst()
-                  .orElseThrow(() -> new NotFound("Session not found"));
-            })
-        .build();
+                  .orElseThrow(() -> new NotFound("Session not found")).build();
   }
 
   private Stream<Types.Session.SessionBuilder> querySessions(Query query) {

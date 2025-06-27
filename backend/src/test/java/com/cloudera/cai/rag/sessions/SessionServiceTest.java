@@ -65,7 +65,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
     var input = TestData.createSessionInstance("test").withEmbeddingModel("embeddingModelTest");
@@ -88,7 +87,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
     var input = TestData.createSessionInstance("test").withRerankModel("").withDataSourceIds(null);
@@ -107,7 +105,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             projectRepository,
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
 
@@ -140,7 +137,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
     var createSession =
@@ -160,7 +156,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
     String username1 = UUID.randomUUID().toString();
@@ -182,7 +177,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
     ProjectService projectService = ProjectService.createNull();
@@ -232,7 +226,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
 
@@ -252,7 +245,6 @@ class SessionServiceTest {
         new SessionService(
             SessionRepository.createNull(),
             ProjectRepository.createNull(),
-            RagDataSourceService.createNull(),
             JdbiConfiguration.createNull(),
             RagDataSourceRepository.createNull());
 
