@@ -122,7 +122,8 @@ public class TestData {
         connectionType,
         null,
         null,
-        true);
+        true,
+        null);
   }
 
   public static long createTestDataSource(RagDataSourceRepository dataSourceRepository) {

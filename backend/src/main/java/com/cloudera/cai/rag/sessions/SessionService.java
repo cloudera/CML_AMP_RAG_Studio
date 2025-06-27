@@ -67,7 +67,7 @@ public class SessionService {
     var session = Types.Session.fromCreateRequest(createSession, username);
     validateDataSourceIds(session);
     var id = sessionRepository.create(cleanInputs(session));
-    session = sessionRepository.getSessionById(id, username);
+    session = getSessionById(id, username);
     if (createSession.embeddingModel() != null) {
       Types.RagDataSource newDataSource =
           new Types.RagDataSource(
@@ -84,12 +84,14 @@ public class SessionService {
               Types.ConnectionType.MANUAL,
               null,
               null,
-              true);
+              false,
+              id);
       Types.RagDataSource ragDataSource = ragDataSourceService.createRagDataSource(newDataSource);
+      var projectId = createSession.projectId();
+      projectRepository.addDataSourceToProject(projectId, ragDataSource.id());
       var dataSourceIds = new ArrayList<>(session.dataSourceIds());
       dataSourceIds.add(ragDataSource.id());
-      session =
-          session.withDataSourceIds(dataSourceIds).withAssociatedDataSourceId(ragDataSource.id());
+      session = session.withDataSourceIds(dataSourceIds);
     }
     return update(session, username);
   }

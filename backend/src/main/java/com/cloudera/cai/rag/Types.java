@@ -99,7 +99,8 @@ public class Types {
       ConnectionType connectionType,
       @Nullable Integer documentCount,
       @Nullable Long totalDocSize,
-      boolean availableForDefaultProject) {}
+      boolean availableForDefaultProject,
+      Long associatedSessionId) {}
 
   @With
   public record QueryConfiguration(
