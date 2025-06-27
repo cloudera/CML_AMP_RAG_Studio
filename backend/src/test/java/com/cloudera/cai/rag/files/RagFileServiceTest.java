@@ -223,7 +223,8 @@ class RagFileServiceTest {
         RagFileIndexReconciler.createNull(),
         prefix,
         dataSourceRepository,
-        RagFileDeleteReconciler.createNull());
+        RagFileDeleteReconciler.createNull(),
+        RagFileSummaryReconciler.createNull());
   }
 
   private long newDataSourceId() {
