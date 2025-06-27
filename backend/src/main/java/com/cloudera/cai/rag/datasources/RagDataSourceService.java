@@ -43,12 +43,12 @@ import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.util.ResourceUtils;
 import java.io.IOException;
 import java.util.List;
-
-import org.jdbi.v3.core.Handle;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RagDataSourceService {
+  public static final int DEFAULT_CHUNK_OVERLAP = 10;
+  public static final int DEFAULT_CHUNK_SIZE = 512;
   private final RagDataSourceRepository ragDataSourceRepository;
 
   public RagDataSourceService(RagDataSourceRepository ragDataSourceRepository) {
@@ -57,10 +57,10 @@ public class RagDataSourceService {
 
   public RagDataSource createRagDataSource(RagDataSource input) {
     if (input.chunkOverlapPercent() == null) {
-      input = input.withChunkOverlapPercent(10);
+      input = input.withChunkOverlapPercent(DEFAULT_CHUNK_OVERLAP);
     }
     if (input.chunkSize() == null) {
-      input = input.withChunkSize(512);
+      input = input.withChunkSize(DEFAULT_CHUNK_SIZE);
     }
     var id =
         ragDataSourceRepository.createRagDataSource(
