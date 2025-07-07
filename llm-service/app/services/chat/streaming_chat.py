@@ -152,7 +152,9 @@ def build_streamer(
 ) -> tuple[str | None, StreamingAgentChatResponse]:
     llm = models.LLM.get(model_name=query_configuration.model_name)
 
-    retriever = build_retriever(query_configuration, session.get_all_data_source_ids(), llm)
+    retriever = build_retriever(
+        query_configuration, session.get_all_data_source_ids(), llm
+    )
 
     chat_engine: Optional[FlexibleContextChatEngine] = build_flexible_chat_engine(
         query_configuration, llm, retriever

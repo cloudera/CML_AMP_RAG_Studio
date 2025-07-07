@@ -79,6 +79,7 @@ class Session:
             [self.associated_data_source_id] if self.associated_data_source_id else []
         )
 
+
 @dataclass
 class UpdatableSession:
     id: int
