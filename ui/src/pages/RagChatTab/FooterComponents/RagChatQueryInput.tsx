@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, InputRef, Tooltip } from "antd";
+import { Button, Flex, Input, InputRef, Tooltip, Upload } from "antd";
 import {
   DatabaseFilled,
   DatabaseOutlined,
@@ -169,7 +169,7 @@ const RagChatQueryInput = ({
 
   return (
     <div
-      onDragOver={() => {
+      onDragEnter={() => {
         setDragging(true);
       }}
       onDragLeave={() => {
@@ -192,30 +192,36 @@ const RagChatQueryInput = ({
         ) : null}
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <div style={{ position: "relative", width: "100%" }}>
-            <TextArea
-              ref={inputRef}
-              placeholder={
-                dataSourceSize && dataSourceSize > 0
-                  ? "Ask a question"
-                  : "Chat with the LLM"
-              }
-              status={dataSourcesStatus === "error" ? "error" : undefined}
-              value={userInput}
-              onChange={(e) => {
-                setUserInput(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.shiftKey && e.key === "Enter") {
-                  return null;
-                } else if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleChat(userInput);
+            {dragging ? (
+              <Upload.Dragger>
+                <div />
+              </Upload.Dragger>
+            ) : (
+              <TextArea
+                ref={inputRef}
+                placeholder={
+                  dataSourceSize && dataSourceSize > 0
+                    ? "Ask a question"
+                    : "Chat with the LLM"
                 }
-              }}
-              autoSize={{ minRows: 2, maxRows: 20 }}
-              disabled={streamChatMutation.isPending}
-              style={{ paddingRight: 110 }}
-            />
+                status={dataSourcesStatus === "error" ? "error" : undefined}
+                value={userInput}
+                onChange={(e) => {
+                  setUserInput(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.shiftKey && e.key === "Enter") {
+                    return null;
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleChat(userInput);
+                  }
+                }}
+                autoSize={{ minRows: 2, maxRows: 20 }}
+                disabled={streamChatMutation.isPending}
+                style={{ paddingRight: 110 }}
+              />
+            )}
             <div
               style={{
                 position: "absolute",
