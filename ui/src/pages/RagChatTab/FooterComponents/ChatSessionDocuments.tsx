@@ -44,6 +44,7 @@ import useModal from "src/utils/useModal.ts";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import { useGetRagDocuments } from "src/api/ragDocumentsApi.ts";
+import { getCompletedIndexing } from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
 
 const ChatSessionDocuments = ({
   activeSession,
@@ -51,10 +52,16 @@ const ChatSessionDocuments = ({
   activeSession?: Session;
 }) => {
   const documentModal = useModal();
-  // TODO: handle case when there's no associated data source
-  const getRagDocuments = useGetRagDocuments(
-    activeSession.associatedDataSourceId,
-    activeSession.inferenceModel,
+
+  const { data: ragDocuments, isFetching: ragDocumentsIsFetching } =
+    useGetRagDocuments(
+      activeSession?.associatedDataSourceId?.toString(),
+      activeSession?.inferenceModel,
+    );
+
+  const indexingStatus = getCompletedIndexing(
+    ragDocuments,
+    ragDocumentsIsFetching,
   );
 
   if (!activeSession?.associatedDataSourceId) {
@@ -72,13 +79,18 @@ const ChatSessionDocuments = ({
           icon={
             // TODO: only display this badge when data source is working/pending
             <Badge
+              size="small"
               count={
-                <ClockCircleOutlined
-                  style={{ fontSize: 10, color: "#f5222d" }}
-                />
+                indexingStatus.fullyIndexed ? (
+                  indexingStatus.completedIndexing
+                ) : (
+                  <ClockCircleOutlined
+                    style={{ fontSize: 10, color: "#f5222d", bottom: 0 }}
+                  />
+                )
               }
             >
-              <DocumentationIcon style={{ color: cdlBlue600 }} />
+              <DocumentationIcon style={{ color: cdlBlue600, fontSize: 20 }} />
             </Badge>
           }
         />

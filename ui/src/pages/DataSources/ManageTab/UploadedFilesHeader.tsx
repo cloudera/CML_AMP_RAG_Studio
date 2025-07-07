@@ -46,6 +46,18 @@ import {
 } from "@ant-design/icons";
 import KnowledgeBaseSummary from "pages/DataSources/ManageTab/KnowledgeBaseSummary.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { memoize } from "lodash";
+
+export const getCompletedIndexing = memoize(
+  (ragDocuments: RagDocumentResponseType[], docsLoading: boolean) => {
+    const completedIndexing = ragDocuments.filter(
+      (doc) => doc.vectorUploadTimestamp !== null,
+    ).length;
+    const fullyIndexed =
+      !docsLoading && ragDocuments.length === completedIndexing;
+    return { completedIndexing, fullyIndexed };
+  },
+);
 
 const UploadedFilesHeader = ({
   ragDocuments,
@@ -58,18 +70,16 @@ const UploadedFilesHeader = ({
   dataSourceId: string;
   simplifiedTable?: boolean;
 }) => {
-  const completedIndexing = ragDocuments.filter(
-    (doc) => doc.vectorUploadTimestamp !== null,
-  ).length;
+  const { completedIndexing, fullyIndexed } = getCompletedIndexing(
+    ragDocuments,
+    docsLoading,
+  );
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
 
   const handleCreateSession = () => {
     createSessionAndRedirect([+dataSourceId]);
   };
-
-  const fullyIndexed =
-    !docsLoading && ragDocuments.length === completedIndexing;
 
   return (
     <Flex style={{ width: "100%", marginBottom: 10 }} vertical gap={10}>

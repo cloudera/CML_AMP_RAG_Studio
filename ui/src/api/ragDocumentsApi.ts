@@ -140,12 +140,21 @@ export interface RagDocumentResponseType {
 }
 
 export const useGetRagDocuments = (
-  dataSourceId: string,
+  dataSourceId?: string,
   summarizationModel?: string,
 ) => {
   return useQuery({
     queryKey: [QueryKeys.getRagDocuments, { dataSourceId }],
-    queryFn: () => getRagDocuments(dataSourceId),
+    queryFn: () => {
+      if (!dataSourceId) {
+        return [];
+      }
+      return getRagDocuments(dataSourceId).then((res) => {
+        return res.map((doc) => ({ ...doc, key: doc.id }));
+      });
+    },
+    enabled: !!dataSourceId,
+    initialData: [],
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) {
