@@ -46,6 +46,18 @@ import {
 } from "@ant-design/icons";
 import KnowledgeBaseSummary from "pages/DataSources/ManageTab/KnowledgeBaseSummary.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { memoize } from "lodash";
+
+export const getCompletedIndexing = memoize(
+  (ragDocuments: RagDocumentResponseType[], docsLoading: boolean) => {
+    const completedIndexing = ragDocuments.filter(
+      (doc) => doc.vectorUploadTimestamp !== null,
+    ).length;
+    const fullyIndexed =
+      !docsLoading && ragDocuments.length === completedIndexing;
+    return { completedIndexing, fullyIndexed };
+  },
+);
 
 export interface CompletedIndexingType {
   completedIndexing: number;
