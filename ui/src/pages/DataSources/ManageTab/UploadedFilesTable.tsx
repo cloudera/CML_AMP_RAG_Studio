@@ -230,12 +230,12 @@ const UploadedFilesTable = ({
     <>
       <UploadedFilesHeader
         ragDocuments={ragDocuments}
-        docsLoading={ragDocumentsIsPending && ragDocuments.length > 0}
+        docsLoading={ragDocuments.length > 0 && ragDocumentsIsPending}
         dataSourceId={dataSourceId}
         simplifiedTable={simplifiedTable}
       />
       <Table<RagDocumentResponseType>
-        loading={ragDocumentsIsPending && ragDocuments.length > 0}
+        loading={ragDocuments.length > 0 && ragDocumentsIsPending}
         dataSource={ragDocuments}
         columns={columns(
           dataSourceId,

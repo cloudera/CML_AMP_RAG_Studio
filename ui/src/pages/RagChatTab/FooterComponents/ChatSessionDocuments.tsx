@@ -39,10 +39,10 @@
 import { Session } from "src/api/sessionApi.ts";
 import { Badge, Button, Modal, Tooltip } from "antd";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
-import { cdlBlue600 } from "src/cuix/variables.ts";
+import { cdlBlue600, cdlGreen600 } from "src/cuix/variables.ts";
 import useModal from "src/utils/useModal.ts";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
-import { ClockCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useGetRagDocuments } from "src/api/ragDocumentsApi.ts";
 import { getCompletedIndexing } from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
 
@@ -80,9 +80,12 @@ const ChatSessionDocuments = ({
             // TODO: only display this badge when data source is working/pending
             <Badge
               size="small"
+              status={"processing"}
               count={
                 indexingStatus.fullyIndexed ? (
-                  indexingStatus.completedIndexing
+                  <CheckCircleOutlined
+                    style={{ color: cdlGreen600, fontSize: 10 }}
+                  />
                 ) : (
                   <ClockCircleOutlined
                     style={{ fontSize: 10, color: "#f5222d", bottom: 0 }}
