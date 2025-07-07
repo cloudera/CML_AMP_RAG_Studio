@@ -43,15 +43,14 @@ import { cdlBlue600 } from "src/cuix/variables.ts";
 import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
 import useModal from "src/utils/useModal.ts";
 
-const documentModal = useModal();
-
 const SessionDocuments = ({ activeSession }: { activeSession?: Session }) => {
+  const documentModal = useModal();
   if (!activeSession?.associatedDataSourceId) {
     return null;
   }
   return (
     <>
-      <Tooltip title={"Add documents to Session"}>
+      <Tooltip title={"Add documents to chat"}>
         <Button
           size="small"
           type="text"
@@ -62,7 +61,7 @@ const SessionDocuments = ({ activeSession }: { activeSession?: Session }) => {
         />
       </Tooltip>
       <Modal
-        title="Session Documents"
+        title="Chat Documents"
         open={documentModal.isModalOpen}
         footer={null}
         onCancel={() => {
