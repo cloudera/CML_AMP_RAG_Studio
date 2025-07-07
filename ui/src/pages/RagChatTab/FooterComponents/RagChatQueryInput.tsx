@@ -36,9 +36,20 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, InputRef, Switch, Tooltip } from "antd";
-import { DatabaseFilled, SendOutlined, StopOutlined } from "@ant-design/icons";
-import { useContext, useEffect, useRef, useState } from "react";
+import { Button, Flex, Input, InputRef, Tooltip } from "antd";
+import {
+  DatabaseFilled,
+  DatabaseOutlined,
+  SendOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import {
+  MouseEventHandler,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
@@ -47,8 +58,6 @@ import {
 } from "src/api/chatApi.ts";
 import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600, cdlRed600 } from "src/cuix/variables.ts";
-
-import type { SwitchChangeEventHandler } from "antd/lib/switch";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
@@ -139,8 +148,10 @@ const RagChatQueryInput = ({
     }
   };
 
-  const handleExcludeKnowledgeBase: SwitchChangeEventHandler = (checked) => {
-    setExcludeKnowledgeBase(() => !checked);
+  const handleExcludeKnowledgeBase:
+    | MouseEventHandler<HTMLElement>
+    | undefined = () => {
+    setExcludeKnowledgeBase(() => !excludeKnowledgeBase);
   };
 
   const handleCancelStream = () => {
@@ -191,7 +202,7 @@ const RagChatQueryInput = ({
                   handleChat(userInput);
                 }
               }}
-              autoSize={{ minRows: 1, maxRows: 20 }}
+              autoSize={{ minRows: 2, maxRows: 20 }}
               disabled={streamChatMutation.isPending}
               style={{ paddingRight: 110 }}
             />
@@ -216,18 +227,31 @@ const RagChatQueryInput = ({
                   />
                 </Tooltip>
               ) : (
-                <Flex gap={4}>
-                  <Flex gap={8} align="end">
-                    <ToolsManagerButton />
-                    <Tooltip title="Whether to query against the knowledge base.  Disabling will query only against the model's training data.">
-                      <Switch
-                        checkedChildren={<DatabaseFilled />}
-                        value={!excludeKnowledgeBase}
-                        style={{ display: dataSourceSize ? "block" : "none" }}
-                        onChange={handleExcludeKnowledgeBase}
-                      />
-                    </Tooltip>
-                  </Flex>
+                <Flex gap={4} align="end">
+                  <ToolsManagerButton />
+                  <Tooltip
+                    title={
+                      excludeKnowledgeBase
+                        ? "Knowledge base excluded from chat. "
+                        : " Knowledge base included in chat. "
+                    }
+                  >
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={
+                        excludeKnowledgeBase ? (
+                          <DatabaseOutlined style={{ color: cdlBlue600 }} />
+                        ) : (
+                          <DatabaseFilled style={{ color: cdlBlue600 }} />
+                        )
+                      }
+                      style={{
+                        display: dataSourceSize ? "block" : "none",
+                      }}
+                      onClick={handleExcludeKnowledgeBase}
+                    />
+                  </Tooltip>
                   <Button
                     size="small"
                     type="text"
