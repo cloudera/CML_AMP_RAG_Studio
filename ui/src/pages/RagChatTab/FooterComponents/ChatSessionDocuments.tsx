@@ -37,11 +37,13 @@
  */
 
 import { Session } from "src/api/sessionApi.ts";
-import { Button, Modal, Tooltip } from "antd";
+import { Badge, Button, Modal, Tooltip } from "antd";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
 import { cdlBlue600 } from "src/cuix/variables.ts";
 import useModal from "src/utils/useModal.ts";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
+import { ClockCircleOutlined } from "@ant-design/icons";
+import { useGetRagDocuments } from "src/api/ragDocumentsApi.ts";
 
 const ChatSessionDocuments = ({
   activeSession,
@@ -49,6 +51,12 @@ const ChatSessionDocuments = ({
   activeSession?: Session;
 }) => {
   const documentModal = useModal();
+  // TODO: handle case when there's no associated data source
+  const getRagDocuments = useGetRagDocuments(
+    activeSession.associatedDataSourceId,
+    activeSession.inferenceModel,
+  );
+
   if (!activeSession?.associatedDataSourceId) {
     return null;
   }
@@ -61,7 +69,18 @@ const ChatSessionDocuments = ({
           onClick={() => {
             documentModal.setIsModalOpen(true);
           }}
-          icon={<DocumentationIcon style={{ color: cdlBlue600 }} />}
+          icon={
+            // TODO: only display this badge when data source is working/pending
+            <Badge
+              count={
+                <ClockCircleOutlined
+                  style={{ fontSize: 10, color: "#f5222d" }}
+                />
+              }
+            >
+              <DocumentationIcon style={{ color: cdlBlue600 }} />
+            </Badge>
+          }
         />
       </Tooltip>
       <Modal
