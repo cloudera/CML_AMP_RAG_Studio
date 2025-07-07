@@ -90,6 +90,7 @@ class UpdatableSession:
     rerankModel: str
     responseChunks: int
     queryConfiguration: dict[str, bool | List[str]]
+    associatedDataSourceId: Optional[int]
 
 
 def url_template() -> str:
@@ -148,6 +149,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableToolCalling": session.query_configuration.enable_tool_calling,
             "selectedTools": session.query_configuration.selected_tools,
         },
+        associatedDataSourceId=session.associated_data_source_id,
     )
     headers = {
         "Content-Type": "application/json",

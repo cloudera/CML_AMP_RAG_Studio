@@ -96,13 +96,13 @@ def generate_suggested_questions(
     if session_id is None:
         return generate_dummy_suggested_questions()
     session = session_metadata_api.get_session(session_id, user_name)
-    if len(session.data_source_ids) == 0:
+    if len(session.get_all_data_source_ids()) == 0:
         return _generate_suggested_questions_direct_llm(session)
 
     total_data_sources_size: int = sum(
         map(
             lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
+            session.get_all_data_source_ids(),
         )
     )
     if total_data_sources_size == 0:
