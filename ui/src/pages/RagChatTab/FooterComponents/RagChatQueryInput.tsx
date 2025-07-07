@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, InputRef, Tooltip } from "antd";
+import { Button, Flex, Input, InputRef, Modal, Tooltip } from "antd";
 import {
   DatabaseFilled,
   DatabaseOutlined,
@@ -61,6 +61,9 @@ import { cdlBlue600, cdlRed600 } from "src/cuix/variables.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
+import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
+import useModal from "src/utils/useModal.ts";
+import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
 
 const { TextArea } = Input;
 
@@ -70,6 +73,7 @@ const RagChatQueryInput = ({
   newSessionCallback: (userInput: string) => void;
 }) => {
   const {
+    activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
@@ -88,6 +92,7 @@ const RagChatQueryInput = ({
     strict: false,
   });
   const inputRef = useRef<InputRef>(null);
+  const documentModal = useModal();
   const {
     data: sampleQuestions,
     isFetching: sampleQuestionsIsFetching,
@@ -261,12 +266,31 @@ const RagChatQueryInput = ({
                     icon={<SendOutlined style={{ color: cdlBlue600 }} />}
                     disabled={streamChatMutation.isPending}
                   />
+                  <Button
+                    size="small"
+                    type="text"
+                    onClick={() => {
+                      documentModal.setIsModalOpen(true);
+                    }}
+                    icon={<DocumentationIcon style={{ color: cdlBlue600 }} />}
+                  />
                 </Flex>
               )}
             </div>
           </div>
         </Flex>
       </Flex>
+      <Modal
+        title="Chat Documents?"
+        open={documentModal.isModalOpen}
+        footer={null}
+        onCancel={() => {
+          documentModal.setIsModalOpen(false);
+        }}
+        destroyOnHidden={true}
+      >
+        <UploadedFilesTable dataSourceId={activeSession.}>
+      </Modal>
     </div>
   );
 };
