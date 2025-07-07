@@ -89,11 +89,11 @@ def stream_chat(
     total_data_sources_size: int = sum(
         map(
             lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
+            session.get_all_data_source_ids(),
         )
     )
     if not query_configuration.use_tool_calling and (
-        len(session.data_source_ids) == 0 or total_data_sources_size == 0
+        len(session.get_all_data_source_ids()) == 0 or total_data_sources_size == 0
     ):
         # put a poison pill in the queue to stop the tool events stream
         return _stream_direct_llm_chat(session, response_id, query, user_name)
@@ -152,7 +152,7 @@ def build_streamer(
 ) -> tuple[str | None, StreamingAgentChatResponse]:
     llm = models.LLM.get(model_name=query_configuration.model_name)
 
-    retriever = build_retriever(query_configuration, session.data_source_ids, llm)
+    retriever = build_retriever(query_configuration, session.get_all_data_source_ids(), llm)
 
     chat_engine: Optional[FlexibleContextChatEngine] = build_flexible_chat_engine(
         query_configuration, llm, retriever

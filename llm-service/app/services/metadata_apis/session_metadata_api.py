@@ -68,7 +68,16 @@ class Session:
     rerank_model: str
     response_chunks: int
     query_configuration: SessionQueryConfiguration
+    associated_data_source_id: Optional[int] = None
 
+    def get_all_data_source_ids(self) -> List[int]:
+        """
+        Returns all data source IDs associated with the session.
+        If the session has an associated data source ID, it is included in the list.
+        """
+        return self.data_source_ids + (
+            [self.associated_data_source_id] if self.associated_data_source_id else []
+        )
 
 @dataclass
 class UpdatableSession:
@@ -119,6 +128,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
             ),
             selected_tools=data["queryConfiguration"]["selectedTools"] or [],
         ),
+        associated_data_source_id=data.get("associatedDataSourceId", None),
     )
 
 
