@@ -158,7 +158,7 @@ const FileManagement: React.FC = () => {
       <UploadedFilesTable
         dataSourceId={dataSourceId}
         summarizationModel={dataSourceMetaData?.summarizationModel}
-        simpleColumns={false}
+        simplifiedTable={false}
       />
     </Flex>
   );

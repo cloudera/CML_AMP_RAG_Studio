@@ -51,10 +51,12 @@ const UploadedFilesHeader = ({
   ragDocuments,
   docsLoading,
   dataSourceId,
+  simplifiedTable,
 }: {
   ragDocuments: RagDocumentResponseType[];
   docsLoading: boolean;
   dataSourceId: string;
+  simplifiedTable?: boolean;
 }) => {
   const completedIndexing = ragDocuments.filter(
     (doc) => doc.vectorUploadTimestamp !== null,
@@ -71,14 +73,16 @@ const UploadedFilesHeader = ({
 
   return (
     <Flex style={{ width: "100%", marginBottom: 10 }} vertical gap={10}>
-      <Flex flex={1} style={{ width: "100%" }}>
-        <KnowledgeBaseSummary
-          ragDocuments={ragDocuments}
-          dataSourceId={dataSourceId}
-        />
-      </Flex>
+      {!simplifiedTable && (
+        <Flex flex={1} style={{ width: "100%" }}>
+          <KnowledgeBaseSummary
+            ragDocuments={ragDocuments}
+            dataSourceId={dataSourceId}
+          />
+        </Flex>
+      )}
       <Flex justify="end" align="center" gap={16}>
-        {fullyIndexed ? (
+        {!simplifiedTable && fullyIndexed ? (
           <Tooltip title="Create a new session with this Knowledge Base">
             <Button onClick={handleCreateSession} icon={<MessageOutlined />} />
           </Tooltip>

@@ -169,6 +169,36 @@ const RagChatQueryInput = ({
     streamChatMutation.reset();
   };
 
+  const SessionDocuments = () => (
+    <>
+      <Tooltip title={"Add documents to Session"}>
+        <Button
+          size="small"
+          type="text"
+          onClick={() => {
+            documentModal.setIsModalOpen(true);
+          }}
+          icon={<DocumentationIcon style={{ color: cdlBlue600 }} />}
+        />
+      </Tooltip>
+      <Modal
+        title="Session Documents"
+        open={documentModal.isModalOpen}
+        footer={null}
+        onCancel={() => {
+          documentModal.setIsModalOpen(false);
+        }}
+        destroyOnHidden={true}
+        width={800}
+      >
+        <UploadedFilesTable
+          dataSourceId={activeSession.associatedDataSourceId.toString()}
+          summarizationModel={activeSession.inferenceModel}
+          simplifiedTable={true}
+        />
+      </Modal>
+    </>
+  );
   return (
     <div>
       <Flex vertical align="center" gap={10}>
@@ -257,6 +287,9 @@ const RagChatQueryInput = ({
                       onClick={handleExcludeKnowledgeBase}
                     />
                   </Tooltip>
+                  {activeSession?.associatedDataSourceId ? (
+                    <SessionDocuments />
+                  ) : null}
                   <Button
                     size="small"
                     type="text"
@@ -266,35 +299,6 @@ const RagChatQueryInput = ({
                     icon={<SendOutlined style={{ color: cdlBlue600 }} />}
                     disabled={streamChatMutation.isPending}
                   />
-                  {activeSession?.associatedDataSourceId ? (
-                    <>
-                      <Button
-                        size="small"
-                        type="text"
-                        onClick={() => {
-                          documentModal.setIsModalOpen(true);
-                        }}
-                        icon={
-                          <DocumentationIcon style={{ color: cdlBlue600 }} />
-                        }
-                      />
-                      <Modal
-                        title="Chat Documents?"
-                        open={documentModal.isModalOpen}
-                        footer={null}
-                        onCancel={() => {
-                          documentModal.setIsModalOpen(false);
-                        }}
-                        destroyOnHidden={true}
-                      >
-                        <UploadedFilesTable
-                          dataSourceId={activeSession.associatedDataSourceId.toString()}
-                          summarizationModel={activeSession.inferenceModel}
-                          simpleColumns={true}
-                        />
-                      </Modal>
-                    </>
-                  ) : null}
                 </Flex>
               )}
             </div>

@@ -170,11 +170,11 @@ const columns = (
 const UploadedFilesTable = ({
   dataSourceId,
   summarizationModel,
-  simpleColumns,
+  simplifiedTable,
 }: {
   dataSourceId: string;
   summarizationModel?: string;
-  simpleColumns: boolean;
+  simplifiedTable: boolean;
 }) => {
   const [selectedDocument, setSelectedDocument] =
     useState<RagDocumentResponseType>();
@@ -235,6 +235,7 @@ const UploadedFilesTable = ({
         ragDocuments={ragDocuments}
         docsLoading={docsLoading}
         dataSourceId={dataSourceId}
+        simplifiedTable={simplifiedTable}
       />
       <Table<RagDocumentResponseType>
         loading={docsLoading}
@@ -242,7 +243,7 @@ const UploadedFilesTable = ({
         columns={columns(
           dataSourceId,
           handleDeleteFileModal,
-          simpleColumns,
+          simplifiedTable,
           summarizationModel,
         )}
       />
