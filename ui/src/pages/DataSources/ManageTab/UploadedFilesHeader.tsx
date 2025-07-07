@@ -46,16 +46,16 @@ import {
 } from "@ant-design/icons";
 import KnowledgeBaseSummary from "pages/DataSources/ManageTab/KnowledgeBaseSummary.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
-import { Route } from "src/routes/_layout/data/_layout-datasources/$dataSourceId.tsx";
 
 const UploadedFilesHeader = ({
   ragDocuments,
   docsLoading,
+  dataSourceId,
 }: {
   ragDocuments: RagDocumentResponseType[];
   docsLoading: boolean;
+  dataSourceId: string;
 }) => {
-  const { dataSourceId } = Route.useParams();
   const completedIndexing = ragDocuments.filter(
     (doc) => doc.vectorUploadTimestamp !== null,
   ).length;
@@ -72,7 +72,10 @@ const UploadedFilesHeader = ({
   return (
     <Flex style={{ width: "100%", marginBottom: 10 }} vertical gap={10}>
       <Flex flex={1} style={{ width: "100%" }}>
-        <KnowledgeBaseSummary ragDocuments={ragDocuments} />
+        <KnowledgeBaseSummary
+          ragDocuments={ragDocuments}
+          dataSourceId={dataSourceId}
+        />
       </Flex>
       <Flex justify="end" align="center" gap={16}>
         {fullyIndexed ? (

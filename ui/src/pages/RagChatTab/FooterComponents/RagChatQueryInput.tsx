@@ -266,35 +266,41 @@ const RagChatQueryInput = ({
                     icon={<SendOutlined style={{ color: cdlBlue600 }} />}
                     disabled={streamChatMutation.isPending}
                   />
-                  {
-                    activeSession?.associatedDataSourceId
-                    ?
-                    <Button
-                    size="small"
-                    type="text"
-                    onClick={() => {
-                      documentModal.setIsModalOpen(true);
-                    }}
-                    icon={<DocumentationIcon style={{ color: cdlBlue600 }} />}
-                  /> : null
-                  }
+                  {activeSession?.associatedDataSourceId ? (
+                    <>
+                      <Button
+                        size="small"
+                        type="text"
+                        onClick={() => {
+                          documentModal.setIsModalOpen(true);
+                        }}
+                        icon={
+                          <DocumentationIcon style={{ color: cdlBlue600 }} />
+                        }
+                      />
+                      <Modal
+                        title="Chat Documents?"
+                        open={documentModal.isModalOpen}
+                        footer={null}
+                        onCancel={() => {
+                          documentModal.setIsModalOpen(false);
+                        }}
+                        destroyOnHidden={true}
+                      >
+                        <UploadedFilesTable
+                          dataSourceId={activeSession.associatedDataSourceId.toString()}
+                          summarizationModel={activeSession.inferenceModel}
+                          simpleColumns={true}
+                        />
+                      </Modal>
+                    </>
+                  ) : null}
                 </Flex>
               )}
             </div>
           </div>
         </Flex>
       </Flex>
-      <Modal
-        title="Chat Documents?"
-        open={documentModal.isModalOpen}
-        footer={null}
-        onCancel={() => {
-          documentModal.setIsModalOpen(false);
-        }}
-        destroyOnHidden={true}
-      >
-          <UploadedFilesTable dataSourceId={activeSession?.associatedDataSourceId?.toString()}>
-        </Modal>
     </div>
   );
 };

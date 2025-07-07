@@ -234,6 +234,7 @@ const UploadedFilesTable = ({
       <UploadedFilesHeader
         ragDocuments={ragDocuments}
         docsLoading={docsLoading}
+        dataSourceId={dataSourceId}
       />
       <Table<RagDocumentResponseType>
         loading={docsLoading}
