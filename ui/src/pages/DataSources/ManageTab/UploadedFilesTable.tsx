@@ -180,8 +180,11 @@ const UploadedFilesTable = ({
     useState<RagDocumentResponseType>();
   const deleteConfirmationModal = useModal();
   const queryClient = useQueryClient();
-  const { data: ragDocuments, isFetching: ragDocumentsIsFetching } =
-    useGetRagDocuments(dataSourceId, summarizationModel);
+  const {
+    data: ragDocuments,
+    isLoading: ragDocumentsIsLoading,
+    isPending: ragDocumentsIsPending,
+  } = useGetRagDocuments(dataSourceId, summarizationModel);
   const deleteDocumentMutation = useDeleteDocumentMutation({
     onSuccess: () => {
       messageQueue.success("Document deleted successfully");
@@ -230,12 +233,12 @@ const UploadedFilesTable = ({
     <>
       <UploadedFilesHeader
         ragDocuments={ragDocuments}
-        docsLoading={ragDocumentsIsFetching}
+        docsLoading={ragDocumentsIsLoading}
         dataSourceId={dataSourceId}
         simplifiedTable={simplifiedTable}
       />
       <Table<RagDocumentResponseType>
-        loading={ragDocumentsIsFetching}
+        loading={ragDocumentsIsLoading}
         dataSource={ragDocuments}
         columns={columns(
           dataSourceId,
