@@ -266,14 +266,18 @@ const RagChatQueryInput = ({
                     icon={<SendOutlined style={{ color: cdlBlue600 }} />}
                     disabled={streamChatMutation.isPending}
                   />
-                  <Button
+                  {
+                    activeSession?.associatedDataSourceId
+                    ?
+                    <Button
                     size="small"
                     type="text"
                     onClick={() => {
                       documentModal.setIsModalOpen(true);
                     }}
                     icon={<DocumentationIcon style={{ color: cdlBlue600 }} />}
-                  />
+                  /> : null
+                  }
                 </Flex>
               )}
             </div>
@@ -289,8 +293,8 @@ const RagChatQueryInput = ({
         }}
         destroyOnHidden={true}
       >
-        <UploadedFilesTable dataSourceId={activeSession.}>
-      </Modal>
+          <UploadedFilesTable dataSourceId={activeSession?.associatedDataSourceId?.toString()}>
+        </Modal>
     </div>
   );
 };
