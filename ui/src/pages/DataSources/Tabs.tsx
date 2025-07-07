@@ -42,14 +42,27 @@ import IndexSettings from "pages/DataSources/IndexSettingsTab/IndexSettings.tsx"
 import DataSourceConnections from "pages/DataSources/DataSourceConnectionsTab/DataSourceConnections.tsx";
 import DataSourceVisualization from "pages/DataSources/VisualizationTab/DataSourceVisualization.tsx";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import MetricsTab from "pages/DataSources/MetricsTab/MetricsTab.tsx";
+import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+
+const FileManagementWrapper = () => {
+  const { dataSourceId, dataSourceMetaData } = useContext(DataSourceContext);
+
+  return (
+    <FileManagement
+      simplifiedTable={false}
+      dataSourceId={dataSourceId}
+      summarizationModel={dataSourceMetaData?.summarizationModel}
+    />
+  );
+};
 
 export const tabItems: TabsProps["items"] = [
   {
     key: "manage",
     label: "Manage",
-    children: <FileManagement />,
+    children: <FileManagementWrapper />,
   },
   {
     key: "settings",
@@ -70,7 +83,7 @@ export const tabItems: TabsProps["items"] = [
     key: "visualize",
     label: "Visualize",
     children: <DataSourceVisualization />,
-    destroyInactiveTabPane: true,
+    destroyOnHidden: true,
   },
 ];
 

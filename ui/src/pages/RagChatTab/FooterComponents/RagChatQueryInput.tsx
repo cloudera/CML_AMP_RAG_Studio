@@ -61,7 +61,7 @@ import { cdlBlue600, cdlRed600 } from "src/cuix/variables.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
-import SessionDocuments from "pages/RagChatTab/FooterComponents/SessionDocuments.tsx";
+import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
 
 const { TextArea } = Input;
 
@@ -255,7 +255,7 @@ const RagChatQueryInput = ({
                     />
                   </Tooltip>
 
-                  <SessionDocuments activeSession={activeSession} />
+                  <ChatSessionDocuments activeSession={activeSession} />
                   <Button
                     size="small"
                     type="text"

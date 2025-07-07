@@ -40,10 +40,14 @@ import { Session } from "src/api/sessionApi.ts";
 import { Button, Modal, Tooltip } from "antd";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
 import { cdlBlue600 } from "src/cuix/variables.ts";
-import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
 import useModal from "src/utils/useModal.ts";
+import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 
-const SessionDocuments = ({ activeSession }: { activeSession?: Session }) => {
+const ChatSessionDocuments = ({
+  activeSession,
+}: {
+  activeSession?: Session;
+}) => {
   const documentModal = useModal();
   if (!activeSession?.associatedDataSourceId) {
     return null;
@@ -70,14 +74,14 @@ const SessionDocuments = ({ activeSession }: { activeSession?: Session }) => {
         destroyOnHidden={true}
         width={800}
       >
-        <UploadedFilesTable
-          dataSourceId={activeSession.associatedDataSourceId.toString()}
-          summarizationModel={activeSession.inferenceModel}
+        <FileManagement
           simplifiedTable={true}
+          summarizationModel={activeSession.inferenceModel}
+          dataSourceId={activeSession.associatedDataSourceId.toString()}
         />
       </Modal>
     </>
   );
 };
 
-export default SessionDocuments;
+export default ChatSessionDocuments;
