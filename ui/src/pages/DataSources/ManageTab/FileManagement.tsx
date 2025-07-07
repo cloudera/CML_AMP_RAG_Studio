@@ -71,7 +71,7 @@ interface RejectReasonType {
 const FileManagement: React.FC = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const queryClient = useQueryClient();
-  const { dataSourceId } = useContext(DataSourceContext);
+  const { dataSourceId, dataSourceMetaData } = useContext(DataSourceContext);
   const ragDocumentMutation = useCreateRagDocumentsMutation({
     onSuccess: (settledPromises) => {
       const fulfilledValues = settledPromises
@@ -155,7 +155,11 @@ const FileManagement: React.FC = () => {
         </Button>
       </Flex>
       <Divider />
-      <UploadedFilesTable />
+      <UploadedFilesTable
+        dataSourceId={dataSourceId}
+        summarizationModel={dataSourceMetaData?.summarizationModel}
+        simpleColumns={false}
+      />
     </Flex>
   );
 };

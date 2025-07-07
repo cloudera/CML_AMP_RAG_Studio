@@ -54,118 +54,133 @@ import {
 import { bytesConversion } from "src/utils/bytesConversion.ts";
 import UploadedFilesHeader from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
 import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
 import { cdlWhite } from "src/cuix/variables.ts";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
 import ReadyColumn from "pages/DataSources/ManageTab/ReadyColumn.tsx";
 import SummaryColumn from "pages/DataSources/ManageTab/SummaryColumn.tsx";
+import { ColumnsType } from "antd/es/table";
 
 const columns = (
   dataSourceId: string,
   handleDeleteFile: (document: RagDocumentResponseType) => void,
+  simpleColumns: boolean,
   summarizationModel?: string,
-): TableProps<RagDocumentResponseType>["columns"] => [
-  {
-    title: (
-      <Tooltip
-        title={
-          <Flex vertical gap={4}>
-            <Typography.Text style={{ color: cdlWhite }}>
-              Document Summary
-            </Typography.Text>
-            <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
-              Note: Document summarization requires a summarization model to be
-              selected.
-            </Typography.Text>
-            <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
-              Document summarization can take a significant amount of time, but
-              will not impact the ability to use the document for Chat.
-            </Typography.Text>
-          </Flex>
-        }
-      >
-        <Icon component={AiAssistantIcon} style={{ fontSize: 20 }} />
-      </Tooltip>
-    ),
-    dataIndex: "summaryCreationTimestamp",
-    key: "summaryCreationTimestamp",
-    align: "center",
-    render: (_, data) => {
-      return (
-        <SummaryColumn
-          file={data}
-          dataSourceId={dataSourceId}
-          summarizationModel={summarizationModel}
-        />
-      );
+): TableProps<RagDocumentResponseType>["columns"] => {
+  let columns: ColumnsType<RagDocumentResponseType> = [
+    {
+      title: (
+        <Tooltip
+          title={
+            <Flex vertical gap={4}>
+              <Typography.Text style={{ color: cdlWhite }}>
+                Document Summary
+              </Typography.Text>
+              <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
+                Note: Document summarization requires a summarization model to
+                be selected.
+              </Typography.Text>
+              <Typography.Text style={{ fontSize: 10, color: cdlWhite }}>
+                Document summarization can take a significant amount of time,
+                but will not impact the ability to use the document for Chat.
+              </Typography.Text>
+            </Flex>
+          }
+        >
+          <Icon component={AiAssistantIcon} style={{ fontSize: 20 }} />
+        </Tooltip>
+      ),
+      dataIndex: "summaryCreationTimestamp",
+      key: "summaryCreationTimestamp",
+      align: "center",
+      render: (_, data) => {
+        return (
+          <SummaryColumn
+            file={data}
+            dataSourceId={dataSourceId}
+            summarizationModel={summarizationModel}
+          />
+        );
+      },
     },
-  },
-  {
-    title: "Filename",
-    dataIndex: "filename",
-    key: "filename",
-    showSorterTooltip: false,
-    sorter: (a, b) => a.filename.localeCompare(b.filename),
-  },
-  {
-    title: "Size",
-    dataIndex: "sizeInBytes",
-    key: "sizeInBytes",
-    render: (sizeInBytes: RagDocumentResponseType["sizeInBytes"]) =>
-      bytesConversion(sizeInBytes.toString()),
-  },
-  {
-    title: "Extension",
-    dataIndex: "extension",
-    key: "extension",
-  },
-  {
-    title: "Creation date",
-    dataIndex: "timeCreated",
-    key: "timeCreated",
-    showSorterTooltip: false,
-    sorter: (a, b) => {
-      return a.timeCreated - b.timeCreated;
+    {
+      title: "Filename",
+      dataIndex: "filename",
+      key: "filename",
+      showSorterTooltip: false,
+      sorter: (a, b) => a.filename.localeCompare(b.filename),
     },
-    defaultSortOrder: "descend",
-    render: (timestamp) => new Date(timestamp * 1000).toLocaleString(),
-  },
-  {
-    title: <Tooltip title="Document indexing complete">Ready</Tooltip>,
-    dataIndex: "vectorUploadTimestamp",
-    key: "vectorUploadTimestamp",
-    render: (_, file: RagDocumentResponseType) => <ReadyColumn file={file} />,
-  },
-  {
-    title: "Actions",
-    render: (_, record) => {
-      return (
-        <Button
-          type="text"
-          icon={<DeleteOutlined />}
-          onClick={() => {
-            handleDeleteFile(record);
-          }}
-        />
-      );
-    },
-  },
-];
+  ];
 
-const UploadedFilesTable = () => {
-  const { dataSourceId, dataSourceMetaData } = useContext(DataSourceContext);
+  if (!simpleColumns) {
+    columns = columns.concat([
+      {
+        title: "Size",
+        dataIndex: "sizeInBytes",
+        key: "sizeInBytes",
+        render: (sizeInBytes: RagDocumentResponseType["sizeInBytes"]) =>
+          bytesConversion(sizeInBytes.toString()),
+      },
+      {
+        title: "Extension",
+        dataIndex: "extension",
+        key: "extension",
+      },
+      {
+        title: "Creation date",
+        dataIndex: "timeCreated",
+        key: "timeCreated",
+        showSorterTooltip: false,
+        sorter: (a, b) => {
+          return a.timeCreated - b.timeCreated;
+        },
+        defaultSortOrder: "descend",
+        render: (timestamp) => new Date(timestamp * 1000).toLocaleString(),
+      },
+    ]);
+  }
+  columns = columns.concat([
+    {
+      title: <Tooltip title="Document indexing complete">Ready</Tooltip>,
+      dataIndex: "vectorUploadTimestamp",
+      key: "vectorUploadTimestamp",
+      render: (_, file: RagDocumentResponseType) => <ReadyColumn file={file} />,
+    },
+    {
+      title: "Actions",
+      render: (_, record) => {
+        return (
+          <Button
+            type="text"
+            icon={<DeleteOutlined />}
+            onClick={() => {
+              handleDeleteFile(record);
+            }}
+          />
+        );
+      },
+    },
+  ]);
+  return columns;
+};
+
+const UploadedFilesTable = ({
+  dataSourceId,
+  summarizationModel,
+  simpleColumns,
+}: {
+  dataSourceId: string;
+  summarizationModel?: string;
+  simpleColumns: boolean;
+}) => {
   const [selectedDocument, setSelectedDocument] =
     useState<RagDocumentResponseType>();
   const deleteConfirmationModal = useModal();
   const queryClient = useQueryClient();
-  const getRagDocuments = useGetRagDocuments(
-    dataSourceId,
-    dataSourceMetaData?.summarizationModel,
-  );
+  const getRagDocuments = useGetRagDocuments(dataSourceId, summarizationModel);
   const deleteDocumentMutation = useDeleteDocumentMutation({
     onSuccess: () => {
       messageQueue.success("Document deleted successfully");
@@ -226,7 +241,8 @@ const UploadedFilesTable = () => {
         columns={columns(
           dataSourceId,
           handleDeleteFileModal,
-          dataSourceMetaData?.summarizationModel,
+          simpleColumns,
+          summarizationModel,
         )}
       />
       <Modal
