@@ -36,9 +36,9 @@
  * DATA.
  ******************************************************************************/
 
-import { Flex, Layout } from "antd";
+import { Flex, Layout, Upload } from "antd";
 import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
 import ChatMessageController from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageController.tsx";
@@ -53,39 +53,63 @@ const RagChat = () => {
     dataSourcesQuery: { dataSources },
     activeSession,
   } = useContext(RagChatContext);
+  const [dragging, setDragging] = useState(false);
   const createSessionAndRedirect = useCreateSessionAndRedirect();
 
   const currentDataSources: DataSourceType[] = dataSources.filter((ds) =>
     activeSession?.dataSourceIds.includes(ds.id),
   );
   return (
-    <Layout style={{ height: "100%", width: "100%" }}>
+    <Layout
+      onDragEnter={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        setDragging(false);
+      }}
+      style={{ height: "100%", width: "100%" }}
+    >
       <StyledChatLayoutWrapper>
         <RagChatHeader
           activeSession={activeSession}
           currentDataSources={currentDataSources}
         />
       </StyledChatLayoutWrapper>
-      <Content
-        style={{
-          height: "20vh",
-          overflowY: "auto",
-          width: "100%",
-          paddingRight: 20,
-        }}
-      >
-        <StyledChatLayoutWrapper>
-          <Flex
-            vertical
-            align="center"
-            gap={16}
-            justify="center"
-            style={{ width: "100%" }}
+      {dragging ? (
+        <Upload.Dragger>
+          <div
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
           >
-            <ChatMessageController />
-          </Flex>
-        </StyledChatLayoutWrapper>
-      </Content>
+            HELLO WROSLD
+          </div>
+        </Upload.Dragger>
+      ) : (
+        <Content
+          style={{
+            height: "20vh",
+            overflowY: "auto",
+            width: "100%",
+            paddingRight: 20,
+          }}
+        >
+          <StyledChatLayoutWrapper>
+            <Flex
+              vertical
+              align="center"
+              gap={16}
+              justify="center"
+              style={{ width: "100%" }}
+            >
+              <ChatMessageController />
+            </Flex>
+          </StyledChatLayoutWrapper>
+        </Content>
+      )}
       <Flex justify="center">
         <Footer
           style={{
