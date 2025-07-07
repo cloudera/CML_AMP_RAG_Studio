@@ -90,6 +90,7 @@ const RagChatQueryInput = ({
     strict: false,
   });
   const inputRef = useRef<InputRef>(null);
+  const [dragging, setDragging] = useState(false);
   const {
     data: sampleQuestions,
     isFetching: sampleQuestionsIsFetching,
@@ -167,7 +168,14 @@ const RagChatQueryInput = ({
   };
 
   return (
-    <div>
+    <div
+      onDragOver={() => {
+        setDragging(true);
+      }}
+      onDragLeave={() => {
+        setDragging(false);
+      }}
+    >
       <Flex vertical align="center" gap={10}>
         {flatChatHistory.length > 0 ? (
           <SuggestedQuestionsFooter
