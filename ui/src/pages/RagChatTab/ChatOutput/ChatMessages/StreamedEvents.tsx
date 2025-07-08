@@ -36,13 +36,13 @@
  * DATA.
  */
 
-import { CrewEventResponse } from "src/api/chatApi.ts";
+import { ChatEvent } from "src/api/chatApi.ts";
 import { Button, Card, Flex, Spin, Typography } from "antd";
 import { format } from "date-fns";
 import { useState } from "react";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 
-const StreamedEvent = ({ event }: { event: CrewEventResponse }) => {
+const StreamedEvent = ({ event }: { event: ChatEvent }) => {
   return (
     <Flex vertical style={{ paddingRight: 16 }}>
       <Flex justify="space-between">
@@ -76,7 +76,7 @@ const StreamedEvent = ({ event }: { event: CrewEventResponse }) => {
 const StreamedEvents = ({
   streamedEvents,
 }: {
-  streamedEvents?: CrewEventResponse[];
+  streamedEvents?: ChatEvent[];
 }) => {
   const [collapsed, setCollapsed] = useState(true);
 

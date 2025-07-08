@@ -43,9 +43,11 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import ToolsPage from "pages/Tools/ToolsPage.tsx";
 
 const modelConfigKey = "modelConfiguration";
 const ampSettingsKey = "ampSettings";
+const toolsKey = "tools";
 
 const SettingsNavigation = () => {
   const navigate = useNavigate();
@@ -69,6 +71,12 @@ const SettingsNavigation = () => {
       key: modelConfigKey,
       label: "Model Configuration",
       children: <ModelPage />,
+      disabled: !config?.is_valid_config,
+    },
+    {
+      key: toolsKey,
+      label: "Tools",
+      children: <ToolsPage />,
       disabled: !config?.is_valid_config,
     },
   ];

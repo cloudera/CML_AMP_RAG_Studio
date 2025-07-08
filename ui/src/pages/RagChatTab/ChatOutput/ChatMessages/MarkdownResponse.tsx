@@ -58,7 +58,7 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
           const { href, className, children, ...other } = props;
           if (className === "rag_citation") {
             if (data.source_nodes.length === 0) {
-              return undefined;
+              return <span>{props.children}</span>;
             }
             const { source_nodes } = data;
             const sourceNodeIndex = source_nodes.findIndex(
@@ -66,10 +66,13 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
             );
             if (sourceNodeIndex >= 0) {
               return (
-                <SourceCard
-                  source={source_nodes[sourceNodeIndex]}
-                  index={sourceNodeIndex + 1}
-                />
+                <span>
+                  {props.children}
+                  <SourceCard
+                    source={source_nodes[sourceNodeIndex]}
+                    index={sourceNodeIndex + 1}
+                  />
+                </span>
               );
             }
             if (!href?.startsWith("http")) {
@@ -77,7 +80,7 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
             }
           }
           return (
-            <a href={href} className={className} {...other}>
+            <a href={href} className={className} {...other} target="_blank" rel="noopener noreferrer">
               {children}
             </a>
           );

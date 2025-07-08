@@ -37,6 +37,7 @@
 #
 import logging
 import os
+import random
 import shutil
 from pathlib import Path
 from threading import Lock
@@ -74,7 +75,7 @@ from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import settings
 from ...services.metadata_apis import data_sources_metadata_api
-from ...services.models.providers import CAIIModelProvider
+from ...services.models.providers import CAIIModelProvider, AzureModelProvider, OpenAiModelProvider
 
 logger = logging.getLogger(__name__)
 
@@ -131,9 +132,11 @@ class SummaryIndexer(BaseTextIndexer):
         embed_summaries: bool = True,
     ) -> Dict[str, Any]:
         prompt_helper: Optional[PromptHelper] = None
-        # if we're using CAII, let's be conservative, and use a small context window to account for mistral's small context
+        # if we're using CAII, let's be conservative and use a small context window to account for mistral's small context
         if CAIIModelProvider.is_enabled():
             prompt_helper = PromptHelper(context_window=3000)
+        if AzureModelProvider.is_enabled() or OpenAiModelProvider.is_enabled():
+            prompt_helper = PromptHelper(context_window=min(llm.metadata.context_window, 10000))
         return {
             "llm": llm,
             "response_synthesizer": get_response_synthesizer(
@@ -277,6 +280,9 @@ class SummaryIndexer(BaseTextIndexer):
         chunks: ChunksResult = reader.load_chunks(file_path)
         nodes: List[TextNode] = chunks.chunks
 
+        nodes = self.sample_nodes(nodes, 1000, 20)
+        logger.debug(f"Using {len(nodes)} nodes from {len(chunks.chunks)} total nodes")
+
         if not nodes:
             logger.warning(f"No chunks found for file {file_path}")
             return
@@ -357,6 +363,72 @@ class SummaryIndexer(BaseTextIndexer):
             pass
         global_summary_store.insert_nodes(new_nodes)
         global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
+
+    def sample_nodes(
+        self,
+        nodes: List[TextNode],
+        max_number_to_sample: int = 1000,
+        sample_block_size: int = 20,
+    ) -> List[TextNode]:
+        """
+        Sample max_number_to_sample in contiguous blocks of sample_block_size if we have more than max_number_to_sample nodes.
+        This sampling helps reduce processing time for very large documents while maintaining context coherence.
+
+        Args:
+            nodes: List of TextNode objects to sample from
+            max_number_to_sample: max number of nodes to sample
+            sample_block_size: how big the contiguous blocks should be
+
+        Returns:
+            A list of sampled TextNode objects, or the original list if it has 1000 or fewer nodes
+        """
+        if len(nodes) <= max_number_to_sample:
+            return nodes
+
+        num_blocks = max_number_to_sample // sample_block_size
+        block_size = sample_block_size
+
+        # Calculate the maximum valid starting index for a block
+        max_block_start_index = len(nodes) - block_size
+
+        # Randomly select starting indices for blocks, ensuring they're at least block_size apart
+        # to avoid overlapping blocks
+        available_indices = list(range(max_block_start_index + 1))
+        block_start_indices: list[int] = []
+
+        # Try to get num_blocks non-overlapping blocks
+        while len(block_start_indices) < num_blocks and available_indices:
+            # Randomly select an index from available indices
+            if not available_indices:
+                break
+            idx = random.choice(available_indices)
+            block_start_indices.append(idx)
+
+            # Remove this index and all indices that would create overlapping blocks
+            # (i.e., all indices within block_size of the selected index)
+            for i in range(
+                max(0, idx - block_size + 1), min(len(nodes), idx + block_size)
+            ):
+                if i in available_indices:
+                    available_indices.remove(i)
+
+        # Sort the indices to maintain order
+        block_start_indices.sort()
+
+        # Extract blocks of block_size contiguous nodes
+        sampled_nodes = []
+        for start_idx in block_start_indices:
+            sampled_nodes.extend(nodes[start_idx : start_idx + block_size])
+
+        # If we couldn't get enough blocks (if document is not large enough)
+        # but still larger than 1000, take the first 1000
+        if (
+            len(sampled_nodes) < max_number_to_sample
+            and len(nodes) >= max_number_to_sample
+        ):
+            return nodes[:max_number_to_sample]
+        else:
+            return sampled_nodes
 
     def get_summary(self, document_id: str) -> Optional[str]:
         with _write_lock:

@@ -26,7 +26,7 @@ dependencies = [
     "torch>=2.5.1",
     "pillow>=10.4.0",
     "transformers>=4.46.3",
-    "docling>=2.15.0",
+    "docling>=2.40.0",
     "llvmlite==0.43.0",
     "llama-index-llms-bedrock-converse>=0.4.10",
     "presidio-analyzer>=2.2.355",
@@ -40,15 +40,16 @@ dependencies = [
     "llama-index-llms-nvidia>=0.3.2",
     "llama-index-storage-kvstore-s3>=0.3.0",
     "llama-index-vector-stores-opensearch>=0.5.5",
-    "crewai[tools]>=0.119.0",
     "aiostream>=0.6.4",
     "opik>=1.7.22",
     "llama-index-callbacks-opik>=1.1.0",
     "mcp[cli]>=1.9.1",
-    "crewai-tools[mcp]>=0.44.0",
-    "pysqlite3-binary==0.5.4; platform_system == 'Linux'",
+    "pysqlite3-binary==0.5.4; platform_system == 'Linux' and platform_machine != 'aarch64'",
+    "llama-index-tools-mcp>=0.2.5",
+    "llama-index-readers-docling>=0.3.3",
+    "llama-index-node-parser-docling>=0.3.2",
 ]
-requires-python = ">=3.10,<=3.12"
+requires-python = ">=3.10,<3.13"
 readme = "README.md"
 license = {text = "APACHE"}
 
@@ -56,17 +57,19 @@ license = {text = "APACHE"}
 override-dependencies = [
     "boto3-stubs==1.36.1",
     "botocore-stubs==1.36.1",
+    "docling-ibm-models==3.7.0"
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.3",
     "ruff>=0.7.4",
-    "mypy>=1.13.0",
+    "mypy>=1.16.1",
     "lipsum>=0.1.2",
     "hypothesis>=6.122.1",
     "black>=24.10.0",
     "types-boto3-s3>=1.36.1",
+    "types-requests>=2.32.0"
 ]
 
 [tool.pytest.ini_options]

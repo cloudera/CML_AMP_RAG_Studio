@@ -40,6 +40,7 @@ import {
   Collapse,
   Flex,
   Form,
+  FormInstance,
   Input,
   Modal,
   Popover,
@@ -49,10 +50,14 @@ import {
   Tag,
   Typography,
 } from "antd";
-import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
+import {
+  Model,
+  useGetLlmModels,
+  useGetRerankingModels,
+} from "src/api/modelsApi.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   UpdateSessionRequest,
@@ -66,19 +71,35 @@ import { CreateSessionType } from "pages/RagChatTab/SessionsSidebar/CreateSessio
 import { formatDataSource } from "src/utils/formatters.ts";
 import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 
+export const onInferenceModelChange = (
+  changedValues: Partial<Omit<CreateSessionType, "id">>,
+  form: FormInstance<Omit<CreateSessionType, "id">>,
+  llmModels?: Model[],
+) => {
+  if (changedValues.inferenceModel) {
+    const model = llmModels?.find(
+      (model) => model.model_id === changedValues.inferenceModel,
+    );
+    form.setFieldValue(
+      ["queryConfiguration", "enableToolCalling"],
+      model?.tool_calling_supported ?? false,
+    );
+  }
+};
+
 const ChatSettingsModal = ({
-  open,
+  modelIsOpen,
   closeModal,
 }: {
-  open: boolean;
+  modelIsOpen: boolean;
   closeModal: () => void;
 }) => {
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
   const {
     dataSourcesQuery: { dataSources },
+    activeSession,
   } = useContext(RagChatContext);
-  const { activeSession } = useContext(RagChatContext);
   const [form] = Form.useForm<Omit<CreateSessionType, "id">>();
   const queryClient = useQueryClient();
   const updateSession = useUpdateSessionMutation({
@@ -98,6 +119,14 @@ const ChatSettingsModal = ({
   if (!activeSession) {
     return null;
   }
+
+  useEffect(() => {
+    if (modelIsOpen && activeSession.name) {
+      form.setFieldsValue({
+        name: activeSession.name,
+      });
+    }
+  }, [activeSession.name, form.setFieldsValue, modelIsOpen]);
 
   const handleUpdateSession = () => {
     form
@@ -211,7 +240,7 @@ const ChatSettingsModal = ({
   return (
     <Modal
       title={`Chat Settings: ${activeSession.name}`}
-      open={open}
+      open={modelIsOpen}
       onCancel={closeModal}
       destroyOnHidden={true}
       onOk={handleUpdateSession}
@@ -219,7 +248,16 @@ const ChatSettingsModal = ({
       width={600}
     >
       <Flex vertical gap={10}>
-        <Form autoCorrect="off" form={form} clearOnDestroy={true}>
+        <Form
+          autoCorrect="off"
+          form={form}
+          clearOnDestroy={true}
+          onValuesChange={(
+            changedValues: Partial<Omit<CreateSessionType, "id">>,
+          ) => {
+            onInferenceModelChange(changedValues, form, llmModels);
+          }}
+        >
           <Form.Item
             name="dataSourceIds"
             label="Knowledge Base"

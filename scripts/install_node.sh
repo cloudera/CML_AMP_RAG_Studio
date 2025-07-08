@@ -42,6 +42,15 @@
 # Download and install nvm:
 set +x
 
+# check to see if node is already installed.
+node --version
+return_code=$?
+
+if [ $return_code -eq 0 ]; then
+  echo "Node.js is already installed.  Exiting."
+  exit 0
+fi
+
 touch ~/.bashrc
 
 # NVM installer updates bashrc if exists
@@ -51,7 +60,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" > /dev/null  # This loads nvm
 
 ### allow-list entry:
-### https://nodejs.org/dist/v22.15.0/node-v22.15.0-darwin-arm64.tar.xz
+### https://nodejs.org/dist/v22.15.0/node-v22.15.0-linux-x64.tar.gz
 nvm install v22.15.0
 nvm use 22
 

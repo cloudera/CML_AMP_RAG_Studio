@@ -81,8 +81,8 @@ const RagChatQueryInput = ({
   const inputRef = useRef<InputRef>(null);
   const {
     data: sampleQuestions,
-    isPending: sampleQuestionsIsPending,
     isFetching: sampleQuestionsIsFetching,
+    error: sampleQuestionsError,
   } = useSuggestQuestions(
     {
       session_id: sessionId ? +sessionId : undefined,
@@ -159,7 +159,8 @@ const RagChatQueryInput = ({
         {flatChatHistory.length > 0 ? (
           <SuggestedQuestionsFooter
             questions={sampleQuestions?.suggested_questions ?? []}
-            isLoading={sampleQuestionsIsPending || sampleQuestionsIsFetching}
+            isLoading={sampleQuestionsIsFetching}
+            error={sampleQuestionsError}
             handleChat={handleChat}
             condensedQuestion={
               flatChatHistory.length > 0

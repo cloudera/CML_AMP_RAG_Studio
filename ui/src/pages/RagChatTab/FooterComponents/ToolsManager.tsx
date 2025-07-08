@@ -65,10 +65,13 @@ import {
 } from "src/api/sessionApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { QueryKeys } from "src/api/utils.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
 const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   const { data, isLoading } = useToolsQuery();
+  const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
   const toolsList = data?.map((tool) => ({
     name: tool.name,
@@ -119,17 +122,28 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
   return (
     <Flex style={{ width: 500, height: 300, margin: 8 }} vertical>
       <Flex align={"start"}>
-        <Tag
-          style={{
-            backgroundColor: cdlOrange500,
-            color: cdlWhite,
-            borderRadius: 10,
-          }}
-        >
-          &beta;
-        </Tag>
+        <Tooltip title="Tool Calling (Beta)">
+          <Tag
+            style={{
+              backgroundColor: cdlOrange500,
+              color: cdlWhite,
+              borderRadius: 10,
+            }}
+          >
+            &beta;
+          </Tag>
+        </Tooltip>
         <Typography.Title level={5} style={{ margin: 0, marginBottom: 16 }}>
-          Tools Manager
+          Tool Selection{" "}
+          {config ? (
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              (Manage available tools{" "}
+              <Link to={"/settings"} hash={"tools"}>
+                here
+              </Link>
+              )
+            </Typography.Text>
+          ) : null}
         </Typography.Title>
       </Flex>
       <List
@@ -192,12 +206,12 @@ const ToolsManagerButton = () => {
   }
 
   return (
-    <Tooltip title={!toolsManagerOpen ? "Tools manager" : ""}>
-      <ToolsManager
-        isOpen={toolsManagerOpen}
-        setIsOpen={setToolsManagerOpen}
-        activeSession={activeSession}
-      >
+    <ToolsManager
+      isOpen={toolsManagerOpen}
+      setIsOpen={setToolsManagerOpen}
+      activeSession={activeSession}
+    >
+      <Tooltip title={!toolsManagerOpen ? "Tool Selection" : ""}>
         <Button
           icon={<ToolOutlined />}
           type="text"
@@ -207,8 +221,8 @@ const ToolsManagerButton = () => {
             setToolsManagerOpen(!toolsManagerOpen);
           }}
         />
-      </ToolsManager>
-    </Tooltip>
+      </Tooltip>
+    </ToolsManager>
   );
 };
 

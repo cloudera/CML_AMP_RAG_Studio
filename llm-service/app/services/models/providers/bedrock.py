@@ -44,6 +44,7 @@ import boto3
 import requests
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
+from fastapi import HTTPException
 from llama_index.embeddings.bedrock import BedrockEmbedding
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
@@ -62,6 +63,13 @@ DEFAULT_BEDROCK_LLM_MODEL = "meta.llama3-1-8b-instruct-v1:0"
 DEFAULT_BEDROCK_RERANK_MODEL = "cohere.rerank-v3-5:0"
 
 BedrockModality = Literal["TEXT", "IMAGE", "EMBEDDING"]
+
+BEDROCK_TOOL_CALLING_MODELS = {
+    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "anthropic.claude-3-7-sonnet-20250219-v1:0",
+    "anthropic.claude-sonnet-4-20250514-v1:0",
+}
 
 
 class BedrockModelProvider(ModelProvider):
@@ -153,22 +161,33 @@ class BedrockModelProvider(ModelProvider):
             raise_for_http_error(response)
             return cast(dict[str, Any], response.json())
 
-        responses: list[dict[str, Any] | None] = [None for _ in aws_requests]
+        responses: list[dict[str, Any] | None] = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_index = {
-                executor.submit(get_aws_responses, url, headers): idx
-                for idx, (url, headers) in enumerate(aws_requests)
-            }
-            for future in concurrent.futures.as_completed(future_to_index):
-                idx = future_to_index[future]
+            results = executor.map(
+                lambda url_and_headers: get_aws_responses(*url_and_headers),
+                aws_requests,
+            )
+            while True:
                 try:
-                    responses[idx] = future.result()
-                except Exception:
+                    result = next(results)
+                    responses.append(result)
+                except StopIteration:
+                    break
+                except HTTPException as e:
+                    model_id = str(e).split("/")[-1]
                     logger.exception(
-                        "Error fetching data for model %s", models[idx]["modelId"]
+                        "Error fetching data for model %s",
+                        model_id,
                     )
-                    responses[idx] = None
-
+                    responses.append(None)
+                    continue
+                except Exception as e:
+                    logger.exception(
+                        "Unexpected error fetching data: %s",
+                        e,
+                    )
+                    responses.append(None)
+                    continue
         for model, model_data in zip(models, responses):
             if model_data:
                 if model_data["entitlementAvailability"] == "AVAILABLE":
@@ -195,6 +214,9 @@ class BedrockModelProvider(ModelProvider):
                             model_id=model["modelId"],
                             name=model["modelName"],
                             available=True,
+                            tool_calling_supported=BedrockModelProvider._is_tool_calling_supported(
+                                model
+                            ),
                         )
                     )
                 else:
@@ -204,9 +226,16 @@ class BedrockModelProvider(ModelProvider):
                         )
                     )
                     if arn_model_response:
+                        arn_model_response.tool_calling_supported = (
+                            BedrockModelProvider._is_tool_calling_supported(model)
+                        )
                         models.append(arn_model_response)
 
         return models
+
+    @staticmethod
+    def _is_tool_calling_supported(model: dict[str, Any]) -> bool:
+        return True if model["modelId"] in BEDROCK_TOOL_CALLING_MODELS else False
 
     @staticmethod
     def _get_model_arn_by_profiles(

@@ -150,6 +150,7 @@ def generate_suggested_questions(
                 use_tool_calling=False,
             ),
             [],
+            should_condense_question=False,
         )
         suggested_questions = process_response(response.response)
     return suggested_questions

@@ -43,7 +43,7 @@ import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   ChatMessageType,
-  CrewEventResponse,
+  ChatEvent,
   useChatHistoryQuery,
 } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -78,7 +78,7 @@ function ChatLayout() {
     useGetDataSourcesForProject(+projectId);
   const [excludeKnowledgeBase, setExcludeKnowledgeBase] = useState(false);
   const [streamedChat, setStreamedChat] = useState("");
-  const [streamedEvent, setStreamedEvent] = useState<CrewEventResponse[]>([]);
+  const [streamedEvent, setStreamedEvent] = useState<ChatEvent[]>([]);
   const [streamedAbortController, setStreamedAbortController] =
     useState<AbortController>();
   const {

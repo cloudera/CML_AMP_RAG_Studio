@@ -113,8 +113,8 @@ def _get_app_log_handler() -> logging.Handler:
         fmt=" ".join(
             [
                 "%(asctime)s",
-                "%(levelname)5s",
-                "%(name)30s",
+                "%(levelname)-7s",
+                "%(name)28s",
                 "%(message)s",
             ]
         )

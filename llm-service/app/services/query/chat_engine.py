@@ -225,6 +225,14 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
 
         return response_synthesizer, context_source, context_nodes
 
+    @property
+    def retriever(self) -> BaseRetriever:
+        return self._retriever
+
+    @property
+    def node_postprocessors(self) -> List[BaseNodePostprocessor]:
+        return self._node_postprocessors
+
 
 def build_flexible_chat_engine(
     configuration: QueryConfiguration,
@@ -266,7 +274,7 @@ def _create_node_postprocessors(
         return []
 
     if configuration.rerank_model_name is None:
-        return [SimpleReranker(top_n=configuration.top_k)]
+        return [DebugNodePostProcessor(), SimpleReranker(top_n=configuration.top_k)]
 
     return [
         DebugNodePostProcessor(),

@@ -131,7 +131,6 @@ def get_llm(
         base_url=api_base,
         model=model,
         http_client=http_client
-        # api_base=api_base, # todo: figure out how to integrate with Crew models
     )
 
 

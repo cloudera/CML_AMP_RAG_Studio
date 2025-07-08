@@ -29,34 +29,35 @@
 # ##############################################################################
 from __future__ import annotations
 
-import json
-import os
 import re
-from copy import copy
-from queue import Queue
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, cast
 
-from crewai import CrewOutput
-from crewai.tools import BaseTool
-from crewai_tools.adapters.mcp_adapter import MCPServerAdapter
 from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
+from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
-from mcp import StdioServerParameters
-
-from .agents.crewai_querier import (
-    assemble_crew,
-    should_use_retrieval,
-    launch_crew,
-    stream_chat,
-    poison_pill,
+from llama_index.llms.bedrock_converse.utils import (
+    BEDROCK_FUNCTION_CALLING_MODELS,
+    get_model_name,
 )
-from .crew_events import CrewEvent
+from llama_index.llms.openai.utils import (
+    is_function_calling_model,
+    ALL_AVAILABLE_MODELS,
+)
+
+from .agents.tool_calling_querier import (
+    should_use_retrieval,
+    stream_chat,
+)
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
-from ...config import settings
+from ..models.providers import (
+    BedrockModelProvider,
+    OpenAiModelProvider,
+    AzureModelProvider,
+)
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -79,44 +80,14 @@ from ...ai.vector_stores.vector_store_factory import VectorStoreFactory
 
 logger = logging.getLogger(__name__)
 
+LLAMA_3_2_NON_FUNCTION_CALLING_MODELS = {
+    "meta.llama3-2-1b-instruct-v1:0",
+    "meta.llama3-2-3b-instruct-v1:0",
+}
 
-def get_mcp_server_adapter(server_name: str) -> MCPServerAdapter:
-    """
-    Find an MCP server by name in the mcp.json file and return the appropriate adapter.
-
-    Args:
-        server_name: The name of the MCP server to find
-
-    Returns:
-        An MCPServerAdapter configured for the specified server
-
-    Raises:
-        ValueError: If the server name is not found in the mcp.json file
-    """
-    mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
-
-    with open(mcp_json_path, "r") as f:
-        mcp_config = json.load(f)
-
-    mcp_servers = mcp_config["mcp_servers"]
-    server_config = next(filter(lambda x: x["name"] == server_name, mcp_servers), None)
-
-    if server_config:
-        environment: dict[str, str] | None = copy(dict(os.environ))
-        if "env" in server_config and environment:
-            environment.update(server_config["env"])
-
-        if "command" in server_config:
-            params = StdioServerParameters(
-                command=server_config["command"],
-                args=server_config.get("args", []),
-                env=environment,
-            )
-            return MCPServerAdapter(serverparams=params)
-        elif "url" in server_config:
-            return MCPServerAdapter({"url": server_config["url"][0]})
-
-    raise ValueError(f"Invalid configuration for MCP server '{server_name}'")
+MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS = tuple(
+    set(BEDROCK_FUNCTION_CALLING_MODELS) - LLAMA_3_2_NON_FUNCTION_CALLING_MODELS
+)
 
 
 def streaming_query(
@@ -124,114 +95,91 @@ def streaming_query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_messages: list[ChatMessage],
-    crew_events_queue: Queue[CrewEvent],
     session: Session,
-    retriever: Optional[BaseRetriever],
 ) -> StreamingAgentChatResponse:
-    mcp_tools: list[BaseTool] = []
-    all_adapters: list[MCPServerAdapter] = []
+    llm = models.LLM.get(model_name=configuration.model_name)
 
-    if session.query_configuration and session.query_configuration.selected_tools:
-        for tool_name in session.query_configuration.selected_tools:
-            try:
-                adapter = get_mcp_server_adapter(tool_name)
-                print(
-                    f"Adding adapter for tools: {[tool.name for tool in adapter.tools]}"
-                )
-                all_adapters.append(adapter)
-            except ValueError as e:
-                logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
-                continue
+    chat_response: StreamingAgentChatResponse
+    if configuration.use_tool_calling:
+        check_for_tool_calling_support(llm)
+
+        use_retrieval, data_source_summaries = should_use_retrieval(
+            session.data_source_ids, configuration.exclude_knowledge_base
+        )
+
+        chat_response = stream_chat(
+            use_retrieval,
+            cast(FunctionCallingLLM, llm),
+            chat_engine,
+            query_str,
+            chat_messages,
+            session,
+            data_source_summaries,
+        )
+        return chat_response
+    if not chat_engine:
+        raise HTTPException(
+            status_code=500,
+            detail="Chat engine is not initialized. Please check the configuration.",
+        )
 
     try:
-        for adapter in all_adapters:
-            mcp_tools.extend(adapter.tools)
+        chat_response = chat_engine.stream_chat(query_str, chat_messages)
+        logger.debug("query response received from chat engine")
+    except botocore.exceptions.ClientError as error:
+        logger.warning(error.response)
+        json_error = error.response
+        detail = json_error["Error"].get("Message", None)
+        raise HTTPException(
+            status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
+            detail=detail if detail else json_error["StatusReason"],
+        ) from error
 
-        llm = models.LLM.get(model_name=configuration.model_name)
+    return chat_response
 
-        chat_response: StreamingAgentChatResponse
-        if configuration.use_tool_calling:
-            use_retrieval, data_source_summaries = should_use_retrieval(
-                configuration,
-                session.data_source_ids,
-                llm,
-                query_str,
-                chat_messages,
-            )
 
-            crew = assemble_crew(
-                use_retrieval,
-                llm,
-                chat_messages,
-                query_str,
-                crew_events_queue,
-                retriever,
-                data_source_summaries,
-                mcp_tools,
-            )
-            enhanced_query, crew_result = launch_crew(
-                crew,
-                query_str,
-            )
+# LlamaIndex's list of function-calling models appears out of date,
+# so we have a modified version
+def is_bedrock_function_calling_model_v2(model_name: str) -> bool:
+    return get_model_name(model_name) in MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS
 
-            source_nodes = get_nodes_from_output(crew_result, session)
 
-            chat_response = stream_chat(
-                use_retrieval,
-                llm,
-                chat_engine,
-                enhanced_query,
-                source_nodes,
-                chat_messages,
-            )
-            return chat_response
-        if not chat_engine:
-            raise HTTPException(
-                status_code=500,
-                detail="Chat engine is not initialized. Please check the configuration.",
-            )
-
-        try:
-            chat_response = chat_engine.stream_chat(query_str, chat_messages)
-            crew_events_queue.put(CrewEvent(type=poison_pill, name="no-op"))
-            logger.debug("query response received from chat engine")
-        except botocore.exceptions.ClientError as error:
-            logger.warning(error.response)
-            json_error = error.response
-            raise HTTPException(
-                status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-                detail=json_error["StatusReason"],
-            ) from error
-
-        return chat_response
-    finally:
-        for adapter in all_adapters:
-            adapter.stop()
+def check_for_tool_calling_support(llm: LLM) -> None:
+    if BedrockModelProvider.is_enabled() and not is_bedrock_function_calling_model_v2(
+        llm.metadata.model_name
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Tool calling is enabled, but the model {get_model_name(llm.metadata.model_name)} does not support tool calling.  "
+            f"The following models support tool calling: {', '.join(list(MODIFIED_BEDROCK_FUNCTION_CALLING_MODELS))}.",
+        )
+    if (
+        OpenAiModelProvider.is_enabled() or AzureModelProvider.is_enabled()
+    ) and not llm.metadata.is_function_calling_model:
+        openai_function_calling_models = [
+            model_name
+            for model_name in ALL_AVAILABLE_MODELS.keys()
+            if is_function_calling_model(model_name)
+        ]
+        raise HTTPException(
+            status_code=422,
+            detail=f"Tool calling is enabled, but the model {llm.metadata.model_name} does not support tool calling. "
+            f"The following models support tool calling: {', '.join(list(openai_function_calling_models))}.",
+        )
 
 
 def get_nodes_from_output(
-    output: str | CrewOutput,
+    output: str,
     session: Session,
 ) -> list[NodeWithScore]:
     source_node_ids_w_score: dict[str, float] = {}
-    if isinstance(output, CrewOutput):
-        # Extract the retriever results from the crew result
-        for task_output in output.tasks_output:
-            if task_output.name == "RetrieverTask":
-                if task_output.json_dict:
-                    json_output = task_output.json_dict["retriever_results"]
-                    for result in json_output:
-                        node_id = result["node_id"]
-                        score = result["score"]
-                        if node_id and score:
-                            # Append the node id and score to the list
-                            source_node_ids_w_score[node_id] = score
 
     # Extract the node ids from string output
     extracted_node_ids = re.findall(
-        r"<a class='rag_citation' href='(.*?)'>",
-        str(output) if isinstance(output, CrewOutput) else output,
+        r"<a class=\"rag_citation\" href=\"(.*?)\">",
+        output,
     )
+
     # add the extracted node ids to the source node ids
     for node_id in extracted_node_ids:
         if node_id not in source_node_ids_w_score:
@@ -285,6 +233,7 @@ def query(
     query_str: str,
     configuration: QueryConfiguration,
     chat_history: list[RagContext],
+    should_condense_question: bool = True,
 ) -> tuple[AgentChatResponse, str | None]:
     llm = models.LLM.get(model_name=configuration.model_name)
     retriever = build_retriever(configuration, session.data_source_ids, llm)
@@ -304,9 +253,11 @@ def query(
         )
     )
 
-    condensed_question: str = chat_engine.condense_question(
-        chat_messages, query_str
-    ).strip()
+    condensed_question: str | None = None
+    if should_condense_question:
+        condensed_question = chat_engine.condense_question(
+            chat_messages, query_str
+        ).strip()
 
     try:
         chat_response: AgentChatResponse = chat_engine.chat(query_str, chat_messages)
@@ -315,9 +266,10 @@ def query(
     except botocore.exceptions.ClientError as error:
         logger.warning(error.response)
         json_error = error.response
+        detail = json_error["Error"].get("Message", None)
         raise HTTPException(
             status_code=json_error["ResponseMetadata"]["HTTPStatusCode"],
-            detail=json_error["StatusReason"],
+            detail=detail if detail else json_error["StatusReason"],
         ) from error
 
 
