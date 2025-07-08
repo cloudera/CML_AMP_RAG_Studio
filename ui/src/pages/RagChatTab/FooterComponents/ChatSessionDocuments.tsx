@@ -43,8 +43,64 @@ import { cdlAmber600, cdlBlue600, cdlGreen600 } from "src/cuix/variables.ts";
 import useModal from "src/utils/useModal.ts";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
-import { useGetRagDocuments } from "src/api/ragDocumentsApi.ts";
-import { getCompletedIndexing } from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
+import {
+  RagDocumentResponseType,
+  RagDocumentStatus,
+  useGetRagDocuments,
+} from "src/api/ragDocumentsApi.ts";
+import {
+  CompletedIndexingType,
+  getCompletedIndexing,
+} from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
+
+type RagDocumentType = RagDocumentResponseType & { key: number };
+
+const countIcon = ({
+  ragDocuments,
+  indexingStatus,
+  ragDocumentsIsFetching,
+}: {
+  ragDocuments: RagDocumentType[];
+  indexingStatus: CompletedIndexingType;
+  ragDocumentsIsFetching: boolean;
+}) => {
+  if (ragDocuments.length === 0 || ragDocumentsIsFetching) {
+    return null;
+  } else if (indexingStatus.fullyIndexed) {
+    return <CheckCircleOutlined style={{ color: cdlGreen600, fontSize: 10 }} />;
+  } else {
+    return (
+      <ClockCircleOutlined
+        style={{ fontSize: 10, color: cdlAmber600, bottom: 0 }}
+      />
+    );
+  }
+};
+
+const title = (
+  ragDocuments: RagDocumentType[],
+  indexingStatus: CompletedIndexingType,
+  ragDocumentsIsFetching: boolean,
+) => {
+  const summarizing = ragDocuments.filter(
+    (doc) =>
+      doc.summaryStatus !== RagDocumentStatus.SUCCESS &&
+      doc.summaryStatus !== RagDocumentStatus.ERROR,
+  ).length;
+
+  const docsToIndex = ragDocuments.length - indexingStatus.completedIndexing;
+  if (ragDocumentsIsFetching) {
+    return "Loading documents...";
+  } else if (summarizing > 0) {
+    return `Indexing documents: ${docsToIndex.toString()} Summarizing: ${summarizing.toString()}`;
+  } else if (docsToIndex > 0) {
+    return `Indexing documents: ${docsToIndex.toString()}`;
+  } else if (ragDocuments.length > 0) {
+    return `Drag or add documents to chat.  Documents added: ${ragDocuments.length.toString()}`;
+  } else {
+    return "Drag or add documents to chat";
+  }
+};
 
 const ChatSessionDocuments = ({
   activeSession,
@@ -67,25 +123,12 @@ const ChatSessionDocuments = ({
   if (!activeSession?.associatedDataSourceId) {
     return null;
   }
-  const getCountIcon = () => {
-    if (ragDocuments.length === 0 || ragDocumentsIsFetching) {
-      return null;
-    } else if (indexingStatus.fullyIndexed) {
-      return (
-        <CheckCircleOutlined style={{ color: cdlGreen600, fontSize: 10 }} />
-      );
-    } else {
-      return (
-        <ClockCircleOutlined
-          style={{ fontSize: 10, color: cdlAmber600, bottom: 0 }}
-        />
-      );
-    }
-  };
 
   return (
     <>
-      <Tooltip title={"Drag or add documents to chat"}>
+      <Tooltip
+        title={title(ragDocuments, indexingStatus, ragDocumentsIsFetching)}
+      >
         <Button
           size="small"
           type="text"
@@ -94,7 +137,15 @@ const ChatSessionDocuments = ({
           }}
           icon={
             // TODO: only display this badge when data source is working/pending
-            <Badge size="small" status={"processing"} count={getCountIcon()}>
+            <Badge
+              size="small"
+              status={"processing"}
+              count={countIcon({
+                ragDocuments,
+                indexingStatus,
+                ragDocumentsIsFetching,
+              })}
+            >
               <DocumentationIcon style={{ color: cdlBlue600, fontSize: 20 }} />
             </Badge>
           }

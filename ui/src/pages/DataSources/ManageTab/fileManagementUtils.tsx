@@ -38,19 +38,23 @@
 
 import { InboxOutlined } from "@ant-design/icons";
 
-export const DragAndDrop = () => {
+export const DragAndDrop = ({ helpText }: { helpText?: string }) => {
   return (
     <div style={{ width: 400 }}>
       <p className="ant-upload-drag-icon">
         <InboxOutlined />
       </p>
-      <div className="ant-upload-text">Drag and drop or click to upload.</div>
+      <div className="ant-upload-text">
+        {helpText ?? "Drag and drop or click to upload."}
+      </div>
     </div>
   );
 };
+
 export const isFulfilled = <T,>(
   p: PromiseSettledResult<T>,
 ): p is PromiseFulfilledResult<T> => p.status === "fulfilled";
+
 export const isRejected = <T,>(
   p: PromiseSettledResult<T>,
 ): p is PromiseRejectedResult => p.status === "rejected";

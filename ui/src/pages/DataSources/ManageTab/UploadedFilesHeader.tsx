@@ -47,10 +47,15 @@ import {
 import KnowledgeBaseSummary from "pages/DataSources/ManageTab/KnowledgeBaseSummary.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 
+export interface CompletedIndexingType {
+  completedIndexing: number;
+  fullyIndexed: boolean;
+}
+
 export const getCompletedIndexing = (
   ragDocuments: RagDocumentResponseType[],
   docsLoading: boolean,
-) => {
+): CompletedIndexingType => {
   const completedIndexing = ragDocuments.filter(
     (doc) => doc.vectorUploadTimestamp !== null,
   ).length;

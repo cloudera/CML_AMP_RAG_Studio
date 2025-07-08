@@ -169,7 +169,9 @@ export const ChatSessionDragAndDrop = () => {
   }
   return (
     <Upload.Dragger onDrop={handleDrop} showUploadList={false}>
-      <DragAndDrop />
+      <DragAndDrop
+        helpText={"Drag and drop to upload documents to the chat session."}
+      />
     </Upload.Dragger>
   );
 };
