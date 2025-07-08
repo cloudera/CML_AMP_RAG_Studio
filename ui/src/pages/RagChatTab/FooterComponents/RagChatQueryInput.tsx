@@ -38,18 +38,18 @@
 
 import { Button, Flex, Input, InputRef, Tooltip } from "antd";
 import {
-  DatabaseFilled,
-  DatabaseOutlined,
-  SendOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
-import {
   MouseEventHandler,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
+import {
+  DatabaseFilled,
+  DatabaseOutlined,
+  SendOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import {
   createQueryConfiguration,
@@ -62,6 +62,7 @@ import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
+import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
 
 const { TextArea } = Input;
 
@@ -182,6 +183,7 @@ const RagChatQueryInput = ({
             }
           />
         ) : null}
+        <ChatSessionDragAndDrop />
         <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
           <div style={{ position: "relative", width: "100%" }}>
             <TextArea

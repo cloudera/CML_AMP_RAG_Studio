@@ -45,7 +45,7 @@ import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.t
 import { useCreateRagDocumentsMutation } from "src/api/ragDocumentsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 
-const DragAndDrop = () => {
+export const DragAndDrop = () => {
   return (
     <div style={{ width: 400 }}>
       <p className="ant-upload-drag-icon">
@@ -117,7 +117,8 @@ const FileManagement = ({
   });
 
   const handleUpload = () => {
-    ragDocumentMutation.mutate({ files: fileList, dataSourceId });
+    const files = fileList.map((file) => file.originFileObj as File);
+    ragDocumentMutation.mutate({ files, dataSourceId });
   };
 
   const props: UploadProps = {
