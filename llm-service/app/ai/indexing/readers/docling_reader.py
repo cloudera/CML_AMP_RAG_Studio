@@ -42,12 +42,8 @@ from typing import List, Any
 
 from docling.datamodel.document import ConversionResult
 from docling.document_converter import DocumentConverter
-from docling_core.transforms.chunker import BaseChunk
-from docling_core.transforms.chunker.hierarchical_chunker import HierarchicalChunker
 from docling_core.transforms.chunker.base import BaseChunk
 from docling_core.transforms.chunker.hybrid_chunker import HybridChunker
-from docling_core.transforms.serializer.base import SerializationResult
-from docling_core.transforms.serializer.markdown import MarkdownDocSerializer
 from llama_index.core.schema import Document, TextNode, NodeRelationship
 
 from .base_reader import BaseReader
