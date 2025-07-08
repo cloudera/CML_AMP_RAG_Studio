@@ -39,33 +39,16 @@
 import { useState } from "react";
 import { Button, Divider, Flex, Upload, UploadFile, UploadProps } from "antd";
 import { QueryKeys } from "src/api/utils.ts";
-import { InboxOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
 import { useCreateRagDocumentsMutation } from "src/api/ragDocumentsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-
-export const DragAndDrop = () => {
-  return (
-    <div style={{ width: 400 }}>
-      <p className="ant-upload-drag-icon">
-        <InboxOutlined />
-      </p>
-      <div className="ant-upload-text">Drag and drop or click to upload.</div>
-    </div>
-  );
-};
-
-const isFulfilled = <T,>(
-  p: PromiseSettledResult<T>,
-): p is PromiseFulfilledResult<T> => p.status === "fulfilled";
-const isRejected = <T,>(
-  p: PromiseSettledResult<T>,
-): p is PromiseRejectedResult => p.status === "rejected";
-
-interface RejectReasonType {
-  message: string;
-}
+import {
+  DragAndDrop,
+  isFulfilled,
+  isRejected,
+  RejectReasonType,
+} from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
 
 const FileManagement = ({
   simplifiedTable,

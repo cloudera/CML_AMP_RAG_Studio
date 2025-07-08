@@ -47,17 +47,53 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { useCreateRagDocumentsMutation } from "src/api/ragDocumentsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { Upload } from "antd";
-import { DragAndDrop } from "pages/DataSources/ManageTab/FileManagement.tsx";
+import { QueryKeys } from "src/api/utils.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  DragAndDrop,
+  isFulfilled,
+  isRejected,
+  RejectReasonType,
+} from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
 
 export const ChatSessionDragAndDrop = () => {
   const { activeSession } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
+  const queryClient = useQueryClient();
   const dragCounter = useRef(0); // Counter to track nested dragenter/dragleave events
   const ragDocumentMutation = useCreateRagDocumentsMutation({
-    onSuccess: (data) => {
-      messageQueue.success(
-        `Successfully uploaded ${data.length.toString()} documents.`,
-      );
+    onSuccess: (settledPromises) => {
+      const fulfilledValues = settledPromises
+        .filter(isFulfilled)
+        .map((p) => p.value).length;
+      const rejectedReasons = settledPromises
+        .filter(isRejected)
+        .map((p) => p.reason as RejectReasonType);
+
+      rejectedReasons.forEach((reason: RejectReasonType) => {
+        messageQueue.error(reason.message);
+      });
+
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getRagDocuments],
+        })
+        .catch(() => null);
+
+      queryClient
+        .invalidateQueries({
+          queryKey: [
+            QueryKeys.getDataSourceById,
+            { dataSourceId: activeSession?.associatedDataSourceId },
+          ],
+        })
+        .catch(() => null);
+
+      if (fulfilledValues > 0) {
+        messageQueue.success(
+          `Uploaded ${fulfilledValues.toString()} document${fulfilledValues > 1 ? "s" : ""} successfully.`,
+        );
+      }
     },
     onError: (error) => {
       messageQueue.error(`Failed to upload documents: ${error.message}`);

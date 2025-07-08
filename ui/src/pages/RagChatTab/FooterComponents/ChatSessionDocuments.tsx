@@ -85,7 +85,7 @@ const ChatSessionDocuments = ({
 
   return (
     <>
-      <Tooltip title={"Add documents to chat"}>
+      <Tooltip title={"Drag or add documents to chat"}>
         <Button
           size="small"
           type="text"
