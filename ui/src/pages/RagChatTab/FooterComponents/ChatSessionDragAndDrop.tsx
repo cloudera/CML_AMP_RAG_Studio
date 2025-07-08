@@ -55,12 +55,32 @@ import {
   isRejected,
   RejectReasonType,
 } from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
+import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
+import { Session } from "src/api/sessionApi.ts";
 
 export const ChatSessionDragAndDrop = () => {
   const { activeSession } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
   const queryClient = useQueryClient();
-  const dragCounter = useRef(0); // Counter to track nested dragenter/dragleave events
+  // Counter to track nested dragenter/dragleave events
+  const dragCounter = useRef(0);
+  const [filesToUpload, setFilesToUpload] = useState<FileList>();
+  const onSuccess = (session: Session) => {
+    const files = [];
+    if (!filesToUpload || filesToUpload.length === 0) {
+      return;
+    }
+    for (const file of filesToUpload) {
+      files.push(file);
+    }
+    if (session.associatedDataSourceId) {
+      ragDocumentMutation.mutate({
+        files: files,
+        dataSourceId: session.associatedDataSourceId.toString(),
+      });
+    }
+  };
+  const createSessionAndRedirect = useCreateSessionAndRedirect(onSuccess);
   const ragDocumentMutation = useCreateRagDocumentsMutation({
     onSuccess: (settledPromises) => {
       const fulfilledValues = settledPromises
@@ -148,6 +168,11 @@ export const ChatSessionDragAndDrop = () => {
     e.stopPropagation();
     setIsDragging(false);
     dragCounter.current = 0;
+    if (!activeSession) {
+      setFilesToUpload(e.dataTransfer.files);
+      e.dataTransfer.clearData();
+      createSessionAndRedirect([]);
+    }
     if (
       e.dataTransfer.files.length > 0 &&
       activeSession?.associatedDataSourceId
@@ -164,7 +189,7 @@ export const ChatSessionDragAndDrop = () => {
     }
   };
 
-  if (!isDragging || !activeSession?.associatedDataSourceId) {
+  if (!isDragging) {
     return null;
   }
   return (
