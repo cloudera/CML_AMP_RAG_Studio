@@ -186,7 +186,9 @@ public class RagDataSourceRepository {
   public int getNumberOfDataSources() {
     return jdbi.withHandle(
         handle -> {
-          try (var query = handle.createQuery("SELECT count(*) FROM RAG_DATA_SOURCE")) {
+          try (var query =
+              handle.createQuery(
+                  "SELECT count(*) FROM RAG_DATA_SOURCE where ASSOCIATED_SESSION_ID IS NULL AND DELETED IS NULL")) {
             return query.mapTo(Integer.class).one();
           }
         });
