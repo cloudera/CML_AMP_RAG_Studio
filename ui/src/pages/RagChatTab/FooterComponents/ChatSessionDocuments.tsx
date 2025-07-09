@@ -160,7 +160,9 @@ const ChatSessionDocuments = ({
                 ragDocumentsIsFetching,
               })}
             >
-              <DocumentationIcon style={{ color: cdlBlue600, fontSize: 20 }} />
+              <DocumentationIcon
+                style={{ color: cdlBlue600, fontSize: 16, marginTop: 2 }}
+              />
             </Badge>
           }
         />

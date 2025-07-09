@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { useState } from "react";
-import { Button, Divider, Flex, Upload, UploadFile, UploadProps } from "antd";
+import { Button, Divider, Flex, Upload, UploadProps } from "antd";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
@@ -49,6 +49,7 @@ import {
   isRejected,
   RejectReasonType,
 } from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
+import { RcFile } from "antd/lib/upload";
 
 const FileManagement = ({
   simplifiedTable,
@@ -59,7 +60,7 @@ const FileManagement = ({
   dataSourceId: string;
   summarizationModel?: string;
 }) => {
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [fileList, setFileList] = useState<RcFile[]>([]);
   const queryClient = useQueryClient();
   const ragDocumentMutation = useCreateRagDocumentsMutation({
     onSuccess: (settledPromises) => {
@@ -100,15 +101,25 @@ const FileManagement = ({
   });
 
   const handleUpload = () => {
-    const files = fileList.map((file) => file.originFileObj as File);
-    ragDocumentMutation.mutate({ files, dataSourceId });
+    ragDocumentMutation.mutate({ files: fileList, dataSourceId });
   };
 
   const props: UploadProps = {
     onRemove: (file) => {
-      const index = fileList.indexOf(file);
+      let fileIndex: number | undefined = undefined;
+      for (const [idx, f] of fileList.entries()) {
+        if (f.uid === file.uid) {
+          fileIndex = idx;
+          break;
+        }
+      }
+
+      if (fileIndex === undefined) {
+        return;
+      }
+
       const newFileList = fileList.slice();
-      newFileList.splice(index, 1);
+      newFileList.splice(fileIndex, 1);
       setFileList(newFileList);
     },
     beforeUpload: (_, newFileLIst) => {

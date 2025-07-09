@@ -36,8 +36,9 @@
  * DATA.
  */
 
-import { InboxOutlined } from "@ant-design/icons";
-import { Flex } from "antd";
+import { CloseOutlined, InboxOutlined } from "@ant-design/icons";
+import { Button, Flex } from "antd";
+import { Dispatch, SetStateAction } from "react";
 
 export const DragAndDrop = () => {
   return (
@@ -50,13 +51,34 @@ export const DragAndDrop = () => {
   );
 };
 
-export const MinimalDragAndDrop = () => {
+export const MinimalDragAndDrop = ({
+  setIsDragging,
+}: {
+  setIsDragging: Dispatch<SetStateAction<boolean>>;
+}) => {
   return (
-    <Flex gap={8} align="center" justify={"center"}>
-      <InboxOutlined style={{ color: "#1677ff" }} />
-      <div className="ant-upload-text">
-        Drag and drop to upload documents to the chat session.
-      </div>
+    <Flex justify={"space-between"} vertical>
+      <Flex
+        justify={"flex-end"}
+        style={{ height: 10, marginTop: -10 }}
+        align={"flex-start"}
+      >
+        <Button
+          icon={<CloseOutlined style={{ fontSize: 10 }} />}
+          size={"small"}
+          type="text"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsDragging(false);
+          }}
+        />
+      </Flex>
+      <Flex gap={8} align="center" justify={"center"}>
+        <InboxOutlined style={{ color: "#1677ff" }} />
+        <div className="ant-upload-text">
+          Drag and drop to upload documents to the chat session.
+        </div>
+      </Flex>
     </Flex>
   );
 };
