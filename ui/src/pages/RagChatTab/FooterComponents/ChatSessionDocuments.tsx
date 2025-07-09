@@ -120,13 +120,11 @@ const ChatSessionDocuments = ({
       activeSession?.inferenceModel,
     );
 
-  const indexingStatus = getCompletedIndexing(
-    ragDocuments,
-    ragDocumentsIsFetching,
-  );
+  const indexingStatus = getCompletedIndexing(ragDocuments);
 
   useEffect(() => {
     if (indexingStatus.fullyIndexed) {
+      console.log(indexingStatus.fullyIndexed);
       queryClient
         .invalidateQueries({
           queryKey: suggestedQuestionKey(activeSession?.id),

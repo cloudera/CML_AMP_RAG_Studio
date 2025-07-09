@@ -54,31 +54,26 @@ export interface CompletedIndexingType {
 
 export const getCompletedIndexing = (
   ragDocuments: RagDocumentResponseType[],
-  docsLoading: boolean,
 ): CompletedIndexingType => {
   const completedIndexing = ragDocuments.filter(
     (doc) => doc.vectorUploadTimestamp !== null,
   ).length;
   const fullyIndexed =
-    !docsLoading && ragDocuments.length === completedIndexing;
+    ragDocuments.length === 0 || ragDocuments.length === completedIndexing;
   return { completedIndexing, fullyIndexed };
 };
 
 const UploadedFilesHeader = ({
   ragDocuments,
-  docsLoading,
   dataSourceId,
   simplifiedTable,
 }: {
   ragDocuments: RagDocumentResponseType[];
-  docsLoading: boolean;
   dataSourceId: string;
   simplifiedTable?: boolean;
 }) => {
-  const { completedIndexing, fullyIndexed } = getCompletedIndexing(
-    ragDocuments,
-    docsLoading,
-  );
+  const { completedIndexing, fullyIndexed } =
+    getCompletedIndexing(ragDocuments);
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
 
