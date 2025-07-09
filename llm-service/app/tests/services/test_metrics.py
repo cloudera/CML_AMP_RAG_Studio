@@ -171,7 +171,7 @@ def st_metric_filter() -> st.SearchStrategy[MetricFilter]:
 
 def make_test_run(**kwargs: Any) -> Run:
     run_info: RunInfo = RunInfo(
-        run_id=str(uuid.uuid4()),
+        run_uuid=str(uuid.uuid4()),
         experiment_id="",
         user_id="",
         status="RUNNING",
