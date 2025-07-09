@@ -44,7 +44,7 @@ import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileRepository;
-import com.cloudera.cai.rag.sessions.SessionRepository;
+import com.cloudera.cai.rag.sessions.SessionService;
 import org.junit.jupiter.api.Test;
 
 class MetricsControllerTest {
@@ -53,17 +53,20 @@ class MetricsControllerTest {
     var metricsController = new MetricsController(MetricsService.createNull());
     var beginningMetrics = metricsController.getMetrics();
 
-    var seshRepo = SessionRepository.createNull();
-    seshRepo.create(TestData.createTestSessionInstance("test-session-1"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-2"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-3"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-4"));
-    seshRepo.create(TestData.createTestSessionInstance("test-session-5"));
+    var seshService = SessionService.createNull();
+    seshService.create(TestData.createSessionInstance("test-session-1"), "test");
+    seshService.create(TestData.createSessionInstance("test-session-2"), "test");
+    seshService.create(TestData.createSessionInstance("test-session-3"), "test");
+    seshService.create(TestData.createSessionInstance("test-session-4"), "test");
+    seshService.create(TestData.createSessionInstance("test-session-5"), "test");
 
     var dataSourceRepo = RagDataSourceRepository.createNull();
     var id1 = TestData.createTestDataSource(dataSourceRepo);
     var id2 = TestData.createTestDataSource(dataSourceRepo);
     var id3 = TestData.createTestDataSource(dataSourceRepo);
+
+    var id4 = TestData.createTestDataSource(dataSourceRepo);
+    dataSourceRepo.deleteDataSource(id4);
 
     RagFileRepository ragFileRepo = RagFileRepository.createNull();
     TestData.createTestDocument(id1, "doc-1", ragFileRepo);

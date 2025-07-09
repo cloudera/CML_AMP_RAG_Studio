@@ -79,13 +79,16 @@ def chat(
 
     response_id = str(uuid.uuid4())
 
-    if configuration.exclude_knowledge_base or len(session.data_source_ids) == 0:
+    if (
+        configuration.exclude_knowledge_base
+        or len(session.get_all_data_source_ids()) == 0
+    ):
         return direct_llm_chat(session, response_id, query, user_name)
 
     total_data_sources_size: int = sum(
         map(
             lambda ds_id: VectorStoreFactory.for_chunks(ds_id).size() or 0,
-            session.data_source_ids,
+            session.get_all_data_source_ids(),
         )
     )
     if total_data_sources_size == 0:

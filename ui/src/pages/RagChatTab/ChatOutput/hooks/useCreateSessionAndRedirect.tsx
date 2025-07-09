@@ -1,24 +1,31 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useGetLlmModels } from "src/api/modelsApi";
+import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi";
 import {
   CreateSessionRequest,
+  Session,
   useCreateSessionMutation,
 } from "src/api/sessionApi";
 import messageQueue from "src/utils/messageQueue.ts";
 import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
-const useCreateSessionAndRedirect = () => {
+const useCreateSessionAndRedirect = (
+  onSuccess?: (session: Session) => void,
+) => {
   const navigate = useNavigate();
   const { projectId } = useParams({ strict: false });
   const { data: defaultProject } = useSuspenseQuery(
     getDefaultProjectQueryOptions,
   );
 
+  const { data: embeddingModels } = useGetEmbeddingModels();
   const { data: models } = useGetLlmModels();
   const createSession = useCreateSessionMutation({
-    onSuccess: () => {
+    onSuccess: (session) => {
       messageQueue.success("Session created successfully");
+      if (onSuccess) {
+        onSuccess(session);
+      }
     },
     onError: () => {
       messageQueue.error("Failed to create session");
@@ -38,6 +45,9 @@ const useCreateSessionAndRedirect = () => {
           enableToolCalling: false,
           selectedTools: [],
         },
+        embeddingModel: embeddingModels?.length
+          ? embeddingModels[0].model_id
+          : undefined,
         projectId: projectId ? parseInt(projectId) : defaultProject.id,
       };
       createSession

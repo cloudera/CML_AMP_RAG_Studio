@@ -42,8 +42,8 @@ import { Session, useGetSessions } from "src/api/sessionApi.ts";
 import { Outlet, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  ChatMessageType,
   ChatEvent,
+  ChatMessageType,
   useChatHistoryQuery,
 } from "src/api/chatApi.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";

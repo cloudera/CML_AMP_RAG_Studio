@@ -37,18 +37,18 @@
  ******************************************************************************/
 import { Card, Typography } from "antd";
 import { useGetDataSourceSummary } from "src/api/summaryApi.ts";
-import { useContext, useEffect, useState } from "react";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import { useEffect, useState } from "react";
 import { RagDocumentResponseType } from "src/api/ragDocumentsApi.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
 
 const KnowledgeBaseSummary = ({
   ragDocuments,
+  dataSourceId,
 }: {
   ragDocuments: RagDocumentResponseType[];
+  dataSourceId: string;
 }) => {
-  const { dataSourceId } = useContext(DataSourceContext);
   const [numberOfDocsSummarized, setNumberOfDocsSummarized] = useState(0);
   const queryClient = useQueryClient();
   const docsSummarized = ragDocuments.filter(

@@ -118,7 +118,8 @@ class RagFileControllerTest {
                 Types.ConnectionType.API,
                 null,
                 null,
-                true));
+                true,
+                null));
 
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     String fileName = "test-get-rag-docs-" + new Random().nextLong();

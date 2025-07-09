@@ -46,19 +46,39 @@ import {
 } from "@ant-design/icons";
 import KnowledgeBaseSummary from "pages/DataSources/ManageTab/KnowledgeBaseSummary.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
-import { Route } from "src/routes/_layout/data/_layout-datasources/$dataSourceId.tsx";
+
+export interface CompletedIndexingType {
+  completedIndexing: number;
+  fullyIndexed: boolean;
+}
+
+export const getCompletedIndexing = (
+  ragDocuments: RagDocumentResponseType[],
+  docsLoading: boolean,
+): CompletedIndexingType => {
+  const completedIndexing = ragDocuments.filter(
+    (doc) => doc.vectorUploadTimestamp !== null,
+  ).length;
+  const fullyIndexed =
+    !docsLoading && ragDocuments.length === completedIndexing;
+  return { completedIndexing, fullyIndexed };
+};
 
 const UploadedFilesHeader = ({
   ragDocuments,
   docsLoading,
+  dataSourceId,
+  simplifiedTable,
 }: {
   ragDocuments: RagDocumentResponseType[];
   docsLoading: boolean;
+  dataSourceId: string;
+  simplifiedTable?: boolean;
 }) => {
-  const { dataSourceId } = Route.useParams();
-  const completedIndexing = ragDocuments.filter(
-    (doc) => doc.vectorUploadTimestamp !== null,
-  ).length;
+  const { completedIndexing, fullyIndexed } = getCompletedIndexing(
+    ragDocuments,
+    docsLoading,
+  );
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const totalSize = ragDocuments.reduce((acc, doc) => acc + doc.sizeInBytes, 0);
 
@@ -66,16 +86,18 @@ const UploadedFilesHeader = ({
     createSessionAndRedirect([+dataSourceId]);
   };
 
-  const fullyIndexed =
-    !docsLoading && ragDocuments.length === completedIndexing;
-
   return (
     <Flex style={{ width: "100%", marginBottom: 10 }} vertical gap={10}>
-      <Flex flex={1} style={{ width: "100%" }}>
-        <KnowledgeBaseSummary ragDocuments={ragDocuments} />
-      </Flex>
+      {!simplifiedTable && (
+        <Flex flex={1} style={{ width: "100%" }}>
+          <KnowledgeBaseSummary
+            ragDocuments={ragDocuments}
+            dataSourceId={dataSourceId}
+          />
+        </Flex>
+      )}
       <Flex justify="end" align="center" gap={16}>
-        {fullyIndexed ? (
+        {!simplifiedTable && fullyIndexed ? (
           <Tooltip title="Create a new session with this Knowledge Base">
             <Button onClick={handleCreateSession} icon={<MessageOutlined />} />
           </Tooltip>

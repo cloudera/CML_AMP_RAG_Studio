@@ -86,7 +86,7 @@ class RagDataSourceServiceTest {
         new RagDataSourceService(RagDataSourceRepository.createNull());
     var ragDataSource =
         ragDataSourceService.createRagDataSource(
-            TestData.createTestDataSourceInstance("test-name", 512, null, ConnectionType.MANUAL)
+            TestData.createTestDataSourceInstance("test-name", null, null, ConnectionType.MANUAL)
                 .withCreatedById("abc")
                 .withUpdatedById("abc"));
     assertThat(ragDataSource).isNotNull();
@@ -94,6 +94,7 @@ class RagDataSourceServiceTest {
     assertThat(ragDataSource.createdById()).isEqualTo("abc");
     assertThat(ragDataSource.updatedById()).isEqualTo("abc");
     assertThat(ragDataSource.chunkOverlapPercent()).isEqualTo(10);
+    assertThat(ragDataSource.chunkSize()).isEqualTo(512);
   }
 
   @Test

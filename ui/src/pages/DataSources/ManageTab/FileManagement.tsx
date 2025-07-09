@@ -36,42 +36,31 @@
  * DATA.
  ******************************************************************************/
 
-import React, { useContext, useState } from "react";
+import { useState } from "react";
 import { Button, Divider, Flex, Upload, UploadFile, UploadProps } from "antd";
 import { QueryKeys } from "src/api/utils.ts";
-import { InboxOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
 import { useCreateRagDocumentsMutation } from "src/api/ragDocumentsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import {
+  DragAndDrop,
+  isFulfilled,
+  isRejected,
+  RejectReasonType,
+} from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
 
-const DragAndDrop = () => {
-  return (
-    <div style={{ width: 400 }}>
-      <p className="ant-upload-drag-icon">
-        <InboxOutlined />
-      </p>
-      <div className="ant-upload-text">Drag and drop or click to upload.</div>
-    </div>
-  );
-};
-
-const isFulfilled = <T,>(
-  p: PromiseSettledResult<T>,
-): p is PromiseFulfilledResult<T> => p.status === "fulfilled";
-const isRejected = <T,>(
-  p: PromiseSettledResult<T>,
-): p is PromiseRejectedResult => p.status === "rejected";
-
-interface RejectReasonType {
-  message: string;
-}
-
-const FileManagement: React.FC = () => {
+const FileManagement = ({
+  simplifiedTable,
+  dataSourceId,
+  summarizationModel,
+}: {
+  simplifiedTable: boolean;
+  dataSourceId: string;
+  summarizationModel?: string;
+}) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const queryClient = useQueryClient();
-  const { dataSourceId } = useContext(DataSourceContext);
   const ragDocumentMutation = useCreateRagDocumentsMutation({
     onSuccess: (settledPromises) => {
       const fulfilledValues = settledPromises
@@ -111,7 +100,8 @@ const FileManagement: React.FC = () => {
   });
 
   const handleUpload = () => {
-    ragDocumentMutation.mutate({ files: fileList, dataSourceId });
+    const files = fileList.map((file) => file.originFileObj as File);
+    ragDocumentMutation.mutate({ files, dataSourceId });
   };
 
   const props: UploadProps = {
@@ -155,7 +145,11 @@ const FileManagement: React.FC = () => {
         </Button>
       </Flex>
       <Divider />
-      <UploadedFilesTable />
+      <UploadedFilesTable
+        dataSourceId={dataSourceId}
+        summarizationModel={summarizationModel}
+        simplifiedTable={simplifiedTable}
+      />
     </Flex>
   );
 };

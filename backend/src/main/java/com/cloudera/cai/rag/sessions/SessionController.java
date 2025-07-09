@@ -66,8 +66,7 @@ public class SessionController {
   @PostMapping(consumes = "application/json", produces = "application/json")
   public Session create(@RequestBody CreateSession input, HttpServletRequest request) {
     String username = usernameExtractor.extractUsername(request);
-    Session toCreate = Session.fromCreateRequest(input, username);
-    return sessionService.create(toCreate, username);
+    return sessionService.create(input, username);
   }
 
   @PostMapping(path = "/{id}", consumes = "application/json", produces = "application/json")
@@ -78,8 +77,9 @@ public class SessionController {
   }
 
   @DeleteMapping(path = "/{id}")
-  public void delete(@PathVariable Long id) {
-    sessionService.delete(id);
+  public void delete(@PathVariable Long id, HttpServletRequest request) {
+    String username = usernameExtractor.extractUsername(request);
+    sessionService.delete(id, username);
   }
 
   @GetMapping(produces = "application/json")

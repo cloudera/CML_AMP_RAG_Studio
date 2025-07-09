@@ -104,7 +104,7 @@ def streaming_query(
         check_for_tool_calling_support(llm)
 
         use_retrieval, data_source_summaries = should_use_retrieval(
-            session.data_source_ids, configuration.exclude_knowledge_base
+            session.get_all_data_source_ids(), configuration.exclude_knowledge_base
         )
 
         chat_response = stream_chat(
@@ -185,7 +185,7 @@ def get_nodes_from_output(
         if node_id not in source_node_ids_w_score:
             source_node_ids_w_score[node_id] = 0.0
 
-    extracted_data_source_ids = session.data_source_ids
+    extracted_data_source_ids = session.get_all_data_source_ids()
     source_nodes: list[NodeWithScore] = []
     if len(source_node_ids_w_score) > 0:
         try:
@@ -236,7 +236,7 @@ def query(
     should_condense_question: bool = True,
 ) -> tuple[AgentChatResponse, str | None]:
     llm = models.LLM.get(model_name=configuration.model_name)
-    retriever = build_retriever(configuration, session.data_source_ids, llm)
+    retriever = build_retriever(configuration, session.get_all_data_source_ids(), llm)
 
     chat_engine = build_flexible_chat_engine(configuration, llm, retriever)
 
