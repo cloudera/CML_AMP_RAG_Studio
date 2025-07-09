@@ -1,1 +1,1 @@
-export RELEASE_TAG=1.24.0-beta
+export RELEASE_TAG=1.24.0
