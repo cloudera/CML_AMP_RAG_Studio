@@ -84,6 +84,7 @@ const RagChatQueryInput = ({
       setStreamedAbortController,
     ],
   } = useContext(RagChatContext);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
@@ -183,95 +184,100 @@ const RagChatQueryInput = ({
             }
           />
         ) : null}
-        <ChatSessionDragAndDrop />
-        <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
-          <div style={{ position: "relative", width: "100%" }}>
-            <TextArea
-              ref={inputRef}
-              placeholder={
-                dataSourceSize && dataSourceSize > 0
-                  ? "Ask a question"
-                  : "Chat with the LLM"
-              }
-              status={dataSourcesStatus === "error" ? "error" : undefined}
-              value={userInput}
-              onChange={(e) => {
-                setUserInput(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.shiftKey && e.key === "Enter") {
-                  return null;
-                } else if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleChat(userInput);
+        <ChatSessionDragAndDrop
+          isDragging={isDragging}
+          setIsDragging={setIsDragging}
+        />
+        {!isDragging ? (
+          <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
+            <div style={{ position: "relative", width: "100%" }}>
+              <TextArea
+                ref={inputRef}
+                placeholder={
+                  dataSourceSize && dataSourceSize > 0
+                    ? "Ask a question"
+                    : "Chat with the LLM"
                 }
-              }}
-              autoSize={{ minRows: 2, maxRows: 20 }}
-              disabled={streamChatMutation.isPending}
-              style={{ paddingRight: 110 }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                right: "8px",
-                bottom: "5px",
-                display: "flex",
-                gap: "4px",
-                zIndex: 1,
-              }}
-            >
-              {streamChatMutation.isPending ? (
-                <Tooltip title="Stop streaming response">
-                  <Button
-                    icon={<StopOutlined />}
-                    type="text"
-                    size="small"
-                    style={{ color: cdlRed600 }}
-                    onClick={handleCancelStream}
-                  />
-                </Tooltip>
-              ) : (
-                <Flex gap={4} align="end">
-                  <ToolsManagerButton />
-                  <Tooltip
-                    title={
-                      excludeKnowledgeBase
-                        ? "Knowledge base excluded from chat. "
-                        : " Knowledge base included in chat. "
-                    }
-                  >
+                status={dataSourcesStatus === "error" ? "error" : undefined}
+                value={userInput}
+                onChange={(e) => {
+                  setUserInput(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.shiftKey && e.key === "Enter") {
+                    return null;
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleChat(userInput);
+                  }
+                }}
+                autoSize={{ minRows: 2, maxRows: 20 }}
+                disabled={streamChatMutation.isPending}
+                style={{ paddingRight: 110 }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  bottom: "5px",
+                  display: "flex",
+                  gap: "4px",
+                  zIndex: 1,
+                }}
+              >
+                {streamChatMutation.isPending ? (
+                  <Tooltip title="Stop streaming response">
+                    <Button
+                      icon={<StopOutlined />}
+                      type="text"
+                      size="small"
+                      style={{ color: cdlRed600 }}
+                      onClick={handleCancelStream}
+                    />
+                  </Tooltip>
+                ) : (
+                  <Flex gap={4} align="end">
+                    <ToolsManagerButton />
+                    <Tooltip
+                      title={
+                        excludeKnowledgeBase
+                          ? "Knowledge base excluded from chat. "
+                          : " Knowledge base included in chat. "
+                      }
+                    >
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={
+                          excludeKnowledgeBase ? (
+                            <DatabaseOutlined style={{ color: cdlBlue600 }} />
+                          ) : (
+                            <DatabaseFilled style={{ color: cdlBlue600 }} />
+                          )
+                        }
+                        style={{
+                          display: dataSourceSize ? "block" : "none",
+                        }}
+                        onClick={handleExcludeKnowledgeBase}
+                      />
+                    </Tooltip>
+
+                    <ChatSessionDocuments activeSession={activeSession} />
                     <Button
                       size="small"
                       type="text"
-                      icon={
-                        excludeKnowledgeBase ? (
-                          <DatabaseOutlined style={{ color: cdlBlue600 }} />
-                        ) : (
-                          <DatabaseFilled style={{ color: cdlBlue600 }} />
-                        )
-                      }
-                      style={{
-                        display: dataSourceSize ? "block" : "none",
+                      onClick={() => {
+                        handleChat(userInput);
                       }}
-                      onClick={handleExcludeKnowledgeBase}
+                      icon={<SendOutlined style={{ color: cdlBlue600 }} />}
+                      disabled={streamChatMutation.isPending}
                     />
-                  </Tooltip>
-
-                  <ChatSessionDocuments activeSession={activeSession} />
-                  <Button
-                    size="small"
-                    type="text"
-                    onClick={() => {
-                      handleChat(userInput);
-                    }}
-                    icon={<SendOutlined style={{ color: cdlBlue600 }} />}
-                    disabled={streamChatMutation.isPending}
-                  />
-                </Flex>
-              )}
+                  </Flex>
+                )}
+              </div>
             </div>
-          </div>
-        </Flex>
+          </Flex>
+        ) : null}
       </Flex>
     </div>
   );

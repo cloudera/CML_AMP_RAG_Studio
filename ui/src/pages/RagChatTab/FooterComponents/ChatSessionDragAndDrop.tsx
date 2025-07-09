@@ -37,7 +37,9 @@
  */
 
 import {
+  Dispatch,
   DragEvent as ReactDragEvent,
+  SetStateAction,
   useContext,
   useEffect,
   useRef,
@@ -50,17 +52,22 @@ import { Upload } from "antd";
 import { QueryKeys } from "src/api/utils.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  DragAndDrop,
   isFulfilled,
   isRejected,
+  MinimalDragAndDrop,
   RejectReasonType,
 } from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 import { Session } from "src/api/sessionApi.ts";
 
-export const ChatSessionDragAndDrop = () => {
+export const ChatSessionDragAndDrop = ({
+  isDragging,
+  setIsDragging,
+}: {
+  isDragging: boolean;
+  setIsDragging: Dispatch<SetStateAction<boolean>>;
+}) => {
   const { activeSession } = useContext(RagChatContext);
-  const [isDragging, setIsDragging] = useState(false);
   const queryClient = useQueryClient();
   // Counter to track nested dragenter/dragleave events
   const dragCounter = useRef(0);
@@ -192,11 +199,12 @@ export const ChatSessionDragAndDrop = () => {
   if (!isDragging) {
     return null;
   }
+
   return (
-    <Upload.Dragger onDrop={handleDrop} showUploadList={false}>
-      <DragAndDrop
-        helpText={"Drag and drop to upload documents to the chat session."}
-      />
-    </Upload.Dragger>
+    <div style={{ width: "100%" }}>
+      <Upload.Dragger onDrop={handleDrop} showUploadList={false}>
+        <MinimalDragAndDrop />
+      </Upload.Dragger>
+    </div>
   );
 };

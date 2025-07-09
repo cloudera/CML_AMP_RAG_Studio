@@ -37,17 +37,27 @@
  */
 
 import { InboxOutlined } from "@ant-design/icons";
+import { Flex } from "antd";
 
-export const DragAndDrop = ({ helpText }: { helpText?: string }) => {
+export const DragAndDrop = () => {
   return (
     <div style={{ width: 400 }}>
       <p className="ant-upload-drag-icon">
         <InboxOutlined />
       </p>
-      <div className="ant-upload-text">
-        {helpText ?? "Drag and drop or click to upload."}
-      </div>
+      <div className="ant-upload-text">Drag and drop or click to upload.</div>
     </div>
+  );
+};
+
+export const MinimalDragAndDrop = () => {
+  return (
+    <Flex gap={8} align="center" justify={"center"}>
+      <InboxOutlined style={{ color: "#1677ff" }} />
+      <div className="ant-upload-text">
+        Drag and drop to upload documents to the chat session.
+      </div>
+    </Flex>
   );
 };
 
