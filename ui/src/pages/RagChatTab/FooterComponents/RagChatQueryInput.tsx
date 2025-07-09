@@ -241,8 +241,8 @@ const RagChatQueryInput = ({
                     <Tooltip
                       title={
                         excludeKnowledgeBase
-                          ? "Knowledge base excluded from chat. "
-                          : " Knowledge base included in chat. "
+                          ? "Knowledge base excluded from chat."
+                          : "Knowledge base included in chat."
                       }
                     >
                       <Button

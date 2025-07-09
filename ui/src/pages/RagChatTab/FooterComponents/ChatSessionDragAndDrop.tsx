@@ -151,7 +151,7 @@ export const ChatSessionDragAndDrop = ({
       }
     };
 
-    const handleDrop = (e: DragEvent) => {
+    const handleDropOnWindow = (e: DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
       dragCounter.current = 0;
@@ -160,13 +160,13 @@ export const ChatSessionDragAndDrop = ({
     window.addEventListener("dragenter", handleDragEnter);
     window.addEventListener("dragleave", handleDragLeave);
     window.addEventListener("dragover", handleDragOver);
-    window.addEventListener("drop", handleDrop);
+    window.addEventListener("drop", handleDropOnWindow);
 
     return () => {
       window.removeEventListener("dragenter", handleDragEnter);
       window.removeEventListener("dragleave", handleDragLeave);
       window.removeEventListener("dragover", handleDragOver);
-      window.removeEventListener("drop", handleDrop);
+      window.removeEventListener("drop", handleDropOnWindow);
     };
   }, []);
 
