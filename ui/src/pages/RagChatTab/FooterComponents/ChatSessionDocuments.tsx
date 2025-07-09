@@ -52,6 +52,9 @@ import {
   CompletedIndexingType,
   getCompletedIndexing,
 } from "pages/DataSources/ManageTab/UploadedFilesHeader.tsx";
+import { useQueryClient } from "@tanstack/react-query";
+import { suggestedQuestionKey } from "src/api/ragQueryApi.ts";
+import { useEffect } from "react";
 
 type RagDocumentType = RagDocumentResponseType & { key: number };
 
@@ -108,6 +111,7 @@ const ChatSessionDocuments = ({
   activeSession?: Session;
 }) => {
   const documentModal = useModal();
+  const queryClient = useQueryClient();
 
   const { data: ragDocuments, isFetching: ragDocumentsIsFetching } =
     useGetRagDocuments(
@@ -119,6 +123,16 @@ const ChatSessionDocuments = ({
     ragDocuments,
     ragDocumentsIsFetching,
   );
+
+  useEffect(() => {
+    if (indexingStatus.fullyIndexed) {
+      queryClient
+        .invalidateQueries({
+          queryKey: suggestedQuestionKey(activeSession?.id),
+        })
+        .catch(() => null);
+    }
+  }, [indexingStatus.fullyIndexed, activeSession?.id]);
 
   if (!activeSession?.associatedDataSourceId) {
     return null;
