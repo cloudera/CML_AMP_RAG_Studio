@@ -63,6 +63,7 @@ import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/Suggeste
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
+import useModal from "src/utils/useModal.ts";
 
 const { TextArea } = Input;
 
@@ -117,6 +118,8 @@ const RagChatQueryInput = ({
       setStreamedAbortController(ctrl);
     },
   });
+
+  const documentModal = useModal();
 
   useEffect(() => {
     // Check if any modal is currently open
@@ -184,10 +187,12 @@ const RagChatQueryInput = ({
             }
           />
         ) : null}
-        <ChatSessionDragAndDrop
-          isDragging={isDragging}
-          setIsDragging={setIsDragging}
-        />
+        {!documentModal.isModalOpen ? (
+          <ChatSessionDragAndDrop
+            isDragging={isDragging}
+            setIsDragging={setIsDragging}
+          />
+        ) : null}
         {!isDragging ? (
           <Flex style={{ width: "100%" }} justify="space-between" gap={5}>
             <div style={{ position: "relative", width: "100%" }}>
@@ -262,7 +267,10 @@ const RagChatQueryInput = ({
                       />
                     </Tooltip>
 
-                    <ChatSessionDocuments activeSession={activeSession} />
+                    <ChatSessionDocuments
+                      activeSession={activeSession}
+                      documentModal={documentModal}
+                    />
                     <Button
                       size="small"
                       type="text"

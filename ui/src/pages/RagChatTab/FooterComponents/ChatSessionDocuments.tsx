@@ -40,7 +40,7 @@ import { Session } from "src/api/sessionApi.ts";
 import { Badge, Button, Modal, Tooltip } from "antd";
 import DocumentationIcon from "src/cuix/icons/DocumentationIcon.ts";
 import { cdlAmber600, cdlBlue600, cdlGreen600 } from "src/cuix/variables.ts";
-import useModal from "src/utils/useModal.ts";
+import { ModalHook } from "src/utils/useModal.ts";
 import FileManagement from "pages/DataSources/ManageTab/FileManagement.tsx";
 import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import {
@@ -107,10 +107,11 @@ const title = (
 
 const ChatSessionDocuments = ({
   activeSession,
+  documentModal,
 }: {
   activeSession?: Session;
+  documentModal: ModalHook;
 }) => {
-  const documentModal = useModal();
   const queryClient = useQueryClient();
 
   const { data: ragDocuments, isFetching: ragDocumentsIsFetching } =
@@ -176,6 +177,7 @@ const ChatSessionDocuments = ({
         }}
         destroyOnHidden={true}
         width={800}
+        maskClosable={false}
       >
         <FileManagement
           simplifiedTable={true}
