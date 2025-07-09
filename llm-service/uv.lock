@@ -2369,7 +2369,7 @@ requires-dist = [
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.9.1" },
-    { name = "mlflow", specifier = "<=2.22.1" },
+    { name = "mlflow", specifier = "==2.22.1" },
     { name = "opik", specifier = ">=1.7.22" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pillow", specifier = ">=10.4.0" },
