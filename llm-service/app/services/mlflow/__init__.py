@@ -87,7 +87,7 @@ def chat_log_ml_flow_params(
     session: Session, query_configuration: QueryConfiguration, user_name: Optional[str]
 ) -> dict[str, Any]:
     data_source_metadata = data_sources_metadata_api.get_metadata(
-        session.data_source_ids[0]
+        session.get_all_data_source_ids()[0]
     )
     return {
         "top_k": query_configuration.top_k,
@@ -99,7 +99,7 @@ def chat_log_ml_flow_params(
         "use_summary_filter": query_configuration.use_summary_filter,
         "session_id": session.id,
         "project_id": session.project_id,
-        "data_source_ids": session.data_source_ids,
+        "data_source_ids": session.get_all_data_source_ids(),
         "user_name": user_name,
         "embedding_model": data_source_metadata.embedding_model,
         "chunk_size": data_source_metadata.chunk_size,
@@ -115,7 +115,7 @@ def record_rag_mlflow_run(
     session: Session,
     user_name: Optional[str],
 ) -> None:
-    if not session.data_source_ids:
+    if not session.get_all_data_source_ids():
         record_direct_llm_mlflow_run(response_id, session, user_name)
         return
     params = chat_log_ml_flow_params(session, query_configuration, user_name)
@@ -154,7 +154,7 @@ def record_direct_llm_mlflow_run(
                 "inference_model": session.inference_model,
                 "exclude_knowledge_base": True,
                 "session_id": session.id,
-                "data_source_ids": session.data_source_ids,
+                "data_source_ids": session.get_all_data_source_ids(),
                 "user_name": user_name,
             },
             "tags": {

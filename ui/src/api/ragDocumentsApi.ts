@@ -47,7 +47,7 @@ import {
   ragPath,
   UseMutationType,
 } from "src/api/utils.ts";
-import { GetProp, UploadFile, UploadProps } from "antd";
+import { GetProp, UploadProps } from "antd";
 
 type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
 
@@ -74,7 +74,7 @@ const createRagDocumentsMutation = async ({
   files,
   dataSourceId,
 }: {
-  files: UploadFile[];
+  files: File[];
   dataSourceId: string;
 }) => {
   const promises = files.map((file) =>
@@ -84,10 +84,7 @@ const createRagDocumentsMutation = async ({
   return Promise.allSettled(promises);
 };
 
-const createRagDocumentMutation = async (
-  file: UploadFile,
-  dataSourceId: string,
-) => {
+const createRagDocumentMutation = async (file: File, dataSourceId: string) => {
   const formData = new FormData();
   formData.append("file", file as FileType, file.name);
   return await fetch(
@@ -140,12 +137,21 @@ export interface RagDocumentResponseType {
 }
 
 export const useGetRagDocuments = (
-  dataSourceId: string,
+  dataSourceId?: string,
   summarizationModel?: string,
 ) => {
   return useQuery({
     queryKey: [QueryKeys.getRagDocuments, { dataSourceId }],
-    queryFn: () => getRagDocuments(dataSourceId),
+    queryFn: () => {
+      if (!dataSourceId) {
+        return [];
+      }
+      return getRagDocuments(dataSourceId).then((res) => {
+        return res.map((doc) => ({ ...doc, key: doc.id }));
+      });
+    },
+    enabled: !!dataSourceId,
+    initialData: [],
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) {

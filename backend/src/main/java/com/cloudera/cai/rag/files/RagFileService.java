@@ -72,6 +72,7 @@ public class RagFileService {
   private final String s3PathPrefix;
   private final RagDataSourceRepository ragDataSourceRepository;
   private final RagFileDeleteReconciler ragFileDeleteReconciler;
+  private final RagFileSummaryReconciler ragFileSummaryReconciler;
 
   @Autowired
   public RagFileService(
@@ -81,7 +82,8 @@ public class RagFileService {
       RagFileIndexReconciler ragFileIndexReconciler,
       @Qualifier("s3BucketPrefix") String s3PathPrefix,
       RagDataSourceRepository ragDataSourceRepository,
-      RagFileDeleteReconciler ragFileDeleteReconciler) {
+      RagFileDeleteReconciler ragFileDeleteReconciler,
+      RagFileSummaryReconciler ragFileSummaryReconciler) {
     this.idGenerator = idGenerator;
     this.ragFileRepository = ragFileRepository;
     this.ragFileUploader = ragFileUploader;
@@ -89,6 +91,7 @@ public class RagFileService {
     this.s3PathPrefix = s3PathPrefix;
     this.ragDataSourceRepository = ragDataSourceRepository;
     this.ragFileDeleteReconciler = ragFileDeleteReconciler;
+    this.ragFileSummaryReconciler = ragFileSummaryReconciler;
   }
 
   public List<RagDocumentMetadata> saveRagFile(
@@ -148,6 +151,7 @@ public class RagFileService {
     log.info("Saved document with id: {}", id);
 
     ragFileIndexReconciler.submit(ragDocument.withId(id));
+    ragFileSummaryReconciler.submit(ragDocument.withId(id));
 
     return new RagDocumentMetadata(
         ragDocument.filename(), documentId, ragDocument.extension(), ragDocument.sizeInBytes());
@@ -206,19 +210,6 @@ public class RagFileService {
     ragFileDeleteReconciler.submit(document);
   }
 
-  // Nullables stuff down here
-
-  public static RagFileService createNull(String... dummyIds) {
-    return new RagFileService(
-        IdGenerator.createNull(dummyIds),
-        RagFileRepository.createNull(),
-        RagFileUploader.createNull(),
-        RagFileIndexReconciler.createNull(),
-        "prefix",
-        RagDataSourceRepository.createNull(),
-        RagFileDeleteReconciler.createNull());
-  }
-
   public List<RagDocument> getRagDocuments(Long dataSourceId) {
     return ragFileRepository.getRagDocuments(dataSourceId);
   }
@@ -258,5 +249,19 @@ public class RagFileService {
     public long getSize() {
       return size;
     }
+  }
+
+  // Nullables stuff down here
+
+  public static RagFileService createNull(String... dummyIds) {
+    return new RagFileService(
+        IdGenerator.createNull(dummyIds),
+        RagFileRepository.createNull(),
+        RagFileUploader.createNull(),
+        RagFileIndexReconciler.createNull(),
+        "prefix",
+        RagDataSourceRepository.createNull(),
+        RagFileDeleteReconciler.createNull(),
+        RagFileSummaryReconciler.createNull());
   }
 }

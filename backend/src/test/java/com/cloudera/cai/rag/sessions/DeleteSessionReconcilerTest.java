@@ -72,7 +72,7 @@ class DeleteSessionReconcilerTest {
 
     reconciler.resync();
     await().until(reconciler::isEmpty);
-    ragSessionRepository.delete(sessionId);
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
 
     reconciler.resync();
     await().until(reconciler::isEmpty);

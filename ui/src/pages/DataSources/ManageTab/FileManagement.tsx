@@ -36,42 +36,32 @@
  * DATA.
  ******************************************************************************/
 
-import React, { useContext, useState } from "react";
-import { Button, Divider, Flex, Upload, UploadFile, UploadProps } from "antd";
+import { useState } from "react";
+import { Button, Divider, Flex, Upload, UploadProps } from "antd";
 import { QueryKeys } from "src/api/utils.ts";
-import { InboxOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import UploadedFilesTable from "pages/DataSources/ManageTab/UploadedFilesTable.tsx";
 import { useCreateRagDocumentsMutation } from "src/api/ragDocumentsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { DataSourceContext } from "pages/DataSources/Layout.tsx";
+import {
+  DragAndDrop,
+  isFulfilled,
+  isRejected,
+  RejectReasonType,
+} from "pages/DataSources/ManageTab/fileManagementUtils.tsx";
+import { RcFile } from "antd/lib/upload";
 
-const DragAndDrop = () => {
-  return (
-    <div style={{ width: 400 }}>
-      <p className="ant-upload-drag-icon">
-        <InboxOutlined />
-      </p>
-      <div className="ant-upload-text">Drag and drop or click to upload.</div>
-    </div>
-  );
-};
-
-const isFulfilled = <T,>(
-  p: PromiseSettledResult<T>,
-): p is PromiseFulfilledResult<T> => p.status === "fulfilled";
-const isRejected = <T,>(
-  p: PromiseSettledResult<T>,
-): p is PromiseRejectedResult => p.status === "rejected";
-
-interface RejectReasonType {
-  message: string;
-}
-
-const FileManagement: React.FC = () => {
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+const FileManagement = ({
+  simplifiedTable,
+  dataSourceId,
+  summarizationModel,
+}: {
+  simplifiedTable: boolean;
+  dataSourceId: string;
+  summarizationModel?: string;
+}) => {
+  const [fileList, setFileList] = useState<RcFile[]>([]);
   const queryClient = useQueryClient();
-  const { dataSourceId } = useContext(DataSourceContext);
   const ragDocumentMutation = useCreateRagDocumentsMutation({
     onSuccess: (settledPromises) => {
       const fulfilledValues = settledPromises
@@ -116,9 +106,20 @@ const FileManagement: React.FC = () => {
 
   const props: UploadProps = {
     onRemove: (file) => {
-      const index = fileList.indexOf(file);
+      let fileIndex: number | undefined = undefined;
+      for (const [idx, f] of fileList.entries()) {
+        if (f.uid === file.uid) {
+          fileIndex = idx;
+          break;
+        }
+      }
+
+      if (fileIndex === undefined) {
+        return;
+      }
+
       const newFileList = fileList.slice();
-      newFileList.splice(index, 1);
+      newFileList.splice(fileIndex, 1);
       setFileList(newFileList);
     },
     beforeUpload: (_, newFileLIst) => {
@@ -155,7 +156,11 @@ const FileManagement: React.FC = () => {
         </Button>
       </Flex>
       <Divider />
-      <UploadedFilesTable />
+      <UploadedFilesTable
+        dataSourceId={dataSourceId}
+        summarizationModel={summarizationModel}
+        simplifiedTable={simplifiedTable}
+      />
     </Flex>
   );
 };

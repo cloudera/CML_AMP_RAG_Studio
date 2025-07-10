@@ -219,12 +219,15 @@ def stream_chat(
         )
         tools.insert(0, retrieval_tool)
 
-    gen, source_nodes = _run_streamer(chat_messages, enhanced_query, llm, tools)
+    gen, source_nodes = _run_streamer(
+        chat_engine, chat_messages, enhanced_query, llm, tools
+    )
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
 
 
 def _run_streamer(
+    chat_engine: Optional[FlexibleContextChatEngine],
     chat_messages: list[ChatMessage],
     enhanced_query: str,
     llm: FunctionCallingLLM,
@@ -237,11 +240,21 @@ def _run_streamer(
 
     # If no tools are provided, we can directly stream the chat response
     if not tools:
-        chat_gen = llm.stream_chat(
+        if chat_engine:
+            chat_gen: StreamingAgentChatResponse = chat_engine.stream_chat(
+                message=enhanced_query,
+                chat_history=chat_messages,
+            )
+            if not chat_gen.chat_stream:
+                raise RuntimeError("Chat engine did not return a chat stream. ")
+            return chat_gen.chat_stream, chat_gen.source_nodes
+
+        # If no chat engine is provided, we can use the LLM directly
+        direct_chat_gen = llm.stream_chat(
             messages=chat_messages
             + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
         )
-        return chat_gen, source_nodes
+        return direct_chat_gen, source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)

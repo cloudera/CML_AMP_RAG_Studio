@@ -183,7 +183,8 @@ class RagFileIndexReconcilerTest {
             Types.ConnectionType.API,
             null,
             null,
-            true));
+            true,
+            null));
   }
 
   @Test
@@ -274,7 +275,8 @@ class RagFileIndexReconcilerTest {
             RagDataSourceRepository.createNull(),
             reconcilerConfig,
             RagFileRepository.createNull(),
-            OpenTelemetry.noop());
+            OpenTelemetry.noop(),
+            RagFileSummaryReconciler.createNull());
     reconciler.init();
     return reconciler;
   }
