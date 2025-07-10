@@ -116,7 +116,8 @@ def should_use_retrieval(
         data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
         if data_source_summary_indexer:
             data_source_summary = data_source_summary_indexer.get_full_summary()
-            data_source_summaries[data_source_id] = data_source_summary
+            if data_source_summary:
+                data_source_summaries[data_source_id] = data_source_summary
     return len(data_source_ids) > 0, data_source_summaries
 
 
@@ -257,16 +258,26 @@ def _run_streamer(
         # If no chat engine is provided, we can use the LLM directly
         direct_chat_gen = llm.stream_chat(
             messages=chat_messages
-            + [ChatMessage(role=MessageRole.USER, blocks=[
-                TextBlock(text=enhanced_query),
-            ])]
+            + [
+                ChatMessage(
+                    role=MessageRole.USER,
+                    blocks=[
+                        TextBlock(text=enhanced_query),
+                    ],
+                )
+            ]
         )
         return direct_chat_gen, source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
-        handler = agent.run(user_msg=ChatMessage(blocks=[
-            TextBlock(text=enhanced_query),
-        ]), chat_history=chat_messages)
+        handler = agent.run(
+            user_msg=ChatMessage(
+                blocks=[
+                    TextBlock(text=enhanced_query),
+                ]
+            ),
+            chat_history=chat_messages,
+        )
 
         async for event in handler.stream_events():
             if isinstance(event, AgentSetup):
