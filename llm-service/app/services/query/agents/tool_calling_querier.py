@@ -51,7 +51,13 @@ from llama_index.core.agent.workflow import (
     AgentInput,
     AgentSetup,
 )
-from llama_index.core.base.llms.types import ChatMessage, MessageRole, ChatResponse
+from llama_index.core.base.llms.types import (
+    ChatMessage,
+    MessageRole,
+    ChatResponse,
+    TextBlock,
+    ImageBlock,
+)
 from llama_index.core.chat_engine.types import StreamingAgentChatResponse
 from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
@@ -59,6 +65,7 @@ from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import get_model_name
+from pydantic import FilePath
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -252,12 +259,16 @@ def _run_streamer(
         # If no chat engine is provided, we can use the LLM directly
         direct_chat_gen = llm.stream_chat(
             messages=chat_messages
-            + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+            + [ChatMessage(role=MessageRole.USER, blocks=[
+                TextBlock(text=enhanced_query),
+            ])]
         )
         return direct_chat_gen, source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
-        handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
+        handler = agent.run(user_msg=ChatMessage(blocks=[
+            TextBlock(text=enhanced_query),
+        ]), chat_history=chat_messages)
 
         async for event in handler.stream_events():
             if isinstance(event, AgentSetup):
