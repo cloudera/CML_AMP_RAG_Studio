@@ -230,7 +230,6 @@ const UploadedFilesTable = ({
     <>
       <UploadedFilesHeader
         ragDocuments={ragDocuments}
-        docsLoading={ragDocuments.length > 0 && ragDocumentsIsPending}
         dataSourceId={dataSourceId}
         simplifiedTable={simplifiedTable}
       />

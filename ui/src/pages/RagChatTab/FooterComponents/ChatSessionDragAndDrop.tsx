@@ -203,7 +203,7 @@ export const ChatSessionDragAndDrop = ({
   return (
     <div style={{ width: "100%" }}>
       <Upload.Dragger onDrop={handleDrop} showUploadList={false}>
-        <MinimalDragAndDrop />
+        <MinimalDragAndDrop setIsDragging={setIsDragging} />
       </Upload.Dragger>
     </div>
   );
