@@ -71,7 +71,7 @@ def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
 
 
 def stream_completion(
-    session_id: int, question: str, model_name: str
+    session_id: int, query: ChatMessage, model_name: str
 ) -> Generator[ChatResponse, None, None]:
     """
     Streamed version of the completion function.
@@ -84,7 +84,7 @@ def stream_completion(
             map(lambda x: make_chat_messages(x), chat_history)
         )
     )
-    messages.append(ChatMessage.from_str(question, role="user"))
+    messages.append(query)
 
     stream = model.stream_chat(messages)
     return stream

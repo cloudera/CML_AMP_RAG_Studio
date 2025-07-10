@@ -39,11 +39,17 @@ import time
 import uuid
 from typing import Optional, Generator
 
-from llama_index.core.base.llms.types import ChatResponse, ChatMessage, TextBlock
+from llama_index.core.base.llms.types import (
+    ChatResponse,
+    ChatMessage,
+    TextBlock,
+    ImageBlock,
+)
 from llama_index.core.chat_engine.types import (
     AgentChatResponse,
     StreamingAgentChatResponse,
 )
+from pydantic import FilePath
 
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
@@ -95,7 +101,6 @@ def stream_chat(
     if not query_configuration.use_tool_calling and (
         len(session.get_all_data_source_ids()) == 0 or total_data_sources_size == 0
     ):
-        # put a poison pill in the queue to stop the tool events stream
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
@@ -194,7 +199,9 @@ def _stream_direct_llm_chat(
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.stream_completion(
-        session.id, query, session.inference_model
+        session.id, ChatMessage(blocks=[
+            TextBlock(text=query),
+        ]), session.inference_model
     )
     response: ChatResponse = ChatResponse(message=ChatMessage(blocks=[
         TextBlock(text=query)
