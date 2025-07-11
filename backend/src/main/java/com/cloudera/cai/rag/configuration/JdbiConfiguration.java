@@ -110,10 +110,6 @@ public class JdbiConfiguration {
   }
 
   // nullables below here
-  public static DatabaseOperations createNull() {
-    return new DatabaseOperationsImpl(createJdbi());
-  }
-
   public static DatabaseOperations createNull(RuntimeException... exceptions) {
     return new DatabaseOperationsStub(createJdbi(), exceptions);
   }
