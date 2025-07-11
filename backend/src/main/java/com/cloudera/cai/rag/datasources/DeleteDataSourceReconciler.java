@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.rag.datasources;
 
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.Tracker;
@@ -45,30 +46,29 @@ import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.jdbi.v3.core.Jdbi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 public class DeleteDataSourceReconciler extends BaseReconciler<Long> {
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final RagBackendClient ragBackendClient;
 
   public DeleteDataSourceReconciler(
-      Jdbi jdbi,
+      DatabaseOperations databaseOperations,
       RagBackendClient ragBackendClient,
       @Qualifier("reconcilerConfig") ReconcilerConfig reconcilerConfig,
       OpenTelemetry openTelemetry) {
     super(reconcilerConfig, openTelemetry);
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
     this.ragBackendClient = ragBackendClient;
   }
 
   @Override
   public void resync() {
     log.debug("Checking for data sources to delete");
-    jdbi.useHandle(
+    databaseOperations.useHandle(
         handle ->
             handle
                 .createQuery("SELECT id FROM rag_data_source WHERE deleted IS NOT NULL")
@@ -83,7 +83,7 @@ public class DeleteDataSourceReconciler extends BaseReconciler<Long> {
       ragBackendClient.deleteDataSource(dataSourceId);
       log.info(
           "deleting data source and documents from the database. data source id: {}", dataSourceId);
-      jdbi.useTransaction(
+      databaseOperations.useTransaction(
           handle -> {
             handle.execute("DELETE FROM RAG_DATA_SOURCE WHERE ID = ?", dataSourceId);
             handle.execute(

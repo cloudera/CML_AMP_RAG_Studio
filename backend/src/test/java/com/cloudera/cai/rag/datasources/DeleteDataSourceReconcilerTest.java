@@ -44,6 +44,7 @@ import static org.awaitility.Awaitility.await;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.rag.files.RagFileRepository;
@@ -53,14 +54,13 @@ import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
 import java.util.UUID;
-import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Test;
 
 class DeleteDataSourceReconcilerTest {
   private final RagDataSourceRepository ragDataSourceRepository =
       RagDataSourceRepository.createNull();
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
-  private final Jdbi jdbi = JdbiConfiguration.createNull();
+  private final DatabaseOperations databaseOperations = JdbiConfiguration.createNull();
 
   @Test
   void reconcile() {
@@ -87,7 +87,7 @@ class DeleteDataSourceReconcilerTest {
     ragFileRepository.insertDocumentMetadata(document);
     reconciler.resync();
     await().until(reconciler::isEmpty);
-    jdbi.useHandle(
+    databaseOperations.useHandle(
         handle -> {
           ragDataSourceRepository.deleteDataSource(handle, dataSourceId);
         });
@@ -112,13 +112,16 @@ class DeleteDataSourceReconcilerTest {
     var reconcilerConfig = ReconcilerConfig.builder().isTestReconciler(true).build();
     var reconciler =
         new DeleteDataSourceReconciler(
-            jdbi, RagBackendClient.createNull(tracker), reconcilerConfig, OpenTelemetry.noop());
+            databaseOperations,
+            RagBackendClient.createNull(tracker),
+            reconcilerConfig,
+            OpenTelemetry.noop());
     reconciler.init();
     return reconciler;
   }
 
   private Boolean dataSourceIsInTheDatabase(Long dataSourceId) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           Integer count;
           try (var query =

@@ -44,6 +44,7 @@ import static org.awaitility.Awaitility.await;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.Types.RagDocument;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.external.RagBackendClient;
@@ -58,7 +59,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Test;
 
 class RagFileIndexReconcilerTest {
@@ -264,13 +264,13 @@ class RagFileIndexReconcilerTest {
 
   private RagFileIndexReconciler createTestInstance(
       Tracker<RagBackendClient.TrackedRequest<?>> tracker, List<Runnable> runnables) {
-    Jdbi jdbi = new JdbiConfiguration().jdbi();
+    DatabaseOperations databaseOperations = JdbiConfiguration.createNull();
     var reconcilerConfig = ReconcilerConfig.builder().isTestReconciler(true).workerCount(1).build();
 
     RagFileIndexReconciler reconciler =
         new RagFileIndexReconciler(
             "rag-files",
-            jdbi,
+            databaseOperations,
             RagBackendClient.createNull(tracker, runnables),
             RagDataSourceRepository.createNull(),
             reconcilerConfig,

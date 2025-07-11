@@ -42,10 +42,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.UUID;
-import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.Test;
 
 class SessionRepositoryTest {
@@ -112,8 +112,8 @@ class SessionRepositoryTest {
                 .withCreatedById(username)
                 .withUpdatedById(username));
     assertThat(sessionRepository.getSessionById(id, username)).isNotNull();
-    Jdbi jdbi = JdbiConfiguration.createNull();
-    jdbi.useTransaction(
+    DatabaseOperations databaseOperations = JdbiConfiguration.createNull();
+    databaseOperations.useTransaction(
         handle -> {
           sessionRepository.delete(handle, id);
         });

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,24 +36,36 @@
  * DATA.
  ******************************************************************************/
 
-package com.cloudera.cai.util;
+package com.cloudera.cai.rag.configuration;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.jdbi.v3.core.HandleCallback;
+import org.jdbi.v3.core.HandleConsumer;
+import org.jdbi.v3.core.Jdbi;
 
-public class Tracker<T> {
-  private List<T> values = Collections.synchronizedList(new ArrayList<T>());
+/**
+ * Database operations implementation that delegates to a Jdbi instance. This is the production
+ * implementation used throughout the application.
+ */
+public class DatabaseOperations {
+  private final Jdbi jdbi;
 
-  public void track(T t) {
-    values.add(t);
+  public DatabaseOperations(Jdbi jdbi) {
+    this.jdbi = jdbi;
   }
 
-  public List<T> getValues() {
-    return values;
+  public <X extends Exception> void useHandle(HandleConsumer<X> handleConsumer) throws X {
+    jdbi.useHandle(handleConsumer);
   }
 
-  public void clear() {
-    values.clear();
+  public <X extends Exception> void useTransaction(HandleConsumer<X> handleConsumer) throws X {
+    jdbi.useTransaction(handleConsumer);
+  }
+
+  public <T, X extends Exception> T inTransaction(HandleCallback<T, X> handleCallback) throws X {
+    return jdbi.inTransaction(handleCallback);
+  }
+
+  public <T, X extends Exception> T withHandle(HandleCallback<T, X> handleCallback) throws X {
+    return jdbi.withHandle(handleCallback);
   }
 }
