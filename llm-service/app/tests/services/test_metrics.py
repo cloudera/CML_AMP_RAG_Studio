@@ -36,16 +36,35 @@
 #  DATA.
 #
 import functools
+import json
 import random
 import uuid
 from typing import Any, TypeVar, Optional
+from unittest.mock import Mock, patch
 
 import hypothesis
+import pandas as pd
+import pytest
 from hypothesis import given, example, settings
 from hypothesis import strategies as st
-from mlflow.entities import RunInfo, Run, RunData, Param
+from mlflow.entities import (
+    RunInfo,
+    Run,
+    RunData,
+    Param,
+    Metric,
+    Experiment,
+    FileInfo,
+    RunTag,
+)
 
-from app.services.metrics import MetricFilter, get_relevant_runs
+from app.services.metrics import (
+    MetricFilter,
+    get_relevant_runs,
+    generate_metrics,
+    Metrics,
+)
+from app.services.metadata_apis.app_metrics_api import MetadataMetrics
 
 
 # mypy: disable-error-code="no-untyped-call"
@@ -307,3 +326,528 @@ def create_run_from_filter(
         run_data["rerank_model_name"] = None
 
     return make_test_run(**run_data)
+
+
+# Tests for generate_metrics function
+
+
+def create_test_run_with_metrics(
+    run_id: str = "test_run_1",
+    experiment_id: str = "exp_1",
+    start_time: int = 1000,
+    rating: float = 1.0,
+    max_score: float = 0.8,
+    input_word_count: int = 50,
+    output_word_count: int = 100,
+    faithfulness: float = 0.9,
+    relevance: float = 0.85,
+    user_name: str = "test_user",
+    data_source_ids: list[int] = [1],
+    project_id: int = 1,
+    inference_model: str = "test_model",
+    rerank_model_name: Optional[str] = None,
+    direct_llm: bool = False,
+    **kwargs: Any,
+) -> Run:
+    """Create a test run with metrics and parameters for testing generate_metrics."""
+    run_info = RunInfo(
+        run_uuid=run_id,
+        experiment_id=experiment_id,
+        user_id="test_user",
+        status="FINISHED",
+        start_time=start_time,
+        end_time=start_time + 1000,
+        lifecycle_stage="active",
+        artifact_uri=f"artifacts://{run_id}",
+    )
+
+    # Create parameters
+    params = [
+        Param(key="user_name", value=user_name),
+        Param(key="data_source_ids", value=json.dumps(data_source_ids)),
+        Param(key="project_id", value=str(project_id)),
+        Param(key="inference_model", value=inference_model),
+    ]
+
+    if rerank_model_name is not None:
+        params.append(Param(key="rerank_model_name", value=rerank_model_name))
+
+    # Add any additional parameters from kwargs
+    for key, value in kwargs.items():
+        params.append(Param(key=key, value=str(value)))
+
+    # Create metrics
+    metrics = [
+        Metric(key="rating", value=rating, timestamp=start_time, step=0),
+        Metric(key="max_score", value=max_score, timestamp=start_time, step=0),
+        Metric(
+            key="input_word_count", value=input_word_count, timestamp=start_time, step=0
+        ),
+        Metric(
+            key="output_word_count",
+            value=output_word_count,
+            timestamp=start_time,
+            step=0,
+        ),
+        Metric(key="faithfulness", value=faithfulness, timestamp=start_time, step=0),
+        Metric(key="relevance", value=relevance, timestamp=start_time, step=0),
+    ]
+
+    # Create tags
+    tags = []
+    if direct_llm:
+        tags.append(RunTag(key="direct_llm", value="True"))
+
+    run_data = RunData(
+        params=params,
+        metrics=metrics,
+        tags=tags,
+    )
+
+    return Run(run_info=run_info, run_data=run_data)
+
+
+@pytest.fixture
+def mock_metadata_metrics() -> MetadataMetrics:
+    """Mock metadata metrics."""
+    return MetadataMetrics(
+        number_of_data_sources=5,
+        number_of_documents=100,
+        number_of_sessions=50,
+    )
+
+
+@pytest.fixture
+def sample_experiments() -> list[Experiment]:
+    """Sample experiments for testing."""
+    return [
+        Experiment(
+            experiment_id="exp_1",
+            name="test_experiment",
+            artifact_location="artifacts://exp_1",
+            lifecycle_stage="active",
+            tags={},
+        ),
+        Experiment(
+            experiment_id="datasource_exp_1",
+            name="datasource_test",
+            artifact_location="artifacts://datasource_exp_1",
+            lifecycle_stage="active",
+            tags={},
+        ),
+    ]
+
+
+class TestGenerateMetrics:
+    """Test suite for the generate_metrics function."""
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    @patch("app.services.metrics.mlflow.artifacts.load_text")
+    def test_generate_metrics_basic(
+        self,
+        mock_load_text: Mock,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test basic metrics generation with simple data."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        # Create test runs
+        runs = [
+            create_test_run_with_metrics(
+                run_id="run_1",
+                rating=1.0,
+                user_name="user1",
+                start_time=1000,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_2",
+                rating=-1.0,
+                user_name="user2",
+                start_time=2000,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_3",
+                rating=0.0,
+                user_name="user1",
+                start_time=3000,
+            ),
+        ]
+
+        mock_search_runs.return_value = runs
+        mock_list_artifacts.return_value = []
+
+        # Execute
+        result = generate_metrics()
+
+        # Assertions
+        assert isinstance(result, Metrics)
+        assert result.positive_ratings == 1
+        assert result.negative_ratings == 1
+        assert result.no_ratings == 1
+        assert result.count_of_interactions == 3
+        assert result.count_of_direct_interactions == 0
+        assert result.unique_users == 2
+        assert result.metadata_metrics == mock_metadata_metrics
+        assert len(result.max_score_over_time) == 3
+        assert len(result.input_word_count_over_time) == 3
+        assert len(result.output_word_count_over_time) == 3
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    def test_generate_metrics_with_filter(
+        self,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test metrics generation with filter applied."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        # Create test runs with different data source IDs
+        runs = [
+            create_test_run_with_metrics(
+                run_id="run_1",
+                data_source_ids=[1],
+                rating=1.0,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_2",
+                data_source_ids=[2],
+                rating=1.0,
+            ),
+        ]
+
+        mock_search_runs.return_value = runs
+        mock_list_artifacts.return_value = []
+
+        # Execute with filter
+        metric_filter = MetricFilter(data_source_id=1)
+        result = generate_metrics(metric_filter)
+
+        # Should only count runs with data_source_id=1
+        assert result.positive_ratings == 1
+        assert result.count_of_interactions == 1
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    def test_generate_metrics_with_direct_llm(
+        self,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test metrics generation with direct LLM interactions."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        # Create runs with direct LLM tag
+        runs = [
+            create_test_run_with_metrics(
+                run_id="run_1",
+                direct_llm=True,
+                rating=1.0,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_2",
+                direct_llm=False,
+                rating=1.0,
+            ),
+        ]
+
+        mock_search_runs.return_value = runs
+        mock_list_artifacts.return_value = []
+
+        # Execute
+        result = generate_metrics()
+
+        # Assertions
+        assert result.count_of_interactions == 2
+        assert result.count_of_direct_interactions == 1
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    @patch("app.services.metrics.mlflow.artifacts.load_text")
+    def test_generate_metrics_with_artifacts(
+        self,
+        mock_load_text: Mock,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test metrics generation with artifact processing."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        runs = [
+            create_test_run_with_metrics(
+                run_id="run_1",
+                rating=1.0,
+            ),
+        ]
+
+        mock_search_runs.return_value = runs
+
+        # Mock artifacts
+        mock_list_artifacts.return_value = [
+            FileInfo(path="response_details.json", is_dir=False, file_size=100),
+            FileInfo(path="feedback.json", is_dir=False, file_size=50),
+        ]
+
+        # Mock artifact content
+        response_details_df = pd.DataFrame(
+            {
+                "score": [0.8, 0.9, 0.7],
+                "other_col": ["a", "b", "c"],
+            }
+        )
+        feedback_df = pd.DataFrame(
+            {
+                "feedback": ["Inaccurate", "Too short", "Custom feedback"],
+                "other_col": ["x", "y", "z"],
+            }
+        )
+
+        def mock_load_text_side_effect(path: str) -> str:
+            if "response_details.json" in path:
+                return response_details_df.to_json(orient="split") or "{}"
+            elif "feedback.json" in path:
+                return feedback_df.to_json(orient="split") or "{}"
+            return "{}"
+
+        mock_load_text.side_effect = mock_load_text_side_effect
+
+        # Execute
+        result = generate_metrics()
+
+        # Assertions
+        assert result.aggregated_feedback == {
+            "Inaccurate": 1,
+            "Too short": 1,
+            "Other": 1,  # Custom feedback should be categorized as "Other"
+        }
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    def test_generate_metrics_evaluation_averages(
+        self,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test evaluation averages calculation."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        # Create runs with faithfulness and relevance metrics
+        runs = [
+            create_test_run_with_metrics(
+                run_id="run_1",
+                faithfulness=0.8,
+                relevance=0.7,
+                direct_llm=False,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_2",
+                faithfulness=0.9,
+                relevance=0.8,
+                direct_llm=False,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_3",
+                faithfulness=0.6,
+                relevance=0.9,
+                direct_llm=True,  # This should be excluded from averages
+            ),
+        ]
+
+        mock_search_runs.return_value = runs
+        mock_list_artifacts.return_value = []
+
+        # Execute
+        result = generate_metrics()
+
+        # FIXED: Now correctly calculates averages by only summing non-direct LLM runs
+        # Direct LLM runs (run_3) are excluded from evaluation averages calculation
+        # Only non-direct LLM runs are included: (0.8 + 0.9) / 2 = 0.85, (0.7 + 0.8) / 2 = 0.75
+        expected_faithfulness = (0.8 + 0.9) / 2  # 0.85
+        expected_relevance = (0.7 + 0.8) / 2  # 0.75
+
+        assert result.evaluation_averages["faithfulness"] == expected_faithfulness
+        assert result.evaluation_averages["relevance"] == expected_relevance
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    def test_generate_metrics_evaluation_averages_only_direct_llm(
+        self,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test evaluation averages when there are only direct LLM runs."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        # Create runs with only direct LLM runs (should be excluded from evaluation averages)
+        runs = [
+            create_test_run_with_metrics(
+                run_id="run_1",
+                faithfulness=0.8,
+                relevance=0.7,
+                direct_llm=True,
+            ),
+            create_test_run_with_metrics(
+                run_id="run_2",
+                faithfulness=0.9,
+                relevance=0.8,
+                direct_llm=True,
+            ),
+        ]
+
+        mock_search_runs.return_value = runs
+        mock_list_artifacts.return_value = []
+
+        # Execute
+        result = generate_metrics()
+
+        # With only direct LLM runs, evaluation averages should be 0
+        assert result.evaluation_averages["faithfulness"] == 0
+        assert result.evaluation_averages["relevance"] == 0
+        assert result.count_of_interactions == 2
+        assert result.count_of_direct_interactions == 2
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    def test_generate_metrics_empty_runs(
+        self,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test metrics generation with no runs."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+        mock_search_runs.return_value = []
+        mock_list_artifacts.return_value = []
+
+        # Execute
+        result = generate_metrics()
+
+        # All counts should be zero
+        assert result.positive_ratings == 0
+        assert result.negative_ratings == 0
+        assert result.no_ratings == 0
+        assert result.count_of_interactions == 0
+        assert result.count_of_direct_interactions == 0
+        assert result.unique_users == 0
+        assert result.aggregated_feedback == {}
+        assert result.max_score_over_time == []
+        assert result.input_word_count_over_time == []
+        assert result.output_word_count_over_time == []
+        assert result.evaluation_averages["faithfulness"] == 0
+        assert result.evaluation_averages["relevance"] == 0
+
+    @patch("app.services.metrics.app_metrics_api.get_metadata_metrics")
+    @patch("app.services.metrics.mlflow.search_experiments")
+    @patch("app.services.metrics.mlflow.search_runs")
+    @patch("app.services.metrics.mlflow.artifacts.list_artifacts")
+    def test_generate_metrics_filters_datasource_experiments(
+        self,
+        mock_list_artifacts: Mock,
+        mock_search_runs: Mock,
+        mock_search_experiments: Mock,
+        mock_get_metadata_metrics: Mock,
+        sample_experiments: list[Experiment],
+        mock_metadata_metrics: MetadataMetrics,
+    ) -> None:
+        """Test that datasource experiments are filtered out."""
+        # Setup mocks
+        mock_get_metadata_metrics.return_value = mock_metadata_metrics
+        mock_search_experiments.return_value = sample_experiments
+
+        # Mock search_runs to return different runs for different experiments
+        def mock_search_runs_side_effect(
+            experiment_ids: list[str], **kwargs: Any
+        ) -> list[Run]:
+            if experiment_ids == ["exp_1"]:
+                return [create_test_run_with_metrics(run_id="run_1")]
+            elif experiment_ids == ["datasource_exp_1"]:
+                return [create_test_run_with_metrics(run_id="datasource_run_1")]
+            return []
+
+        mock_search_runs.side_effect = mock_search_runs_side_effect
+        mock_list_artifacts.return_value = []
+
+        # Execute
+        result = generate_metrics()
+
+        # Should only process runs from non-datasource experiments
+        assert result.count_of_interactions == 1
+
+    def test_generate_metrics_with_none_filter(self) -> None:
+        """Test that passing None as filter works correctly."""
+        with patch(
+            "app.services.metrics.app_metrics_api.get_metadata_metrics"
+        ) as mock_get_metadata_metrics:
+            with patch("app.services.metrics.filter_runs") as mock_filter_runs:
+                mock_get_metadata_metrics.return_value = MetadataMetrics(
+                    number_of_data_sources=0,
+                    number_of_documents=0,
+                    number_of_sessions=0,
+                )
+                mock_filter_runs.return_value = []
+
+                result = generate_metrics(None)
+
+                # Should create a default MetricFilter and process normally
+                assert isinstance(result, Metrics)
+                mock_filter_runs.assert_called_once()
+                # Verify that a MetricFilter was created (not None)
+                args, kwargs = mock_filter_runs.call_args
+                assert isinstance(args[0], MetricFilter)

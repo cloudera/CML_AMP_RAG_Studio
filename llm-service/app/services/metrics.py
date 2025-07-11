@@ -209,8 +209,11 @@ def generate_metrics(metric_filter: Optional[MetricFilter] = None) -> Metrics:
         output_word_count_over_time.append(
             (run.info.start_time, run.data.metrics.get("output_word_count", 0))
         )
-        faithfulness_total += run.data.metrics.get("faithfulness", 0)
-        relevance_total += run.data.metrics.get("relevance", 0)
+        
+        # Only accumulate faithfulness and relevance for non-direct LLM runs
+        if run.data.tags.get("direct_llm") != "True":
+            faithfulness_total += run.data.metrics.get("faithfulness", 0)
+            relevance_total += run.data.metrics.get("relevance", 0)
 
         artifact: FileInfo
         for artifact in artifacts:
