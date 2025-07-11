@@ -41,6 +41,7 @@ package com.cloudera.cai.rag.files;
 import static com.cloudera.cai.rag.Types.*;
 import static com.cloudera.cai.rag.external.RagBackendClient.*;
 
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.external.RagBackendClient;
@@ -52,7 +53,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.jdbi.v3.core.statement.Update;
@@ -64,7 +64,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   private final String bucketName;
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final RagBackendClient ragBackendClient;
   private final RagDataSourceRepository ragDataSourceRepository;
   private final RagFileRepository ragFileRepository;
@@ -73,7 +73,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   @Autowired
   public RagFileIndexReconciler(
       @Qualifier("s3BucketName") String bucketName,
-      Jdbi jdbi,
+      DatabaseOperations databaseOperations,
       RagBackendClient ragBackendClient,
       RagDataSourceRepository ragDataSourceRepository,
       @Qualifier("singleWorkerReconcilerConfig") ReconcilerConfig reconcilerConfig,
@@ -82,7 +82,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
       RagFileSummaryReconciler ragFileSummaryReconciler) {
     super(reconcilerConfig, openTelemetry);
     this.bucketName = bucketName;
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
     this.ragBackendClient = ragBackendClient;
     this.ragDataSourceRepository = ragDataSourceRepository;
     this.ragFileRepository = ragFileRepository;
@@ -98,7 +98,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
          WHERE vector_upload_timestamp IS NULL
            AND time_created > :yesterday
         """;
-    jdbi.useHandle(
+    databaseOperations.useHandle(
         handle -> {
           handle.registerRowMapper(ConstructorMapper.factory(RagDocument.class));
 
@@ -129,7 +129,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   }
 
   private void updateFinalStatus(RagDocument finalDocument) {
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           String updateSql =
               """
@@ -150,7 +150,7 @@ public class RagFileIndexReconciler extends BaseReconciler<RagDocument> {
   }
 
   private void setToInProgress(RagDocument document) {
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           String updateSql =
               """

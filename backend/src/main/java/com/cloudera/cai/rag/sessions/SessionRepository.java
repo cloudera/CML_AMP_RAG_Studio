@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -48,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.result.RowView;
 import org.jdbi.v3.core.statement.Query;
@@ -58,15 +58,15 @@ import org.springframework.stereotype.Component;
 public class SessionRepository {
   public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
       new Types.QueryConfiguration(false, true, false, List.of());
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  public SessionRepository(Jdbi jdbi) {
-    this.jdbi = jdbi;
+  public SessionRepository(DatabaseOperations databaseOperations) {
+    this.databaseOperations = databaseOperations;
   }
 
   public Long create(Types.Session input) {
-    return jdbi.inTransaction((handle) -> create(handle, input));
+    return databaseOperations.inTransaction((handle) -> create(handle, input));
   }
 
   public Long create(Handle handle, Types.Session input) {
@@ -107,7 +107,7 @@ public class SessionRepository {
   }
 
   public Types.Session getSessionById(Long id, String username) {
-    return jdbi.withHandle(handle -> getSessionById(handle, id, username));
+    return databaseOperations.withHandle(handle -> getSessionById(handle, id, username));
   }
 
   public Types.Session getSessionById(Handle handle, Long id, String username) {
@@ -181,7 +181,7 @@ public class SessionRepository {
   }
 
   public List<Types.Session> getSessions(String username) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -198,7 +198,7 @@ public class SessionRepository {
   }
 
   public List<Types.Session> getSessionsByProjectId(Long projectId) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -223,7 +223,7 @@ public class SessionRepository {
   }
 
   public void update(Types.Session input) {
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           update(handle, input);
         });
@@ -256,7 +256,7 @@ public class SessionRepository {
   }
 
   public int getNumberOfSessions() {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           try (var query = handle.createQuery("SELECT count(*) FROM CHAT_SESSION")) {
             return query.mapTo(Integer.class).one();
