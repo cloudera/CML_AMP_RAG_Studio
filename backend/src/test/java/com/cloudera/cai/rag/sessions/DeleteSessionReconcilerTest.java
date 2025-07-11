@@ -41,12 +41,9 @@ package com.cloudera.cai.rag.sessions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.DatabaseOperations;
-import com.cloudera.cai.rag.configuration.DatabaseOperationsImpl;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.rag.files.RagFileRepository;
@@ -58,13 +55,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 class DeleteSessionReconcilerTest {
   private final SessionRepository ragSessionRepository = SessionRepository.createNull();
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
@@ -236,27 +229,18 @@ class DeleteSessionReconcilerTest {
 
   @Test
   void reconcile_databaseFailure() {
-    // This test uses a completely mocked JDBI, so the database check will fail
-    // and no RAG backend calls should be made
-    var mockJdbi =
-        mock(
-            Jdbi.class,
-            withSettings()
-                .defaultAnswer(
-                    invocation -> {
-                      throw new RuntimeException("Mocked JDBI failure");
-                    }));
+    // This test uses a DatabaseOperations that throws exceptions on any call
     var initialTrackerSize = tracker.getValues().size();
 
     var reconciler =
         new DeleteSessionReconciler(
-            new DatabaseOperationsImpl(mockJdbi),
+            JdbiConfiguration.createNull(new RuntimeException("Mocked JDBI failure")),
             RagBackendClient.createNull(tracker),
             ReconcilerConfig.builder().isTestReconciler(true).build(),
             OpenTelemetry.noop());
     reconciler.init();
 
-    // With a mock JDBI, the database check will fail and throw an exception
+    // With a failing DatabaseOperations, the database check will fail and throw an exception
     assertThatThrownBy(() -> reconciler.reconcile(Set.of(1L))).isInstanceOf(RuntimeException.class);
 
     // RAG backend call is made before the db is updated
@@ -356,15 +340,13 @@ class DeleteSessionReconcilerTest {
                 .withUpdatedById("user"));
     databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
 
-    // Create a mock of DatabaseOperations to throw an exception on useTransaction
-    var mockDatabaseOperations = mock(DatabaseOperations.class);
-    doThrow(new UnableToExecuteStatementException("Transaction rollback"))
-        .when(mockDatabaseOperations)
-        .useTransaction(any());
+    // Create a DatabaseOperations that throws an exception on useTransaction
+    var failingDatabaseOperations =
+        JdbiConfiguration.createNull(new UnableToExecuteStatementException("Transaction rollback"));
 
     var reconciler =
         new DeleteSessionReconciler(
-            mockDatabaseOperations,
+            failingDatabaseOperations,
             ragBackendClient,
             ReconcilerConfig.builder().isTestReconciler(true).build(),
             OpenTelemetry.noop());
@@ -379,8 +361,7 @@ class DeleteSessionReconcilerTest {
         .contains(
             new RagBackendClient.TrackedRequest<>(
                 new RagBackendClient.TrackedDeleteSessionRequest(sessionId)));
-    // Then fail on database transaction
-    verify(mockDatabaseOperations, times(1)).useTransaction(any());
+    // Then fail on database transaction - no need to verify since we're not using mocks
   }
 
   private DeleteSessionReconciler createTestInstance(

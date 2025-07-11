@@ -45,6 +45,8 @@ import com.cloudera.cai.util.db.migration.Migrator;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
+import org.jdbi.v3.core.HandleCallback;
+import org.jdbi.v3.core.HandleConsumer;
 import org.jdbi.v3.core.Jdbi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -110,5 +112,54 @@ public class JdbiConfiguration {
   // nullables below here
   public static DatabaseOperations createNull() {
     return new DatabaseOperationsImpl(createJdbi());
+  }
+
+  public static DatabaseOperations createNull(RuntimeException... exceptions) {
+    return new DatabaseOperationsStub(createJdbi(), exceptions);
+  }
+
+  /**
+   * Test implementation of DatabaseOperations that can inject failures for testing. This allows us
+   * to test error scenarios without using Mockito.
+   */
+  private static class DatabaseOperationsStub implements DatabaseOperations {
+    private final DatabaseOperations delegate;
+    private final RuntimeException[] exceptions;
+    private int exceptionIndex = 0;
+
+    private DatabaseOperationsStub(Jdbi jdbi, RuntimeException[] exceptions) {
+      this.delegate = new DatabaseOperationsImpl(jdbi);
+      this.exceptions = exceptions;
+    }
+
+    private void checkForException() {
+      if (exceptionIndex < exceptions.length) {
+        throw exceptions[exceptionIndex++];
+      }
+    }
+
+    @Override
+    public <X extends Exception> void useHandle(HandleConsumer<X> handleConsumer) throws X {
+      checkForException();
+      delegate.useHandle(handleConsumer);
+    }
+
+    @Override
+    public <X extends Exception> void useTransaction(HandleConsumer<X> handleConsumer) throws X {
+      checkForException();
+      delegate.useTransaction(handleConsumer);
+    }
+
+    @Override
+    public <T, X extends Exception> T inTransaction(HandleCallback<T, X> handleCallback) throws X {
+      checkForException();
+      return delegate.inTransaction(handleCallback);
+    }
+
+    @Override
+    public <T, X extends Exception> T withHandle(HandleCallback<T, X> handleCallback) throws X {
+      checkForException();
+      return delegate.withHandle(handleCallback);
+    }
   }
 }
