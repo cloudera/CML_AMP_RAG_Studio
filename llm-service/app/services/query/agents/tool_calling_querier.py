@@ -64,8 +64,10 @@ from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import get_model_name
+from llama_index.tools.openai.image_generation.base import OpenAIImageGenerationToolSpec
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.config import settings
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.models.providers import BedrockModelProvider
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
@@ -205,7 +207,11 @@ def stream_chat(
     session: Session,
     data_source_summaries: dict[int, str],
 ) -> StreamingAgentChatResponse:
+    image_generator_tool = OpenAIImageGenerationToolSpec(
+        api_key=settings.openai_api_key
+    ).to_tool_list()
     mcp_tools: list[BaseTool] = []
+    mcp_tools.extend(image_generator_tool)
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
             try:

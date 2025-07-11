@@ -48,6 +48,7 @@ dependencies = [
     "llama-index-tools-mcp>=0.2.5",
     "llama-index-readers-docling>=0.3.3",
     "llama-index-node-parser-docling>=0.3.2",
+    "llama-index-tools-openai-image-generation>=0.4.0",
 ]
 requires-python = ">=3.10,<3.13"
 readme = "README.md"
