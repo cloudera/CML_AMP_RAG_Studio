@@ -280,8 +280,11 @@ def build_retriever(
 ) -> Optional[BaseRetriever]:
     retrievers: list[FlexibleRetriever] = []
     for data_source_id in data_source_ids:
+        if data_source_id is None:
+            continue
+
         chunks = VectorStoreFactory.for_chunks(data_source_id)
-        if data_source_id is None or not chunks.size():
+        if not chunks.size():
             continue
 
         embedding_model, vector_store = build_datasource_query_components(
