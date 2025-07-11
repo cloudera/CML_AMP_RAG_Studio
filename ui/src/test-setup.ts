@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,32 +36,4 @@
  * DATA.
  ******************************************************************************/
 
-import { defineConfig } from "vite";
-import viteReact from "@vitejs/plugin-react";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
-import tsConfigPathsPlugin from "vite-tsconfig-paths";
-import svgr from "vite-plugin-svgr";
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    TanStackRouterVite(),
-    viteReact(),
-    tsConfigPathsPlugin(),
-    svgr({ svgrOptions: { icon: true } }),
-  ],
-  test: {
-    environment: "jsdom",
-    setupFiles: ["./src/test-setup.ts"],
-    globals: true,
-  },
-  server: {
-    proxy: {
-      "/api": "http://localhost:8080",
-      "/llm-service": {
-        target: "http://localhost:8081",
-        rewrite: (path) => path.replace(/^\/llm-service/, ""),
-      },
-    },
-  },
-});
+import "@testing-library/jest-dom";
