@@ -64,7 +64,7 @@ const ProjectLabel = ({ project }: { project: Project }) => {
 
 const getProjectSessions = (
   sessions: Session[],
-  navigate: UseNavigateResult<string>,
+  navigate: UseNavigateResult<string>
 ) => {
   return sessions.map((session) => {
     return {
@@ -125,7 +125,7 @@ export const getProjectItems = (): ItemType[] => {
 
   return filteredProjects.map((project) => {
     const sessionsForProject = sessions?.filter(
-      (s) => s.projectId === project.id,
+      (s) => s.projectId === project.id
     );
     return projectSessionSidebarItem({
       project,

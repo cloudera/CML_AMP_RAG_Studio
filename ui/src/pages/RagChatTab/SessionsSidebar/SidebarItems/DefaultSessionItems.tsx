@@ -50,10 +50,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 export const defaultSessionItems = (sessions: Session[]): MenuItem => {
   const navigate = useNavigate();
   const { data: defaultProject } = useSuspenseQuery(
-    getDefaultProjectQueryOptions,
+    getDefaultProjectQueryOptions
   );
   const defaultSessions = sessions.filter(
-    (session) => defaultProject.id === session.projectId,
+    (session) => defaultProject.id === session.projectId
   );
   const defaultSessionsByDate = groupBy(defaultSessions, (session) => {
     const relevantTime = session.lastInteractionTime || session.timeUpdated;
@@ -85,17 +85,18 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
             }).catch(() => null);
           },
         };
-      },
+      }
     );
 
     return [
       dateItem,
       ...sessionItems,
       { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
+      { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
     ];
   });
 
-  const flattenedSessionItems = items.flatMap((item) => item);
+  const flattenedSessionItems = [...items.flatMap((item) => item)];
 
   if (flattenedSessionItems.length === 0) {
     return [
