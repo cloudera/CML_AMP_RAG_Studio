@@ -1,6 +1,7 @@
 package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.exceptions.NotFound;
@@ -10,7 +11,6 @@ import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.springframework.stereotype.Component;
@@ -18,23 +18,23 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class RagFileDeleteReconciler extends BaseReconciler<Types.RagDocument> {
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final RagBackendClient ragBackendClient;
 
   public RagFileDeleteReconciler(
       ReconcilerConfig reconcilerConfig,
       OpenTelemetry openTelemetry,
-      Jdbi jdbi,
+      DatabaseOperations databaseOperations,
       RagBackendClient ragBackendClient) {
     super(reconcilerConfig, openTelemetry);
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
     this.ragBackendClient = ragBackendClient;
   }
 
   @Override
   public void resync() throws Exception {
     log.debug("checking for RAG documents to be deleted");
-    jdbi.useHandle(
+    databaseOperations.useHandle(
         handle -> {
           handle.registerRowMapper(ConstructorMapper.factory(Types.RagDocument.class));
           Query query =
@@ -54,7 +54,7 @@ public class RagFileDeleteReconciler extends BaseReconciler<Types.RagDocument> {
       } catch (NotFound e) {
         log.debug("got a not found exception from the rag backend: {}", e.getMessage());
       }
-      jdbi.useHandle(
+      databaseOperations.useHandle(
           handle ->
               handle.execute("DELETE from rag_data_source_document WHERE id = ?", document.id()));
     }

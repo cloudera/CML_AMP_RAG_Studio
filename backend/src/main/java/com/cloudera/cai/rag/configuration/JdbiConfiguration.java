@@ -56,8 +56,8 @@ public class JdbiConfiguration {
   private static final Object LOCK = new Object();
 
   @Bean
-  public Jdbi jdbi() {
-    return createJdbi();
+  public DatabaseOperations databaseOperations() {
+    return new DatabaseOperationsImpl(createJdbi());
   }
 
   private static Jdbi createJdbi() {
@@ -108,7 +108,7 @@ public class JdbiConfiguration {
   }
 
   // nullables below here
-  public static Jdbi createNull() {
-    return new JdbiConfiguration().jdbi();
+  public static DatabaseOperations createNull() {
+    return new DatabaseOperationsImpl(createJdbi());
   }
 }

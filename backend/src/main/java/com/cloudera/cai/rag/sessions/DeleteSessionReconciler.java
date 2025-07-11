@@ -38,6 +38,7 @@
 
 package com.cloudera.cai.rag.sessions;
 
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.Tracker;
@@ -46,29 +47,28 @@ import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.jdbi.v3.core.Jdbi;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 public class DeleteSessionReconciler extends BaseReconciler<Long> {
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final RagBackendClient ragBackendClient;
 
   public DeleteSessionReconciler(
-      Jdbi jdbi,
+      DatabaseOperations databaseOperations,
       RagBackendClient ragBackendClient,
       ReconcilerConfig reconcilerConfig,
       OpenTelemetry openTelemetry) {
     super(reconcilerConfig, openTelemetry);
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
     this.ragBackendClient = ragBackendClient;
   }
 
   @Override
   public void resync() {
     log.debug("Checking for sessions to delete");
-    jdbi.useHandle(
+    databaseOperations.useHandle(
         handle ->
             handle
                 .createQuery("SELECT id FROM CHAT_SESSION WHERE deleted IS NOT NULL")
@@ -86,7 +86,7 @@ public class DeleteSessionReconciler extends BaseReconciler<Long> {
         log.info("session with id {} not found in rag backend, skipping deletion", sessionId);
       }
       log.info("deleting session from the database: {}", sessionId);
-      jdbi.useTransaction(
+      databaseOperations.useTransaction(
           handle -> {
             handle.execute("DELETE FROM CHAT_SESSION WHERE ID = ?", sessionId);
             handle.execute(

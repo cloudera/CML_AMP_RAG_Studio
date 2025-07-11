@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.sessions;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.datasources.RagDataSourceService;
@@ -46,7 +47,6 @@ import com.cloudera.cai.rag.projects.ProjectRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.jdbi.v3.core.Jdbi;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -54,22 +54,22 @@ public class SessionService {
 
   private final SessionRepository sessionRepository;
   private final ProjectRepository projectRepository;
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final RagDataSourceRepository ragDataSourceRepository;
 
   public SessionService(
       SessionRepository sessionRepository,
       ProjectRepository projectRepository,
-      Jdbi jdbi,
+      DatabaseOperations databaseOperations,
       RagDataSourceRepository ragDataSourceRepository) {
     this.sessionRepository = sessionRepository;
     this.projectRepository = projectRepository;
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
     this.ragDataSourceRepository = ragDataSourceRepository;
   }
 
   public Types.Session create(Types.CreateSession createSession, String username) {
-    return jdbi.inTransaction(
+    return databaseOperations.inTransaction(
         handle -> {
           var session = Types.Session.fromCreateRequest(createSession, username);
           validateDataSourceIds(session);
@@ -150,7 +150,7 @@ public class SessionService {
 
   public void delete(Long id, String username) {
     Types.Session session = sessionRepository.getSessionById(id, username);
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           ragDataSourceRepository.deleteDataSource(handle, session.associatedDataSourceId());
           sessionRepository.delete(handle, id);

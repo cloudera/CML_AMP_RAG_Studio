@@ -45,6 +45,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.cloudera.cai.rag.TestData;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
+import com.cloudera.cai.rag.configuration.DatabaseOperationsImpl;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.rag.files.RagFileRepository;
@@ -66,7 +68,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DeleteSessionReconcilerTest {
   private final SessionRepository ragSessionRepository = SessionRepository.createNull();
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
-  private final Jdbi jdbi = JdbiConfiguration.createNull();
+  private final DatabaseOperations databaseOperations = JdbiConfiguration.createNull();
   private final Tracker<RagBackendClient.TrackedRequest<?>> tracker = new Tracker<>();
 
   @Test
@@ -81,7 +83,7 @@ class DeleteSessionReconcilerTest {
 
     reconciler.resync();
     await().until(reconciler::isEmpty);
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
 
     reconciler.resync();
     await().until(reconciler::isEmpty);
@@ -101,7 +103,8 @@ class DeleteSessionReconcilerTest {
     var reconciler = createTestInstance(tracker);
 
     // Clean slate - remove any leftover sessions from previous tests
-    jdbi.useHandle(handle -> handle.execute("DELETE FROM CHAT_SESSION WHERE deleted IS NOT NULL"));
+    databaseOperations.useHandle(
+        handle -> handle.execute("DELETE FROM CHAT_SESSION WHERE deleted IS NOT NULL"));
 
     // Record initial tracker state
     var initialCallCount = tracker.getValues().size();
@@ -133,8 +136,8 @@ class DeleteSessionReconcilerTest {
                 .withUpdatedById("user2"));
 
     // Mark both sessions for deletion
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId1));
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId2));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId1));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId2));
 
     reconciler.resync();
     await().until(reconciler::isEmpty);
@@ -188,7 +191,7 @@ class DeleteSessionReconcilerTest {
 
     var reconciler =
         new DeleteSessionReconciler(
-            jdbi,
+            databaseOperations,
             ragBackendClient,
             ReconcilerConfig.builder().isTestReconciler(true).build(),
             OpenTelemetry.noop());
@@ -200,7 +203,7 @@ class DeleteSessionReconcilerTest {
                 .withCreatedById("user")
                 .withUpdatedById("user"));
 
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
     var result = reconciler.reconcile(Set.of(sessionId));
     assertThat(result).isNotNull();
   }
@@ -212,7 +215,7 @@ class DeleteSessionReconcilerTest {
 
     var reconciler =
         new DeleteSessionReconciler(
-            jdbi,
+            databaseOperations,
             ragBackendClient,
             ReconcilerConfig.builder().isTestReconciler(true).build(),
             OpenTelemetry.noop());
@@ -224,7 +227,7 @@ class DeleteSessionReconcilerTest {
                 .withCreatedById("user")
                 .withUpdatedById("user"));
 
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
 
     // Should fail if RAG backend throws server error
     assertThatThrownBy(() -> reconciler.reconcile(Set.of(sessionId)))
@@ -247,7 +250,7 @@ class DeleteSessionReconcilerTest {
 
     var reconciler =
         new DeleteSessionReconciler(
-            mockJdbi,
+            new DatabaseOperationsImpl(mockJdbi),
             RagBackendClient.createNull(tracker),
             ReconcilerConfig.builder().isTestReconciler(true).build(),
             OpenTelemetry.noop());
@@ -274,8 +277,8 @@ class DeleteSessionReconcilerTest {
                 .withCreatedById("user2")
                 .withUpdatedById("user2"));
 
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId1));
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId2));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId1));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId2));
 
     // Process sessions concurrently
     var future1 = CompletableFuture.runAsync(() -> reconciler.reconcile(Set.of(sessionId1)));
@@ -305,7 +308,7 @@ class DeleteSessionReconcilerTest {
               TestData.createTestSessionInstance("session-" + i)
                   .withCreatedById("user" + i)
                   .withUpdatedById("user" + i));
-      jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+      databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
       sessionIds.add(sessionId);
     }
 
@@ -351,17 +354,17 @@ class DeleteSessionReconcilerTest {
             TestData.createTestSessionInstance("test-session")
                 .withCreatedById("user")
                 .withUpdatedById("user"));
-    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+    databaseOperations.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
 
-    // Create a spy of the real JDBI to mock just the useTransaction method
-    Jdbi spyJdbi = spy(jdbi);
+    // Create a mock of DatabaseOperations to throw an exception on useTransaction
+    var mockDatabaseOperations = mock(DatabaseOperations.class);
     doThrow(new UnableToExecuteStatementException("Transaction rollback"))
-        .when(spyJdbi)
+        .when(mockDatabaseOperations)
         .useTransaction(any());
 
     var reconciler =
         new DeleteSessionReconciler(
-            spyJdbi,
+            mockDatabaseOperations,
             ragBackendClient,
             ReconcilerConfig.builder().isTestReconciler(true).build(),
             OpenTelemetry.noop());
@@ -377,7 +380,7 @@ class DeleteSessionReconcilerTest {
             new RagBackendClient.TrackedRequest<>(
                 new RagBackendClient.TrackedDeleteSessionRequest(sessionId)));
     // Then fail on database transaction
-    verify(spyJdbi, times(1)).useTransaction(any());
+    verify(mockDatabaseOperations, times(1)).useTransaction(any());
   }
 
   private DeleteSessionReconciler createTestInstance(
@@ -386,13 +389,16 @@ class DeleteSessionReconcilerTest {
 
     var reconciler =
         new DeleteSessionReconciler(
-            jdbi, RagBackendClient.createNull(tracker), reconcilerConfig, OpenTelemetry.noop());
+            databaseOperations,
+            RagBackendClient.createNull(tracker),
+            reconcilerConfig,
+            OpenTelemetry.noop());
     reconciler.init();
     return reconciler;
   }
 
   private Boolean sessionIsInTheDatabase(Long sessionId) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           Integer count;
           try (var query = handle.createQuery("SELECT COUNT(*) FROM CHAT_SESSION WHERE id = :id")) {

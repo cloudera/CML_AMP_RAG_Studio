@@ -39,13 +39,13 @@
 package com.cloudera.cai.rag.projects;
 
 import com.cloudera.cai.rag.Types.Project;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.springframework.stereotype.Component;
@@ -53,14 +53,14 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class ProjectRepository {
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
 
-  public ProjectRepository(Jdbi jdbi) {
-    this.jdbi = jdbi;
+  public ProjectRepository(DatabaseOperations databaseOperations) {
+    this.databaseOperations = databaseOperations;
   }
 
   public Long createProject(Project input) {
-    return jdbi.inTransaction(
+    return databaseOperations.inTransaction(
         handle -> {
           var sql =
               """
@@ -76,7 +76,7 @@ public class ProjectRepository {
   }
 
   public void updateProject(Project input) {
-    jdbi.inTransaction(
+    databaseOperations.inTransaction(
         handle -> {
           var sql =
               """
@@ -96,7 +96,7 @@ public class ProjectRepository {
   }
 
   public Project getProjectById(Long id) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -116,7 +116,7 @@ public class ProjectRepository {
   }
 
   public List<Project> getProjects(String username) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -139,7 +139,7 @@ public class ProjectRepository {
   }
 
   public Project getDefaultProject() {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -159,7 +159,7 @@ public class ProjectRepository {
   }
 
   public void addDataSourceToProject(Long projectId, Long dataSourceId) {
-    jdbi.inTransaction(
+    databaseOperations.inTransaction(
         handle -> {
           var sql =
               """
@@ -173,7 +173,7 @@ public class ProjectRepository {
   }
 
   public void removeDataSourceFromProject(Long projectId, Long dataSourceId) {
-    jdbi.inTransaction(
+    databaseOperations.inTransaction(
         handle -> {
           var sql =
               """
@@ -187,7 +187,7 @@ public class ProjectRepository {
   }
 
   public List<Long> getDataSourceIdsForProject(Long projectId) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -206,6 +206,6 @@ public class ProjectRepository {
 
   public static ProjectRepository createNull() {
     // the db configuration will use in-memory db based on env vars.
-    return new ProjectRepository(new JdbiConfiguration().jdbi());
+    return new ProjectRepository(JdbiConfiguration.createNull());
   }
 }
