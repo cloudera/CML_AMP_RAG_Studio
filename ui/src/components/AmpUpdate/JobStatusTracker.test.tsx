@@ -152,12 +152,23 @@ describe("JobStatusTracker", () => {
     testCases.forEach(({ status, expectedPercent }) => {
       it(`sets correct progress percentage (${expectedPercent.toString()}%) for ${status ?? "undefined"} status`, () => {
         const { container } = render(<JobStatusTracker jobStatus={status} />);
-        const progressCircle = container.querySelector(
-          ".ant-progress-circle-path",
-        );
+        
+        // Check that the progress element exists
+        const progressElement = container.querySelector(".ant-progress");
+        expect(progressElement).toBeTruthy();
+        
+        // Check the aria-valuenow attribute for the actual percentage
+        const progressWithValue = container.querySelector("[aria-valuenow]");
+        if (progressWithValue) {
+          const actualPercent = progressWithValue.getAttribute("aria-valuenow");
+          expect(actualPercent).toBe(expectedPercent.toString());
+        }
+        
+        // Alternative check: look for the progress circle path and verify it exists for non-zero percentages
+        const progressCircle = container.querySelector(".ant-progress-circle-path");
         if (expectedPercent === 0) {
           // For 0%, the path element might not exist or have different attributes
-          const progressElement = container.querySelector(".ant-progress");
+          // Just ensure the progress component rendered
           expect(progressElement).toBeTruthy();
         } else {
           expect(progressCircle).toBeTruthy();
