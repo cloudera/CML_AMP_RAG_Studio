@@ -101,15 +101,6 @@ tasks.named<Test>("test") {
     testLogging {
         events("passed")
     }
-    
-    // Clean environment for tests - exclude problematic environment variables
-    environment.remove("DB_URL")
-    environment.remove("DB_TYPE")
-    environment.remove("VECTOR_DB_PROVIDER")
-    
-    // Ensure tests use clean in-memory H2 database
-    systemProperty("spring.test.database.replace", "any")
-    systemProperty("spring.datasource.url", "jdbc:h2:mem:testdb")
 }
 
 tasks {
