@@ -40,50 +40,32 @@ package com.cloudera.cai.rag.configuration;
 
 import org.jdbi.v3.core.HandleCallback;
 import org.jdbi.v3.core.HandleConsumer;
+import org.jdbi.v3.core.Jdbi;
 
 /**
- * Interface for database operations that wraps Jdbi functionality. This allows for easier testing
- * using the nullables pattern without mocks.
+ * Database operations implementation that delegates to a Jdbi instance. This is the production
+ * implementation used throughout the application.
  */
-public interface DatabaseOperations {
+public class DatabaseOperations {
+  private final Jdbi jdbi;
 
-  /**
-   * Execute a database operation with a handle that doesn't return a value.
-   *
-   * @param handleConsumer the operation to execute
-   * @param <X> the exception type that can be thrown
-   * @throws X if the operation throws an exception
-   */
-  <X extends Exception> void useHandle(HandleConsumer<X> handleConsumer) throws X;
+  public DatabaseOperations(Jdbi jdbi) {
+    this.jdbi = jdbi;
+  }
 
-  /**
-   * Execute a database operation within a transaction that doesn't return a value.
-   *
-   * @param handleConsumer the operation to execute
-   * @param <X> the exception type that can be thrown
-   * @throws X if the operation throws an exception
-   */
-  <X extends Exception> void useTransaction(HandleConsumer<X> handleConsumer) throws X;
+  public <X extends Exception> void useHandle(HandleConsumer<X> handleConsumer) throws X {
+    jdbi.useHandle(handleConsumer);
+  }
 
-  /**
-   * Execute a database operation within a transaction that returns a value.
-   *
-   * @param handleCallback the operation to execute
-   * @param <T> the return type
-   * @param <X> the exception type that can be thrown
-   * @return the result of the operation
-   * @throws X if the operation throws an exception
-   */
-  <T, X extends Exception> T inTransaction(HandleCallback<T, X> handleCallback) throws X;
+  public <X extends Exception> void useTransaction(HandleConsumer<X> handleConsumer) throws X {
+    jdbi.useTransaction(handleConsumer);
+  }
 
-  /**
-   * Execute a database operation with a handle that returns a value.
-   *
-   * @param handleCallback the operation to execute
-   * @param <T> the return type
-   * @param <X> the exception type that can be thrown
-   * @return the result of the operation
-   * @throws X if the operation throws an exception
-   */
-  <T, X extends Exception> T withHandle(HandleCallback<T, X> handleCallback) throws X;
+  public <T, X extends Exception> T inTransaction(HandleCallback<T, X> handleCallback) throws X {
+    return jdbi.inTransaction(handleCallback);
+  }
+
+  public <T, X extends Exception> T withHandle(HandleCallback<T, X> handleCallback) throws X {
+    return jdbi.withHandle(handleCallback);
+  }
 }

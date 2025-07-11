@@ -59,7 +59,7 @@ public class JdbiConfiguration {
 
   @Bean
   public DatabaseOperations databaseOperations() {
-    return new DatabaseOperationsImpl(createJdbi());
+    return new DatabaseOperations(createJdbi());
   }
 
   private static Jdbi createJdbi() {
@@ -118,13 +118,12 @@ public class JdbiConfiguration {
    * Test implementation of DatabaseOperations that can inject failures for testing. This allows us
    * to test error scenarios without using Mockito.
    */
-  private static class DatabaseOperationsStub implements DatabaseOperations {
-    private final DatabaseOperations delegate;
+  private static class DatabaseOperationsStub extends DatabaseOperations {
     private final RuntimeException[] exceptions;
     private int exceptionIndex = 0;
 
     private DatabaseOperationsStub(Jdbi jdbi, RuntimeException[] exceptions) {
-      this.delegate = new DatabaseOperationsImpl(jdbi);
+      super(jdbi);
       this.exceptions = exceptions;
     }
 
@@ -137,25 +136,25 @@ public class JdbiConfiguration {
     @Override
     public <X extends Exception> void useHandle(HandleConsumer<X> handleConsumer) throws X {
       checkForException();
-      delegate.useHandle(handleConsumer);
+      super.useHandle(handleConsumer);
     }
 
     @Override
     public <X extends Exception> void useTransaction(HandleConsumer<X> handleConsumer) throws X {
       checkForException();
-      delegate.useTransaction(handleConsumer);
+      super.useTransaction(handleConsumer);
     }
 
     @Override
     public <T, X extends Exception> T inTransaction(HandleCallback<T, X> handleCallback) throws X {
       checkForException();
-      return delegate.inTransaction(handleCallback);
+      return super.inTransaction(handleCallback);
     }
 
     @Override
     public <T, X extends Exception> T withHandle(HandleCallback<T, X> handleCallback) throws X {
       checkForException();
-      return delegate.withHandle(handleCallback);
+      return super.withHandle(handleCallback);
     }
   }
 }
