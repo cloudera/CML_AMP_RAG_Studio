@@ -89,11 +89,27 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
     );
 
     return [
-      { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
       dateItem,
       ...sessionItems,
+      { type: "divider", key: `divider-${dateItem.key?.toString() ?? ""}` },
     ];
   });
 
-  return [...items.flatMap((item) => item)];
+  const flattenedSessionItems = [...items.flatMap((item) => item)];
+
+  if (flattenedSessionItems.length === 0) {
+    return [
+      {
+        key: "noSessions",
+        type: "group",
+        label: (
+          <Typography.Text type="secondary" style={{ paddingLeft: 32 }}>
+            No sessions created
+          </Typography.Text>
+        ),
+      },
+    ];
+  }
+
+  return flattenedSessionItems;
 };
