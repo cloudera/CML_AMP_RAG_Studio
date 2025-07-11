@@ -95,7 +95,7 @@ export const defaultSessionItems = (sessions: Session[]): MenuItem => {
     ];
   });
 
-  const flattenedSessionItems = [...items.flatMap((item) => item)];
+  const flattenedSessionItems = items.flatMap((item) => item);
 
   if (flattenedSessionItems.length === 0) {
     return [
