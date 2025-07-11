@@ -150,7 +150,7 @@ describe("JobStatusTracker", () => {
     ];
 
     testCases.forEach(({ status, expectedPercent }) => {
-      it(`sets correct progress percentage (${expectedPercent}%) for ${status || "undefined"} status`, () => {
+      it(`sets correct progress percentage (${expectedPercent.toString()}%) for ${status ?? "undefined"} status`, () => {
         const { container } = render(<JobStatusTracker jobStatus={status} />);
         const progressCircle = container.querySelector(
           ".ant-progress-circle-path",
@@ -293,13 +293,13 @@ describe("JobStatusTracker", () => {
 
     it("handles null jobStatus gracefully", () => {
       expect(() => {
-        render(<JobStatusTracker jobStatus={null as any} />);
+        render(<JobStatusTracker jobStatus={null as unknown as JobStatus} />);
       }).not.toThrow();
     });
 
     it("displays correct text for edge case statuses", () => {
       // Test with an invalid status (this tests the default case)
-      render(<JobStatusTracker jobStatus={"INVALID_STATUS" as any} />);
+      render(<JobStatusTracker jobStatus={"INVALID_STATUS" as unknown as JobStatus} />);
       expect(screen.getByText("Unknown")).toBeTruthy();
     });
   });
