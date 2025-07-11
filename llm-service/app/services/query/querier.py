@@ -284,7 +284,7 @@ def build_retriever(
             continue
 
         chunks = VectorStoreFactory.for_chunks(data_source_id)
-        if not chunks.size():
+        if not chunks or not chunks.size():
             continue
 
         embedding_model, vector_store = build_datasource_query_components(
