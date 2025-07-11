@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -41,6 +41,8 @@ package com.cloudera.cai.rag.sessions;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
@@ -48,20 +50,27 @@ import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.rag.files.RagFileRepository;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.NotFound;
+import com.cloudera.cai.util.exceptions.ServerError;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class DeleteSessionReconcilerTest {
   private final SessionRepository ragSessionRepository = SessionRepository.createNull();
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
   private final Jdbi jdbi = JdbiConfiguration.createNull();
+  private final Tracker<RagBackendClient.TrackedRequest<?>> tracker = new Tracker<>();
 
   @Test
-  void reconcile() {
-    var tracker = new Tracker<RagBackendClient.TrackedRequest<?>>();
+  void reconcile_basicHappyPath() {
     var reconciler = createTestInstance(tracker);
     var sessionId =
         ragSessionRepository.create(
@@ -85,6 +94,290 @@ class DeleteSessionReconcilerTest {
         .contains(
             new RagBackendClient.TrackedRequest<>(
                 new RagBackendClient.TrackedDeleteSessionRequest(sessionId)));
+  }
+
+  @Test
+  void resync_noSessionsToDelete() {
+    var reconciler = createTestInstance(tracker);
+
+    // Clean slate - remove any leftover sessions from previous tests
+    jdbi.useHandle(handle -> handle.execute("DELETE FROM CHAT_SESSION WHERE deleted IS NOT NULL"));
+
+    // Record initial tracker state
+    var initialCallCount = tracker.getValues().size();
+
+    reconciler.resync();
+    await().until(reconciler::isEmpty);
+
+    // Should not make any new RAG backend calls
+    assertThat(tracker.getValues()).hasSize(initialCallCount);
+  }
+
+  @Test
+  void resync_multipleSessionsToDelete() {
+    var reconciler = createTestInstance(tracker);
+    // Clean slate - remove any leftover sessions from previous tests
+    reconciler.resync();
+    await().until(reconciler::isEmpty);
+    tracker.clear();
+
+    var sessionId1 =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("session-1")
+                .withCreatedById("user1")
+                .withUpdatedById("user1"));
+    var sessionId2 =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("session-2")
+                .withCreatedById("user2")
+                .withUpdatedById("user2"));
+
+    // Mark both sessions for deletion
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId1));
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId2));
+
+    reconciler.resync();
+    await().until(reconciler::isEmpty);
+
+    // Should process both sessions
+    assertThat(tracker.getValues())
+        .hasSize(2)
+        .contains(
+            new RagBackendClient.TrackedRequest<>(
+                new RagBackendClient.TrackedDeleteSessionRequest(sessionId1)),
+            new RagBackendClient.TrackedRequest<>(
+                new RagBackendClient.TrackedDeleteSessionRequest(sessionId2)));
+
+    // Both sessions should be removed from database
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(sessionIsInTheDatabase(sessionId1)).isFalse();
+              assertThat(sessionIsInTheDatabase(sessionId2)).isFalse();
+            });
+  }
+
+  @Test
+  void reconcile_emptySessionSet() {
+    var reconciler = createTestInstance(tracker);
+
+    var result = reconciler.reconcile(Set.of());
+
+    assertThat(result).isNotNull();
+    assertThat(tracker.getValues()).isEmpty();
+  }
+
+  @Test
+  void reconcile_nonExistentSessionId() {
+    var reconciler = createTestInstance(tracker);
+    var nonExistentId = 999999L;
+
+    // Record initial tracker state
+    var initialCallCount = tracker.getValues().size();
+
+    var result = reconciler.reconcile(Set.of(nonExistentId));
+
+    // Should complete successfully
+    assertThat(result).isNotNull();
+    assertThat(tracker.getValues()).hasSize(initialCallCount + 1);
+  }
+
+  @Test
+  void reconcile_withRagBackendNotFound() {
+    var ragBackendClient = RagBackendClient.createNull(tracker, new NotFound("Session not found"));
+
+    var reconciler =
+        new DeleteSessionReconciler(
+            jdbi,
+            ragBackendClient,
+            ReconcilerConfig.builder().isTestReconciler(true).build(),
+            OpenTelemetry.noop());
+    reconciler.init();
+
+    var sessionId =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("test-session")
+                .withCreatedById("user")
+                .withUpdatedById("user"));
+
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+    var result = reconciler.reconcile(Set.of(sessionId));
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  void reconcile_withRagBackendServerError() {
+    var ragBackendClient =
+        RagBackendClient.createNull(tracker, new ServerError("Internal server error", 500));
+
+    var reconciler =
+        new DeleteSessionReconciler(
+            jdbi,
+            ragBackendClient,
+            ReconcilerConfig.builder().isTestReconciler(true).build(),
+            OpenTelemetry.noop());
+    reconciler.init();
+
+    var sessionId =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("test-session")
+                .withCreatedById("user")
+                .withUpdatedById("user"));
+
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+
+    // Should fail if RAG backend throws server error
+    assertThatThrownBy(() -> reconciler.reconcile(Set.of(sessionId)))
+        .isInstanceOf(ServerError.class);
+  }
+
+  @Test
+  void reconcile_databaseFailure() {
+    // This test uses a completely mocked JDBI, so the database check will fail
+    // and no RAG backend calls should be made
+    var mockJdbi =
+        mock(
+            Jdbi.class,
+            withSettings()
+                .defaultAnswer(
+                    invocation -> {
+                      throw new RuntimeException("Mocked JDBI failure");
+                    }));
+    var initialTrackerSize = tracker.getValues().size();
+
+    var reconciler =
+        new DeleteSessionReconciler(
+            mockJdbi,
+            RagBackendClient.createNull(tracker),
+            ReconcilerConfig.builder().isTestReconciler(true).build(),
+            OpenTelemetry.noop());
+    reconciler.init();
+
+    // With a mock JDBI, the database check will fail and throw an exception
+    assertThatThrownBy(() -> reconciler.reconcile(Set.of(1L))).isInstanceOf(RuntimeException.class);
+
+    // RAG backend call is made before the db is updated
+    assertThat(tracker.getValues()).hasSize(initialTrackerSize + 1);
+  }
+
+  @Test
+  void reconcile_concurrentProcessing() {
+    var reconciler = createTestInstance(tracker);
+    var sessionId1 =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("session-1")
+                .withCreatedById("user1")
+                .withUpdatedById("user1"));
+    var sessionId2 =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("session-2")
+                .withCreatedById("user2")
+                .withUpdatedById("user2"));
+
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId1));
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId2));
+
+    // Process sessions concurrently
+    var future1 = CompletableFuture.runAsync(() -> reconciler.reconcile(Set.of(sessionId1)));
+    var future2 = CompletableFuture.runAsync(() -> reconciler.reconcile(Set.of(sessionId2)));
+
+    // Both should complete successfully
+    assertThat(future1.join()).isNull();
+    assertThat(future2.join()).isNull();
+
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(sessionIsInTheDatabase(sessionId1)).isFalse();
+              assertThat(sessionIsInTheDatabase(sessionId2)).isFalse();
+            });
+  }
+
+  @Test
+  void reconcile_largeSessionBatch() {
+    var reconciler = createTestInstance(tracker);
+
+    // Create actual sessions and mark them for deletion
+    var sessionIds = new java.util.HashSet<Long>();
+    for (int i = 1; i <= 10; i++) {
+      var sessionId =
+          ragSessionRepository.create(
+              TestData.createTestSessionInstance("session-" + i)
+                  .withCreatedById("user" + i)
+                  .withUpdatedById("user" + i));
+      jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+      sessionIds.add(sessionId);
+    }
+
+    var result = reconciler.reconcile(sessionIds);
+
+    assertThat(result).isNotNull();
+    assertThat(tracker.getValues()).hasSize(10);
+  }
+
+  @Test
+  void init_successful() {
+    var reconciler = createTestInstance(tracker);
+
+    // Should initialize without error
+    reconciler.init();
+
+    // Should start empty
+    assertThat(reconciler.isEmpty()).isTrue();
+  }
+
+  @Test
+  void createNull_factoryMethod() {
+    var testTracker = new Tracker<RagBackendClient.TrackedRequest<?>>();
+    var reconciler = DeleteSessionReconciler.createNull(testTracker);
+
+    assertThat(reconciler).isNotNull();
+    assertThat(reconciler).isInstanceOf(DeleteSessionReconciler.class);
+
+    // Should be able to initialize without errors
+    reconciler.init();
+
+    // Should start empty
+    assertThat(reconciler.isEmpty()).isTrue();
+  }
+
+  @Test
+  void reconcile_databaseTransactionRollback() {
+    var ragBackendClient = RagBackendClient.createNull(tracker);
+
+    // Create a session and mark it for deletion
+    var sessionId =
+        ragSessionRepository.create(
+            TestData.createTestSessionInstance("test-session")
+                .withCreatedById("user")
+                .withUpdatedById("user"));
+    jdbi.useHandle(handle -> ragSessionRepository.delete(handle, sessionId));
+
+    // Create a spy of the real JDBI to mock just the useTransaction method
+    Jdbi spyJdbi = spy(jdbi);
+    doThrow(new UnableToExecuteStatementException("Transaction rollback"))
+        .when(spyJdbi)
+        .useTransaction(any());
+
+    var reconciler =
+        new DeleteSessionReconciler(
+            spyJdbi,
+            ragBackendClient,
+            ReconcilerConfig.builder().isTestReconciler(true).build(),
+            OpenTelemetry.noop());
+    reconciler.init();
+
+    assertThatThrownBy(() -> reconciler.reconcile(Set.of(sessionId)))
+        .isInstanceOf(UnableToExecuteStatementException.class);
+
+    // Should call RAG backend first
+    assertThat(tracker.getValues())
+        .hasSize(1)
+        .contains(
+            new RagBackendClient.TrackedRequest<>(
+                new RagBackendClient.TrackedDeleteSessionRequest(sessionId)));
+    // Then fail on database transaction
+    verify(spyJdbi, times(1)).useTransaction(any());
   }
 
   private DeleteSessionReconciler createTestInstance(

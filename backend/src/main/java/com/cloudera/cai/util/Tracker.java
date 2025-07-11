@@ -52,4 +52,8 @@ public class Tracker<T> {
   public List<T> getValues() {
     return values;
   }
+
+  public void clear() {
+    values.clear();
+  }
 }

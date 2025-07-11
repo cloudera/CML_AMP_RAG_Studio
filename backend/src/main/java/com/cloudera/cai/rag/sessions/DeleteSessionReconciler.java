@@ -41,6 +41,7 @@ package com.cloudera.cai.rag.sessions;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.Tracker;
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.reconcilers.*;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Set;
@@ -79,7 +80,11 @@ public class DeleteSessionReconciler extends BaseReconciler<Long> {
   public ReconcileResult reconcile(Set<Long> sessionIds) {
     for (Long sessionId : sessionIds) {
       log.info("telling the rag backend to delete session with id: {}", sessionId);
-      ragBackendClient.deleteSession(sessionId);
+      try {
+        ragBackendClient.deleteSession(sessionId);
+      } catch (NotFound e) {
+        log.info("session with id {} not found in rag backend, skipping deletion", sessionId);
+      }
       log.info("deleting session from the database: {}", sessionId);
       jdbi.useTransaction(
           handle -> {
