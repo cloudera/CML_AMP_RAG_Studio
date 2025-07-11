@@ -113,7 +113,7 @@ export const getProjectItems = (): ItemType[] => {
         key: "noProjects",
         type: "group",
         label: (
-          <Flex style={{ paddingLeft: "32px" }}>
+          <Flex style={{ paddingLeft: 32 }}>
             <Typography.Text type="secondary">
               No projects created
             </Typography.Text>
