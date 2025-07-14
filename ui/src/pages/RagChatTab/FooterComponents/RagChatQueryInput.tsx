@@ -235,9 +235,16 @@ const RagChatQueryInput = ({
   const handleChangeInferenceModel = (modelId: string) => {
     setInferenceModel(modelId);
     if (activeSession) {
+      const supportsToolCalling = llmModels?.find(
+        (model) => model.model_id === modelId,
+      )?.tool_calling_supported;
       updateSession.mutate({
         ...activeSession,
         inferenceModel: modelId,
+        queryConfiguration: {
+          ...activeSession.queryConfiguration,
+          enableToolCalling: supportsToolCalling ?? false,
+        },
       });
     }
   };

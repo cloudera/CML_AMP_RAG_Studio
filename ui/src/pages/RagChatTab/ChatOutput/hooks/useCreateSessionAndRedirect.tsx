@@ -38,6 +38,9 @@ const useCreateSessionAndRedirect = (
     inferenceModel?: string,
   ) => {
     if (models) {
+      const supportsToolCalling = models.find(
+        (model) => model.model_id === inferenceModel,
+      )?.tool_calling_supported;
       const requestBody: CreateSessionRequest = {
         name: "",
         dataSourceIds: dataSourceIds,
@@ -46,7 +49,7 @@ const useCreateSessionAndRedirect = (
         queryConfiguration: {
           enableHyde: false,
           enableSummaryFilter: true,
-          enableToolCalling: false,
+          enableToolCalling: supportsToolCalling ?? false,
           selectedTools: [],
         },
         embeddingModel: embeddingModels?.length
