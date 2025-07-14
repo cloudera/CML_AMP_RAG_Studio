@@ -111,7 +111,8 @@ def should_use_retrieval(
         data_source_summary_indexer = SummaryIndexer.get_summary_indexer(data_source_id)
         if data_source_summary_indexer:
             data_source_summary = data_source_summary_indexer.get_full_summary()
-            data_source_summaries[data_source_id] = data_source_summary
+            if data_source_summary:
+                data_source_summaries[data_source_id] = data_source_summary
     return len(data_source_ids) > 0, data_source_summaries
 
 
