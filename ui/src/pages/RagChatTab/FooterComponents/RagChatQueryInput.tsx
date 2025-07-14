@@ -74,11 +74,12 @@ import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSe
 import useModal from "src/utils/useModal.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
 import { transformModelOptions } from "src/utils/modelUtils.ts";
-import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 import { useUpdateSessionMutation } from "src/api/sessionApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { QueryKeys } from "src/api/utils.ts";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 const { TextArea } = Input;
 
@@ -90,15 +91,17 @@ export interface NewSessionCallbackProps {
 
 const RagChatQueryInput = ({
   newSessionCallback,
+  validDataSources,
 }: {
   newSessionCallback: (props: NewSessionCallbackProps) => void;
+  validDataSources?: DataSourceType[];
 }) => {
   const {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
-    dataSourcesQuery: { dataSourcesStatus, dataSources },
+    dataSourcesQuery: { dataSourcesStatus, dataSources: allDataSources },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
     streamedAbortControllerState: [
@@ -116,7 +119,7 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
-  const { data: llmModels } = useGetLlmModels();
+  const { data: llmModels } = useSuspenseQuery(getLlmModelsQueryOptions);
   const [inferenceModel, setInferenceModel] = useState<string>(() => {
     if (sessionId) {
       if (activeSession?.inferenceModel) {
@@ -124,10 +127,11 @@ const RagChatQueryInput = ({
       }
       return "";
     }
-    return llmModels && llmModels.length > 0 ? llmModels[0].model_id : "";
+    return llmModels.length > 0 ? llmModels[0].model_id : "";
   });
   const inputRef = useRef<InputRef>(null);
   const queryClient = useQueryClient();
+  const dataSources = validDataSources ?? allDataSources;
 
   const updateSession = useUpdateSessionMutation({
     onSuccess: () => {
@@ -235,7 +239,7 @@ const RagChatQueryInput = ({
   const handleChangeInferenceModel = (modelId: string) => {
     setInferenceModel(modelId);
     if (activeSession) {
-      const supportsToolCalling = llmModels?.find(
+      const supportsToolCalling = llmModels.find(
         (model) => model.model_id === modelId,
       )?.tool_calling_supported;
       updateSession.mutate({
