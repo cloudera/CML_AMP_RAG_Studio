@@ -98,8 +98,11 @@ const RagChat = () => {
           }}
         >
           <RagChatQueryInput
-            newSessionCallback={(userInput: string) => {
-              createSessionAndRedirect([], userInput);
+            newSessionCallback={(
+              userInput: string,
+              selectedDataSourceIds: number[],
+            ) => {
+              createSessionAndRedirect(selectedDataSourceIds, userInput);
             }}
           />
         </Footer>

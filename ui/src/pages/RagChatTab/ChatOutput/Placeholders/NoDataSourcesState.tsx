@@ -37,12 +37,9 @@
  ******************************************************************************/
 
 import { useNavigate } from "@tanstack/react-router";
-import { Button, Flex, Form, Select, Typography } from "antd";
+import { Button, Flex, Typography } from "antd";
 import { useContext, ReactNode } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
-import { ArrowRightOutlined } from "@ant-design/icons";
-import { formatDataSource } from "src/utils/formatters.ts";
 
 const PlaceholderContainer = ({
   message,
@@ -70,63 +67,21 @@ const PlaceholderContainer = ({
 
 const NoDataSourcesState = () => {
   const navigate = useNavigate();
-  const [form] = Form.useForm<{ dataSourceIds: number[] }>();
   const {
     activeSession,
     dataSourcesQuery: { dataSources, dataSourcesStatus },
   } = useContext(RagChatContext);
-
-  const createSessionAndRedirect = useCreateSessionAndRedirect();
-
-  const handleCreateSession = () => {
-    form
-      .validateFields()
-      .catch(() => null)
-      .then((values) => {
-        if (values?.dataSourceIds.length) {
-          createSessionAndRedirect(values.dataSourceIds);
-        }
-      })
-      .catch(() => null);
-  };
 
   if (activeSession) {
     return null;
   }
 
   if (dataSourcesStatus === "success" && dataSources.length > 0) {
-    return (
-      <PlaceholderContainer message="Start chatting with an existing Knowledge Base">
-        <Form autoCorrect="off" form={form} clearOnDestroy={true}>
-          <Flex gap={8}>
-            <Form.Item
-              name="dataSourceIds"
-              rules={[
-                { required: true, message: "Please select Knowledge Base(s)" },
-              ]}
-            >
-              <Select
-                mode="multiple"
-                disabled={dataSources.length === 0}
-                style={{ width: 300 }}
-                options={dataSources.map((value) => {
-                  return formatDataSource(value);
-                })}
-              />
-            </Form.Item>
-            <Button
-              type="primary"
-              icon={<ArrowRightOutlined />}
-              onClick={handleCreateSession}
-            />
-          </Flex>
-        </Form>
-      </PlaceholderContainer>
-    );
+    return null;
   }
 
   return (
-    <PlaceholderContainer message="Or create a knowledge base to chat with your documents.">
+    <PlaceholderContainer message="Create a knowledge base to chat with your documents.">
       <Button
         type="default"
         style={{ width: 200 }}

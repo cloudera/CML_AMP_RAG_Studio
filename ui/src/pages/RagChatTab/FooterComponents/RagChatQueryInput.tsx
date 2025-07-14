@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, InputRef, Tooltip } from "antd";
+import { Button, Flex, Input, InputRef, Select, Tooltip } from "antd";
 import {
   MouseEventHandler,
   useContext,
@@ -64,20 +64,24 @@ import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.t
 import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
 import useModal from "src/utils/useModal.ts";
+import { formatDataSource } from "src/utils/formatters.ts";
 
 const { TextArea } = Input;
 
 const RagChatQueryInput = ({
   newSessionCallback,
 }: {
-  newSessionCallback: (userInput: string) => void;
+  newSessionCallback: (
+    userInput: string,
+    selectedDataSourceIds: number[],
+  ) => void;
 }) => {
   const {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
-    dataSourcesQuery: { dataSourcesStatus },
+    dataSourcesQuery: { dataSourcesStatus, dataSources },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
     streamedAbortControllerState: [
@@ -86,6 +90,9 @@ const RagChatQueryInput = ({
     ],
   } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedDataSourceIds, setSelectedDataSourceIds] = useState<number[]>(
+    [],
+  );
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
@@ -150,7 +157,7 @@ const RagChatQueryInput = ({
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        newSessionCallback(userInput);
+        newSessionCallback(userInput, selectedDataSourceIds);
       }
     }
   };
@@ -216,7 +223,7 @@ const RagChatQueryInput = ({
                     handleChat(userInput);
                   }
                 }}
-                autoSize={{ minRows: 2, maxRows: 20 }}
+                autoSize={{ minRows: 3, maxRows: 20 }}
                 disabled={streamChatMutation.isPending}
                 style={{ paddingRight: 110 }}
               />
@@ -242,6 +249,19 @@ const RagChatQueryInput = ({
                   </Tooltip>
                 ) : (
                   <Flex gap={4} align="end">
+                    {!activeSession && dataSources.length > 0 ? (
+                      <Select
+                        mode="multiple"
+                        // allowClear
+                        placeholder="knowledge base(s)"
+                        style={{ marginTop: 4, minWidth: 180 }}
+                        options={dataSources.map((ds) => formatDataSource(ds))}
+                        onChange={setSelectedDataSourceIds}
+                        value={selectedDataSourceIds}
+                        size="small"
+                        variant="borderless"
+                      />
+                    ) : null}
                     <ToolsManagerButton />
                     <Tooltip
                       title={
