@@ -253,7 +253,10 @@ const RagChatQueryInput = ({
                       <Select
                         mode="multiple"
                         placeholder="knowledge base(s)"
-                        style={{ marginTop: 4, minWidth: 180 }}
+                        style={{
+                          marginTop: 4,
+                          minWidth: 168,
+                        }}
                         options={dataSources.map((ds) => formatDataSource(ds))}
                         onChange={setSelectedDataSourceIds}
                         value={selectedDataSourceIds}
