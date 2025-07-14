@@ -117,9 +117,15 @@ const RagChatQueryInput = ({
     strict: false,
   });
   const { data: llmModels } = useGetLlmModels();
-  const [inferenceModel, setInferenceModel] = useState<string>(
-    activeSession?.inferenceModel ?? (llmModels ? llmModels[0].model_id : ""),
-  );
+  const [inferenceModel, setInferenceModel] = useState<string>(() => {
+    if (sessionId) {
+      if (activeSession?.inferenceModel) {
+        return activeSession.inferenceModel;
+      }
+      return "";
+    }
+    return llmModels && llmModels.length > 0 ? llmModels[0].model_id : "";
+  });
   const inputRef = useRef<InputRef>(null);
   const queryClient = useQueryClient();
 
@@ -182,6 +188,12 @@ const RagChatQueryInput = ({
       setStreamedAbortController(undefined);
     }
   }, [streamChatMutation.isSuccess, setStreamedAbortController]);
+
+  useEffect(() => {
+    if (activeSession?.inferenceModel) {
+      setInferenceModel(activeSession.inferenceModel);
+    }
+  }, [activeSession?.inferenceModel]);
 
   const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
