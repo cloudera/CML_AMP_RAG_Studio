@@ -223,9 +223,9 @@ const RagChatQueryInput = ({
                     handleChat(userInput);
                   }
                 }}
-                autoSize={{ minRows: 3, maxRows: 20 }}
+                autoSize={{ minRows: 1, maxRows: 20 }}
                 disabled={streamChatMutation.isPending}
-                style={{ paddingRight: 110 }}
+                style={{ paddingBottom: 30 }}
               />
               <div
                 style={{
