@@ -326,7 +326,7 @@ const RagChatQueryInput = ({
                         placeholder="knowledge base(s)"
                         style={{
                           marginTop: 4,
-                          minWidth: 168,
+                          minWidth: 166,
                         }}
                         options={dataSources.map((ds) => formatDataSource(ds))}
                         onChange={setSelectedDataSourceIds}
@@ -334,6 +334,7 @@ const RagChatQueryInput = ({
                         size="small"
                         variant="borderless"
                         optionFilterProp="label"
+                        popupMatchSelectWidth={false}
                       />
                     ) : null}
                     <Tooltip title={"Inference Model"}>
@@ -343,6 +344,7 @@ const RagChatQueryInput = ({
                           minWidth: 168,
                         }}
                         size="small"
+                        popupMatchSelectWidth={false}
                         variant="borderless"
                         optionFilterProp="label"
                         value={inferenceModel}
