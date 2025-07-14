@@ -36,7 +36,15 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, InputRef, Select, Tooltip } from "antd";
+import {
+  Button,
+  Flex,
+  Input,
+  InputRef,
+  Select,
+  Tooltip,
+  Typography,
+} from "antd";
 import {
   MouseEventHandler,
   useContext,
@@ -65,16 +73,25 @@ import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionD
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
 import useModal from "src/utils/useModal.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
+import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { useGetLlmModels } from "src/api/modelsApi.ts";
+import { useUpdateSessionMutation } from "src/api/sessionApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
 
 const { TextArea } = Input;
+
+export interface NewSessionCallbackProps {
+  userInput: string;
+  selectedDataSourceIds: number[];
+  inferenceModel?: string;
+}
 
 const RagChatQueryInput = ({
   newSessionCallback,
 }: {
-  newSessionCallback: (
-    userInput: string,
-    selectedDataSourceIds: number[],
-  ) => void;
+  newSessionCallback: (props: NewSessionCallbackProps) => void;
 }) => {
   const {
     activeSession,
@@ -99,7 +116,28 @@ const RagChatQueryInput = ({
   const search: { question?: string } = useSearch({
     strict: false,
   });
+  const { data: llmModels } = useGetLlmModels();
+  const [inferenceModel, setInferenceModel] = useState<string>(
+    activeSession?.inferenceModel ?? (llmModels ? llmModels[0].model_id : ""),
+  );
   const inputRef = useRef<InputRef>(null);
+  const queryClient = useQueryClient();
+
+  const updateSession = useUpdateSessionMutation({
+    onSuccess: () => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getSessions],
+        })
+        .catch((error: unknown) => {
+          messageQueue.error(`Error refetching sessions: ${String(error)}`);
+        });
+    },
+    onError: (error) => {
+      messageQueue.error(`Failed to update session: ${error.message}`);
+    },
+  });
+
   const {
     data: sampleQuestions,
     isFetching: sampleQuestionsIsFetching,
@@ -157,7 +195,11 @@ const RagChatQueryInput = ({
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        newSessionCallback(userInput, selectedDataSourceIds);
+        newSessionCallback({
+          userInput,
+          selectedDataSourceIds,
+          inferenceModel,
+        });
       }
     }
   };
@@ -176,6 +218,16 @@ const RagChatQueryInput = ({
     setStreamedChat("");
     setStreamedEvent([]);
     streamChatMutation.reset();
+  };
+
+  const handleChangeInferenceModel = (modelId: string) => {
+    setInferenceModel(modelId);
+    if (activeSession) {
+      updateSession.mutate({
+        ...activeSession,
+        inferenceModel: modelId,
+      });
+    }
   };
 
   return (
@@ -265,6 +317,25 @@ const RagChatQueryInput = ({
                         optionFilterProp="label"
                       />
                     ) : null}
+                    <Tooltip title={"Inference Model"}>
+                      <Select
+                        style={{
+                          marginTop: 4,
+                          minWidth: 168,
+                        }}
+                        size="small"
+                        variant="borderless"
+                        optionFilterProp="label"
+                        value={inferenceModel}
+                        onChange={handleChangeInferenceModel}
+                        options={transformModelOptions(llmModels)}
+                        labelRender={(label) => (
+                          <Typography.Text type={"secondary"}>
+                            {label.label}
+                          </Typography.Text>
+                        )}
+                      />
+                    </Tooltip>
                     <ToolsManagerButton />
                     <Tooltip
                       title={
