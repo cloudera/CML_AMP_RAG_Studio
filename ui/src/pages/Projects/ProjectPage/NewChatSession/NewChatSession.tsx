@@ -36,19 +36,18 @@
  * DATA.
  ******************************************************************************/
 
-import { Card, Select, Typography } from "antd";
-import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
+import { Card, Typography } from "antd";
+import RagChatQueryInput, {
+  NewSessionCallbackProps,
+} from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect.tsx";
 import { useGetDataSourcesForProject } from "src/api/projectsApi.ts";
 import { useProjectContext } from "pages/Projects/ProjectContext.tsx";
-import { DataSourceInputType, formatDataSource } from "src/utils/formatters.ts";
-import { useState } from "react";
 
 export const NewChatSession = () => {
   const { project } = useProjectContext();
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { data: dataSources } = useGetDataSourcesForProject(project.id);
-  const [selectedDataSources, setSelectedDataSources] = useState<number[]>([]);
 
   return (
     <Card
@@ -57,25 +56,19 @@ export const NewChatSession = () => {
           Start a new chat session
         </Typography.Title>
       }
-      extra={
-        <Select
-          mode="multiple"
-          placeholder="Select a data source (optional)"
-          disabled={!dataSources || dataSources.length === 0}
-          style={{ width: 300 }}
-          allowClear={true}
-          onChange={(ids: DataSourceInputType["value"][]) => {
-            setSelectedDataSources(ids);
-          }}
-          options={dataSources?.map((value) => {
-            return formatDataSource(value);
-          })}
-        />
-      }
     >
       <RagChatQueryInput
-        newSessionCallback={(userInput: string) => {
-          createSessionAndRedirect(selectedDataSources, userInput);
+        validDataSources={dataSources}
+        newSessionCallback={({
+          userInput,
+          selectedDataSourceIds,
+          inferenceModel,
+        }: NewSessionCallbackProps) => {
+          createSessionAndRedirect(
+            selectedDataSourceIds,
+            userInput,
+            inferenceModel,
+          );
         }}
       />
     </Card>

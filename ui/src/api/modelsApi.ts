@@ -47,7 +47,7 @@ import {
 } from "src/api/utils.ts";
 
 export interface Model {
-  name?: string;
+  name: string;
   model_id: string;
   available: boolean | null;
   replica_count?: number;

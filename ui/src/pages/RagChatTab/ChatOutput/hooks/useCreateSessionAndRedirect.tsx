@@ -32,17 +32,24 @@ const useCreateSessionAndRedirect = (
     },
   });
 
-  return (dataSourceIds: number[], question?: string) => {
+  return (
+    dataSourceIds: number[],
+    question?: string,
+    inferenceModel?: string,
+  ) => {
     if (models) {
+      const supportsToolCalling = models.find(
+        (model) => model.model_id === inferenceModel,
+      )?.tool_calling_supported;
       const requestBody: CreateSessionRequest = {
         name: "",
         dataSourceIds: dataSourceIds,
-        inferenceModel: models[0].model_id,
+        inferenceModel: inferenceModel ?? models[0].model_id,
         responseChunks: 10,
         queryConfiguration: {
           enableHyde: false,
           enableSummaryFilter: true,
-          enableToolCalling: false,
+          enableToolCalling: supportsToolCalling ?? false,
           selectedTools: [],
         },
         embeddingModel: embeddingModels?.length

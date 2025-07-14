@@ -36,7 +36,15 @@
  * DATA.
  ******************************************************************************/
 
-import { Button, Flex, Input, InputRef, Tooltip } from "antd";
+import {
+  Button,
+  Flex,
+  Input,
+  InputRef,
+  Select,
+  Tooltip,
+  Typography,
+} from "antd";
 import {
   MouseEventHandler,
   useContext,
@@ -64,20 +72,36 @@ import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.t
 import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
 import useModal from "src/utils/useModal.ts";
+import { formatDataSource } from "src/utils/formatters.ts";
+import { useTransformModelOptions } from "src/utils/modelUtils.ts";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
+import { useUpdateSessionMutation } from "src/api/sessionApi.ts";
+import messageQueue from "src/utils/messageQueue.ts";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryKeys } from "src/api/utils.ts";
+import { DataSourceType } from "src/api/dataSourceApi.ts";
 
 const { TextArea } = Input;
 
+export interface NewSessionCallbackProps {
+  userInput: string;
+  selectedDataSourceIds: number[];
+  inferenceModel?: string;
+}
+
 const RagChatQueryInput = ({
   newSessionCallback,
+  validDataSources,
 }: {
-  newSessionCallback: (userInput: string) => void;
+  newSessionCallback: (props: NewSessionCallbackProps) => void;
+  validDataSources?: DataSourceType[];
 }) => {
   const {
     activeSession,
     excludeKnowledgeBaseState: [excludeKnowledgeBase, setExcludeKnowledgeBase],
     chatHistoryQuery: { flatChatHistory },
     dataSourceSize,
-    dataSourcesQuery: { dataSourcesStatus },
+    dataSourcesQuery: { dataSourcesStatus, dataSources: allDataSources },
     streamedChatState: [, setStreamedChat],
     streamedEventState: [, setStreamedEvent],
     streamedAbortControllerState: [
@@ -86,13 +110,45 @@ const RagChatQueryInput = ({
     ],
   } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedDataSourceIds, setSelectedDataSourceIds] = useState<number[]>(
+    [],
+  );
 
   const [userInput, setUserInput] = useState("");
   const { sessionId } = useParams({ strict: false });
   const search: { question?: string } = useSearch({
     strict: false,
   });
+  const { data: llmModels } = useSuspenseQuery(getLlmModelsQueryOptions);
+  const [inferenceModel, setInferenceModel] = useState<string>(() => {
+    if (sessionId) {
+      if (activeSession?.inferenceModel) {
+        return activeSession.inferenceModel;
+      }
+      return "";
+    }
+    return llmModels.length > 0 ? llmModels[0].model_id : "";
+  });
   const inputRef = useRef<InputRef>(null);
+  const queryClient = useQueryClient();
+  const dataSources = validDataSources ?? allDataSources;
+  const modelOptions = useTransformModelOptions(llmModels);
+
+  const updateSession = useUpdateSessionMutation({
+    onSuccess: () => {
+      queryClient
+        .invalidateQueries({
+          queryKey: [QueryKeys.getSessions],
+        })
+        .catch((error: unknown) => {
+          messageQueue.error(`Error refetching sessions: ${String(error)}`);
+        });
+    },
+    onError: (error) => {
+      messageQueue.error(`Failed to update session: ${error.message}`);
+    },
+  });
+
   const {
     data: sampleQuestions,
     isFetching: sampleQuestionsIsFetching,
@@ -138,6 +194,12 @@ const RagChatQueryInput = ({
     }
   }, [streamChatMutation.isSuccess, setStreamedAbortController]);
 
+  useEffect(() => {
+    if (activeSession?.inferenceModel) {
+      setInferenceModel(activeSession.inferenceModel);
+    }
+  }, [activeSession?.inferenceModel]);
+
   const handleChat = (userInput: string) => {
     if (userInput.trim().length <= 0) {
       return;
@@ -150,7 +212,11 @@ const RagChatQueryInput = ({
           configuration: createQueryConfiguration(excludeKnowledgeBase),
         });
       } else {
-        newSessionCallback(userInput);
+        newSessionCallback({
+          userInput,
+          selectedDataSourceIds,
+          inferenceModel,
+        });
       }
     }
   };
@@ -169,6 +235,23 @@ const RagChatQueryInput = ({
     setStreamedChat("");
     setStreamedEvent([]);
     streamChatMutation.reset();
+  };
+
+  const handleChangeInferenceModel = (modelId: string) => {
+    setInferenceModel(modelId);
+    if (activeSession) {
+      const supportsToolCalling = llmModels.find(
+        (model) => model.model_id === modelId,
+      )?.tool_calling_supported;
+      updateSession.mutate({
+        ...activeSession,
+        inferenceModel: modelId,
+        queryConfiguration: {
+          ...activeSession.queryConfiguration,
+          enableToolCalling: supportsToolCalling ?? false,
+        },
+      });
+    }
   };
 
   return (
@@ -216,9 +299,9 @@ const RagChatQueryInput = ({
                     handleChat(userInput);
                   }
                 }}
-                autoSize={{ minRows: 2, maxRows: 20 }}
+                autoSize={{ minRows: 1, maxRows: 20 }}
                 disabled={streamChatMutation.isPending}
-                style={{ paddingRight: 110 }}
+                style={{ paddingBottom: 30 }}
               />
               <div
                 style={{
@@ -242,6 +325,46 @@ const RagChatQueryInput = ({
                   </Tooltip>
                 ) : (
                   <Flex gap={4} align="end">
+                    {!activeSession && dataSources.length > 0 ? (
+                      <Select
+                        mode="multiple"
+                        placeholder="Knowledge base(s)"
+                        style={{
+                          marginTop: 4,
+                          minWidth: 167,
+                        }}
+                        options={dataSources.map((ds) => formatDataSource(ds))}
+                        onChange={setSelectedDataSourceIds}
+                        value={selectedDataSourceIds}
+                        size="small"
+                        variant="borderless"
+                        optionFilterProp="label"
+                        popupMatchSelectWidth={false}
+                      />
+                    ) : null}
+                    <Tooltip title={"Inference Model"}>
+                      <Select
+                        style={{
+                          marginTop: 4,
+                          minWidth: 168,
+                        }}
+                        size="small"
+                        popupMatchSelectWidth={false}
+                        variant="borderless"
+                        optionFilterProp="label"
+                        value={inferenceModel}
+                        onChange={handleChangeInferenceModel}
+                        options={modelOptions}
+                        labelRender={(label) => (
+                          <Typography.Text
+                            style={{ fontSize: 14, color: "rgba(0,0,0,0.25)" }}
+                            type={"secondary"}
+                          >
+                            {label.label}
+                          </Typography.Text>
+                        )}
+                      />
+                    </Tooltip>
                     <ToolsManagerButton />
                     <Tooltip
                       title={

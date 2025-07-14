@@ -58,6 +58,26 @@ vi.mock("src/api/chatApi.ts", () => ({
   })),
 }));
 
+vi.mock("src/api/modelsApi.ts", () => ({
+  getLlmModelsQueryOptions: {
+    queryKey: ["llmModels"],
+    queryFn: () =>
+      Promise.resolve([
+        { model_id: "test-llm", tool_calling_supported: false },
+      ]),
+  },
+  useGetLlmModels: vi.fn(() => ({
+    data: [{ model_id: "test-llm" }],
+    isFetching: false,
+    error: null,
+  })),
+  useGetModelSource: vi.fn(() => ({
+    data: "OpenAI",
+    isFetching: false,
+    error: null,
+  })),
+}));
+
 vi.mock("src/api/ragQueryApi.ts", () => ({
   useSuggestQuestions: vi.fn(() => ({
     data: { suggested_questions: ["Sample question 1", "Sample question 2"] },
@@ -70,6 +90,16 @@ vi.mock("@tanstack/react-router", () => ({
   useParams: vi.fn(() => ({ sessionId: "123" })),
   useSearch: vi.fn(() => ({ question: undefined })),
 }));
+
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useSuspenseQuery: vi.fn(() => ({
+      data: [{ model_id: "test-llm", tool_calling_supported: false }],
+    })),
+  };
+});
 
 vi.mock("src/utils/useModal.ts", () => ({
   default: vi.fn(() => ({
@@ -472,22 +502,22 @@ describe("RagChatQueryInput", () => {
   });
 
   describe("New Session Callback", () => {
-    it("calls newSessionCallback when no sessionId exists", async () => {
+    it("calls newSessionCallback when no session exists", async () => {
       const user = userEvent.setup();
-      const mockNewSessionCallback = vi.fn();
+      const newSessionCallback = vi.fn();
       (useParams as Mock).mockReturnValue({ sessionId: undefined });
-
       const mockContext = createMockContext();
-      renderWithContext(mockContext, mockNewSessionCallback);
+      renderWithContext(mockContext, newSessionCallback);
 
       const textArea = screen.getByPlaceholderText("Ask a question");
-      const sendButton = screen.getByRole("button", { name: /send/i });
+      await user.type(textArea, "Test query");
+      await user.click(screen.getByRole("button", { name: /send/i }));
 
-      await user.type(textArea, "New session query");
-      await user.click(sendButton);
-
-      expect(mockNewSessionCallback).toHaveBeenCalledWith("New session query");
-      expect(mockStreamingChatMutation.mutate).not.toHaveBeenCalled();
+      expect(newSessionCallback).toHaveBeenCalledWith({
+        userInput: "Test query",
+        selectedDataSourceIds: [],
+        inferenceModel: "test-llm",
+      });
     });
   });
 

@@ -38,10 +38,14 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
+import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 
 export const Route = createFileRoute(
   "/_layout/projects/_layout-projects/$projectId",
 )({
   loader: async ({ context }) =>
-    await context.queryClient.ensureQueryData(getProjectsQueryOptions),
+    await Promise.all([
+      context.queryClient.ensureQueryData(getProjectsQueryOptions),
+      context.queryClient.ensureQueryData(getLlmModelsQueryOptions),
+    ]),
 });
