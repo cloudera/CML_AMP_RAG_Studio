@@ -355,7 +355,10 @@ const RagChatQueryInput = ({
                         onChange={handleChangeInferenceModel}
                         options={transformModelOptions(llmModels)}
                         labelRender={(label) => (
-                          <Typography.Text type={"secondary"}>
+                          <Typography.Text
+                            style={{ fontSize: 14, color: "rgba(0,0,0,0.25)" }}
+                            type={"secondary"}
+                          >
                             {label.label}
                           </Typography.Text>
                         )}
