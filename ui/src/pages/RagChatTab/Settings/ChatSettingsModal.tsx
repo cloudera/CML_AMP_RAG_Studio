@@ -55,7 +55,7 @@ import {
   useGetLlmModels,
   useGetRerankingModels,
 } from "src/api/modelsApi.ts";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { useTransformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useContext, useEffect } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -96,6 +96,8 @@ const ChatSettingsModal = ({
 }) => {
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
+  const llmModelOptions = useTransformModelOptions(llmModels);
+  const rerankModelOptions = useTransformModelOptions(rerankingModels);
   const {
     dataSourcesQuery: { dataSources },
     activeSession,
@@ -289,7 +291,7 @@ const ChatSettingsModal = ({
             }
             rules={[{ required: true, message: "Please select a model" }]}
           >
-            <Select options={transformModelOptions(llmModels)} />
+            <Select options={llmModelOptions} />
           </Form.Item>
           <Form.Item
             name="rerankModel"
@@ -298,7 +300,7 @@ const ChatSettingsModal = ({
           >
             <Select
               allowClear
-              options={transformModelOptions(rerankingModels)}
+              options={rerankModelOptions}
             />
           </Form.Item>
           <Form.Item

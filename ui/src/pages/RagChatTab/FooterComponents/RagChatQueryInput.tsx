@@ -73,7 +73,7 @@ import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionD
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
 import useModal from "src/utils/useModal.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { useTransformModelOptions } from "src/utils/modelUtils.ts";
 import { getLlmModelsQueryOptions } from "src/api/modelsApi.ts";
 import { useUpdateSessionMutation } from "src/api/sessionApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
@@ -132,6 +132,7 @@ const RagChatQueryInput = ({
   const inputRef = useRef<InputRef>(null);
   const queryClient = useQueryClient();
   const dataSources = validDataSources ?? allDataSources;
+  const modelOptions = useTransformModelOptions(llmModels);
 
   const updateSession = useUpdateSessionMutation({
     onSuccess: () => {
@@ -353,7 +354,7 @@ const RagChatQueryInput = ({
                         optionFilterProp="label"
                         value={inferenceModel}
                         onChange={handleChangeInferenceModel}
-                        options={transformModelOptions(llmModels)}
+                        options={modelOptions}
                         labelRender={(label) => (
                           <Typography.Text
                             style={{ fontSize: 14, color: "rgba(0,0,0,0.25)" }}
