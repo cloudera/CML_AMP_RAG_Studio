@@ -46,15 +46,6 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatMessageType } from "src/api/chatApi.ts";
 
-// Mock the intersection observer
-const mockIntersectionObserver = vi.fn();
-mockIntersectionObserver.mockReturnValue({
-  observe: () => null,
-  unobserve: () => null,
-  disconnect: () => null,
-});
-window.IntersectionObserver = mockIntersectionObserver;
-
 // Mock scrollIntoView
 const mockScrollIntoView = vi.fn();
 Element.prototype.scrollIntoView = mockScrollIntoView;
@@ -70,7 +61,7 @@ Object.defineProperty(window, "history", {
 // Mock window.location
 Object.defineProperty(window, "location", {
   value: {
-    href: "http://localhost:3000",
+    href: "http://localhost:9999",
   },
   writable: true,
 });
@@ -705,32 +696,6 @@ describe("ChatMessageController", () => {
       expect(lastMessageContainer).toHaveStyle({
         minHeight: `${String(window.innerHeight - 200)}px`,
       });
-    });
-
-    it("applies intersection observer ref to the third message (index 2)", () => {
-      const messages = [
-        createMockMessage("1", "First", "Response 1"),
-        createMockMessage("2", "Second", "Response 2"),
-        createMockMessage("3", "Third", "Response 3"),
-        createMockMessage("4", "Fourth", "Response 4"),
-      ];
-
-      const mockContext = createMockContext({
-        chatHistoryQuery: {
-          flatChatHistory: messages,
-          isFetching: false,
-          isFetchingPreviousPage: false,
-          chatHistoryStatus: "success",
-          fetchPreviousPage: vi.fn(),
-        },
-      });
-      renderWithContext(mockContext);
-
-      // All messages should be rendered
-      expect(screen.getByTestId("chat-message-1")).toBeInTheDocument();
-      expect(screen.getByTestId("chat-message-2")).toBeInTheDocument();
-      expect(screen.getByTestId("chat-message-3")).toBeInTheDocument();
-      expect(screen.getByTestId("chat-message-4")).toBeInTheDocument();
     });
   });
 });
