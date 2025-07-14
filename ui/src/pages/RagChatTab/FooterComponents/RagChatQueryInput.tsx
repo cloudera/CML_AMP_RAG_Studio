@@ -252,7 +252,6 @@ const RagChatQueryInput = ({
                     {!activeSession && dataSources.length > 0 ? (
                       <Select
                         mode="multiple"
-                        // allowClear
                         placeholder="knowledge base(s)"
                         style={{ marginTop: 4, minWidth: 180 }}
                         options={dataSources.map((ds) => formatDataSource(ds))}
@@ -260,6 +259,7 @@ const RagChatQueryInput = ({
                         value={selectedDataSourceIds}
                         size="small"
                         variant="borderless"
+                        optionFilterProp="label"
                       />
                     ) : null}
                     <ToolsManagerButton />
