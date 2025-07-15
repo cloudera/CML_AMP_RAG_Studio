@@ -51,7 +51,7 @@ ragstudio_apps = ["RagStudio"]
 if len(cml_apps.applications) > 0:
     for app_name in ragstudio_apps:
         cml_ragstudio_app = next(
-            (cml_app for cml_app in cml_apps.applications if cml_app.name == app_name),
+            (cml_app for cml_app in cml_apps.applications if cml_app.name.startswith(app_name)),
             None,
         )
 
