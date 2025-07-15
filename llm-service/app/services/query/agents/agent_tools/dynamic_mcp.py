@@ -348,11 +348,12 @@ class UserToolStorage:
         """Save a user tool to mcp.json."""
         config = self._read_mcp_config()
 
-        # Add or update the tool
         tool_data = {
             "name": tool.name,
-            "display_name": tool.display_name,
-            "description": tool.description,
+            "metadata": {
+                "display_name": tool.display_name,
+                "description": tool.description,
+            },
             "function_schema": tool.function_schema,
             "script_path": tool.script_path,
         }
@@ -424,10 +425,20 @@ def create_user_tool_from_dict(tool_data: Dict[str, Any]) -> UserToolDefinition:
         except ImportError:
             script_path = os.path.join("..", "tools", script_path)
 
+    # Handle both old and new metadata structure for backward compatibility
+    if "metadata" in tool_data:
+        # New structure with metadata
+        display_name = tool_data["metadata"]["display_name"]
+        description = tool_data["metadata"]["description"]
+    else:
+        # Old structure for backward compatibility
+        display_name = tool_data.get("display_name", tool_data["name"])
+        description = tool_data.get("description", "")
+
     return UserToolDefinition(
         name=tool_data["name"],
-        display_name=tool_data["display_name"],
-        description=tool_data["description"],
+        display_name=display_name,
+        description=description,
         script_path=script_path,
     )
 

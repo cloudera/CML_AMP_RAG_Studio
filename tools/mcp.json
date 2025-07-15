@@ -7,16 +7,16 @@
         "display_name": "Web Scraper",
         "description": "Extracts and retrieves content from web pages. This tool enables you to incorporate live web data into your queries, enhancing responses with up-to-date information from specified URLs."
       },
-      "args": [
-        "mcp-server-fetch"
-      ]
+      "args": ["mcp-server-fetch"]
     }
   ],
   "custom_tools": [
     {
       "name": "simple-calculator",
-      "display_name": "Simple Calculator",
-      "description": "Performs basic arithmetic operations on two",
+      "metadata": {
+        "display_name": "Simple Calculator",
+        "description": "Performs basic arithmetic operations on two numbers"
+      },
       "function_schema": {
         "type": "object",
         "properties": {
@@ -30,20 +30,11 @@
           },
           "operation": {
             "type": "string",
-            "enum": [
-              "add",
-              "subtract",
-              "multiply",
-              "divide"
-            ],
+            "enum": ["add", "subtract", "multiply", "divide"],
             "description": "The arithmetic operation to perform"
           }
         },
-        "required": [
-          "first_number",
-          "second_number",
-          "operation"
-        ]
+        "required": ["first_number", "second_number", "operation"]
       },
       "script_path": "../tools/custom_tool_scripts/simple-calculator.py"
     }

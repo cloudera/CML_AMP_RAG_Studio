@@ -43,6 +43,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
+from app.config import settings
 from app import exceptions
 
 logger = logging.getLogger(__name__)
@@ -83,15 +84,21 @@ def get_user_tools() -> List[UserToolResponse]:
         storage = UserToolStorage()
         tools_data = storage.get_custom_tools()
 
-        return [
-            UserToolResponse(
-                name=tool["name"],
-                display_name=tool["display_name"],
-                description=tool["description"],
-                script_path=tool["script_path"],
+        responses = []
+        for tool in tools_data:
+            display_name, description = (
+                tool["metadata"]["display_name"],
+                tool["metadata"]["description"],
             )
-            for tool in tools_data
-        ]
+            responses.append(
+                UserToolResponse(
+                    name=tool["name"],
+                    display_name=display_name,
+                    description=description,
+                    script_path=tool["script_path"],
+                )
+            )
+        return responses
     except Exception as e:
         logger.error(f"Error getting user tools: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving tools: {str(e)}")
@@ -135,8 +142,6 @@ def create_user_tool(
 
         # Create full path for validation
         try:
-            from app.config import settings
-
             full_script_path = os.path.join(settings.tools_dir, script_path)
         except ImportError:
             full_script_path = os.path.join("..", "tools", script_path)
@@ -183,10 +188,15 @@ def get_user_tool(
         if not tool_data:
             raise HTTPException(status_code=404, detail=f"Tool '{tool_name}' not found")
 
+        display_name, description = (
+            tool_data["metadata"]["display_name"],
+            tool_data["metadata"]["description"],
+        )
+
         return UserToolResponse(
             name=tool_data["name"],
-            display_name=tool_data["display_name"],
-            description=tool_data["description"],
+            display_name=display_name,
+            description=description,
             script_path=tool_data["script_path"],
         )
 
@@ -236,8 +246,6 @@ def update_user_tool(
 
         # Create full path for validation
         try:
-            from app.config import settings
-
             full_script_path = os.path.join(settings.tools_dir, script_path)
         except ImportError:
             full_script_path = os.path.join("..", "tools", script_path)
