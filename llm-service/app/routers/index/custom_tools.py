@@ -108,7 +108,6 @@ def create_user_tool(
 ) -> UserToolResponse:
     """Create a new user tool."""
     try:
-        import json
         from app.services.query.agents.agent_tools.dynamic_mcp import (
             UserToolDefinition,
             UserToolStorage,
@@ -210,7 +209,6 @@ def update_user_tool(
 ) -> UserToolResponse:
     """Update an existing user tool."""
     try:
-        import json
         from app.services.query.agents.agent_tools.dynamic_mcp import (
             UserToolDefinition,
             UserToolStorage,
