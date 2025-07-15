@@ -114,8 +114,8 @@ export function SessionSidebar({ sessions }: { sessions: Session[] }) {
     },
     { type: "divider", key: "projectHeaderDivider" },
     ...projectItems,
-    { type: "divider", key: "newChatDivider" },
     ...newChatItem(),
+    { type: "divider", key: "newChatDivider" },
     ...defaultSessionItems(sessions),
   ];
 

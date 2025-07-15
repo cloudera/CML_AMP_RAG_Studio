@@ -41,6 +41,7 @@ package com.cloudera.cai.rag.projects;
 import com.cloudera.cai.rag.Types.Project;
 import com.cloudera.cai.rag.Types.RagDataSource;
 import com.cloudera.cai.rag.Types.Session;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.sessions.SessionRepository;
@@ -48,7 +49,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.jdbi.v3.core.Jdbi;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -56,17 +56,17 @@ public class ProjectService {
   private final ProjectRepository projectRepository;
   private final SessionRepository sessionRepository;
   private final RagDataSourceRepository dataSourceRepository;
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
 
   public ProjectService(
       ProjectRepository projectRepository,
       SessionRepository sessionRepository,
       RagDataSourceRepository dataSourceRepository,
-      Jdbi jdbi) {
+      DatabaseOperations databaseOperations) {
     this.projectRepository = projectRepository;
     this.sessionRepository = sessionRepository;
     this.dataSourceRepository = dataSourceRepository;
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
   }
 
   public Project createProject(Project input) {
@@ -82,7 +82,7 @@ public class ProjectService {
   }
 
   public void deleteProject(Long id) {
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           projectRepository.deleteProject(handle, id);
           sessionRepository.deleteByProjectId(handle, id);

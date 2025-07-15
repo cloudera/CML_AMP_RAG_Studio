@@ -45,7 +45,10 @@ import {
   Select,
   Typography,
 } from "antd";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
+import {
+  ModelSelectOptions,
+  useTransformModelOptions,
+} from "src/utils/modelUtils.ts";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { MetricFilter } from "src/api/metricsApi.ts";
 import MetadataMetrics from "pages/Analytics/AppMetrics.tsx";
@@ -79,7 +82,7 @@ const SelectFilterOption = ({
 }: {
   name: string;
   label: string;
-  options: { value: string; label: string | undefined }[];
+  options: ModelSelectOptions;
 }) => {
   return (
     <Form.Item name={name} label={label} style={{ marginTop: 8 }}>
@@ -106,6 +109,8 @@ const MetricFilterOptions = ({
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
   const { data: projects } = useGetProjects();
+  const llmModelOptions = useTransformModelOptions(llmModels);
+  const rerankModelOptions = useTransformModelOptions(rerankingModels);
 
   return (
     <Form
@@ -117,15 +122,12 @@ const MetricFilterOptions = ({
       <SelectFilterOption
         name="inference_model"
         label="Response synthesizer model"
-        options={transformModelOptions(llmModels)}
+        options={llmModelOptions}
       />
       <SelectFilterOption
         name="rerank_model"
         label="Reranking model"
-        options={[
-          ...transformModelOptions(rerankingModels),
-          { value: "none", label: "None" },
-        ]}
+        options={[...rerankModelOptions, { value: "none", label: "None" }]}
       />
       <BooleanFilterOption
         name="use_summary_filter"

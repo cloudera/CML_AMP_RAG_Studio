@@ -39,13 +39,13 @@
 package com.cloudera.cai.rag.datasources;
 
 import com.cloudera.cai.rag.Types.RagDataSource;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.springframework.stereotype.Component;
@@ -53,14 +53,14 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class RagDataSourceRepository {
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
 
-  public RagDataSourceRepository(Jdbi jdbi) {
-    this.jdbi = jdbi;
+  public RagDataSourceRepository(DatabaseOperations databaseOperations) {
+    this.databaseOperations = databaseOperations;
   }
 
   public Long createRagDataSource(RagDataSource input) {
-    return jdbi.inTransaction(handle -> createRagDataSource(handle, input));
+    return databaseOperations.inTransaction(handle -> createRagDataSource(handle, input));
   }
 
   public Long createRagDataSource(Handle handle, RagDataSource input) {
@@ -91,7 +91,7 @@ public class RagDataSourceRepository {
 
   public void updateRagDataSource(RagDataSource input) {
     RagDataSource cleanedInputs = cleanInputs(input);
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           var sql =
               """
@@ -121,7 +121,7 @@ public class RagDataSourceRepository {
   }
 
   public RagDataSource getRagDataSourceById(Long id) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -150,7 +150,7 @@ public class RagDataSourceRepository {
 
   public List<RagDataSource> getRagDataSources() {
     log.debug("Getting all RagDataSources");
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           var sql =
               """
@@ -174,7 +174,7 @@ public class RagDataSourceRepository {
   }
 
   public void deleteDataSource(Long id) {
-    jdbi.useTransaction(handle -> deleteDataSource(handle, id));
+    databaseOperations.useTransaction(handle -> deleteDataSource(handle, id));
   }
 
   public void deleteDataSource(Handle handle, Long id) {
@@ -184,7 +184,7 @@ public class RagDataSourceRepository {
   }
 
   public int getNumberOfDataSources() {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           try (var query =
               handle.createQuery(
@@ -198,6 +198,6 @@ public class RagDataSourceRepository {
 
   public static RagDataSourceRepository createNull() {
     // the db configuration will use in-memory db based on env vars.
-    return new RagDataSourceRepository(new JdbiConfiguration().jdbi());
+    return new RagDataSourceRepository(JdbiConfiguration.createNull());
   }
 }

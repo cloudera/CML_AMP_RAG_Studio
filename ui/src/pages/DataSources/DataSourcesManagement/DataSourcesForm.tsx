@@ -52,7 +52,7 @@ import {
 import { ConnectionType, DataSourceBaseType } from "src/api/dataSourceApi";
 import { useGetEmbeddingModels, useGetLlmModels } from "src/api/modelsApi.ts";
 import { useEffect } from "react";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { useTransformModelOptions } from "src/utils/modelUtils.ts";
 import { useNavigate } from "@tanstack/react-router";
 import messageQueue from "src/utils/messageQueue.ts";
 
@@ -148,6 +148,8 @@ const DataSourcesForm = ({
   const embeddingsModels = useGetEmbeddingModels();
   const llmModels = useGetLlmModels();
   const navigate = useNavigate();
+  const embeddingModelOptions = useTransformModelOptions(embeddingsModels.data);
+  const llmModelOptions = useTransformModelOptions(llmModels.data);
 
   useEffect(() => {
     if (initialValues.embeddingModel) {
@@ -226,7 +228,7 @@ const DataSourcesForm = ({
         initialValue={initialValues.embeddingModel}
       >
         <Select
-          options={transformModelOptions(embeddingsModels.data)}
+          options={embeddingModelOptions}
           disabled={updateMode}
           loading={embeddingsModels.isLoading}
         />
@@ -246,7 +248,7 @@ const DataSourcesForm = ({
         initialValue={initialValues.summarizationModel}
       >
         <Select
-          options={transformModelOptions(llmModels.data)}
+          options={llmModelOptions}
           allowClear
           loading={llmModels.isLoading}
         />

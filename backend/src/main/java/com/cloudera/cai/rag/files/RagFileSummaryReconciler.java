@@ -40,6 +40,7 @@ package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocument;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.rag.external.RagBackendClient;
 import com.cloudera.cai.util.exceptions.ClientError;
@@ -52,7 +53,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.jdbi.v3.core.statement.Update;
@@ -64,21 +64,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
   private final String bucketName;
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
   private final RagBackendClient ragBackendClient;
   private final RagFileRepository ragFileRepository;
 
   @Autowired
   public RagFileSummaryReconciler(
       @Qualifier("s3BucketName") String bucketName,
-      Jdbi jdbi,
+      DatabaseOperations databaseOperations,
       RagBackendClient ragBackendClient,
       RagFileRepository ragFileRepository,
       @Qualifier("singleWorkerReconcilerConfig") ReconcilerConfig reconcilerConfig,
       OpenTelemetry openTelemetry) {
     super(reconcilerConfig, openTelemetry);
     this.bucketName = bucketName;
-    this.jdbi = jdbi;
+    this.databaseOperations = databaseOperations;
     this.ragBackendClient = ragBackendClient;
     this.ragFileRepository = ragFileRepository;
   }
@@ -96,7 +96,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
            AND (rdsd.time_created > :yesterday OR rds.time_updated > :yesterday)
            AND rds.summarization_model IS NOT NULL AND rds.summarization_model != ''
         """;
-    jdbi.useHandle(
+    databaseOperations.useHandle(
         handle -> {
           handle.registerRowMapper(ConstructorMapper.factory(RagDocument.class));
 
@@ -125,7 +125,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
             SET summary_creation_timestamp = :summaryTimestamp, summary_status = :summaryStatus, summary_error = :summaryError, time_updated = :now
             WHERE id = :id
           """;
-      jdbi.useHandle(
+      databaseOperations.useHandle(
           handle -> {
             try (Update update = handle.createUpdate(updateSql)) {
               update
@@ -142,7 +142,7 @@ public class RagFileSummaryReconciler extends BaseReconciler<RagDocument> {
   }
 
   private void setToInProgress(RagDocument document) {
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           String updateSql =
               """

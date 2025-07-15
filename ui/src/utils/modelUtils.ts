@@ -35,7 +35,8 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Model } from "src/api/modelsApi.ts";
+import { useMemo } from "react";
+import { Model, useGetModelSource } from "src/api/modelsApi.ts";
 
 export const transformModelOptions = (models?: Model[]) => {
   if (!models) {
@@ -45,4 +46,69 @@ export const transformModelOptions = (models?: Model[]) => {
     value: model.model_id,
     label: model.name,
   }));
+};
+
+const REGION_PREFIXES = ["us", "eu", "apac"];
+
+const getModelFamily = (modelId: string): string => {
+  const parts = modelId.split(".");
+  if (REGION_PREFIXES.includes(parts[0])) {
+    parts.shift();
+  }
+  const family = parts[0]?.trim();
+  return family || "other";
+};
+
+const capitalizeFirst = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export type ModelSelectOptions = (
+  | { value: string; label: string }
+  | {
+      label: string;
+      options: {
+        value: string;
+        label: string;
+      }[];
+    }
+)[];
+
+export const useTransformModelOptions = (
+  models?: Model[],
+): ModelSelectOptions => {
+  const { data: modelSource } = useGetModelSource();
+
+  return useMemo(() => {
+    if (!models) {
+      return [];
+    }
+
+    // For Bedrock, group by model family
+    if (modelSource === "Bedrock") {
+      const familyGroups: Record<string, Model[]> = {};
+
+      models.forEach((model) => {
+        const family = getModelFamily(model.model_id);
+        if (!(family in familyGroups)) {
+          familyGroups[family] = [];
+        }
+        familyGroups[family].push(model);
+      });
+
+      return Object.entries(familyGroups).map(([family, familyModels]) => ({
+        label: capitalizeFirst(family),
+        options: familyModels.map((model) => ({
+          value: model.model_id,
+          label: model.name,
+        })),
+      }));
+    }
+
+    // For all other model providers, return flat options
+    return models.map((model) => ({
+      value: model.model_id,
+      label: model.name,
+    }));
+  }, [models, modelSource]);
 };

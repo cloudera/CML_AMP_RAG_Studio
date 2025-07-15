@@ -37,7 +37,9 @@
  ******************************************************************************/
 
 import { Flex, Layout } from "antd";
-import RagChatQueryInput from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
+import RagChatQueryInput, {
+  NewSessionCallbackProps,
+} from "pages/RagChatTab/FooterComponents/RagChatQueryInput.tsx";
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { RagChatHeader } from "pages/RagChatTab/Header/RagChatHeader.tsx";
@@ -98,8 +100,16 @@ const RagChat = () => {
           }}
         >
           <RagChatQueryInput
-            newSessionCallback={(userInput: string) => {
-              createSessionAndRedirect([], userInput);
+            newSessionCallback={({
+              inferenceModel,
+              selectedDataSourceIds,
+              userInput,
+            }: NewSessionCallbackProps) => {
+              createSessionAndRedirect(
+                selectedDataSourceIds,
+                userInput,
+                inferenceModel,
+              );
             }}
           />
         </Footer>
