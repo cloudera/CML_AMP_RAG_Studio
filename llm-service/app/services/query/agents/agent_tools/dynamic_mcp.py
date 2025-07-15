@@ -42,7 +42,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Type
 
-from llama_index.core.tools import FunctionTool, ToolMetadata
+from llama_index.core.tools import FunctionTool
 from pydantic import BaseModel, create_model
 
 logger = logging.getLogger(__name__)
@@ -267,11 +267,6 @@ class UserToolDefinition:
 
         # Create the input model
         input_model = self._create_input_model()
-
-        # Create the tool metadata
-        metadata = ToolMetadata(
-            name=self.name, description=self.description, fn_schema=input_model
-        )
 
         # Create the function tool
         def tool_function(**kwargs):

@@ -75,14 +75,11 @@ class UserToolTestRequest(BaseModel):
 
 @router.get("", summary="Get user tools", response_model=List[UserToolResponse])
 @exceptions.propagates
-def get_user_tools(
-    origin_remote_user: Optional[str] = Header(None),
-) -> List[UserToolResponse]:
+def get_user_tools() -> List[UserToolResponse]:
     """Get all tools for the current user."""
     try:
         from app.services.query.agents.agent_tools.dynamic_mcp import UserToolStorage
 
-        username = origin_remote_user or "default_user"
         storage = UserToolStorage()
         tools_data = storage.get_custom_tools()
 
