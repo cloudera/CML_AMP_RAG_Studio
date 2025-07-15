@@ -40,6 +40,7 @@ import {
   Button,
   Flex,
   Form,
+  FormInstance,
   Input,
   Modal,
   Space,
@@ -56,9 +57,9 @@ import {
 import messageQueue from "src/utils/messageQueue.ts";
 import { useState } from "react";
 import {
+  InboxOutlined,
   MinusCircleOutlined,
   PlusOutlined,
-  UploadOutlined,
 } from "@ant-design/icons";
 
 const CommandFormFields = () => {
@@ -140,7 +141,11 @@ const UrlFormFields = () => {
   );
 };
 
-const UserToolFormFields = ({ form }: { form: any }) => {
+const UserToolFormFields = ({
+  form,
+}: {
+  form: FormInstance<AddToolFormValues & CustomToolFormValues>;
+}) => {
   return (
     <>
       <Form.Item
@@ -158,7 +163,7 @@ const UserToolFormFields = ({ form }: { form: any }) => {
                 };
                 if (parsed.type !== "object" || !parsed.properties) {
                   return Promise.reject(
-                    new Error("Schema must be an object with properties"),
+                    new Error("Schema must be an object with properties")
                   );
                 }
                 return Promise.resolve();
@@ -195,7 +200,7 @@ const UserToolFormFields = ({ form }: { form: any }) => {
           { required: true, message: "Please upload a Python script file" },
         ]}
       >
-        <Upload
+        <Upload.Dragger
           beforeUpload={() => false} // Prevent auto upload
           accept=".py"
           maxCount={1}
@@ -206,9 +211,19 @@ const UserToolFormFields = ({ form }: { form: any }) => {
               form.setFieldsValue({ script_file: file });
             }
           }}
+          style={{ padding: "20px" }}
         >
-          <Button icon={<UploadOutlined />}>Upload Python File (.py)</Button>
-        </Upload>
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">
+            Click or drag Python file (.py) to this area to upload
+          </p>
+          <p className="ant-upload-hint">
+            Support for a single Python script file. The file will be used to
+            create your custom tool.
+          </p>
+        </Upload.Dragger>
       </Form.Item>
     </>
   );
@@ -223,7 +238,7 @@ export const AddNewToolModal = ({
 }) => {
   const [form] = Form.useForm<AddToolFormValues & CustomToolFormValues>();
   const [toolType, setToolType] = useState<"command" | "url" | "custom">(
-    "command",
+    "command"
   );
 
   const addToolMutation = useAddToolMutation({

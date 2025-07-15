@@ -401,7 +401,14 @@ def create_user_tool_from_dict(tool_data: Dict[str, Any]) -> UserToolDefinition:
 
 
 def get_custom_function_tools(username: Optional[str] = None) -> List[FunctionTool]:
-    """Get all FunctionTools for custom user-submitted tools (username ignored in unified storage)."""
+    """Get all FunctionTools for custom user-submitted tools.
+
+    Args:
+        username: Ignored in unified storage (kept for API compatibility).
+
+    Returns:
+        List of FunctionTool objects for all custom tools.
+    """
     storage = UserToolStorage()
     tools_data = storage.get_custom_tools()
 

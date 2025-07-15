@@ -157,26 +157,6 @@ const ToolsPage = () => {
       key: "description",
     },
     {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      render: (type: "mcp" | "custom") => (
-        <span
-          style={{
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "500",
-            backgroundColor: type === "mcp" ? "#e6f4ff" : "#f6ffed",
-            color: type === "mcp" ? "#1890ff" : "#52c41a",
-            border: `1px solid ${type === "mcp" ? "#91caff" : "#b7eb8f"}`,
-          }}
-        >
-          {type === "mcp" ? "MCP Tool" : "Custom Tool"}
-        </span>
-      ),
-    },
-    {
       title: "Actions",
       key: "actions",
       width: 80,
@@ -185,7 +165,9 @@ const ToolsPage = () => {
           type="text"
           danger
           icon={<DeleteOutlined />}
-          onClick={() => handleDeleteTool(tool)}
+          onClick={() => {
+            handleDeleteTool(tool);
+          }}
         />
       ),
     },

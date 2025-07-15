@@ -185,10 +185,10 @@ export const createCustomTool = async (toolData: {
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`HTTP error! status: ${response.status.toString()}`);
   }
 
-  return response.json();
+  return response.json() as Promise<CustomTool>;
 };
 
 export const useCreateCustomToolMutation = ({
@@ -218,7 +218,7 @@ export const updateCustomTool = async (
     description: string;
     function_schema: string;
     script_file: File;
-  },
+  }
 ): Promise<CustomTool> => {
   const formData = new FormData();
   formData.append("name", toolData.name);
@@ -233,10 +233,10 @@ export const updateCustomTool = async (
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`HTTP error! status: ${response.status.toString()}`);
   }
 
-  return response.json();
+  return response.json() as Promise<CustomTool>;
 };
 
 export const useUpdateCustomToolMutation = ({
@@ -295,11 +295,11 @@ export const useDeleteCustomToolMutation = ({
 
 export const testCustomTool = async (
   toolName: string,
-  testData: CustomToolTestRequest,
+  testData: CustomToolTestRequest
 ): Promise<{ success: boolean; result?: unknown; error?: string }> => {
   return postRequest(
     `${llmServicePath}/custom-tools/${toolName}/test`,
-    testData,
+    testData
   );
 };
 
