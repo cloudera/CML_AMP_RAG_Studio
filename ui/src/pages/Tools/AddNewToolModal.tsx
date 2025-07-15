@@ -149,51 +149,6 @@ const UserToolFormFields = ({
   return (
     <>
       <Form.Item
-        name="function_schema"
-        label="Function Schema (JSON)"
-        rules={[
-          { required: true, message: "Please enter a function schema" },
-          {
-            validator: (_, value: string) => {
-              if (!value) return Promise.resolve();
-              try {
-                const parsed = JSON.parse(value) as {
-                  type?: string;
-                  properties?: unknown;
-                };
-                if (parsed.type !== "object" || !parsed.properties) {
-                  return Promise.reject(
-                    new Error("Schema must be an object with properties")
-                  );
-                }
-                return Promise.resolve();
-              } catch {
-                return Promise.reject(new Error("Invalid JSON format"));
-              }
-            },
-          },
-        ]}
-      >
-        <Input.TextArea
-          rows={8}
-          placeholder={`{
-  "type": "object",
-  "properties": {
-    "param1": {
-      "type": "string",
-      "description": "First parameter"
-    },
-    "param2": {
-      "type": "number",
-      "description": "Second parameter"
-    }
-  },
-  "required": ["param1", "param2"]
-}`}
-        />
-      </Form.Item>
-
-      <Form.Item
         name="script_file"
         label="Python Script File"
         rules={[
@@ -238,7 +193,7 @@ export const AddNewToolModal = ({
 }) => {
   const [form] = Form.useForm<AddToolFormValues & CustomToolFormValues>();
   const [toolType, setToolType] = useState<"command" | "url" | "custom">(
-    "command"
+    "command",
   );
 
   const addToolMutation = useAddToolMutation({
@@ -271,7 +226,6 @@ export const AddNewToolModal = ({
           name: values.name,
           display_name: values.display_name,
           description: values.description,
-          function_schema: values.function_schema, // Keep as string for FormData
           script_file: values.script_file,
         };
         createCustomToolMutation.mutate(customToolData);

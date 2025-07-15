@@ -63,18 +63,6 @@ export interface CustomTool {
   name: string;
   display_name: string;
   description: string;
-  function_schema: {
-    type: "object";
-    properties: Record<
-      string,
-      {
-        type: string;
-        description: string;
-        enum?: string[];
-      }
-    >;
-    required: string[];
-  };
   script_path: string;
 }
 
@@ -92,7 +80,6 @@ export interface CustomToolFormValues {
   name: string;
   display_name: string;
   description: string;
-  function_schema: string; // JSON string
   script_file: File;
 }
 
@@ -169,14 +156,12 @@ export const createCustomTool = async (toolData: {
   name: string;
   display_name: string;
   description: string;
-  function_schema: string;
   script_file: File;
 }): Promise<CustomTool> => {
   const formData = new FormData();
   formData.append("name", toolData.name);
   formData.append("display_name", toolData.display_name);
   formData.append("description", toolData.description);
-  formData.append("function_schema", toolData.function_schema);
   formData.append("script_file", toolData.script_file);
 
   const response = await fetch(`${llmServicePath}/custom-tools`, {
@@ -216,7 +201,6 @@ export const updateCustomTool = async (
     name: string;
     display_name: string;
     description: string;
-    function_schema: string;
     script_file: File;
   }
 ): Promise<CustomTool> => {
@@ -224,7 +208,6 @@ export const updateCustomTool = async (
   formData.append("name", toolData.name);
   formData.append("display_name", toolData.display_name);
   formData.append("description", toolData.description);
-  formData.append("function_schema", toolData.function_schema);
   formData.append("script_file", toolData.script_file);
 
   const response = await fetch(`${llmServicePath}/custom-tools/${toolName}`, {
@@ -254,7 +237,6 @@ export const useUpdateCustomToolMutation = ({
         name: string;
         display_name: string;
         description: string;
-        function_schema: string;
         script_file: File;
       };
     }) => updateCustomTool(toolName, toolData),

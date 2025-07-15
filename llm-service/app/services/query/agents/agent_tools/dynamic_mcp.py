@@ -58,18 +58,59 @@ class UserToolDefinition:
         name: str,
         display_name: str,
         description: str,
-        function_schema: Dict[str, Any],
         script_path: str,
     ):
         self.name = name
         self.display_name = display_name
         self.description = description
-        self.function_schema = function_schema
         self.script_path = script_path
 
         # Validate and prepare the function
         self._validate_script_path()
         self._prepare_function()
+        self.function_schema = self._extract_function_schema()
+
+    def _extract_function_schema(self) -> dict:
+        """
+        Extracts a JSON schema from the main function in the script file.
+        """
+        with open(self.script_path, "r") as f:
+            function_code = f.read()
+        tree = ast.parse(function_code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                func_node = node
+                break
+        else:
+            raise ValueError("No function definition found in script.")
+
+        # Extract argument names, types, and docstring
+        properties = {}
+        required = []
+        for arg in func_node.args.args:
+            if arg.arg == "self":
+                continue
+            arg_type = "string"  # default type
+            if arg.annotation:
+                ann = ast.unparse(arg.annotation)
+                if ann in ["int", "float", "bool", "list", "dict"]:
+                    arg_type = {
+                        "int": "integer",
+                        "float": "number",
+                        "bool": "boolean",
+                        "list": "array",
+                        "dict": "object",
+                    }[ann]
+            properties[arg.arg] = {"type": arg_type}
+            required.append(arg.arg)
+        docstring = ast.get_docstring(func_node) or ""
+        return {
+            "title": func_node.name,
+            "description": docstring,
+            "type": "object",
+            "properties": properties,
+            "required": required,
+        }
 
     def _validate_script_path(self):
         """Validate that the script path exists and the code is safe to execute."""
@@ -395,7 +436,6 @@ def create_user_tool_from_dict(tool_data: Dict[str, Any]) -> UserToolDefinition:
         name=tool_data["name"],
         display_name=tool_data["display_name"],
         description=tool_data["description"],
-        function_schema=tool_data["function_schema"],
         script_path=script_path,
     )
 

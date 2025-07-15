@@ -56,7 +56,6 @@ class UserToolCreateRequest(BaseModel):
     name: str
     display_name: str
     description: str
-    function_schema: Dict[str, Any]
 
 
 class UserToolResponse(BaseModel):
@@ -65,7 +64,6 @@ class UserToolResponse(BaseModel):
     name: str
     display_name: str
     description: str
-    function_schema: Dict[str, Any]
     script_path: str
 
 
@@ -93,7 +91,6 @@ def get_user_tools(
                 name=tool["name"],
                 display_name=tool["display_name"],
                 description=tool["description"],
-                function_schema=tool["function_schema"],
                 script_path=tool["script_path"],
             )
             for tool in tools_data
@@ -109,7 +106,6 @@ def create_user_tool(
     name: str = Form(...),
     display_name: str = Form(...),
     description: str = Form(...),
-    function_schema: str = Form(...),  # JSON string
     script_file: UploadFile = File(...),
     origin_remote_user: Optional[str] = Header(None),
 ) -> UserToolResponse:
@@ -128,14 +124,6 @@ def create_user_tool(
         existing_tool = storage.get_tool(username, name)
         if existing_tool:
             raise HTTPException(status_code=400, detail=f"Tool '{name}' already exists")
-
-        # Validate and parse function schema
-        try:
-            schema_dict = json.loads(function_schema)
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid JSON in function_schema: {e}"
-            )
 
         # Validate file type
         if not script_file.filename or not script_file.filename.endswith(".py"):
@@ -162,7 +150,6 @@ def create_user_tool(
             name=name,
             display_name=display_name,
             description=description,
-            function_schema=schema_dict,
             script_path=full_script_path,
         )
 
@@ -173,7 +160,6 @@ def create_user_tool(
             name=tool.name,
             display_name=tool.display_name,
             description=tool.description,
-            function_schema=tool.function_schema,
             script_path=script_path,  # Return relative path
         )
 
@@ -205,7 +191,6 @@ def get_user_tool(
             name=tool_data["name"],
             display_name=tool_data["display_name"],
             description=tool_data["description"],
-            function_schema=tool_data["function_schema"],
             script_path=tool_data["script_path"],
         )
 
@@ -223,7 +208,6 @@ def update_user_tool(
     name: str = Form(...),
     display_name: str = Form(...),
     description: str = Form(...),
-    function_schema: str = Form(...),  # JSON string
     script_file: UploadFile = File(...),
     origin_remote_user: Optional[str] = Header(None),
 ) -> UserToolResponse:
@@ -242,14 +226,6 @@ def update_user_tool(
         existing_tool = storage.get_tool(username, tool_name)
         if not existing_tool:
             raise HTTPException(status_code=404, detail=f"Tool '{tool_name}' not found")
-
-        # Validate and parse function schema
-        try:
-            schema_dict = json.loads(function_schema)
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=400, detail=f"Invalid JSON in function_schema: {e}"
-            )
 
         # Validate file type
         if not script_file.filename or not script_file.filename.endswith(".py"):
@@ -276,7 +252,6 @@ def update_user_tool(
             name=name,
             display_name=display_name,
             description=description,
-            function_schema=schema_dict,
             script_path=full_script_path,
         )
 
@@ -287,7 +262,6 @@ def update_user_tool(
             name=tool.name,
             display_name=tool.display_name,
             description=tool.description,
-            function_schema=tool.function_schema,
             script_path=script_path,  # Return relative path
         )
 
