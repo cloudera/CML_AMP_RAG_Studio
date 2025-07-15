@@ -204,10 +204,28 @@ def stream_chat(
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
             try:
+                # Try to load as static MCP tool first
                 mcp_tools.extend(get_llama_index_tools(tool_name))
             except ValueError as e:
                 logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
                 continue
+
+    # Also load user-submitted tools for this session
+    # For now, we'll load tools for a default user - this would need to be
+    # updated to get the actual user from the session context
+    try:
+        from app.services.query.agents.agent_tools.dynamic_mcp import (
+            get_custom_function_tools,
+        )
+
+        # TODO: Get actual username from session context
+        custom_tools = get_custom_function_tools()
+        print(f"Loaded {len(custom_tools)} custom tools")
+        mcp_tools.extend(custom_tools)
+    except ImportError as e:
+        logger.warning(f"Could not load user tools: {e}")
+    except Exception as e:
+        logger.warning(f"Error loading user tools: {e}")
 
     # Use the existing chat engine with the enhanced query for streaming response
     tools: list[BaseTool] = mcp_tools

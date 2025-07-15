@@ -47,7 +47,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import { useToolsQuery } from "src/api/toolsApi.ts";
+import { useToolsQuery, useCustomToolsQuery } from "src/api/toolsApi.ts";
 import {
   Dispatch,
   ReactNode,
@@ -70,14 +70,27 @@ import { Link } from "@tanstack/react-router";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
 const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
-  const { data, isLoading } = useToolsQuery();
+  const { data: mcpTools, isLoading: mcpLoading } = useToolsQuery();
+  const { data: customTools, isLoading: customLoading } = useCustomToolsQuery();
   const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
-  const toolsList = data?.map((tool) => ({
-    name: tool.name,
-    displayName: tool.metadata.display_name,
-    description: tool.metadata.description,
-  }));
+  // Combine MCP tools and custom tools into a unified list
+  const toolsList = [
+    ...(mcpTools?.map((tool) => ({
+      name: tool.name,
+      displayName: tool.metadata.display_name,
+      description: tool.metadata.description,
+      type: "MCP" as const,
+    })) ?? []),
+    ...(customTools?.map((tool) => ({
+      name: tool.name,
+      displayName: tool.display_name,
+      description: tool.description,
+      type: "User" as const,
+    })) ?? []),
+  ];
+
+  const isLoading = mcpLoading || customLoading;
 
   const queryClient = useQueryClient();
 
@@ -113,8 +126,8 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
     } else {
       handleUpdateSession(
         activeSession.queryConfiguration.selectedTools.filter(
-          (tool) => tool !== title,
-        ),
+          (tool) => tool !== title
+        )
       );
     }
   };
@@ -153,12 +166,30 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
         renderItem={(item) => (
           <List.Item>
             <List.Item.Meta
-              title={item.displayName || item.name}
+              title={
+                <Flex align="center" gap={8}>
+                  <span>{item.displayName || item.name}</span>
+                  <span
+                    style={{
+                      padding: "1px 6px",
+                      borderRadius: "3px",
+                      fontSize: "10px",
+                      fontWeight: "500",
+                      backgroundColor:
+                        item.type === "MCP" ? "#e6f4ff" : "#f6ffed",
+                      color: item.type === "MCP" ? "#1890ff" : "#52c41a",
+                      border: `1px solid ${item.type === "MCP" ? "#91caff" : "#b7eb8f"}`,
+                    }}
+                  >
+                    {item.type}
+                  </span>
+                </Flex>
+              }
               description={item.description}
               avatar={
                 <Checkbox
                   checked={activeSession.queryConfiguration.selectedTools.includes(
-                    item.name,
+                    item.name
                   )}
                   onChange={(e: CheckboxChangeEvent) => {
                     handleCheck(item.name, e.target.checked);

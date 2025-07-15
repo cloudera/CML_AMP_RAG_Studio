@@ -56,6 +56,26 @@ export interface Tool {
     description: string;
     display_name: string;
   };
+  type?: "mcp" | "custom"; // Add tool type to distinguish MCP vs custom tools
+}
+
+export interface CustomTool {
+  name: string;
+  display_name: string;
+  description: string;
+  function_schema: {
+    type: "object";
+    properties: Record<
+      string,
+      {
+        type: string;
+        description: string;
+        enum?: string[];
+      }
+    >;
+    required: string[];
+  };
+  script_path: string;
 }
 
 export interface AddToolFormValues {
@@ -66,6 +86,18 @@ export interface AddToolFormValues {
   env?: { key: string; value: string }[];
   display_name: string;
   description: string;
+}
+
+export interface CustomToolFormValues {
+  name: string;
+  display_name: string;
+  description: string;
+  function_schema: string; // JSON string
+  script_file: File;
+}
+
+export interface CustomToolTestRequest {
+  input_data: Record<string, unknown>;
 }
 
 export const getTools = async (): Promise<Tool[]> => {
@@ -117,6 +149,173 @@ export const useDeleteToolMutation = ({
         onSuccess();
       }
     },
+    onError,
+  });
+};
+
+// User Tools API
+export const getCustomTools = async (): Promise<CustomTool[]> => {
+  return getRequest(`${llmServicePath}/custom-tools`);
+};
+
+export const useCustomToolsQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getCustomTools],
+    queryFn: getCustomTools,
+  });
+};
+
+export const createCustomTool = async (toolData: {
+  name: string;
+  display_name: string;
+  description: string;
+  function_schema: string;
+  script_file: File;
+}): Promise<CustomTool> => {
+  const formData = new FormData();
+  formData.append("name", toolData.name);
+  formData.append("display_name", toolData.display_name);
+  formData.append("description", toolData.description);
+  formData.append("function_schema", toolData.function_schema);
+  formData.append("script_file", toolData.script_file);
+
+  const response = await fetch(`${llmServicePath}/custom-tools`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+export const useCreateCustomToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<CustomTool>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createCustomTool,
+    onSuccess: (tool) => {
+      void queryClient.invalidateQueries({
+        queryKey: [QueryKeys.getCustomTools],
+      });
+      if (onSuccess) {
+        onSuccess(tool);
+      }
+    },
+    onError,
+  });
+};
+
+export const updateCustomTool = async (
+  toolName: string,
+  toolData: {
+    name: string;
+    display_name: string;
+    description: string;
+    function_schema: string;
+    script_file: File;
+  },
+): Promise<CustomTool> => {
+  const formData = new FormData();
+  formData.append("name", toolData.name);
+  formData.append("display_name", toolData.display_name);
+  formData.append("description", toolData.description);
+  formData.append("function_schema", toolData.function_schema);
+  formData.append("script_file", toolData.script_file);
+
+  const response = await fetch(`${llmServicePath}/custom-tools/${toolName}`, {
+    method: "PUT",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+export const useUpdateCustomToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<CustomTool>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      toolName,
+      toolData,
+    }: {
+      toolName: string;
+      toolData: {
+        name: string;
+        display_name: string;
+        description: string;
+        function_schema: string;
+        script_file: File;
+      };
+    }) => updateCustomTool(toolName, toolData),
+    onSuccess: (tool) => {
+      void queryClient.invalidateQueries({
+        queryKey: [QueryKeys.getCustomTools],
+      });
+      if (onSuccess) {
+        onSuccess(tool);
+      }
+    },
+    onError,
+  });
+};
+
+export const deleteCustomTool = async (toolName: string): Promise<void> => {
+  return deleteRequest(`${llmServicePath}/custom-tools/${toolName}`);
+};
+
+export const useDeleteCustomToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<void>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCustomTool,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [QueryKeys.getCustomTools],
+      });
+      if (onSuccess) {
+        onSuccess();
+      }
+    },
+    onError,
+  });
+};
+
+export const testCustomTool = async (
+  toolName: string,
+  testData: CustomToolTestRequest,
+): Promise<{ success: boolean; result?: unknown; error?: string }> => {
+  return postRequest(
+    `${llmServicePath}/custom-tools/${toolName}/test`,
+    testData,
+  );
+};
+
+export const useTestCustomToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<{ success: boolean; result?: unknown; error?: string }>) => {
+  return useMutation({
+    mutationFn: ({
+      toolName,
+      testData,
+    }: {
+      toolName: string;
+      testData: CustomToolTestRequest;
+    }) => testCustomTool(toolName, testData),
+    onSuccess,
     onError,
   });
 };

@@ -36,15 +36,30 @@
  * DATA.
  */
 
-import { Button, Flex, Form, Input, Modal, Space, Typography } from "antd";
+import {
+  Button,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Space,
+  Typography,
+  Upload,
+} from "antd";
 import {
   AddToolFormValues,
+  CustomToolFormValues,
   Tool,
   useAddToolMutation,
+  useCreateCustomToolMutation,
 } from "src/api/toolsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useState } from "react";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  MinusCircleOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 
 const CommandFormFields = () => {
   return (
@@ -125,6 +140,80 @@ const UrlFormFields = () => {
   );
 };
 
+const UserToolFormFields = ({ form }: { form: any }) => {
+  return (
+    <>
+      <Form.Item
+        name="function_schema"
+        label="Function Schema (JSON)"
+        rules={[
+          { required: true, message: "Please enter a function schema" },
+          {
+            validator: (_, value: string) => {
+              if (!value) return Promise.resolve();
+              try {
+                const parsed = JSON.parse(value) as {
+                  type?: string;
+                  properties?: unknown;
+                };
+                if (parsed.type !== "object" || !parsed.properties) {
+                  return Promise.reject(
+                    new Error("Schema must be an object with properties"),
+                  );
+                }
+                return Promise.resolve();
+              } catch {
+                return Promise.reject(new Error("Invalid JSON format"));
+              }
+            },
+          },
+        ]}
+      >
+        <Input.TextArea
+          rows={8}
+          placeholder={`{
+  "type": "object",
+  "properties": {
+    "param1": {
+      "type": "string",
+      "description": "First parameter"
+    },
+    "param2": {
+      "type": "number",
+      "description": "Second parameter"
+    }
+  },
+  "required": ["param1", "param2"]
+}`}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="script_file"
+        label="Python Script File"
+        rules={[
+          { required: true, message: "Please upload a Python script file" },
+        ]}
+      >
+        <Upload
+          beforeUpload={() => false} // Prevent auto upload
+          accept=".py"
+          maxCount={1}
+          onChange={(info) => {
+            const file = info.fileList[0]?.originFileObj;
+            // Set the file in the form
+            if (file) {
+              form.setFieldsValue({ script_file: file });
+            }
+          }}
+        >
+          <Button icon={<UploadOutlined />}>Upload Python File (.py)</Button>
+        </Upload>
+      </Form.Item>
+    </>
+  );
+};
+
 export const AddNewToolModal = ({
   isModalVisible,
   setIsModalVisible,
@@ -132,52 +221,92 @@ export const AddNewToolModal = ({
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
 }) => {
-  const [form] = Form.useForm<AddToolFormValues>();
-  const [toolType, setToolType] = useState<"command" | "url">("command");
+  const [form] = Form.useForm<AddToolFormValues & CustomToolFormValues>();
+  const [toolType, setToolType] = useState<"command" | "url" | "custom">(
+    "command",
+  );
+
   const addToolMutation = useAddToolMutation({
     onSuccess: () => {
-      messageQueue.success("Tool added successfully");
+      messageQueue.success("MCP tool added successfully");
       setIsModalVisible(false);
       form.resetFields();
     },
     onError: (error) => {
-      messageQueue.error(`Failed to add tool: ${error.message}`);
+      messageQueue.error(`Failed to add MCP tool: ${error.message}`);
+    },
+  });
+
+  const createCustomToolMutation = useCreateCustomToolMutation({
+    onSuccess: () => {
+      messageQueue.success("Custom tool added successfully");
+      setIsModalVisible(false);
+      form.resetFields();
+    },
+    onError: (error) => {
+      messageQueue.error(`Failed to add custom tool: ${error.message}`);
     },
   });
 
   const handleAddTool = () => {
     void form.validateFields().then((values) => {
-      const newTool: Tool = {
-        name: values.name,
-        metadata: {
+      if (toolType === "custom") {
+        // Handle custom tool creation
+        const customToolData = {
+          name: values.name,
           display_name: values.display_name,
           description: values.description,
-        },
-      };
-
-      if (toolType === "command") {
-        newTool.command = values.command;
-        if (values.args) {
-          newTool.args = values.args.split(",").map((arg) => arg.trim());
-        }
-        if (values.env?.length) {
-          newTool.env = values.env.reduce((accum, val) => {
-            return { ...accum, [val.key]: val.value };
-          }, {});
-        }
+          function_schema: values.function_schema, // Keep as string for FormData
+          script_file: values.script_file,
+        };
+        createCustomToolMutation.mutate(customToolData);
       } else {
-        if (values.url) {
-          newTool.url = values.url.split(",").map((url) => url.trim());
-        }
-      }
+        // Handle MCP tool creation
+        const newTool: Tool = {
+          name: values.name,
+          metadata: {
+            display_name: values.display_name,
+            description: values.description,
+          },
+        };
 
-      addToolMutation.mutate(newTool);
+        if (toolType === "command") {
+          newTool.command = values.command;
+          if (values.args) {
+            newTool.args = values.args.split(",").map((arg) => arg.trim());
+          }
+          if (values.env?.length) {
+            newTool.env = values.env.reduce((accum, val) => {
+              return { ...accum, [val.key]: val.value };
+            }, {});
+          }
+        } else {
+          if (values.url) {
+            newTool.url = values.url.split(",").map((url) => url.trim());
+          }
+        }
+
+        addToolMutation.mutate(newTool);
+      }
     });
+  };
+
+  const getModalTitle = () => {
+    switch (toolType) {
+      case "command":
+        return "Add MCP Command Tool";
+      case "url":
+        return "Add MCP URL Tool";
+      case "custom":
+        return "Add Custom Function Tool";
+      default:
+        return "Add New Tool";
+    }
   };
 
   return (
     <Modal
-      title="Add New Tool"
+      title={getModalTitle()}
       open={isModalVisible}
       onCancel={() => {
         setIsModalVisible(false);
@@ -197,9 +326,11 @@ export const AddNewToolModal = ({
           key="submit"
           type="primary"
           onClick={handleAddTool}
-          loading={addToolMutation.isPending}
+          loading={
+            addToolMutation.isPending || createCustomToolMutation.isPending
+          }
         >
-          Add
+          {toolType === "custom" ? "Create Custom Tool" : "Add MCP Tool"}
         </Button>,
       ]}
     >
@@ -246,7 +377,7 @@ export const AddNewToolModal = ({
                 setToolType("command");
               }}
             >
-              Command-based
+              MCP Command
             </Button>
             <Button
               type={toolType === "url" ? "primary" : "default"}
@@ -254,12 +385,22 @@ export const AddNewToolModal = ({
                 setToolType("url");
               }}
             >
-              URL-based
+              MCP URL
+            </Button>
+            <Button
+              type={toolType === "custom" ? "primary" : "default"}
+              onClick={() => {
+                setToolType("custom");
+              }}
+            >
+              Custom Function
             </Button>
           </Space>
         </Form.Item>
 
-        {toolType === "command" ? <CommandFormFields /> : <UrlFormFields />}
+        {toolType === "command" && <CommandFormFields />}
+        {toolType === "url" && <UrlFormFields />}
+        {toolType === "custom" && <UserToolFormFields form={form} />}
       </Form>
     </Modal>
   );
