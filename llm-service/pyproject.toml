@@ -63,6 +63,7 @@ override-dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.3.3",
+    "pytest-asyncio>=1.0.0",
     "ruff>=0.7.4",
     "mypy>=1.16.1",
     "lipsum>=0.1.2",
