@@ -63,6 +63,7 @@ if len(cml_apps.applications) > 0:
             print(
                 "No RagStudio application found to restart. This can happen if someone renamed the application."
             )
+            # if we're in "studio" mode, then there might be other applications that are not named RagStudio (Agent Studio, etc.)
             if os.getenv("IS_COMPOSABLE", "") != "":
                 print("Composable environment. This is likely the initial deployment.")
             else:
