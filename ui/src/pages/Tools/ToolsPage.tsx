@@ -49,28 +49,96 @@ import {
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import {
-  Tool,
   useDeleteToolMutation,
+  useDeleteCustomToolMutation,
   useToolsQuery,
+  useCustomToolsQuery,
 } from "src/api/toolsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
 import { AddNewToolModal } from "pages/Tools/AddNewToolModal.tsx";
 
+interface UnifiedTool {
+  name: string;
+  display_name: string;
+  description: string;
+  type: "mcp" | "custom";
+}
+
 const ToolsPage = () => {
   const confirmDeleteModal = useModal();
-  const { data: tools = [], isLoading, error: toolsError } = useToolsQuery();
+  const {
+    data: mcpTools = [],
+    isLoading: mcpLoading,
+    error: mcpError,
+  } = useToolsQuery();
+  const {
+    data: customTools = [],
+    isLoading: customLoading,
+    error: customError,
+  } = useCustomToolsQuery();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [toolToDelete, setToolToDelete] = useState<UnifiedTool | null>(null);
+
+  // Transform data into unified format
+  const unifiedTools: UnifiedTool[] = [
+    ...mcpTools.map(
+      (tool): UnifiedTool => ({
+        name: tool.name,
+        display_name: tool.metadata.display_name,
+        description: tool.metadata.description,
+        type: "mcp",
+      })
+    ),
+    ...customTools.map(
+      (tool): UnifiedTool => ({
+        name: tool.name,
+        display_name: tool.display_name,
+        description: tool.description,
+        type: "custom",
+      })
+    ),
+  ];
+
+  const isLoading = mcpLoading || customLoading;
+  const toolsError = mcpError ?? customError;
 
   const deleteToolMutation = useDeleteToolMutation({
     onSuccess: () => {
-      messageQueue.success("Tool deleted successfully");
+      messageQueue.success("MCP tool deleted successfully");
       confirmDeleteModal.setIsModalOpen(false);
+      setToolToDelete(null);
     },
     onError: (error) => {
-      messageQueue.error(`Failed to delete tool: ${error.message}`);
+      messageQueue.error(`Failed to delete MCP tool: ${error.message}`);
     },
   });
+
+  const deleteCustomToolMutation = useDeleteCustomToolMutation({
+    onSuccess: () => {
+      messageQueue.success("Custom tool deleted successfully");
+      confirmDeleteModal.setIsModalOpen(false);
+      setToolToDelete(null);
+    },
+    onError: (error) => {
+      messageQueue.error(`Failed to delete custom tool: ${error.message}`);
+    },
+  });
+
+  const handleDeleteTool = (tool: UnifiedTool) => {
+    setToolToDelete(tool);
+    confirmDeleteModal.setIsModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!toolToDelete) return;
+
+    if (toolToDelete.type === "mcp") {
+      deleteToolMutation.mutate(toolToDelete.name);
+    } else {
+      deleteCustomToolMutation.mutate(toolToDelete.name);
+    }
+  };
 
   const columns = [
     {
@@ -80,43 +148,27 @@ const ToolsPage = () => {
     },
     {
       title: "Display Name",
-      dataIndex: ["metadata", "display_name"],
+      dataIndex: "display_name",
       key: "display_name",
     },
     {
       title: "Description",
-      dataIndex: ["metadata", "description"],
+      dataIndex: "description",
       key: "description",
     },
     {
       title: "Actions",
       key: "actions",
       width: 80,
-      render: (_: unknown, tool: Tool) => (
-        <>
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => {
-              confirmDeleteModal.setIsModalOpen(true);
-            }}
-          />
-          <Modal
-            title="Delete tool?"
-            open={confirmDeleteModal.isModalOpen}
-            onOk={() => {
-              deleteToolMutation.mutate(tool.name);
-            }}
-            okText={"Yes, delete it!"}
-            okButtonProps={{
-              danger: true,
-            }}
-            onCancel={() => {
-              confirmDeleteModal.handleCancel();
-            }}
-          />
-        </>
+      render: (_: unknown, tool: UnifiedTool) => (
+        <Button
+          type="text"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => {
+            handleDeleteTool(tool);
+          }}
+        />
       ),
     },
   ];
@@ -130,13 +182,12 @@ const ToolsPage = () => {
       }}
     >
       <Flex vertical gap={20}>
-        <Typography.Title level={3}>
-          (Beta) MCP Tools Management
-        </Typography.Title>
+        <Typography.Title level={3}>Tools Management</Typography.Title>
         <Typography.Paragraph>
           Manage external tools and services that can be used by the RAG Studio
-          application. These tools can be used during query processing to
-          enhance the capabilities of the system.
+          application. This includes both MCP (Model Context Protocol) tools and
+          custom user-submitted tools. These tools can be used during query
+          processing to enhance the capabilities of the system.
           <br />
           <br />
           See{" "}
@@ -144,13 +195,13 @@ const ToolsPage = () => {
             onClick={() => {
               window.open(
                 "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
-                "_blank",
+                "_blank"
               );
             }}
           >
             docs
           </Typography.Link>{" "}
-          for manually adding additional tools.
+          for manually adding additional MCP tools.
         </Typography.Paragraph>
 
         {toolsError ? (
@@ -163,7 +214,7 @@ const ToolsPage = () => {
               style={{ marginBottom: 16 }}
             >
               <Typography.Title level={4} style={{ margin: 0 }}>
-                Available Tools
+                Available Tools ({unifiedTools.length})
               </Typography.Title>
               <Button
                 type="primary"
@@ -176,7 +227,7 @@ const ToolsPage = () => {
               </Button>
             </Flex>
             <Table
-              dataSource={tools}
+              dataSource={unifiedTools}
               columns={columns}
               rowKey="name"
               loading={isLoading}
@@ -184,10 +235,31 @@ const ToolsPage = () => {
             />
           </Card>
         )}
+
         <AddNewToolModal
           setIsModalVisible={setIsModalVisible}
           isModalVisible={isModalVisible}
         />
+
+        <Modal
+          title={`Delete ${toolToDelete?.type === "mcp" ? "MCP" : "custom"} tool?`}
+          open={confirmDeleteModal.isModalOpen}
+          onOk={confirmDelete}
+          okText="Yes, delete it!"
+          okButtonProps={{
+            danger: true,
+            loading:
+              deleteToolMutation.isPending ||
+              deleteCustomToolMutation.isPending,
+          }}
+          onCancel={() => {
+            confirmDeleteModal.handleCancel();
+            setToolToDelete(null);
+          }}
+        >
+          Are you sure you want to delete the tool "{toolToDelete?.display_name}
+          "? This action cannot be undone.
+        </Modal>
       </Flex>
     </Layout>
   );

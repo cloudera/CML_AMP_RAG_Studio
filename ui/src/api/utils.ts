@@ -82,6 +82,10 @@ export enum MutationKeys {
   "restartApplication" = "restartApplication",
   "streamChatMutation" = "streamChatMutation",
   "setCdpToken" = "setCdpToken",
+  "createCustomTool" = "createCustomTool",
+  "updateCustomTool" = "updateCustomTool",
+  "deleteCustomTool" = "deleteCustomTool",
+  "testCustomTool" = "testCustomTool",
 }
 
 export enum QueryKeys {
@@ -113,6 +117,8 @@ export enum QueryKeys {
   "getAmpConfig" = "getAmpConfig",
   "getTools" = "getTools",
   "getPollingAmpConfig" = "getPollingAmpConfig",
+  "getCustomTools" = "getCustomTools",
+  "getCustomTool" = "getCustomTool",
 }
 
 export const commonHeaders = {
@@ -133,7 +139,7 @@ export interface CustomError {
 export class ApiError extends Error {
   constructor(
     message = "unknown",
-    public status: number,
+    public status: number
   ) {
     super(message);
     this.name = "CustomError";
@@ -143,7 +149,7 @@ export class ApiError extends Error {
 
 export const postRequest = async <T>(
   url: string,
-  body: Record<never, never>,
+  body: Record<never, never>
 ): Promise<T> => {
   const res = await fetch(url, {
     method: "POST",
@@ -171,6 +177,25 @@ export const getRequest = async <T>(url: string): Promise<T> => {
     throw new ApiError(detail.message ?? detail.detail, res.status);
   }
 
+  return await ((await res.json()) as Promise<T>);
+};
+
+export const putRequest = async <T>(
+  url: string,
+  body: Record<never, never>
+): Promise<T> => {
+  const res = await fetch(url, {
+    method: "PUT",
+    body: JSON.stringify(body),
+    headers: {
+      ...commonHeaders,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) {
+    const detail = (await res.json()) as CustomError;
+    throw new ApiError(detail.message ?? detail.detail, res.status);
+  }
   return await ((await res.json()) as Promise<T>);
 };
 

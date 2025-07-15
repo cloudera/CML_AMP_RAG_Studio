@@ -1,0 +1,25 @@
+{
+  "name": "simple_calculator",
+  "display_name": "Simple Calculator",
+  "description": "Performs basic arithmetic operations on two numbers",
+  "function_schema": {
+    "type": "object",
+    "properties": {
+      "first_number": {
+        "type": "number",
+        "description": "The first number in the operation"
+      },
+      "second_number": {
+        "type": "number",
+        "description": "The second number in the operation"
+      },
+      "operation": {
+        "type": "string",
+        "enum": ["add", "subtract", "multiply", "divide"],
+        "description": "The arithmetic operation to perform"
+      }
+    },
+    "required": ["first_number", "second_number", "operation"]
+  },
+  "function_code": "def simple_calculator(first_number: float, second_number: float, operation: str) -> float:\n    \"\"\"\n    Performs basic arithmetic operations on two numbers.\n    \n    Args:\n        first_number: The first number in the operation\n        second_number: The second number in the operation  \n        operation: The arithmetic operation to perform (add, subtract, multiply, divide)\n        \n    Returns:\n        The result of the arithmetic operation\n        \n    Raises:\n        ValueError: If operation is not supported or division by zero\n    \"\"\"\n    if operation == \"add\":\n        return first_number + second_number\n    elif operation == \"subtract\":\n        return first_number - second_number\n    elif operation == \"multiply\":\n        return first_number * second_number\n    elif operation == \"divide\":\n        if second_number == 0:\n            raise ValueError(\"Cannot divide by zero\")\n        return first_number / second_number\n    else:\n        raise ValueError(f\"Unsupported operation: {operation}\")"
+}
