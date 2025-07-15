@@ -40,10 +40,11 @@ import ast
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, cast
 
 from llama_index.core.tools import FunctionTool
 from pydantic import BaseModel, create_model
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class UserToolDefinition:
         display_name: str,
         description: str,
         script_path: str,
-    ):
+    ) -> None:
         self.name = name
         self.display_name = display_name
         self.description = description
@@ -70,7 +71,7 @@ class UserToolDefinition:
         self._prepare_function()
         self.function_schema = self._extract_function_schema()
 
-    def _extract_function_schema(self) -> dict:
+    def _extract_function_schema(self) -> Dict[str, Any]:
         """
         Extracts a JSON schema from the main function in the script file.
         """
@@ -112,7 +113,7 @@ class UserToolDefinition:
             "required": required,
         }
 
-    def _validate_script_path(self):
+    def _validate_script_path(self) -> None:
         """Validate that the script path exists and the code is safe to execute."""
         if not os.path.exists(self.script_path):
             raise ValueError(f"Script file not found: {self.script_path}")
@@ -157,7 +158,7 @@ class UserToolDefinition:
         if not function_names:
             raise ValueError("Script must contain at least one function definition")
 
-    def _prepare_function(self):
+    def _prepare_function(self) -> None:
         """Prepare the function for execution."""
         # Read the code from the script file
         with open(self.script_path, "r") as f:
@@ -189,15 +190,17 @@ class UserToolDefinition:
             "object": dict,
         }
 
-        fields = {}
+        field_definitions: Dict[str, Any] = {}
         for field_name, field_schema in properties.items():
             field_type = type_mapping.get(field_schema.get("type", "string"), str)
             default_value = ... if field_name in required_fields else None
-            fields[field_name] = (field_type, default_value)
+            field_definitions[field_name] = (field_type, default_value)
 
-        return create_model(f"{self.name}Input", **fields)
+        return cast(
+            Type[BaseModel], create_model(f"{self.name}Input", **field_definitions)
+        )
 
-    def execute(self, **kwargs) -> Any:
+    def execute(self, **kwargs: Any) -> Any:
         """Execute the user's function with the provided arguments."""
         try:
             # Create a restricted execution environment
@@ -253,8 +256,8 @@ class UserToolDefinition:
                 )
 
             # Call the function with the provided arguments
-            # Type checker hint: we've verified user_function is callable
-            result = user_function(**kwargs)  # type: ignore
+            # We've verified user_function is callable
+            result = user_function(**kwargs)
 
             return result
 
@@ -269,7 +272,7 @@ class UserToolDefinition:
         input_model = self._create_input_model()
 
         # Create the function tool
-        def tool_function(**kwargs):
+        def tool_function(**kwargs: Any) -> Any:
             try:
                 result = self.execute(**kwargs)
                 # Ensure result is JSON serializable
@@ -293,11 +296,9 @@ class UserToolStorage:
     Unified storage for user tools in mcp.json file.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Use the tools directory from settings
         try:
-            from app.config import settings
-
             self.mcp_json_path = os.path.join(settings.tools_dir, "mcp.json")
             self.scripts_dir = os.path.join(settings.tools_dir, "custom_tool_scripts")
         except ImportError:
@@ -314,7 +315,7 @@ class UserToolStorage:
 
         try:
             with open(self.mcp_json_path, "r") as f:
-                config = json.load(f)
+                config = cast(Dict[str, Any], json.load(f))
                 # Ensure custom_tools array exists
                 if "custom_tools" not in config:
                     config["custom_tools"] = []
@@ -368,7 +369,7 @@ class UserToolStorage:
     def get_custom_tools(self, username: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get all custom tools (username parameter ignored for unified storage)."""
         config = self._read_mcp_config()
-        return config.get("custom_tools", [])
+        return cast(List[Dict[str, Any]], config.get("custom_tools", []))
 
     def get_tool(self, username: str, tool_name: str) -> Optional[Dict[str, Any]]:
         """Get a specific tool (username parameter ignored for unified storage)."""
@@ -400,8 +401,6 @@ class UserToolStorage:
         # Delete the script file if it exists
         if "script_path" in tool_to_delete:
             try:
-                from app.config import settings
-
                 script_full_path = os.path.join(
                     settings.tools_dir, tool_to_delete["script_path"]
                 )
@@ -421,8 +420,6 @@ def create_user_tool_from_dict(tool_data: Dict[str, Any]) -> UserToolDefinition:
     script_path = tool_data["script_path"]
     if not os.path.isabs(script_path):
         try:
-            from app.config import settings
-
             script_path = os.path.join(settings.tools_dir, script_path)
         except ImportError:
             script_path = os.path.join("..", "tools", script_path)
