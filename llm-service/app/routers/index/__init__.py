@@ -52,10 +52,10 @@ logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
-router.include_router(chat.router)
 router.include_router(summaries.router)
 router.include_router(data_source.router)
 router.include_router(sessions.router)
+router.include_router(sessions.no_id_router)
 router.include_router(amp_metadata.router)
 # include this for legacy UI calls
 router.include_router(amp_metadata.router, prefix="/index", deprecated=True)
