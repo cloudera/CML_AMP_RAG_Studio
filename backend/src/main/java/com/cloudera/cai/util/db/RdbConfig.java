@@ -209,19 +209,16 @@ public class RdbConfig {
     } else if (rdb.isPostgres()) {
       regex = "^jdbc:postgresql:(?://[^/]+/)?(\\w+)";
     } else {
-      throw new IllegalStateException("database url parsing not supported for db type: " + rdb.rdbType);
+      throw new IllegalStateException(
+          "database url parsing not supported for db type: " + rdb.rdbType);
     }
     Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
     var dbName =
-        pattern
-            .matcher(url)
-            .results()
-            .map(mr -> mr.group(1))
-            .collect(Collectors.joining());
+        pattern.matcher(url).results().map(mr -> mr.group(1)).collect(Collectors.joining());
 
     if (dbName.isEmpty()) {
       throw new InvalidDbConfigException(
-              url, "Database name not found in the database connection URL");
+          url, "Database name not found in the database connection URL");
     }
     return dbName;
   }
