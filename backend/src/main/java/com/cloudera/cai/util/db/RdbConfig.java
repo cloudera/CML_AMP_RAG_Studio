@@ -153,7 +153,15 @@ public class RdbConfig {
     }
 
     if (rdb.isPostgres()) {
-      return rdb.rdbUrl;
+      var pattern =
+          Pattern.compile("^jdbc:postgresql:(//[^/]+/)?(\\w+)(.*)", Pattern.CASE_INSENSITIVE);
+      var matcher = pattern.matcher(rdb.rdbUrl);
+      if (!matcher.matches()) {
+        throw new IllegalStateException("URL doesn't match the expected regex");
+      }
+      var firstPart = matcher.group(1);
+      var lastPart = matcher.group(3);
+      return "jdbc:postgresql:" + firstPart + rdb.getRdbDatabaseName() + lastPart;
     }
     final var url =
         rdb.rdbUrl
