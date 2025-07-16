@@ -95,7 +95,7 @@ public class JdbiConfiguration {
     RdbConfig rdbConfiguration =
         RdbConfig.builder().rdbUrl(dbUrl).rdbType(rdbType).rdbDatabaseName("rag").build();
     if (rdbConfiguration.isPostgres()) {
-      rdbConfiguration = rdbConfiguration.toBuilder().rdbUsername("postgres").build();
+      rdbConfiguration = rdbConfiguration.toBuilder().rdbUsername("postgres").rdbDatabaseName(null).build();
     }
     return DatabaseConfig.builder().RdbConfiguration(rdbConfiguration).build();
   }

@@ -123,7 +123,7 @@ public class RdbConfig {
       return adjustMsSqlRdbUrl(rdb.rdbUrl) + ";databaseName=" + rdb.getRdbDatabaseName();
     }
     if (rdb.isPostgres()) {
-      return rdb.rdbUrl + "/" + rdb.getRdbDatabaseName();
+      return rdb.rdbUrl;
     }
 
     final var url =
@@ -153,7 +153,7 @@ public class RdbConfig {
     }
 
     if (rdb.isPostgres()) {
-      return rdb.rdbUrl + "/" + rdb.getRdbDatabaseName();
+      return rdb.rdbUrl;
     }
     final var url =
         rdb.rdbUrl
@@ -181,7 +181,11 @@ public class RdbConfig {
   public static String buildDatabaseName(RdbConfig rdb) {
     String dbName = rdb.getRdbDatabaseName();
     if (rdb.getDbConnectionUrl() != null) {
-      dbName = getDBNameFromDBConnectionURL(rdb);
+      dbName = getDBNameFromDBConnectionURL(rdb, rdb.dbConnectionUrl);
+    }
+
+    if (dbName == null) {
+      dbName = getDBNameFromDBConnectionURL(rdb, rdb.rdbUrl);
     }
 
     if (dbName.contains("-")) {
@@ -195,25 +199,29 @@ public class RdbConfig {
     return dbName;
   }
 
-  private static String getDBNameFromDBConnectionURL(RdbConfig rdb) {
+  private static String getDBNameFromDBConnectionURL(RdbConfig rdb, String url) {
     String regex;
     if (rdb.isMssql()) {
       // Regex reference: https://regex101.com/r/yaU0DY/1
       regex = ";databaseName=([^;]*)";
-    } else {
+    } else if (rdb.isMysql()) {
       regex = "^jdbc:mysql:(?://[^/]+/)?(\\w+)";
+    } else if (rdb.isPostgres()) {
+      regex = "^jdbc:postgresql:(?://[^/]+/)?(\\w+)";
+    } else {
+      throw new IllegalStateException("database url parsing not supported for db type: " + rdb.rdbType);
     }
     Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
     var dbName =
         pattern
-            .matcher(rdb.dbConnectionUrl)
+            .matcher(url)
             .results()
             .map(mr -> mr.group(1))
             .collect(Collectors.joining());
 
     if (dbName.isEmpty()) {
       throw new InvalidDbConfigException(
-          rdb.dbConnectionUrl, "Database name not found in the database connection URL");
+              url, "Database name not found in the database connection URL");
     }
     return dbName;
   }
