@@ -192,6 +192,8 @@ def get_nodes_from_output(
             for ds_id in extracted_data_source_ids:
                 node_ids = list(source_node_ids_w_score.keys())
                 qdrant_store = VectorStoreFactory.for_chunks(ds_id)
+                if not qdrant_store or not qdrant_store.size():
+                    continue
                 vector_store = qdrant_store.llama_vector_store()
                 extracted_source_nodes = vector_store.get_nodes(node_ids=node_ids)
 
