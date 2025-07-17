@@ -39,11 +39,13 @@
 set -ox pipefail
 
 RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+if [ -z "$IS_COMPOSABLE" ]; then
+  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+fi
 
 if [ -z "$DB_URL" ]; then
   DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
   if [ -z "$IS_COMPOSABLE" ]; then
-    RAG_STUDIO_INSTALL_DIR="/home/cdsw"
     DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
   fi
   export DB_URL=$DB_URL_LOCATION
