@@ -70,7 +70,7 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient: queryClient },
-  defaultErrorComponent: ({ error }) => <CustomUnhandledError error={error} />,
+  defaultErrorComponent: (error) => <CustomUnhandledError error={error} />,
   defaultNotFoundComponent: () => <NotFoundComponent />,
   defaultPendingComponent: () => (
     <Flex

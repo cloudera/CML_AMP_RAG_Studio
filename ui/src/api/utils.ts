@@ -155,7 +155,10 @@ export const postRequest = async <T>(
   });
   if (!res.ok) {
     const detail = (await res.json()) as CustomError;
-    throw new ApiError(detail.message ?? detail.detail, res.status);
+    throw new ApiError(
+      detail.message ?? detail.detail ?? res.statusText,
+      res.status,
+    );
   }
   return await ((await res.json()) as Promise<T>);
 };
@@ -168,7 +171,10 @@ export const getRequest = async <T>(url: string): Promise<T> => {
 
   if (!res.ok) {
     const detail = (await res.json()) as CustomError;
-    throw new ApiError(detail.message ?? detail.detail, res.status);
+    throw new ApiError(
+      detail.message ?? detail.detail ?? res.statusText,
+      res.status,
+    );
   }
 
   return await ((await res.json()) as Promise<T>);
@@ -182,6 +188,9 @@ export const deleteRequest = async (url: string) => {
 
   if (!res.ok) {
     const detail = (await res.json()) as CustomError;
-    throw new ApiError(detail.message ?? detail.detail, res.status);
+    throw new ApiError(
+      detail.message ?? detail.detail ?? res.statusText,
+      res.status,
+    );
   }
 };
