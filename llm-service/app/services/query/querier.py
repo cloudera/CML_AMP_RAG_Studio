@@ -54,11 +54,6 @@ from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
 from ..models import get_model_source, ModelSource
-from ..models.providers import (
-    BedrockModelProvider,
-    OpenAiModelProvider,
-    AzureModelProvider,
-)
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
