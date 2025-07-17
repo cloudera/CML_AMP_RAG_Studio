@@ -159,13 +159,20 @@ export interface ApplicationConfig {
   memory_size_gb: number;
 }
 
+export type MetadataDBProvider = "EMBEDDED" | "POSTGRESQL";
+interface MetadataDBConfig {
+  jdbc_url?: string;
+}
+
 export type VectorDBProvider = "QDRANT" | "OPENSEARCH";
 
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
   summary_storage_provider: "Local" | "S3";
   chat_store_provider: "Local" | "S3";
+  metadata_db_provider: MetadataDBProvider;
   vector_db_provider: VectorDBProvider;
+  metadata_db_config: MetadataDBConfig;
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   openai_config: OpenAIConfig;

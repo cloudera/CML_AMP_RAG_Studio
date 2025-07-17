@@ -53,6 +53,7 @@ import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 import { VectorDBFields } from "pages/Settings/VectorDBFields.tsx";
+import MetadataDatabaseFields from "pages/Settings/MetadataDBFields.tsx";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -72,6 +73,7 @@ const AmpSettingsPage = () => {
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
+  const selectedMetadataDbField = Form.useWatch("metadata_db_provider", form);
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
@@ -115,6 +117,17 @@ const AmpSettingsPage = () => {
       <Form form={form} labelCol={{ offset: 1 }}>
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields projectConfig={projectConfig} />
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>Metadata Database</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
+        <MetadataDatabaseFields
+          selectedMetadataDBProvider={selectedMetadataDbField}
+          projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
+        />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>File Storage</Typography.Title>
           <Typography.Text type="secondary">
