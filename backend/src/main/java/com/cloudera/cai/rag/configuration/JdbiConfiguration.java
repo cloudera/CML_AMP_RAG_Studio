@@ -66,6 +66,7 @@ public class JdbiConfiguration {
     if (jdbi == null) {
       synchronized (LOCK) {
         if (jdbi == null) {
+          log.info("Initializing new Jdbi instance");
           jdbi = Jdbi.create(createDataSource());
         }
       }
