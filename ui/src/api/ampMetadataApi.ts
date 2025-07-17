@@ -159,7 +159,7 @@ export interface ApplicationConfig {
   memory_size_gb: number;
 }
 
-export type MetadataDBProvider = "EMBEDDED" | "POSTGRESQL";
+export type MetadataDBProvider = "H2" | "PostgreSQL";
 interface MetadataDBConfig {
   jdbc_url?: string;
 }

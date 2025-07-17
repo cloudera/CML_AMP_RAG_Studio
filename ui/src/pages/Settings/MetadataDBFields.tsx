@@ -51,7 +51,7 @@ const MetadataDatabaseFields = ({
 }) => (
   <Flex vertical style={{ maxWidth: 600 }}>
     <Form.Item
-      initialValue={projectConfig?.metadata_db_provider ?? "EMBEDDED"}
+      initialValue={projectConfig?.metadata_db_provider ?? "H2"}
       name="metadata_db_provider"
     >
       <Radio.Group
@@ -59,13 +59,13 @@ const MetadataDatabaseFields = ({
         optionType="button"
         buttonStyle="solid"
         options={[
-          { value: "EMBEDDED", label: "Embedded" },
-          { value: "POSTGRESQL", label: "External PostgreSQL" },
+          { value: "H2", label: "Embedded" },
+          { value: "PostgreSQL", label: "External PostgreSQL" },
         ]}
         disabled={!enableModification}
       />
     </Form.Item>
-    {selectedMetadataDBProvider === "EMBEDDED" && (
+    {selectedMetadataDBProvider === "H2" && (
       <StyledHelperText>
         Embedded H2 database will be used as the metadata database.
       </StyledHelperText>
@@ -74,10 +74,10 @@ const MetadataDatabaseFields = ({
       label={"PostgreSQL JDBC URL"}
       initialValue={projectConfig?.metadata_db_config.jdbc_url}
       name={["metadata_db_config", "jdbc_url"]}
-      required={selectedMetadataDBProvider === "POSTGRESQL"}
+      required={selectedMetadataDBProvider === "PostgreSQL"}
       tooltip="PostgreSQL instance JDBC URL. Example: jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag?username=postgres&password=password123"
-      rules={[{ required: selectedMetadataDBProvider === "POSTGRESQL" }]}
-      hidden={selectedMetadataDBProvider !== "POSTGRESQL"}
+      rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
+      hidden={selectedMetadataDBProvider !== "PostgreSQL"}
     >
       <Input
         placeholder="jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag?username=postgres&password=password123"
