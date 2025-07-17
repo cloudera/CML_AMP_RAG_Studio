@@ -279,4 +279,6 @@ def build_retriever(
             configuration, vector_store, embedding_model, data_source_id, llm
         )
         retrievers.append(retriever)
+    if not retrievers:
+        return None
     return MultiSourceRetriever(retrievers)
