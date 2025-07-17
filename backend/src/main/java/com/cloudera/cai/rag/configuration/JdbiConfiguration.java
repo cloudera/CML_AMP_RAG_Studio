@@ -93,8 +93,16 @@ public class JdbiConfiguration {
   private static DatabaseConfig createDatabaseConfig() {
     String dbUrl = System.getenv().getOrDefault("DB_URL", "jdbc:h2:mem:rag");
     String rdbType = System.getenv().getOrDefault("DB_TYPE", RdbConfig.H2_DB_TYPE);
+    String password = System.getenv().get("DB_PASSWORD");
+    String username = System.getenv().get("DB_USERNAME");
     RdbConfig rdbConfiguration =
-        RdbConfig.builder().rdbUrl(dbUrl).rdbType(rdbType).rdbDatabaseName("rag").build();
+        RdbConfig.builder()
+            .rdbUrl(dbUrl)
+            .rdbType(rdbType)
+            .rdbDatabaseName("rag")
+            .rdbUsername(username)
+            .rdbPassword(password)
+            .build();
     if (rdbConfiguration.isPostgres()) {
       rdbConfiguration =
           rdbConfiguration.toBuilder().rdbUsername("postgres").rdbDatabaseName(null).build();
