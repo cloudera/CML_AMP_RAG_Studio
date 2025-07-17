@@ -55,7 +55,6 @@ const MetadataDatabaseFields = ({
       name="metadata_db_provider"
     >
       <Radio.Group
-        style={{ marginBottom: 20 }}
         optionType="button"
         buttonStyle="solid"
         options={[
