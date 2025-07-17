@@ -52,6 +52,7 @@ from typing import cast, Optional, Literal
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
 VectorDbProviderType = Literal["QDRANT", "OPENSEARCH"]
+MetadataDbProviderType = Literal["H2", "PostgreSQL"]
 
 
 class _Settings:

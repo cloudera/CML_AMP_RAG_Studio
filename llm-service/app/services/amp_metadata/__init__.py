@@ -47,6 +47,7 @@ from app.config import (
     SummaryStorageProviderType,
     ChatStoreProviderType,
     VectorDbProviderType,
+    MetadataDbProviderType,
 )
 
 
@@ -96,6 +97,8 @@ class OpenSearchConfig(BaseModel):
     opensearch_endpoint: Optional[str] = None
     opensearch_namespace: Optional[str] = None
 
+class MetadataDbConfig(BaseModel):
+    jdbc_url: Optional[str] = None
 
 class ProjectConfig(BaseModel):
     """
@@ -106,11 +109,13 @@ class ProjectConfig(BaseModel):
     summary_storage_provider: SummaryStorageProviderType
     chat_store_provider: ChatStoreProviderType
     vector_db_provider: VectorDbProviderType
+    metadata_db_provider: MetadataDbProviderType
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
     openai_config: OpenAiConfig
     opensearch_config: OpenSearchConfig
+    metadata_db_config: MetadataDbConfig
     cdp_token: Optional[str] = None
 
 
@@ -212,7 +217,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     Converts a ProjectConfig object to a dictionary of environment variables.
     """
-    return {
+    return {key: str(value) for key, value in  {
         "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
         "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
         "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
@@ -232,7 +237,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
         "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
         "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
-    }
+        "DB_TYPE": config.metadata_db_provider or "H2",
+        "DB_URL": config.metadata_db_config.jdbc_url or "jdbc:h2:../databases/rag",
+    }.items()}
 
 
 def build_configuration(
@@ -291,6 +298,10 @@ def build_configuration(
             openai_api_base=env.get("OPENAI_API_BASE"),
         ),
         cdp_token=env.get("CDP_TOKEN"),
+        metadata_db_provider=TypeAdapter(MetadataDbProviderType).validate_python(env.get("DB_TYPE", "H2")),
+        metadata_db_config=MetadataDbConfig(
+            jdbc_url=env.get("DB_URL")
+        ),
     )
 
 
