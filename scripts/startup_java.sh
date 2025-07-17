@@ -39,13 +39,16 @@
 set -ox pipefail
 
 RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
-DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
-if [ -z "$IS_COMPOSABLE" ]; then
-  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
-  DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
+
+if [ -z "$DB_URL" ]; then
+  DB_URL_LOCATION="jdbc:h2:file:~/rag-studio/databases/rag"
+  if [ -z "$IS_COMPOSABLE" ]; then
+    RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+    DB_URL_LOCATION="jdbc:h2:file:~/databases/rag"
+  fi
+  export DB_URL=$DB_URL_LOCATION
 fi
 
-export DB_URL=$DB_URL_LOCATION
 # grab the most recent java installation and use it for java home
 export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
