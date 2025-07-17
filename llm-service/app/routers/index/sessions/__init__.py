@@ -71,16 +71,19 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
 no_id_router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
+
 class RagSuggestedQuestionsResponse(BaseModel):
     suggested_questions: list[str]
+
 
 class SuggestedQuestionsRequest(BaseModel):
     session_id: Optional[int] = None
 
+
 @no_id_router.post("/suggest-questions")
 @exceptions.propagates
 def suggest_questions(
-        request: SuggestedQuestionsRequest, origin_remote_user: Optional[str] = Header(None)
+    request: SuggestedQuestionsRequest, origin_remote_user: Optional[str] = Header(None)
 ) -> RagSuggestedQuestionsResponse:
 
     return RagSuggestedQuestionsResponse(
