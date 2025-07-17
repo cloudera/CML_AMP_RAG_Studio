@@ -162,6 +162,8 @@ export interface ApplicationConfig {
 export type MetadataDBProvider = "H2" | "PostgreSQL";
 interface MetadataDBConfig {
   jdbc_url?: string;
+  username?: string;
+  password?: string;
 }
 
 export type VectorDBProvider = "QDRANT" | "OPENSEARCH";

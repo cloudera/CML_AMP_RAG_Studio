@@ -74,12 +74,40 @@ const MetadataDatabaseFields = ({
       initialValue={projectConfig?.metadata_db_config.jdbc_url}
       name={["metadata_db_config", "jdbc_url"]}
       required={selectedMetadataDBProvider === "PostgreSQL"}
-      tooltip="PostgreSQL instance JDBC URL. Example: jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag?username=postgres&password=password123"
+      tooltip="PostgreSQL instance JDBC URL. Example: jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag"
       rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
       hidden={selectedMetadataDBProvider !== "PostgreSQL"}
     >
       <Input
-        placeholder="jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag?username=postgres&password=password123"
+        placeholder="jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag"
+        disabled={!enableModification}
+      />
+    </Form.Item>
+    <Form.Item
+      label={"PostgreSQL Username"}
+      initialValue={projectConfig?.metadata_db_config.username}
+      name={["metadata_db_config", "username"]}
+      required={selectedMetadataDBProvider === "PostgreSQL"}
+      tooltip="PostgreSQL username"
+      rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
+      hidden={selectedMetadataDBProvider !== "PostgreSQL"}
+    >
+      <Input
+        placeholder="postgres"
+        disabled={!enableModification}
+      />
+    </Form.Item>
+    <Form.Item
+      label={"PostgreSQL Password"}
+      initialValue={projectConfig?.metadata_db_config.password}
+      name={["metadata_db_config", "password"]}
+      required={selectedMetadataDBProvider === "PostgreSQL"}
+      tooltip="PostgreSQL password"
+      rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
+      hidden={selectedMetadataDBProvider !== "PostgreSQL"}
+    >
+      <Input.Password
+        placeholder="password"
         disabled={!enableModification}
       />
     </Form.Item>
