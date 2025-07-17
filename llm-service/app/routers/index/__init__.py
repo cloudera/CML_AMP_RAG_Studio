@@ -46,7 +46,6 @@ from . import summaries
 from . import amp_metadata
 from . import models
 from . import metrics
-from . import chat
 
 logger = logging.getLogger(__name__)
 
