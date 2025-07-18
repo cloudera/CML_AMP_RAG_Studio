@@ -43,7 +43,7 @@ const apiProxy: Options = {
         return res.end("Something went wrong.");
       }
 
-      // Only return 503 for service unavailability errors
+      // Only return 502 for service unavailability errors
       const isServiceUnavailable = [
         "ECONNREFUSED",
         "ENOTFOUND",
@@ -54,7 +54,7 @@ const apiProxy: Options = {
       ].some((code) => err.stack?.includes(code));
 
       if (isServiceUnavailable) {
-        res.writeHead(503, {
+        res.writeHead(502, {
           "Content-Type": "application/json",
         });
         return res.end(
@@ -67,17 +67,7 @@ const apiProxy: Options = {
           }),
         );
       }
-
-      const message = `API Proxy Error: ${err.message || "An unexpected error occurred."}`;
-      res.writeHead(500, message, res.getHeaders());
-      return res.end(
-        JSON.stringify({
-          error: err.name ?? "Internal Server Error",
-          message,
-          details: err.stack ?? "No additional details available.",
-          timestamp: new Date().toISOString(),
-        }),
-      );
+      return res;
     },
   },
 };

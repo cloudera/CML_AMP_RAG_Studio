@@ -54,6 +54,9 @@ const queryClient = new QueryClient({
     queries: {
       retry: (failureCount: number, error: Error) => {
         if (error instanceof ApiError) {
+          if (error.status === 502) {
+            return false;
+          }
           if (error.message.includes("No such file or directory: '/tmp/jwt'")) {
             return false;
           }
