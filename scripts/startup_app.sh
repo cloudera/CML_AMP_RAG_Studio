@@ -55,9 +55,9 @@ done
 trap cleanup EXIT
 
 
-RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+export RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
 if [ -z "$IS_COMPOSABLE" ]; then
-  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+  export RAG_STUDIO_INSTALL_DIR="/home/cdsw"
 fi
 
 export RAG_DATABASES_DIR=$(pwd)/databases
