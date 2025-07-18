@@ -215,7 +215,7 @@ def validate_jdbc_connection(
     rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
     jar_path = os.path.join(rag_studio_dir, "prebuilt_artifacts/rag-api.jar")
     cmd = [
-        "java",
+        f"{os.environ.get('JAVA_HOME')}/bin/java",
         "-cp",
         jar_path,
         "-Dloader.main=com.cloudera.cai.util.db.JdbiUtils",

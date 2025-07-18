@@ -51,10 +51,6 @@ if [ -z "$DB_URL" ]; then
   export DB_URL=$DB_URL_LOCATION
 fi
 
-# grab the most recent java installation and use it for java home
-export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
-export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
-
 for i in {1..3}; do
   echo "Starting Java application..."
   "$JAVA_HOME"/bin/java -jar prebuilt_artifacts/rag-api.jar
