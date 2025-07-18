@@ -101,8 +101,9 @@ public class JdbiUtils {
   /**
    * A utility class to test database connectivity using JDBC.
    *
-   * <p>Run this with: java -jar prebuilt_artifacts/rag-api.jar com.cloudera.cai.util.db.JdbiUtils
-   * <jdbc_url> <username> <password>
+   * <p>Run this with: java -cp prebuilt_artifacts/rag-api.jar
+   * -Dloader.main=com.cloudera.cai.util.db.JdbiUtils
+   * org.springframework.boot.loader.launch.PropertiesLauncher <jdbc_url> <username> <password>
    *
    * <p>An exit code of 0 indicates success, 1 indicates failure, and 2 indicates incorrect usage.
    */

@@ -198,6 +198,44 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
     return "Auth token saved successfully"
 
 
+@router.post("/validate-jdbc-connection", summary="Validates a JDBC connection string, username, and password.")
+@exceptions.propagates
+def validate_jdbc_connection(
+    db_url: Annotated[str, Body(embed=True)],
+    username: Annotated[str, Body(embed=True)],
+    password: Annotated[str, Body(embed=True)],
+) -> dict:
+    """
+    Calls the JdbiUtils main method to validate JDBC connection parameters.
+    Returns a dict with 'valid': True/False and 'message'.
+    """
+    import subprocess
+    import os
+    # Use RAG_STUDIO_INSTALL_DIR to resolve the jar path
+    rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
+    jar_path = os.path.join(rag_studio_dir, "prebuilt_artifacts/rag-api.jar")
+    cmd = [
+        "java",
+        "-cp",
+        jar_path,
+        "-Dloader.main=com.cloudera.cai.util.db.JdbiUtils",
+        "org.springframework.boot.loader.launch.PropertiesLauncher",
+        db_url,
+        username,
+        password,
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            return {"valid": True, "message": result.stdout.strip()}
+        elif result.returncode == 2:
+            return {"valid": False, "message": "Usage error: " + result.stderr.strip()}
+        else:
+            return {"valid": False, "message": result.stderr.strip()}
+    except Exception as e:
+        return {"valid": False, "message": str(e)}
+
+
 def save_cdp_token(auth_token: str) -> None:
     token_data = {"access_token": auth_token}
     with open("cdp_token", "w") as file:
