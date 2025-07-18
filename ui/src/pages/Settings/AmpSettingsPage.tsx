@@ -99,11 +99,13 @@ const AmpSettingsPage = () => {
           <Alert
             message={
               <div>
-                <Typography.Text>
-                  {projectConfig.config_validation_results.storage.valid
-                    ? ""
-                    : `Storage configuration is invalid: ${projectConfig.config_validation_results.storage.message}`}
-                </Typography.Text>
+                {projectConfig.config_validation_results.storage
+                  .valid ? null : (
+                  <Typography.Text>
+                    `Storage configuration is invalid: $
+                    {projectConfig.config_validation_results.storage.message}`
+                  </Typography.Text>
+                )}
               </div>
             }
             type="warning"
