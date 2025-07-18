@@ -46,6 +46,7 @@ from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
+from ....config import MetadataDbProviderType
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
@@ -204,6 +205,7 @@ def validate_jdbc_connection(
     db_url: Annotated[str, Body(embed=True)],
     username: Annotated[str, Body(embed=True)],
     password: Annotated[str, Body(embed=True)],
+    db_type: Annotated[MetadataDbProviderType, Body(embed=True)],
 ) -> dict:
     """
     Calls the JdbiUtils main method to validate JDBC connection parameters.
@@ -223,6 +225,7 @@ def validate_jdbc_connection(
         db_url,
         username,
         password,
+        db_type
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)

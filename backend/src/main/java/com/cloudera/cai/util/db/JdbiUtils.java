@@ -108,14 +108,25 @@ public class JdbiUtils {
    * <p>An exit code of 0 indicates success, 1 indicates failure, and 2 indicates incorrect usage.
    */
   public static void main(String[] args) {
-    if (args.length != 3) {
-      System.err.println("Usage: JdbiUtils <db_url> <username> <password>");
+    if (args.length != 4) {
+      System.err.println("Usage: JdbiUtils <db_url> <username> <password> <db_type>");
       System.exit(2); // Incorrect usage
     }
     String dbUrl = args[0];
     String username = args[1];
     String password = args[2];
-    try (Connection connection = DriverManager.getConnection(dbUrl, username, password)) {
+    String dbType = args[3];
+    RdbConfig rdbConfiguration =
+        RdbConfig.builder()
+            .rdbUrl(dbUrl)
+            .rdbType(dbType)
+            .rdbDatabaseName("rag")
+            .rdbUsername(username)
+            .rdbPassword(password)
+            .build();
+    var connectionString = RdbConfig.buildDatabaseServerConnectionString(rdbConfiguration);
+    try (Connection connection =
+        DriverManager.getConnection(connectionString, username, password)) {
       if (connection != null && !connection.isClosed()) {
         System.out.println("Connection successful.");
         System.exit(0); // Success
