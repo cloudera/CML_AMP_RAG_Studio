@@ -37,11 +37,11 @@
  ******************************************************************************/
 
 import {
-  ProjectConfig,
   MetadataDBProvider,
+  ProjectConfig,
   useValidateJdbcConnection,
 } from "src/api/ampMetadataApi.ts";
-import { Button, Flex, Form, FormInstance, Input, Radio } from "antd";
+import { Button, Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
 
@@ -49,12 +49,12 @@ const MetadataDatabaseFields = ({
   selectedMetadataDBProvider,
   projectConfig,
   enableModification,
-  form,
+  formItems,
 }: {
   selectedMetadataDBProvider: MetadataDBProvider;
   projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
-  form: FormInstance<ProjectConfig>;
+  formItems: ProjectConfig;
 }) => {
   const testConnection = useValidateJdbcConnection({
     onSuccess: () => {
@@ -125,16 +125,21 @@ const MetadataDatabaseFields = ({
         <Button
           type="primary"
           onClick={() => {
-            // pass the values from the form to the testConnection mutation
+            if (!formItems.metadata_db_config.jdbc_url) {
+              messageQueue.error(
+                "JDBC URL is required for testing connection.",
+              );
+              return;
+            }
             testConnection.mutate({
-              jdbc_url: form.getFieldValue(["metadata_db_config", "jdbc_url"]),
-              username: form.getFieldValue(["metadata_db_config", "username"]),
-              password: form.getFieldValue(["metadata_db_config", "password"]),
+              jdbc_url: formItems.metadata_db_config.jdbc_url,
+              username: formItems.metadata_db_config.username,
+              password: formItems.metadata_db_config.password,
               db_type: selectedMetadataDBProvider,
             });
           }}
           style={{ width: 160 }}
-          disabled={}
+          disabled={!formItems.metadata_db_config.jdbc_url}
         >
           Test Connection
         </Button>
