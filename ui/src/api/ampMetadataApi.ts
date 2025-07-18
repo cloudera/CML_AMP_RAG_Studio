@@ -168,6 +168,18 @@ interface MetadataDBConfig {
 
 export type VectorDBProvider = "QDRANT" | "OPENSEARCH";
 
+export interface ValidationResult {
+  valid: boolean;
+  message: string;
+}
+
+export interface ConfigValidationResults {
+  storage: ValidationResult;
+  model: ValidationResult;
+  metadata_api: ValidationResult;
+  valid: boolean;
+}
+
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
   summary_storage_provider: "Local" | "S3";
@@ -181,6 +193,7 @@ export interface ProjectConfig {
   caii_config: CaiiConfig;
   opensearch_config: OpenSearchConfig;
   is_valid_config: boolean;
+  config_validation_results: ConfigValidationResults;
   release_version: string;
   application_config: ApplicationConfig;
   cdp_token?: string;

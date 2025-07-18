@@ -93,22 +93,24 @@ const AmpSettingsPage = () => {
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      {!projectConfig?.is_valid_config && !confirmationModal.isModalOpen && (
-        <Alert
-          message={
-            <div>
-              <Typography.Text>
-                For initial configuration of RAG Studio, please provide valid
-                credentials for the Cloudera AI Inference service, AWS Bedrock,
-                or Azure OpenAI.
-              </Typography.Text>
-            </div>
-          }
-          type="warning"
-          showIcon
-          style={{ marginTop: 40, width: "fit-content" }}
-        />
-      )}
+      {!projectConfig?.is_valid_config &&
+        projectConfig?.config_validation_results &&
+        !confirmationModal.isModalOpen && (
+          <Alert
+            message={
+              <div>
+                <Typography.Text>
+                  {projectConfig.config_validation_results.storage.valid
+                    ? ""
+                    : `Storage configuration is invalid: ${projectConfig.config_validation_results.storage.message}`}
+                </Typography.Text>
+              </div>
+            }
+            type="warning"
+            showIcon
+            style={{ marginTop: 40, width: "fit-content" }}
+          />
+        )}
       {!enableSettingsModification && (
         <Alert
           message="Storage and model provider settings cannot be modified if there are any chats or knowledge bases."
