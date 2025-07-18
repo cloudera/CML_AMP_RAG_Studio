@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
  * (C) Cloudera, Inc. 2024
  * All rights reserved.
@@ -95,6 +95,36 @@ public class JdbiUtils {
         statement.executeUpdate("CREATE DATABASE " + databaseName);
         log.info("the database {} was created successfully", databaseName);
       }
+    }
+  }
+
+  /**
+   * A utility class to test database connectivity using JDBC.
+   *
+   * <p>Run this with: java -jar prebuilt_artifacts/rag-api.jar com.cloudera.cai.util.db.JdbiUtils
+   * <jdbc_url> <username> <password>
+   *
+   * <p>An exit code of 0 indicates success, 1 indicates failure, and 2 indicates incorrect usage.
+   */
+  public static void main(String[] args) {
+    if (args.length != 3) {
+      System.err.println("Usage: JdbiUtils <db_url> <username> <password>");
+      System.exit(2); // Incorrect usage
+    }
+    String dbUrl = args[0];
+    String username = args[1];
+    String password = args[2];
+    try (Connection connection = DriverManager.getConnection(dbUrl, username, password)) {
+      if (connection != null && !connection.isClosed()) {
+        System.out.println("Connection successful.");
+        System.exit(0); // Success
+      } else {
+        System.err.println("Connection failed: Connection is null or closed.");
+        System.exit(1); // Failure
+      }
+    } catch (Exception e) {
+      System.err.println("Connection failed: " + e.getMessage());
+      System.exit(1); // Failure
     }
   }
 }
