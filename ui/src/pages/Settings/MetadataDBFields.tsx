@@ -36,89 +36,111 @@
  * DATA.
  ******************************************************************************/
 
-import { ProjectConfig, MetadataDBProvider } from "src/api/ampMetadataApi.ts";
-import { Button, Flex, Form, Input, Radio } from "antd";
+import {
+  ProjectConfig,
+  MetadataDBProvider,
+  useValidateJdbcConnection,
+} from "src/api/ampMetadataApi.ts";
+import { Button, Flex, Form, FormInstance, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const MetadataDatabaseFields = ({
   selectedMetadataDBProvider,
   projectConfig,
   enableModification,
+  form,
 }: {
   selectedMetadataDBProvider: MetadataDBProvider;
   projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
-}) => (
-  <Flex vertical style={{ maxWidth: 600 }}>
-    <Form.Item
-      initialValue={projectConfig?.metadata_db_provider ?? "H2"}
-      name="metadata_db_provider"
-    >
-      <Radio.Group
-        optionType="button"
-        buttonStyle="solid"
-        options={[
-          { value: "H2", label: "Embedded" },
-          { value: "PostgreSQL", label: "External PostgreSQL" },
-        ]}
-        disabled={!enableModification}
-      />
-    </Form.Item>
-    {selectedMetadataDBProvider === "H2" && (
-      <StyledHelperText>
-        Embedded H2 database will be used as the metadata database.
-      </StyledHelperText>
-    )}
-    <Form.Item
-      label={"PostgreSQL JDBC URL"}
-      initialValue={projectConfig?.metadata_db_config.jdbc_url}
-      name={["metadata_db_config", "jdbc_url"]}
-      required={selectedMetadataDBProvider === "PostgreSQL"}
-      tooltip="PostgreSQL instance JDBC URL. Example: jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag"
-      rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
-      hidden={selectedMetadataDBProvider !== "PostgreSQL"}
-    >
-      <Input
-        placeholder="jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag"
-        disabled={!enableModification}
-      />
-    </Form.Item>
-    <Form.Item
-      label={"PostgreSQL Username"}
-      initialValue={projectConfig?.metadata_db_config.username}
-      name={["metadata_db_config", "username"]}
-      required={selectedMetadataDBProvider === "PostgreSQL"}
-      tooltip="PostgreSQL username"
-      rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
-      hidden={selectedMetadataDBProvider !== "PostgreSQL"}
-    >
-      <Input placeholder="postgres" disabled={!enableModification} />
-    </Form.Item>
-    <Form.Item
-      label={"PostgreSQL Password"}
-      initialValue={projectConfig?.metadata_db_config.password}
-      name={["metadata_db_config", "password"]}
-      required={selectedMetadataDBProvider === "PostgreSQL"}
-      tooltip="PostgreSQL password"
-      rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
-      hidden={selectedMetadataDBProvider !== "PostgreSQL"}
-    >
-      <Input.Password placeholder="password" disabled={!enableModification} />
-    </Form.Item>
-    <Flex justify="flex-end">
-      <Button
-        type="primary"
-        onClick={() => {
-          // Logic to test the connection can be added here
-          console.log("Testing connection...");
-        }}
-        style={{ width: 160 }}
-        disabled={!enableModification}
+  form: FormInstance<ProjectConfig>;
+}) => {
+  const testConnection = useValidateJdbcConnection({
+    onSuccess: () => {
+      messageQueue.success("Connection successful!");
+    },
+    onError: (error) => {
+      messageQueue.error(`Connection failed: ${error.message}`);
+    },
+  });
+  return (
+    <Flex vertical style={{ maxWidth: 600 }}>
+      <Form.Item
+        initialValue={projectConfig?.metadata_db_provider ?? "H2"}
+        name="metadata_db_provider"
       >
-        Test Connection
-      </Button>
+        <Radio.Group
+          optionType="button"
+          buttonStyle="solid"
+          options={[
+            { value: "H2", label: "Embedded" },
+            { value: "PostgreSQL", label: "External PostgreSQL" },
+          ]}
+          disabled={!enableModification}
+        />
+      </Form.Item>
+      {selectedMetadataDBProvider === "H2" && (
+        <StyledHelperText>
+          Embedded H2 database will be used as the metadata database.
+        </StyledHelperText>
+      )}
+      <Form.Item
+        label={"PostgreSQL JDBC URL"}
+        initialValue={projectConfig?.metadata_db_config.jdbc_url}
+        name={["metadata_db_config", "jdbc_url"]}
+        required={selectedMetadataDBProvider === "PostgreSQL"}
+        tooltip="PostgreSQL instance JDBC URL. Example: jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag"
+        rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
+        hidden={selectedMetadataDBProvider !== "PostgreSQL"}
+      >
+        <Input
+          placeholder="jdbc:postgresql://xyz.us-west-2.rds.amazonaws.com:5432/rag"
+          disabled={!enableModification}
+        />
+      </Form.Item>
+      <Form.Item
+        label={"PostgreSQL Username"}
+        initialValue={projectConfig?.metadata_db_config.username}
+        name={["metadata_db_config", "username"]}
+        required={selectedMetadataDBProvider === "PostgreSQL"}
+        tooltip="PostgreSQL username"
+        rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
+        hidden={selectedMetadataDBProvider !== "PostgreSQL"}
+      >
+        <Input placeholder="postgres" disabled={!enableModification} />
+      </Form.Item>
+      <Form.Item
+        label={"PostgreSQL Password"}
+        initialValue={projectConfig?.metadata_db_config.password}
+        name={["metadata_db_config", "password"]}
+        required={selectedMetadataDBProvider === "PostgreSQL"}
+        tooltip="PostgreSQL password"
+        rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
+        hidden={selectedMetadataDBProvider !== "PostgreSQL"}
+      >
+        <Input.Password placeholder="password" disabled={!enableModification} />
+      </Form.Item>
+      <Flex justify="flex-end">
+        <Button
+          type="primary"
+          onClick={() => {
+            // pass the values from the form to the testConnection mutation
+            testConnection.mutate({
+              jdbc_url: form.getFieldValue(["metadata_db_config", "jdbc_url"]),
+              username: form.getFieldValue(["metadata_db_config", "username"]),
+              password: form.getFieldValue(["metadata_db_config", "password"]),
+              db_type: selectedMetadataDBProvider,
+            });
+          }}
+          style={{ width: 160 }}
+          disabled={}
+        >
+          Test Connection
+        </Button>
+      </Flex>
     </Flex>
-  </Flex>
-);
+  );
+};
 
 export default MetadataDatabaseFields;
