@@ -49,11 +49,11 @@ import { ProcessingFields } from "pages/Settings/ProcessingFields.tsx";
 import { FileStorageFields } from "pages/Settings/FileStorageFields.tsx";
 import { ModelProviderFields } from "pages/Settings/ModelProviderFields.tsx";
 import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
-import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 import { VectorDBFields } from "pages/Settings/VectorDBFields.tsx";
 import MetadataDatabaseFields from "pages/Settings/MetadataDBFields.tsx";
+import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { useGetSessions } from "src/api/sessionApi.ts";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -77,15 +77,19 @@ const AmpSettingsPage = () => {
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
-  const dataSourcesQuery = useSuspenseQuery(getDataSourcesQueryOptions);
-  const sessionsQuery = useSuspenseQuery(getSessionsQueryOptions);
+
+  const dataSourcesQuery = useGetDataSourcesQuery();
+  const sessionsQuery = useGetSessions();
+
   const summaryStorageProvider = Form.useWatch(
     "summary_storage_provider",
     form,
   );
   const selectedVectorDBField = Form.useWatch("vector_db_provider", form);
   const enableSettingsModification =
-    dataSourcesQuery.data.length === 0 && sessionsQuery.data.length === 0;
+    dataSourcesQuery.isError ||
+    sessionsQuery.isError ||
+    (dataSourcesQuery.data?.length === 0 && sessionsQuery.data?.length === 0);
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>

@@ -2,7 +2,8 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import { ClientRequest, IncomingMessage } from "node:http";
+import { ClientRequest, IncomingMessage, ServerResponse } from "node:http";
+import { Socket } from "node:net";
 
 const app = express();
 
@@ -29,6 +30,55 @@ const apiProxy: Options = {
   },
   on: {
     proxyReq,
+    error: (
+      err: Error,
+      req: IncomingMessage,
+      res: ServerResponse<IncomingMessage> | Socket,
+    ) => {
+      console.error("API Proxy Error:", err);
+      console.error("API Error Request URL:", req.url);
+
+      if (res instanceof Socket) {
+        console.error("Response is a Socket, not a ServerResponse.");
+        return res.end("Something went wrong.");
+      }
+
+      // Only return 503 for service unavailability errors
+      const isServiceUnavailable = [
+        "ECONNREFUSED",
+        "ENOTFOUND",
+        "ETIMEDOUT",
+        "ECONNRESET",
+        "EHOSTUNREACH",
+        "ENETUNREACH",
+      ].some((code) => err.stack?.includes(code));
+
+      if (isServiceUnavailable) {
+        res.writeHead(503, {
+          "Content-Type": "application/json",
+        });
+        return res.end(
+          JSON.stringify({
+            error: "Service Unavailable",
+            message:
+              "API service is currently unavailable. Please try again later.",
+            details: err.message,
+            timestamp: new Date().toISOString(),
+          }),
+        );
+      }
+
+      const message = `API Proxy Error: ${err.message || "An unexpected error occurred."}`;
+      res.writeHead(500, message, res.getHeaders());
+      return res.end(
+        JSON.stringify({
+          error: err.name ?? "Internal Server Error",
+          message,
+          details: err.stack ?? "No additional details available.",
+          timestamp: new Date().toISOString(),
+        }),
+      );
+    },
   },
 };
 
