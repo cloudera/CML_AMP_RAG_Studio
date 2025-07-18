@@ -199,6 +199,7 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
             socket.gethostbyname(caii_domain)
             print(f"CAII domain {caii_domain} can be resolved")
             valid_model_config_exists = True
+            message = "CAII domain is set and can be resolved. \n"
         except socket.error:
             print(f"ERROR: CAII domain {caii_domain} can not be resolved")
             message = message + f"CAII domain {caii_domain} can not be resolved. \n"
@@ -206,6 +207,7 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
     if any([access_key_id, secret_key_id, default_region]):
         if all([access_key_id, secret_key_id, default_region]):
             valid_model_config_exists = True
+            message = "AWS Config is valid for Bedrock. \n"
         else:
             print(
                 "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
@@ -218,21 +220,20 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
     if any([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
         if all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
             valid_model_config_exists = True
+            message = "Azure config is valid. \n"
         else:
             print(
-                "Azure config is not valid for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
+                "Azure config is not valid; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
             )
             message = message + (
-                "Azure config is not valid for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed. \n"
+                "Azure config is not valid; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed. \n"
             )
 
     if any([open_ai_key]):
         if open_ai_key:
             valid_model_config_exists = True
-    return ValidationResult(
-        valid=valid_model_config_exists,
-        message=message or "Model configuration is valid.",
-    )
+            message = "OpenAI config is valid. \n"
+    return ValidationResult(valid=valid_model_config_exists, message=message)
 
 
 def validate(environ: dict[str, str]) -> ConfigValidationResults:
@@ -418,7 +419,12 @@ def get_application_config() -> ApplicationConfig:
     )
 
 
-def validate_jdbc(db_type, db_url, password, username) -> ValidationResult:
+def validate_jdbc(
+    db_type: MetadataDbProviderType,
+    db_url: str,
+    password: Optional[str],
+    username: Optional[str],
+) -> ValidationResult:
     # Use RAG_STUDIO_INSTALL_DIR to resolve the jar path
     rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
     jar_path = os.path.join(rag_studio_dir, "prebuilt_artifacts/rag-api.jar")
@@ -431,7 +437,7 @@ def validate_jdbc(db_type, db_url, password, username) -> ValidationResult:
         db_url,
         username,
         password,
-        db_type,
+        str(db_type),
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)

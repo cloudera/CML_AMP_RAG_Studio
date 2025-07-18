@@ -287,3 +287,31 @@ const setCdpToken = async (auth_token: string): Promise<string> => {
     auth_token,
   });
 };
+
+export const useValidateJdbcConnection = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ValidationResult>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.validateJdbcConnection],
+    mutationFn: validateJdbcConnection,
+    onError,
+    onSuccess,
+  });
+};
+
+interface TestJdbcConnectionParams {
+  jdbc_url: string;
+  db_type: MetadataDBProvider;
+  username?: string;
+  password?: string;
+}
+
+const validateJdbcConnection = async (
+  body: TestJdbcConnectionParams,
+): Promise<ValidationResult> => {
+  return await postRequest(
+    `${llmServicePath}/amp/validate-jdbc-connection`,
+    body,
+  );
+};

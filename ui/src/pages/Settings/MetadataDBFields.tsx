@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { ProjectConfig, MetadataDBProvider } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio } from "antd";
+import { Button, Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 const MetadataDatabaseFields = ({
@@ -92,10 +92,7 @@ const MetadataDatabaseFields = ({
       rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
       hidden={selectedMetadataDBProvider !== "PostgreSQL"}
     >
-      <Input
-        placeholder="postgres"
-        disabled={!enableModification}
-      />
+      <Input placeholder="postgres" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"PostgreSQL Password"}
@@ -106,11 +103,21 @@ const MetadataDatabaseFields = ({
       rules={[{ required: selectedMetadataDBProvider === "PostgreSQL" }]}
       hidden={selectedMetadataDBProvider !== "PostgreSQL"}
     >
-      <Input.Password
-        placeholder="password"
-        disabled={!enableModification}
-      />
+      <Input.Password placeholder="password" disabled={!enableModification} />
     </Form.Item>
+    <Flex justify="flex-end">
+      <Button
+        type="primary"
+        onClick={() => {
+          // Logic to test the connection can be added here
+          console.log("Testing connection...");
+        }}
+        style={{ width: 160 }}
+        disabled={!enableModification}
+      >
+        Test Connection
+      </Button>
+    </Flex>
   </Flex>
 );
 

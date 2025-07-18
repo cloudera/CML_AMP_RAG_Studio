@@ -102,35 +102,29 @@ const AmpSettingsPage = () => {
       {projectConfig &&
         !projectConfig.is_valid_config &&
         !confirmationModal.isModalOpen && (
-          <>
+          <Flex style={{ marginTop: 40 }} gap={8} vertical>
             {!projectConfig.config_validation_results.storage.valid ? (
               <Alert
-                message={
-                  <div>
-                    <Typography.Text>
-                      Storage configuration is invalid:
-                      {projectConfig.config_validation_results.storage.message}
-                    </Typography.Text>
-                  </div>
+                message="Storage configuration is invalid"
+                description={
+                  <Typography.Text type={"secondary"}>
+                    {projectConfig.config_validation_results.storage.message}
+                  </Typography.Text>
                 }
                 type="warning"
                 showIcon
-                style={{ marginTop: 40, width: "fit-content" }}
               />
             ) : null}
             {!projectConfig.config_validation_results.model.valid ? (
               <Alert
-                message={
-                  <div>
-                    <Typography.Text>
-                      Model configuration is invalid:
-                      {projectConfig.config_validation_results.model.message}
-                    </Typography.Text>
-                  </div>
+                message="Model configuration is invalid"
+                description={
+                  <Typography.Text type={"secondary"}>
+                    {projectConfig.config_validation_results.model.message}
+                  </Typography.Text>
                 }
                 type="warning"
                 showIcon
-                style={{ marginTop: 40, width: "fit-content" }}
               />
             ) : null}
             {!projectConfig.config_validation_results.metadata_api.valid ? (
@@ -146,10 +140,9 @@ const AmpSettingsPage = () => {
                 }
                 type="warning"
                 showIcon
-                style={{ marginTop: 40, width: "fit-content" }}
               />
             ) : null}
-          </>
+          </Flex>
         )}
       {showWarning && (
         <Alert

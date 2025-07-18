@@ -82,6 +82,7 @@ export enum MutationKeys {
   "restartApplication" = "restartApplication",
   "streamChatMutation" = "streamChatMutation",
   "setCdpToken" = "setCdpToken",
+  "validateJdbcConnection" = "validateJdbcConnection",
 }
 
 export enum QueryKeys {
