@@ -80,7 +80,7 @@ const MoveSessionModal = ({
     isLoading: dataSourcesForProjectIsLoading,
   } = useGetDataSourcesForProject(selectedProject);
   const [dataSourcesToTransfer, setDataSourcesToTransfer] = useState<number[]>(
-    [],
+    []
   );
   useEffect(() => {
     if (dataSourcesForProject) {
@@ -88,9 +88,9 @@ const MoveSessionModal = ({
         session.dataSourceIds.filter(
           (dataSourceId) =>
             !dataSourcesForProject.some(
-              (projectDs) => projectDs.id === dataSourceId,
-            ),
-        ),
+              (projectDs) => projectDs.id === dataSourceId
+            )
+        )
       );
     }
   }, [session.dataSourceIds, dataSourcesForProject, setDataSourcesToTransfer]);
@@ -106,7 +106,7 @@ const MoveSessionModal = ({
           projectId: selectedProject,
           dataSourceId: dataSourceId,
         });
-      }),
+      })
     )
       .then(() => {
         const dataSourceIds = new Set([

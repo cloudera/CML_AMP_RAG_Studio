@@ -81,7 +81,10 @@ export const useSuggestQuestions = (
 const suggestQuestionsQuery = async (
   request: SuggestQuestionsRequest,
 ): Promise<SuggestQuestionsResponse> => {
-  return await postRequest(`${llmServicePath}/chat/suggest-questions`, request);
+  return await postRequest(
+    `${llmServicePath}/sessions/suggest-questions`,
+    request,
+  );
 };
 
 export interface ChunkMetadata {

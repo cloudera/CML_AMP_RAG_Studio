@@ -55,9 +55,9 @@ done
 trap cleanup EXIT
 
 
-RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
+export RAG_STUDIO_INSTALL_DIR="/home/cdsw/rag-studio"
 if [ -z "$IS_COMPOSABLE" ]; then
-  RAG_STUDIO_INSTALL_DIR="/home/cdsw"
+  export RAG_STUDIO_INSTALL_DIR="/home/cdsw"
 fi
 
 export RAG_DATABASES_DIR=$(pwd)/databases
@@ -70,6 +70,10 @@ export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 qdrant/qdrant 2>&1 &
 
 # start up the jarva
+# grab the most recent java installation and use it for java home
+export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
+export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
+
 scripts/startup_java.sh 2>&1 &
 
 source scripts/load_nvm.sh > /dev/null

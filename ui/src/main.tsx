@@ -47,18 +47,36 @@ import { Flex, Spin, Typography } from "antd";
 import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
 import { CustomUnhandledError } from "src/components/ErrorComponents/CustomUnhandledError.tsx";
 import "@ant-design/v5-patch-for-react-19";
+import messageQueue from "src/utils/messageQueue.ts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: (_, error: Error) => {
+      retry: (failureCount: number, error: Error) => {
         if (error instanceof ApiError) {
+          if (error.status === 502) {
+            return false;
+          }
           if (error.message.includes("No such file or directory: '/tmp/jwt'")) {
             return false;
           }
-          return error.status >= 500;
+          if (failureCount > 4) {
+            return false;
+          }
+          const shouldRetry = error.status >= 500;
+          if (shouldRetry && failureCount === 0) {
+            messageQueue.warning(
+              `Retrying request due to server error. ${error.message}`,
+            );
+          }
+          return shouldRetry;
         }
-        return true;
+        if (failureCount === 0) {
+          messageQueue.warning(
+            `Retrying request due to server error. ${error.message}`,
+          );
+        }
+        return failureCount <= 4;
       },
     },
   },
@@ -67,7 +85,7 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient: queryClient },
-  defaultErrorComponent: ({ error }) => <CustomUnhandledError error={error} />,
+  defaultErrorComponent: (error) => <CustomUnhandledError error={error} />,
   defaultNotFoundComponent: () => <NotFoundComponent />,
   defaultPendingComponent: () => (
     <Flex

@@ -10,7 +10,7 @@ services:
       - "9464:9464"
     environment:
       - API_HOST=0.0.0.0
-      - DB_URL=jdbc:postgresql://db:5432
+      - DB_URL=jdbc:postgresql://db:5432/rag
       - DB_TYPE=PostgreSQL
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
       - OTEL_METRICS_EXPORTER=none # we configure this by hand

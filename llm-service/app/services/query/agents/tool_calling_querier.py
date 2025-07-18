@@ -385,7 +385,10 @@ def _run_streamer(
                     # it is a start to a tool call stream
                     if BedrockModelProvider.is_enabled():
                         delta = event.delta or ""
-                        if "contentBlockStart" in event.raw:
+                        if (
+                            isinstance(event.raw, dict)
+                            and "contentBlockStart" in event.raw
+                        ):
                             # check the contentBlockIndex in the raw response
                             if event.raw["contentBlockStart"]["contentBlockIndex"]:
                                 # If contentBlockIndex is > 0, prepend a newline to the delta

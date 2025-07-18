@@ -56,6 +56,7 @@ from ....rag_types import RagPredictConfiguration
 from ....services.chat.chat import (
     chat as run_chat,
 )
+from ....services.chat.suggested_questions import generate_suggested_questions
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     chat_history_manager,
@@ -68,6 +69,28 @@ from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+no_id_router = APIRouter(prefix="/sessions", tags=["Sessions"])
+
+
+class RagSuggestedQuestionsResponse(BaseModel):
+    suggested_questions: list[str]
+
+
+class SuggestedQuestionsRequest(BaseModel):
+    session_id: Optional[int] = None
+
+
+@no_id_router.post("/suggest-questions")
+@exceptions.propagates
+def suggest_questions(
+    request: SuggestedQuestionsRequest, origin_remote_user: Optional[str] = Header(None)
+) -> RagSuggestedQuestionsResponse:
+
+    return RagSuggestedQuestionsResponse(
+        suggested_questions=generate_suggested_questions(
+            request.session_id, user_name=origin_remote_user
+        )
+    )
 
 
 class CancelableStreamingResponse(StreamingResponse):
@@ -92,10 +115,6 @@ class CancelableStreamingResponse(StreamingResponse):
                 logger.info("Client disconnected, cancelling stream")
                 self.cancel_event.set()
                 break
-
-
-class RagSuggestedQuestionsResponse(BaseModel):
-    suggested_questions: list[str]
 
 
 @router.post(

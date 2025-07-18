@@ -36,8 +36,12 @@
  * DATA.
  */
 
-import { ErrorComponent } from "@tanstack/react-router";
+import { ErrorComponent, ErrorComponentProps } from "@tanstack/react-router";
 
-export const CustomUnhandledError = ({ error }: { error: Error }) => {
-  return <ErrorComponent error={error} />;
+export const CustomUnhandledError = ({
+  error,
+}: {
+  error: ErrorComponentProps;
+}) => {
+  return <ErrorComponent error={error.error} />;
 };
