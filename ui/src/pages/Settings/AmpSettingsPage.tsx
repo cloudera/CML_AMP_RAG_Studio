@@ -91,29 +91,73 @@ const AmpSettingsPage = () => {
     sessionsQuery.isError ||
     (dataSourcesQuery.data?.length === 0 && sessionsQuery.data?.length === 0);
 
+  // Only show the warning when both queries have finished loading
+  const showWarning =
+    dataSourcesQuery.isFetched &&
+    sessionsQuery.isFetched &&
+    !enableSettingsModification;
+
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      {!projectConfig?.is_valid_config &&
-        projectConfig?.config_validation_results &&
+      {projectConfig &&
+        !projectConfig.is_valid_config &&
         !confirmationModal.isModalOpen && (
-          <Alert
-            message={
-              <div>
-                {projectConfig.config_validation_results.storage
-                  .valid ? null : (
-                  <Typography.Text>
-                    `Storage configuration is invalid: $
-                    {projectConfig.config_validation_results.storage.message}`
-                  </Typography.Text>
-                )}
-              </div>
-            }
-            type="warning"
-            showIcon
-            style={{ marginTop: 40, width: "fit-content" }}
-          />
+          <>
+            <Alert
+              message={
+                <div>
+                  {projectConfig.config_validation_results.storage
+                    .valid ? null : (
+                    <Typography.Text>
+                      `Storage configuration is invalid: $
+                      {projectConfig.config_validation_results.storage.message}`
+                    </Typography.Text>
+                  )}
+                </div>
+              }
+              type="warning"
+              showIcon
+              style={{ marginTop: 40, width: "fit-content" }}
+            />
+            <Alert
+              message={
+                <div>
+                  {projectConfig.config_validation_results.model
+                    .valid ? null : (
+                    <Typography.Text>
+                      `Model configuration is invalid: $
+                      {projectConfig.config_validation_results.model.message}`
+                    </Typography.Text>
+                  )}
+                </div>
+              }
+              type="warning"
+              showIcon
+              style={{ marginTop: 40, width: "fit-content" }}
+            />
+            <Alert
+              message={
+                <div>
+                  {projectConfig.config_validation_results.metadata_api
+                    .valid ? null : (
+                    <Typography.Text>
+                      `Metadata database configuration is invalid: $
+                      {
+                        projectConfig.config_validation_results.metadata_api
+                          .message
+                      }
+                      `
+                    </Typography.Text>
+                  )}
+                </div>
+              }
+              type="warning"
+              showIcon
+              style={{ marginTop: 40, width: "fit-content" }}
+            />
+          </>
         )}
-      {!enableSettingsModification && (
+      {showWarning && (
         <Alert
           message="Storage and model provider settings cannot be modified if there are any chats or knowledge bases."
           type="warning"
