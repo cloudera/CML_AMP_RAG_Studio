@@ -74,6 +74,7 @@ const AmpSettingsPage = () => {
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
   const selectedMetadataDbField = Form.useWatch("metadata_db_provider", form);
+  const [formValues, setFormValues] = useState<ProjectConfig>();
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
@@ -153,7 +154,13 @@ const AmpSettingsPage = () => {
         />
       )}
 
-      <Form form={form} labelCol={{ offset: 1 }}>
+      <Form
+        form={form}
+        labelCol={{ offset: 1 }}
+        onValuesChange={(_, values) => {
+          setFormValues(values);
+        }}
+      >
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields projectConfig={projectConfig} />
         <Flex align={"baseline"} gap={8}>
@@ -166,7 +173,7 @@ const AmpSettingsPage = () => {
           selectedMetadataDBProvider={selectedMetadataDbField}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
-          formItems={form.getFieldsValue()}
+          formItems={formValues ?? projectConfig ?? undefined}
         />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>File Storage</Typography.Title>

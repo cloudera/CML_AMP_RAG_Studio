@@ -40,6 +40,7 @@ import {
   MetadataDBProvider,
   ProjectConfig,
   useValidateJdbcConnection,
+  ValidationResult,
 } from "src/api/ampMetadataApi.ts";
 import { Button, Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
@@ -54,10 +55,14 @@ const MetadataDatabaseFields = ({
   selectedMetadataDBProvider: MetadataDBProvider;
   projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
-  formItems: ProjectConfig;
+  formItems?: ProjectConfig;
 }) => {
   const testConnection = useValidateJdbcConnection({
-    onSuccess: () => {
+    onSuccess: (result: ValidationResult) => {
+      if (!result.valid) {
+        messageQueue.error(result.message);
+        return;
+      }
       messageQueue.success("Connection successful!");
     },
     onError: (error) => {
@@ -125,21 +130,21 @@ const MetadataDatabaseFields = ({
         <Button
           type="primary"
           onClick={() => {
-            if (!formItems.metadata_db_config.jdbc_url) {
+            if (!formItems?.metadata_db_config.jdbc_url) {
               messageQueue.error(
                 "JDBC URL is required for testing connection.",
               );
               return;
             }
             testConnection.mutate({
-              jdbc_url: formItems.metadata_db_config.jdbc_url,
+              db_url: formItems.metadata_db_config.jdbc_url,
               username: formItems.metadata_db_config.username,
               password: formItems.metadata_db_config.password,
               db_type: selectedMetadataDBProvider,
             });
           }}
           style={{ width: 160 }}
-          disabled={!formItems.metadata_db_config.jdbc_url}
+          disabled={!formItems?.metadata_db_config.jdbc_url}
         >
           Test Connection
         </Button>

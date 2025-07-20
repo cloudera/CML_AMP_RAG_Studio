@@ -301,7 +301,7 @@ export const useValidateJdbcConnection = ({
 };
 
 interface TestJdbcConnectionParams {
-  jdbc_url: string;
+  db_url: string;
   db_type: MetadataDBProvider;
   username?: string;
   password?: string;
