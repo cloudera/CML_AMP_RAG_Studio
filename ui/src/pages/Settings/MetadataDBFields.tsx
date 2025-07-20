@@ -50,12 +50,12 @@ const MetadataDatabaseFields = ({
   selectedMetadataDBProvider,
   projectConfig,
   enableModification,
-  formItems,
+  formValues,
 }: {
   selectedMetadataDBProvider: MetadataDBProvider;
   projectConfig?: ProjectConfig | null;
   enableModification?: boolean;
-  formItems?: ProjectConfig;
+  formValues?: ProjectConfig;
 }) => {
   const testConnection = useValidateJdbcConnection({
     onSuccess: (result: ValidationResult) => {
@@ -130,21 +130,21 @@ const MetadataDatabaseFields = ({
         <Button
           type="primary"
           onClick={() => {
-            if (!formItems?.metadata_db_config.jdbc_url) {
+            if (!formValues?.metadata_db_config.jdbc_url) {
               messageQueue.error(
                 "JDBC URL is required for testing connection.",
               );
               return;
             }
             testConnection.mutate({
-              db_url: formItems.metadata_db_config.jdbc_url,
-              username: formItems.metadata_db_config.username,
-              password: formItems.metadata_db_config.password,
+              db_url: formValues.metadata_db_config.jdbc_url,
+              username: formValues.metadata_db_config.username,
+              password: formValues.metadata_db_config.password,
               db_type: selectedMetadataDBProvider,
             });
           }}
           style={{ width: 160 }}
-          disabled={!formItems?.metadata_db_config.jdbc_url}
+          disabled={!formValues?.metadata_db_config.jdbc_url}
         >
           Test Connection
         </Button>

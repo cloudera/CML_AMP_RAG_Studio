@@ -173,7 +173,7 @@ const AmpSettingsPage = () => {
           selectedMetadataDBProvider={selectedMetadataDbField}
           projectConfig={projectConfig}
           enableModification={enableSettingsModification}
-          formItems={formValues ?? projectConfig ?? undefined}
+          formValues={formValues ?? projectConfig ?? undefined}
         />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>File Storage</Typography.Title>
