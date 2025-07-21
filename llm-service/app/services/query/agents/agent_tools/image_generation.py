@@ -37,6 +37,7 @@
 #
 import abc
 import base64
+import enum
 import json
 import os
 from enum import Enum
@@ -107,6 +108,12 @@ class OpenAIImageGenerationToolSpec(
         )
 
 
+class ValidBedrockImageSizes(tuple[int, int], enum.Enum):
+    LARGE = (1024, 1024)
+    MEDIUM = (768, 768)
+    SMALL = (512, 512)
+
+
 class BedrockImageGenerationToolSpec(ImageGeneratorToolSpec):
     """Bedrock Image Generation tool spec."""
 
@@ -124,7 +131,7 @@ class BedrockImageGenerationToolSpec(ImageGeneratorToolSpec):
         model: Optional[str] = "amazon.titan-image-generator-v2:0",
         quality: Optional[str] = "standard",
         num_images: Optional[int] = 1,
-        size: Optional[str] = "512x512",
+        size: ValidBedrockImageSizes = ValidBedrockImageSizes.SMALL,
         cfg_scale: Optional[float] = 8.0,
         **kwargs,
     ) -> str:
@@ -136,8 +143,8 @@ class BedrockImageGenerationToolSpec(ImageGeneratorToolSpec):
                 "numberOfImages": num_images,
                 "quality": quality,
                 "cfgScale": cfg_scale,
-                "height": int(size.split("x")[1]),
-                "width": int(size.split("x")[0]),
+                "width": size[0],
+                "height": size[1],
             },
         }
 
