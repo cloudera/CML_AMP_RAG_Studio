@@ -69,7 +69,11 @@ from llama_index.tools.openai.image_generation.base import OpenAIImageGeneration
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.config import settings
 from app.services.metadata_apis.session_metadata_api import Session
+from app.services.models import get_model_source, ModelSource
 from app.services.models.providers import BedrockModelProvider
+from app.services.query.agents.agent_tools.image_generation import (
+    BedrockImageGenerationToolSpec,
+)
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
@@ -207,11 +211,7 @@ def stream_chat(
     session: Session,
     data_source_summaries: dict[int, str],
 ) -> StreamingAgentChatResponse:
-    image_generator_tool = OpenAIImageGenerationToolSpec(
-        api_key=settings.openai_api_key
-    ).to_tool_list()
     mcp_tools: list[BaseTool] = []
-    mcp_tools.extend(image_generator_tool)
     if session.query_configuration and session.query_configuration.selected_tools:
         for tool_name in session.query_configuration.selected_tools:
             try:
@@ -219,9 +219,23 @@ def stream_chat(
             except ValueError as e:
                 logger.warning(f"Could not create adapter for tool {tool_name}: {e}")
                 continue
-
     # Use the existing chat engine with the enhanced query for streaming response
     tools: list[BaseTool] = mcp_tools
+
+    # Add image generation tool if available
+    model_source = get_model_source()
+    if model_source == ModelSource.OPENAI:
+        image_generator_tool = OpenAIImageGenerationToolSpec(
+            api_key=settings.openai_api_key
+        ).to_tool_list()
+    elif model_source == ModelSource.BEDROCK:
+        image_generator_tool = BedrockImageGenerationToolSpec().to_tool_list()
+    else:
+        image_generator_tool = None
+
+    if image_generator_tool:
+        tools.extend(image_generator_tool)
+
     # Use tool calling only if retrieval is not the only tool to optimize performance
     if tools and use_retrieval and chat_engine:
         retrieval_tool = build_retriever_tool(
