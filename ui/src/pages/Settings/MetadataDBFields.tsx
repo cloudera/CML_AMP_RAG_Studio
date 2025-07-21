@@ -66,6 +66,7 @@ const MetadataDatabaseFields = ({
       messageQueue.success("Connection successful!");
     },
     onError: (error) => {
+      console.log(error.message);
       messageQueue.error(`Connection failed: ${error.message}`);
     },
   });
@@ -106,7 +107,7 @@ const MetadataDatabaseFields = ({
       </Form.Item>
       <Form.Item
         label={"PostgreSQL Username"}
-        initialValue={projectConfig?.metadata_db_config.username}
+        initialValue={projectConfig?.metadata_db_config.username ?? ""}
         name={["metadata_db_config", "username"]}
         required={selectedMetadataDBProvider === "PostgreSQL"}
         tooltip="PostgreSQL username"
@@ -117,7 +118,7 @@ const MetadataDatabaseFields = ({
       </Form.Item>
       <Form.Item
         label={"PostgreSQL Password"}
-        initialValue={projectConfig?.metadata_db_config.password}
+        initialValue={projectConfig?.metadata_db_config.password ?? ""}
         name={["metadata_db_config", "password"]}
         required={selectedMetadataDBProvider === "PostgreSQL"}
         tooltip="PostgreSQL password"

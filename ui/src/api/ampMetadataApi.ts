@@ -303,8 +303,8 @@ export const useValidateJdbcConnection = ({
 interface TestJdbcConnectionParams {
   db_url: string;
   db_type: MetadataDBProvider;
-  username?: string;
-  password?: string;
+  username: string;
+  password: string;
 }
 
 const validateJdbcConnection = async (
