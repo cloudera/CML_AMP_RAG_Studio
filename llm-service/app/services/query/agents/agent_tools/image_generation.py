@@ -37,12 +37,9 @@
 #
 import abc
 import base64
-import enum
 import json
 import os
-from enum import Enum
-from os import PathLike
-from typing import Optional
+from typing import Literal, Optional
 
 import boto3
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
@@ -52,6 +49,17 @@ from llama_index.tools.openai import (
 from llama_index.tools.openai.image_generation.base import DEFAULT_SIZE
 
 from app.config import settings
+from app.services.query.agents.agent_tools.stable_diffusion_types import (
+    StableDiffusionRequest,
+    GenerationMode,
+    AspectRatio,
+)
+from app.services.query.agents.agent_tools.titan_image_types import (
+    TitanImageRequest,
+    TextToImageParams,
+    TitanImageGenerationConfig,
+    ValidTitanImageSizes,
+)
 
 
 class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
@@ -66,10 +74,10 @@ class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
     @staticmethod
     def get_cache_dir() -> str:
         """Return the cache directory."""
-        return os.path.join(settings.rag_databases_dir, "..", "cache")
+        return os.path.abspath(os.path.join(settings.rag_databases_dir, "..", "cache"))
 
     @abc.abstractmethod
-    def image_generation(self, **kwargs):
+    def image_generation(self, **kwargs) -> str:
         """Generate an image based on the provided parameters."""
         raise NotImplementedError("Subclasses must implement this method.")
 
@@ -108,49 +116,93 @@ class OpenAIImageGenerationToolSpec(
         )
 
 
-class ValidBedrockImageSizes(tuple[int, int], enum.Enum):
-    LARGE = (1024, 1024)
-    MEDIUM = (768, 768)
-    SMALL = (512, 512)
-
-
 class BedrockImageGenerationToolSpec(ImageGeneratorToolSpec):
     """Bedrock Image Generation tool spec."""
 
     spec_functions = ["image_generation"]
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, model: str = "stability.sd3-5-large-v1:0", **kwargs) -> None:
         """Initialize with parameters."""
         super().__init__(**kwargs)
         self.client = boto3.client("bedrock-runtime")
+        self.model = model
 
     def image_generation(
         self,
         text: str,
         image_name: str,
-        model: Optional[str] = "amazon.titan-image-generator-v2:0",
-        quality: Optional[str] = "standard",
+        quality: Literal["standard", "premium"] = "standard",
         num_images: Optional[int] = 1,
-        size: ValidBedrockImageSizes = ValidBedrockImageSizes.SMALL,
         cfg_scale: Optional[float] = 8.0,
+        seed: Optional[int] = 42,
+        # Stable Diffusion Specific Parameters
+        style_preset: Optional[str] = None,
+        negative_text: Optional[str] = "",
+        # Titan Specific Parameters
+        size: ValidTitanImageSizes = ValidTitanImageSizes.SMALL,
         **kwargs,
     ) -> str:
-        """Generate an image using Bedrock."""
-        native_request = {
-            "taskType": "TEXT_IMAGE",
-            "textToImageParams": {"text": text},
-            "imageGenerationConfig": {
-                "numberOfImages": num_images,
-                "quality": quality,
-                "cfgScale": cfg_scale,
-                "width": size[0],
-                "height": size[1],
-            },
-        }
+        """
+        Generate an image using Bedrock.
 
-        request = json.dumps(native_request)
+        Args:
+            text (str): The text prompt for image generation.
+            image_name (str): The name to save the generated image as.
+            negative_text (Optional[str]): Text prompt defining what not to include in the image.
+            quality (str): Quality of the generated image. For Titan, must be "standard" or "premium".
+            num_images (Optional[int]): Number of images to generate.
+            size (ValidTitanImageSizes): Size of the generated image.
+            cfg_scale (Optional[float]): Configuration scale parameter.
+            seed (Optional[int]): Seed for reproducible results.
+            style_preset (Optional[str]): Style preset for Stable Diffusion models.
+            steps (Optional[int]): Number of diffusion steps for Stable Diffusion models.
+        """
+        # Determine which model to use based on the model ID
+        if "titan" in self.model.lower():
+            # Create Titan Pydantic model instances
+            text_to_image_params = TextToImageParams(
+                text=text, negativeText=negative_text
+            )
+            image_generation_config = TitanImageGenerationConfig(
+                numberOfImages=num_images,
+                quality=quality,
+                cfgScale=cfg_scale,
+                width=size[0],
+                height=size[1],
+                seed=seed,
+            )
 
-        response = self.client.invoke_model(modelId=model, body=request)
+            titan_request = TitanImageRequest(
+                taskType="TEXT_IMAGE",
+                textToImageParams=text_to_image_params,
+                imageGenerationConfig=image_generation_config,
+            )
+
+            # Convert to JSON for API request
+            request = titan_request.model_dump_json()
+
+        elif "stability" in self.model.lower() or "sd" in self.model.lower():
+            # Create Stable Diffusion Pydantic model instance
+            sd_request = StableDiffusionRequest(
+                prompt=text,
+                negative_prompt=negative_text,
+                mode=GenerationMode.TEXT_TO_IMAGE,
+                seed=seed,
+                aspect_ratio=AspectRatio.RATIO_16_9,
+            )
+
+            # Convert to JSON for API request
+            request = sd_request.model_dump_json()
+
+        else:
+            raise ValueError(
+                f"Unsupported model: {self.model}. Currently supported models include Titan and Stable Diffusion."
+            )
+
+        # Call the Bedrock API
+        response = self.client.invoke_model(modelId=self.model, body=request)
+
+        # Parse the response
         model_response = json.loads(response["body"].read())
         base64_image_data = model_response["images"][0]
         image_data = base64.b64decode(base64_image_data)
