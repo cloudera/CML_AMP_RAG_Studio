@@ -69,7 +69,6 @@ class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
 
     def __init__(self, **kwargs) -> None:
         """Initialize with parameters."""
-        pass
 
     @staticmethod
     def get_cache_dir() -> str:
@@ -116,8 +115,8 @@ class OpenAIImageGenerationToolSpec(
         )
 
 
-class BedrockImageGenerationToolSpec(ImageGeneratorToolSpec):
-    """Bedrock Image Generation tool spec."""
+class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
+    """Bedrock Stable Diffusion Image Generation tool spec."""
 
     spec_functions = ["image_generation"]
 
@@ -131,86 +130,157 @@ class BedrockImageGenerationToolSpec(ImageGeneratorToolSpec):
         self,
         text: str,
         image_name: str,
+        seed: Optional[int] = 42,
+        negative_text: Optional[str] = "",
+        aspect_ratio: Optional[AspectRatio] = AspectRatio.RATIO_5_4,
+        **kwargs,
+    ) -> str:
+        """
+        Generate an image using Stable Diffusion models on Bedrock.
+
+        Parameters:
+            text (str): The prompt for image generation.
+            image_name (str): The name to save the generated image as.
+            quality (Literal["standard", "premium"], optional): Image quality.
+            num_images (int, optional): Number of images to generate.
+            seed (int, optional): Random seed for generation.
+            negative_text (str, optional): Negative prompt for image generation.
+            aspect_ratio (AspectRatio, optional): Aspect ratio for the generated image.
+            **kwargs: Additional parameters.
+
+        Returns:
+            str: Path to the generated image in the cache directory.
+        """
+        # Create Stable Diffusion Pydantic model instance
+        sd_request = StableDiffusionRequest(
+            prompt=text,
+            negative_prompt=negative_text,
+            mode=GenerationMode.TEXT_TO_IMAGE,
+            seed=seed,
+            aspect_ratio=aspect_ratio,
+        )
+
+        # Convert to JSON for API request
+        request = sd_request.model_dump_json()
+
+        # Call the Bedrock API
+        return _get_image_from_bedrock(
+            client=self.client,
+            model=self.model,
+            request=request,
+            image_name=image_name,
+            cache_dir=self.get_cache_dir(),
+        )
+
+
+class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
+    """Bedrock Titan Image Generation tool spec."""
+
+    spec_functions = ["image_generation"]
+
+    def __init__(
+        self, model: str = "amazon.titan-image-generator-v2:0", **kwargs
+    ) -> None:
+        """Initialize with parameters."""
+        super().__init__(**kwargs)
+        self.client = boto3.client("bedrock-runtime")
+        self.model = model
+
+    def image_generation(
+        self,
+        text: str,
+        image_name: str,
         quality: Literal["standard", "premium"] = "standard",
         num_images: Optional[int] = 1,
-        cfg_scale: Optional[float] = 8.0,
         seed: Optional[int] = 42,
-        # Stable Diffusion Specific Parameters
-        style_preset: Optional[str] = None,
         negative_text: Optional[str] = "",
-        # Titan Specific Parameters
+        cfg_scale: Optional[float] = 8.0,
         size: ValidTitanImageSizes = ValidTitanImageSizes.SMALL,
         **kwargs,
     ) -> str:
         """
-        Generate an image using Bedrock.
+        Generate an image using Amazon Titan Image Generator on Bedrock.
 
-        Args:
-            text (str): The text prompt for image generation.
+        Parameters:
+            text (str): The prompt for image generation.
             image_name (str): The name to save the generated image as.
-            negative_text (Optional[str]): Text prompt defining what not to include in the image.
-            quality (str): Quality of the generated image. For Titan, must be "standard" or "premium".
-            num_images (Optional[int]): Number of images to generate.
-            size (ValidTitanImageSizes): Size of the generated image.
-            cfg_scale (Optional[float]): Configuration scale parameter.
-            seed (Optional[int]): Seed for reproducible results.
-            style_preset (Optional[str]): Style preset for Stable Diffusion models.
-            steps (Optional[int]): Number of diffusion steps for Stable Diffusion models.
+            quality (Literal["standard", "premium"], optional): Image quality.
+            num_images (int, optional): Number of images to generate.
+            seed (int, optional): Random seed for generation.
+            negative_text (str, optional): Negative prompt for image generation.
+            cfg_scale (float, optional): Configuration scale for generation.
+            size (ValidTitanImageSizes, optional): Image size for generation.
+            **kwargs: Additional parameters.
+
+        Returns:
+            str: Path to the generated image in the cache directory.
         """
-        # Determine which model to use based on the model ID
-        if "titan" in self.model.lower():
-            # Create Titan Pydantic model instances
-            text_to_image_params = TextToImageParams(
-                text=text, negativeText=negative_text
-            )
-            image_generation_config = TitanImageGenerationConfig(
-                numberOfImages=num_images,
-                quality=quality,
-                cfgScale=cfg_scale,
-                width=size[0],
-                height=size[1],
-                seed=seed,
-            )
+        # Create Titan Pydantic model instances
+        text_to_image_params = TextToImageParams(text=text, negativeText=negative_text)
+        image_generation_config = TitanImageGenerationConfig(
+            numberOfImages=num_images,
+            quality=quality,
+            cfgScale=cfg_scale,
+            width=size[0],
+            height=size[1],
+            seed=seed,
+        )
 
-            titan_request = TitanImageRequest(
-                taskType="TEXT_IMAGE",
-                textToImageParams=text_to_image_params,
-                imageGenerationConfig=image_generation_config,
-            )
+        titan_request = TitanImageRequest(
+            taskType="TEXT_IMAGE",
+            textToImageParams=text_to_image_params,
+            imageGenerationConfig=image_generation_config,
+        )
 
-            # Convert to JSON for API request
-            request = titan_request.model_dump_json()
-
-        elif "stability" in self.model.lower() or "sd" in self.model.lower():
-            # Create Stable Diffusion Pydantic model instance
-            sd_request = StableDiffusionRequest(
-                prompt=text,
-                negative_prompt=negative_text,
-                mode=GenerationMode.TEXT_TO_IMAGE,
-                seed=seed,
-                aspect_ratio=AspectRatio.RATIO_16_9,
-            )
-
-            # Convert to JSON for API request
-            request = sd_request.model_dump_json()
-
-        else:
-            raise ValueError(
-                f"Unsupported model: {self.model}. Currently supported models include Titan and Stable Diffusion."
-            )
+        # Convert to JSON for API request
+        request = titan_request.model_dump_json()
 
         # Call the Bedrock API
-        response = self.client.invoke_model(modelId=self.model, body=request)
+        return _get_image_from_bedrock(
+            client=self.client,
+            model=self.model,
+            request=request,
+            image_name=image_name,
+            cache_dir=self.get_cache_dir(),
+        )
 
-        # Parse the response
-        model_response = json.loads(response["body"].read())
-        base64_image_data = model_response["images"][0]
-        image_data = base64.b64decode(base64_image_data)
 
-        # Save the image to the cache directory
-        image_path = os.path.join(self.get_cache_dir(), f"{image_name}.png")
-        # Create cache directory if it doesn't exist
-        os.makedirs(self.get_cache_dir(), exist_ok=True)
-        with open(image_path, "wb") as file:
-            file.write(image_data)
-        return image_path
+def _get_image_from_bedrock(
+    client: boto3.client,
+    model: str,
+    request: str,
+    image_name: str,
+    cache_dir: str,
+):
+    """
+    Helper function to get an image from Bedrock and save it to the cache directory.
+
+    Parameters:
+        client: The Bedrock client.
+        model: The model ID to use for image generation.
+        request: The request payload for the model.
+        image_name (str): The name to save the generated image as.
+        cache_dir (str): The directory to save the image in.
+
+    Returns:
+        str: Path to the generated image in the cache directory.
+    """
+    response = client.invoke_model(modelId=model, body=request)
+    model_response = json.loads(response["body"].read())
+    base64_image_data = model_response["images"][0]
+    image_data = base64.b64decode(base64_image_data)
+
+    # Save the image to the cache directory
+    image_path = os.path.join(cache_dir, f"{image_name}.png")
+    os.makedirs(cache_dir, exist_ok=True)
+    if os.path.exists(image_path):
+        # use a different name for the image
+        i = 1
+        # increment the number until the image does not exist
+        while os.path.exists(image_path):
+            image_name = f"{image_name}_{i}"
+            image_path = os.path.join(cache_dir, f"{image_name}.png")
+            i += 1
+    with open(image_path, "wb") as file:
+        file.write(image_data)
+    return f"/cache/{image_name}.png"

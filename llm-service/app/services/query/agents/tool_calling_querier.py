@@ -64,7 +64,6 @@ from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import get_model_name
-from llama_index.tools.openai.image_generation.base import OpenAIImageGenerationToolSpec
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.config import settings
@@ -72,7 +71,9 @@ from app.services.metadata_apis.session_metadata_api import Session
 from app.services.models import get_model_source, ModelSource
 from app.services.models.providers import BedrockModelProvider
 from app.services.query.agents.agent_tools.image_generation import (
-    BedrockImageGenerationToolSpec,
+    BedrockStableDiffusionToolSpec,
+    BedrockTitanImageToolSpec,
+    OpenAIImageGenerationToolSpec,
 )
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
@@ -125,6 +126,31 @@ def should_use_retrieval(
             if data_source_summary:
                 data_source_summaries[data_source_id] = data_source_summary
     return len(data_source_ids) > 0, data_source_summaries
+
+
+def get_bedrock_image_generation_tool(model_id: Optional[str] = None) -> list[BaseTool]:
+    """
+    Get the appropriate Bedrock image generation tool based on model type.
+
+    Args:
+        model_id: Optional model ID to determine the tool type. If not provided,
+                 defaults to Stable Diffusion.
+
+    Returns:
+        List of BaseTool objects for image generation.
+    """
+    if not model_id:
+        # Default to Stable Diffusion if no model specified
+        return BedrockStableDiffusionToolSpec().to_tool_list()
+
+    model_id_lower = model_id.lower()
+
+    if "titan" in model_id_lower:
+        return BedrockTitanImageToolSpec(model=model_id).to_tool_list()
+    elif "stability" in model_id_lower or "sd" in model_id_lower:
+        return BedrockStableDiffusionToolSpec(model=model_id).to_tool_list()
+    else:
+        return []
 
 
 DEFAULT_AGENT_PROMPT = """\
@@ -233,7 +259,10 @@ def stream_chat(
             api_key=settings.openai_api_key
         ).to_tool_list()
     elif model_source == ModelSource.BEDROCK:
-        image_generator_tool = BedrockImageGenerationToolSpec().to_tool_list()
+        # Determine the appropriate Bedrock image generation tool
+        # For now, we use the default image generation model from settings if available
+        # This could be extended to use session-specific model configurations
+        image_generator_tool = get_bedrock_image_generation_tool()
     else:
         image_generator_tool = None
 
