@@ -39,8 +39,7 @@ import abc
 import base64
 import json
 import os
-import typing
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 import boto3
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
@@ -74,7 +73,7 @@ class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
         return os.path.abspath(os.path.join(settings.rag_databases_dir, "..", "cache"))
 
     @abc.abstractmethod
-    def image_generation(self, **kwargs) -> str:
+    def image_generation(self, *args: Any, **kwargs: Any) -> str:
         """Generate an image based on the provided parameters."""
         raise NotImplementedError("Subclasses must implement this method.")
 
@@ -96,7 +95,11 @@ class OpenAIImageGenerationToolSpec(
 class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
     """Bedrock Stable Diffusion Image Generation tool spec."""
 
-    def __init__(self, model: str = "stability.sd3-5-large-v1:0", **kwargs) -> None:
+    def __init__(
+        self,
+        model: str = "stability.sd3-5-large-v1:0",
+        **kwargs: Any,
+    ) -> None:
         """Initialize with parameters."""
         super().__init__(**kwargs)
         self.client = boto3.client("bedrock-runtime")
@@ -106,8 +109,8 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
         self,
         text: str,
         image_name: str,
-        seed: Optional[int] = 42,
-        negative_text: Optional[str] = "",
+        seed: int = 42,
+        negative_text: str = "",
         aspect_ratio: Optional[AspectRatio] = AspectRatio.RATIO_5_4,
     ) -> str:
         """
@@ -151,7 +154,9 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
     """Bedrock Titan Image Generation tool spec."""
 
     def __init__(
-        self, model: str = "amazon.titan-image-generator-v2:0", **kwargs
+        self,
+        model: str = "amazon.titan-image-generator-v2:0",
+        **kwargs: Any,
     ) -> None:
         """Initialize with parameters."""
         super().__init__(**kwargs)
@@ -163,10 +168,10 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
         text: str,
         image_name: str,
         quality: Literal["standard", "premium"] = "standard",
-        num_images: Optional[int] = 1,
-        seed: Optional[int] = 42,
-        negative_text: Optional[str] = "",
-        cfg_scale: Optional[float] = 8.0,
+        num_images: int = 1,
+        seed: int = 42,
+        negative_text: str = "",
+        cfg_scale: float = 8.0,
         size: ValidTitanImageSizes = ValidTitanImageSizes.SMALL,
     ) -> str:
         """
@@ -216,12 +221,12 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
 
 
 def _get_image_from_bedrock(
-    client: boto3.client,
+    client: "boto3.client",
     model: str,
     request: str,
     image_name: str,
     cache_dir: str,
-):
+) -> str:
     """
     Helper function to get an image from Bedrock and save it to the cache directory.
 

@@ -128,7 +128,9 @@ def should_use_retrieval(
     return len(data_source_ids) > 0, data_source_summaries
 
 
-def get_bedrock_image_generation_tools(model_id: Optional[str] = None) -> list[BaseTool]:
+def get_bedrock_image_generation_tools(
+    model_id: Optional[str] = None,
+) -> list[BaseTool]:
     """
     Get the appropriate Bedrock image generation tool based on model type.
 
@@ -139,18 +141,19 @@ def get_bedrock_image_generation_tools(model_id: Optional[str] = None) -> list[B
     Returns:
         List of BaseTool objects for image generation.
     """
+    tools: list[BaseTool]
     if not model_id:
         # Default to Stable Diffusion if no model specified
-        return BedrockStableDiffusionToolSpec().to_tool_list()
-
-    model_id_lower = model_id.lower()
-
-    if "titan" in model_id_lower:
-        return BedrockTitanImageToolSpec(model=model_id).to_tool_list()
-    elif "stability" in model_id_lower or "sd" in model_id_lower:
-        return BedrockStableDiffusionToolSpec(model=model_id).to_tool_list()
+        tools = BedrockStableDiffusionToolSpec().to_tool_list()
     else:
-        return []
+        model_id_lower = model_id.lower()
+        if "titan" in model_id_lower:
+            tools = BedrockTitanImageToolSpec(model=model_id).to_tool_list()
+        elif "stability" in model_id_lower or "sd" in model_id_lower:
+            tools = BedrockStableDiffusionToolSpec(model=model_id).to_tool_list()
+        else:
+            tools = []
+    return tools
 
 
 DEFAULT_AGENT_PROMPT = """\
@@ -254,11 +257,15 @@ def stream_chat(
 
     # Add image generation tool if available
     image_generator_tools: list[BaseTool]
-    model_source = get_model_source()
-    match model_source:
+    match get_model_source():
         case ModelSource.OPENAI:
+            if settings.openai_api_key is None:
+                # This should never happen, since we're using ModelSource.OPENAI
+                raise ValueError(
+                    "Expected env var OPENAI_API_KEY to have a non-empty value",
+                )
             image_generator_tools = OpenAIImageGenerationToolSpec(
-                api_key=settings.openai_api_key
+                api_key=settings.openai_api_key,
             ).to_tool_list()
         case ModelSource.BEDROCK:
             # Determine the appropriate Bedrock image generation tool

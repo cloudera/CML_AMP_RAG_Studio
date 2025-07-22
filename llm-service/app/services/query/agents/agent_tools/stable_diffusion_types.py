@@ -28,9 +28,12 @@
 #  DATA.
 #
 from enum import Enum
-from typing import Literal, Optional, Union
+from typing import Optional, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
+from pydantic_core.core_schema import ValidationInfo
+
+T = TypeVar("T")
 
 
 class GenerationMode(str, Enum):
@@ -106,7 +109,8 @@ class StableDiffusionRequest(BaseModel):
     )
 
     @field_validator("*")
-    def validate_mode_specific_fields(cls, v, info):
+    @classmethod
+    def validate_mode_specific_fields(cls, v: T, info: ValidationInfo) -> T:
         """Validate that the appropriate fields are provided based on the generation mode."""
         field_name = info.field_name
         mode = info.data.get("mode")
