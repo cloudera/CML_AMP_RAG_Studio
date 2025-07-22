@@ -294,7 +294,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
         }.items()
     }
 
-    if config.metadata_db_provider is "H2":
+    if config.metadata_db_provider == "H2":
         new_env["DB_URL"] = "jdbc:h2:" + os.path.abspath(
             os.path.join(settings.rag_databases_dir, "rag")
         )
