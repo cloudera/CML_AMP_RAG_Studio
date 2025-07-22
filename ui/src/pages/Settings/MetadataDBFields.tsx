@@ -192,7 +192,12 @@ const MetadataDatabaseFields = ({
             type="default"
             onClick={handleTestConnection}
             style={{ width: 160 }}
-            disabled={!formValues?.metadata_db_config.jdbc_url}
+            disabled={
+              !formValues?.metadata_db_config.jdbc_url ||
+              !formValues.metadata_db_config.username ||
+              !formValues.metadata_db_config.password ||
+              testConnection.isPending
+            }
           >
             Test Connection
           </Button>
