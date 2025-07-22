@@ -51,14 +51,20 @@ import "@ant-design/v5-patch-for-react-19";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: (_, error: Error) => {
+      retry: (failureCount: number, error: Error) => {
         if (error instanceof ApiError) {
+          if (error.status === 502) {
+            return false;
+          }
           if (error.message.includes("No such file or directory: '/tmp/jwt'")) {
+            return false;
+          }
+          if (failureCount > 4) {
             return false;
           }
           return error.status >= 500;
         }
-        return true;
+        return failureCount <= 4;
       },
     },
   },
@@ -67,7 +73,7 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient: queryClient },
-  defaultErrorComponent: ({ error }) => <CustomUnhandledError error={error} />,
+  defaultErrorComponent: (error) => <CustomUnhandledError error={error} />,
   defaultNotFoundComponent: () => <NotFoundComponent />,
   defaultPendingComponent: () => (
     <Flex

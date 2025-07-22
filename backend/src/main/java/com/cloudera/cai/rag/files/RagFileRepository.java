@@ -39,11 +39,11 @@
 package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.rag.Types.RagDocument;
+import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.jdbi.v3.core.statement.Update;
@@ -53,15 +53,15 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class RagFileRepository {
-  private final Jdbi jdbi;
+  private final DatabaseOperations databaseOperations;
 
   @Autowired
-  public RagFileRepository(Jdbi jdbi) {
-    this.jdbi = jdbi;
+  public RagFileRepository(DatabaseOperations databaseOperations) {
+    this.databaseOperations = databaseOperations;
   }
 
   public Long insertDocumentMetadata(RagDocument ragDocument) {
-    return jdbi.inTransaction(
+    return databaseOperations.inTransaction(
         handle -> {
           String insertSql =
               """
@@ -76,7 +76,7 @@ public class RagFileRepository {
   }
 
   public RagDocument findDocumentByDocumentId(String documentId) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           String sql =
               """
@@ -96,7 +96,7 @@ public class RagFileRepository {
   }
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           String sql =
               """
@@ -119,11 +119,11 @@ public class RagFileRepository {
 
   public static RagFileRepository createNull() {
     // the db configuration will use in-memory db based on env vars.
-    return new RagFileRepository(new JdbiConfiguration().jdbi());
+    return new RagFileRepository(JdbiConfiguration.createNull());
   }
 
   public void deleteById(Long id) {
-    jdbi.useTransaction(
+    databaseOperations.useTransaction(
         handle -> {
           String sql = "UPDATE rag_data_source_document SET deleted = :deleted WHERE id = :id";
           try (Update update = handle.createUpdate(sql)) {
@@ -133,7 +133,7 @@ public class RagFileRepository {
   }
 
   public RagDocument getRagDocumentById(Long id) {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           handle.registerRowMapper(ConstructorMapper.factory(RagDocument.class));
           String sql = "SELECT * FROM rag_data_source_document WHERE id = :id";
@@ -148,7 +148,7 @@ public class RagFileRepository {
   }
 
   public int getNumberOfRagDocuments() {
-    return jdbi.withHandle(
+    return databaseOperations.withHandle(
         handle -> {
           try (var query = handle.createQuery("SELECT count(*) FROM rag_data_source_document")) {
             return query.mapTo(Integer.class).one();

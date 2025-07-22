@@ -37,7 +37,9 @@
 #
 import json
 import os
+import re
 import socket
+import subprocess
 from typing import Optional, cast, Protocol
 
 from pydantic import BaseModel, TypeAdapter
@@ -47,6 +49,7 @@ from app.config import (
     SummaryStorageProviderType,
     ChatStoreProviderType,
     VectorDbProviderType,
+    MetadataDbProviderType,
 )
 
 
@@ -97,6 +100,24 @@ class OpenSearchConfig(BaseModel):
     opensearch_namespace: Optional[str] = None
 
 
+class MetadataDbConfig(BaseModel):
+    jdbc_url: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+
+class ValidationResult(BaseModel):
+    valid: bool
+    message: str
+
+
+class ConfigValidationResults(BaseModel):
+    storage: ValidationResult
+    model: ValidationResult
+    metadata_api: ValidationResult
+    valid: bool
+
+
 class ProjectConfig(BaseModel):
     """
     Model to represent the project configuration.
@@ -106,11 +127,13 @@ class ProjectConfig(BaseModel):
     summary_storage_provider: SummaryStorageProviderType
     chat_store_provider: ChatStoreProviderType
     vector_db_provider: VectorDbProviderType
+    metadata_db_provider: MetadataDbProviderType
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
     openai_config: OpenAiConfig
     opensearch_config: OpenSearchConfig
+    metadata_db_config: MetadataDbConfig
     cdp_token: Optional[str] = None
 
 
@@ -130,10 +153,11 @@ class ProjectConfigPlus(ProjectConfig):
 
     release_version: Optional[str] = None
     is_valid_config: bool
+    config_validation_results: ConfigValidationResults
     application_config: ApplicationConfig
 
 
-def validate_storage_config(environ: dict[str, str]) -> bool:
+def validate_storage_config(environ: dict[str, str]) -> ValidationResult:
     access_key_id = environ.get("AWS_ACCESS_KEY_ID") or None
     secret_key_id = environ.get("AWS_SECRET_ACCESS_KEY") or None
     default_region = environ.get("AWS_DEFAULT_REGION") or None
@@ -144,11 +168,14 @@ def validate_storage_config(environ: dict[str, str]) -> bool:
             print(
                 "ERROR: Using S3 for document storage; missing required environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION"
             )
-            return False
-    return True
+            return ValidationResult(
+                valid=False,
+                message="Using S3 for document storage; missing required configuration: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION",
+            )
+    return ValidationResult(valid=True, message="Storage configuration is valid.")
 
 
-def validate_model_config(environ: dict[str, str]) -> bool:
+def validate_model_config(environ: dict[str, str]) -> ValidationResult:
     #  aws
     access_key_id = environ.get("AWS_ACCESS_KEY_ID") or None
     secret_key_id = environ.get("AWS_SECRET_ACCESS_KEY") or None
@@ -164,6 +191,7 @@ def validate_model_config(environ: dict[str, str]) -> bool:
 
     open_ai_key = environ.get("OPENAI_API_KEY") or None
 
+    message = ""
     valid_model_config_exists = False
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is not None:
@@ -172,67 +200,111 @@ def validate_model_config(environ: dict[str, str]) -> bool:
             socket.gethostbyname(caii_domain)
             print(f"CAII domain {caii_domain} can be resolved")
             valid_model_config_exists = True
+            message = "CAII domain is set and can be resolved. \n"
         except socket.error:
             print(f"ERROR: CAII domain {caii_domain} can not be resolved")
+            message = message + f"CAII domain {caii_domain} can not be resolved. \n"
 
     if any([access_key_id, secret_key_id, default_region]):
         if all([access_key_id, secret_key_id, default_region]):
             valid_model_config_exists = True
+            message = "AWS Config is valid for Bedrock. \n"
         else:
             print(
                 "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
+            )
+            message = (
+                message
+                + "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set. \n"
             )
 
     if any([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
         if all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
             valid_model_config_exists = True
+            message = "Azure config is valid. \n"
         else:
             print(
-                "Azure config is not valid for LLMs/embeddings; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
+                "Azure config is not valid; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
+            )
+            message = message + (
+                "Azure config is not valid; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed. \n"
             )
 
     if any([open_ai_key]):
         if open_ai_key:
             valid_model_config_exists = True
-    return valid_model_config_exists
+            message = "OpenAI config is valid. \n"
+
+    if message == "":
+        return ValidationResult(valid=True, message="No model configuration found.")
+
+    return ValidationResult(valid=valid_model_config_exists, message=message)
 
 
-def validate(environ: dict[str, str]) -> bool:
+def validate(environ: dict[str, str]) -> ConfigValidationResults:
     print("Validating environment variables...")
-    storage_options_valid = validate_storage_config(environ)
-    valid_model_options = validate_model_config(environ)
+    storage_config = validate_storage_config(environ)
+    model_config = validate_model_config(environ)
 
-    if not valid_model_options or not storage_options_valid:
-        print("ERROR: Invalid configuration options")
-        return False
-    return True
+    jdbc_config = validate_jdbc(
+        TypeAdapter(MetadataDbProviderType).validate_python(
+            environ.get("DB_TYPE", "H2")
+        ),
+        environ.get("DB_URL", "jdbc:h2:../databases/rag"),
+        environ.get("DB_PASSWORD", ""),
+        environ.get("DB_USERNAME", ""),
+    )
+
+    overall_valid = model_config.valid and storage_config.valid and jdbc_config.valid
+    return ConfigValidationResults(
+        storage=storage_config,
+        model=model_config,
+        metadata_api=jdbc_config,
+        valid=overall_valid,
+    )
 
 
 def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     Converts a ProjectConfig object to a dictionary of environment variables.
     """
-    return {
-        "USE_ENHANCED_PDF_PROCESSING": str(config.use_enhanced_pdf_processing).lower(),
-        "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
-        "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
-        "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
-        "AWS_DEFAULT_REGION": config.aws_config.region or "",
-        "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
-        "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
-        "AWS_ACCESS_KEY_ID": config.aws_config.access_key_id or "",
-        "AWS_SECRET_ACCESS_KEY": config.aws_config.secret_access_key or "",
-        "AZURE_OPENAI_API_KEY": config.azure_config.openai_key or "",
-        "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
-        "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
-        "CAII_DOMAIN": config.caii_config.caii_domain or "",
-        "OPENSEARCH_USERNAME": config.opensearch_config.opensearch_username or "",
-        "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
-        "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
-        "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
-        "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
-        "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
+    new_env: dict[str, str] = {
+        key: str(value)
+        for key, value in {
+            "USE_ENHANCED_PDF_PROCESSING": str(
+                config.use_enhanced_pdf_processing
+            ).lower(),
+            "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
+            "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
+            "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
+            "AWS_DEFAULT_REGION": config.aws_config.region or "",
+            "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
+            "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
+            "AWS_ACCESS_KEY_ID": config.aws_config.access_key_id or "",
+            "AWS_SECRET_ACCESS_KEY": config.aws_config.secret_access_key or "",
+            "AZURE_OPENAI_API_KEY": config.azure_config.openai_key or "",
+            "AZURE_OPENAI_ENDPOINT": config.azure_config.openai_endpoint or "",
+            "OPENAI_API_VERSION": config.azure_config.openai_api_version or "",
+            "CAII_DOMAIN": config.caii_config.caii_domain or "",
+            "OPENSEARCH_USERNAME": config.opensearch_config.opensearch_username or "",
+            "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
+            "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
+            "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
+            "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
+            "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
+            "DB_TYPE": config.metadata_db_provider or "H2",
+            "DB_URL": config.metadata_db_config.jdbc_url,
+            "DB_USERNAME": config.metadata_db_config.username,
+            "DB_PASSWORD": config.metadata_db_config.password,
+        }.items()
     }
+
+    if config.metadata_db_provider == "H2":
+        new_env["DB_URL"] = ""
+        new_env["DB_USERNAME"] = ""
+        new_env["DB_PASSWORD"] = ""
+
+    return new_env
 
 
 def build_configuration(
@@ -264,6 +336,8 @@ def build_configuration(
         opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
         opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
+    validate_config = validate(env)
+
     return ProjectConfigPlus(
         use_enhanced_pdf_processing=TypeAdapter(bool).validate_python(
             env.get("USE_ENHANCED_PDF_PROCESSING", False),
@@ -283,7 +357,8 @@ def build_configuration(
         azure_config=azure_config,
         caii_config=caii_config,
         opensearch_config=opensearch_config,
-        is_valid_config=validate(env),
+        is_valid_config=validate_config.valid,
+        config_validation_results=validate_config,
         release_version=os.environ.get("RELEASE_TAG", "unknown"),
         application_config=application_config,
         openai_config=OpenAiConfig(
@@ -291,6 +366,14 @@ def build_configuration(
             openai_api_base=env.get("OPENAI_API_BASE"),
         ),
         cdp_token=env.get("CDP_TOKEN"),
+        metadata_db_provider=TypeAdapter(MetadataDbProviderType).validate_python(
+            env.get("DB_TYPE", "H2")
+        ),
+        metadata_db_config=MetadataDbConfig(
+            jdbc_url=env.get("DB_URL"),
+            username=env.get("DB_USERNAME"),
+            password=env.get("DB_PASSWORD"),
+        ),
     )
 
 
@@ -349,3 +432,58 @@ def get_application_config() -> ApplicationConfig:
         num_of_gpus=0,
         memory_size_gb=0,
     )
+
+
+def validate_jdbc(
+    db_type: MetadataDbProviderType,
+    db_url: str,
+    password: str,
+    username: str,
+) -> ValidationResult:
+    # if db_type is H2, we don't need to validate the JDBC connection
+    if db_type == "H2":
+        return ValidationResult(
+            valid=True, message="H2 database type does not require validation."
+        )
+
+    # Validate inputs to prevent injection attacks
+    if not db_url.startswith("jdbc:"):
+        return ValidationResult(valid=False, message="Invalid JDBC URL format.")
+
+    if not username.isalnum() or not (1 <= len(username) <= 16):
+        return ValidationResult(
+            valid=False,
+            message="Username must be alphanumeric and 1-16 characters long.",
+        )
+
+    if not re.match(r"[^\s@\"\\/]*", password):
+        return ValidationResult(
+            valid=False,
+            message='Password contains invalid characters. \\, /, @, " are not allowed.',
+        )
+    # Use RAG_STUDIO_INSTALL_DIR to resolve the jar path
+    rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
+    jar_path = os.path.join(rag_studio_dir, "prebuilt_artifacts/rag-api.jar")
+    cmd = [
+        f"{os.environ.get('JAVA_HOME')}/bin/java",
+        "-cp",
+        jar_path,
+        "-Dloader.main=com.cloudera.cai.util.db.JdbiUtils",
+        "org.springframework.boot.loader.launch.PropertiesLauncher",
+        db_url,
+        username,
+        password,
+        str(db_type),
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if result.returncode == 0:
+            return ValidationResult(valid=True, message=result.stdout.strip())
+        elif result.returncode == 2:
+            return ValidationResult(
+                valid=False, message="Usage error: " + result.stderr.strip()
+            )
+        else:
+            return ValidationResult(valid=False, message=result.stderr.strip())
+    except Exception as e:
+        return ValidationResult(valid=False, message=str(e))

@@ -49,7 +49,7 @@ import {
   Typography,
 } from "antd";
 import { DataSourceType } from "src/api/dataSourceApi.ts";
-import { transformModelOptions } from "src/utils/modelUtils.ts";
+import { useTransformModelOptions } from "src/utils/modelUtils.ts";
 import { ResponseChunksRange } from "pages/RagChatTab/Settings/ResponseChunksSlider.tsx";
 import { useGetLlmModels, useGetRerankingModels } from "src/api/modelsApi.ts";
 import { formatDataSource } from "src/utils/formatters.ts";
@@ -70,6 +70,8 @@ const layout = {
 const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
   const { data: llmModels } = useGetLlmModels();
   const { data: rerankingModels } = useGetRerankingModels();
+  const llmModelOptions = useTransformModelOptions(llmModels);
+  const rerankModelOptions = useTransformModelOptions(rerankingModels);
 
   const advancedOptions = () => [
     {
@@ -199,7 +201,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
         label="Response synthesizer model"
         rules={[{ required: true }]}
       >
-        <Select options={transformModelOptions(llmModels)} />
+        <Select options={llmModelOptions} />
       </Form.Item>
       <Form.Item
         name="rerankModel"
@@ -208,7 +210,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
           rerankingModels?.length ? rerankingModels[0].model_id : ""
         }
       >
-        <Select allowClear options={transformModelOptions(rerankingModels)} />
+        <Select allowClear options={rerankModelOptions} />
       </Form.Item>
       <Form.Item<CreateSessionRequest>
         name="responseChunks"

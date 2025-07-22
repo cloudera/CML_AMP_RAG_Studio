@@ -52,10 +52,12 @@ export default defineConfig({
   ],
   test: {
     environment: "jsdom",
+    setupFiles: ["./src/test-setup.ts"],
+    globals: true,
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8080",
+      "/api": "http://localhost:3000",
       "/llm-service": {
         target: "http://localhost:8081",
         rewrite: (path) => path.replace(/^\/llm-service/, ""),

@@ -100,25 +100,37 @@ export const projectSessionSidebarItem = ({
   };
 };
 
-export const getProjectItems = () => {
+export const getProjectItems = (): ItemType[] => {
   const { data: projects } = useGetProjects();
   const { data: sessions } = useGetSessions();
   const navigate = useNavigate();
 
-  const projectItems: ItemType[] = projects
-    ? projects
-        .filter((p) => !p.defaultProject)
-        .map((project) => {
-          const sessionsForProject = sessions?.filter(
-            (s) => s.projectId === project.id,
-          );
-          return projectSessionSidebarItem({
-            project,
-            sessions: sessionsForProject ?? [],
-            navigate,
-          });
-        })
-    : [];
+  const filteredProjects = projects?.filter((p) => !p.defaultProject);
 
-  return projectItems;
+  if (!filteredProjects?.length) {
+    return [
+      {
+        key: "noProjects",
+        type: "group",
+        label: (
+          <Flex style={{ paddingLeft: 32 }}>
+            <Typography.Text type="secondary">
+              No projects created
+            </Typography.Text>
+          </Flex>
+        ),
+      },
+    ];
+  }
+
+  return filteredProjects.map((project) => {
+    const sessionsForProject = sessions?.filter(
+      (s) => s.projectId === project.id,
+    );
+    return projectSessionSidebarItem({
+      project,
+      sessions: sessionsForProject ?? [],
+      navigate,
+    });
+  });
 };
