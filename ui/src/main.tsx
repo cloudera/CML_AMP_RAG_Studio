@@ -47,7 +47,6 @@ import { Flex, Spin, Typography } from "antd";
 import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
 import { CustomUnhandledError } from "src/components/ErrorComponents/CustomUnhandledError.tsx";
 import "@ant-design/v5-patch-for-react-19";
-import messageQueue from "src/utils/messageQueue.ts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,18 +62,7 @@ const queryClient = new QueryClient({
           if (failureCount > 4) {
             return false;
           }
-          const shouldRetry = error.status >= 500;
-          if (shouldRetry && failureCount === 0) {
-            messageQueue.warning(
-              `Retrying request due to server error. ${error.message}`,
-            );
-          }
-          return shouldRetry;
-        }
-        if (failureCount === 0) {
-          messageQueue.warning(
-            `Retrying request due to server error. ${error.message}`,
-          );
+          return error.status >= 500;
         }
         return failureCount <= 4;
       },

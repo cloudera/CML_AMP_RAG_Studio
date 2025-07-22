@@ -233,6 +233,10 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
         if open_ai_key:
             valid_model_config_exists = True
             message = "OpenAI config is valid. \n"
+
+    if message == "":
+        return ValidationResult(valid=True, message="No model configuration found.")
+
     return ValidationResult(valid=valid_model_config_exists, message=message)
 
 
