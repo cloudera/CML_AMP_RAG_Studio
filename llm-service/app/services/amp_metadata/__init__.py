@@ -259,11 +259,11 @@ def validate(environ: dict[str, str]) -> ConfigValidationResults:
     )
 
 
-def config_to_env(config: ProjectConfig) -> dict[str, Optional[str]]:
+def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     Converts a ProjectConfig object to a dictionary of environment variables.
     """
-    new_env: dict[str, Optional[str]] = {
+    new_env: dict[str, str] = {
         key: str(value)
         for key, value in {
             "USE_ENHANCED_PDF_PROCESSING": str(
