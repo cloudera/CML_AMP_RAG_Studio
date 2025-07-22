@@ -58,7 +58,7 @@ const TestResultIcon = ({ result }: { result?: ValidationResult }) => {
   const color = result.valid ? cdlGreen600 : cdlRed600;
 
   return (
-    <Tooltip title={result.message} defaultOpen={true}>
+    <Tooltip title={result.message}>
       <OutlinedIcon
         style={{ color, marginRight: 12, fontSize: 20 }}
         size={32}
