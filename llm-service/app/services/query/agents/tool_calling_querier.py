@@ -128,7 +128,7 @@ def should_use_retrieval(
     return len(data_source_ids) > 0, data_source_summaries
 
 
-def get_bedrock_image_generation_tool(model_id: Optional[str] = None) -> list[BaseTool]:
+def get_bedrock_image_generation_tools(model_id: Optional[str] = None) -> list[BaseTool]:
     """
     Get the appropriate Bedrock image generation tool based on model type.
 
@@ -253,21 +253,22 @@ def stream_chat(
     tools: list[BaseTool] = mcp_tools
 
     # Add image generation tool if available
+    image_generator_tools: list[BaseTool]
     model_source = get_model_source()
-    if model_source == ModelSource.OPENAI:
-        image_generator_tool = OpenAIImageGenerationToolSpec(
-            api_key=settings.openai_api_key
-        ).to_tool_list()
-    elif model_source == ModelSource.BEDROCK:
-        # Determine the appropriate Bedrock image generation tool
-        # For now, we use the default image generation model from settings if available
-        # This could be extended to use session-specific model configurations
-        image_generator_tool = get_bedrock_image_generation_tool()
-    else:
-        image_generator_tool = None
-
-    if image_generator_tool:
-        tools.extend(image_generator_tool)
+    match model_source:
+        case ModelSource.OPENAI:
+            image_generator_tools = OpenAIImageGenerationToolSpec(
+                api_key=settings.openai_api_key
+            ).to_tool_list()
+        case ModelSource.BEDROCK:
+            # Determine the appropriate Bedrock image generation tool
+            # For now, we use the default image generation model from settings if available
+            # This could be extended to use session-specific model configurations
+            image_generator_tools = get_bedrock_image_generation_tools()
+        case _:
+            image_generator_tools = []
+    if image_generator_tools:
+        tools.extend(image_generator_tools)
 
     # Use tool calling only if retrieval is not the only tool to optimize performance
     if tools and use_retrieval and chat_engine:
