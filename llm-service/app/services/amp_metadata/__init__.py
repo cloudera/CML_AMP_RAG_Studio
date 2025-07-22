@@ -241,11 +241,14 @@ def validate(environ: dict[str, str]) -> ConfigValidationResults:
     storage_config = validate_storage_config(environ)
     model_config = validate_model_config(environ)
 
+    db_url = environ.get("DB_URL", None)
+    if not db_url:
+        db_url = "jdbc:h2:../databases/rag"
     jdbc_config = validate_jdbc(
         TypeAdapter(MetadataDbProviderType).validate_python(
             environ.get("DB_TYPE", "H2")
         ),
-        environ.get("DB_URL", "jdbc:h2:../databases/rag"),
+        db_url,
         environ.get("DB_PASSWORD", ""),
         environ.get("DB_USERNAME", ""),
     )
