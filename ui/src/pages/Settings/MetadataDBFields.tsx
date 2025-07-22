@@ -185,17 +185,19 @@ const MetadataDatabaseFields = ({
       >
         <Input.Password placeholder="password" disabled={!enableModification} />
       </Form.Item>
-      <Flex justify="flex-end">
-        <TestResultIcon result={testResult} />
-        <Button
-          type="default"
-          onClick={handleTestConnection}
-          style={{ width: 160 }}
-          disabled={!formValues?.metadata_db_config.jdbc_url}
-        >
-          Test Connection
-        </Button>
-      </Flex>
+      {selectedMetadataDBProvider === "PostgreSQL" && (
+        <Flex justify="flex-end">
+          <TestResultIcon result={testResult} />
+          <Button
+            type="default"
+            onClick={handleTestConnection}
+            style={{ width: 160 }}
+            disabled={!formValues?.metadata_db_config.jdbc_url}
+          >
+            Test Connection
+          </Button>
+        </Flex>
+      )}
     </Flex>
   );
 };
