@@ -241,14 +241,11 @@ def validate(environ: dict[str, str]) -> ConfigValidationResults:
     storage_config = validate_storage_config(environ)
     model_config = validate_model_config(environ)
 
-    db_url = environ.get("DB_URL", None)
-    if not db_url:
-        db_url = "jdbc:h2:../databases/rag"
     jdbc_config = validate_jdbc(
         TypeAdapter(MetadataDbProviderType).validate_python(
             environ.get("DB_TYPE", "H2")
         ),
-        db_url,
+        environ.get("DB_URL", "jdbc:h2:../databases/rag"),
         environ.get("DB_PASSWORD", ""),
         environ.get("DB_USERNAME", ""),
     )
@@ -438,6 +435,11 @@ def validate_jdbc(
     password: str,
     username: str,
 ) -> ValidationResult:
+    # if db_type is H2, we don't need to validate the JDBC connection
+    if db_type == "H2":
+        return ValidationResult(
+            valid=True, message="H2 database type does not require validation."
+        )
     # Use RAG_STUDIO_INSTALL_DIR to resolve the jar path
     rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
     jar_path = os.path.join(rag_studio_dir, "prebuilt_artifacts/rag-api.jar")
