@@ -46,7 +46,6 @@ from llama_index.core.tools.tool_spec.base import BaseToolSpec
 from llama_index.tools.openai import (
     OpenAIImageGenerationToolSpec as LlamaIndexOpenAIImageGenerationToolSpec,
 )
-from llama_index.tools.openai.image_generation.base import DEFAULT_SIZE
 
 from app.config import settings
 from app.services.query.agents.agent_tools.stable_diffusion_types import (
