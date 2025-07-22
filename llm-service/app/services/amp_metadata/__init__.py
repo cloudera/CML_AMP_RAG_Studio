@@ -37,6 +37,7 @@
 #
 import json
 import os
+import re
 import socket
 import subprocess
 from typing import Optional, cast, Protocol
@@ -443,6 +444,22 @@ def validate_jdbc(
     if db_type == "H2":
         return ValidationResult(
             valid=True, message="H2 database type does not require validation."
+        )
+
+    # Validate inputs to prevent injection attacks
+    if not db_url.startswith("jdbc:"):
+        return ValidationResult(valid=False, message="Invalid JDBC URL format.")
+
+    if not username.isalnum() or not (1 <= len(username) <= 16):
+        return ValidationResult(
+            valid=False,
+            message="Username must be alphanumeric and 1-16 characters long.",
+        )
+
+    if not re.match(r"[^\s@\"\\/]*", password):
+        return ValidationResult(
+            valid=False,
+            message='Password contains invalid characters. \\, /, @, " are not allowed.',
         )
     # Use RAG_STUDIO_INSTALL_DIR to resolve the jar path
     rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
