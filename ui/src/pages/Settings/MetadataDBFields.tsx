@@ -42,9 +42,41 @@ import {
   useValidateJdbcConnection,
   ValidationResult,
 } from "src/api/ampMetadataApi.ts";
-import { Button, Flex, Form, Input, Radio } from "antd";
+import { Button, Flex, Form, Input, Radio, Tooltip } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 import messageQueue from "src/utils/messageQueue.ts";
+import { useState } from "react";
+import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+
+const TestResultIcon = ({ result }: { result?: ValidationResult }) => {
+  if (!result) {
+    return null;
+  }
+
+  const OutlinedIcon = result.valid ? CheckCircleOutlined : CloseCircleOutlined;
+  const color = result.valid ? cdlGreen600 : cdlRed600;
+
+  return (
+    <Tooltip title={result.message} defaultOpen={true}>
+      <OutlinedIcon
+        style={{ color, marginRight: 12, fontSize: 20 }}
+        size={32}
+      />
+    </Tooltip>
+  );
+};
+
+const formItemLayout = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 8 },
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 16 },
+  },
+};
 
 const MetadataDatabaseFields = ({
   selectedMetadataDBProvider,
@@ -57,19 +89,42 @@ const MetadataDatabaseFields = ({
   enableModification?: boolean;
   formValues?: ProjectConfig;
 }) => {
+  const [testResult, setTestResult] = useState<ValidationResult>();
   const testConnection = useValidateJdbcConnection({
     onSuccess: (result: ValidationResult) => {
-      if (!result.valid) {
-        messageQueue.error(result.message);
-        return;
-      }
-      messageQueue.success("Connection successful!");
+      setTestResult(result);
     },
     onError: (error) => {
-      console.log(error.message);
-      messageQueue.error(`Connection failed: ${error.message}`);
+      setTestResult({
+        valid: false,
+        message: error.message || "Connection failed",
+      });
     },
   });
+
+  const handleTestConnection = () => {
+    if (!formValues) {
+      return;
+    }
+
+    const {
+      metadata_db_config: { jdbc_url, username, password },
+    } = formValues;
+
+    if (!jdbc_url || !username || !password) {
+      messageQueue.error("JDBC URL is required for testing connection.");
+      return;
+    }
+
+    setTestResult(undefined);
+    testConnection.mutate({
+      db_url: jdbc_url,
+      username: username,
+      password: password,
+      db_type: selectedMetadataDBProvider,
+    });
+  };
+
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
       <Form.Item
@@ -93,6 +148,7 @@ const MetadataDatabaseFields = ({
       )}
       <Form.Item
         label={"PostgreSQL JDBC URL"}
+        {...formItemLayout}
         initialValue={projectConfig?.metadata_db_config.jdbc_url}
         name={["metadata_db_config", "jdbc_url"]}
         required={selectedMetadataDBProvider === "PostgreSQL"}
@@ -107,6 +163,7 @@ const MetadataDatabaseFields = ({
       </Form.Item>
       <Form.Item
         label={"PostgreSQL Username"}
+        {...formItemLayout}
         initialValue={projectConfig?.metadata_db_config.username ?? ""}
         name={["metadata_db_config", "username"]}
         required={selectedMetadataDBProvider === "PostgreSQL"}
@@ -118,6 +175,7 @@ const MetadataDatabaseFields = ({
       </Form.Item>
       <Form.Item
         label={"PostgreSQL Password"}
+        {...formItemLayout}
         initialValue={projectConfig?.metadata_db_config.password ?? ""}
         name={["metadata_db_config", "password"]}
         required={selectedMetadataDBProvider === "PostgreSQL"}
@@ -128,22 +186,10 @@ const MetadataDatabaseFields = ({
         <Input.Password placeholder="password" disabled={!enableModification} />
       </Form.Item>
       <Flex justify="flex-end">
+        <TestResultIcon result={testResult} />
         <Button
-          type="primary"
-          onClick={() => {
-            if (!formValues?.metadata_db_config.jdbc_url) {
-              messageQueue.error(
-                "JDBC URL is required for testing connection.",
-              );
-              return;
-            }
-            testConnection.mutate({
-              db_url: formValues.metadata_db_config.jdbc_url,
-              username: formValues.metadata_db_config.username,
-              password: formValues.metadata_db_config.password,
-              db_type: selectedMetadataDBProvider,
-            });
-          }}
+          type="default"
+          onClick={handleTestConnection}
           style={{ width: 160 }}
           disabled={!formValues?.metadata_db_config.jdbc_url}
         >
