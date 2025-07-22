@@ -240,8 +240,11 @@ def validate(environ: dict[str, str]) -> ConfigValidationResults:
     print("Validating environment variables...")
     storage_config = validate_storage_config(environ)
     model_config = validate_model_config(environ)
+
     jdbc_config = validate_jdbc(
-        environ.get("DB_TYPE", "H2"),
+        TypeAdapter(MetadataDbProviderType).validate_python(
+            environ.get("DB_TYPE", "H2")
+        ),
         environ.get("DB_URL", "jdbc:h2:../databases/rag"),
         environ.get("DB_PASSWORD", ""),
         environ.get("DB_USERNAME", ""),
@@ -422,8 +425,8 @@ def get_application_config() -> ApplicationConfig:
 def validate_jdbc(
     db_type: MetadataDbProviderType,
     db_url: str,
-    password: Optional[str],
-    username: Optional[str],
+    password: str,
+    username: str,
 ) -> ValidationResult:
     # Use RAG_STUDIO_INSTALL_DIR to resolve the jar path
     rag_studio_dir = os.getenv("RAG_STUDIO_INSTALL_DIR", "/home/cdsw/rag-studio")
