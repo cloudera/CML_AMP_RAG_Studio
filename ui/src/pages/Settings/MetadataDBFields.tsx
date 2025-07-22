@@ -112,7 +112,7 @@ const MetadataDatabaseFields = ({
     } = formValues;
 
     if (!jdbc_url || !username || !password) {
-      messageQueue.error("JDBC URL is required for testing connection.");
+      messageQueue.error("JDBC URL, username, and password are required for testing connection.");
       return;
     }
 
