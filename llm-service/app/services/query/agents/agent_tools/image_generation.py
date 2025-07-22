@@ -39,6 +39,7 @@ import abc
 import base64
 import json
 import os
+import typing
 from typing import Literal, Optional
 
 import boto3
@@ -67,9 +68,6 @@ class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
 
     spec_functions = ["image_generation"]
 
-    def __init__(self, **kwargs) -> None:
-        """Initialize with parameters."""
-
     @staticmethod
     def get_cache_dir() -> str:
         """Return the cache directory."""
@@ -82,43 +80,21 @@ class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
 
 
 class OpenAIImageGenerationToolSpec(
-    LlamaIndexOpenAIImageGenerationToolSpec, ImageGeneratorToolSpec
+    LlamaIndexOpenAIImageGenerationToolSpec,
+    ImageGeneratorToolSpec,
 ):
     """OpenAI Image Generation tool spec."""
 
     def __init__(self, api_key: str = None) -> None:
         """Initialize with parameters."""
         super().__init__(
-            api_key=api_key, cache_dir=ImageGeneratorToolSpec.get_cache_dir()
-        )
-
-    def image_generation(
-        self,
-        text: str,
-        model: Optional[str] = "dall-e-3",
-        quality: Optional[str] = "standard",
-        num_images: Optional[int] = 1,
-        size: Optional[str] = DEFAULT_SIZE,
-        style: Optional[str] = "vivid",
-        timeout: Optional[int] = None,
-        download: Optional[bool] = None,  # For backward compatibility
-    ) -> str:
-        return super().image_generation(
-            text=text,
-            model=model,
-            quality=quality,
-            num_images=num_images,
-            size=size,
-            style=style,
-            timeout=timeout,
-            download=False,  # Default to not downloading
+            api_key=api_key,
+            cache_dir=ImageGeneratorToolSpec.get_cache_dir(),
         )
 
 
 class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
     """Bedrock Stable Diffusion Image Generation tool spec."""
-
-    spec_functions = ["image_generation"]
 
     def __init__(self, model: str = "stability.sd3-5-large-v1:0", **kwargs) -> None:
         """Initialize with parameters."""
@@ -133,7 +109,6 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
         seed: Optional[int] = 42,
         negative_text: Optional[str] = "",
         aspect_ratio: Optional[AspectRatio] = AspectRatio.RATIO_5_4,
-        **kwargs,
     ) -> str:
         """
         Generate an image using Stable Diffusion models on Bedrock.
@@ -146,7 +121,6 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
             seed (int, optional): Random seed for generation.
             negative_text (str, optional): Negative prompt for image generation.
             aspect_ratio (AspectRatio, optional): Aspect ratio for the generated image.
-            **kwargs: Additional parameters.
 
         Returns:
             str: Path to the generated image in the cache directory.
@@ -176,8 +150,6 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
 class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
     """Bedrock Titan Image Generation tool spec."""
 
-    spec_functions = ["image_generation"]
-
     def __init__(
         self, model: str = "amazon.titan-image-generator-v2:0", **kwargs
     ) -> None:
@@ -196,7 +168,6 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
         negative_text: Optional[str] = "",
         cfg_scale: Optional[float] = 8.0,
         size: ValidTitanImageSizes = ValidTitanImageSizes.SMALL,
-        **kwargs,
     ) -> str:
         """
         Generate an image using Amazon Titan Image Generator on Bedrock.
@@ -210,7 +181,6 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
             negative_text (str, optional): Negative prompt for image generation.
             cfg_scale (float, optional): Configuration scale for generation.
             size (ValidTitanImageSizes, optional): Image size for generation.
-            **kwargs: Additional parameters.
 
         Returns:
             str: Path to the generated image in the cache directory.
