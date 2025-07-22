@@ -263,7 +263,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
     """
     Converts a ProjectConfig object to a dictionary of environment variables.
     """
-    return {
+    new_env = {
         key: str(value)
         for key, value in {
             "USE_ENHANCED_PDF_PROCESSING": str(
@@ -288,23 +288,18 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
-            "DB_URL": (
-                config.metadata_db_config.jdbc_url
-                if config.metadata_db_provider is "PostgreSQL"
-                else "jdbc:h2:../databases/rag"
-            ),
-            "DB_USERNAME": (
-                config.metadata_db_config.username
-                if config.metadata_db_provider is "PostgreSQL"
-                else ""
-            ),
-            "DB_PASSWORD": (
-                config.metadata_db_config.password
-                if config.metadata_db_provider is "PostgreSQL"
-                else ""
-            ),
+            "DB_URL": (config.metadata_db_config.jdbc_url),
+            "DB_USERNAME": (config.metadata_db_config.username),
+            "DB_PASSWORD": (config.metadata_db_config.password),
         }.items()
     }
+
+    if config.metadata_db_provider is MetadataDbProviderType.H2:
+        new_env["DB_URL"] = "jdbc:h2:../databases/rag"
+        new_env.pop("DB_USERNAME", None)
+        new_env.pop("DB_PASSWORD", None)
+
+    return new_env
 
 
 def build_configuration(
