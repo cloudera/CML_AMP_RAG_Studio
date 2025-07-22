@@ -142,7 +142,7 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
 
         # Call the Bedrock API
         return _get_image_from_bedrock(
-            client=self.client,
+            boto3_bedrock_client=self.client,
             model=self.model,
             request=request,
             image_name=image_name,
@@ -212,7 +212,7 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
 
         # Call the Bedrock API
         return _get_image_from_bedrock(
-            client=self.client,
+            boto3_bedrock_client=self.client,
             model=self.model,
             request=request,
             image_name=image_name,
@@ -221,7 +221,7 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
 
 
 def _get_image_from_bedrock(
-    client: "boto3.client",
+    boto3_bedrock_client: Any,
     model: str,
     request: str,
     image_name: str,
@@ -231,7 +231,7 @@ def _get_image_from_bedrock(
     Helper function to get an image from Bedrock and save it to the cache directory.
 
     Parameters:
-        client: The Bedrock client.
+        boto3_bedrock_client: The Bedrock client.
         model: The model ID to use for image generation.
         request: The request payload for the model.
         image_name (str): The name to save the generated image as.
@@ -240,7 +240,7 @@ def _get_image_from_bedrock(
     Returns:
         str: Path to the generated image in the cache directory.
     """
-    response = client.invoke_model(modelId=model, body=request)
+    response = boto3_bedrock_client.invoke_model(modelId=model, body=request)
     model_response = json.loads(response["body"].read())
     base64_image_data = model_response["images"][0]
     image_data = base64.b64decode(base64_image_data)
