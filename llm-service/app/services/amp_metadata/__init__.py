@@ -259,11 +259,11 @@ def validate(environ: dict[str, str]) -> ConfigValidationResults:
     )
 
 
-def config_to_env(config: ProjectConfig) -> dict[str, str]:
+def config_to_env(config: ProjectConfig) -> dict[str, Optional[str]]:
     """
     Converts a ProjectConfig object to a dictionary of environment variables.
     """
-    new_env = {
+    new_env: dict[str, Optional[str]] = {
         key: str(value)
         for key, value in {
             "USE_ENHANCED_PDF_PROCESSING": str(
@@ -288,16 +288,16 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
-            "DB_URL": (config.metadata_db_config.jdbc_url),
-            "DB_USERNAME": (config.metadata_db_config.username),
-            "DB_PASSWORD": (config.metadata_db_config.password),
+            "DB_URL": config.metadata_db_config.jdbc_url,
+            "DB_USERNAME": config.metadata_db_config.username,
+            "DB_PASSWORD": config.metadata_db_config.password,
         }.items()
     }
 
     if config.metadata_db_provider == "H2":
-        new_env.pop("DB_URL", None)
-        new_env.pop("DB_USERNAME", None)
-        new_env.pop("DB_PASSWORD", None)
+        new_env["DB_URL"] = ""
+        new_env["DB_USERNAME"] = ""
+        new_env["DB_PASSWORD"] = ""
 
     return new_env
 
