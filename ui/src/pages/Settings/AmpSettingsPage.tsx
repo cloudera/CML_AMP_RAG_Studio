@@ -241,6 +241,7 @@ const AmpSettingsPage = () => {
         form={form}
         selectedFileStorage={selectedFileStorage}
         modelProvider={modelProvider}
+        selectedMetadataDb={selectedMetadataDbField}
       />
     </Flex>
   );
