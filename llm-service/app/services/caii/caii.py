@@ -84,6 +84,9 @@ def list_endpoints() -> list[ListEndpointEntry]:
 
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
     except Exception:
+        logger.exception(
+            "Model discovery failed through Python API, falling back to CAI REST API"
+        )
         try:
             domain = settings.caii_domain
 
