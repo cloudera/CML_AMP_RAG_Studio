@@ -37,7 +37,7 @@
 #
 import logging
 import os
-from typing import Callable, List, Sequence
+from typing import Callable, List, Sequence, Optional
 
 import httpx
 import requests
@@ -62,15 +62,28 @@ DEFAULT_NAMESPACE = "serving-default"
 logger = logging.getLogger(__name__)
 
 
-def describe_endpoint(endpoint_name: str) -> Endpoint:
-    domain = settings.caii_domain
-    headers = build_auth_headers()
-    describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
-    desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
+def describe_endpoint(
+    endpoint_name: str, endpoints: Optional[List[ListEndpointEntry]] = None
+) -> Endpoint:
+    if not endpoints:
+        logger.info("Fetching endpoint details from CAII REST API")
+        domain = settings.caii_domain
+        headers = build_auth_headers()
+        describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
+        desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
 
-    response = requests.post(describe_url, headers=headers, json=desc_json)
-    raise_for_http_error(response)
-    return Endpoint(**body_to_json(response))
+        response = requests.post(describe_url, headers=headers, json=desc_json)
+        raise_for_http_error(response)
+        return Endpoint(**body_to_json(response))
+
+    logger.info("Fetching endpoint details from cached list of endpoints")
+    for endpoint in endpoints:
+        if endpoint.name == endpoint_name:
+            return Endpoint(**endpoint.model_dump())
+
+    raise HTTPException(
+        status_code=404, detail=f"Endpoint '{endpoint_name}' not found."
+    )
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
@@ -80,6 +93,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
 
         api_client = cmlapi.default_client()
         ml_serving_apps = api_client.list_ml_serving_apps()
+        logger.info("Listing endpoints for ML Serving Apps: %s", ml_serving_apps)
         endpoints = cmlendpoints.list_endpoints(ml_serving_apps)
 
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
@@ -104,7 +118,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         except requests.exceptions.ConnectionError:
             raise HTTPException(
                 status_code=421,
-                detail=f"Unable to connect to host. Please check your CAII Settings.",
+                detail="Unable to connect to host. Please check your CAII Settings.",
             )
 
 
@@ -120,11 +134,10 @@ def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
 
 
 def get_llm(
-    endpoint_name: str,
+    endpoint: Endpoint,
     messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
     completion_to_prompt: Callable[[str], str],
 ) -> LLM:
-    endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint.url.removesuffix("/chat/completions")
 
     model = endpoint.model_name
@@ -134,7 +147,7 @@ def get_llm(
         http_client = None
 
     # todo: test if the NVIDIA impl works with deepseek, too
-    if "deepseek" in endpoint_name.lower():
+    if "deepseek" in endpoint.name.lower():
         return DeepseekModel(
             model=model,
             context=128000,
@@ -178,11 +191,11 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 
 def get_caii_llm_models() -> List[ModelResponse]:
     potential_models = get_models_with_task("TEXT_GENERATION")
-    results: list[ModelResponse] = []
+    results: list[Endpoint] = []
     for potential in potential_models:
         try:
             model = get_llm(
-                endpoint_name=potential.name,
+                endpoint=potential,
                 messages_to_prompt=messages_to_prompt,
                 completion_to_prompt=completion_to_prompt,
             )
@@ -194,21 +207,23 @@ def get_caii_llm_models() -> List[ModelResponse]:
             )
             pass
 
-    return results
+    return list(map(build_model_response, results))
 
 
 def get_caii_reranking_models() -> List[ModelResponse]:
-    return get_models_with_task("RANK")
+    endpoints = get_models_with_task("RANK")
+    return list(map(build_model_response, endpoints))
 
 
 def get_caii_embedding_models() -> List[ModelResponse]:
-    return get_models_with_task("EMBED")
+    endpoints = get_models_with_task("EMBED")
+    return list(map(build_model_response, endpoints))
 
 
-def get_models_with_task(task_type: str) -> List[ModelResponse]:
+def get_models_with_task(task_type: str) -> List[Endpoint]:
     endpoints = list_endpoints()
     endpoint_details = list(
-        map(lambda endpoint: describe_endpoint(endpoint.name), endpoints)
+        map(lambda endpoint: describe_endpoint(endpoint.name, endpoints), endpoints)
     )
     llm_endpoints = list(
         filter(
@@ -216,8 +231,7 @@ def get_models_with_task(task_type: str) -> List[ModelResponse]:
             endpoint_details,
         )
     )
-    models = list(map(build_model_response, llm_endpoints))
-    return models
+    return llm_endpoints
 
 
 def build_model_response(endpoint: Endpoint) -> ModelResponse:
