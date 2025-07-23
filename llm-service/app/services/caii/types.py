@@ -41,62 +41,39 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel, ConfigDict
 
 
-# class EndpointCondition(BaseModel):
-#     status: str
-#     severity: str
-#     last_transition_time: str
-#     reason: str
-#     message: str
-
-
-# class ReplicaMetadata(BaseModel):
-#     modelVersion: str
-#     replicaCount: int
-#     replicaNames: List[str]
-
-
-# class RegistrySource(BaseModel):
-#     model_config = ConfigDict(protected_namespaces=())
-#     model_id: Optional[str]
-#     version: Optional[int]
-
-# class EndpointStatus(BaseModel):
-#     failed_copies: int
-#     total_copies: int
-#     active_model_state: str
-#     target_model_state: str
-#     transition_status: str
-#
-
-
-class ListEndpointEntry(BaseModel):
+class Endpoint(BaseModel):
+    """Common fields for each endpoint representation."""
     model_config = ConfigDict(extra="ignore")
     namespace: str
     name: str
+    model_name: str
     url: str
-    state: str
     created_by: str
     api_standard: str
     has_chat_template: bool
+    task: str
+
+
+class ListEndpointEntry(Endpoint):
+    """Response from CAII /listEndpoints."""
+    state: str
     metric_format: str
-    task: Optional[str] = None
-    model_name: Optional[str] = None
 
 
-class Endpoint(ListEndpointEntry):
-    model_config = ConfigDict(protected_namespaces=(), extra="ignore")
-    # conditions: List[EndpointCondition]
-    # status: EndpointStatus
+class DescribeEndpointEntry(Endpoint):
+    """Response from CAII /describeEndpoint."""
     observed_generation: int
     replica_count: int
-    # replica_metadata: List[ReplicaMetadata]
     description: str
     created_at: str
-    resources: Dict[str, str]
-    # source: Dict[str, RegistrySource]
-    autoscaling: Dict[str, Any]
-    traffic: Dict[str, str]
+    resources: dict[str, str]
+    autoscaling: dict[str, Any]
+    relevant_revisions: dict[str, str]
+    traffic: dict[str, str]
+    metric_format: str
     instance_type: str
+    optimization_profile: Optional[dict[str, Any]]
+    crn: str
 
 
 @dataclass

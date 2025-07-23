@@ -35,9 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import functools
 import logging
 import os
-from typing import Callable, List, Sequence, Optional
+from typing import Callable, List, Sequence, Optional, cast
 
 import httpx
 import requests
@@ -51,7 +52,7 @@ from llama_index.llms.nvidia import NVIDIA
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import DeepseekModel
 from .caii_reranking import CaiiRerankingModel
-from .types import Endpoint, ListEndpointEntry, ModelResponse
+from .types import Endpoint, ListEndpointEntry, ModelResponse, DescribeEndpointEntry
 from .utils import build_auth_headers, get_caii_access_token
 from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..utils import raise_for_http_error, body_to_json
@@ -79,9 +80,7 @@ def describe_endpoint_entry(
     )
 
 
-def describe_endpoint(
-    endpoint_name: str,
-) -> Endpoint:
+def describe_endpoint(endpoint_name: str) -> DescribeEndpointEntry:
     logger.info("Fetching endpoint details from CAII REST API")
     domain = settings.caii_domain
     headers = build_auth_headers()
@@ -90,7 +89,7 @@ def describe_endpoint(
 
     response = requests.post(describe_url, headers=headers, json=desc_json)
     raise_for_http_error(response)
-    return Endpoint(**body_to_json(response))
+    return DescribeEndpointEntry(**body_to_json(response))
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
@@ -120,7 +119,6 @@ def list_endpoints() -> list[ListEndpointEntry]:
             )
             raise_for_http_error(response)
             endpoints = body_to_json(response)["endpoints"]
-
             return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
         except requests.exceptions.ConnectionError:
             raise HTTPException(
@@ -241,18 +239,21 @@ def get_models_with_task(task_type: str) -> List[Endpoint]:
             endpoint_details,
         )
     )
-    return llm_endpoints
+    return cast(list[Endpoint], llm_endpoints)
 
 
-def build_model_response(endpoint: ListEndpointEntry) -> ModelResponse:
-    if isinstance(endpoint, Endpoint):
-        replica_count = endpoint.replica_count
-    else:
-        replica_count = None
-
+@functools.singledispatch
+def build_model_response(endpoint: Endpoint) -> ModelResponse:
     return ModelResponse(
         model_id=endpoint.name,
         name=endpoint.name,
-        available=(replica_count > 0 if replica_count is not None else None),
-        replica_count=(replica_count if replica_count else None),
+    )
+
+@build_model_response.register
+def _(endpoint: DescribeEndpointEntry) -> ModelResponse:
+    return ModelResponse(
+        model_id=endpoint.name,
+        name=endpoint.name,
+        available=endpoint.replica_count > 0,
+        replica_count=endpoint.replica_count,
     )
