@@ -61,6 +61,7 @@ DEFAULT_NAMESPACE = "serving-default"
 
 logger = logging.getLogger(__name__)
 
+
 def describe_endpoint(endpoint_name: str) -> Endpoint:
     domain = settings.caii_domain
     headers = build_auth_headers()
@@ -73,21 +74,35 @@ def describe_endpoint(endpoint_name: str) -> Endpoint:
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
-    domain = settings.caii_domain
     try:
-        headers = build_auth_headers()
-        describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
-        desc_json = {"namespace": DEFAULT_NAMESPACE}
+        import cmlapi
+        import cml.endpoints_v1 as cmlendpoints
 
-        response = requests.post(describe_url, headers=headers, json=desc_json, timeout=5)
-        raise_for_http_error(response)
-        endpoints = body_to_json(response)["endpoints"]
+        api_client = cmlapi.default_client()
+        ml_serving_apps = api_client.list_ml_serving_apps()
+        endpoints = cmlendpoints.list_endpoints(ml_serving_apps)
+
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(
-            status_code=421,
-            detail=f"Unable to connect to host {domain}. Please check your CAII Settings.",
-        )
+    except Exception:
+        try:
+            domain = settings.caii_domain
+
+            headers = build_auth_headers()
+            describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
+            desc_json = {"namespace": DEFAULT_NAMESPACE}
+
+            response = requests.post(
+                describe_url, headers=headers, json=desc_json, timeout=5
+            )
+            raise_for_http_error(response)
+            endpoints = body_to_json(response)["endpoints"]
+
+            return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
+        except requests.exceptions.ConnectionError:
+            raise HTTPException(
+                status_code=421,
+                detail=f"Unable to connect to host. Please check your CAII Settings.",
+            )
 
 
 def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
@@ -130,7 +145,7 @@ def get_llm(
         api_key=get_caii_access_token(),
         base_url=api_base,
         model=model,
-        http_client=http_client
+        http_client=http_client,
     )
 
 
@@ -163,17 +178,25 @@ def get_caii_llm_models() -> List[ModelResponse]:
     results: list[ModelResponse] = []
     for potential in potential_models:
         try:
-            model = get_llm(endpoint_name=potential.name, messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt)
+            model = get_llm(
+                endpoint_name=potential.name,
+                messages_to_prompt=messages_to_prompt,
+                completion_to_prompt=completion_to_prompt,
+            )
             if model.metadata:
                 results.append(potential)
         except Exception as e:
-            logger.warning(f"Unable to load model metadata for model: {potential.name}. Error: {e}")
+            logger.warning(
+                f"Unable to load model metadata for model: {potential.name}. Error: {e}"
+            )
             pass
 
     return results
 
+
 def get_caii_reranking_models() -> List[ModelResponse]:
     return get_models_with_task("RANK")
+
 
 def get_caii_embedding_models() -> List[ModelResponse]:
     return get_models_with_task("EMBED")
