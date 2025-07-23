@@ -41,8 +41,8 @@ import { Flex, Layout, Typography } from "antd";
 import { cdlGray300 } from "src/cuix/variables.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
-import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
 import SettingsNavigation from "pages/Settings/SettingsNavigation.tsx";
+import NotFoundComponent from "src/components/ErrorComponents/NotFoundComponent.tsx";
 
 const { Content, Header } = Layout;
 

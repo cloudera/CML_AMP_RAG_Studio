@@ -49,10 +49,11 @@ import { ProcessingFields } from "pages/Settings/ProcessingFields.tsx";
 import { FileStorageFields } from "pages/Settings/FileStorageFields.tsx";
 import { ModelProviderFields } from "pages/Settings/ModelProviderFields.tsx";
 import { AuthenticationFields } from "pages/Settings/AuthenticationFields.tsx";
-import { getDataSourcesQueryOptions } from "src/api/dataSourceApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { getSessionsQueryOptions } from "src/api/sessionApi.ts";
 import { VectorDBFields } from "pages/Settings/VectorDBFields.tsx";
+import MetadataDatabaseFields from "pages/Settings/MetadataDBFields.tsx";
+import { useGetDataSourcesQuery } from "src/api/dataSourceApi.ts";
+import { useGetSessions } from "src/api/sessionApi.ts";
 
 export type FileStorage = "AWS" | "Local";
 
@@ -72,38 +73,79 @@ const AmpSettingsPage = () => {
   const [selectedFileStorage, setSelectedFileStorage] = useState<FileStorage>(
     projectConfig?.aws_config.document_bucket_name ? "AWS" : "Local",
   );
+  const selectedMetadataDbField = Form.useWatch("metadata_db_provider", form);
+  const [formValues, setFormValues] = useState<ProjectConfig>();
   const [modelProvider, setModelProvider] = useState<ModelSource | undefined>(
     currentModelSource,
   );
-  const dataSourcesQuery = useSuspenseQuery(getDataSourcesQueryOptions);
-  const sessionsQuery = useSuspenseQuery(getSessionsQueryOptions);
+
+  const dataSourcesQuery = useGetDataSourcesQuery();
+  const sessionsQuery = useGetSessions();
+
   const summaryStorageProvider = Form.useWatch(
     "summary_storage_provider",
     form,
   );
   const selectedVectorDBField = Form.useWatch("vector_db_provider", form);
   const enableSettingsModification =
-    dataSourcesQuery.data.length === 0 && sessionsQuery.data.length === 0;
+    dataSourcesQuery.isError ||
+    sessionsQuery.isError ||
+    (dataSourcesQuery.data?.length === 0 && sessionsQuery.data?.length === 0);
+
+  // Only show the warning when both queries have finished loading
+  const showWarning =
+    dataSourcesQuery.isFetched &&
+    sessionsQuery.isFetched &&
+    !enableSettingsModification;
 
   return (
     <Flex style={{ marginLeft: 60 }} vertical>
-      {!projectConfig?.is_valid_config && !confirmationModal.isModalOpen && (
-        <Alert
-          message={
-            <div>
-              <Typography.Text>
-                For initial configuration of RAG Studio, please provide valid
-                credentials for the Cloudera AI Inference service, AWS Bedrock,
-                or Azure OpenAI.
-              </Typography.Text>
-            </div>
-          }
-          type="warning"
-          showIcon
-          style={{ marginTop: 40, width: "fit-content" }}
-        />
-      )}
-      {!enableSettingsModification && (
+      {projectConfig &&
+        !projectConfig.is_valid_config &&
+        !confirmationModal.isModalOpen && (
+          <Flex style={{ marginTop: 40 }} gap={8} vertical>
+            {!projectConfig.config_validation_results.storage.valid ? (
+              <Alert
+                message="Storage configuration is invalid"
+                description={
+                  <Typography.Text type={"secondary"}>
+                    {projectConfig.config_validation_results.storage.message}
+                  </Typography.Text>
+                }
+                type="warning"
+                showIcon
+              />
+            ) : null}
+            {!projectConfig.config_validation_results.model.valid ? (
+              <Alert
+                message="Model configuration is invalid"
+                description={
+                  <Typography.Text type={"secondary"}>
+                    {projectConfig.config_validation_results.model.message}
+                  </Typography.Text>
+                }
+                type="warning"
+                showIcon
+              />
+            ) : null}
+            {!projectConfig.config_validation_results.metadata_api.valid ? (
+              <Alert
+                message="Metadata database configuration is invalid"
+                description={
+                  <Typography.Text type={"secondary"}>
+                    {
+                      projectConfig.config_validation_results.metadata_api
+                        .message
+                    }
+                  </Typography.Text>
+                }
+                type="warning"
+                showIcon
+              />
+            ) : null}
+          </Flex>
+        )}
+      {showWarning && (
         <Alert
           message="Storage and model provider settings cannot be modified if there are any chats or knowledge bases."
           type="warning"
@@ -112,9 +154,27 @@ const AmpSettingsPage = () => {
         />
       )}
 
-      <Form form={form} labelCol={{ offset: 1 }}>
+      <Form
+        form={form}
+        labelCol={{ offset: 1 }}
+        onValuesChange={(_, values) => {
+          setFormValues(values);
+        }}
+      >
         <Typography.Title level={4}>Processing Settings</Typography.Title>
         <ProcessingFields projectConfig={projectConfig} />
+        <Flex align={"baseline"} gap={8}>
+          <Typography.Title level={4}>Metadata Database</Typography.Title>
+          <Typography.Text type="secondary">
+            (Choose one option)
+          </Typography.Text>
+        </Flex>
+        <MetadataDatabaseFields
+          selectedMetadataDBProvider={selectedMetadataDbField}
+          projectConfig={projectConfig}
+          enableModification={enableSettingsModification}
+          formValues={formValues ?? projectConfig ?? undefined}
+        />
         <Flex align={"baseline"} gap={8}>
           <Typography.Title level={4}>File Storage</Typography.Title>
           <Typography.Text type="secondary">
@@ -181,6 +241,7 @@ const AmpSettingsPage = () => {
         form={form}
         selectedFileStorage={selectedFileStorage}
         modelProvider={modelProvider}
+        selectedMetadataDb={selectedMetadataDbField}
       />
     </Flex>
   );

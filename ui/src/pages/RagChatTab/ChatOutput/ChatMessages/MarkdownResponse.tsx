@@ -52,6 +52,11 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
       className="styled-markdown"
       children={data.rag_message.assistant.trimStart()}
       components={{
+        img: (
+          props: ComponentProps<"img">,
+        ): ReactElement<SourceNode> | undefined => {
+          return <img {...props} alt={props.alt} style={{ width: "100%" }} />;
+        },
         a: (
           props: ComponentProps<"a">,
         ): ReactElement<SourceNode> | undefined => {
@@ -80,7 +85,13 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
             }
           }
           return (
-            <a href={href} className={className} {...other} target="_blank" rel="noopener noreferrer">
+            <a
+              href={href}
+              className={className}
+              {...other}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {children}
             </a>
           );

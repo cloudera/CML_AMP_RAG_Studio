@@ -37,16 +37,19 @@
  ******************************************************************************/
 
 import { defineConfig } from "vite";
-import viteReact from "@vitejs/plugin-react";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import react from "@vitejs/plugin-react";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import tsConfigPathsPlugin from "vite-tsconfig-paths";
 import svgr from "vite-plugin-svgr";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    TanStackRouterVite(),
-    viteReact(),
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),
+    react(),
     tsConfigPathsPlugin(),
     svgr({ svgrOptions: { icon: true } }),
   ],
@@ -57,7 +60,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8080",
+      "/api": "http://localhost:3000",
       "/llm-service": {
         target: "http://localhost:8081",
         rewrite: (path) => path.replace(/^\/llm-service/, ""),

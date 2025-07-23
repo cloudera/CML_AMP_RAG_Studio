@@ -49,46 +49,45 @@ from llama_index.core.llms import LLM
 from ..services import models
 
 
-def evaluate_response(
-        query: str, chat_response: AgentChatResponse, model_name: str
-) -> tuple[float, float]:
-    # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
+def evaluate_response(query: str, chat_response: AgentChatResponse, model_name: str) -> tuple[float, float]:
+    """
+    Synchronous wrapper for running async evaluation of a chat response.
+    """
+    # Note: In a fully async application, you would await the async function directly.
+    # This function fetches the model and runs the async evaluation loop.
     evaluator_llm = models.LLM.get(model_name)
     return asyncio.run(_async_evaluate_response(query, chat_response, evaluator_llm))
 
-async def async_evaluate_response(
-        query: str, chat_response: AgentChatResponse, model_name: str
-) -> tuple[float, float]:
-    # todo: pass in the correct llm model and use it, rather than requiring querying for it like this.
-    evaluator_llm = models.LLM.get(model_name)
-    return await _async_evaluate_response(query, chat_response, evaluator_llm)
+
+async def _async_evaluate_response(query: str, chat_response: AgentChatResponse, evaluator_llm: LLM) -> tuple[float, float]:
+    """
+    Asynchronously evaluates a chat response for relevancy and faithfulness concurrently.
+    """
+    response_obj = _build_response_object(chat_response)
+
+    # Run evaluations concurrently for better performance
+    relevancy_task = _evaluate_relevancy(response_obj, evaluator_llm, query)
+    faithfulness_task = _evaluate_faithfulness(response_obj, evaluator_llm, query)
+
+    relevancy_result, faithfulness_result = await asyncio.gather(relevancy_task, faithfulness_task)
+
+    return relevancy_result.score or 0.0, faithfulness_result.score or 0.0
 
 
-async def _async_evaluate_response(query: str, chat_response: AgentChatResponse, evaluator_llm: LLM) -> tuple[float, float] :
-    relevance = await _evaluate_relevancy(chat_response, evaluator_llm, query)
-    faithfulness = await _evaluate_faithfulness(chat_response, evaluator_llm, query)
-    return relevance.score or 0, faithfulness.score or 0
-
-
-async def _evaluate_faithfulness(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
+async def _evaluate_faithfulness(response: Response, evaluator_llm: LLM, query: str) -> EvaluationResult:
     faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
-    return await faithfulness_evaluator.aevaluate_response(
-        query=query,
-        response=Response(
-            response=chat_response.response,
-            source_nodes=chat_response.source_nodes,
-            metadata=chat_response.metadata,
-        ),
-    )
+    return await faithfulness_evaluator.aevaluate_response(query=query, response=response)
 
 
-async def _evaluate_relevancy(chat_response: AgentChatResponse, evaluator_llm: LLM, query: str) -> EvaluationResult:
+async def _evaluate_relevancy(response: Response, evaluator_llm: LLM, query: str) -> EvaluationResult:
     relevancy_evaluator = RelevancyEvaluator(llm=evaluator_llm)
-    return await relevancy_evaluator.aevaluate_response(
-        query=query,
-        response=Response(
-            response=chat_response.response,
-            source_nodes=chat_response.source_nodes,
-            metadata=chat_response.metadata,
-        ),
+    return await relevancy_evaluator.aevaluate_response(query=query, response=response)
+
+
+def _build_response_object(chat_response: AgentChatResponse) -> Response:
+    """Helper to construct a LlamaIndex Response object from an AgentChatResponse."""
+    return Response(
+        response=chat_response.response,
+        source_nodes=chat_response.source_nodes,
+        metadata=chat_response.metadata,
     )

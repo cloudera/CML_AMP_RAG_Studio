@@ -46,6 +46,7 @@ from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
+from ....config import MetadataDbProviderType
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
@@ -54,6 +55,8 @@ from ....services.amp_metadata import (
     update_project_environment,
     get_project_environment,
     get_application_config,
+    validate_jdbc,
+    ValidationResult,
 )
 from ....services.amp_update import does_amp_need_updating
 from ....services.models.providers import CAIIModelProvider
@@ -196,6 +199,24 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
         )
 
     return "Auth token saved successfully"
+
+
+@router.post(
+    "/validate-jdbc-connection",
+    summary="Validates a JDBC connection string, username, and password.",
+)
+@exceptions.propagates
+def validate_jdbc_connection(
+    db_url: Annotated[str, Body(embed=True)],
+    username: Annotated[str, Body(embed=True)],
+    password: Annotated[str, Body(embed=True)],
+    db_type: Annotated[MetadataDbProviderType, Body(embed=True)],
+) -> ValidationResult:
+    """
+    Calls the JdbiUtils main method to validate JDBC connection parameters.
+    Returns a dict with 'valid': True/False and 'message'.
+    """
+    return validate_jdbc(db_type, db_url, password, username)
 
 
 def save_cdp_token(auth_token: str) -> None:
