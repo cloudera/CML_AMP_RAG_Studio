@@ -64,16 +64,16 @@ logger = logging.getLogger(__name__)
 
 
 def describe_endpoint_entry(
-    endpoint_name: str, endpoints: Optional[List[ListEndpointEntry]] = None
-) -> ListEndpointEntry:
+    endpoint_name: str, endpoints: Optional[list[ListEndpointEntry]] = None
+) -> Endpoint:
     if not endpoints:
         endpoint = describe_endpoint(endpoint_name)
-        return ListEndpointEntry(**endpoint.model_dump())
+        return cast(Endpoint, endpoint)
 
     logger.info("Fetching endpoint details from cached list of endpoints")
     for endpoint in endpoints:
         if endpoint.name == endpoint_name:
-            return ListEndpointEntry(**endpoint.model_dump())
+            return cast(Endpoint, endpoint)
 
     raise HTTPException(
         status_code=404, detail=f"Endpoint '{endpoint_name}' not found."
@@ -239,7 +239,7 @@ def get_models_with_task(task_type: str) -> List[Endpoint]:
             endpoint_details,
         )
     )
-    return cast(list[Endpoint], llm_endpoints)
+    return llm_endpoints
 
 
 @functools.singledispatch
