@@ -36,7 +36,11 @@
  * DATA.
  ******************************************************************************/
 import { Button, Flex, TableProps, Tooltip, Typography } from "antd";
-import { Model } from "src/api/modelsApi.ts";
+import {
+  Model,
+  useGetCAIIModelStatus,
+  useGetModelSource,
+} from "src/api/modelsApi.ts";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
 
@@ -100,13 +104,21 @@ export const modelColumns: TableProps<Model>["columns"] = [
     width: 150,
     key: "available",
     render: (_, model) => {
-      if (!model.name) {
+      const { data: modelSource } = useGetModelSource();
+      const { data: modelStatus } = useGetCAIIModelStatus(
+        model.name,
+        modelSource,
+      );
+
+      const updatedModel = modelStatus ?? model;
+
+      if (!updatedModel.name) {
         return null;
       }
-      if (model.available === null) {
+      if (updatedModel.available === null) {
         return "Unknown";
       }
-      return model.available ? "Available" : "Not Ready";
+      return updatedModel.available ? "Available" : "Not Ready";
     },
   },
 ];

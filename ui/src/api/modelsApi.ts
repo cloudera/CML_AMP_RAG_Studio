@@ -147,12 +147,16 @@ const getModelSource = async (): Promise<ModelSource> => {
   return await getRequest(`${llmServicePath}/models/model_source`);
 };
 
-export const useGetCAIIModelStatus = (endpoint_name: string) => {
+export const useGetCAIIModelStatus = (
+  endpoint_name: string,
+  model_source?: ModelSource,
+) => {
   return useQuery({
     queryKey: [QueryKeys.getCAIIModelStatus, { endpoint_name }],
     queryFn: async () => {
       return await getCAIIModelStatus(endpoint_name);
     },
+    enabled: model_source === "CAII" && !!endpoint_name,
   });
 };
 
