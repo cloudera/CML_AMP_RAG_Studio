@@ -42,7 +42,7 @@ import httpx
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
 
-from .types import Endpoint, ListEndpointEntry
+from .types import ListEndpointEntry
 from .utils import build_auth_headers
 
 

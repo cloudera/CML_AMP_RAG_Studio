@@ -42,7 +42,7 @@ from fastapi import APIRouter
 from .... import exceptions
 from ....services import models
 from ....services.caii.caii import describe_endpoint, build_model_response
-from ....services.caii.types import ModelResponse, Endpoint
+from ....services.caii.types import ModelResponse
 
 router = APIRouter(prefix="/models", tags=["Models"])
 
