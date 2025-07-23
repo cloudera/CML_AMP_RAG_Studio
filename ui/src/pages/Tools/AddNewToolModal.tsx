@@ -36,15 +36,31 @@
  * DATA.
  */
 
-import { Button, Flex, Form, Input, Modal, Space, Typography } from "antd";
+import {
+  Button,
+  Flex,
+  Form,
+  FormInstance,
+  Input,
+  Modal,
+  Space,
+  Typography,
+  Upload,
+} from "antd";
 import {
   AddToolFormValues,
+  CustomToolFormValues,
   Tool,
   useAddToolMutation,
+  useCreateCustomToolMutation,
 } from "src/api/toolsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useState } from "react";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  InboxOutlined,
+  MinusCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 
 const CommandFormFields = () => {
   return (
@@ -125,6 +141,49 @@ const UrlFormFields = () => {
   );
 };
 
+const UserToolFormFields = ({
+  form,
+}: {
+  form: FormInstance<AddToolFormValues & CustomToolFormValues>;
+}) => {
+  return (
+    <>
+      <Form.Item
+        name="script_file"
+        label="Python Script File"
+        rules={[
+          { required: true, message: "Please upload a Python script file" },
+        ]}
+      >
+        <Upload.Dragger
+          beforeUpload={() => false} // Prevent auto upload
+          accept=".py"
+          maxCount={1}
+          onChange={(info) => {
+            const file = info.fileList[0]?.originFileObj;
+            // Set the file in the form
+            if (file) {
+              form.setFieldsValue({ script_file: file });
+            }
+          }}
+          style={{ padding: "20px" }}
+        >
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">
+            Click or drag Python file (.py) to this area to upload
+          </p>
+          <p className="ant-upload-hint">
+            Support for a single Python script file. The file will be used to
+            create your custom tool.
+          </p>
+        </Upload.Dragger>
+      </Form.Item>
+    </>
+  );
+};
+
 export const AddNewToolModal = ({
   isModalVisible,
   setIsModalVisible,
@@ -132,52 +191,91 @@ export const AddNewToolModal = ({
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
 }) => {
-  const [form] = Form.useForm<AddToolFormValues>();
-  const [toolType, setToolType] = useState<"command" | "url">("command");
+  const [form] = Form.useForm<AddToolFormValues & CustomToolFormValues>();
+  const [toolType, setToolType] = useState<"command" | "url" | "custom">(
+    "command",
+  );
+
   const addToolMutation = useAddToolMutation({
     onSuccess: () => {
-      messageQueue.success("Tool added successfully");
+      messageQueue.success("MCP tool added successfully");
       setIsModalVisible(false);
       form.resetFields();
     },
     onError: (error) => {
-      messageQueue.error(`Failed to add tool: ${error.message}`);
+      messageQueue.error(`Failed to add MCP tool: ${error.message}`);
+    },
+  });
+
+  const createCustomToolMutation = useCreateCustomToolMutation({
+    onSuccess: () => {
+      messageQueue.success("Custom tool added successfully");
+      setIsModalVisible(false);
+      form.resetFields();
+    },
+    onError: (error) => {
+      messageQueue.error(`Failed to add custom tool: ${error.message}`);
     },
   });
 
   const handleAddTool = () => {
     void form.validateFields().then((values) => {
-      const newTool: Tool = {
-        name: values.name,
-        metadata: {
+      if (toolType === "custom") {
+        // Handle custom tool creation
+        const customToolData = {
+          name: values.name,
           display_name: values.display_name,
           description: values.description,
-        },
-      };
-
-      if (toolType === "command") {
-        newTool.command = values.command;
-        if (values.args) {
-          newTool.args = values.args.split(",").map((arg) => arg.trim());
-        }
-        if (values.env?.length) {
-          newTool.env = values.env.reduce((accum, val) => {
-            return { ...accum, [val.key]: val.value };
-          }, {});
-        }
+          script_file: values.script_file,
+        };
+        createCustomToolMutation.mutate(customToolData);
       } else {
-        if (values.url) {
-          newTool.url = values.url.split(",").map((url) => url.trim());
-        }
-      }
+        // Handle MCP tool creation
+        const newTool: Tool = {
+          name: values.name,
+          metadata: {
+            display_name: values.display_name,
+            description: values.description,
+          },
+        };
 
-      addToolMutation.mutate(newTool);
+        if (toolType === "command") {
+          newTool.command = values.command;
+          if (values.args) {
+            newTool.args = values.args.split(",").map((arg) => arg.trim());
+          }
+          if (values.env?.length) {
+            newTool.env = values.env.reduce((accum, val) => {
+              return { ...accum, [val.key]: val.value };
+            }, {});
+          }
+        } else {
+          if (values.url) {
+            newTool.url = values.url.split(",").map((url) => url.trim());
+          }
+        }
+
+        addToolMutation.mutate(newTool);
+      }
     });
+  };
+
+  const getModalTitle = () => {
+    switch (toolType) {
+      case "command":
+        return "Add MCP Command Tool";
+      case "url":
+        return "Add MCP URL Tool";
+      case "custom":
+        return "Add Custom Function Tool";
+      default:
+        return "Add New Tool";
+    }
   };
 
   return (
     <Modal
-      title="Add New Tool"
+      title={getModalTitle()}
       open={isModalVisible}
       onCancel={() => {
         setIsModalVisible(false);
@@ -197,9 +295,11 @@ export const AddNewToolModal = ({
           key="submit"
           type="primary"
           onClick={handleAddTool}
-          loading={addToolMutation.isPending}
+          loading={
+            addToolMutation.isPending || createCustomToolMutation.isPending
+          }
         >
-          Add
+          {toolType === "custom" ? "Create Custom Tool" : "Add MCP Tool"}
         </Button>,
       ]}
     >
@@ -246,7 +346,7 @@ export const AddNewToolModal = ({
                 setToolType("command");
               }}
             >
-              Command-based
+              MCP Command
             </Button>
             <Button
               type={toolType === "url" ? "primary" : "default"}
@@ -254,12 +354,22 @@ export const AddNewToolModal = ({
                 setToolType("url");
               }}
             >
-              URL-based
+              MCP URL
+            </Button>
+            <Button
+              type={toolType === "custom" ? "primary" : "default"}
+              onClick={() => {
+                setToolType("custom");
+              }}
+            >
+              Custom Function
             </Button>
           </Space>
         </Form.Item>
 
-        {toolType === "command" ? <CommandFormFields /> : <UrlFormFields />}
+        {toolType === "command" && <CommandFormFields />}
+        {toolType === "url" && <UrlFormFields />}
+        {toolType === "custom" && <UserToolFormFields form={form} />}
       </Form>
     </Modal>
   );
