@@ -42,17 +42,23 @@ import httpx
 from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from pydantic import Field
 
-from .types import Endpoint
+from .types import Endpoint, ListEndpointEntry
 from .utils import build_auth_headers
 
 
 class CaiiEmbeddingModel(BaseEmbedding):
-    endpoint: Endpoint = Field(
-        Endpoint, description="The endpoint to use for embeddings"
+    endpoint: ListEndpointEntry = Field(
+        ListEndpointEntry, description="The endpoint to use for embeddings"
     )
-    http_client: httpx.Client = Field(httpx.Client, description="The http client to use for requests")
+    http_client: httpx.Client = Field(
+        httpx.Client, description="The http client to use for requests"
+    )
 
-    def __init__(self, endpoint: Endpoint, http_client: httpx.Client | None = httpx.Client()):
+    def __init__(
+        self,
+        endpoint: ListEndpointEntry,
+        http_client: httpx.Client | None = httpx.Client(),
+    ):
         super().__init__()
         self.endpoint = endpoint
         self.http_client = http_client or httpx.Client()
@@ -86,7 +92,9 @@ class CaiiEmbeddingModel(BaseEmbedding):
     def make_embedding_request(self, body: str) -> Any:
         headers = build_auth_headers()
         headers["Content-Type"] = "application/json"
-        response = self.http_client.post(url=self.endpoint.url, content=body, headers=headers)
+        response = self.http_client.post(
+            url=self.endpoint.url, content=body, headers=headers
+        )
         res = response.content
         json_response = res.decode("utf-8")
         structured_response = json.loads(json_response)

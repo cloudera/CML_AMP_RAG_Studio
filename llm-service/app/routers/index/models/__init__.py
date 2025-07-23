@@ -41,7 +41,8 @@ from fastapi import APIRouter
 
 from .... import exceptions
 from ....services import models
-from ....services.caii.types import ModelResponse
+from ....services.caii.caii import describe_endpoint, build_model_response
+from ....services.caii.types import ModelResponse, Endpoint
 
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -70,6 +71,17 @@ def get_reranking_models() -> List[ModelResponse]:
 @exceptions.propagates
 def get_model() -> models.ModelSource:
     return models.get_model_source()
+
+
+@router.get(path="/caii/endpoint/{endpoint_name}", summary="Get CAII endpoint details.")
+@exceptions.propagates
+def get_endpoint_description(endpoint_name: str) -> ModelResponse:
+    """
+    Get the details of a specific CAII endpoint by its name.
+    """
+    endpoint = describe_endpoint(endpoint_name)
+    model_response = build_model_response(endpoint)
+    return model_response
 
 
 @router.get("/llm/{model_name}/test", summary="Test LLM Inference model.")

@@ -147,6 +147,21 @@ const getModelSource = async (): Promise<ModelSource> => {
   return await getRequest(`${llmServicePath}/models/model_source`);
 };
 
+export const useGetCAIIModelStatus = (endpoint_name: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.getCAIIModelStatus, { endpoint_name }],
+    queryFn: async () => {
+      return await getCAIIModelStatus(endpoint_name);
+    },
+  });
+};
+
+const getCAIIModelStatus = async (endpoint_name: string): Promise<Model> => {
+  return await getRequest(
+    `${llmServicePath}/models/caii/endpoint/${endpoint_name}`,
+  );
+};
+
 export const useTestLlmModel = ({
   onSuccess,
   onError,

@@ -62,28 +62,35 @@ DEFAULT_NAMESPACE = "serving-default"
 logger = logging.getLogger(__name__)
 
 
-def describe_endpoint(
+def describe_endpoint_entry(
     endpoint_name: str, endpoints: Optional[List[ListEndpointEntry]] = None
-) -> Endpoint:
+) -> ListEndpointEntry:
     if not endpoints:
-        logger.info("Fetching endpoint details from CAII REST API")
-        domain = settings.caii_domain
-        headers = build_auth_headers()
-        describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
-        desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
-
-        response = requests.post(describe_url, headers=headers, json=desc_json)
-        raise_for_http_error(response)
-        return Endpoint(**body_to_json(response))
+        endpoint = describe_endpoint(endpoint_name)
+        return ListEndpointEntry(**endpoint.model_dump())
 
     logger.info("Fetching endpoint details from cached list of endpoints")
     for endpoint in endpoints:
         if endpoint.name == endpoint_name:
-            return Endpoint(**endpoint.model_dump())
+            return ListEndpointEntry(**endpoint.model_dump())
 
     raise HTTPException(
         status_code=404, detail=f"Endpoint '{endpoint_name}' not found."
     )
+
+
+def describe_endpoint(
+    endpoint_name: str,
+) -> Endpoint:
+    logger.info("Fetching endpoint details from CAII REST API")
+    domain = settings.caii_domain
+    headers = build_auth_headers()
+    describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
+    desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
+
+    response = requests.post(describe_url, headers=headers, json=desc_json)
+    raise_for_http_error(response)
+    return Endpoint(**body_to_json(response))
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
@@ -123,7 +130,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
 
 
 def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
-    endpoint = describe_endpoint(endpoint_name=model_name)
+    endpoint = describe_endpoint_entry(endpoint_name=model_name)
     token = get_caii_access_token()
     return CaiiRerankingModel(
         model=endpoint.model_name,
@@ -167,7 +174,7 @@ def get_llm(
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
-    endpoint = describe_endpoint(endpoint_name=endpoint_name)
+    endpoint = describe_endpoint_entry(endpoint_name=endpoint_name)
 
     if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
         http_client = httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
@@ -223,7 +230,10 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 def get_models_with_task(task_type: str) -> List[Endpoint]:
     endpoints = list_endpoints()
     endpoint_details = list(
-        map(lambda endpoint: describe_endpoint(endpoint.name, endpoints), endpoints)
+        map(
+            lambda endpoint: describe_endpoint_entry(endpoint.name, endpoints),
+            endpoints,
+        )
     )
     llm_endpoints = list(
         filter(
