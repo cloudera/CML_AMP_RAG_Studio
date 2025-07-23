@@ -105,14 +105,14 @@ export const modelColumns: TableProps<Model>["columns"] = [
     key: "available",
     render: (_, model) => {
       const { data: modelSource } = useGetModelSource();
-      const { data: modelStatus } = useGetCAIIModelStatus(
+      const { data: modelStatus, isLoading } = useGetCAIIModelStatus(
         model.name,
         modelSource,
       );
 
       const updatedModel = modelStatus ?? model;
 
-      if (!updatedModel.name) {
+      if (!updatedModel.name || isLoading) {
         return null;
       }
       if (updatedModel.available === null) {

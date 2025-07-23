@@ -244,10 +244,15 @@ def get_models_with_task(task_type: str) -> List[Endpoint]:
     return llm_endpoints
 
 
-def build_model_response(endpoint: Endpoint) -> ModelResponse:
+def build_model_response(endpoint: ListEndpointEntry) -> ModelResponse:
+    if isinstance(endpoint, Endpoint):
+        replica_count = endpoint.replica_count
+    else:
+        replica_count = None
+
     return ModelResponse(
         model_id=endpoint.name,
         name=endpoint.name,
-        available=endpoint.replica_count > 0,
-        replica_count=endpoint.replica_count,
+        available=(replica_count > 0 if replica_count is not None else None),
+        replica_count=(replica_count if replica_count else None),
     )
