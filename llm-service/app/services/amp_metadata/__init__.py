@@ -450,12 +450,6 @@ def validate_jdbc(
     if not db_url.startswith("jdbc:"):
         return ValidationResult(valid=False, message="Invalid JDBC URL format.")
 
-    if not username.isalnum() or not (1 <= len(username) <= 16):
-        return ValidationResult(
-            valid=False,
-            message="Username must be alphanumeric and 1-16 characters long.",
-        )
-
     if not re.match(r"[^\s@\"\\/]*", password):
         return ValidationResult(
             valid=False,
