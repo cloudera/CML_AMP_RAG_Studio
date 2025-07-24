@@ -36,13 +36,14 @@
 #  DATA.
 #
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict
 
 
 class Endpoint(BaseModel):
     """Common fields for each endpoint representation."""
+
     model_config = ConfigDict(extra="ignore")
     namespace: str
     name: str
@@ -56,12 +57,14 @@ class Endpoint(BaseModel):
 
 class ListEndpointEntry(Endpoint):
     """Response from CAII /listEndpoints."""
+
     state: str
     metric_format: str
 
 
 class DescribeEndpointEntry(Endpoint):
     """Response from CAII /describeEndpoint."""
+
     observed_generation: int
     replica_count: int
     description: str
