@@ -70,7 +70,10 @@ def describe_endpoint_entry(
         endpoint = describe_endpoint(endpoint_name)
         return cast(Endpoint, endpoint)
 
-    logger.info("Fetching endpoint details from cached list of endpoints")
+    logger.info(
+        "Fetching endpoint details from cached list of endpoints for endpoint: %s",
+        endpoint_name,
+    )
     for endpoint in endpoints:
         if endpoint.name == endpoint_name:
             return cast(Endpoint, endpoint)
@@ -81,7 +84,9 @@ def describe_endpoint_entry(
 
 
 def describe_endpoint(endpoint_name: str) -> DescribeEndpointEntry:
-    logger.info("Fetching endpoint details from CAII REST API")
+    logger.info(
+        "Fetching endpoint details from CAII REST API for endpoint: %s", endpoint_name
+    )
     domain = settings.caii_domain
     headers = build_auth_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
@@ -94,6 +99,7 @@ def describe_endpoint(endpoint_name: str) -> DescribeEndpointEntry:
 
 def list_endpoints() -> list[ListEndpointEntry]:
     try:
+        logger.info("Attempting Model discovery through Python API")
         import cmlapi
         import cml.endpoints_v1 as cmlendpoints
 
@@ -248,6 +254,7 @@ def build_model_response(endpoint: Endpoint) -> ModelResponse:
         model_id=endpoint.name,
         name=endpoint.name,
     )
+
 
 @build_model_response.register
 def _(endpoint: DescribeEndpointEntry) -> ModelResponse:

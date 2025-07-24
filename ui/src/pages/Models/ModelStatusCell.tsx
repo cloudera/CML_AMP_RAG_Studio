@@ -35,71 +35,61 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, TableProps, Tooltip, Typography } from "antd";
-import { Model } from "src/api/modelsApi.ts";
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
-import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
-import ModelStatusCell from "pages/Models/ModelStatusCell.tsx";
+import {
+  Model,
+  useGetCAIIModelStatus,
+  useGetModelSource,
+} from "src/api/modelsApi.ts";
+import { memo } from "react";
+import { Spin, Tooltip } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { cdlRed600 } from "src/cuix/variables.ts";
 
-export const TestCell = ({
-  onClick,
-  model,
-  loading,
-  error,
-  testResult,
-}: {
-  onClick: () => void;
-  model: Model;
-  loading: boolean;
-  error: Error | null;
-  testResult: string | undefined;
-}) => {
+const ModelStatusCell = memo(({ model }: { model: Model }) => {
+  const { data: modelSource, error: modelSourceError } = useGetModelSource();
+  const {
+    data: modelStatus,
+    isLoading,
+    error: caiiModelStatusError,
+  } = useGetCAIIModelStatus(model.name, modelSource);
+
   if (!model.name) {
     return null;
   }
 
-  if (testResult === "ok") {
-    return <CheckCircleOutlined style={{ color: cdlGreen600 }} />;
+  if (modelSourceError) {
+    return (
+      <Tooltip
+        title={modelSourceError.message || "Error fetching model source"}
+      >
+        <ExclamationCircleOutlined style={{ color: cdlRed600 }} />
+      </Tooltip>
+    );
   }
 
-  return (
-    <Flex gap={8}>
-      <Button
-        onClick={onClick}
-        disabled={model.available != undefined && !model.available}
-        loading={loading}
-      >
-        Test
-      </Button>
-      {error || (testResult && testResult !== "ok") ? (
-        <Tooltip title={error?.message ?? "an error occurred"}>
-          <CloseCircleOutlined style={{ color: cdlRed600 }} />
-        </Tooltip>
-      ) : null}
-    </Flex>
-  );
-};
+  if (isLoading) {
+    return <Spin size="small" style={{ marginLeft: 8 }} />;
+  }
 
-export const modelColumns: TableProps<Model>["columns"] = [
-  {
-    title: "Model ID",
-    dataIndex: "model_id",
-    key: "model_id",
-    width: 350,
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-    width: 350,
-    render: (name?: string) =>
-      name ?? <Typography.Text type="warning">No model found</Typography.Text>,
-  },
-  {
-    title: "Status",
-    dataIndex: "available",
-    width: 150,
-    key: "available",
-    render: (_, model) => <ModelStatusCell model={model} />,
-  },
-];
+  if (caiiModelStatusError) {
+    return (
+      <Tooltip
+        title={caiiModelStatusError.message || "Error fetching model status"}
+      >
+        <ExclamationCircleOutlined style={{ color: cdlRed600 }} />
+      </Tooltip>
+    );
+  }
+
+  if (modelStatus) {
+    return <>{modelStatus.available ? "Available" : "Not Ready"}</>;
+  }
+
+  if (model.available === null) {
+    return <>Unknown</>;
+  }
+
+  return <>{model.available ? "Available" : "Not Ready"}</>;
+});
+
+export default ModelStatusCell;
