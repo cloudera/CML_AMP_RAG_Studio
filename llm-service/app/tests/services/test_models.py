@@ -87,12 +87,14 @@ class TestListAvailableModels:
                     ListEndpointEntry(
                         namespace=namespace,
                         name=name,
+                        model_name=f"ragtime/{name}",
                         url=f"https://this.is.test/namespaces/{namespace}/endpoints/{name}/v1/test",
                         state="Loaded",
                         created_by="rag-studio-tests",
                         api_standard="openai",
                         has_chat_template=False,
                         metric_format="triton",
+                        task="TEST",
                     )
                 )
 

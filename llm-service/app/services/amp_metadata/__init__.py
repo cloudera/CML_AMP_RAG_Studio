@@ -205,23 +205,11 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
             print(f"ERROR: CAII domain {caii_domain} can not be resolved")
             message = message + f"CAII domain {caii_domain} can not be resolved. \n"
 
-    if any([access_key_id, secret_key_id, default_region]):
-        if all([access_key_id, secret_key_id, default_region]):
-            valid_model_config_exists = True
-            message = "AWS Config is valid for Bedrock. \n"
-        else:
-            print(
-                "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
-            )
-            message = (
-                message
-                + "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set. \n"
-            )
-
     if any([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
         if all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
             valid_model_config_exists = True
-            message = "Azure config is valid. \n"
+            if not message:
+                message = "Azure config is valid. \n"
         else:
             print(
                 "Azure config is not valid; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
@@ -233,7 +221,22 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
     if any([open_ai_key]):
         if open_ai_key:
             valid_model_config_exists = True
-            message = "OpenAI config is valid. \n"
+            if not message:
+                message = "OpenAI config is valid. \n"
+
+    if any([access_key_id, secret_key_id, default_region]):
+        if all([access_key_id, secret_key_id, default_region]):
+            valid_model_config_exists = True
+            if not message:
+                message = "AWS Config is valid for Bedrock. \n"
+        else:
+            print(
+                "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
+            )
+            message = (
+                message
+                + "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set. \n"
+            )
 
     if message == "":
         return ValidationResult(valid=True, message="No model configuration found.")

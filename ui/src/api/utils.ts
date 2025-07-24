@@ -114,6 +114,7 @@ export enum QueryKeys {
   "getAmpConfig" = "getAmpConfig",
   "getTools" = "getTools",
   "getPollingAmpConfig" = "getPollingAmpConfig",
+  "getCAIIModelStatus" = "getCAIIModelStatus",
 }
 
 export const commonHeaders = {

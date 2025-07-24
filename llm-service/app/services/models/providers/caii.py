@@ -48,6 +48,7 @@ from ...caii.caii import (
     get_llm as get_caii_llm_model,
     get_embedding_model as get_caii_embedding_model,
     get_reranking_model as get_caii_reranking_model,
+    describe_endpoint,
 )
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
@@ -72,8 +73,9 @@ class CAIIModelProvider(ModelProvider):
 
     @staticmethod
     def get_llm_model(name: str) -> LLM:
+        endpoint = describe_endpoint(endpoint_name=name)
         return get_caii_llm_model(
-            endpoint_name=name,
+            endpoint=endpoint,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
         )
