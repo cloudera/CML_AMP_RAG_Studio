@@ -83,11 +83,8 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
         models = cls.list_available()
         for model in models:
             if model.model_id == model_name:
-                if not CAIIModelProvider.is_enabled() or model.available:
-                    cls.get(model_name).get_text_embedding("test")
-                    return "ok"
-                else:
-                    raise HTTPException(status_code=503, detail="Model not ready")
+                cls.get(model_name).get_text_embedding("test")
+                return "ok"
 
         raise HTTPException(status_code=404, detail="Model not found")
 
