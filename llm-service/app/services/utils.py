@@ -35,8 +35,10 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import functools
 import re
+import time
+from functools import lru_cache
 from typing import Generator, List, Sequence, Tuple, TypeVar, Union, Any
 
 import requests
@@ -191,3 +193,18 @@ def has_admin_rights(
     project_owner = env.get("PROJECT_OWNER", "unknown")
 
     return origin_remote_user == project_owner or remote_user_perm == "RW"
+
+
+def timed_lru_cache(seconds: int, maxsize: int = 128):
+    def wrapper_cache(func):
+        func = lru_cache(maxsize=maxsize)(func)
+        func.expiration = time.monotonic() + seconds
+
+        @functools.wraps(func)
+        def wrapped_func(*args, **kwargs):
+            if time.monotonic() >= func.expiration:
+                func.cache_clear()
+                func.expiration = time.monotonic() + seconds
+            return func(*args, **kwargs)
+        return wrapped_func
+    return wrapper_cache

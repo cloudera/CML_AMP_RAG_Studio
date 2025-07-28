@@ -55,7 +55,7 @@ from app.config import settings
 from ._model_provider import ModelProvider
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
-from ...utils import raise_for_http_error
+from ...utils import raise_for_http_error, timed_lru_cache
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +125,7 @@ class BedrockModelProvider(ModelProvider):
         return valid_foundation_models
 
     @staticmethod
+    @timed_lru_cache(maxsize=128, seconds=300)
     def list_available_models(
         modality: Optional[BedrockModality] = None,
     ) -> list[dict[str, Any]]:
