@@ -89,19 +89,18 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
         models = cls.list_available()
         for model in models:
             if model.model_id == model_name:
-                if not CAIIModelProvider.is_enabled() or model.available:
-                    node = NodeWithScore(node=TextNode(text="test"), score=0.5)
-                    another_test_node = NodeWithScore(
-                        node=TextNode(text="another test node"), score=0.4
+                node = NodeWithScore(node=TextNode(text="test"), score=0.5)
+                another_test_node = NodeWithScore(
+                    node=TextNode(text="another test node"), score=0.4
+                )
+                reranking_model: BaseNodePostprocessor | None = cls.get(
+                    model_name=model_name
+                )
+                if reranking_model:
+                    reranking_model.postprocess_nodes(
+                        [node, another_test_node], None, "test"
                     )
-                    reranking_model: BaseNodePostprocessor | None = cls.get(
-                        model_name=model_name
-                    )
-                    if reranking_model:
-                        reranking_model.postprocess_nodes(
-                            [node, another_test_node], None, "test"
-                        )
-                        return "ok"
+                    return "ok"
         raise HTTPException(status_code=404, detail="Model not found")
 
 

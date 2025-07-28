@@ -81,14 +81,6 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
     @classmethod
     def test(cls, model_name: str) -> Literal["ok"]:
-        if CAIIModelProvider.is_enabled():
-            models = cls.list_available()
-            for model in models:
-                if model.model_id == model_name:
-                    if model.available:
-                        return cls.test_llm_chat(model_name)
-                    else:
-                        raise HTTPException(status_code=503, detail="Model not ready")
         try:
             cls.get(model_name)
         except Exception:
