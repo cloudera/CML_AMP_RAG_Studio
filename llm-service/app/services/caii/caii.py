@@ -106,6 +106,8 @@ def list_endpoints() -> list[ListEndpointEntry]:
         ml_serving_apps = api_client.list_ml_serving_apps()
         logger.info("Listing endpoints for ML Serving Apps: %s", ml_serving_apps)
         endpoints = cmlendpoints.list_endpoints(ml_serving_apps)
+        for endpoint in endpoints:
+            print(f"{endpoint=}")
 
         return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
     except Exception:
