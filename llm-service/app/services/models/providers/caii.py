@@ -35,16 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import functools
-import time
-from functools import lru_cache
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from ._model_provider import ModelProvider
-from ...utils import timed_lru_cache
 from ...caii.caii import (
     get_caii_llm_models,
     get_caii_embedding_models,
@@ -56,6 +52,8 @@ from ...caii.caii import (
 )
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ...utils import timed_lru_cache
+
 
 class CAIIModelProvider(ModelProvider):
     @staticmethod

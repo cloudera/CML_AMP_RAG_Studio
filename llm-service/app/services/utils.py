@@ -39,7 +39,18 @@ import functools
 import re
 import time
 from functools import lru_cache
-from typing import Generator, List, Sequence, Tuple, TypeVar, Union, Any
+from typing import (
+    Callable,
+    Generator,
+    List,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    Any,
+    cast,
+    Hashable,
+)
 
 import requests
 
@@ -195,16 +206,18 @@ def has_admin_rights(
     return origin_remote_user == project_owner or remote_user_perm == "RW"
 
 
-def timed_lru_cache(seconds: int, maxsize: int = 128):
-    def wrapper_cache(func):
-        func = lru_cache(maxsize=maxsize)(func)
-        func.expiration = time.monotonic() + seconds
+C = TypeVar("C", bound=Callable[..., Any])
+
+def timed_lru_cache(seconds: int, maxsize: int = 128) -> Callable[[C], C]:
+    def wrapper_cache(func: C) -> C:
+        cached_func = lru_cache(maxsize=maxsize)(func)
+        cached_func.expiration = time.monotonic() + seconds  # type: ignore
 
         @functools.wraps(func)
-        def wrapped_func(*args, **kwargs):
-            if time.monotonic() >= func.expiration:
-                func.cache_clear()
-                func.expiration = time.monotonic() + seconds
-            return func(*args, **kwargs)
-        return wrapped_func
+        def wrapped_func(*args: Any, **kwargs: Hashable) -> C:
+            if time.monotonic() >= cached_func.expiration:  # type: ignore
+                cached_func.cache_clear()
+                cached_func.expiration = time.monotonic() + seconds  # type: ignore
+            return cast(C, cached_func(*args, **kwargs))
+        return cast(C, wrapped_func)
     return wrapper_cache
