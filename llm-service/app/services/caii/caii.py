@@ -105,11 +105,12 @@ def list_endpoints() -> list[ListEndpointEntry]:
         api_client = cmlapi.default_client()
         ml_serving_apps = api_client.list_ml_serving_apps()
         logger.info("Listing endpoints for ML Serving Apps: %s", ml_serving_apps)
-        endpoints = cmlendpoints.list_endpoints(ml_serving_apps)
-        for endpoint in endpoints:
-            print(f"{endpoint=}")
-
-        return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
+        endpoint_groups = cmlendpoints.list_endpoints(ml_serving_apps)
+        results: list[ListEndpointEntry] = []
+        for endpoints in endpoint_groups:
+            for endpoint in endpoints:
+                results.append(ListEndpointEntry(**endpoint))
+        return results
     except Exception:
         logger.exception(
             "Model discovery failed through Python API, falling back to CAI REST API"
