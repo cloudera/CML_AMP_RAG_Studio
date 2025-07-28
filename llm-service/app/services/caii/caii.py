@@ -137,7 +137,7 @@ def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
     token = get_caii_access_token()
     return CaiiRerankingModel(
         model=endpoint.model_name,
-        base_url=endpoint.url.removesuffix("/ranking"),
+        base_url=endpoint.url,
         api_key=token,
         top_n=top_n,
     )
