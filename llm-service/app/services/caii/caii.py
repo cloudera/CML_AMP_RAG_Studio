@@ -66,20 +66,21 @@ logger = logging.getLogger(__name__)
 def describe_endpoint_entry(
     endpoint_name: str, endpoints: Optional[list[ListEndpointEntry]] = None
 ) -> Endpoint:
-    endpoint = describe_endpoint(endpoint_name)
-    return cast(Endpoint, endpoint)
+    if not endpoints:
+        endpoint = describe_endpoint(endpoint_name)
+        return cast(Endpoint, endpoint)
 
-    # logger.info(
-    #     "Fetching endpoint details from cached list of endpoints for endpoint: %s",
-    #     endpoint_name,
-    # )
-    # for endpoint in endpoints:
-    #     if endpoint.name == endpoint_name:
-    #         return cast(Endpoint, endpoint)
-    #
-    # raise HTTPException(
-    #     status_code=404, detail=f"Endpoint '{endpoint_name}' not found."
-    # )
+    logger.info(
+        "Fetching endpoint details from cached list of endpoints for endpoint: %s",
+        endpoint_name,
+    )
+    for endpoint in endpoints:
+        if endpoint.name == endpoint_name:
+            return cast(Endpoint, endpoint)
+
+    raise HTTPException(
+        status_code=404, detail=f"Endpoint '{endpoint_name}' not found."
+    )
 
 
 def describe_endpoint(endpoint_name: str) -> DescribeEndpointEntry:
@@ -181,9 +182,7 @@ def get_llm(
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
-    print(f"{endpoint_name=}")
     endpoint = describe_endpoint_entry(endpoint_name=endpoint_name)
-    print(f"{endpoint=}")
     if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
         http_client = httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
     else:
@@ -236,7 +235,7 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 
 def get_models_with_task(task_type: str) -> List[Endpoint]:
-    endpoints = list_endpoints()
+    endpoints: list[ListEndpointEntry] = list_endpoints()
     endpoint_details = list(
         map(
             lambda endpoint: describe_endpoint_entry(endpoint.name, endpoints),
