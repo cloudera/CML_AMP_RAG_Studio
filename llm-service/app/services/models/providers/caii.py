@@ -35,6 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import functools
+import time
+from functools import lru_cache
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
@@ -53,6 +56,19 @@ from ...caii.caii import (
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 
+def timed_lru_cache(seconds: int, maxsize: int = 128):
+    def wrapper_cache(func):
+        func = lru_cache(maxsize=maxsize)(func)
+        func.expiration = time.monotonic() + seconds
+
+        @functools.wraps(func)
+        def wrapped_func(*args, **kwargs):
+            if time.monotonic() >= func.expiration:
+                func.cache_clear()
+                func.expiration = time.monotonic() + seconds
+            return func(*args, **kwargs)
+        return wrapped_func
+    return wrapper_cache
 
 class CAIIModelProvider(ModelProvider):
     @staticmethod
@@ -60,18 +76,22 @@ class CAIIModelProvider(ModelProvider):
         return {"CAII_DOMAIN"}
 
     @staticmethod
+    @timed_lru_cache(maxsize=1, seconds=300)
     def list_llm_models() -> list[ModelResponse]:
         return get_caii_llm_models()
 
     @staticmethod
+    @timed_lru_cache(maxsize=1, seconds=300)
     def list_embedding_models() -> list[ModelResponse]:
         return get_caii_embedding_models()
 
     @staticmethod
+    @timed_lru_cache(maxsize=1, seconds=300)
     def list_reranking_models() -> list[ModelResponse]:
         return get_caii_reranking_models()
 
     @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
     def get_llm_model(name: str) -> LLM:
         endpoint = describe_endpoint(endpoint_name=name)
         return get_caii_llm_model(
@@ -81,10 +101,12 @@ class CAIIModelProvider(ModelProvider):
         )
 
     @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
     def get_embedding_model(name: str) -> BaseEmbedding:
         return get_caii_embedding_model(model_name=name)
 
     @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         return get_caii_reranking_model(name, top_n)
 
