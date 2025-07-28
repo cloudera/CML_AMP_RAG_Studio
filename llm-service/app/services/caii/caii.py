@@ -129,7 +129,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         except requests.exceptions.ConnectionError:
             raise HTTPException(
                 status_code=421,
-                detail="Unable to connect to host. Please check your CAII Settings.",
+                detail=f"Unable to connect to host '{domain}'. Please check your CAII Settings.",
             )
 
 
