@@ -109,6 +109,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
         results: list[ListEndpointEntry] = []
         for endpoints in endpoint_groups:
             for endpoint in endpoints:
+                logger.info("Found endpoint: %s", endpoint)
                 results.append(ListEndpointEntry(**endpoint))
         return results
     except Exception:
