@@ -36,7 +36,9 @@
 #  DATA.
 #
 import json
-from typing import Dict
+import os
+from typing import Dict, Optional
+import requests
 
 from app.config import settings
 
@@ -63,3 +65,23 @@ def get_caii_access_token() -> str:
         jwt_contents = json.load(file)
     access_token = jwt_contents["access_token"]
     return access_token
+
+
+def get_cml_version_from_sense_bootstrap() -> Optional[str]:
+    """
+    Fetches the CML version from the `sense-bootstrap.json` file hosted on the CDSW domain.
+
+    Returns:
+        Optional[str]: The CML version if available, otherwise None.
+    """
+    try:
+        url = f"https://{os.environ.get('CDSW_DOMAIN')}/sense-bootstrap.json"
+        sense_bootstrap_response = requests.get(url)
+        if sense_bootstrap_response.status_code == 200:
+            sense_bootstrap_json = sense_bootstrap_response.json()
+            version = sense_bootstrap_json.get("gitSha")
+            return version
+        return None
+    except Exception as e:
+        print("Failed to fetch version from `sense-bootstrap.json`. %e" % e)
+        return None
