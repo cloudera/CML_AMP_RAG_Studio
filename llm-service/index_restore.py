@@ -36,14 +36,102 @@
 #  DATA.
 #
 import os
-from typing import Generator, Optional
+from typing import Optional
+from typing import cast
 
+from llama_index.core import (
+    DocumentSummaryIndex,
+    StorageContext,
+    load_index_from_storage,
+)
 from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.schema import (
+    Document,
+    NodeRelationship,
+)
+from llama_index.core.storage.index_store import SimpleIndexStore
+from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
+from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.config import Settings
 from app.services import models
 from app.services.metadata_apis import data_sources_metadata_api
+
+
+def restore_index_store(self: SummaryIndexer) -> None:
+    """Reconstruct the index store from scratch."""
+    global_persist_dir = self._SummaryIndexer__persist_root_dir()
+    global_summary_store_config = self._SummaryIndexer__index_kwargs(
+        embed_summaries=False
+    )
+
+    data_source_id: int = global_summary_store_config.get("data_source_id")
+
+    ### START index_file() copy ###
+    persist_dir = self._SummaryIndexer__database_dir(data_source_id)
+    print(f"{persist_dir=}")
+    summary_store: DocumentSummaryIndex = self._SummaryIndexer__summary_indexer(
+        persist_dir
+    )
+    ### END index_file() copy ###
+
+    ### START __update_global_summary_store() copy ###
+    storage_context = StorageContext.from_defaults(
+        persist_dir=global_persist_dir,
+        index_store=SimpleIndexStore(),
+        vector_store=QdrantVectorStore.for_summaries(
+            data_source_id
+        ).llama_vector_store(),
+    )
+    global_summary_store: DocumentSummaryIndex = cast(
+        DocumentSummaryIndex,
+        load_index_from_storage(
+            storage_context=storage_context,
+            **global_summary_store_config,
+        ),
+    )
+
+    data_source_node = Document(doc_id=str(data_source_id))
+    summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
+        str(data_source_id)
+    )
+
+    new_nodes = []
+    if summary_id:
+        document_ids = global_summary_store.index_struct.summary_id_to_node_ids.get(
+            summary_id
+        )
+        if document_ids:
+            # Reload the summary for each existing node id, which correspond to full documents
+            summaries = [
+                summary_store.get_document_summary(document_id)
+                for document_id in document_ids
+            ]
+
+            new_nodes = [
+                Document(
+                    doc_id=document_id,
+                    text=document_summary,
+                    relationships={
+                        NodeRelationship.SOURCE: data_source_node.as_related_node_info()
+                    },
+                )
+                for document_id, document_summary in zip(document_ids, summaries)
+            ]
+
+    # Persist
+    try:
+        # Delete first so that we don't accumulate trash in the summary store.
+        global_summary_store.delete_ref_doc(
+            str(data_source_id), delete_from_docstore=True
+        )
+    except (KeyError, UnexpectedResponse):
+        # UnexpectedResponse is raised when the collection doesn't exist, which is fine, since it might be a new index.
+        pass
+    global_summary_store.insert_nodes(new_nodes)
+    global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
+    ### END __update_global_summary_store() copy ###
 
 
 def _get_data_source_ids() -> list[int]:
@@ -74,10 +162,14 @@ def _summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
 
 
 def main() -> None:
+    SummaryIndexer.restore_index_store = restore_index_store
+
     for data_source_id in _get_data_source_ids():
-        print(f"Restoring data source {data_source_id}")
-        if summary_indexer := _summary_indexer(data_source_id) is None:
+        summary_indexer = _summary_indexer(data_source_id)
+        if summary_indexer is None:
+            print(f"Skipping data source {data_source_id}")
             continue
+        print(f"Restoring data source {data_source_id}")
         summary_indexer.restore_index_store()
 
 
