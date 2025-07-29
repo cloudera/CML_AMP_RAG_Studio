@@ -99,37 +99,27 @@ def restore_index_store(self: SummaryIndexer) -> None:
         ),
     )
 
-    summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
-        str(data_source_id)
-    )
+    # gather documents
+    new_nodes: list[Document] = []
     summary_store: DocumentSummaryIndex = self._SummaryIndexer__summary_indexer(
         self._SummaryIndexer__database_dir(data_source_id)
     )
     data_source_node = Document(doc_id=str(data_source_id))
-    new_nodes = []
-    if summary_id:
-        document_ids = global_summary_store.index_struct.summary_id_to_node_ids.get(
-            summary_id
+    print(f"{global_summary_store.docstore.docs=}")
+    for doc_id, doc in global_summary_store.docstore.docs.items():
+        # TODO: get this working; where am I supposed to pull summaries from??
+        print(f"{global_summary_store.get_document_summary(doc_id)=}")
+        new_nodes.append(
+            Document(
+                doc_id=doc_id,
+                text=summary_store.get_document_summary(doc_id),
+                relationships={
+                    NodeRelationship.SOURCE: data_source_node.as_related_node_info()
+                },
+            )
         )
-        if document_ids:
-            # Reload the summary for each existing node id, which correspond to full documents
-            summaries = [
-                summary_store.get_document_summary(document_id)
-                for document_id in document_ids
-            ]
 
-            new_nodes = [
-                Document(
-                    doc_id=document_id,
-                    text=document_summary,
-                    relationships={
-                        NodeRelationship.SOURCE: data_source_node.as_related_node_info()
-                    },
-                )
-                for document_id, document_summary in zip(document_ids, summaries)
-            ]
-
-    # Persist
+    # persist
     try:
         # Delete first so that we don't accumulate trash in the summary store.
         global_summary_store.delete_ref_doc(
@@ -140,7 +130,6 @@ def restore_index_store(self: SummaryIndexer) -> None:
         pass
     global_summary_store.insert_nodes(new_nodes)
     global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
-    ### END __update_global_summary_store() copy ###
 
 
 def _get_data_source_ids() -> list[int]:
