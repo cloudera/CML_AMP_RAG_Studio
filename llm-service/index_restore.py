@@ -50,6 +50,7 @@ from llama_index.core.schema import (
     NodeRelationship,
 )
 from llama_index.core.storage.index_store import SimpleIndexStore
+from llama_index.core.storage.index_store.types import DEFAULT_PERSIST_FNAME
 from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
@@ -60,7 +61,11 @@ from app.services.metadata_apis import data_sources_metadata_api
 
 
 def restore_index_store(self: SummaryIndexer) -> None:
-    """Reconstruct the index store from scratch."""
+    """Reconstruct the index store from scratch.
+
+    Based on logic from index_file() and __update_global_summary_store().
+
+    """
     global_persist_dir = self._SummaryIndexer__persist_root_dir()
     global_summary_store_config = self._SummaryIndexer__index_kwargs(
         embed_summaries=False
@@ -68,15 +73,10 @@ def restore_index_store(self: SummaryIndexer) -> None:
 
     data_source_id: int = global_summary_store_config.get("data_source_id")
 
-    ### START index_file() copy ###
-    persist_dir = self._SummaryIndexer__database_dir(data_source_id)
-    print(f"{persist_dir=}")
     summary_store: DocumentSummaryIndex = self._SummaryIndexer__summary_indexer(
-        persist_dir
+        self._SummaryIndexer__database_dir(data_source_id)
     )
-    ### END index_file() copy ###
 
-    ### START __update_global_summary_store() copy ###
     storage_context = StorageContext.from_defaults(
         persist_dir=global_persist_dir,
         index_store=SimpleIndexStore(),
