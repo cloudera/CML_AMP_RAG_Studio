@@ -63,7 +63,10 @@ from app.services.metadata_apis import data_sources_metadata_api
 def restore_index_store(self: SummaryIndexer) -> None:
     """Reconstruct the index store from scratch.
 
-    Based on logic from index_file() and __update_global_summary_store().
+    Based on logic from
+    * index_file()
+    * __update_global_summary_store().
+    * __init_summary_store()
 
     """
     global_persist_dir = self._SummaryIndexer__persist_root_dir()
@@ -73,10 +76,15 @@ def restore_index_store(self: SummaryIndexer) -> None:
 
     data_source_id: int = global_summary_store_config.get("data_source_id")
 
-    summary_store: DocumentSummaryIndex = self._SummaryIndexer__summary_indexer(
-        self._SummaryIndexer__database_dir(data_source_id)
+    # initialize index store
+    DocumentSummaryIndex.from_documents(
+        [],
+        **global_summary_store_config,
+    ).storage_context.index_store.persist(
+        str(os.path.join(global_persist_dir, DEFAULT_PERSIST_FNAME))
     )
 
+    # load global stores
     storage_context = StorageContext.from_defaults(
         persist_dir=global_persist_dir,
         index_store=SimpleIndexStore(),
@@ -92,11 +100,13 @@ def restore_index_store(self: SummaryIndexer) -> None:
         ),
     )
 
-    data_source_node = Document(doc_id=str(data_source_id))
     summary_id = global_summary_store.index_struct.doc_id_to_summary_id.get(
         str(data_source_id)
     )
-
+    summary_store: DocumentSummaryIndex = self._SummaryIndexer__summary_indexer(
+        self._SummaryIndexer__database_dir(data_source_id)
+    )
+    data_source_node = Document(doc_id=str(data_source_id))
     new_nodes = []
     if summary_id:
         document_ids = global_summary_store.index_struct.summary_id_to_node_ids.get(
