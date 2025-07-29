@@ -51,9 +51,9 @@ const ModelStatusCell = memo(({ model }: { model: Model }) => {
     data: modelStatus,
     isLoading,
     error: caiiModelStatusError,
-  } = useGetCAIIModelStatus(model.name, modelSource);
+  } = useGetCAIIModelStatus(model.model_id, modelSource);
 
-  if (!model.name) {
+  if (!model.model_id) {
     return null;
   }
 
