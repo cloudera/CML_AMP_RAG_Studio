@@ -107,7 +107,9 @@ def restore_index_store(self: SummaryIndexer) -> None:
     data_source_node = Document(doc_id=str(data_source_id))
     print(f"{global_summary_store.docstore.docs=}")
     for doc_id, doc in global_summary_store.docstore.docs.items():
-        # TODO: get this working; where am I supposed to pull summaries from??
+        # TODO: Get this working; where am I supposed to pull summaries from??
+        # TODO: Do I even need the summaries? This is basically recreating the entire global summary store, but
+        #       technically we only need the index.
         print(f"{global_summary_store.get_document_summary(doc_id)=}")
         new_nodes.append(
             Document(
