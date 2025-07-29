@@ -178,7 +178,7 @@ def list_endpoints() -> list[ListEndpointEntry]:
     return results
 
 
-def list_endpoints_from_python_api():
+def list_endpoints_from_python_api() -> list[ListEndpointEntry]:
     try:
         import cmlapi
         import cml.endpoints_v1 as cmlendpoints
