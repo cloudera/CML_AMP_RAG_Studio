@@ -37,7 +37,10 @@ NOTE:
 Requirements:
 
 * databases/doc_summary_index_global/docstore.json must exist.
-* Run this script from the llm-service/ directory.
+* Run this script from the llm-service/ directory:
+  ```python
+  uv run python scripts/restore_global_index.py
+  ```
 
 """
 import json
