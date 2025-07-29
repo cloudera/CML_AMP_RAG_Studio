@@ -149,10 +149,10 @@ def list_endpoints() -> list[ListEndpointEntry]:
         rest_api_results = list_endpoints_from_rest_api(domain)
         if rest_api_results:
             new_rest_api_results = []
+            existing_urls = set([e.url for e in results])
             for endpoint in rest_api_results:
                 # Only add endpoints we didn't already find via Python API
-                existing_names = set([f"{e.url}:{e.name}" for e in results])
-                if f"{endpoint.url}:{endpoint.name}" not in existing_names:
+                if endpoint.url not in existing_urls:
                     new_rest_api_results.append(endpoint)
             logger.info(
                 "Found %d additional endpoints via CAII REST API.",

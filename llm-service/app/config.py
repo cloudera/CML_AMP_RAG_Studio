@@ -76,7 +76,7 @@ class _Settings:
 
     @property
     def caii_domain(self) -> Optional[str]:
-        return os.environ.get("CAII_DOMAIN", None)
+        return os.environ.get("CAII_DOMAIN")
 
     @property
     def cdsw_project_id(self) -> str:
