@@ -75,8 +75,8 @@ class _Settings:
         return os.path.join("..", "tools")
 
     @property
-    def caii_domain(self) -> str:
-        return os.environ["CAII_DOMAIN"]
+    def caii_domain(self) -> Optional[str]:
+        return os.environ.get("CAII_DOMAIN", None)
 
     @property
     def cdsw_project_id(self) -> str:

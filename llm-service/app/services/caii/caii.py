@@ -116,28 +116,13 @@ def list_endpoints() -> list[ListEndpointEntry]:
     # Try Python API for CML version >= 2.0.50-b68
     if version:
         if Version(version) >= Version("2.0.50-b68"):
-            try:
-                logger.info("Attempting Model discovery through Python API")
-                import cmlapi
-                import cml.endpoints_v1 as cmlendpoints
-
-                api_client = cmlapi.default_client()
-                ml_serving_apps = api_client.list_ml_serving_apps()
+            logger.info("Attempting Model discovery through Python API")
+            python_api_results = list_endpoints_from_python_api()
+            if python_api_results:
                 logger.info(
-                    "Listing endpoints for ML Serving Apps: %s", ml_serving_apps
+                    "Found %d endpoints via Python API.", len(python_api_results)
                 )
-                endpoint_groups = cmlendpoints.list_endpoints(ml_serving_apps)
-                for endpoints in endpoint_groups:
-                    for endpoint in endpoints:
-                        logger.info("Found endpoint: %s", endpoint)
-                        results.append(ListEndpointEntry(**endpoint))
-            except ImportError as e:
-                logger.warning("Failed to import CML Python API modules. Error: %s", e)
-            except Exception as e:
-                logger.exception(
-                    "Model discovery failed through Python API, trying CAI REST API. Error: %s",
-                    e,
-                )
+                results.extend(python_api_results)
         else:
             logger.info(
                 "CML version %s is below 2.0.50-b68, skipping Python API model discovery.",
@@ -161,55 +146,84 @@ def list_endpoints() -> list[ListEndpointEntry]:
 
     logger.info("Using CAII domain: %s", domain)
     try:
-        headers = build_auth_headers()
-        list_url = f"https://{domain}/api/v1alpha1/listEndpoints"
-        list_json = {"namespace": DEFAULT_NAMESPACE}
-
-        response = requests.post(list_url, headers=headers, json=list_json, timeout=10)
-        raise_for_http_error(response)
-        api_endpoints = body_to_json(response).get("endpoints", [])
-
-        # Add domain prefix to endpoint names for clarity
-        domain_endpoints = []
-        for endpoint in api_endpoints:
-            # Only add endpoints we didn't already find via Python API
-            existing_names = [e.name for e in results]
-            if endpoint.get("name") not in existing_names:
-                domain_endpoints.append(ListEndpointEntry(**endpoint))
-
-        results.extend(domain_endpoints)
-        logger.info(
-            f"Found {len(domain_endpoints)} additional endpoints from CAII REST API"
-        )
-        return results
-    except requests.exceptions.RequestException as e:
-        if results:
-            logger.warning(
-                f"Error connecting to CAII REST API at '{domain}', but returning {len(results)} endpoints found via Python API. Error: {e}"
+        rest_api_results = list_endpoints_from_rest_api(domain)
+        if rest_api_results:
+            new_rest_api_results = []
+            for endpoint in rest_api_results:
+                # Only add endpoints we didn't already find via Python API
+                existing_names = set([f"{e.url}:{e.name}" for e in results])
+                if f"{endpoint.url}:{endpoint.name}" not in existing_names:
+                    new_rest_api_results.append(endpoint)
+            logger.info(
+                "Found %d additional endpoints via CAII REST API.",
+                len(new_rest_api_results),
             )
-            return results
+            results.extend(new_rest_api_results)
         else:
-            logger.error(
-                f"Failed to retrieve endpoints from both Python API and CAII REST API. Error: {e}"
-            )
-            raise HTTPException(
-                status_code=421,
-                detail=f"Unable to connect to host '{domain}' or find endpoints. Please check your CAII Settings. Error: {str(e)}",
-            )
+            logger.info("No new endpoints found via CAII REST API.")
     except Exception as e:
-        if results:
-            logger.warning(
-                f"Unexpected error when fetching endpoints from CAII REST API: {e}. Returning {len(results)} endpoints found via Python API."
-            )
-            return results
-        else:
-            logger.error(
-                f"Failed to retrieve endpoints from both Python API and CAII REST API. Error: {e}"
-            )
+        logger.exception("Failed to list endpoints from CAII REST API. Error: %s", e)
+        if not results:
             raise HTTPException(
                 status_code=500,
-                detail=f"Unexpected error when trying to list endpoints: {str(e)}",
+                detail="Failed to list endpoints from both Python API and CAII REST API.",
             )
+        logger.info("Returning previously discovered endpoints: %s", results)
+    if not results:
+        logger.warning(
+            "No endpoints found from either Python API or CAII REST API. Returning empty list."
+        )
+        return []
+    logger.info("Total endpoints discovered: %d", len(results))
+    return results
+
+
+def list_endpoints_from_python_api():
+    try:
+        import cmlapi
+        import cml.endpoints_v1 as cmlendpoints
+
+        results: list[ListEndpointEntry] = []
+        api_client = cmlapi.default_client()
+        ml_serving_apps = api_client.list_ml_serving_apps()
+        logger.info("Listing endpoints for ML Serving Apps: %s", ml_serving_apps)
+        endpoint_groups = cmlendpoints.list_endpoints(ml_serving_apps)
+        for endpoints in endpoint_groups:
+            for endpoint in endpoints:
+                logger.info("Found endpoint: %s", endpoint)
+                results.append(ListEndpointEntry(**endpoint))
+        return results
+    except ImportError as e:
+        logger.warning("Failed to import CML Python API modules. Error: %s", e)
+    except Exception as e:
+        logger.exception(
+            "Model discovery failed through Python API, trying CAI REST API. Error: %s",
+            e,
+        )
+    return []
+
+
+def list_endpoints_from_rest_api(domain: str) -> list[ListEndpointEntry]:
+    headers = build_auth_headers()
+    list_url = f"https://{domain}/api/v1alpha1/listEndpoints"
+    list_json = {"namespace": DEFAULT_NAMESPACE}
+    response = requests.post(list_url, headers=headers, json=list_json, timeout=10)
+    raise_for_http_error(response)
+    api_endpoints = body_to_json(response).get("endpoints", [])
+    # Add domain prefix to endpoint names for clarity
+    logger.info(f"Found {len(api_endpoints)} endpoints from CAII REST API")
+    results: list[ListEndpointEntry] = []
+    for entry in api_endpoints:
+        if "name" not in entry or "url" not in entry:
+            logger.warning("Skipping endpoint entry without 'name' or 'url': %s", entry)
+            continue
+        # Ensure the entry has a 'task' field, defaulting to None if missing
+        results.append(
+            ListEndpointEntry(
+                **entry,
+            )
+        )
+    return results
 
 
 def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
