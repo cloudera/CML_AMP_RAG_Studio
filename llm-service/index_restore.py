@@ -60,33 +60,27 @@ from app.services import models
 from app.services.metadata_apis import data_sources_metadata_api
 
 
+GLOBAL_PERSIST_DIR = SummaryIndexer._SummaryIndexer__persist_root_dir()
+
+
 def restore_index_store(self: SummaryIndexer) -> None:
     """Reconstruct the index store from scratch.
 
     Based on logic from
     * index_file()
-    * __update_global_summary_store().
-    * __init_summary_store()
+    * __update_global_summary_store()
 
     """
-    global_persist_dir = self._SummaryIndexer__persist_root_dir()
     global_summary_store_config = self._SummaryIndexer__index_kwargs(
         embed_summaries=False
     )
 
     data_source_id: int = global_summary_store_config.get("data_source_id")
-
-    # initialize empty global index store
-    DocumentSummaryIndex.from_documents(
-        [],
-        **global_summary_store_config,
-    ).storage_context.index_store.persist(
-        str(os.path.join(global_persist_dir, DEFAULT_PERSIST_FNAME))
-    )
+    print(f"Restoring data source {data_source_id}")
 
     # load all global stores
     storage_context = StorageContext.from_defaults(
-        persist_dir=global_persist_dir,
+        persist_dir=GLOBAL_PERSIST_DIR,
         vector_store=QdrantVectorStore.for_summaries(
             data_source_id
         ).llama_vector_store(),
@@ -112,6 +106,7 @@ def restore_index_store(self: SummaryIndexer) -> None:
         if source.node_type is None:  # data source summary rather than document summary
             # TODO: do we really not need the data source summary?
             continue
+        print(f"Collecting document {doc_id}")
         new_nodes.append(
             Document(
                 doc_id=doc_id,
@@ -132,7 +127,20 @@ def restore_index_store(self: SummaryIndexer) -> None:
         # UnexpectedResponse is raised when the collection doesn't exist, which is fine, since it might be a new index.
         pass
     global_summary_store.insert_nodes(new_nodes)
-    global_summary_store.storage_context.persist(persist_dir=global_persist_dir)
+    global_summary_store.storage_context.persist(persist_dir=GLOBAL_PERSIST_DIR)
+
+
+def init_global_index_store(self):
+    """Based on logic from DataSourceController.__init_summary_store()."""
+    GLOBAL_INDEX_STORE_FILEPATH = str(
+        os.path.join(GLOBAL_PERSIST_DIR, DEFAULT_PERSIST_FNAME)
+    )
+    print(f"Initializing global index store at {GLOBAL_INDEX_STORE_FILEPATH}")
+
+    DocumentSummaryIndex.from_documents(
+        [],
+        **self._SummaryIndexer__index_kwargs(),
+    ).storage_context.index_store.persist(GLOBAL_INDEX_STORE_FILEPATH)
 
 
 def _get_data_source_ids() -> list[int]:
@@ -164,13 +172,19 @@ def _summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
 
 def main() -> None:
     SummaryIndexer.restore_index_store = restore_index_store
+    SummaryIndexer.init_global_index_store = init_global_index_store
 
+    global_index_store_initialized = False
     for data_source_id in _get_data_source_ids():
         summary_indexer = _summary_indexer(data_source_id)
+        if not global_index_store_initialized:
+            summary_indexer.init_global_index_store()
+            global_index_store_initialized = True
+
         if summary_indexer is None:
-            print(f"Skipping data source {data_source_id}")
+            print(f"Skipping data source {data_source_id}; no summarization model")
             continue
-        print(f"Restoring data source {data_source_id}")
+
         summary_indexer.restore_index_store()
 
 
