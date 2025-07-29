@@ -42,8 +42,6 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional, cast, List
 
-from llama_index.core.storage.index_store import SimpleIndexStore
-
 from app.services import models
 from llama_index.core import (
     DocumentSummaryIndex,
