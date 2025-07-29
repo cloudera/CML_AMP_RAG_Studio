@@ -87,7 +87,6 @@ def restore_index_store(self: SummaryIndexer) -> None:
     # load global stores
     storage_context = StorageContext.from_defaults(
         persist_dir=global_persist_dir,
-        index_store=SimpleIndexStore(),
         vector_store=QdrantVectorStore.for_summaries(
             data_source_id
         ).llama_vector_store(),
