@@ -101,6 +101,7 @@ class CAIIModelProvider(ModelProvider):
     @classmethod
     def is_enabled(cls) -> bool:
         version: Optional[str] = get_cml_version_from_sense_bootstrap()
+        print(f"CML version: {version}")
         if not version:
             return super().is_enabled()
         cml_version = Version(version)
