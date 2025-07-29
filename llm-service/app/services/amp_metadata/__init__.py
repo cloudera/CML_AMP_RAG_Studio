@@ -51,10 +51,6 @@ from app.config import (
     VectorDbProviderType,
     MetadataDbProviderType,
 )
-from app.services import models
-from app.services.caii.utils import get_cml_version_from_sense_bootstrap
-from packaging.version import Version
-
 from app.services.models import CAIIModelProvider
 
 
