@@ -38,6 +38,11 @@
 
 """This script reconstructs RAG Studio's databases/doc_summary_index_global/index_store.json.
 
+NOTE:
+
+* This will also overwrite the global docstore.json and graph_store.json by necessity. I think the UUIDs change or something.
+* Make sure to back up the global directory!
+
 Requirements:
 
 * RAG Studio must be running.
