@@ -49,7 +49,7 @@ import sys
 import uuid
 from collections import defaultdict
 from time import sleep
-from typing import Any
+from typing import Any, cast
 
 from llama_index.core.schema import (
     NodeRelationship,
@@ -66,7 +66,7 @@ from pydantic import BaseModel
 sys.path.append(".")
 from app.ai.indexing.summary_indexer import SummaryIndexer
 
-GLOBAL_PERSIST_DIR = SummaryIndexer._SummaryIndexer__persist_root_dir()
+GLOBAL_PERSIST_DIR = SummaryIndexer._SummaryIndexer__persist_root_dir()  # type: ignore
 GLOBAL_INDEX_STORE_FILEPATH = os.path.join(
     GLOBAL_PERSIST_DIR,
     DEFAULT_INDEX_STORE_FILENAME,
@@ -79,7 +79,8 @@ GLOBAL_DOC_STORE_FILEPATH = os.path.join(
 
 def load_doc_store() -> dict[str, Any]:
     with open(GLOBAL_DOC_STORE_FILEPATH, "r") as f:
-        return json.load(f)
+        doc_store = json.load(f)
+    return cast(dict[str, Any], doc_store)
 
 
 def write_index_store(index_store: dict[str, Any]) -> None:
@@ -138,7 +139,7 @@ def read_doc_store(doc_store: dict[str, Any]) -> list[DataSource]:
                     f"Unrecognized type for {summary_type} summary {summary_id}"
                 )
 
-    data_source_documents: dict[int, list[str]] = defaultdict(list)
+    data_source_documents: dict[str, list[str]] = defaultdict(list)
     for summary in documents.values():
         summary = summary["__data__"]
         source = summary["relationships"][NodeRelationship.SOURCE]
@@ -153,7 +154,7 @@ def read_doc_store(doc_store: dict[str, Any]) -> list[DataSource]:
         data_source = DataSource(
             id=source["node_id"],
             summary_id=summary["id_"],
-            doc_summary_ids=data_source_documents[source["node_id"]],
+            doc_summary_ids=data_source_documents[source["node_id"]],  # type: ignore
         )
         print(
             f"Collected data source {data_source.id}",
