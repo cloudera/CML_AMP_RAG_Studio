@@ -39,6 +39,7 @@ import functools
 import logging
 import os
 from typing import Callable, List, Sequence, Optional, cast
+from urllib.parse import urlparse
 
 import httpx
 import requests
@@ -87,7 +88,13 @@ def describe_endpoint(endpoint_name: str) -> DescribeEndpointEntry:
     logger.info(
         "Fetching endpoint details from CAII REST API for endpoint: %s", endpoint_name
     )
-    domain = settings.caii_domain
+    if ":" in endpoint_name:
+        # If the endpoint name contains a colon, it should be in the format "domain:endpoint_name"
+        pieces = endpoint_name.split(":")
+        domain = pieces[0]
+        endpoint_name = pieces[1]
+    else:
+        domain = settings.caii_domain
     headers = build_auth_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
     desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
@@ -254,16 +261,21 @@ def get_models_with_task(task_type: str) -> List[Endpoint]:
 @functools.singledispatch
 def build_model_response(endpoint: Endpoint) -> ModelResponse:
     print(f"{endpoint=}")
+
+    domain = urlparse(endpoint.url).hostname
+    print(f"{endpoint=}, domain={domain}")
     return ModelResponse(
-        model_id=endpoint.name,
+        model_id=f"{domain}:{endpoint.name}",
         name=endpoint.name,
     )
 
 
 @build_model_response.register
 def _(endpoint: DescribeEndpointEntry) -> ModelResponse:
+    domain = urlparse(endpoint.url).hostname
+    print(f"{endpoint=}, domain={domain}")
     return ModelResponse(
-        model_id=endpoint.name,
+        model_id=f"{domain}:{endpoint.name}",
         name=endpoint.name,
         available=endpoint.replica_count > 0,
         replica_count=endpoint.replica_count,
