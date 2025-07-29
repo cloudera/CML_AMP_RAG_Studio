@@ -36,11 +36,14 @@
 #  DATA.
 #
 import json
+import logging
 import os
 from typing import Dict, Optional
 import requests
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def build_auth_headers() -> Dict[str, str]:
@@ -79,9 +82,9 @@ def get_cml_version_from_sense_bootstrap() -> Optional[str]:
         sense_bootstrap_response = requests.get(url)
         if sense_bootstrap_response.status_code == 200:
             sense_bootstrap_json = sense_bootstrap_response.json()
-            version = sense_bootstrap_json.get("gitSha")
+            version: str = sense_bootstrap_json.get("gitSha")
             return version
         return None
     except Exception as e:
-        print("Failed to fetch version from `sense-bootstrap.json`. %e" % e)
+        logger.info(f"Failed to fetch version from `sense-bootstrap.json`. {e}")
         return None
