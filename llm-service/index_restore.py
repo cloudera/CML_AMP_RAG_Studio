@@ -76,7 +76,7 @@ def restore_index_store(self: SummaryIndexer) -> None:
 
     data_source_id: int = global_summary_store_config.get("data_source_id")
 
-    # initialize index store
+    # initialize empty global index store
     DocumentSummaryIndex.from_documents(
         [],
         **global_summary_store_config,
@@ -84,7 +84,7 @@ def restore_index_store(self: SummaryIndexer) -> None:
         str(os.path.join(global_persist_dir, DEFAULT_PERSIST_FNAME))
     )
 
-    # load global stores
+    # load all global stores
     storage_context = StorageContext.from_defaults(
         persist_dir=global_persist_dir,
         vector_store=QdrantVectorStore.for_summaries(
@@ -148,7 +148,7 @@ def _get_data_source_ids() -> list[int]:
 
 
 def _summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
-    ### START DataSourceController._get_summary_indexer() copy ###
+    """Based on logic from DataSourceController._get_summary_indexer()."""
     datasource = data_sources_metadata_api.get_metadata(data_source_id)
     if not datasource.summarization_model:
         return None
