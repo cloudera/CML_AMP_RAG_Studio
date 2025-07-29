@@ -35,10 +35,12 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import Optional
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from packaging.version import Version
 
 from ._model_provider import ModelProvider
 from ...caii.caii import (
@@ -51,6 +53,7 @@ from ...caii.caii import (
     describe_endpoint,
 )
 from ...caii.types import ModelResponse
+from ...caii.utils import get_cml_version_from_sense_bootstrap
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import timed_lru_cache
 
@@ -94,6 +97,19 @@ class CAIIModelProvider(ModelProvider):
     @timed_lru_cache(maxsize=32, seconds=300)
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         return get_caii_reranking_model(name, top_n)
+
+    @classmethod
+    def is_enabled(cls) -> bool:
+        version: Optional[str] = get_cml_version_from_sense_bootstrap()
+        if not version:
+            return super().is_enabled()
+        cml_version = Version(version)
+        if cml_version >= Version("2.0.50-b68"):
+            available_models = cls.list_llm_models()
+            if available_models:
+                return True
+
+        return super().is_enabled()
 
 
 # ensure interface is implemented

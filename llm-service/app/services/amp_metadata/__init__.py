@@ -40,7 +40,7 @@ import os
 import re
 import socket
 import subprocess
-from typing import Optional, cast, Protocol
+from typing import Optional, Protocol
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -51,6 +51,11 @@ from app.config import (
     VectorDbProviderType,
     MetadataDbProviderType,
 )
+from app.services import models
+from app.services.caii.utils import get_cml_version_from_sense_bootstrap
+from packaging.version import Version
+
+from app.services.models import CAIIModelProvider
 
 
 class AwsConfig(BaseModel):
@@ -239,7 +244,12 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
             )
 
     if message == "":
-        return ValidationResult(valid=True, message="No model configuration found.")
+        # check to see if CAII models are available via discovery
+        if CAIIModelProvider.is_enabled():
+            message = "CAII models are available."
+            valid_model_config_exists= True
+        else:
+            return ValidationResult(valid=False, message="No model configuration found.")
 
     return ValidationResult(valid=valid_model_config_exists, message=message)
 
@@ -391,18 +401,6 @@ def update_project_environment(new_env: dict[str, str]) -> None:
         client.update_project(project_id=project_id, body=project)
     except ImportError:
         pass
-
-
-def get_project_environment() -> dict[str, str]:
-    try:
-        import cmlapi
-
-        client = cmlapi.default_client()
-        project_id = settings.cdsw_project_id
-        project = client.get_project(project_id=project_id)
-        return cast(dict[str, str], json.loads(project.environment))
-    except ImportError:
-        return dict(os.environ)
 
 
 class CMLApplication(Protocol):

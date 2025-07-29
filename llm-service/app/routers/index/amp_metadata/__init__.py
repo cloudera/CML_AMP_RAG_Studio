@@ -53,14 +53,13 @@ from ....services.amp_metadata import (
     config_to_env,
     build_configuration,
     update_project_environment,
-    get_project_environment,
     get_application_config,
     validate_jdbc,
     ValidationResult,
 )
 from ....services.amp_update import does_amp_need_updating
 from ....services.models.providers import CAIIModelProvider
-from ....services.utils import has_admin_rights
+from ....services.utils import has_admin_rights, get_project_environment
 
 router = APIRouter(prefix="/amp", tags=["AMP"])
 

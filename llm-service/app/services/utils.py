@@ -36,6 +36,8 @@
 #  DATA.
 # ##############################################################################
 import functools
+import json
+import os
 import re
 import time
 from functools import lru_cache
@@ -54,7 +56,7 @@ from typing import (
 
 import requests
 
-from app.services.amp_metadata import get_project_environment
+from app.config import settings
 
 
 # TODO delete this if it's not being used
@@ -221,3 +223,15 @@ def timed_lru_cache(seconds: int, maxsize: int = 128) -> Callable[[C], C]:
             return cast(C, cached_func(*args, **kwargs))
         return cast(C, wrapped_func)
     return wrapper_cache
+
+
+def get_project_environment() -> dict[str, str]:
+    try:
+        import cmlapi
+
+        client = cmlapi.default_client()
+        project_id = settings.cdsw_project_id
+        project = client.get_project(project_id=project_id)
+        return cast(dict[str, str], json.loads(project.environment))
+    except ImportError:
+        return dict(os.environ)
