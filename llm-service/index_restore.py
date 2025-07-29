@@ -35,6 +35,18 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+
+"""This script reconstructs RAG Studio's databases/doc_summary_index_global/index_store.json.
+
+Requirements:
+
+* RAG Studio must be running.
+* databases/doc_summary_index_global/docstore.json must exist.
+* Run this script using the same Python environment and shell environment variables as RAG Studio.
+* Run this script in the llm-service/ directory.
+
+"""
+
 import os
 from typing import Optional
 from typing import cast
@@ -49,7 +61,6 @@ from llama_index.core.schema import (
     Document,
     NodeRelationship,
 )
-from llama_index.core.storage.index_store import SimpleIndexStore
 from llama_index.core.storage.index_store.types import DEFAULT_PERSIST_FNAME
 from qdrant_client.http.exceptions import UnexpectedResponse
 
@@ -59,14 +70,14 @@ from app.config import Settings
 from app.services import models
 from app.services.metadata_apis import data_sources_metadata_api
 
-
 GLOBAL_PERSIST_DIR = SummaryIndexer._SummaryIndexer__persist_root_dir()
 
 
 def restore_index_store(self: SummaryIndexer) -> None:
     """Reconstruct the index store from scratch.
 
-    Based on logic from
+    Based on logic from:
+
     * index_file()
     * __update_global_summary_store()
 
@@ -130,7 +141,7 @@ def restore_index_store(self: SummaryIndexer) -> None:
     global_summary_store.storage_context.persist(persist_dir=GLOBAL_PERSIST_DIR)
 
 
-def init_global_index_store(self):
+def init_global_index_store(self) -> None:
     """Based on logic from DataSourceController.__init_summary_store()."""
     GLOBAL_INDEX_STORE_FILEPATH = str(
         os.path.join(GLOBAL_PERSIST_DIR, DEFAULT_PERSIST_FNAME)
@@ -167,7 +178,6 @@ def _summary_indexer(data_source_id: int) -> Optional[SummaryIndexer]:
         embedding_model=models.Embedding.get(datasource.embedding_model),
         llm=models.LLM.get(datasource.summarization_model),
     )
-    ### END DataSourceController._get_summary_indexer() copy ###
 
 
 def main() -> None:
