@@ -51,7 +51,6 @@ from typing import (
     Union,
     Any,
     cast,
-    Hashable,
 )
 
 import requests
