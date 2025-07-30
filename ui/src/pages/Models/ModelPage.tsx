@@ -80,7 +80,7 @@ const ModelPage = () => {
         modelSource={modelSource}
       />
       <ModelTips modelSource={modelSource} />
-      <Flex vertical style={{ width: "90%", maxWidth: 1500 }} gap={20}>
+      <Flex vertical style={{ width: "80%", maxWidth: 1000 }} gap={20}>
         {checkHandledCaiiError(
           inferenceError,
           rerankingError,

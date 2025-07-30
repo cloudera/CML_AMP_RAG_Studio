@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 import { Button, Flex, TableProps, Tooltip, Typography } from "antd";
-import { Model } from "src/api/modelsApi.ts";
+import { Model, ModelSource } from "src/api/modelsApi.ts";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
 import ModelStatusCell from "pages/Models/ModelStatusCell.tsx";
@@ -107,18 +107,6 @@ export const modelColumns: TableProps<Model>["columns"] = [
     dataIndex: "model_id",
     key: "model_id",
     width: 350,
-    render(modelId?: string) {
-      if (modelId?.includes(":")) {
-        const name = modelId.split(":")[1];
-        return (
-          <Flex gap={8}>
-            <Typography.Text>{name}</Typography.Text>
-          </Flex>
-        );
-      } else {
-        return <Typography.Text type="secondary">{modelId}</Typography.Text>;
-      }
-    },
   },
   {
     title: "Name",
@@ -136,3 +124,48 @@ export const modelColumns: TableProps<Model>["columns"] = [
     render: (_, model) => <ModelStatusCell model={model} />,
   },
 ];
+
+export const getColumnsForModelSource = (
+  modelSource?: ModelSource,
+): TableProps<Model>["columns"] => {
+  if (modelSource === "CAII") {
+    return [
+      {
+        title: "Domain",
+        dataIndex: "model_id",
+        width: 750,
+        key: "model_id",
+        render(modelId?: string) {
+          if (modelId?.includes(":")) {
+            const domain = modelId.split(":")[0];
+            return (
+              <Flex gap={8}>
+                <Typography.Text>{domain}</Typography.Text>
+              </Flex>
+            );
+          } else {
+            return null;
+          }
+        },
+      },
+      {
+        title: "Name",
+        dataIndex: "name",
+        key: "name",
+        width: 350,
+        render: (name?: string) =>
+          name ?? (
+            <Typography.Text type="warning">No model found</Typography.Text>
+          ),
+      },
+      {
+        title: "Status",
+        dataIndex: "available",
+        width: 150,
+        key: "available",
+        render: (_, model) => <ModelStatusCell model={model} />,
+      },
+    ];
+  }
+  return modelColumns;
+};

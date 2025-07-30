@@ -38,12 +38,10 @@
 
 import { Table, TableProps } from "antd";
 import {
-  domainColumn,
-  modelColumns,
+  getColumnsForModelSource,
   TestCell,
 } from "pages/Models/ModelTable.tsx";
 import { Model, useTestLlmModel } from "src/api/modelsApi.ts";
-import { ColumnsType } from "antd/es/table";
 
 const InferenceModelTestCell = ({ model }: { model: Model }) => {
   const {
@@ -89,17 +87,10 @@ const InferenceModelTable = ({
   areInferenceModelsLoading: boolean;
   modelSource?: "CAII" | "Bedrock" | "Azure" | "OpenAI" | undefined;
 }) => {
-  const domainColumns: ColumnsType<Model> | undefined =
-    modelSource === "CAII" ? domainColumn : undefined;
-
   return (
     <Table
       dataSource={inferenceModels}
-      columns={
-        modelColumns
-          ? [...(domainColumns ?? []), ...modelColumns, ...testCell]
-          : testCell
-      }
+      columns={[...(getColumnsForModelSource(modelSource) ?? []), ...testCell]}
       style={{ width: "100%" }}
       loading={areInferenceModelsLoading}
       rowKey={(record) => record.model_id}
