@@ -162,7 +162,11 @@ def list_endpoints() -> list[ListEndpointEntry]:
         else:
             logger.info("No new endpoints found via CAII REST API.")
     except Exception as e:
-        logger.exception("Failed to list endpoints from CAII REST API. Error: %s", e)
+        logger.info(
+            "Failed to list endpoints from CAII REST API. Error: %s",
+            e,
+            exc_info=True,
+        )
         if not results:
             raise HTTPException(
                 status_code=500,
