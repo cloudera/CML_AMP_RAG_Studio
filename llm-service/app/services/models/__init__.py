@@ -37,7 +37,7 @@
 #
 from .embedding import Embedding
 from .llm import LLM
-from .model_source import ModelSource
+from ._model_source import ModelSource
 from .providers import (
     AzureModelProvider,
     CAIIModelProvider,
@@ -47,7 +47,7 @@ from .providers._model_provider import ModelProvider
 from .providers.openai import OpenAiModelProvider
 from .reranking import Reranking
 
-__all__ = ["Embedding", "LLM", "Reranking", "CAIIModelProvider", "ModelProvider"]
+__all__ = ["Embedding", "LLM", "Reranking"]
 
 
 def get_model_source() -> ModelSource:

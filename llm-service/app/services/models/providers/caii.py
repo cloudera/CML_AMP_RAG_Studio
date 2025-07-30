@@ -43,7 +43,7 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from packaging.version import Version
 
 from ._model_provider import ModelProvider
-from ..model_source import ModelSource
+from .._model_source import ModelSource
 from ...caii.caii import (
     get_caii_llm_models,
     get_caii_embedding_models,

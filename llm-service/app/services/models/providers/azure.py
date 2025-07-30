@@ -39,7 +39,7 @@ from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.llms.azure_openai import AzureOpenAI
 
 from ._model_provider import ModelProvider
-from ..model_source import ModelSource
+from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...query.simple_reranker import SimpleReranker

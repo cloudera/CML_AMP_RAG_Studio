@@ -55,7 +55,7 @@ class ModelProvider(abc.ABC):
     @staticmethod
     def get_provider_class() -> type["ModelProvider"]:
         """Return the ModelProvider subclass for the given provider name."""
-        from .. import (
+        from . import (
             AzureModelProvider,
             CAIIModelProvider,
             OpenAiModelProvider,

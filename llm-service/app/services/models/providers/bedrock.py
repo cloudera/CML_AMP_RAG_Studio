@@ -53,7 +53,7 @@ from pydantic import TypeAdapter
 
 from app.config import settings
 from ._model_provider import ModelProvider
-from ..model_source import ModelSource
+from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import raise_for_http_error, timed_lru_cache
