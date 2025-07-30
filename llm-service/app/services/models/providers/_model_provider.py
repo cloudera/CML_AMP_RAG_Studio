@@ -73,13 +73,13 @@ class ModelProvider(abc.ABC):
             return BedrockModelProvider
 
         # Fallback to priority order if no specific provider is set
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider
-        elif AzureModelProvider.is_enabled():
+        if AzureModelProvider.is_enabled():
             return AzureModelProvider
         elif OpenAiModelProvider.is_enabled():
             return OpenAiModelProvider
-        return BedrockModelProvider
+        elif BedrockModelProvider.is_enabled():
+            return BedrockModelProvider
+        return CAIIModelProvider
 
     @staticmethod
     @abc.abstractmethod
