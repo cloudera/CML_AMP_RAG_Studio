@@ -43,6 +43,7 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
 from app.config import settings
+from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 
 
@@ -123,7 +124,7 @@ class ModelProvider(abc.ABC):
         """Return reranking model with `name`."""
         raise NotImplementedError
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
-    def get_model_source(cls):
+    def get_model_source() -> ModelSource:
         raise NotImplementedError

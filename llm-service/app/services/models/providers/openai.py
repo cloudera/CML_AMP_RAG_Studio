@@ -114,8 +114,8 @@ class OpenAiModelProvider(ModelProvider):
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         raise NotImplementedError("No reranking models available")
 
-    @classmethod
-    def get_model_source(cls):
+    @staticmethod
+    def get_model_source() -> ModelSource:
         return ModelSource.OPENAI
 
 

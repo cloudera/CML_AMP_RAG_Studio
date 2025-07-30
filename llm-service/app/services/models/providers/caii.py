@@ -113,8 +113,8 @@ class CAIIModelProvider(ModelProvider):
 
         return super().is_enabled()
 
-    @classmethod
-    def get_model_source(cls):
+    @staticmethod
+    def get_model_source() -> ModelSource:
         return ModelSource.CAII
 
 

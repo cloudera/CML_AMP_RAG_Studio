@@ -105,8 +105,8 @@ class AzureModelProvider(ModelProvider):
     def get_reranking_model(name: str, top_n: int) -> SimpleReranker:
         return SimpleReranker(top_n=top_n)
 
-    @classmethod
-    def get_model_source(cls):
+    @staticmethod
+    def get_model_source() -> ModelSource:
         return ModelSource.AZURE
 
 

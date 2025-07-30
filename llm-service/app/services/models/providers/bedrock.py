@@ -309,8 +309,8 @@ class BedrockModelProvider(ModelProvider):
     def get_reranking_model(name: str, top_n: int) -> AWSBedrockRerank:
         return AWSBedrockRerank(rerank_model_name=name, top_n=top_n)
 
-    @classmethod
-    def get_model_source(cls):
+    @staticmethod
+    def get_model_source() -> ModelSource:
         return ModelSource.BEDROCK
 
 
