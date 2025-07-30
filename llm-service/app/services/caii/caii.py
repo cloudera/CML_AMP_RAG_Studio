@@ -191,7 +191,8 @@ def list_endpoints_from_python_api() -> list[ListEndpointEntry]:
         for endpoints in endpoint_groups:
             for endpoint in endpoints:
                 logger.info("Found endpoint: %s", endpoint)
-                results.append(ListEndpointEntry(**endpoint))
+                if endpoint.get("url"):
+                    results.append(ListEndpointEntry(**endpoint))
         return results
     except ImportError as e:
         logger.warning("Failed to import CML Python API modules. Error: %s", e)
@@ -214,14 +215,13 @@ def list_endpoints_from_rest_api(domain: str) -> list[ListEndpointEntry]:
     logger.info(f"Found {len(api_endpoints)} endpoints from CAII REST API")
     results: list[ListEndpointEntry] = []
     for entry in api_endpoints:
-        if "name" not in entry or "url" not in entry:
+        if "name" not in entry or "url" not in entry or not entry["name"] or not entry["url"]:
             logger.warning("Skipping endpoint entry without 'name' or 'url': %s", entry)
             continue
-        # Ensure the entry has a 'task' field, defaulting to None if missing
         results.append(
             ListEndpointEntry(
                 **entry,
-            )
+             )
         )
     return results
 
@@ -342,8 +342,6 @@ def get_models_with_task(task_type: str) -> List[Endpoint]:
 
 @functools.singledispatch
 def build_model_response(endpoint: Endpoint) -> ModelResponse:
-    print(f"{endpoint=}")
-
     domain = urlparse(endpoint.url).hostname
     print(f"{endpoint=}, domain={domain}")
     return ModelResponse(
