@@ -216,7 +216,7 @@ def timed_lru_cache(seconds: int, maxsize: int = 128) -> Callable[[C], C]:
         cached_func.expiration = time.monotonic() + seconds  # type: ignore
 
         @functools.wraps(func)
-        def wrapped_func(*args: Any, **kwargs: Hashable) -> C:
+        def wrapped_func(*args: Any, **kwargs: Any) -> C:
             if time.monotonic() >= cached_func.expiration:  # type: ignore
                 cached_func.cache_clear()
                 cached_func.expiration = time.monotonic() + seconds  # type: ignore
