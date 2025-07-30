@@ -59,9 +59,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        # Check for preferred provider first based on MODEL_PROVIDER env var
-        model_provider = ModelProvider.get_provider_class()
-        return model_provider.list_llm_models()
+        return ModelProvider.get_provider_class().list_llm_models()
 
     @classmethod
     def test(cls, model_name: str) -> Literal["ok"]:
