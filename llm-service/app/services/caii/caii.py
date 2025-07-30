@@ -347,7 +347,6 @@ def get_models_with_task(task_type: str) -> List[Endpoint]:
 @functools.singledispatch
 def build_model_response(endpoint: Endpoint) -> ModelResponse:
     domain = urlparse(endpoint.url).hostname
-    print(f"{endpoint=}, domain={domain}")
     return ModelResponse(
         model_id=f"{domain}:{endpoint.name}",
         name=endpoint.name,
@@ -357,7 +356,6 @@ def build_model_response(endpoint: Endpoint) -> ModelResponse:
 @build_model_response.register
 def _(endpoint: DescribeEndpointEntry) -> ModelResponse:
     domain = urlparse(endpoint.url).hostname
-    print(f"{endpoint=}, domain={domain}")
     return ModelResponse(
         model_id=f"{domain}:{endpoint.name}",
         name=endpoint.name,
