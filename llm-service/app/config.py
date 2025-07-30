@@ -53,6 +53,7 @@ SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
 VectorDbProviderType = Literal["QDRANT", "OPENSEARCH"]
 MetadataDbProviderType = Literal["H2", "PostgreSQL"]
+ModelProviderType = Literal["Azure", "CAII", "OpenAI", "Bedrock"]
 
 
 class _Settings:
@@ -182,6 +183,16 @@ class _Settings:
     @property
     def openai_api_base(self) -> Optional[str]:
         return os.environ.get("OPENAI_API_BASE")
+
+    @property
+    def model_provider(self) -> Optional[ModelProviderType]:
+        """The preferred model provider to use.
+        Options: 'AZURE', 'CAII', 'OPENAI', 'BEDROCK'
+        If not set, will use the first available provider in priority order."""
+        provider = os.environ.get("MODEL_PROVIDER")
+        if provider and provider in ["Azure", "CAII", "OpenAI", "Bedrock"]:
+            return cast(ModelProviderType, provider)
+        return None
 
 
 settings = _Settings()

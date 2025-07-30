@@ -36,22 +36,21 @@
 #  DATA.
 #
 from enum import Enum
+import os
+
+from app.config import settings
 
 from .embedding import Embedding
 from .llm import LLM
 from .providers import (
     AzureModelProvider,
     CAIIModelProvider,
+    BedrockModelProvider,
 )
 from .providers.openai import OpenAiModelProvider
 from .reranking import Reranking
 
-__all__ = [
-    "Embedding",
-    "LLM",
-    "Reranking",
-    "CAIIModelProvider"
-]
+__all__ = ["Embedding", "LLM", "Reranking", "CAIIModelProvider"]
 
 
 class ModelSource(str, Enum):
@@ -62,6 +61,18 @@ class ModelSource(str, Enum):
 
 
 def get_model_source() -> ModelSource:
+    model_provider = settings.model_provider
+    if model_provider:
+        if model_provider == "Azure" and AzureModelProvider.is_enabled():
+            return ModelSource.AZURE
+        if model_provider == "CAII" and CAIIModelProvider.is_enabled():
+            return ModelSource.CAII
+        if model_provider == "OpenAI" and OpenAiModelProvider.is_enabled():
+            return ModelSource.OPENAI
+        if model_provider == "Bedrock" and BedrockModelProvider.is_enabled():
+            return ModelSource.BEDROCK
+
+    # Fallback to priority order if no specific provider is set
     if CAIIModelProvider.is_enabled():
         return ModelSource.CAII
     if AzureModelProvider.is_enabled():

@@ -50,6 +50,7 @@ from app.config import (
     ChatStoreProviderType,
     VectorDbProviderType,
     MetadataDbProviderType,
+    ModelProviderType,
 )
 from app.services.models import CAIIModelProvider
 
@@ -129,6 +130,7 @@ class ProjectConfig(BaseModel):
     chat_store_provider: ChatStoreProviderType
     vector_db_provider: VectorDbProviderType
     metadata_db_provider: MetadataDbProviderType
+    model_provider: Optional[ModelProviderType] = None
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -192,8 +194,48 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
 
     open_ai_key = environ.get("OPENAI_API_KEY") or None
 
+    # Get preferred model provider if set
+    preferred_provider = environ.get("MODEL_PROVIDER") or None
+
     message = ""
     valid_model_config_exists = False
+
+    # Check if the preferred provider is properly configured
+    if preferred_provider:
+        if preferred_provider == "Bedrock" and all(
+            [access_key_id, secret_key_id, default_region]
+        ):
+            valid_model_config_exists = True
+        elif preferred_provider == "Azure" and all(
+            [azure_openai_api_key, azure_openai_endpoint, openai_api_version]
+        ):
+            valid_model_config_exists = True
+            message = (
+                f"Preferred provider {preferred_provider} is properly configured. \n"
+            )
+        elif preferred_provider == "OpenAI" and open_ai_key:
+            valid_model_config_exists = True
+            message = (
+                f"Preferred provider {preferred_provider} is properly configured. \n"
+            )
+        elif preferred_provider == "CAII" and (
+            caii_domain or CAIIModelProvider.is_enabled()
+        ):
+            valid_model_config_exists = True
+            message = (
+                f"Preferred provider {preferred_provider} is properly configured. \n"
+            )
+        else:
+            print(
+                f"WARNING: Preferred provider {preferred_provider} is not properly configured."
+            )
+            message = f"WARNING: Preferred provider {preferred_provider} is not properly configured. \n"
+
+    # If we already determined the config is valid based on preferred provider, return early
+    if valid_model_config_exists:
+        return ValidationResult(valid=valid_model_config_exists, message=message)
+
+    # Otherwise, check all available providers as before
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is not None:
         print("Using CAII for LLMs/embeddings; CAII_DOMAIN is set")
@@ -243,9 +285,11 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
         # check to see if CAII models are available via discovery
         if CAIIModelProvider.is_enabled():
             message = "CAII models are available."
-            valid_model_config_exists= True
+            valid_model_config_exists = True
         else:
-            return ValidationResult(valid=False, message="No model configuration found.")
+            return ValidationResult(
+                valid=False, message="No model configuration found."
+            )
 
     return ValidationResult(valid=valid_model_config_exists, message=message)
 
@@ -286,6 +330,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
             "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
             "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
+            "MODEL_PROVIDER": config.model_provider or "",
             "AWS_DEFAULT_REGION": config.aws_config.region or "",
             "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
             "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -347,6 +392,12 @@ def build_configuration(
     )
     validate_config = validate(env)
 
+    model_provider = (
+        TypeAdapter(ModelProviderType).validate_python(env.get("MODEL_PROVIDER"))
+        if env.get("MODEL_PROVIDER")
+        else None
+    )
+
     return ProjectConfigPlus(
         use_enhanced_pdf_processing=TypeAdapter(bool).validate_python(
             env.get("USE_ENHANCED_PDF_PROCESSING", False),
@@ -362,6 +413,7 @@ def build_configuration(
         vector_db_provider=TypeAdapter(VectorDbProviderType).validate_python(
             env.get("VECTOR_DB_PROVIDER", "QDRANT")
         ),
+        model_provider=model_provider,
         aws_config=aws_config,
         azure_config=azure_config,
         caii_config=caii_config,

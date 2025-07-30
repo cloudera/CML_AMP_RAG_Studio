@@ -36,7 +36,7 @@
 #  DATA.
 #
 from typing import Literal, Optional
-
+import os
 from fastapi import HTTPException
 from llama_index.core import llms
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
@@ -49,6 +49,7 @@ from .providers import (
 )
 from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
+from ...config import settings
 
 
 class LLM(_model_type.ModelType[llms.LLM]):
@@ -57,13 +58,40 @@ class LLM(_model_type.ModelType[llms.LLM]):
         if not model_name:
             model_name = cls.list_available()[0].model_id
 
+        # Check for preferred provider first based on MODEL_PROVIDER env var
+        preferred_provider = settings.model_provider
+        if preferred_provider:
+            if preferred_provider == "Azure" and AzureModelProvider.is_enabled():
+                return AzureModelProvider.get_llm_model(model_name)
+            elif preferred_provider == "CAII" and CAIIModelProvider.is_enabled():
+                return CAIIModelProvider.get_llm_model(model_name)
+            elif preferred_provider == "OpenAI" and OpenAiModelProvider.is_enabled():
+                return OpenAiModelProvider.get_llm_model(model_name)
+            elif preferred_provider == "Bedrock" and BedrockModelProvider.is_enabled():
+                return BedrockModelProvider.get_llm_model(model_name)
+
+        # Fall back to priority order if preferred provider not specified or not enabled
         if AzureModelProvider.is_enabled():
+            if not preferred_provider:
+                cls._set_model_provider("Azure")
             return AzureModelProvider.get_llm_model(model_name)
         if CAIIModelProvider.is_enabled():
+            if not preferred_provider:
+                cls._set_model_provider("CAII")
             return CAIIModelProvider.get_llm_model(model_name)
         if OpenAiModelProvider.is_enabled():
+            if not preferred_provider:
+                cls._set_model_provider("OpenAI")
             return OpenAiModelProvider.get_llm_model(model_name)
+
+        if not preferred_provider:
+            cls._set_model_provider("Bedrock")
         return BedrockModelProvider.get_llm_model(model_name)
+
+    @staticmethod
+    def _set_model_provider(provider: str) -> None:
+        """Set the MODEL_PROVIDER environment variable to persist the selected provider."""
+        os.environ["MODEL_PROVIDER"] = provider
 
     @staticmethod
     def get_noop() -> llms.LLM:
@@ -71,12 +99,34 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
+        # Check for preferred provider first based on MODEL_PROVIDER env var
+        preferred_provider = settings.model_provider
+        if preferred_provider:
+            if preferred_provider == "Azure" and AzureModelProvider.is_enabled():
+                return AzureModelProvider.list_llm_models()
+            elif preferred_provider == "CAII" and CAIIModelProvider.is_enabled():
+                return CAIIModelProvider.list_llm_models()
+            elif preferred_provider == "OpenAI" and OpenAiModelProvider.is_enabled():
+                return OpenAiModelProvider.list_llm_models()
+            elif preferred_provider == "Bedrock" and BedrockModelProvider.is_enabled():
+                return BedrockModelProvider.list_llm_models()
+
+        # Fall back to priority order if preferred provider not specified or not enabled
         if AzureModelProvider.is_enabled():
+            if not preferred_provider:
+                LLM._set_model_provider("Azure")
             return AzureModelProvider.list_llm_models()
         if CAIIModelProvider.is_enabled():
+            if not preferred_provider:
+                LLM._set_model_provider("CAII")
             return CAIIModelProvider.list_llm_models()
         if OpenAiModelProvider.is_enabled():
+            if not preferred_provider:
+                LLM._set_model_provider("OpenAI")
             return OpenAiModelProvider.list_llm_models()
+
+        if not preferred_provider:
+            LLM._set_model_provider("Bedrock")
         return BedrockModelProvider.list_llm_models()
 
     @classmethod
