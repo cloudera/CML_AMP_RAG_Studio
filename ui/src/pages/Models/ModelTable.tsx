@@ -88,7 +88,7 @@ export const domainColumn: TableProps<Model>["columns"] = [
     key: "model_id",
     render(modelId?: string) {
       if (modelId?.includes(":")) {
-        const [domain, _] = modelId.split(":");
+        const domain = modelId.split(":")[0];
         return (
           <Flex gap={8}>
             <Typography.Text>{domain}</Typography.Text>
@@ -109,7 +109,7 @@ export const modelColumns: TableProps<Model>["columns"] = [
     width: 350,
     render(modelId?: string) {
       if (modelId?.includes(":")) {
-        const [_, name] = modelId.split(":");
+        const name = modelId.split(":")[1];
         return (
           <Flex gap={8}>
             <Typography.Text>{name}</Typography.Text>
