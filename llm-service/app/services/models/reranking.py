@@ -42,13 +42,7 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode
 
 from . import _model_type
-from .providers import (
-    AzureModelProvider,
-    BedrockModelProvider,
-    CAIIModelProvider,
-)
 from .providers._model_provider import ModelProvider
-from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
 from ..query.simple_reranker import SimpleReranker
 

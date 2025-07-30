@@ -41,13 +41,7 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
 from . import _model_type, _noop
-from .providers import (
-    AzureModelProvider,
-    BedrockModelProvider,
-    CAIIModelProvider,
-)
 from .providers._model_provider import ModelProvider
-from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
 
 

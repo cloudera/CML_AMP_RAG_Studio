@@ -36,21 +36,13 @@
 #  DATA.
 #
 from typing import Literal, Optional
-import os
 from fastapi import HTTPException
 from llama_index.core import llms
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 
 from . import _model_type, _noop
-from .providers import (
-    AzureModelProvider,
-    BedrockModelProvider,
-    CAIIModelProvider,
-)
 from .providers._model_provider import ModelProvider
-from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
-from ...config import settings
 
 
 class LLM(_model_type.ModelType[llms.LLM]):
