@@ -89,6 +89,11 @@ export const ModelProviderFields = ({
       label={"Cloudera AI Inference Domain"}
       initialValue={projectConfig?.caii_config.caii_domain}
       name={["caii_config", "caii_domain"]}
+      rules={[
+        {
+          required: modelProvider === "CAII" && !projectConfig?.is_valid_config,
+        },
+      ]}
       tooltip="The domain of the Cloudera AI Inference service."
       hidden={modelProvider !== "CAII"}
     >
