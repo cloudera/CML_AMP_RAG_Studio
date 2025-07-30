@@ -47,6 +47,7 @@ from .providers import (
     BedrockModelProvider,
     CAIIModelProvider,
 )
+from .providers._model_provider import ModelProvider
 from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
 from ..query.simple_reranker import SimpleReranker
@@ -62,13 +63,9 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
         if not model_name:
             return SimpleReranker(top_n=top_n)
 
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_reranking_model(model_name, top_n)
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_reranking_model(model_name, top_n)
-        if OpenAiModelProvider.is_enabled():
-            pass  # no OpenAI reranking models available
-        return BedrockModelProvider.get_reranking_model(model_name, top_n)
+        return ModelProvider.get_provider_class().get_reranking_model(
+            name=model_name, top_n=top_n
+        )
 
     @staticmethod
     def get_noop() -> BaseNodePostprocessor:
@@ -76,13 +73,7 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.list_reranking_models()
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.list_reranking_models()
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.list_reranking_models()
-        return BedrockModelProvider.list_reranking_models()
+        return ModelProvider.get_provider_class().list_reranking_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:

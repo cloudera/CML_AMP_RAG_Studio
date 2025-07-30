@@ -46,6 +46,7 @@ from .providers import (
     BedrockModelProvider,
     CAIIModelProvider,
 )
+from .providers._model_provider import ModelProvider
 from .providers.openai import OpenAiModelProvider
 from ..caii.types import ModelResponse
 
@@ -56,13 +57,7 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
         if model_name is None:
             model_name = cls.list_available()[0].model_id
 
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_embedding_model(model_name)
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_embedding_model(model_name)
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_embedding_model(model_name)
-        return BedrockModelProvider.get_embedding_model(model_name)
+        return ModelProvider.get_provider_class().get_embedding_model(model_name)
 
     @staticmethod
     def get_noop() -> BaseEmbedding:
@@ -70,13 +65,7 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.list_embedding_models()
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.list_embedding_models()
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.list_embedding_models()
-        return BedrockModelProvider.list_embedding_models()
+        return ModelProvider.get_provider_class().list_embedding_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:
