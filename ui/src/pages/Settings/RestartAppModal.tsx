@@ -168,6 +168,8 @@ const RestartAppModal = ({
     form
       .validateFields()
       .then((values) => {
+        // Ensure model_provider is always a valid ModelSource (not undefined)
+        values.model_provider = modelProvider ?? "Bedrock";
         if (modelProvider === "CAII") {
           values.azure_config = {};
           values.openai_config = {};

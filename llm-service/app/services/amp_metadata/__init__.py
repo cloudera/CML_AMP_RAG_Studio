@@ -40,7 +40,7 @@ import os
 import re
 import socket
 import subprocess
-from typing import Optional, cast, Protocol
+from typing import Optional, Protocol
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -50,6 +50,13 @@ from app.config import (
     ChatStoreProviderType,
     VectorDbProviderType,
     MetadataDbProviderType,
+    ModelProviderType,
+)
+from app.services.models.providers import (
+    CAIIModelProvider,
+    OpenAiModelProvider,
+    AzureModelProvider,
+    BedrockModelProvider,
 )
 
 
@@ -128,6 +135,7 @@ class ProjectConfig(BaseModel):
     chat_store_provider: ChatStoreProviderType
     vector_db_provider: VectorDbProviderType
     metadata_db_provider: MetadataDbProviderType
+    model_provider: Optional[ModelProviderType] = None
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -191,8 +199,35 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
 
     open_ai_key = environ.get("OPENAI_API_KEY") or None
 
+    # Get preferred model provider if set
+    preferred_provider = environ.get("MODEL_PROVIDER") or None
+
     message = ""
     valid_model_config_exists = False
+
+    # Check if the preferred provider is properly configured
+    if preferred_provider:
+        valid_model_config_exists = False
+        message = (
+            f"Preferred provider {preferred_provider} is not properly configured. \n"
+        )
+        valid_message = (
+            f"Preferred provider {preferred_provider} is properly configured. \n"
+        )
+        if preferred_provider == "Bedrock":
+            valid_model_config_exists = BedrockModelProvider.is_enabled()
+        elif preferred_provider == "Azure":
+            valid_model_config_exists = AzureModelProvider.is_enabled()
+        elif preferred_provider == "OpenAI":
+            valid_model_config_exists = OpenAiModelProvider.is_enabled()
+        elif preferred_provider == "CAII":
+            valid_model_config_exists = CAIIModelProvider.is_enabled()
+        return ValidationResult(
+            valid=valid_model_config_exists,
+            message=valid_message if valid_model_config_exists else message,
+        )
+
+    # Otherwise, check all available providers as before
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region
     if caii_domain is not None:
         print("Using CAII for LLMs/embeddings; CAII_DOMAIN is set")
@@ -205,23 +240,11 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
             print(f"ERROR: CAII domain {caii_domain} can not be resolved")
             message = message + f"CAII domain {caii_domain} can not be resolved. \n"
 
-    if any([access_key_id, secret_key_id, default_region]):
-        if all([access_key_id, secret_key_id, default_region]):
-            valid_model_config_exists = True
-            message = "AWS Config is valid for Bedrock. \n"
-        else:
-            print(
-                "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
-            )
-            message = (
-                message
-                + "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set. \n"
-            )
-
     if any([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
         if all([azure_openai_api_key, azure_openai_endpoint, openai_api_version]):
             valid_model_config_exists = True
-            message = "Azure config is valid. \n"
+            if not message:
+                message = "Azure config is valid. \n"
         else:
             print(
                 "Azure config is not valid; AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, and OPENAI_API_VERSION are all needed."
@@ -233,10 +256,32 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
     if any([open_ai_key]):
         if open_ai_key:
             valid_model_config_exists = True
-            message = "OpenAI config is valid. \n"
+            if not message:
+                message = "OpenAI config is valid. \n"
+
+    if any([access_key_id, secret_key_id, default_region]):
+        if all([access_key_id, secret_key_id, default_region]):
+            valid_model_config_exists = True
+            if not message:
+                message = "AWS Config is valid for Bedrock. \n"
+        else:
+            print(
+                "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set"
+            )
+            message = (
+                message
+                + "AWS Config does not contain all required keys; AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_DEFAULT_REGION are not all set. \n"
+            )
 
     if message == "":
-        return ValidationResult(valid=True, message="No model configuration found.")
+        # check to see if CAII models are available via discovery
+        if CAIIModelProvider.is_enabled():
+            message = "CAII models are available."
+            valid_model_config_exists = True
+        else:
+            return ValidationResult(
+                valid=False, message="No model configuration found."
+            )
 
     return ValidationResult(valid=valid_model_config_exists, message=message)
 
@@ -277,6 +322,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
             "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
             "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
+            "MODEL_PROVIDER": config.model_provider or "",
             "AWS_DEFAULT_REGION": config.aws_config.region or "",
             "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
             "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -293,9 +339,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
-            "DB_URL": config.metadata_db_config.jdbc_url,
-            "DB_USERNAME": config.metadata_db_config.username,
-            "DB_PASSWORD": config.metadata_db_config.password,
+            "DB_URL": config.metadata_db_config.jdbc_url or "",
+            "DB_USERNAME": config.metadata_db_config.username or "",
+            "DB_PASSWORD": config.metadata_db_config.password or "",
         }.items()
     }
 
@@ -338,6 +384,12 @@ def build_configuration(
     )
     validate_config = validate(env)
 
+    model_provider = (
+        TypeAdapter(ModelProviderType).validate_python(env.get("MODEL_PROVIDER"))
+        if env.get("MODEL_PROVIDER")
+        else None
+    )
+
     return ProjectConfigPlus(
         use_enhanced_pdf_processing=TypeAdapter(bool).validate_python(
             env.get("USE_ENHANCED_PDF_PROCESSING", False),
@@ -353,6 +405,7 @@ def build_configuration(
         vector_db_provider=TypeAdapter(VectorDbProviderType).validate_python(
             env.get("VECTOR_DB_PROVIDER", "QDRANT")
         ),
+        model_provider=model_provider,
         aws_config=aws_config,
         azure_config=azure_config,
         caii_config=caii_config,
@@ -388,18 +441,6 @@ def update_project_environment(new_env: dict[str, str]) -> None:
         client.update_project(project_id=project_id, body=project)
     except ImportError:
         pass
-
-
-def get_project_environment() -> dict[str, str]:
-    try:
-        import cmlapi
-
-        client = cmlapi.default_client()
-        project_id = settings.cdsw_project_id
-        project = client.get_project(project_id=project_id)
-        return cast(dict[str, str], json.loads(project.environment))
-    except ImportError:
-        return dict(os.environ)
 
 
 class CMLApplication(Protocol):

@@ -46,6 +46,7 @@ import {
   QueryKeys,
   UseMutationType,
 } from "src/api/utils.ts";
+import { ModelSource } from "src/api/modelsApi.ts";
 
 export const useGetAmpUpdateStatus = () => {
   return useQuery({
@@ -186,6 +187,7 @@ export interface ProjectConfig {
   chat_store_provider: "Local" | "S3";
   metadata_db_provider: MetadataDBProvider;
   vector_db_provider: VectorDBProvider;
+  model_provider: ModelSource;
   metadata_db_config: MetadataDBConfig;
   aws_config: AwsConfig;
   azure_config: AzureConfig;

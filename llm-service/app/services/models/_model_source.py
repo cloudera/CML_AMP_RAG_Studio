@@ -1,6 +1,6 @@
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -35,14 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from ._model_source import ModelSource
-from .embedding import Embedding
-from .llm import LLM
-from .providers._model_provider import ModelProvider
-from .reranking import Reranking
 
-__all__ = ["Embedding", "LLM", "Reranking"]
+from enum import Enum
 
 
-def get_model_source() -> ModelSource:
-    return ModelProvider.get_provider_class().get_model_source()
+class ModelSource(str, Enum):
+    BEDROCK = "Bedrock"
+    CAII = "CAII"
+    AZURE = "Azure"
+    OPENAI = "OpenAI"
+
+

@@ -35,67 +35,61 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-
-import { Table, TableProps } from "antd";
-import { Model, useTestRerankingModel } from "src/api/modelsApi.ts";
 import {
-  getColumnsForModelSource,
-  TestCell,
-} from "pages/Models/ModelTable.tsx";
+  Model,
+  useGetCAIIModelStatus,
+  useGetModelSource,
+} from "src/api/modelsApi.ts";
+import { memo } from "react";
+import { Spin, Tooltip } from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { cdlRed600 } from "src/cuix/variables.ts";
 
-const RerankingModelTestCell = ({ model }: { model: Model }) => {
+const ModelStatusCell = memo(({ model }: { model: Model }) => {
+  const { data: modelSource, error: modelSourceError } = useGetModelSource();
   const {
-    data: testResult,
-    isPending,
-    error,
-    mutate,
-  } = useTestRerankingModel({
-    onError: () => undefined,
-  });
+    data: modelStatus,
+    isLoading,
+    error: caiiModelStatusError,
+  } = useGetCAIIModelStatus(model.model_id, modelSource);
 
-  const handleTestModel = () => {
-    mutate(model.model_id);
-  };
+  if (!model.model_id) {
+    return null;
+  }
 
-  return (
-    <TestCell
-      onClick={handleTestModel}
-      model={model}
-      loading={isPending}
-      error={error}
-      testResult={testResult}
-    />
-  );
-};
+  if (modelSourceError) {
+    return (
+      <Tooltip
+        title={modelSourceError.message || "Error fetching model source"}
+      >
+        <ExclamationCircleOutlined style={{ color: cdlRed600 }} />
+      </Tooltip>
+    );
+  }
 
-const testCell: TableProps<Model>["columns"] = [
-  {
-    title: "Test",
-    width: 140,
-    render: (_, model) => {
-      return <RerankingModelTestCell model={model} />;
-    },
-  },
-];
+  if (isLoading) {
+    return <Spin size="small" style={{ marginLeft: 8 }} />;
+  }
 
-const RerankingModelTable = ({
-  rerankingModels,
-  areRerankingModelsLoading,
-  modelSource,
-}: {
-  rerankingModels?: Model[];
-  areRerankingModelsLoading: boolean;
-  modelSource?: "CAII" | "Bedrock" | "Azure" | "OpenAI" | undefined;
-}) => {
-  return (
-    <Table
-      dataSource={rerankingModels}
-      columns={[...(getColumnsForModelSource(modelSource) ?? []), ...testCell]}
-      style={{ width: "100%" }}
-      loading={areRerankingModelsLoading}
-      rowKey={(record) => record.model_id}
-    />
-  );
-};
+  if (caiiModelStatusError) {
+    return (
+      <Tooltip
+        title={caiiModelStatusError.message || "Error fetching model status"}
+      >
+        <ExclamationCircleOutlined style={{ color: cdlRed600 }} />
+      </Tooltip>
+    );
+  }
 
-export default RerankingModelTable;
+  if (modelStatus) {
+    return <>{modelStatus.available ? "Available" : "Not Ready"}</>;
+  }
+
+  if (model.available === null) {
+    return <>Unknown</>;
+  }
+
+  return <>{model.available ? "Available" : "Not Ready"}</>;
+});
+
+export default ModelStatusCell;
