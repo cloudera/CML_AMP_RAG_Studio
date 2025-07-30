@@ -53,6 +53,7 @@ from pydantic import TypeAdapter
 
 from app.config import settings
 from ._model_provider import ModelProvider
+from ..model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import raise_for_http_error, timed_lru_cache
@@ -307,6 +308,10 @@ class BedrockModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> AWSBedrockRerank:
         return AWSBedrockRerank(rerank_model_name=name, top_n=top_n)
+
+    @classmethod
+    def get_model_source(cls):
+        return ModelSource.BEDROCK
 
 
 # ensure interface is implemented

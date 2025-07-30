@@ -44,6 +44,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 
 from ._model_provider import ModelProvider
+from ..model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ....config import settings
@@ -112,6 +113,10 @@ class OpenAiModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         raise NotImplementedError("No reranking models available")
+
+    @classmethod
+    def get_model_source(cls):
+        return ModelSource.OPENAI
 
 
 # ensure interface is implemented

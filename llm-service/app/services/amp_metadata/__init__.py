@@ -52,7 +52,12 @@ from app.config import (
     MetadataDbProviderType,
     ModelProviderType,
 )
-from app.services.models import CAIIModelProvider
+from app.services.models import (
+    CAIIModelProvider,
+    OpenAiModelProvider,
+    AzureModelProvider,
+    BedrockModelProvider,
+)
 
 
 class AwsConfig(BaseModel):
@@ -202,38 +207,19 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
 
     # Check if the preferred provider is properly configured
     if preferred_provider:
-        if preferred_provider == "Bedrock" and all(
-            [access_key_id, secret_key_id, default_region]
-        ):
-            valid_model_config_exists = True
-        elif preferred_provider == "Azure" and all(
-            [azure_openai_api_key, azure_openai_endpoint, openai_api_version]
-        ):
-            valid_model_config_exists = True
-            message = (
-                f"Preferred provider {preferred_provider} is properly configured. \n"
-            )
-        elif preferred_provider == "OpenAI" and open_ai_key:
-            valid_model_config_exists = True
-            message = (
-                f"Preferred provider {preferred_provider} is properly configured. \n"
-            )
-        elif preferred_provider == "CAII" and (
-            caii_domain or CAIIModelProvider.is_enabled()
-        ):
-            valid_model_config_exists = True
-            message = (
-                f"Preferred provider {preferred_provider} is properly configured. \n"
-            )
-        else:
-            print(
-                f"WARNING: Preferred provider {preferred_provider} is not properly configured."
-            )
-            message = f"WARNING: Preferred provider {preferred_provider} is not properly configured. \n"
+        valid_model_config_exists = False
+        message = f"Preferred provider {preferred_provider} is not properly configured. \n"
+        valid_message = f"Preferred provider {preferred_provider} is properly configured. \n"
+        if preferred_provider == "Bedrock":
+            valid_model_config_exists = BedrockModelProvider.is_enabled()
+        elif preferred_provider == "Azure":
+            valid_model_config_exists =  AzureModelProvider.is_enabled()
+        elif preferred_provider == "OpenAI":
+            valid_model_config_exists =  OpenAiModelProvider.is_enabled()
+        elif preferred_provider == "CAII":
+            valid_model_config_exists =  CAIIModelProvider.is_enabled()
+        return ValidationResult(valid=valid_model_config_exists, message=valid_message if valid_model_config_exists else message)
 
-    # If we already determined the config is valid based on preferred provider, return early
-    if valid_model_config_exists:
-        return ValidationResult(valid=valid_model_config_exists, message=message)
 
     # Otherwise, check all available providers as before
     # 1. if you don't have a caii_domain, you _must_ have an access key, secret key, and default region

@@ -122,3 +122,8 @@ class ModelProvider(abc.ABC):
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         """Return reranking model with `name`."""
         raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def get_model_source(cls):
+        raise NotImplementedError

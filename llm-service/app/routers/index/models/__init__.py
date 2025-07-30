@@ -39,6 +39,8 @@ from typing import List, Literal
 
 from fastapi import APIRouter
 
+import app.services.models
+import app.services.models.model_source
 from .... import exceptions
 from ....services import models
 from ....services.caii.caii import describe_endpoint, build_model_response
@@ -69,8 +71,8 @@ def get_reranking_models() -> List[ModelResponse]:
     "/model_source", summary="Model source enabled - Bedrock, CAII, OpenAI or Azure"
 )
 @exceptions.propagates
-def get_model() -> models.ModelSource:
-    return models.get_model_source()
+def get_model() -> app.services.models.model_source.ModelSource:
+    return app.services.models.get_model_source()
 
 
 @router.get(path="/caii/endpoint/{endpoint_name}", summary="Get CAII endpoint details.")
