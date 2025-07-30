@@ -38,7 +38,12 @@
 
 import { Table, TableProps } from "antd";
 import { Model, useTestRerankingModel } from "src/api/modelsApi.ts";
-import { modelColumns, TestCell } from "pages/Models/ModelTable.tsx";
+import {
+  domainColumn,
+  modelColumns,
+  TestCell,
+} from "pages/Models/ModelTable.tsx";
+import { ColumnsType } from "antd/es/table";
 
 const RerankingModelTestCell = ({ model }: { model: Model }) => {
   const {
@@ -78,14 +83,22 @@ const testCell: TableProps<Model>["columns"] = [
 const RerankingModelTable = ({
   rerankingModels,
   areRerankingModelsLoading,
+  modelSource,
 }: {
   rerankingModels?: Model[];
   areRerankingModelsLoading: boolean;
+  modelSource?: "CAII" | "Bedrock" | "Azure" | "OpenAI" | undefined;
 }) => {
+  const domainColumns: ColumnsType<Model> | undefined =
+    modelSource === "CAII" ? domainColumn : undefined;
   return (
     <Table
       dataSource={rerankingModels}
-      columns={modelColumns ? [...modelColumns, ...testCell] : testCell}
+      columns={
+        modelColumns
+          ? [...(domainColumns ?? []), ...modelColumns, ...testCell]
+          : testCell
+      }
       style={{ width: "100%" }}
       loading={areRerankingModelsLoading}
       rowKey={(record) => record.model_id}

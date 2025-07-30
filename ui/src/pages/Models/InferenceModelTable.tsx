@@ -37,8 +37,13 @@
  ******************************************************************************/
 
 import { Table, TableProps } from "antd";
-import { modelColumns, TestCell } from "pages/Models/ModelTable.tsx";
+import {
+  domainColumn,
+  modelColumns,
+  TestCell,
+} from "pages/Models/ModelTable.tsx";
 import { Model, useTestLlmModel } from "src/api/modelsApi.ts";
+import { ColumnsType } from "antd/es/table";
 
 const InferenceModelTestCell = ({ model }: { model: Model }) => {
   const {
@@ -78,14 +83,23 @@ const testCell: TableProps<Model>["columns"] = [
 const InferenceModelTable = ({
   inferenceModels,
   areInferenceModelsLoading,
+  modelSource,
 }: {
   inferenceModels?: Model[];
   areInferenceModelsLoading: boolean;
+  modelSource?: "CAII" | "Bedrock" | "Azure" | "OpenAI" | undefined;
 }) => {
+  const domainColumns: ColumnsType<Model> | undefined =
+    modelSource === "CAII" ? domainColumn : undefined;
+
   return (
     <Table
       dataSource={inferenceModels}
-      columns={modelColumns ? [...modelColumns, ...testCell] : testCell}
+      columns={
+        modelColumns
+          ? [...(domainColumns ?? []), ...modelColumns, ...testCell]
+          : testCell
+      }
       style={{ width: "100%" }}
       loading={areInferenceModelsLoading}
       rowKey={(record) => record.model_id}

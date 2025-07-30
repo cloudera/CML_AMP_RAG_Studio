@@ -80,12 +80,45 @@ export const TestCell = ({
   );
 };
 
+export const domainColumn: TableProps<Model>["columns"] = [
+  {
+    title: "Domain",
+    dataIndex: "model_id",
+    width: 1000,
+    key: "model_id",
+    render(modelId?: string) {
+      if (modelId?.includes(":")) {
+        const [domain, _] = modelId.split(":");
+        return (
+          <Flex gap={8}>
+            <Typography.Text>{domain}</Typography.Text>
+          </Flex>
+        );
+      } else {
+        return null;
+      }
+    },
+  },
+];
+
 export const modelColumns: TableProps<Model>["columns"] = [
   {
     title: "Model ID",
     dataIndex: "model_id",
     key: "model_id",
     width: 350,
+    render(modelId?: string) {
+      if (modelId?.includes(":")) {
+        const [_, name] = modelId.split(":");
+        return (
+          <Flex gap={8}>
+            <Typography.Text>{name}</Typography.Text>
+          </Flex>
+        );
+      } else {
+        return <Typography.Text type="secondary">{modelId}</Typography.Text>;
+      }
+    },
   },
   {
     title: "Name",
