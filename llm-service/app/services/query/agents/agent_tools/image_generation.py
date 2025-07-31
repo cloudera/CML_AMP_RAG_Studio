@@ -39,13 +39,17 @@ import abc
 import base64
 import json
 import os
-from typing import Any, Literal, Optional
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, Literal, Optional
 
 import boto3
+from llama_index.core.tools import BaseTool
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 from llama_index.tools.openai import (
     OpenAIImageGenerationToolSpec as LlamaIndexOpenAIImageGenerationToolSpec,
 )
+from llama_index.tools.openai.image_generation.base import DEFAULT_SIZE
 
 from app.config import settings
 from app.services.query.agents.agent_tools.stable_diffusion_types import (
@@ -59,6 +63,32 @@ from app.services.query.agents.agent_tools.titan_image_types import (
     TitanImageGenerationConfig,
     ValidTitanImageSizes,
 )
+
+
+# Define image generation tool IDs for different providers
+class ImageGenerationTools(str, Enum):
+    """Enum for image generation tool IDs."""
+
+    OPENAI_IMAGE_GENERATION = "openai-image-generation"
+    BEDROCK_STABLE_DIFFUSION = "bedrock-stable-diffusion"
+    BEDROCK_TITAN_IMAGE = "bedrock-titan-image"
+
+
+# Tool metadata for UI display
+IMAGE_GENERATION_TOOL_METADATA: Dict[str, Dict[str, Any]] = {
+    ImageGenerationTools.OPENAI_IMAGE_GENERATION: {
+        "display_name": "OpenAI Image Generation",
+        "description": "Generate images using OpenAI's DALL-E model",
+    },
+    ImageGenerationTools.BEDROCK_STABLE_DIFFUSION: {
+        "display_name": "Stable Diffusion (Bedrock)",
+        "description": "Generate images using Stable Diffusion models on AWS Bedrock",
+    },
+    ImageGenerationTools.BEDROCK_TITAN_IMAGE: {
+        "display_name": "Titan Image Generator (Bedrock)",
+        "description": "Generate images using Amazon's Titan Image Generator on AWS Bedrock",
+    },
+}
 
 
 class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
@@ -89,6 +119,59 @@ class OpenAIImageGenerationToolSpec(
             api_key=api_key,
             cache_dir=ImageGeneratorToolSpec.get_cache_dir(),
         )
+
+    def image_generation(
+        self,
+        text: str,
+        model: Optional[str] = "dall-e-3",
+        quality: Optional[str] = "standard",
+        num_images: Optional[int] = 1,
+        size: Optional[str] = DEFAULT_SIZE,
+        style: Optional[str] = "vivid",
+        timeout: Optional[int] = None,
+        download: bool = True,  # For suppressing signature error
+    ) -> str:
+        """
+        This tool accepts a natural language string and will use OpenAI's DALL-E model to generate an image.
+
+        Args:
+            text: The text to generate an image from.
+
+            model: The model to use for image generation. Defaults to `dall-e-3`.
+                Must be one of `dall-e-2` or `dall-e-3`.
+
+            num_images: The number of images to generate. Defaults to 1.
+                Must be between 1 and 10. For `dall-e-3`, only `n=1` is supported.
+
+            quality: The quality of the image that will be generated. Defaults to `standard`.
+                Must be one of `standard` or `hd`. `hd` creates images with finer
+                details and greater consistency across the image. This param is only supported
+                for `dall-e-3`.
+
+            size: The size of the generated images. Defaults to `1024x1024`.
+                Must be one of `256x256`, `512x512`, or `1024x1024` for `dall-e-2`.
+                Must be one of `1024x1024`, `1792x1024`, or `1024x1792` for `dall-e-3` models.
+
+            style: The style of the generated images. Defaults to `vivid`.
+                Must be one of `vivid` or `natural`.
+                Vivid causes the model to lean towards generating hyper-real and dramatic images.
+                Natural causes the model to produce more natural, less hyper-real looking images.
+                This param is only supported for `dall-e-3`.
+
+            timeout: Override the client-level default timeout for this request, in seconds. Defaults to `None`.
+        """
+        image_path = super().image_generation(
+            text=text,
+            model=model,
+            quality=quality,
+            num_images=num_images,
+            size=size,
+            style=style,
+            timeout=timeout,
+            download=True,
+        )
+        image_name = Path(image_path[0]).name
+        return f"/cache/{image_name}"
 
 
 class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):

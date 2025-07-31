@@ -47,6 +47,11 @@ from pydantic import BaseModel
 
 from .... import exceptions
 from ....config import settings
+from ....services.models import get_model_source, ModelSource
+from ....services.query.agents.agent_tools.image_generation import (
+    ImageGenerationTools,
+    IMAGE_GENERATION_TOOL_METADATA,
+)
 from ....services.utils import has_admin_rights
 
 logger = logging.getLogger(__name__)
@@ -104,9 +109,48 @@ def get_mcp_config() -> dict[str, Any]:
 )
 @exceptions.propagates
 def tools() -> list[ToolMetadata]:
-
+    # Get MCP tools from config
     mcp_config = get_mcp_config()
-    return [ToolMetadata(**server) for server in mcp_config["mcp_servers"]]
+    tool_list = [ToolMetadata(**server) for server in mcp_config["mcp_servers"]]
+
+    image_gen_tools = get_image_generation_tool_metadata()
+    if image_gen_tools:
+        tool_list.extend(image_gen_tools)
+
+    return tool_list
+
+
+def get_image_generation_tool_metadata() -> list[ToolMetadata]:
+    # Get current model provider
+    model_source = get_model_source()
+    # Add image generation tools based on the current model provider
+    if model_source == ModelSource.OPENAI:
+        tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
+            ImageGenerationTools.OPENAI_IMAGE_GENERATION
+        ]
+        return [
+            ToolMetadata(
+                name=ImageGenerationTools.OPENAI_IMAGE_GENERATION,
+                metadata={
+                    "description": tool_metadata["description"],
+                    "display_name": tool_metadata["display_name"],
+                },
+            )
+        ]
+    if model_source == ModelSource.BEDROCK:
+        sd_tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
+            ImageGenerationTools.BEDROCK_STABLE_DIFFUSION
+        ]
+        return [
+            ToolMetadata(
+                name=ImageGenerationTools.BEDROCK_STABLE_DIFFUSION,
+                metadata={
+                    "description": sd_tool_metadata["description"],
+                    "display_name": sd_tool_metadata["display_name"],
+                },
+            ),
+        ]
+    return []
 
 
 @router.post(
