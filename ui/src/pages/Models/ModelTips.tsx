@@ -46,12 +46,12 @@ const helpText = {
     <Typography>
       <ul>
         <li>
-          Cloudera AI models must be enabled in the Cloudera AI Model Hub to use
-          them within RAG Studio.
+          You can use the Cloudera Model Hub to explore and import Embedding,
+          Chat, and Reranking models to your AI Registry.
         </li>
         <li>
-          At least one Inference and one Embedding model must available in the
-          Model Hub.
+          At least one Chat model and one Embedding model must be deployed and
+          active in AI Inference service.
         </li>
       </ul>
     </Typography>
@@ -107,6 +107,13 @@ const helpText = {
   ),
 };
 
+const modelSourceTitle = {
+  CAII: "Cloudera AI Inference",
+  Azure: "Azure OpenAI",
+  Bedrock: "Amazon Bedrock",
+  OpenAI: "OpenAI",
+};
+
 const getItems: (modelSource: ModelSource) => CollapseProps["items"] = (
   modelSource,
 ) => [
@@ -115,7 +122,7 @@ const getItems: (modelSource: ModelSource) => CollapseProps["items"] = (
     label: (
       <Flex gap={8}>
         <InfoCircleOutlined />
-        Tips: {modelSource} Configuration
+        Tips: {modelSourceTitle[modelSource]} Configuration
       </Flex>
     ),
     children: helpText[modelSource],

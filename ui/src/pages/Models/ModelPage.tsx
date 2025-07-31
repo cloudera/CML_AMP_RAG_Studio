@@ -92,16 +92,19 @@ const ModelPage = () => {
         <EmbeddingModelTable
           embeddingModels={embeddingModels}
           areEmbeddingModelsLoading={areEmbeddingModelsLoading}
+          modelSource={modelSource}
         />
         <Typography.Title level={3}>Inference Models</Typography.Title>
         <InferenceModelTable
           inferenceModels={inferenceModels}
           areInferenceModelsLoading={areInferenceModelsLoading}
+          modelSource={modelSource}
         />
         <Typography.Title level={3}>Reranking Models</Typography.Title>
         <RerankingModelTable
           rerankingModels={rerankingModels}
           areRerankingModelsLoading={areRerankingModelsLoading}
+          modelSource={modelSource}
         />
       </Flex>
     </Flex>

@@ -10,131 +10,111 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as LayoutSessionsIndexRouteImport } from './routes/_layout/sessions/index'
+import { Route as LayoutDocsIndexRouteImport } from './routes/_layout/docs/index'
+import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
+import { Route as LayoutProjectsLayoutProjectsRouteImport } from './routes/_layout/projects/_layout-projects'
+import { Route as LayoutModelsLayoutModelsRouteImport } from './routes/_layout/models/_layout-models'
+import { Route as LayoutDataLayoutDatasourcesRouteImport } from './routes/_layout/data/_layout-datasources'
+import { Route as LayoutChatsLayoutChatsRouteImport } from './routes/_layout/chats/_layout-chats'
+import { Route as LayoutAnalyticsLayoutAnalyticsRouteImport } from './routes/_layout/analytics/_layout-analytics'
+import { Route as LayoutSettingsLayoutSettingsIndexRouteImport } from './routes/_layout/settings/_layout-settings/index'
+import { Route as LayoutProjectsLayoutProjectsIndexRouteImport } from './routes/_layout/projects/_layout-projects/index'
+import { Route as LayoutModelsLayoutModelsIndexRouteImport } from './routes/_layout/models/_layout-models/index'
+import { Route as LayoutDataLayoutDatasourcesIndexRouteImport } from './routes/_layout/data/_layout-datasources/index'
+import { Route as LayoutChatsLayoutChatsIndexRouteImport } from './routes/_layout/chats/_layout-chats/index'
+import { Route as LayoutAnalyticsLayoutAnalyticsIndexRouteImport } from './routes/_layout/analytics/_layout-analytics/index'
+import { Route as LayoutProjectsLayoutProjectsProjectIdRouteImport } from './routes/_layout/projects/_layout-projects/$projectId'
+import { Route as LayoutDataLayoutDatasourcesDataSourceIdRouteImport } from './routes/_layout/data/_layout-datasources/$dataSourceId'
+import { Route as LayoutChatsLayoutChatsSessionIdRouteImport } from './routes/_layout/chats/_layout-chats/$sessionId'
+import { Route as LayoutChatsLayoutChatsProjectsProjectIdIndexRouteImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/index'
+import { Route as LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRouteImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/index'
+import { Route as LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRouteImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LayoutImport } from './routes/_layout'
-import { Route as IndexImport } from './routes/index'
-import { Route as LayoutSessionsIndexImport } from './routes/_layout/sessions/index'
-import { Route as LayoutDocsIndexImport } from './routes/_layout/docs/index'
-import { Route as LayoutSessionsSessionIdImport } from './routes/_layout/sessions/$sessionId'
-import { Route as LayoutProjectsLayoutProjectsImport } from './routes/_layout/projects/_layout-projects'
-import { Route as LayoutModelsLayoutModelsImport } from './routes/_layout/models/_layout-models'
-import { Route as LayoutDataLayoutDatasourcesImport } from './routes/_layout/data/_layout-datasources'
-import { Route as LayoutChatsLayoutChatsImport } from './routes/_layout/chats/_layout-chats'
-import { Route as LayoutAnalyticsLayoutAnalyticsImport } from './routes/_layout/analytics/_layout-analytics'
-import { Route as LayoutSettingsLayoutSettingsIndexImport } from './routes/_layout/settings/_layout-settings/index'
-import { Route as LayoutProjectsLayoutProjectsIndexImport } from './routes/_layout/projects/_layout-projects/index'
-import { Route as LayoutModelsLayoutModelsIndexImport } from './routes/_layout/models/_layout-models/index'
-import { Route as LayoutDataLayoutDatasourcesIndexImport } from './routes/_layout/data/_layout-datasources/index'
-import { Route as LayoutChatsLayoutChatsIndexImport } from './routes/_layout/chats/_layout-chats/index'
-import { Route as LayoutAnalyticsLayoutAnalyticsIndexImport } from './routes/_layout/analytics/_layout-analytics/index'
-import { Route as LayoutProjectsLayoutProjectsProjectIdImport } from './routes/_layout/projects/_layout-projects/$projectId'
-import { Route as LayoutDataLayoutDatasourcesDataSourceIdImport } from './routes/_layout/data/_layout-datasources/$dataSourceId'
-import { Route as LayoutChatsLayoutChatsSessionIdImport } from './routes/_layout/chats/_layout-chats/$sessionId'
-import { Route as LayoutChatsLayoutChatsProjectsProjectIdIndexImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/index'
-import { Route as LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/index'
-import { Route as LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdImport } from './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
+const LayoutProjectsRouteImport = createFileRoute('/_layout/projects')()
+const LayoutModelsRouteImport = createFileRoute('/_layout/models')()
+const LayoutDataRouteImport = createFileRoute('/_layout/data')()
+const LayoutChatsRouteImport = createFileRoute('/_layout/chats')()
+const LayoutAnalyticsRouteImport = createFileRoute('/_layout/analytics')()
 
-// Create Virtual Routes
-
-const LayoutProjectsImport = createFileRoute('/_layout/projects')()
-const LayoutModelsImport = createFileRoute('/_layout/models')()
-const LayoutDataImport = createFileRoute('/_layout/data')()
-const LayoutChatsImport = createFileRoute('/_layout/chats')()
-const LayoutAnalyticsImport = createFileRoute('/_layout/analytics')()
-
-// Create/Update Routes
-
-const LayoutRoute = LayoutImport.update({
+const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/_layout.lazy').then((d) => d.Route))
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
-
-const LayoutProjectsRoute = LayoutProjectsImport.update({
+const LayoutProjectsRoute = LayoutProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutModelsRoute = LayoutModelsImport.update({
+const LayoutModelsRoute = LayoutModelsRouteImport.update({
   id: '/models',
   path: '/models',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutDataRoute = LayoutDataImport.update({
+const LayoutDataRoute = LayoutDataRouteImport.update({
   id: '/data',
   path: '/data',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutChatsRoute = LayoutChatsImport.update({
+const LayoutChatsRoute = LayoutChatsRouteImport.update({
   id: '/chats',
   path: '/chats',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutAnalyticsRoute = LayoutAnalyticsImport.update({
+const LayoutAnalyticsRoute = LayoutAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutSessionsIndexRoute = LayoutSessionsIndexImport.update({
+const LayoutSessionsIndexRoute = LayoutSessionsIndexRouteImport.update({
   id: '/sessions/',
   path: '/sessions/',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutDocsIndexRoute = LayoutDocsIndexImport.update({
+const LayoutDocsIndexRoute = LayoutDocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
   getParentRoute: () => LayoutRoute,
 } as any)
-
-const LayoutSessionsSessionIdRoute = LayoutSessionsSessionIdImport.update({
+const LayoutSessionsSessionIdRoute = LayoutSessionsSessionIdRouteImport.update({
   id: '/sessions/$sessionId',
   path: '/sessions/$sessionId',
   getParentRoute: () => LayoutRoute,
 } as any)
-
 const LayoutProjectsLayoutProjectsRoute =
-  LayoutProjectsLayoutProjectsImport.update({
+  LayoutProjectsLayoutProjectsRouteImport.update({
     id: '/_layout-projects',
     getParentRoute: () => LayoutProjectsRoute,
   } as any)
-
-const LayoutModelsLayoutModelsRoute = LayoutModelsLayoutModelsImport.update({
-  id: '/_layout-models',
-  getParentRoute: () => LayoutModelsRoute,
-} as any)
-
+const LayoutModelsLayoutModelsRoute =
+  LayoutModelsLayoutModelsRouteImport.update({
+    id: '/_layout-models',
+    getParentRoute: () => LayoutModelsRoute,
+  } as any)
 const LayoutDataLayoutDatasourcesRoute =
-  LayoutDataLayoutDatasourcesImport.update({
+  LayoutDataLayoutDatasourcesRouteImport.update({
     id: '/_layout-datasources',
     getParentRoute: () => LayoutDataRoute,
   } as any)
-
-const LayoutChatsLayoutChatsRoute = LayoutChatsLayoutChatsImport.update({
+const LayoutChatsLayoutChatsRoute = LayoutChatsLayoutChatsRouteImport.update({
   id: '/_layout-chats',
   getParentRoute: () => LayoutChatsRoute,
 } as any)
-
 const LayoutAnalyticsLayoutAnalyticsRoute =
-  LayoutAnalyticsLayoutAnalyticsImport.update({
+  LayoutAnalyticsLayoutAnalyticsRouteImport.update({
     id: '/_layout-analytics',
     getParentRoute: () => LayoutAnalyticsRoute,
   } as any)
-
 const LayoutSettingsLayoutSettingsIndexRoute =
-  LayoutSettingsLayoutSettingsIndexImport.update({
+  LayoutSettingsLayoutSettingsIndexRouteImport.update({
     id: '/settings/_layout-settings/',
     path: '/settings/',
     getParentRoute: () => LayoutRoute,
@@ -143,9 +123,8 @@ const LayoutSettingsLayoutSettingsIndexRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutProjectsLayoutProjectsIndexRoute =
-  LayoutProjectsLayoutProjectsIndexImport.update({
+  LayoutProjectsLayoutProjectsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => LayoutProjectsLayoutProjectsRoute,
@@ -154,9 +133,8 @@ const LayoutProjectsLayoutProjectsIndexRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutModelsLayoutModelsIndexRoute =
-  LayoutModelsLayoutModelsIndexImport.update({
+  LayoutModelsLayoutModelsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => LayoutModelsLayoutModelsRoute,
@@ -165,9 +143,8 @@ const LayoutModelsLayoutModelsIndexRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutDataLayoutDatasourcesIndexRoute =
-  LayoutDataLayoutDatasourcesIndexImport.update({
+  LayoutDataLayoutDatasourcesIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => LayoutDataLayoutDatasourcesRoute,
@@ -176,9 +153,8 @@ const LayoutDataLayoutDatasourcesIndexRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutChatsLayoutChatsIndexRoute =
-  LayoutChatsLayoutChatsIndexImport.update({
+  LayoutChatsLayoutChatsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => LayoutChatsLayoutChatsRoute,
@@ -187,9 +163,8 @@ const LayoutChatsLayoutChatsIndexRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutAnalyticsLayoutAnalyticsIndexRoute =
-  LayoutAnalyticsLayoutAnalyticsIndexImport.update({
+  LayoutAnalyticsLayoutAnalyticsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => LayoutAnalyticsLayoutAnalyticsRoute,
@@ -198,9 +173,8 @@ const LayoutAnalyticsLayoutAnalyticsIndexRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutProjectsLayoutProjectsProjectIdRoute =
-  LayoutProjectsLayoutProjectsProjectIdImport.update({
+  LayoutProjectsLayoutProjectsProjectIdRouteImport.update({
     id: '/$projectId',
     path: '/$projectId',
     getParentRoute: () => LayoutProjectsLayoutProjectsRoute,
@@ -209,9 +183,8 @@ const LayoutProjectsLayoutProjectsProjectIdRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutDataLayoutDatasourcesDataSourceIdRoute =
-  LayoutDataLayoutDatasourcesDataSourceIdImport.update({
+  LayoutDataLayoutDatasourcesDataSourceIdRouteImport.update({
     id: '/$dataSourceId',
     path: '/$dataSourceId',
     getParentRoute: () => LayoutDataLayoutDatasourcesRoute,
@@ -220,9 +193,8 @@ const LayoutDataLayoutDatasourcesDataSourceIdRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutChatsLayoutChatsSessionIdRoute =
-  LayoutChatsLayoutChatsSessionIdImport.update({
+  LayoutChatsLayoutChatsSessionIdRouteImport.update({
     id: '/$sessionId',
     path: '/$sessionId',
     getParentRoute: () => LayoutChatsLayoutChatsRoute,
@@ -231,9 +203,8 @@ const LayoutChatsLayoutChatsSessionIdRoute =
       (d) => d.Route,
     ),
   )
-
 const LayoutChatsLayoutChatsProjectsProjectIdIndexRoute =
-  LayoutChatsLayoutChatsProjectsProjectIdIndexImport.update({
+  LayoutChatsLayoutChatsProjectsProjectIdIndexRouteImport.update({
     id: '/projects/$projectId/',
     path: '/projects/$projectId/',
     getParentRoute: () => LayoutChatsLayoutChatsRoute,
@@ -242,9 +213,8 @@ const LayoutChatsLayoutChatsProjectsProjectIdIndexRoute =
       './routes/_layout/chats/_layout-chats/projects/$projectId/index.lazy'
     ).then((d) => d.Route),
   )
-
 const LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute =
-  LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexImport.update({
+  LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRouteImport.update({
     id: '/projects/$projectId/sessions/',
     path: '/projects/$projectId/sessions/',
     getParentRoute: () => LayoutChatsLayoutChatsRoute,
@@ -253,9 +223,8 @@ const LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute =
       './routes/_layout/chats/_layout-chats/projects/$projectId/sessions/index.lazy'
     ).then((d) => d.Route),
   )
-
 const LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute =
-  LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdImport.update({
+  LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRouteImport.update({
     id: '/projects/$projectId/sessions/$sessionId',
     path: '/projects/$projectId/sessions/$sessionId',
     getParentRoute: () => LayoutChatsLayoutChatsRoute,
@@ -265,203 +234,348 @@ const LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute =
     ).then((d) => d.Route),
   )
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/analytics': typeof LayoutAnalyticsLayoutAnalyticsRouteWithChildren
+  '/chats': typeof LayoutChatsLayoutChatsRouteWithChildren
+  '/data': typeof LayoutDataLayoutDatasourcesRouteWithChildren
+  '/models': typeof LayoutModelsLayoutModelsRouteWithChildren
+  '/projects': typeof LayoutProjectsLayoutProjectsRouteWithChildren
+  '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
+  '/docs': typeof LayoutDocsIndexRoute
+  '/sessions': typeof LayoutSessionsIndexRoute
+  '/chats/$sessionId': typeof LayoutChatsLayoutChatsSessionIdRoute
+  '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
+  '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
+  '/analytics/': typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
+  '/chats/': typeof LayoutChatsLayoutChatsIndexRoute
+  '/data/': typeof LayoutDataLayoutDatasourcesIndexRoute
+  '/models/': typeof LayoutModelsLayoutModelsIndexRoute
+  '/projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
+  '/settings': typeof LayoutSettingsLayoutSettingsIndexRoute
+  '/chats/projects/$projectId': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
+  '/chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  '/chats/projects/$projectId/sessions': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/analytics': typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
+  '/chats': typeof LayoutChatsLayoutChatsIndexRoute
+  '/data': typeof LayoutDataLayoutDatasourcesIndexRoute
+  '/models': typeof LayoutModelsLayoutModelsIndexRoute
+  '/projects': typeof LayoutProjectsLayoutProjectsIndexRoute
+  '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
+  '/docs': typeof LayoutDocsIndexRoute
+  '/sessions': typeof LayoutSessionsIndexRoute
+  '/chats/$sessionId': typeof LayoutChatsLayoutChatsSessionIdRoute
+  '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
+  '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
+  '/settings': typeof LayoutSettingsLayoutSettingsIndexRoute
+  '/chats/projects/$projectId': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
+  '/chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  '/chats/projects/$projectId/sessions': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/_layout': typeof LayoutRouteWithChildren
+  '/_layout/analytics': typeof LayoutAnalyticsRouteWithChildren
+  '/_layout/analytics/_layout-analytics': typeof LayoutAnalyticsLayoutAnalyticsRouteWithChildren
+  '/_layout/chats': typeof LayoutChatsRouteWithChildren
+  '/_layout/chats/_layout-chats': typeof LayoutChatsLayoutChatsRouteWithChildren
+  '/_layout/data': typeof LayoutDataRouteWithChildren
+  '/_layout/data/_layout-datasources': typeof LayoutDataLayoutDatasourcesRouteWithChildren
+  '/_layout/models': typeof LayoutModelsRouteWithChildren
+  '/_layout/models/_layout-models': typeof LayoutModelsLayoutModelsRouteWithChildren
+  '/_layout/projects': typeof LayoutProjectsRouteWithChildren
+  '/_layout/projects/_layout-projects': typeof LayoutProjectsLayoutProjectsRouteWithChildren
+  '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
+  '/_layout/docs/': typeof LayoutDocsIndexRoute
+  '/_layout/sessions/': typeof LayoutSessionsIndexRoute
+  '/_layout/chats/_layout-chats/$sessionId': typeof LayoutChatsLayoutChatsSessionIdRoute
+  '/_layout/data/_layout-datasources/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
+  '/_layout/projects/_layout-projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
+  '/_layout/analytics/_layout-analytics/': typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
+  '/_layout/chats/_layout-chats/': typeof LayoutChatsLayoutChatsIndexRoute
+  '/_layout/data/_layout-datasources/': typeof LayoutDataLayoutDatasourcesIndexRoute
+  '/_layout/models/_layout-models/': typeof LayoutModelsLayoutModelsIndexRoute
+  '/_layout/projects/_layout-projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
+  '/_layout/settings/_layout-settings/': typeof LayoutSettingsLayoutSettingsIndexRoute
+  '/_layout/chats/_layout-chats/projects/$projectId/': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
+  '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
+  '/_layout/chats/_layout-chats/projects/$projectId/sessions/': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/chats'
+    | '/data'
+    | '/models'
+    | '/projects'
+    | '/sessions/$sessionId'
+    | '/docs'
+    | '/sessions'
+    | '/chats/$sessionId'
+    | '/data/$dataSourceId'
+    | '/projects/$projectId'
+    | '/analytics/'
+    | '/chats/'
+    | '/data/'
+    | '/models/'
+    | '/projects/'
+    | '/settings'
+    | '/chats/projects/$projectId'
+    | '/chats/projects/$projectId/sessions/$sessionId'
+    | '/chats/projects/$projectId/sessions'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/analytics'
+    | '/chats'
+    | '/data'
+    | '/models'
+    | '/projects'
+    | '/sessions/$sessionId'
+    | '/docs'
+    | '/sessions'
+    | '/chats/$sessionId'
+    | '/data/$dataSourceId'
+    | '/projects/$projectId'
+    | '/settings'
+    | '/chats/projects/$projectId'
+    | '/chats/projects/$projectId/sessions/$sessionId'
+    | '/chats/projects/$projectId/sessions'
+  id:
+    | '__root__'
+    | '/'
+    | '/_layout'
+    | '/_layout/analytics'
+    | '/_layout/analytics/_layout-analytics'
+    | '/_layout/chats'
+    | '/_layout/chats/_layout-chats'
+    | '/_layout/data'
+    | '/_layout/data/_layout-datasources'
+    | '/_layout/models'
+    | '/_layout/models/_layout-models'
+    | '/_layout/projects'
+    | '/_layout/projects/_layout-projects'
+    | '/_layout/sessions/$sessionId'
+    | '/_layout/docs/'
+    | '/_layout/sessions/'
+    | '/_layout/chats/_layout-chats/$sessionId'
+    | '/_layout/data/_layout-datasources/$dataSourceId'
+    | '/_layout/projects/_layout-projects/$projectId'
+    | '/_layout/analytics/_layout-analytics/'
+    | '/_layout/chats/_layout-chats/'
+    | '/_layout/data/_layout-datasources/'
+    | '/_layout/models/_layout-models/'
+    | '/_layout/projects/_layout-projects/'
+    | '/_layout/settings/_layout-settings/'
+    | '/_layout/chats/_layout-chats/projects/$projectId/'
+    | '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
+    | '/_layout/chats/_layout-chats/projects/$projectId/sessions/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  LayoutRoute: typeof LayoutRouteWithChildren
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
     '/_layout': {
       id: '/_layout'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof LayoutImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_layout/analytics': {
-      id: '/_layout/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof LayoutAnalyticsImport
-      parentRoute: typeof LayoutImport
-    }
-    '/_layout/analytics/_layout-analytics': {
-      id: '/_layout/analytics/_layout-analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof LayoutAnalyticsLayoutAnalyticsImport
-      parentRoute: typeof LayoutAnalyticsRoute
-    }
-    '/_layout/chats': {
-      id: '/_layout/chats'
-      path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof LayoutChatsImport
-      parentRoute: typeof LayoutImport
-    }
-    '/_layout/chats/_layout-chats': {
-      id: '/_layout/chats/_layout-chats'
-      path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof LayoutChatsLayoutChatsImport
-      parentRoute: typeof LayoutChatsRoute
-    }
-    '/_layout/data': {
-      id: '/_layout/data'
-      path: '/data'
-      fullPath: '/data'
-      preLoaderRoute: typeof LayoutDataImport
-      parentRoute: typeof LayoutImport
-    }
-    '/_layout/data/_layout-datasources': {
-      id: '/_layout/data/_layout-datasources'
-      path: '/data'
-      fullPath: '/data'
-      preLoaderRoute: typeof LayoutDataLayoutDatasourcesImport
-      parentRoute: typeof LayoutDataRoute
-    }
-    '/_layout/models': {
-      id: '/_layout/models'
-      path: '/models'
-      fullPath: '/models'
-      preLoaderRoute: typeof LayoutModelsImport
-      parentRoute: typeof LayoutImport
-    }
-    '/_layout/models/_layout-models': {
-      id: '/_layout/models/_layout-models'
-      path: '/models'
-      fullPath: '/models'
-      preLoaderRoute: typeof LayoutModelsLayoutModelsImport
-      parentRoute: typeof LayoutModelsRoute
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_layout/projects': {
       id: '/_layout/projects'
       path: '/projects'
       fullPath: '/projects'
-      preLoaderRoute: typeof LayoutProjectsImport
-      parentRoute: typeof LayoutImport
+      preLoaderRoute: typeof LayoutProjectsRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/_layout/projects/_layout-projects': {
-      id: '/_layout/projects/_layout-projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof LayoutProjectsLayoutProjectsImport
-      parentRoute: typeof LayoutProjectsRoute
+    '/_layout/models': {
+      id: '/_layout/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof LayoutModelsRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/_layout/sessions/$sessionId': {
-      id: '/_layout/sessions/$sessionId'
-      path: '/sessions/$sessionId'
-      fullPath: '/sessions/$sessionId'
-      preLoaderRoute: typeof LayoutSessionsSessionIdImport
-      parentRoute: typeof LayoutImport
+    '/_layout/data': {
+      id: '/_layout/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof LayoutDataRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/_layout/docs/': {
-      id: '/_layout/docs/'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof LayoutDocsIndexImport
-      parentRoute: typeof LayoutImport
+    '/_layout/chats': {
+      id: '/_layout/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof LayoutChatsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/analytics': {
+      id: '/_layout/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof LayoutAnalyticsRouteImport
+      parentRoute: typeof LayoutRoute
     }
     '/_layout/sessions/': {
       id: '/_layout/sessions/'
       path: '/sessions'
       fullPath: '/sessions'
-      preLoaderRoute: typeof LayoutSessionsIndexImport
-      parentRoute: typeof LayoutImport
+      preLoaderRoute: typeof LayoutSessionsIndexRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/_layout/chats/_layout-chats/$sessionId': {
-      id: '/_layout/chats/_layout-chats/$sessionId'
-      path: '/$sessionId'
-      fullPath: '/chats/$sessionId'
-      preLoaderRoute: typeof LayoutChatsLayoutChatsSessionIdImport
-      parentRoute: typeof LayoutChatsLayoutChatsImport
+    '/_layout/docs/': {
+      id: '/_layout/docs/'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof LayoutDocsIndexRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/_layout/data/_layout-datasources/$dataSourceId': {
-      id: '/_layout/data/_layout-datasources/$dataSourceId'
-      path: '/$dataSourceId'
-      fullPath: '/data/$dataSourceId'
-      preLoaderRoute: typeof LayoutDataLayoutDatasourcesDataSourceIdImport
-      parentRoute: typeof LayoutDataLayoutDatasourcesImport
+    '/_layout/sessions/$sessionId': {
+      id: '/_layout/sessions/$sessionId'
+      path: '/sessions/$sessionId'
+      fullPath: '/sessions/$sessionId'
+      preLoaderRoute: typeof LayoutSessionsSessionIdRouteImport
+      parentRoute: typeof LayoutRoute
     }
-    '/_layout/projects/_layout-projects/$projectId': {
-      id: '/_layout/projects/_layout-projects/$projectId'
-      path: '/$projectId'
-      fullPath: '/projects/$projectId'
-      preLoaderRoute: typeof LayoutProjectsLayoutProjectsProjectIdImport
-      parentRoute: typeof LayoutProjectsLayoutProjectsImport
+    '/_layout/projects/_layout-projects': {
+      id: '/_layout/projects/_layout-projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof LayoutProjectsLayoutProjectsRouteImport
+      parentRoute: typeof LayoutProjectsRoute
     }
-    '/_layout/analytics/_layout-analytics/': {
-      id: '/_layout/analytics/_layout-analytics/'
-      path: '/'
-      fullPath: '/analytics/'
-      preLoaderRoute: typeof LayoutAnalyticsLayoutAnalyticsIndexImport
-      parentRoute: typeof LayoutAnalyticsLayoutAnalyticsImport
+    '/_layout/models/_layout-models': {
+      id: '/_layout/models/_layout-models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof LayoutModelsLayoutModelsRouteImport
+      parentRoute: typeof LayoutModelsRoute
     }
-    '/_layout/chats/_layout-chats/': {
-      id: '/_layout/chats/_layout-chats/'
-      path: '/'
-      fullPath: '/chats/'
-      preLoaderRoute: typeof LayoutChatsLayoutChatsIndexImport
-      parentRoute: typeof LayoutChatsLayoutChatsImport
+    '/_layout/data/_layout-datasources': {
+      id: '/_layout/data/_layout-datasources'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof LayoutDataLayoutDatasourcesRouteImport
+      parentRoute: typeof LayoutDataRoute
     }
-    '/_layout/data/_layout-datasources/': {
-      id: '/_layout/data/_layout-datasources/'
-      path: '/'
-      fullPath: '/data/'
-      preLoaderRoute: typeof LayoutDataLayoutDatasourcesIndexImport
-      parentRoute: typeof LayoutDataLayoutDatasourcesImport
+    '/_layout/chats/_layout-chats': {
+      id: '/_layout/chats/_layout-chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof LayoutChatsLayoutChatsRouteImport
+      parentRoute: typeof LayoutChatsRoute
     }
-    '/_layout/models/_layout-models/': {
-      id: '/_layout/models/_layout-models/'
-      path: '/'
-      fullPath: '/models/'
-      preLoaderRoute: typeof LayoutModelsLayoutModelsIndexImport
-      parentRoute: typeof LayoutModelsLayoutModelsImport
-    }
-    '/_layout/projects/_layout-projects/': {
-      id: '/_layout/projects/_layout-projects/'
-      path: '/'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof LayoutProjectsLayoutProjectsIndexImport
-      parentRoute: typeof LayoutProjectsLayoutProjectsImport
+    '/_layout/analytics/_layout-analytics': {
+      id: '/_layout/analytics/_layout-analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof LayoutAnalyticsLayoutAnalyticsRouteImport
+      parentRoute: typeof LayoutAnalyticsRoute
     }
     '/_layout/settings/_layout-settings/': {
       id: '/_layout/settings/_layout-settings/'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof LayoutSettingsLayoutSettingsIndexImport
-      parentRoute: typeof LayoutImport
+      preLoaderRoute: typeof LayoutSettingsLayoutSettingsIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/projects/_layout-projects/': {
+      id: '/_layout/projects/_layout-projects/'
+      path: '/'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof LayoutProjectsLayoutProjectsIndexRouteImport
+      parentRoute: typeof LayoutProjectsLayoutProjectsRoute
+    }
+    '/_layout/models/_layout-models/': {
+      id: '/_layout/models/_layout-models/'
+      path: '/'
+      fullPath: '/models/'
+      preLoaderRoute: typeof LayoutModelsLayoutModelsIndexRouteImport
+      parentRoute: typeof LayoutModelsLayoutModelsRoute
+    }
+    '/_layout/data/_layout-datasources/': {
+      id: '/_layout/data/_layout-datasources/'
+      path: '/'
+      fullPath: '/data/'
+      preLoaderRoute: typeof LayoutDataLayoutDatasourcesIndexRouteImport
+      parentRoute: typeof LayoutDataLayoutDatasourcesRoute
+    }
+    '/_layout/chats/_layout-chats/': {
+      id: '/_layout/chats/_layout-chats/'
+      path: '/'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof LayoutChatsLayoutChatsIndexRouteImport
+      parentRoute: typeof LayoutChatsLayoutChatsRoute
+    }
+    '/_layout/analytics/_layout-analytics/': {
+      id: '/_layout/analytics/_layout-analytics/'
+      path: '/'
+      fullPath: '/analytics/'
+      preLoaderRoute: typeof LayoutAnalyticsLayoutAnalyticsIndexRouteImport
+      parentRoute: typeof LayoutAnalyticsLayoutAnalyticsRoute
+    }
+    '/_layout/projects/_layout-projects/$projectId': {
+      id: '/_layout/projects/_layout-projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof LayoutProjectsLayoutProjectsProjectIdRouteImport
+      parentRoute: typeof LayoutProjectsLayoutProjectsRoute
+    }
+    '/_layout/data/_layout-datasources/$dataSourceId': {
+      id: '/_layout/data/_layout-datasources/$dataSourceId'
+      path: '/$dataSourceId'
+      fullPath: '/data/$dataSourceId'
+      preLoaderRoute: typeof LayoutDataLayoutDatasourcesDataSourceIdRouteImport
+      parentRoute: typeof LayoutDataLayoutDatasourcesRoute
+    }
+    '/_layout/chats/_layout-chats/$sessionId': {
+      id: '/_layout/chats/_layout-chats/$sessionId'
+      path: '/$sessionId'
+      fullPath: '/chats/$sessionId'
+      preLoaderRoute: typeof LayoutChatsLayoutChatsSessionIdRouteImport
+      parentRoute: typeof LayoutChatsLayoutChatsRoute
     }
     '/_layout/chats/_layout-chats/projects/$projectId/': {
       id: '/_layout/chats/_layout-chats/projects/$projectId/'
       path: '/projects/$projectId'
       fullPath: '/chats/projects/$projectId'
-      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdIndexImport
-      parentRoute: typeof LayoutChatsLayoutChatsImport
-    }
-    '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId': {
-      id: '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
-      path: '/projects/$projectId/sessions/$sessionId'
-      fullPath: '/chats/projects/$projectId/sessions/$sessionId'
-      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdImport
-      parentRoute: typeof LayoutChatsLayoutChatsImport
+      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRouteImport
+      parentRoute: typeof LayoutChatsLayoutChatsRoute
     }
     '/_layout/chats/_layout-chats/projects/$projectId/sessions/': {
       id: '/_layout/chats/_layout-chats/projects/$projectId/sessions/'
       path: '/projects/$projectId/sessions'
       fullPath: '/chats/projects/$projectId/sessions'
-      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexImport
-      parentRoute: typeof LayoutChatsLayoutChatsImport
+      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRouteImport
+      parentRoute: typeof LayoutChatsLayoutChatsRoute
+    }
+    '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId': {
+      id: '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
+      path: '/projects/$projectId/sessions/$sessionId'
+      fullPath: '/chats/projects/$projectId/sessions/$sessionId'
+      preLoaderRoute: typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRouteImport
+      parentRoute: typeof LayoutChatsLayoutChatsRoute
     }
   }
 }
-
-// Create and export the route tree
 
 interface LayoutAnalyticsLayoutAnalyticsRouteChildren {
   LayoutAnalyticsLayoutAnalyticsIndexRoute: typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
@@ -644,335 +758,10 @@ const LayoutRouteChildren: LayoutRouteChildren = {
 const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '': typeof LayoutRouteWithChildren
-  '/analytics': typeof LayoutAnalyticsLayoutAnalyticsRouteWithChildren
-  '/chats': typeof LayoutChatsLayoutChatsRouteWithChildren
-  '/data': typeof LayoutDataLayoutDatasourcesRouteWithChildren
-  '/models': typeof LayoutModelsLayoutModelsRouteWithChildren
-  '/projects': typeof LayoutProjectsLayoutProjectsRouteWithChildren
-  '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
-  '/docs': typeof LayoutDocsIndexRoute
-  '/sessions': typeof LayoutSessionsIndexRoute
-  '/chats/$sessionId': typeof LayoutChatsLayoutChatsSessionIdRoute
-  '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
-  '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
-  '/analytics/': typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
-  '/chats/': typeof LayoutChatsLayoutChatsIndexRoute
-  '/data/': typeof LayoutDataLayoutDatasourcesIndexRoute
-  '/models/': typeof LayoutModelsLayoutModelsIndexRoute
-  '/projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
-  '/settings': typeof LayoutSettingsLayoutSettingsIndexRoute
-  '/chats/projects/$projectId': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
-  '/chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
-  '/chats/projects/$projectId/sessions': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
-}
-
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '': typeof LayoutRouteWithChildren
-  '/analytics': typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
-  '/chats': typeof LayoutChatsLayoutChatsIndexRoute
-  '/data': typeof LayoutDataLayoutDatasourcesIndexRoute
-  '/models': typeof LayoutModelsLayoutModelsIndexRoute
-  '/projects': typeof LayoutProjectsLayoutProjectsIndexRoute
-  '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
-  '/docs': typeof LayoutDocsIndexRoute
-  '/sessions': typeof LayoutSessionsIndexRoute
-  '/chats/$sessionId': typeof LayoutChatsLayoutChatsSessionIdRoute
-  '/data/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
-  '/projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
-  '/settings': typeof LayoutSettingsLayoutSettingsIndexRoute
-  '/chats/projects/$projectId': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
-  '/chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
-  '/chats/projects/$projectId/sessions': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/_layout': typeof LayoutRouteWithChildren
-  '/_layout/analytics': typeof LayoutAnalyticsRouteWithChildren
-  '/_layout/analytics/_layout-analytics': typeof LayoutAnalyticsLayoutAnalyticsRouteWithChildren
-  '/_layout/chats': typeof LayoutChatsRouteWithChildren
-  '/_layout/chats/_layout-chats': typeof LayoutChatsLayoutChatsRouteWithChildren
-  '/_layout/data': typeof LayoutDataRouteWithChildren
-  '/_layout/data/_layout-datasources': typeof LayoutDataLayoutDatasourcesRouteWithChildren
-  '/_layout/models': typeof LayoutModelsRouteWithChildren
-  '/_layout/models/_layout-models': typeof LayoutModelsLayoutModelsRouteWithChildren
-  '/_layout/projects': typeof LayoutProjectsRouteWithChildren
-  '/_layout/projects/_layout-projects': typeof LayoutProjectsLayoutProjectsRouteWithChildren
-  '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
-  '/_layout/docs/': typeof LayoutDocsIndexRoute
-  '/_layout/sessions/': typeof LayoutSessionsIndexRoute
-  '/_layout/chats/_layout-chats/$sessionId': typeof LayoutChatsLayoutChatsSessionIdRoute
-  '/_layout/data/_layout-datasources/$dataSourceId': typeof LayoutDataLayoutDatasourcesDataSourceIdRoute
-  '/_layout/projects/_layout-projects/$projectId': typeof LayoutProjectsLayoutProjectsProjectIdRoute
-  '/_layout/analytics/_layout-analytics/': typeof LayoutAnalyticsLayoutAnalyticsIndexRoute
-  '/_layout/chats/_layout-chats/': typeof LayoutChatsLayoutChatsIndexRoute
-  '/_layout/data/_layout-datasources/': typeof LayoutDataLayoutDatasourcesIndexRoute
-  '/_layout/models/_layout-models/': typeof LayoutModelsLayoutModelsIndexRoute
-  '/_layout/projects/_layout-projects/': typeof LayoutProjectsLayoutProjectsIndexRoute
-  '/_layout/settings/_layout-settings/': typeof LayoutSettingsLayoutSettingsIndexRoute
-  '/_layout/chats/_layout-chats/projects/$projectId/': typeof LayoutChatsLayoutChatsProjectsProjectIdIndexRoute
-  '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsSessionIdRoute
-  '/_layout/chats/_layout-chats/projects/$projectId/sessions/': typeof LayoutChatsLayoutChatsProjectsProjectIdSessionsIndexRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | ''
-    | '/analytics'
-    | '/chats'
-    | '/data'
-    | '/models'
-    | '/projects'
-    | '/sessions/$sessionId'
-    | '/docs'
-    | '/sessions'
-    | '/chats/$sessionId'
-    | '/data/$dataSourceId'
-    | '/projects/$projectId'
-    | '/analytics/'
-    | '/chats/'
-    | '/data/'
-    | '/models/'
-    | '/projects/'
-    | '/settings'
-    | '/chats/projects/$projectId'
-    | '/chats/projects/$projectId/sessions/$sessionId'
-    | '/chats/projects/$projectId/sessions'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | ''
-    | '/analytics'
-    | '/chats'
-    | '/data'
-    | '/models'
-    | '/projects'
-    | '/sessions/$sessionId'
-    | '/docs'
-    | '/sessions'
-    | '/chats/$sessionId'
-    | '/data/$dataSourceId'
-    | '/projects/$projectId'
-    | '/settings'
-    | '/chats/projects/$projectId'
-    | '/chats/projects/$projectId/sessions/$sessionId'
-    | '/chats/projects/$projectId/sessions'
-  id:
-    | '__root__'
-    | '/'
-    | '/_layout'
-    | '/_layout/analytics'
-    | '/_layout/analytics/_layout-analytics'
-    | '/_layout/chats'
-    | '/_layout/chats/_layout-chats'
-    | '/_layout/data'
-    | '/_layout/data/_layout-datasources'
-    | '/_layout/models'
-    | '/_layout/models/_layout-models'
-    | '/_layout/projects'
-    | '/_layout/projects/_layout-projects'
-    | '/_layout/sessions/$sessionId'
-    | '/_layout/docs/'
-    | '/_layout/sessions/'
-    | '/_layout/chats/_layout-chats/$sessionId'
-    | '/_layout/data/_layout-datasources/$dataSourceId'
-    | '/_layout/projects/_layout-projects/$projectId'
-    | '/_layout/analytics/_layout-analytics/'
-    | '/_layout/chats/_layout-chats/'
-    | '/_layout/data/_layout-datasources/'
-    | '/_layout/models/_layout-models/'
-    | '/_layout/projects/_layout-projects/'
-    | '/_layout/settings/_layout-settings/'
-    | '/_layout/chats/_layout-chats/projects/$projectId/'
-    | '/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId'
-    | '/_layout/chats/_layout-chats/projects/$projectId/sessions/'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  LayoutRoute: typeof LayoutRouteWithChildren
-}
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/_layout"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/_layout": {
-      "filePath": "_layout.tsx",
-      "children": [
-        "/_layout/analytics",
-        "/_layout/chats",
-        "/_layout/data",
-        "/_layout/models",
-        "/_layout/projects",
-        "/_layout/sessions/$sessionId",
-        "/_layout/docs/",
-        "/_layout/sessions/",
-        "/_layout/settings/_layout-settings/"
-      ]
-    },
-    "/_layout/analytics": {
-      "filePath": "_layout/analytics",
-      "parent": "/_layout",
-      "children": [
-        "/_layout/analytics/_layout-analytics"
-      ]
-    },
-    "/_layout/analytics/_layout-analytics": {
-      "filePath": "_layout/analytics/_layout-analytics.tsx",
-      "parent": "/_layout/analytics",
-      "children": [
-        "/_layout/analytics/_layout-analytics/"
-      ]
-    },
-    "/_layout/chats": {
-      "filePath": "_layout/chats",
-      "parent": "/_layout",
-      "children": [
-        "/_layout/chats/_layout-chats"
-      ]
-    },
-    "/_layout/chats/_layout-chats": {
-      "filePath": "_layout/chats/_layout-chats.tsx",
-      "parent": "/_layout/chats",
-      "children": [
-        "/_layout/chats/_layout-chats/$sessionId",
-        "/_layout/chats/_layout-chats/",
-        "/_layout/chats/_layout-chats/projects/$projectId/",
-        "/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId",
-        "/_layout/chats/_layout-chats/projects/$projectId/sessions/"
-      ]
-    },
-    "/_layout/data": {
-      "filePath": "_layout/data",
-      "parent": "/_layout",
-      "children": [
-        "/_layout/data/_layout-datasources"
-      ]
-    },
-    "/_layout/data/_layout-datasources": {
-      "filePath": "_layout/data/_layout-datasources.tsx",
-      "parent": "/_layout/data",
-      "children": [
-        "/_layout/data/_layout-datasources/$dataSourceId",
-        "/_layout/data/_layout-datasources/"
-      ]
-    },
-    "/_layout/models": {
-      "filePath": "_layout/models",
-      "parent": "/_layout",
-      "children": [
-        "/_layout/models/_layout-models"
-      ]
-    },
-    "/_layout/models/_layout-models": {
-      "filePath": "_layout/models/_layout-models.tsx",
-      "parent": "/_layout/models",
-      "children": [
-        "/_layout/models/_layout-models/"
-      ]
-    },
-    "/_layout/projects": {
-      "filePath": "_layout/projects",
-      "parent": "/_layout",
-      "children": [
-        "/_layout/projects/_layout-projects"
-      ]
-    },
-    "/_layout/projects/_layout-projects": {
-      "filePath": "_layout/projects/_layout-projects.tsx",
-      "parent": "/_layout/projects",
-      "children": [
-        "/_layout/projects/_layout-projects/$projectId",
-        "/_layout/projects/_layout-projects/"
-      ]
-    },
-    "/_layout/sessions/$sessionId": {
-      "filePath": "_layout/sessions/$sessionId.tsx",
-      "parent": "/_layout"
-    },
-    "/_layout/docs/": {
-      "filePath": "_layout/docs/index.tsx",
-      "parent": "/_layout"
-    },
-    "/_layout/sessions/": {
-      "filePath": "_layout/sessions/index.tsx",
-      "parent": "/_layout"
-    },
-    "/_layout/chats/_layout-chats/$sessionId": {
-      "filePath": "_layout/chats/_layout-chats/$sessionId.tsx",
-      "parent": "/_layout/chats/_layout-chats"
-    },
-    "/_layout/data/_layout-datasources/$dataSourceId": {
-      "filePath": "_layout/data/_layout-datasources/$dataSourceId.tsx",
-      "parent": "/_layout/data/_layout-datasources"
-    },
-    "/_layout/projects/_layout-projects/$projectId": {
-      "filePath": "_layout/projects/_layout-projects/$projectId.tsx",
-      "parent": "/_layout/projects/_layout-projects"
-    },
-    "/_layout/analytics/_layout-analytics/": {
-      "filePath": "_layout/analytics/_layout-analytics/index.tsx",
-      "parent": "/_layout/analytics/_layout-analytics"
-    },
-    "/_layout/chats/_layout-chats/": {
-      "filePath": "_layout/chats/_layout-chats/index.tsx",
-      "parent": "/_layout/chats/_layout-chats"
-    },
-    "/_layout/data/_layout-datasources/": {
-      "filePath": "_layout/data/_layout-datasources/index.tsx",
-      "parent": "/_layout/data/_layout-datasources"
-    },
-    "/_layout/models/_layout-models/": {
-      "filePath": "_layout/models/_layout-models/index.tsx",
-      "parent": "/_layout/models/_layout-models"
-    },
-    "/_layout/projects/_layout-projects/": {
-      "filePath": "_layout/projects/_layout-projects/index.tsx",
-      "parent": "/_layout/projects/_layout-projects"
-    },
-    "/_layout/settings/_layout-settings/": {
-      "filePath": "_layout/settings/_layout-settings/index.tsx",
-      "parent": "/_layout"
-    },
-    "/_layout/chats/_layout-chats/projects/$projectId/": {
-      "filePath": "_layout/chats/_layout-chats/projects/$projectId/index.tsx",
-      "parent": "/_layout/chats/_layout-chats"
-    },
-    "/_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId": {
-      "filePath": "_layout/chats/_layout-chats/projects/$projectId/sessions/$sessionId.tsx",
-      "parent": "/_layout/chats/_layout-chats"
-    },
-    "/_layout/chats/_layout-chats/projects/$projectId/sessions/": {
-      "filePath": "_layout/chats/_layout-chats/projects/$projectId/sessions/index.tsx",
-      "parent": "/_layout/chats/_layout-chats"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

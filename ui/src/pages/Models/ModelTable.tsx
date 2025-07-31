@@ -36,9 +36,10 @@
  * DATA.
  ******************************************************************************/
 import { Button, Flex, TableProps, Tooltip, Typography } from "antd";
-import { Model } from "src/api/modelsApi.ts";
+import { Model, ModelSource } from "src/api/modelsApi.ts";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
+import ModelStatusCell from "pages/Models/ModelStatusCell.tsx";
 
 export const TestCell = ({
   onClick,
@@ -79,6 +80,27 @@ export const TestCell = ({
   );
 };
 
+export const domainColumn: TableProps<Model>["columns"] = [
+  {
+    title: "Domain",
+    dataIndex: "model_id",
+    width: 1000,
+    key: "model_id",
+    render(modelId?: string) {
+      if (modelId?.includes(":")) {
+        const domain = modelId.split(":")[0];
+        return (
+          <Flex gap={8}>
+            <Typography.Text>{domain}</Typography.Text>
+          </Flex>
+        );
+      } else {
+        return null;
+      }
+    },
+  },
+];
+
 export const modelColumns: TableProps<Model>["columns"] = [
   {
     title: "Model ID",
@@ -99,14 +121,51 @@ export const modelColumns: TableProps<Model>["columns"] = [
     dataIndex: "available",
     width: 150,
     key: "available",
-    render: (_, model) => {
-      if (!model.name) {
-        return null;
-      }
-      if (model.available === null) {
-        return "Unknown";
-      }
-      return model.available ? "Available" : "Not Ready";
-    },
+    render: (_, model) => <ModelStatusCell model={model} />,
   },
 ];
+
+export const getColumnsForModelSource = (
+  modelSource?: ModelSource,
+): TableProps<Model>["columns"] => {
+  if (modelSource === "CAII") {
+    return [
+      {
+        title: "Domain",
+        dataIndex: "model_id",
+        width: 750,
+        key: "model_id",
+        render(modelId?: string) {
+          if (modelId?.includes(":")) {
+            const domain = modelId.split(":")[0];
+            return (
+              <Flex gap={8}>
+                <Typography.Text>{domain}</Typography.Text>
+              </Flex>
+            );
+          } else {
+            return null;
+          }
+        },
+      },
+      {
+        title: "Name",
+        dataIndex: "name",
+        key: "name",
+        width: 350,
+        render: (name?: string) =>
+          name ?? (
+            <Typography.Text type="warning">No model found</Typography.Text>
+          ),
+      },
+      {
+        title: "Status",
+        dataIndex: "available",
+        width: 150,
+        key: "available",
+        render: (_, model) => <ModelStatusCell model={model} />,
+      },
+    ];
+  }
+  return modelColumns;
+};

@@ -39,8 +39,11 @@ from typing import List, Literal
 
 from fastapi import APIRouter
 
+import app.services.models
+import app.services.models._model_source
 from .... import exceptions
 from ....services import models
+from ....services.caii.caii import describe_endpoint, build_model_response
 from ....services.caii.types import ModelResponse
 
 router = APIRouter(prefix="/models", tags=["Models"])
@@ -68,8 +71,19 @@ def get_reranking_models() -> List[ModelResponse]:
     "/model_source", summary="Model source enabled - Bedrock, CAII, OpenAI or Azure"
 )
 @exceptions.propagates
-def get_model() -> models.ModelSource:
-    return models.get_model_source()
+def get_model() -> app.services.models._model_source.ModelSource:
+    return app.services.models.get_model_source()
+
+
+@router.get(path="/caii/endpoint/{endpoint_name}", summary="Get CAII endpoint details.")
+@exceptions.propagates
+def get_endpoint_description(endpoint_name: str) -> ModelResponse:
+    """
+    Get the details of a specific CAII endpoint by its name.
+    """
+    endpoint = describe_endpoint(endpoint_name)
+    model_response = build_model_response(endpoint)
+    return model_response
 
 
 @router.get("/llm/{model_name}/test", summary="Test LLM Inference model.")

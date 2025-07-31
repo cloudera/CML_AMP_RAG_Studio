@@ -35,13 +35,27 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
+import functools
+import json
+import os
 import re
-from typing import Generator, List, Sequence, Tuple, TypeVar, Union, Any
+import time
+from functools import lru_cache
+from typing import (
+    Callable,
+    Generator,
+    List,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    Any,
+    cast,
+)
 
 import requests
 
-from app.services.amp_metadata import get_project_environment
+from app.config import settings
 
 
 # TODO delete this if it's not being used
@@ -191,3 +205,32 @@ def has_admin_rights(
     project_owner = env.get("PROJECT_OWNER", "unknown")
 
     return origin_remote_user == project_owner or remote_user_perm == "RW"
+
+
+C = TypeVar("C", bound=Callable[..., Any])
+
+def timed_lru_cache(seconds: int, maxsize: int = 128) -> Callable[[C], C]:
+    def wrapper_cache(func: C) -> C:
+        cached_func = lru_cache(maxsize=maxsize)(func)
+        cached_func.expiration = time.monotonic() + seconds  # type: ignore
+
+        @functools.wraps(func)
+        def wrapped_func(*args: Any, **kwargs: Any) -> C:
+            if time.monotonic() >= cached_func.expiration:  # type: ignore
+                cached_func.cache_clear()
+                cached_func.expiration = time.monotonic() + seconds  # type: ignore
+            return cast(C, cached_func(*args, **kwargs))
+        return cast(C, wrapped_func)
+    return wrapper_cache
+
+
+def get_project_environment() -> dict[str, str]:
+    try:
+        import cmlapi
+
+        client = cmlapi.default_client()
+        project_id = settings.cdsw_project_id
+        project = client.get_project(project_id=project_id)
+        return cast(dict[str, str], json.loads(project.environment))
+    except ImportError:
+        return dict(os.environ)

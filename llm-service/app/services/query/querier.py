@@ -53,7 +53,8 @@ from .agents.tool_calling_querier import (
 from .flexible_retriever import FlexibleRetriever
 from .multi_retriever import MultiSourceRetriever
 from ..metadata_apis.session_metadata_api import Session
-from ..models import get_model_source, ModelSource
+from ..models._model_source import ModelSource
+from ..models import get_model_source
 
 if TYPE_CHECKING:
     from ..chat.utils import RagContext
@@ -62,7 +63,7 @@ import logging
 
 import botocore.exceptions
 from fastapi import HTTPException
-from llama_index.core.base.llms.types import ChatMessage, TextBlock
+from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.chat_engine.types import (
     AgentChatResponse,
     StreamingAgentChatResponse,
@@ -233,9 +234,7 @@ def query(
 
     chat_messages = list(
         map(
-            lambda message: ChatMessage(role=message.role, blocks=[
-                TextBlock(text=message.content)
-            ]),
+            lambda message: ChatMessage(role=message.role, content=message.content),
             chat_history,
         )
     )

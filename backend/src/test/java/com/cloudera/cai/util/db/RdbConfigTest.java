@@ -49,13 +49,13 @@ class RdbConfigTest {
   void buildDatabaseConnectionString() {
 
     var url =
-        "jdbc:postgresql://rag-dev-testing.cluster-ctgqy2ewo865.us-west-2.rds.amazonaws.com:5432/rag?username=foo&password=bar";
+        "jdbc:postgresql://rag-dev-testing.cluster.us-west-2.rds.amazonaws.com:5432/rag?username=foo&password=bar";
 
     var rdb =
         RdbConfig.builder().rdbUrl(url).rdbDatabaseName("postgres").rdbType("PostgreSQL").build();
     var result = RdbConfig.buildDatabaseServerConnectionString(rdb);
     assertThat(result)
         .isEqualTo(
-            "jdbc:postgresql://rag-dev-testing.cluster-ctgqy2ewo865.us-west-2.rds.amazonaws.com:5432/postgres?username=foo&password=bar");
+            "jdbc:postgresql://rag-dev-testing.cluster.us-west-2.rds.amazonaws.com:5432/postgres?username=foo&password=bar");
   }
 }

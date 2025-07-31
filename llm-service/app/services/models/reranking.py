@@ -42,12 +42,7 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode
 
 from . import _model_type
-from .providers import (
-    AzureModelProvider,
-    BedrockModelProvider,
-    CAIIModelProvider,
-)
-from .providers.openai import OpenAiModelProvider
+from .providers._model_provider import ModelProvider
 from ..caii.types import ModelResponse
 from ..query.simple_reranker import SimpleReranker
 
@@ -62,13 +57,9 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
         if not model_name:
             return SimpleReranker(top_n=top_n)
 
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_reranking_model(model_name, top_n)
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_reranking_model(model_name, top_n)
-        if OpenAiModelProvider.is_enabled():
-            pass  # no OpenAI reranking models available
-        return BedrockModelProvider.get_reranking_model(model_name, top_n)
+        return ModelProvider.get_provider_class().get_reranking_model(
+            name=model_name, top_n=top_n
+        )
 
     @staticmethod
     def get_noop() -> BaseNodePostprocessor:
@@ -76,32 +67,25 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.list_reranking_models()
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.list_reranking_models()
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.list_reranking_models()
-        return BedrockModelProvider.list_reranking_models()
+        return ModelProvider.get_provider_class().list_reranking_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:
         models = cls.list_available()
         for model in models:
             if model.model_id == model_name:
-                if not CAIIModelProvider.is_enabled() or model.available:
-                    node = NodeWithScore(node=TextNode(text="test"), score=0.5)
-                    another_test_node = NodeWithScore(
-                        node=TextNode(text="another test node"), score=0.4
+                node = NodeWithScore(node=TextNode(text="test"), score=0.5)
+                another_test_node = NodeWithScore(
+                    node=TextNode(text="another test node"), score=0.4
+                )
+                reranking_model: BaseNodePostprocessor | None = cls.get(
+                    model_name=model_name
+                )
+                if reranking_model:
+                    reranking_model.postprocess_nodes(
+                        [node, another_test_node], None, "test"
                     )
-                    reranking_model: BaseNodePostprocessor | None = cls.get(
-                        model_name=model_name
-                    )
-                    if reranking_model:
-                        reranking_model.postprocess_nodes(
-                            [node, another_test_node], None, "test"
-                        )
-                        return "ok"
+                    return "ok"
         raise HTTPException(status_code=404, detail="Model not found")
 
 

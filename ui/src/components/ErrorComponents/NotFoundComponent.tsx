@@ -40,7 +40,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button, Flex, Result } from "antd";
 import Images from "src/components/images/Images.ts";
 
-export const NotFoundComponent = () => {
+const NotFoundComponent = () => {
   const navigate = useNavigate();
   return (
     <Flex
@@ -73,3 +73,5 @@ export const NotFoundComponent = () => {
     </Flex>
   );
 };
+
+export default NotFoundComponent;
