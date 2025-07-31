@@ -44,6 +44,8 @@ tasks:
   - type: run_job
     entity_label: refresh_project
     short_summary: Run job to refresh the project from source and rebuilding.
+    environment:
+      UV_HTTP_TIMEOUT: 60000
 
   - type: start_application
     name: RagStudio
