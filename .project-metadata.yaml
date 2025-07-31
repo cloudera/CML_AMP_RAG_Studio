@@ -35,17 +35,16 @@ tasks:
     entity_label: refresh_project
     script: scripts/refresh_project.py
     arguments: None
-    cpu: 2
-    memory: 4
+    cpu: 4
+    memory: 8
     short_summary: Create job to allow refreshing the project from source and rebuilding.
     environment:
       TASK_TYPE: CREATE/RUN_JOB
+      UV_HTTP_TIMEOUT: 60000
 
   - type: run_job
     entity_label: refresh_project
     short_summary: Run job to refresh the project from source and rebuilding.
-    environment:
-      UV_HTTP_TIMEOUT: 60000
 
   - type: start_application
     name: RagStudio
