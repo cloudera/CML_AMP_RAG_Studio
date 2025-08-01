@@ -60,10 +60,19 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8080",
+      "/api": {
+        target: "http://localhost:3000",
+        headers: {
+          "origin-remote-user": process.env.PROJECT_OWNER ?? "unknown",
+          "remote-user": process.env.PROJECT_OWNER ?? "unknown",
+        },
+      },
       "/llm-service": {
-        target: "http://localhost:8081",
-        rewrite: (path) => path.replace(/^\/llm-service/, ""),
+        target: "http://localhost:3000",
+        headers: {
+          "origin-remote-user": process.env.PROJECT_OWNER ?? "unknown",
+          "remote-user": process.env.PROJECT_OWNER ?? "unknown",
+        },
       },
     },
   },
