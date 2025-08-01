@@ -40,7 +40,7 @@
 import os
 from typing import List
 
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, MessageRole, TextBlock
 from llama_index.core.storage.chat_store import SimpleChatStore
 
 from app.config import settings
@@ -137,7 +137,9 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                 self._build_chat_key(session_id),
                 ChatMessage(
                     role=MessageRole.USER,
-                    content=message.rag_message.user,
+                    blocks=[
+                        TextBlock(text=message.rag_message.user)
+                    ],
                     additional_kwargs={
                         "id": message.id,
                     },
@@ -147,7 +149,9 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                 self._build_chat_key(session_id),
                 ChatMessage(
                     role=MessageRole.ASSISTANT,
-                    content=message.rag_message.assistant,
+                    blocks=[
+                        TextBlock(text=message.rag_message.assistant)
+                    ],
                     additional_kwargs={
                         "id": message.id,
                         "source_nodes": message.source_nodes,

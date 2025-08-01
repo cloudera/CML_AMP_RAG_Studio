@@ -39,7 +39,11 @@ import time
 import uuid
 from typing import Optional, Generator
 
-from llama_index.core.base.llms.types import ChatResponse, ChatMessage
+from llama_index.core.base.llms.types import (
+    ChatResponse,
+    ChatMessage,
+    TextBlock,
+)
 from llama_index.core.chat_engine.types import (
     AgentChatResponse,
     StreamingAgentChatResponse,
@@ -95,7 +99,6 @@ def stream_chat(
     if not query_configuration.use_tool_calling and (
         len(session.get_all_data_source_ids()) == 0 or total_data_sources_size == 0
     ):
-        # put a poison pill in the queue to stop the tool events stream
         return _stream_direct_llm_chat(session, response_id, query, user_name)
 
     condensed_question, streaming_chat_response = build_streamer(
@@ -122,7 +125,9 @@ def _run_streaming_chat(
     streaming_chat_response: StreamingAgentChatResponse,
     condensed_question: Optional[str] = None,
 ) -> Generator[ChatResponse, None, None]:
-    response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
+    response: ChatResponse = ChatResponse(
+        message=ChatMessage(blocks=[TextBlock(text=query)])
+    )
     if streaming_chat_response.chat_stream:
         for response in streaming_chat_response.chat_stream:
             response.additional_kwargs["response_id"] = response_id
@@ -162,7 +167,9 @@ def build_streamer(
     chat_history = retrieve_chat_history(session.id)
     chat_messages = list(
         map(
-            lambda message: ChatMessage(role=message.role, content=message.content),
+            lambda message: ChatMessage(
+                role=message.role, blocks=[TextBlock(text=message.content)]
+            ),
             chat_history,
         )
     )
@@ -190,9 +197,17 @@ def _stream_direct_llm_chat(
     record_direct_llm_mlflow_run(response_id, session, user_name)
 
     chat_response = llm_completion.stream_completion(
-        session.id, query, session.inference_model
+        session.id,
+        ChatMessage(
+            blocks=[
+                TextBlock(text=query),
+            ]
+        ),
+        session.inference_model,
     )
-    response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
+    response: ChatResponse = ChatResponse(
+        message=ChatMessage(blocks=[TextBlock(text=query)])
+    )
     for response in chat_response:
         response.additional_kwargs["response_id"] = response_id
         yield response
