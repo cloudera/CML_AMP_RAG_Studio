@@ -91,7 +91,6 @@ app.use(createProxyMiddleware(apiProxy));
 app.get("*", (req: Request, res: Response) => {
   console.log("Serving up req.url: ", req.url);
   res.sendFile(join(__dirname, "../..", "dist", "index.html"));
-  console.log("Served up req.url: ", req.url);
 });
 
 const server = app.listen(port, host, () => {
