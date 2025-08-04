@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Flex, Layout, Typography } from "antd";
 import { cdlGray300 } from "src/cuix/variables.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -70,9 +70,12 @@ export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
               <Typography.Title level={4} style={{ margin: 0 }}>
                 Settings
               </Typography.Title>
-              <Typography.Text type="secondary">
-                version: {config?.release_version}
-              </Typography.Text>
+              <Flex align={"center"} gap={8}>
+                <Typography.Text type="secondary">
+                  version: {config?.release_version}
+                </Typography.Text>
+                <Link to={"/docs"}>API Docs</Link>
+              </Flex>
             </Flex>
           </Header>
           <Content style={{ margin: "0", overflowY: "auto" }}>
