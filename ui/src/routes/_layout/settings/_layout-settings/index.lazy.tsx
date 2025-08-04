@@ -70,7 +70,7 @@ export const Route = createLazyFileRoute("/_layout/settings/_layout-settings/")(
               <Typography.Title level={4} style={{ margin: 0 }}>
                 Settings
               </Typography.Title>
-              <Flex align={"center"} gap={8}>
+              <Flex align={"center"} gap={32}>
                 <Typography.Text type="secondary">
                   version: {config?.release_version}
                 </Typography.Text>
