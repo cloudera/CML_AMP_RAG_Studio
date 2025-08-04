@@ -44,7 +44,6 @@ from pathlib import Path
 from typing import Any, Dict, Literal, Optional
 
 import boto3
-from llama_index.core.tools import BaseTool
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 from llama_index.tools.openai import (
     OpenAIImageGenerationToolSpec as LlamaIndexOpenAIImageGenerationToolSpec,
