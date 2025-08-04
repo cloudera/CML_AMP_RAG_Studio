@@ -112,7 +112,7 @@ class OpenAIImageGenerationToolSpec(
 ):
     """OpenAI Image Generation tool spec."""
 
-    def __init__(self, api_key: str = None) -> None:
+    def __init__(self, api_key: Optional[str] = None) -> None:
         """Initialize with parameters."""
         super().__init__(
             api_key=api_key,
@@ -128,7 +128,7 @@ class OpenAIImageGenerationToolSpec(
         size: Optional[str] = DEFAULT_SIZE,
         style: Optional[str] = "vivid",
         timeout: Optional[int] = None,
-        download: bool = True,  # For suppressing signature error
+        download: Optional[bool] = True,  # For suppressing signature error
     ) -> str:
         """
         This tool accepts a natural language string and will use OpenAI's DALL-E model to generate an image.
@@ -158,6 +158,9 @@ class OpenAIImageGenerationToolSpec(
                 This param is only supported for `dall-e-3`.
 
             timeout: Override the client-level default timeout for this request, in seconds. Defaults to `None`.
+            download: For suppressing signature error, not used in this implementation.
+        Returns:
+            str: Path to the generated image in the cache directory.
         """
         image_path = super().image_generation(
             text=text,
