@@ -241,7 +241,14 @@ const ChatSettingsModal = ({
 
   return (
     <Modal
-      title={`Chat Settings: ${activeSession.name}`}
+      title={
+        <Typography.Paragraph
+          style={{ margin: 0, fontSize: 16, fontWeight: 500, width: "95%" }}
+          ellipsis={{ rows: 1 }}
+        >
+          Chat Settings: {activeSession.name}
+        </Typography.Paragraph>
+      }
       open={modelIsOpen}
       onCancel={closeModal}
       destroyOnHidden={true}
@@ -298,10 +305,7 @@ const ChatSettingsModal = ({
             label="Reranking model"
             initialValue={activeSession.rerankModel}
           >
-            <Select
-              allowClear
-              options={rerankModelOptions}
-            />
+            <Select allowClear options={rerankModelOptions} />
           </Form.Item>
           <Form.Item
             name="responseChunks"

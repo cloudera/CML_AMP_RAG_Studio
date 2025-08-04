@@ -98,9 +98,7 @@ def url_template() -> str:
 
 
 def get_session(session_id: int, user_name: Optional[str]) -> Session:
-    headers = (
-        {"remote-user": user_name, "origin-remote-user": user_name} if user_name else {}
-    )
+    headers = {"remote-user": user_name} if user_name else {}
     headers["Authorization"] = f"Bearer {settings.cdsw_apiv2_key}"
 
     response = requests.get(url_template().format(session_id), headers=headers)
@@ -154,7 +152,6 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
     headers = {
         "Content-Type": "application/json",
         "remote-user": user_name,
-        "origin-remote-user": user_name,
         "Authorization": f"Bearer {settings.cdsw_apiv2_key}",
     }
 

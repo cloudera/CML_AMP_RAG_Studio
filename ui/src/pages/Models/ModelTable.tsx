@@ -35,71 +35,9 @@
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
  ******************************************************************************/
-import { Button, Flex, TableProps, Tooltip, Typography } from "antd";
+import { Flex, TableProps, Typography } from "antd";
 import { Model, ModelSource } from "src/api/modelsApi.ts";
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
-import { cdlGreen600, cdlRed600 } from "src/cuix/variables.ts";
 import ModelStatusCell from "pages/Models/ModelStatusCell.tsx";
-
-export const TestCell = ({
-  onClick,
-  model,
-  loading,
-  error,
-  testResult,
-}: {
-  onClick: () => void;
-  model: Model;
-  loading: boolean;
-  error: Error | null;
-  testResult: string | undefined;
-}) => {
-  if (!model.name) {
-    return null;
-  }
-
-  if (testResult === "ok") {
-    return <CheckCircleOutlined style={{ color: cdlGreen600 }} />;
-  }
-
-  return (
-    <Flex gap={8}>
-      <Button
-        onClick={onClick}
-        disabled={model.available != undefined && !model.available}
-        loading={loading}
-      >
-        Test
-      </Button>
-      {error || (testResult && testResult !== "ok") ? (
-        <Tooltip title={error?.message ?? "an error occurred"}>
-          <CloseCircleOutlined style={{ color: cdlRed600 }} />
-        </Tooltip>
-      ) : null}
-    </Flex>
-  );
-};
-
-export const domainColumn: TableProps<Model>["columns"] = [
-  {
-    title: "Domain",
-    dataIndex: "model_id",
-    width: 1000,
-    key: "model_id",
-    render(modelId?: string) {
-      if (modelId?.includes(":")) {
-        const domain = modelId.split(":")[0];
-        return (
-          <Flex gap={8}>
-            <Typography.Text>{domain}</Typography.Text>
-          </Flex>
-        );
-      } else {
-        return null;
-      }
-    },
-  },
-];
 
 export const modelColumns: TableProps<Model>["columns"] = [
   {
@@ -131,6 +69,16 @@ export const getColumnsForModelSource = (
   if (modelSource === "CAII") {
     return [
       {
+        title: "Name",
+        dataIndex: "name",
+        key: "name",
+        width: 350,
+        render: (name?: string) =>
+          name ?? (
+            <Typography.Text type="warning">No model found</Typography.Text>
+          ),
+      },
+      {
         title: "Domain",
         dataIndex: "model_id",
         width: 750,
@@ -147,16 +95,6 @@ export const getColumnsForModelSource = (
             return null;
           }
         },
-      },
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-        width: 350,
-        render: (name?: string) =>
-          name ?? (
-            <Typography.Text type="warning">No model found</Typography.Text>
-          ),
       },
       {
         title: "Status",

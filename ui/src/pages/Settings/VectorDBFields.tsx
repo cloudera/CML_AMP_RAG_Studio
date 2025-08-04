@@ -88,7 +88,7 @@ export const VectorDBFields = ({
       initialValue={projectConfig?.opensearch_config.opensearch_namespace}
       name={["opensearch_config", "opensearch_namespace"]}
       required={selectedVectorDBProvider === "OPENSEARCH"}
-      tooltip="The namespace or prefix to use for Cloudera Semantic Search."
+      tooltip="The namespace or prefix to use for Cloudera Semantic Search. This is arbitrary, but must be unique to your project."
       rules={[
         { required: selectedVectorDBProvider === "OPENSEARCH" },
         {

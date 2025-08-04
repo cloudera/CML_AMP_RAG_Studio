@@ -37,11 +37,9 @@
  ******************************************************************************/
 
 import { Table, TableProps } from "antd";
-import {
-  getColumnsForModelSource,
-  TestCell,
-} from "pages/Models/ModelTable.tsx";
+import { getColumnsForModelSource } from "pages/Models/ModelTable.tsx";
 import { Model, useTestLlmModel } from "src/api/modelsApi.ts";
+import { TestCell } from "pages/Models/TestCell.tsx";
 
 const InferenceModelTestCell = ({ model }: { model: Model }) => {
   const {
