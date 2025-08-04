@@ -38,10 +38,8 @@
 
 import { Table, TableProps } from "antd";
 import { Model, useTestEmbeddingModel } from "src/api/modelsApi.ts";
-import {
-  getColumnsForModelSource,
-  TestCell,
-} from "pages/Models/ModelTable.tsx";
+import { getColumnsForModelSource } from "pages/Models/ModelTable.tsx";
+import { TestCell } from "pages/Models/TestCell.tsx";
 
 const EmbeddingModelTestCell = ({ model }: { model: Model }) => {
   const {
