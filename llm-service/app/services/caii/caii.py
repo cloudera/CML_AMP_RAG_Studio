@@ -333,7 +333,6 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 
 def get_models_with_task(task_type: str) -> List[Endpoint]:
-    print(f"Fetching models with task type: {task_type}")
     endpoints: list[ListEndpointEntry] = list_endpoints()
     endpoint_details = list(
         map(
