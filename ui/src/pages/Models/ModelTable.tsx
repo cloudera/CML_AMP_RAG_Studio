@@ -131,6 +131,16 @@ export const getColumnsForModelSource = (
   if (modelSource === "CAII") {
     return [
       {
+        title: "Name",
+        dataIndex: "name",
+        key: "name",
+        width: 350,
+        render: (name?: string) =>
+          name ?? (
+            <Typography.Text type="warning">No model found</Typography.Text>
+          ),
+      },
+      {
         title: "Domain",
         dataIndex: "model_id",
         width: 750,
@@ -147,16 +157,6 @@ export const getColumnsForModelSource = (
             return null;
           }
         },
-      },
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-        width: 350,
-        render: (name?: string) =>
-          name ?? (
-            <Typography.Text type="warning">No model found</Typography.Text>
-          ),
       },
       {
         title: "Status",
