@@ -38,7 +38,8 @@
 
 import { Table, TableProps } from "antd";
 import { Model, useTestEmbeddingModel } from "src/api/modelsApi.ts";
-import { modelColumns, TestCell } from "pages/Models/ModelTable.tsx";
+import { getColumnsForModelSource } from "pages/Models/ModelTable.tsx";
+import { TestCell } from "pages/Models/TestCell.tsx";
 
 const EmbeddingModelTestCell = ({ model }: { model: Model }) => {
   const {
@@ -78,14 +79,16 @@ const testCell: TableProps<Model>["columns"] = [
 const EmbeddingModelTable = ({
   embeddingModels,
   areEmbeddingModelsLoading,
+  modelSource,
 }: {
   embeddingModels?: Model[];
   areEmbeddingModelsLoading: boolean;
+  modelSource?: "CAII" | "Bedrock" | "Azure" | "OpenAI" | undefined;
 }) => {
   return (
     <Table
       dataSource={embeddingModels}
-      columns={modelColumns ? [...modelColumns, ...testCell] : testCell}
+      columns={[...(getColumnsForModelSource(modelSource) ?? []), ...testCell]}
       style={{ width: "100%" }}
       loading={areEmbeddingModelsLoading}
       rowKey={(record) => record.model_id}

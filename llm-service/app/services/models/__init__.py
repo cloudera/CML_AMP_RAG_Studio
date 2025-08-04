@@ -35,36 +35,14 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from enum import Enum
-
+from ._model_source import ModelSource
 from .embedding import Embedding
 from .llm import LLM
-from .providers import (
-    AzureModelProvider,
-    CAIIModelProvider,
-)
-from .providers.openai import OpenAiModelProvider
+from .providers._model_provider import ModelProvider
 from .reranking import Reranking
 
-__all__ = [
-    "Embedding",
-    "LLM",
-    "Reranking",
-]
-
-
-class ModelSource(str, Enum):
-    BEDROCK = "Bedrock"
-    CAII = "CAII"
-    AZURE = "Azure"
-    OPENAI = "OpenAI"
+__all__ = ["Embedding", "LLM", "Reranking"]
 
 
 def get_model_source() -> ModelSource:
-    if CAIIModelProvider.is_enabled():
-        return ModelSource.CAII
-    if AzureModelProvider.is_enabled():
-        return ModelSource.AZURE
-    if OpenAiModelProvider.is_enabled():
-        return ModelSource.OPENAI
-    return ModelSource.BEDROCK
+    return ModelProvider.get_provider_class().get_model_source()

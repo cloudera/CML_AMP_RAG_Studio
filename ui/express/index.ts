@@ -2,7 +2,8 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import { ClientRequest, IncomingMessage } from "node:http";
+import { IncomingMessage, ServerResponse } from "node:http";
+import { Socket } from "node:net";
 
 const app = express();
 
@@ -10,13 +11,6 @@ const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
 app.use(cors());
-
-const proxyReq = (proxyReq: ClientRequest, req: IncomingMessage) => {
-  proxyReq.setHeader(
-    "origin-remote-user",
-    req.headers["remote-user"] || "unknown",
-  );
-};
 
 const apiProxy: Options = {
   target: process.env.API_URL ?? "http://localhost:8080",
@@ -28,7 +22,45 @@ const apiProxy: Options = {
     Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
   },
   on: {
-    proxyReq,
+    error: (
+      err: Error,
+      req: IncomingMessage,
+      res: ServerResponse<IncomingMessage> | Socket,
+    ) => {
+      console.error("API Proxy Error:", err);
+      console.error("API Error Request URL:", req.url);
+
+      if (res instanceof Socket) {
+        console.error("Response is a Socket, not a ServerResponse.");
+        return res.end("Something went wrong.");
+      }
+
+      // Only return 502 for service unavailability errors
+      const isServiceUnavailable = [
+        "ECONNREFUSED",
+        "ENOTFOUND",
+        "ETIMEDOUT",
+        "ECONNRESET",
+        "EHOSTUNREACH",
+        "ENETUNREACH",
+      ].some((code) => err.stack?.includes(code));
+
+      if (isServiceUnavailable) {
+        res.writeHead(502, {
+          "Content-Type": "application/json",
+        });
+        return res.end(
+          JSON.stringify({
+            error: "Service Unavailable",
+            message:
+              "API service is currently unavailable. Please try again later.",
+            details: err.message,
+            timestamp: new Date().toISOString(),
+          }),
+        );
+      }
+      return res;
+    },
   },
 };
 
@@ -38,9 +70,6 @@ const llmServiceProxy: Options = {
   pathFilter: ["/llm-service/**"],
   pathRewrite: {
     "^/llm-service": "",
-  },
-  on: {
-    proxyReq,
   },
 };
 

@@ -95,6 +95,8 @@ else
   exit 1
 fi
 
+export RAG_STUDIO_INSTALL_DIR=$(pwd)
+
 cd llm-service
 if [ -z "$USE_SYSTEM_UV" ]; then
   python3.12 -m venv venv

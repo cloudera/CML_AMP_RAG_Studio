@@ -38,6 +38,6 @@
 
 BEGIN;
 
-ALTER TABLE rag_data_source ALTER COLUMN chunk_overlap_percent INTEGER DEFAULT 10;
+ALTER TABLE rag_data_source ALTER COLUMN chunk_overlap_percent SET DEFAULT 10;
 
 COMMIT;

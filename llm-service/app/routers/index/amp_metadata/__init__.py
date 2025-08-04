@@ -46,18 +46,20 @@ from fastapi import APIRouter, Body
 from fastapi.params import Header
 
 from .... import exceptions
+from ....config import MetadataDbProviderType
 from ....services.amp_metadata import (
     ProjectConfig,
     ProjectConfigPlus,
     config_to_env,
     build_configuration,
     update_project_environment,
-    get_project_environment,
     get_application_config,
+    validate_jdbc,
+    ValidationResult,
 )
 from ....services.amp_update import does_amp_need_updating
 from ....services.models.providers import CAIIModelProvider
-from ....services.utils import has_admin_rights
+from ....services.utils import has_admin_rights, get_project_environment
 
 router = APIRouter(prefix="/amp", tags=["AMP"])
 
@@ -69,10 +71,10 @@ root_dir = (
 @router.get("", summary="Returns a boolean for whether AMP needs updating.")
 @exceptions.propagates
 def amp_up_to_date_status(
-    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> bool:
-    if has_admin_rights(origin_remote_user, remote_user_perm):
+    if has_admin_rights(remote_user, remote_user_perm):
         # noinspection PyBroadException
         try:
             return does_amp_need_updating()
@@ -119,13 +121,13 @@ def amp_is_composed() -> bool:
 @router.get("/config", summary="Returns application configuration.")
 @exceptions.propagates
 def get_configuration(
-    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigPlus:
     env = get_project_environment()
     application_config = get_application_config()
 
-    if has_admin_rights(origin_remote_user, remote_user_perm):
+    if has_admin_rights(remote_user, remote_user_perm):
         return build_configuration(env, application_config)
 
     raise fastapi.HTTPException(
@@ -138,10 +140,10 @@ def get_configuration(
 @exceptions.propagates
 def update_configuration(
     config: ProjectConfig,
-    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> ProjectConfigPlus:
-    if has_admin_rights(origin_remote_user, remote_user_perm):
+    if has_admin_rights(remote_user, remote_user_perm):
         if config.cdp_token:
             save_cdp_token(config.cdp_token)
         # merge the new configuration with the existing one
@@ -196,6 +198,24 @@ def save_auth_token(auth_token: Annotated[str, Body(embed=True)]) -> str:
         )
 
     return "Auth token saved successfully"
+
+
+@router.post(
+    "/validate-jdbc-connection",
+    summary="Validates a JDBC connection string, username, and password.",
+)
+@exceptions.propagates
+def validate_jdbc_connection(
+    db_url: Annotated[str, Body(embed=True)],
+    username: Annotated[str, Body(embed=True)],
+    password: Annotated[str, Body(embed=True)],
+    db_type: Annotated[MetadataDbProviderType, Body(embed=True)],
+) -> ValidationResult:
+    """
+    Calls the JdbiUtils main method to validate JDBC connection parameters.
+    Returns a dict with 'valid': True/False and 'message'.
+    """
+    return validate_jdbc(db_type, db_url, password, username)
 
 
 def save_cdp_token(auth_token: str) -> None:

@@ -42,8 +42,7 @@ import { ProjectProvider } from "pages/Projects/ProjectContext.tsx";
 import { Flex } from "antd";
 import { getProjectsQueryOptions } from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
-
-import { NotFoundComponent } from "src/components/ErrorComponents/NotFoundComponent.tsx";
+import NotFoundComponent from "src/components/ErrorComponents/NotFoundComponent.tsx";
 
 export const Route = createLazyFileRoute(
   "/_layout/projects/_layout-projects/$projectId",

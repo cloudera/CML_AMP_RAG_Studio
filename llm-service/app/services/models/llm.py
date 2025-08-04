@@ -36,18 +36,12 @@
 #  DATA.
 #
 from typing import Literal, Optional
-
 from fastapi import HTTPException
 from llama_index.core import llms
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 
 from . import _model_type, _noop
-from .providers import (
-    AzureModelProvider,
-    BedrockModelProvider,
-    CAIIModelProvider,
-)
-from .providers.openai import OpenAiModelProvider
+from .providers._model_provider import ModelProvider
 from ..caii.types import ModelResponse
 
 
@@ -57,13 +51,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
         if not model_name:
             model_name = cls.list_available()[0].model_id
 
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.get_llm_model(model_name)
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.get_llm_model(model_name)
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.get_llm_model(model_name)
-        return BedrockModelProvider.get_llm_model(model_name)
+        return ModelProvider.get_provider_class().get_llm_model(model_name)
 
     @staticmethod
     def get_noop() -> llms.LLM:
@@ -71,24 +59,10 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider.list_llm_models()
-        if CAIIModelProvider.is_enabled():
-            return CAIIModelProvider.list_llm_models()
-        if OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider.list_llm_models()
-        return BedrockModelProvider.list_llm_models()
+        return ModelProvider.get_provider_class().list_llm_models()
 
     @classmethod
     def test(cls, model_name: str) -> Literal["ok"]:
-        if CAIIModelProvider.is_enabled():
-            models = cls.list_available()
-            for model in models:
-                if model.model_id == model_name:
-                    if model.available:
-                        return cls.test_llm_chat(model_name)
-                    else:
-                        raise HTTPException(status_code=503, detail="Model not ready")
         try:
             cls.get(model_name)
         except Exception:

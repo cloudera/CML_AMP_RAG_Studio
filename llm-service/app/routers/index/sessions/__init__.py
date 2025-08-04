@@ -56,6 +56,7 @@ from ....rag_types import RagPredictConfiguration
 from ....services.chat.chat import (
     chat as run_chat,
 )
+from ....services.chat.suggested_questions import generate_suggested_questions
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     chat_history_manager,
@@ -68,6 +69,28 @@ from ....services.session import rename_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sessions/{session_id}", tags=["Sessions"])
+no_id_router = APIRouter(prefix="/sessions", tags=["Sessions"])
+
+
+class RagSuggestedQuestionsResponse(BaseModel):
+    suggested_questions: list[str]
+
+
+class SuggestedQuestionsRequest(BaseModel):
+    session_id: Optional[int] = None
+
+
+@no_id_router.post("/suggest-questions")
+@exceptions.propagates
+def suggest_questions(
+    request: SuggestedQuestionsRequest, remote_user: Optional[str] = Header(None)
+) -> RagSuggestedQuestionsResponse:
+
+    return RagSuggestedQuestionsResponse(
+        suggested_questions=generate_suggested_questions(
+            request.session_id, user_name=remote_user
+        )
+    )
 
 
 class CancelableStreamingResponse(StreamingResponse):
@@ -94,19 +117,15 @@ class CancelableStreamingResponse(StreamingResponse):
                 break
 
 
-class RagSuggestedQuestionsResponse(BaseModel):
-    suggested_questions: list[str]
-
-
 @router.post(
     "/rename-session",
     summary="Rename the session using AI",
 )
 @exceptions.propagates
 def post_rename_session(
-    session_id: int, origin_remote_user: Optional[str] = Header(None)
+    session_id: int, remote_user: Optional[str] = Header(None)
 ) -> str:
-    return rename_session(session_id, user_name=origin_remote_user)
+    return rename_session(session_id, user_name=remote_user)
 
 
 class RagStudioChatHistoryResponse(BaseModel):
@@ -179,10 +198,10 @@ def rating(
     session_id: int,
     response_id: str,
     request: ChatResponseRating,
-    origin_remote_user: Optional[str] = Header(None),
+    remote_user: Optional[str] = Header(None),
 ) -> ChatResponseRating:
     rating_mlflow_log_metric(
-        request.rating, response_id, session_id, user_name=origin_remote_user
+        request.rating, response_id, session_id, user_name=remote_user
     )
     return ChatResponseRating(rating=request.rating)
 
@@ -199,10 +218,10 @@ def feedback(
     session_id: int,
     response_id: str,
     request: ChatResponseFeedback,
-    origin_remote_user: Optional[str] = Header(None),
+    remote_user: Optional[str] = Header(None),
 ) -> ChatResponseFeedback:
     feedback_mlflow_log_table(
-        request.feedback, response_id, session_id, user_name=origin_remote_user
+        request.feedback, response_id, session_id, user_name=remote_user
     )
     return ChatResponseFeedback(feedback=request.feedback)
 
@@ -237,12 +256,12 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
 def chat(
     session_id: int,
     request: RagStudioChatRequest,
-    origin_remote_user: Optional[str] = Header(None),
+    remote_user: Optional[str] = Header(None),
 ) -> RagStudioChatMessage:
-    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
+    session = session_metadata_api.get_session(session_id, user_name=remote_user)
 
     configuration = request.configuration or RagPredictConfiguration()
-    return run_chat(session, request.query, configuration, user_name=origin_remote_user)
+    return run_chat(session, request.query, configuration, user_name=remote_user)
 
 
 @router.post(
@@ -252,9 +271,9 @@ def chat(
 def stream_chat_completion(
     session_id: int,
     request: RagStudioChatRequest,
-    origin_remote_user: Optional[str] = Header(None),
+    remote_user: Optional[str] = Header(None),
 ) -> StreamingResponse:
-    session = session_metadata_api.get_session(session_id, user_name=origin_remote_user)
+    session = session_metadata_api.get_session(session_id, user_name=remote_user)
     configuration = request.configuration or RagPredictConfiguration()
 
     # Create a cancellation event to signal when the client disconnects
@@ -272,7 +291,7 @@ def stream_chat_completion(
                 session=session,
                 query=request.query,
                 configuration=configuration,
-                user_name=origin_remote_user,
+                user_name=remote_user,
             )
 
             # If we get here and the cancel_event is set, the client has disconnected

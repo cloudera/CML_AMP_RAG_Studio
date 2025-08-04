@@ -35,9 +35,11 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import functools
 import logging
 import os
-from typing import Callable, List, Sequence
+from typing import Callable, List, Sequence, Optional, cast
+from urllib.parse import urlparse
 
 import httpx
 import requests
@@ -47,12 +49,17 @@ from llama_index.core.base.llms.types import ChatMessage
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.llms.nvidia import NVIDIA
+from packaging.version import Version
 
 from .CaiiEmbeddingModel import CaiiEmbeddingModel
 from .CaiiModel import DeepseekModel
 from .caii_reranking import CaiiRerankingModel
-from .types import Endpoint, ListEndpointEntry, ModelResponse
-from .utils import build_auth_headers, get_caii_access_token
+from .types import Endpoint, ListEndpointEntry, ModelResponse, DescribeEndpointEntry
+from .utils import (
+    build_auth_headers,
+    get_caii_access_token,
+    get_cml_version_from_sense_bootstrap,
+)
 from ..llama_utils import completion_to_prompt, messages_to_prompt
 from ..utils import raise_for_http_error, body_to_json
 from ...config import settings
@@ -61,52 +68,189 @@ DEFAULT_NAMESPACE = "serving-default"
 
 logger = logging.getLogger(__name__)
 
-def describe_endpoint(endpoint_name: str) -> Endpoint:
-    domain = settings.caii_domain
+
+def describe_endpoint_entry(
+    endpoint_name: str, endpoints: Optional[list[ListEndpointEntry]] = None
+) -> Endpoint:
+    if not endpoints:
+        endpoint = describe_endpoint(endpoint_name)
+        return cast(Endpoint, endpoint)
+
+    logger.info(
+        "Fetching endpoint details from cached list of endpoints for endpoint: %s",
+        endpoint_name,
+    )
+    for endpoint in endpoints:
+        if endpoint.name == endpoint_name:
+            return cast(Endpoint, endpoint)
+
+    raise HTTPException(
+        status_code=404, detail=f"Endpoint '{endpoint_name}' not found."
+    )
+
+
+def describe_endpoint(endpoint_name: str) -> DescribeEndpointEntry:
+    logger.info(
+        "Fetching endpoint details from CAII REST API for endpoint: %s", endpoint_name
+    )
+    if ":" in endpoint_name:
+        # If the endpoint name contains a colon, it should be in the format "domain:endpoint_name"
+        pieces = endpoint_name.split(":")
+        domain = pieces[0]
+        endpoint_name = pieces[1]
+    else:
+        domain = settings.caii_domain
     headers = build_auth_headers()
     describe_url = f"https://{domain}/api/v1alpha1/describeEndpoint"
     desc_json = {"name": endpoint_name, "namespace": DEFAULT_NAMESPACE}
 
     response = requests.post(describe_url, headers=headers, json=desc_json)
     raise_for_http_error(response)
-    return Endpoint(**body_to_json(response))
+    return DescribeEndpointEntry(**body_to_json(response))
 
 
 def list_endpoints() -> list[ListEndpointEntry]:
-    domain = settings.caii_domain
-    try:
-        headers = build_auth_headers()
-        describe_url = f"https://{domain}/api/v1alpha1/listEndpoints"
-        desc_json = {"namespace": DEFAULT_NAMESPACE}
+    results: list[ListEndpointEntry] = []
+    version: Optional[str] = get_cml_version_from_sense_bootstrap()
 
-        response = requests.post(describe_url, headers=headers, json=desc_json, timeout=5)
-        raise_for_http_error(response)
-        endpoints = body_to_json(response)["endpoints"]
-        return [ListEndpointEntry(**endpoint) for endpoint in endpoints]
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(
-            status_code=421,
-            detail=f"Unable to connect to host {domain}. Please check your CAII Settings.",
+    # Try Python API for CML version >= 2.0.50-b68
+    if version:
+        if Version(version) >= Version("2.0.50-b68"):
+            logger.info("Attempting Model discovery through Python API")
+            python_api_results = list_endpoints_from_python_api()
+            if python_api_results:
+                logger.info(
+                    "Found %d endpoints via Python API.", len(python_api_results)
+                )
+                results.extend(python_api_results)
+        else:
+            logger.info(
+                "CML version %s is below 2.0.50-b68, skipping Python API model discovery.",
+                version,
+            )
+    else:
+        logger.warning("CML version not found. Skipping Python API model discovery.")
+
+    # Try CAII REST API if domain is configured
+    domain = settings.caii_domain
+    if not domain:
+        if not results:
+            logger.warning(
+                "No CAII domain configured and no endpoints found via Python API."
+            )
+            return []
+        logger.info(
+            "No CAII domain configured, returning discovered endpoints: %s", results
         )
+        return results
+
+    logger.info("Using CAII domain: %s", domain)
+    try:
+        rest_api_results = list_endpoints_from_rest_api(domain)
+        if rest_api_results:
+            new_rest_api_results = []
+            existing_urls = set([e.url for e in results])
+            for endpoint in rest_api_results:
+                # Only add endpoints we didn't already find via Python API
+                if endpoint.url not in existing_urls:
+                    new_rest_api_results.append(endpoint)
+            logger.info(
+                "Found %d additional endpoints via CAII REST API.",
+                len(new_rest_api_results),
+            )
+            results.extend(new_rest_api_results)
+        else:
+            logger.info("No new endpoints found via CAII REST API.")
+    except Exception as e:
+        logger.info(
+            "Failed to list endpoints from CAII REST API. Error: %s",
+            e,
+            exc_info=True,
+        )
+        if not results:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to list endpoints from both Python API and CAII REST API.",
+            )
+        logger.info("Returning previously discovered endpoints: %s", results)
+    if not results:
+        logger.warning(
+            "No endpoints found from either Python API or CAII REST API. Returning empty list."
+        )
+        return []
+    logger.info("Total endpoints discovered: %d", len(results))
+    return results
+
+
+def list_endpoints_from_python_api() -> list[ListEndpointEntry]:
+    try:
+        import cmlapi
+        import cml.endpoints_v1 as cmlendpoints
+
+        results: list[ListEndpointEntry] = []
+        api_client = cmlapi.default_client()
+        ml_serving_apps = api_client.list_ml_serving_apps()
+        logger.info("Listing endpoints for ML Serving Apps: %s", ml_serving_apps)
+        endpoint_groups = cmlendpoints.list_endpoints(ml_serving_apps)
+        for endpoints in endpoint_groups:
+            for endpoint in endpoints:
+                logger.info("Found endpoint: %s", endpoint)
+                if endpoint.get("url"):
+                    results.append(ListEndpointEntry(**endpoint))
+        return results
+    except ImportError as e:
+        logger.warning("Failed to import CML Python API modules. Error: %s", e)
+    except Exception as e:
+        logger.exception(
+            "Model discovery failed through Python API, trying CAI REST API. Error: %s",
+            e,
+        )
+    return []
+
+
+def list_endpoints_from_rest_api(domain: str) -> list[ListEndpointEntry]:
+    headers = build_auth_headers()
+    list_url = f"https://{domain}/api/v1alpha1/listEndpoints"
+    list_json = {"namespace": DEFAULT_NAMESPACE}
+    response = requests.post(list_url, headers=headers, json=list_json, timeout=10)
+    raise_for_http_error(response)
+    api_endpoints = body_to_json(response).get("endpoints", [])
+    # Add domain prefix to endpoint names for clarity
+    logger.info(f"Found {len(api_endpoints)} endpoints from CAII REST API")
+    results: list[ListEndpointEntry] = []
+    for entry in api_endpoints:
+        if (
+            "name" not in entry
+            or "url" not in entry
+            or not entry["name"]
+            or not entry["url"]
+        ):
+            logger.warning("Skipping endpoint entry without 'name' or 'url': %s", entry)
+            continue
+        results.append(
+            ListEndpointEntry(
+                **entry,
+            )
+        )
+    return results
 
 
 def get_reranking_model(model_name: str, top_n: int) -> BaseNodePostprocessor:
-    endpoint = describe_endpoint(endpoint_name=model_name)
+    endpoint = describe_endpoint_entry(endpoint_name=model_name)
     token = get_caii_access_token()
     return CaiiRerankingModel(
         model=endpoint.model_name,
-        base_url=endpoint.url.removesuffix("/ranking"),
+        base_url=endpoint.url,
         api_key=token,
         top_n=top_n,
     )
 
 
 def get_llm(
-    endpoint_name: str,
+    endpoint: Endpoint,
     messages_to_prompt: Callable[[Sequence[ChatMessage]], str],
     completion_to_prompt: Callable[[str], str],
 ) -> LLM:
-    endpoint = describe_endpoint(endpoint_name=endpoint_name)
     api_base = endpoint.url.removesuffix("/chat/completions")
 
     model = endpoint.model_name
@@ -116,7 +260,7 @@ def get_llm(
         http_client = None
 
     # todo: test if the NVIDIA impl works with deepseek, too
-    if "deepseek" in endpoint_name.lower():
+    if "deepseek" in endpoint.name.lower():
         return DeepseekModel(
             model=model,
             context=128000,
@@ -130,14 +274,13 @@ def get_llm(
         api_key=get_caii_access_token(),
         base_url=api_base,
         model=model,
-        http_client=http_client
+        http_client=http_client,
     )
 
 
 def get_embedding_model(model_name: str) -> BaseEmbedding:
     endpoint_name = model_name
-    endpoint = describe_endpoint(endpoint_name=endpoint_name)
-
+    endpoint = describe_endpoint_entry(endpoint_name=endpoint_name)
     if os.path.exists("/etc/ssl/certs/ca-certificates.crt"):
         http_client = httpx.Client(verify="/etc/ssl/certs/ca-certificates.crt")
     else:
@@ -160,29 +303,42 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 
 def get_caii_llm_models() -> List[ModelResponse]:
     potential_models = get_models_with_task("TEXT_GENERATION")
-    results: list[ModelResponse] = []
+    results: list[Endpoint] = []
     for potential in potential_models:
         try:
-            model = get_llm(endpoint_name=potential.name, messages_to_prompt=messages_to_prompt, completion_to_prompt=completion_to_prompt)
+            model = get_llm(
+                endpoint=potential,
+                messages_to_prompt=messages_to_prompt,
+                completion_to_prompt=completion_to_prompt,
+            )
             if model.metadata:
                 results.append(potential)
         except Exception as e:
-            logger.warning(f"Unable to load model metadata for model: {potential.name}. Error: {e}")
+            logger.warning(
+                f"Unable to load model metadata for model: {potential.name}. Error: {e}"
+            )
             pass
 
-    return results
+    return list(map(build_model_response, results))
+
 
 def get_caii_reranking_models() -> List[ModelResponse]:
-    return get_models_with_task("RANK")
+    endpoints = get_models_with_task("RANK")
+    return list(map(build_model_response, endpoints))
+
 
 def get_caii_embedding_models() -> List[ModelResponse]:
-    return get_models_with_task("EMBED")
+    endpoints = get_models_with_task("EMBED")
+    return list(map(build_model_response, endpoints))
 
 
-def get_models_with_task(task_type: str) -> List[ModelResponse]:
-    endpoints = list_endpoints()
+def get_models_with_task(task_type: str) -> List[Endpoint]:
+    endpoints: list[ListEndpointEntry] = list_endpoints()
     endpoint_details = list(
-        map(lambda endpoint: describe_endpoint(endpoint.name), endpoints)
+        map(
+            lambda endpoint: describe_endpoint_entry(endpoint.name, endpoints),
+            endpoints,
+        )
     )
     llm_endpoints = list(
         filter(
@@ -190,13 +346,23 @@ def get_models_with_task(task_type: str) -> List[ModelResponse]:
             endpoint_details,
         )
     )
-    models = list(map(build_model_response, llm_endpoints))
-    return models
+    return llm_endpoints
 
 
+@functools.singledispatch
 def build_model_response(endpoint: Endpoint) -> ModelResponse:
+    domain = urlparse(endpoint.url).hostname
     return ModelResponse(
-        model_id=endpoint.name,
+        model_id=f"{domain}:{endpoint.name}",
+        name=endpoint.name,
+    )
+
+
+@build_model_response.register
+def _(endpoint: DescribeEndpointEntry) -> ModelResponse:
+    domain = urlparse(endpoint.url).hostname
+    return ModelResponse(
+        model_id=f"{domain}:{endpoint.name}",
         name=endpoint.name,
         available=endpoint.replica_count > 0,
         replica_count=endpoint.replica_count,

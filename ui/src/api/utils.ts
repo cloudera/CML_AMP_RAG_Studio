@@ -82,6 +82,7 @@ export enum MutationKeys {
   "restartApplication" = "restartApplication",
   "streamChatMutation" = "streamChatMutation",
   "setCdpToken" = "setCdpToken",
+  "validateJdbcConnection" = "validateJdbcConnection",
 }
 
 export enum QueryKeys {
@@ -113,6 +114,7 @@ export enum QueryKeys {
   "getAmpConfig" = "getAmpConfig",
   "getTools" = "getTools",
   "getPollingAmpConfig" = "getPollingAmpConfig",
+  "getCAIIModelStatus" = "getCAIIModelStatus",
 }
 
 export const commonHeaders = {
@@ -155,7 +157,10 @@ export const postRequest = async <T>(
   });
   if (!res.ok) {
     const detail = (await res.json()) as CustomError;
-    throw new ApiError(detail.message ?? detail.detail, res.status);
+    throw new ApiError(
+      detail.message ?? detail.detail ?? res.statusText,
+      res.status,
+    );
   }
   return await ((await res.json()) as Promise<T>);
 };
@@ -168,7 +173,10 @@ export const getRequest = async <T>(url: string): Promise<T> => {
 
   if (!res.ok) {
     const detail = (await res.json()) as CustomError;
-    throw new ApiError(detail.message ?? detail.detail, res.status);
+    throw new ApiError(
+      detail.message ?? detail.detail ?? res.statusText,
+      res.status,
+    );
   }
 
   return await ((await res.json()) as Promise<T>);
@@ -182,6 +190,9 @@ export const deleteRequest = async (url: string) => {
 
   if (!res.ok) {
     const detail = (await res.json()) as CustomError;
-    throw new ApiError(detail.message ?? detail.detail, res.status);
+    throw new ApiError(
+      detail.message ?? detail.detail ?? res.statusText,
+      res.status,
+    );
   }
 };

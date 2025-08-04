@@ -35,12 +35,15 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from typing import Optional
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from packaging.version import Version
 
 from ._model_provider import ModelProvider
+from .._model_source import ModelSource
 from ...caii.caii import (
     get_caii_llm_models,
     get_caii_embedding_models,
@@ -48,9 +51,12 @@ from ...caii.caii import (
     get_llm as get_caii_llm_model,
     get_embedding_model as get_caii_embedding_model,
     get_reranking_model as get_caii_reranking_model,
+    describe_endpoint,
 )
 from ...caii.types import ModelResponse
+from ...caii.utils import get_cml_version_from_sense_bootstrap
 from ...llama_utils import completion_to_prompt, messages_to_prompt
+from ...utils import timed_lru_cache
 
 
 class CAIIModelProvider(ModelProvider):
@@ -59,32 +65,56 @@ class CAIIModelProvider(ModelProvider):
         return {"CAII_DOMAIN"}
 
     @staticmethod
+    @timed_lru_cache(maxsize=1, seconds=300)
     def list_llm_models() -> list[ModelResponse]:
         return get_caii_llm_models()
 
     @staticmethod
+    @timed_lru_cache(maxsize=1, seconds=300)
     def list_embedding_models() -> list[ModelResponse]:
         return get_caii_embedding_models()
 
     @staticmethod
+    @timed_lru_cache(maxsize=1, seconds=300)
     def list_reranking_models() -> list[ModelResponse]:
         return get_caii_reranking_models()
 
     @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
     def get_llm_model(name: str) -> LLM:
+        endpoint = describe_endpoint(endpoint_name=name)
         return get_caii_llm_model(
-            endpoint_name=name,
+            endpoint=endpoint,
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
         )
 
     @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
     def get_embedding_model(name: str) -> BaseEmbedding:
         return get_caii_embedding_model(model_name=name)
 
     @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         return get_caii_reranking_model(name, top_n)
+
+    @classmethod
+    def is_enabled(cls) -> bool:
+        version: Optional[str] = get_cml_version_from_sense_bootstrap()
+        if not version:
+            return super().is_enabled()
+        cml_version = Version(version)
+        if cml_version >= Version("2.0.50-b68"):
+            available_models = cls.list_llm_models()
+            if available_models:
+                return True
+
+        return super().is_enabled()
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.CAII
 
 
 # ensure interface is implemented

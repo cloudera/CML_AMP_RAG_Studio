@@ -253,7 +253,7 @@ export const ProjectKnowledgeBases = () => {
   const { project } = useProjectContext();
   const [popoverVisible, setPopoverVisible] = useState(false);
   const { data: dataSources, isLoading } = useGetDataSourcesForProject(
-    project.id,
+    project.id
   );
 
   const { data: allDataSources } = useGetDataSourcesQuery();

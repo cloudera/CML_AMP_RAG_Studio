@@ -37,6 +37,7 @@
  ******************************************************************************/
 import { Button, Flex, FormInstance, Modal, Progress, Typography } from "antd";
 import {
+  MetadataDBProvider,
   ProjectConfig,
   useGetPollingAmpConfig,
   useRestartApplication,
@@ -118,11 +119,13 @@ const RestartAppModal = ({
   form,
   selectedFileStorage,
   modelProvider,
+  selectedMetadataDb,
 }: {
   confirmationModal: ModalHook;
   form: FormInstance<ProjectConfig>;
   selectedFileStorage: FileStorage;
   modelProvider?: ModelSource;
+  selectedMetadataDb: MetadataDBProvider;
 }) => {
   const [polling, setPolling] = useState(false);
   const [hasSeenRestarting, setHasSeenRestarting] = useState(false);
@@ -165,6 +168,8 @@ const RestartAppModal = ({
     form
       .validateFields()
       .then((values) => {
+        // Ensure model_provider is always a valid ModelSource (not undefined)
+        values.model_provider = modelProvider ?? "Bedrock";
         if (modelProvider === "CAII") {
           values.azure_config = {};
           values.openai_config = {};
@@ -185,6 +190,14 @@ const RestartAppModal = ({
           values.aws_config.bucket_prefix = undefined;
           values.summary_storage_provider = "Local";
           values.chat_store_provider = "Local";
+        }
+
+        if (selectedMetadataDb === "H2") {
+          values.metadata_db_config = {
+            jdbc_url: undefined,
+            username: undefined,
+            password: undefined,
+          };
         }
 
         if (values.vector_db_provider === "QDRANT") {

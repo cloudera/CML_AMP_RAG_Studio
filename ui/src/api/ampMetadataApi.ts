@@ -46,6 +46,7 @@ import {
   QueryKeys,
   UseMutationType,
 } from "src/api/utils.ts";
+import { ModelSource } from "src/api/modelsApi.ts";
 
 export const useGetAmpUpdateStatus = () => {
   return useQuery({
@@ -159,19 +160,42 @@ export interface ApplicationConfig {
   memory_size_gb: number;
 }
 
+export type MetadataDBProvider = "H2" | "PostgreSQL";
+interface MetadataDBConfig {
+  jdbc_url?: string;
+  username?: string;
+  password?: string;
+}
+
 export type VectorDBProvider = "QDRANT" | "OPENSEARCH";
+
+export interface ValidationResult {
+  valid: boolean;
+  message: string;
+}
+
+export interface ConfigValidationResults {
+  storage: ValidationResult;
+  model: ValidationResult;
+  metadata_api: ValidationResult;
+  valid: boolean;
+}
 
 export interface ProjectConfig {
   use_enhanced_pdf_processing: boolean;
   summary_storage_provider: "Local" | "S3";
   chat_store_provider: "Local" | "S3";
+  metadata_db_provider: MetadataDBProvider;
   vector_db_provider: VectorDBProvider;
+  model_provider: ModelSource;
+  metadata_db_config: MetadataDBConfig;
   aws_config: AwsConfig;
   azure_config: AzureConfig;
   openai_config: OpenAIConfig;
   caii_config: CaiiConfig;
   opensearch_config: OpenSearchConfig;
   is_valid_config: boolean;
+  config_validation_results: ConfigValidationResults;
   release_version: string;
   application_config: ApplicationConfig;
   cdp_token?: string;
@@ -264,4 +288,32 @@ const setCdpToken = async (auth_token: string): Promise<string> => {
   return await postRequest(`${llmServicePath}/amp/config/cdp-auth-token`, {
     auth_token,
   });
+};
+
+export const useValidateJdbcConnection = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ValidationResult>) => {
+  return useMutation({
+    mutationKey: [MutationKeys.validateJdbcConnection],
+    mutationFn: validateJdbcConnection,
+    onError,
+    onSuccess,
+  });
+};
+
+interface TestJdbcConnectionParams {
+  db_url: string;
+  db_type: MetadataDBProvider;
+  username: string;
+  password: string;
+}
+
+const validateJdbcConnection = async (
+  body: TestJdbcConnectionParams,
+): Promise<ValidationResult> => {
+  return await postRequest(
+    `${llmServicePath}/amp/validate-jdbc-connection`,
+    body,
+  );
 };
