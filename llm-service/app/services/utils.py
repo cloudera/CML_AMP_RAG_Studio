@@ -198,16 +198,15 @@ def raise_for_http_error(response: requests.Response) -> None:
             raise requests.HTTPError(message, response=response)
 
 
-def has_admin_rights(
-    origin_remote_user: str | None, remote_user_perm: str | None
-) -> bool:
+def has_admin_rights(remote_user: str | None, remote_user_perm: str | None) -> bool:
     env = get_project_environment()
     project_owner = env.get("PROJECT_OWNER", "unknown")
 
-    return origin_remote_user == project_owner or remote_user_perm == "RW"
+    return remote_user == project_owner or remote_user_perm == "RW"
 
 
 C = TypeVar("C", bound=Callable[..., Any])
+
 
 def timed_lru_cache(seconds: int, maxsize: int = 128) -> Callable[[C], C]:
     def wrapper_cache(func: C) -> C:
@@ -220,7 +219,9 @@ def timed_lru_cache(seconds: int, maxsize: int = 128) -> Callable[[C], C]:
                 cached_func.cache_clear()
                 cached_func.expiration = time.monotonic() + seconds  # type: ignore
             return cast(C, cached_func(*args, **kwargs))
+
         return cast(C, wrapped_func)
+
     return wrapper_cache
 
 

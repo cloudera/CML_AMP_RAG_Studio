@@ -219,13 +219,18 @@ def list_endpoints_from_rest_api(domain: str) -> list[ListEndpointEntry]:
     logger.info(f"Found {len(api_endpoints)} endpoints from CAII REST API")
     results: list[ListEndpointEntry] = []
     for entry in api_endpoints:
-        if "name" not in entry or "url" not in entry or not entry["name"] or not entry["url"]:
+        if (
+            "name" not in entry
+            or "url" not in entry
+            or not entry["name"]
+            or not entry["url"]
+        ):
             logger.warning("Skipping endpoint entry without 'name' or 'url': %s", entry)
             continue
         results.append(
             ListEndpointEntry(
                 **entry,
-             )
+            )
         )
     return results
 

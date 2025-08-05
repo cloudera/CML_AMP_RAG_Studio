@@ -161,10 +161,10 @@ def get_image_generation_tool_metadata() -> list[ToolMetadata]:
 @exceptions.propagates
 def add_tool(
     tool: Tool,
-    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> Tool:
-    if not has_admin_rights(origin_remote_user, remote_user_perm):
+    if not has_admin_rights(remote_user, remote_user_perm):
         raise HTTPException(
             status_code=401, detail="You do not have permission to add tools."
         )
@@ -203,10 +203,10 @@ def add_tool(
 @exceptions.propagates
 def delete_tool(
     name: str,
-    origin_remote_user: Annotated[str | None, Header()] = None,
+    remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
 ) -> None:
-    if not has_admin_rights(origin_remote_user, remote_user_perm):
+    if not has_admin_rights(remote_user, remote_user_perm):
         raise HTTPException(
             status_code=401, detail="You do not have permission to delete tools."
         )

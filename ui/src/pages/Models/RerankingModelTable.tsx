@@ -38,10 +38,8 @@
 
 import { Table, TableProps } from "antd";
 import { Model, useTestRerankingModel } from "src/api/modelsApi.ts";
-import {
-  getColumnsForModelSource,
-  TestCell,
-} from "pages/Models/ModelTable.tsx";
+import { getColumnsForModelSource } from "pages/Models/ModelTable.tsx";
+import { TestCell } from "pages/Models/TestCell.tsx";
 
 const RerankingModelTestCell = ({ model }: { model: Model }) => {
   const {

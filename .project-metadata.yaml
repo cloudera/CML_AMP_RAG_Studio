@@ -6,6 +6,11 @@ date: "2024-09-10"
 specification_version: 1.0
 prototype_version: 1.0
 
+environment_variables:
+    UV_HTTP_TIMEOUT:
+        description: "Timeout for UV processing in seconds."
+        default: "60000"
+        required: false
 
 runtimes:
   - editor: JupyterLab
@@ -35,8 +40,8 @@ tasks:
     entity_label: refresh_project
     script: scripts/refresh_project.py
     arguments: None
-    cpu: 2
-    memory: 4
+    cpu: 4
+    memory: 16
     short_summary: Create job to allow refreshing the project from source and rebuilding.
     environment:
       TASK_TYPE: CREATE/RUN_JOB

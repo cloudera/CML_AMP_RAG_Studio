@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { join } from "path";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import { ClientRequest, IncomingMessage, ServerResponse } from "node:http";
+import { IncomingMessage, ServerResponse } from "node:http";
 import { Socket } from "node:net";
 
 const app = express();
@@ -11,13 +11,6 @@ const port: number = parseInt(process.env.CDSW_APP_PORT ?? "3000", 10);
 const host: string = process.env.NODE_HOST ?? "127.0.0.1";
 
 app.use(cors());
-
-const proxyReq = (proxyReq: ClientRequest, req: IncomingMessage) => {
-  proxyReq.setHeader(
-    "origin-remote-user",
-    req.headers["remote-user"] || "unknown",
-  );
-};
 
 const apiProxy: Options = {
   target: process.env.API_URL ?? "http://localhost:8080",
@@ -29,7 +22,6 @@ const apiProxy: Options = {
     Authorization: `Bearer ${process.env.CDSW_APIV2_KEY}`,
   },
   on: {
-    proxyReq,
     error: (
       err: Error,
       req: IncomingMessage,
@@ -78,9 +70,6 @@ const llmServiceProxy: Options = {
   pathFilter: ["/llm-service/**"],
   pathRewrite: {
     "^/llm-service": "",
-  },
-  on: {
-    proxyReq,
   },
 };
 
