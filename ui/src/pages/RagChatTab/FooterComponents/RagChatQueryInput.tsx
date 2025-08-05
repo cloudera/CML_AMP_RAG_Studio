@@ -47,8 +47,10 @@ import {
 } from "antd";
 import {
   MouseEventHandler,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -111,7 +113,7 @@ const RagChatQueryInput = ({
   } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedDataSourceIds, setSelectedDataSourceIds] = useState<number[]>(
-    [],
+    []
   );
 
   const [userInput, setUserInput] = useState("");
@@ -158,21 +160,27 @@ const RagChatQueryInput = ({
       session_id: sessionId ? +sessionId : undefined,
     },
     // don't make a request to get suggest questions if we know a question will be in flight soon
-    !search.question,
+    !search.question
   );
 
   const streamChatMutation = useStreamingChatMutation({
-    onChunk: (chunk) => {
-      setStreamedChat((prev) => prev + chunk);
-    },
-    onEvent: getOnEvent(setStreamedEvent),
-    onSuccess: () => {
+    onChunk: useCallback(
+      (chunk: string) => {
+        setStreamedChat((prev) => prev + chunk);
+      },
+      [setStreamedChat]
+    ),
+    onEvent: useMemo(() => getOnEvent(setStreamedEvent), [setStreamedEvent]),
+    onSuccess: useCallback(() => {
       setUserInput("");
       setStreamedChat("");
-    },
-    getController: (ctrl) => {
-      setStreamedAbortController(ctrl);
-    },
+    }, [setStreamedChat]),
+    getController: useCallback(
+      (ctrl: AbortController) => {
+        setStreamedAbortController(ctrl);
+      },
+      [setStreamedAbortController]
+    ),
   });
 
   const documentModal = useModal();
@@ -180,7 +188,7 @@ const RagChatQueryInput = ({
   useEffect(() => {
     // Check if any modal is currently open
     const isModalOpen = document.querySelector(
-      ".ant-modal-root, .ant-modal-mask",
+      ".ant-modal-root, .ant-modal-mask"
     );
 
     if (inputRef.current && !isModalOpen) {
@@ -241,7 +249,7 @@ const RagChatQueryInput = ({
     setInferenceModel(modelId);
     if (activeSession) {
       const supportsToolCalling = llmModels.find(
-        (model) => model.model_id === modelId,
+        (model) => model.model_id === modelId
       )?.tool_calling_supported;
       updateSession.mutate({
         ...activeSession,

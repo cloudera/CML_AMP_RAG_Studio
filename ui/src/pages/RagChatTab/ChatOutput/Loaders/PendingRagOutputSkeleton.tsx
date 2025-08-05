@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext } from "react";
+import { useContext, useMemo, useRef } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
@@ -47,17 +47,24 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
     streamedEventState: [streamedEvent],
   } = useContext(RagChatContext);
 
-  const streamedMessage: ChatMessageType = {
-    id: placeholderChatResponseId,
-    session_id: 0,
-    source_nodes: [],
-    rag_message: {
-      user: question,
-      assistant: streamedChat,
-    },
-    evaluations: [],
-    timestamp: Date.now(),
-  };
+  // Use a ref to maintain a constant timestamp during streaming
+  const timestampRef = useRef<number>(Date.now());
+
+  // Memoize the streamedMessage to prevent unnecessary re-renders
+  const streamedMessage: ChatMessageType = useMemo(
+    () => ({
+      id: placeholderChatResponseId,
+      session_id: 0,
+      source_nodes: [],
+      rag_message: {
+        user: question,
+        assistant: streamedChat,
+      },
+      evaluations: [],
+      timestamp: timestampRef.current,
+    }),
+    [question, streamedChat]
+  );
 
   return (
     <ChatMessageBody data={streamedMessage} streamedEvents={streamedEvent} />
