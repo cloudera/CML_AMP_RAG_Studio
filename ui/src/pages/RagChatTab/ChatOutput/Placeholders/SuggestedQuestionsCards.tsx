@@ -46,6 +46,7 @@ import {
   useStreamingChatMutation,
 } from "src/api/chatApi.ts";
 import useCreateSessionAndRedirect from "pages/RagChatTab/ChatOutput/hooks/useCreateSessionAndRedirect";
+import { useStreamingChunkBuffer } from "src/hooks/useStreamingChunkBuffer.ts";
 
 const QuestionCard = ({
   question,
@@ -95,13 +96,19 @@ const SuggestedQuestionsCards = () => {
   });
 
   const createSessionAndRedirect = useCreateSessionAndRedirect();
+
+  // Use custom hook to handle batched streaming updates
+  const { onChunk, flush } = useStreamingChunkBuffer((chunks) => {
+    setStreamedChat((prev) => prev + chunks);
+  });
+
   const { mutate: chatMutation, isPending: askRagIsPending } =
     useStreamingChatMutation({
-      onChunk: (chunk) => {
-        setStreamedChat((prev) => prev + chunk);
-      },
+      onChunk,
       onEvent: getOnEvent(setStreamedEvent),
       onSuccess: () => {
+        // Flush any remaining chunks before cleanup
+        flush();
         setStreamedChat("");
       },
       getController: (ctrl: AbortController) => {

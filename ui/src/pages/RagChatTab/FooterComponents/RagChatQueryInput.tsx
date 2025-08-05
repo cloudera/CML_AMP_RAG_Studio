@@ -68,6 +68,7 @@ import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600, cdlRed600 } from "src/cuix/variables.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import { useStreamingChunkBuffer } from "src/hooks/useStreamingChunkBuffer.ts";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
@@ -111,7 +112,7 @@ const RagChatQueryInput = ({
   } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedDataSourceIds, setSelectedDataSourceIds] = useState<number[]>(
-    [],
+    []
   );
 
   const [userInput, setUserInput] = useState("");
@@ -158,67 +159,34 @@ const RagChatQueryInput = ({
       session_id: sessionId ? +sessionId : undefined,
     },
     // don't make a request to get suggest questions if we know a question will be in flight soon
-    !search.question,
+    !search.question
   );
 
-  // Chunk queue and timer refs
-  const chunkQueueRef = useRef<string[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Use custom hook to handle batched streaming updates
+  const { onChunk, flush } = useStreamingChunkBuffer((chunks) => {
+    setStreamedChat((prev) => prev + chunks);
+  });
 
-  // Modified onChunk to queue chunks
   const streamChatMutation = useStreamingChatMutation({
-    onChunk: (chunk) => {
-      chunkQueueRef.current.push(chunk);
-    },
+    onChunk,
     onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
-      console.log("Chat streaming completed successfully.");
+      // Flush any remaining chunks before cleanup
+      flush();
       setUserInput("");
       setStreamedChat("");
-      // Clear queue and timer
-      chunkQueueRef.current = [];
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
     },
     getController: (ctrl) => {
       setStreamedAbortController(ctrl);
     },
   });
 
-  // Timer effect to flush chunk queue to streamed chat
-  useEffect(() => {
-    if (streamChatMutation.isPending) {
-      timerRef.current = setInterval(() => {
-        if (chunkQueueRef.current.length > 0) {
-          setStreamedChat((prev) => prev + chunkQueueRef.current.join(""));
-          chunkQueueRef.current = [];
-        }
-      }, 10);
-    } else {
-      // Clean up timer and queue when not streaming
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      chunkQueueRef.current = [];
-    }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      chunkQueueRef.current = [];
-    };
-  }, [streamChatMutation.isPending, setStreamedChat]);
-
   const documentModal = useModal();
 
   useEffect(() => {
     // Check if any modal is currently open
     const isModalOpen = document.querySelector(
-      ".ant-modal-root, .ant-modal-mask",
+      ".ant-modal-root, .ant-modal-mask"
     );
 
     if (inputRef.current && !isModalOpen) {
@@ -279,7 +247,7 @@ const RagChatQueryInput = ({
     setInferenceModel(modelId);
     if (activeSession) {
       const supportsToolCalling = llmModels.find(
-        (model) => model.model_id === modelId,
+        (model) => model.model_id === modelId
       )?.tool_calling_supported;
       updateSession.mutate({
         ...activeSession,
