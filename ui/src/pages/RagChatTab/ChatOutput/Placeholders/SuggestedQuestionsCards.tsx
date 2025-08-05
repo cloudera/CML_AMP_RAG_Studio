@@ -38,7 +38,7 @@
 
 import { Card, Flex, Skeleton, Typography } from "antd";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { useContext, useCallback, useMemo } from "react";
+import { useContext } from "react";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import {
   createQueryConfiguration,
@@ -97,22 +97,16 @@ const SuggestedQuestionsCards = () => {
   const createSessionAndRedirect = useCreateSessionAndRedirect();
   const { mutate: chatMutation, isPending: askRagIsPending } =
     useStreamingChatMutation({
-      onChunk: useCallback(
-        (chunk: string) => {
-          setStreamedChat((prev) => prev + chunk);
-        },
-        [setStreamedChat]
-      ),
-      onEvent: useMemo(() => getOnEvent(setStreamedEvent), [setStreamedEvent]),
-      onSuccess: useCallback(() => {
+      onChunk: (chunk) => {
+        setStreamedChat((prev) => prev + chunk);
+      },
+      onEvent: getOnEvent(setStreamedEvent),
+      onSuccess: () => {
         setStreamedChat("");
-      }, [setStreamedChat]),
-      getController: useCallback(
-        (ctrl: AbortController) => {
-          setStreamedAbortController(ctrl);
-        },
-        [setStreamedAbortController]
-      ),
+      },
+      getController: (ctrl: AbortController) => {
+        setStreamedAbortController(ctrl);
+      },
     });
 
   const handleAskSample = (suggestedQuestion: string) => {

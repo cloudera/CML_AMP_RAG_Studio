@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import { useContext, useEffect, useRef, useCallback, useMemo } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import ChatMessage from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessage.tsx";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
@@ -81,25 +81,19 @@ const ChatMessageController = () => {
   });
 
   const { mutate: chatMutation } = useStreamingChatMutation({
-    onChunk: useCallback(
-      (chunk: string) => {
-        setStreamedChat((prev) => prev + chunk);
-      },
-      [setStreamedChat]
-    ),
-    onEvent: useMemo(() => getOnEvent(setStreamedEvent), [setStreamedEvent]),
-    onSuccess: useCallback(() => {
+    onChunk: (chunk) => {
+      setStreamedChat((prev) => prev + chunk);
+    },
+    onEvent: getOnEvent(setStreamedEvent),
+    onSuccess: () => {
       setStreamedChat("");
       const url = new URL(window.location.href);
       url.searchParams.delete("question");
       window.history.pushState(null, "", url.toString());
-    }, [setStreamedChat]),
-    getController: useCallback(
-      (ctrl: AbortController) => {
-        setStreamedAbortControllerState(ctrl);
-      },
-      [setStreamedAbortControllerState]
-    ),
+    },
+    getController: (ctrl) => {
+      setStreamedAbortControllerState(ctrl);
+    },
   });
 
   useEffect(() => {
