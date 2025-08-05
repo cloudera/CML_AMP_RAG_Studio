@@ -161,19 +161,57 @@ const RagChatQueryInput = ({
     !search.question,
   );
 
+  // Chunk queue and timer refs
+  const chunkQueueRef = useRef<string[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Modified onChunk to queue chunks
   const streamChatMutation = useStreamingChatMutation({
     onChunk: (chunk) => {
-      setStreamedChat((prev) => prev + chunk);
+      chunkQueueRef.current.push(chunk);
     },
     onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
+      console.log("Chat streaming completed successfully.");
       setUserInput("");
       setStreamedChat("");
+      // Clear queue and timer
+      chunkQueueRef.current = [];
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     },
     getController: (ctrl) => {
       setStreamedAbortController(ctrl);
     },
   });
+
+  // Timer effect to flush chunk queue to streamed chat
+  useEffect(() => {
+    if (streamChatMutation.isPending) {
+      timerRef.current = setInterval(() => {
+        if (chunkQueueRef.current.length > 0) {
+          setStreamedChat((prev) => prev + chunkQueueRef.current.join(""));
+          chunkQueueRef.current = [];
+        }
+      }, 10);
+    } else {
+      // Clean up timer and queue when not streaming
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      chunkQueueRef.current = [];
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      chunkQueueRef.current = [];
+    };
+  }, [streamChatMutation.isPending, setStreamedChat]);
 
   const documentModal = useModal();
 
