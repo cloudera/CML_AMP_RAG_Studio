@@ -48,6 +48,7 @@ import {
   RadioChangeEvent,
   Table,
   Typography,
+  Switch,
 } from "antd";
 import {
   DeleteOutlined,
@@ -60,8 +61,8 @@ import {
   useDeleteToolMutation,
   useToolsQuery,
   useImageGenerationToolsQuery,
-  useSelectedImageGenerationToolQuery,
-  useSetSelectedImageGenerationToolMutation,
+  useImageGenerationConfigQuery,
+  useSetImageGenerationConfigMutation,
 } from "src/api/toolsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
@@ -72,18 +73,22 @@ const ToolsPage = () => {
   const { data: tools = [], isLoading, error: toolsError } = useToolsQuery();
   const { data: imageTools = [], isLoading: imageToolsLoading } =
     useImageGenerationToolsQuery();
-  const { data: selectedImageTool } = useSelectedImageGenerationToolQuery();
+  const { data: imageConfig } = useImageGenerationConfigQuery();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [tempSelectedImageTool, setTempSelectedImageTool] = useState<
     string | null
-  >("");
+  >(null);
+  const [tempEnabled, setTempEnabled] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Update temp selection when the actual selection loads
+  // Update temp values when the actual config loads
   useEffect(() => {
-    if (selectedImageTool !== undefined && tempSelectedImageTool === "") {
-      setTempSelectedImageTool(selectedImageTool.selected_tool ?? null);
+    if (imageConfig !== undefined && !isInitialized) {
+      setTempSelectedImageTool(imageConfig.selected_tool ?? null);
+      setTempEnabled(imageConfig.enabled);
+      setIsInitialized(true);
     }
-  }, [selectedImageTool, tempSelectedImageTool]);
+  }, [imageConfig, isInitialized]);
 
   const deleteToolMutation = useDeleteToolMutation({
     onSuccess: () => {
@@ -95,15 +100,17 @@ const ToolsPage = () => {
     },
   });
 
-  const setSelectedImageToolMutation =
-    useSetSelectedImageGenerationToolMutation({
-      onSuccess: () => {
-        messageQueue.success("Image generation tool selection updated");
-      },
-      onError: (error) => {
-        messageQueue.error(`Failed to update selection: ${error.message}`);
-      },
-    });
+  const setImageConfigMutation = useSetImageGenerationConfigMutation({
+    onSuccess: (savedConfig) => {
+      messageQueue.success("Image generation configuration updated");
+      // Update temp states to match the saved config
+      setTempEnabled(savedConfig.enabled);
+      setTempSelectedImageTool(savedConfig.selected_tool);
+    },
+    onError: (error) => {
+      messageQueue.error(`Failed to update configuration: ${error.message}`);
+    },
+  });
 
   // Filter out image generation tools from regular tools
   const imageToolNames = imageTools.map((tool) => tool.name);
@@ -116,10 +123,22 @@ const ToolsPage = () => {
     setTempSelectedImageTool(value);
   };
 
-  const handleSaveImageToolSelection = () => {
-    setSelectedImageToolMutation.mutate({
-      selected_tool: tempSelectedImageTool,
+  const handleSaveImageConfig = () => {
+    let selectedTool = tempSelectedImageTool;
+
+    // Auto-select single tool if enabled but no tool selected
+    if (tempEnabled && !selectedTool && imageTools.length === 1) {
+      selectedTool = imageTools[0].name;
+    }
+
+    setImageConfigMutation.mutate({
+      enabled: tempEnabled,
+      selected_tool: tempEnabled ? selectedTool : null,
     });
+  };
+
+  const handleToggleEnabled = (enabled: boolean) => {
+    setTempEnabled(enabled);
   };
 
   const handleUnselectImageTool = () => {
@@ -130,8 +149,9 @@ const ToolsPage = () => {
     return imageToolNames.includes(toolName);
   };
 
-  const hasSelectionChanged =
-    tempSelectedImageTool !== (selectedImageTool?.selected_tool ?? null);
+  const hasConfigChanged =
+    tempEnabled !== (imageConfig?.enabled ?? false) ||
+    tempSelectedImageTool !== (imageConfig?.selected_tool ?? null);
 
   const columns = [
     {
@@ -192,87 +212,6 @@ const ToolsPage = () => {
         paddingLeft: 60,
       }}
     >
-      {imageTools.length > 0 && (
-        <Flex vertical gap={16} style={{ width: "100%", paddingBottom: 20 }}>
-          <Typography.Title level={3} style={{ marginTop: 20 }}>
-            (Beta) Available Image Generation Tools
-          </Typography.Title>
-          <Typography.Paragraph type="secondary">
-            {imageTools.length > 1
-              ? "Select which image generation tool to make available for use in chat sessions. Only one image generation tool can be active at a time."
-              : "The following image generation tool is available for use in chat sessions."}
-          </Typography.Paragraph>
-          {imageToolsLoading ? (
-            <Typography.Text>Loading image generation tools...</Typography.Text>
-          ) : (
-            <Flex vertical gap={16}>
-              {imageTools.length === 1 ? (
-                // Show simple display for single tool
-                <Flex vertical gap={8}>
-                  <Typography.Text strong>
-                    {imageTools[0].metadata.display_name || imageTools[0].name}
-                  </Typography.Text>
-                  <Typography.Text type="secondary">
-                    {imageTools[0].metadata.description}
-                  </Typography.Text>
-                </Flex>
-              ) : (
-                // Show radio buttons for multiple tools
-                <>
-                  <Radio.Group
-                    value={tempSelectedImageTool}
-                    onChange={handleTempImageToolSelectionChange}
-                    disabled={setSelectedImageToolMutation.isPending}
-                  >
-                    <Flex vertical gap={8}>
-                      {imageTools.map((tool) => (
-                        <Radio key={tool.name} value={tool.name}>
-                          <Flex vertical style={{ marginLeft: 8 }}>
-                            <Typography.Text strong>
-                              {tool.metadata.display_name || tool.name}
-                            </Typography.Text>
-                            <Typography.Text
-                              type="secondary"
-                              style={{ fontSize: 12 }}
-                            >
-                              {tool.metadata.description}
-                            </Typography.Text>
-                          </Flex>
-                        </Radio>
-                      ))}
-                    </Flex>
-                  </Radio.Group>
-                  <Flex justify="space-between" align="center">
-                    <Button
-                      danger
-                      icon={<CloseOutlined />}
-                      onClick={handleUnselectImageTool}
-                      disabled={
-                        setSelectedImageToolMutation.isPending ||
-                        tempSelectedImageTool === null
-                      }
-                    >
-                      Unselect
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<SaveOutlined />}
-                      onClick={handleSaveImageToolSelection}
-                      disabled={
-                        !hasSelectionChanged ||
-                        setSelectedImageToolMutation.isPending
-                      }
-                      loading={setSelectedImageToolMutation.isPending}
-                    >
-                      Save Selection
-                    </Button>
-                  </Flex>
-                </>
-              )}
-            </Flex>
-          )}
-        </Flex>
-      )}
       <Flex vertical gap={20}>
         <Typography.Title level={3}>
           (Beta) MCP Tools Management
@@ -333,6 +272,144 @@ const ToolsPage = () => {
           isModalVisible={isModalVisible}
         />
       </Flex>
+      {imageTools.length > 0 && (
+        <Flex vertical gap={16} style={{ width: "100%", paddingBottom: 20 }}>
+          <Typography.Title level={3} style={{ marginTop: 20 }}>
+            (Beta) Image Generation Tools
+          </Typography.Title>
+
+          {/* Global Enable/Disable Toggle */}
+          <Card
+            style={{ backgroundColor: tempEnabled ? "inherit" : "#f5f5f5" }}
+          >
+            <Flex justify="space-between" align="center">
+              <Flex vertical gap={4}>
+                <Typography.Text strong>Image Generation</Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {tempEnabled
+                    ? "Image generation tools are available for use in chat sessions"
+                    : "Image generation is disabled for all chat sessions"}
+                </Typography.Text>
+              </Flex>
+              <Flex align="center" gap={8}>
+                <Switch
+                  checked={tempEnabled}
+                  onChange={handleToggleEnabled}
+                  disabled={setImageConfigMutation.isPending}
+                />
+                <Typography.Text type={tempEnabled ? "success" : "secondary"}>
+                  {tempEnabled ? "Enabled" : "Disabled"}
+                </Typography.Text>
+              </Flex>
+            </Flex>
+          </Card>
+
+          {/* Tool Selection Section */}
+          <div
+            style={{
+              opacity: tempEnabled ? 1 : 0.5,
+              pointerEvents: tempEnabled ? "auto" : "none",
+              transition: "opacity 0.3s ease",
+            }}
+          >
+            <Typography.Paragraph type="secondary">
+              {imageTools.length > 1
+                ? "Select which image generation tool to make available for use in chat sessions. Only one image generation tool can be active at a time."
+                : "The following image generation tool is available for use in chat sessions."}
+            </Typography.Paragraph>
+
+            {imageToolsLoading ? (
+              <Typography.Text>
+                Loading image generation tools...
+              </Typography.Text>
+            ) : (
+              <Flex vertical gap={16}>
+                {imageTools.length === 1 ? (
+                  // Show simple display for single tool
+                  <Card>
+                    <Flex vertical gap={8}>
+                      <Typography.Text strong>
+                        {imageTools[0].metadata.display_name ||
+                          imageTools[0].name}
+                      </Typography.Text>
+                      <Typography.Text type="secondary">
+                        {imageTools[0].metadata.description}
+                      </Typography.Text>
+                      <Typography.Text
+                        type="secondary"
+                        style={{ fontSize: 12, fontStyle: "italic" }}
+                      >
+                        Status:{" "}
+                        {tempEnabled &&
+                        tempSelectedImageTool === imageTools[0].name
+                          ? "Selected - Will be available when image generation is enabled"
+                          : "Available but not selected"}
+                      </Typography.Text>
+                    </Flex>
+                  </Card>
+                ) : (
+                  // Show radio buttons for multiple tools
+                  <Card>
+                    <Radio.Group
+                      value={tempSelectedImageTool}
+                      onChange={handleTempImageToolSelectionChange}
+                      disabled={setImageConfigMutation.isPending}
+                    >
+                      <Flex vertical gap={8}>
+                        {imageTools.map((tool) => (
+                          <Radio key={tool.name} value={tool.name}>
+                            <Flex vertical style={{ marginLeft: 8 }}>
+                              <Typography.Text strong>
+                                {tool.metadata.display_name || tool.name}
+                              </Typography.Text>
+                              <Typography.Text
+                                type="secondary"
+                                style={{ fontSize: 12 }}
+                              >
+                                {tool.metadata.description}
+                              </Typography.Text>
+                            </Flex>
+                          </Radio>
+                        ))}
+                      </Flex>
+                    </Radio.Group>
+                    {imageTools.length > 1 && (
+                      <Flex justify="flex-start" style={{ marginTop: 16 }}>
+                        <Button
+                          danger
+                          icon={<CloseOutlined />}
+                          onClick={handleUnselectImageTool}
+                          disabled={
+                            setImageConfigMutation.isPending ||
+                            tempSelectedImageTool === null
+                          }
+                        >
+                          Unselect
+                        </Button>
+                      </Flex>
+                    )}
+                  </Card>
+                )}
+              </Flex>
+            )}
+          </div>
+
+          {/* Save Configuration Button - Always Visible */}
+          <Card>
+            <Flex justify="flex-end" align="center">
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSaveImageConfig}
+                disabled={!hasConfigChanged || setImageConfigMutation.isPending}
+                loading={setImageConfigMutation.isPending}
+              >
+                Save Configuration
+              </Button>
+            </Flex>
+          </Card>
+        </Flex>
+      )}
     </Layout>
   );
 };

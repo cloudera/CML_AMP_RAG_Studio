@@ -291,36 +291,56 @@ def get_image_generator_tools(
 ) -> list[BaseTool]:
     image_generator_tools: list[BaseTool] = []
     model_source = get_model_source()
-    # Process user-selected image generation tools
+
+    # Import the function to get currently selected image generation tool
+    from app.routers.index.tools import get_selected_image_generation_tool
+
+    # Get the globally selected image generation tool
+    selected_image_tool = get_selected_image_generation_tool()
+
+    # Process user-selected image generation tools only if they match the globally selected tool
     if query_configuration and query_configuration.selected_tools:
-        if (
-            ImageGenerationTools.OPENAI_IMAGE_GENERATION
-            in query_configuration.selected_tools
-            and model_source == ModelSource.OPENAI
-        ):
-            if settings.openai_api_key is None:
-                logger.warning(
-                    "OpenAI image generation tool selected but API key not set"
-                )
-            image_generator_tools.extend(
-                OpenAIImageGenerationToolSpec(
-                    api_key=settings.openai_api_key
-                ).to_tool_list()
-            )
-        elif (
-            ImageGenerationTools.BEDROCK_STABLE_DIFFUSION
-            in query_configuration.selected_tools
-            and model_source == ModelSource.BEDROCK
-        ):
-            image_generator_tools.extend(
-                BedrockStableDiffusionToolSpec().to_tool_list()
-            )
-        elif (
-            ImageGenerationTools.BEDROCK_TITAN_IMAGE
-            in query_configuration.selected_tools
-            and model_source == ModelSource.BEDROCK
-        ):
-            image_generator_tools.extend(BedrockTitanImageToolSpec().to_tool_list())
+        for tool_name in query_configuration.selected_tools:
+            if tool_name in [t.value for t in ImageGenerationTools]:
+                # Only allow this tool if it's the globally selected one
+                if tool_name != selected_image_tool:
+                    logger.warning(
+                        "Image generation tool %s is selected in session but "
+                        "not globally available. Skipping.",
+                        tool_name,
+                    )
+                    continue
+
+                # Check if the tool matches the current model provider and is available
+                if (
+                    tool_name == ImageGenerationTools.OPENAI_IMAGE_GENERATION
+                    and model_source == ModelSource.OPENAI
+                ):
+                    if settings.openai_api_key is None:
+                        logger.warning(
+                            "OpenAI image generation tool selected but API key not set"
+                        )
+                        continue
+                    image_generator_tools.extend(
+                        OpenAIImageGenerationToolSpec(
+                            api_key=settings.openai_api_key
+                        ).to_tool_list()
+                    )
+                elif (
+                    tool_name == ImageGenerationTools.BEDROCK_STABLE_DIFFUSION
+                    and model_source == ModelSource.BEDROCK
+                ):
+                    image_generator_tools.extend(
+                        BedrockStableDiffusionToolSpec().to_tool_list()
+                    )
+                elif (
+                    tool_name == ImageGenerationTools.BEDROCK_TITAN_IMAGE
+                    and model_source == ModelSource.BEDROCK
+                ):
+                    image_generator_tools.extend(
+                        BedrockTitanImageToolSpec().to_tool_list()
+                    )
+
     return image_generator_tools
 
 

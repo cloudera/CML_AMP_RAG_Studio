@@ -82,17 +82,18 @@ class Tool(ToolMetadata):
     env: Optional[dict[str, str]] = None
 
 
-class SelectedImageGenerationTool(BaseModel):
+class ImageGenerationConfig(BaseModel):
     """
-    Represents the selected image generation tool.
+    Represents the complete image generation configuration.
     """
 
+    enabled: bool = True
     selected_tool: Optional[str] = None
 
 
 mcp_json_path: str = os.path.join(settings.tools_dir, "mcp.json")
-selected_image_tool_path: str = os.path.join(
-    settings.tools_dir, "selected_image_tool.json"
+image_generation_config_path: str = os.path.join(
+    settings.tools_dir, "image_generation_config.json"
 )
 
 
@@ -116,35 +117,47 @@ def get_mcp_config() -> dict[str, Any]:
         )
 
 
+def get_image_generation_config() -> ImageGenerationConfig:
+    """
+    Gets the complete image generation configuration (enabled state + selected tool).
+    """
+    if not os.path.exists(image_generation_config_path):
+        # Default configuration - disabled by default
+        return ImageGenerationConfig(enabled=False, selected_tool=None)
+
+    try:
+        with open(image_generation_config_path, "r") as f:
+            data = json.load(f)
+            return ImageGenerationConfig(**data)
+    except Exception:
+        logger.error(
+            "Failed to get image generation config from %s",
+            image_generation_config_path,
+        )
+        # Default configuration - disabled by default
+        return ImageGenerationConfig(enabled=False, selected_tool=None)
+
+
+def set_image_generation_config(config: ImageGenerationConfig) -> None:
+    """
+    Sets the complete image generation configuration.
+    """
+    os.makedirs(os.path.dirname(image_generation_config_path), exist_ok=True)
+    with open(image_generation_config_path, "w") as f:
+        json.dump(config.model_dump(), f, indent=2)
+
+
 def get_selected_image_generation_tool() -> Optional[str]:
     """
     Gets the currently selected image generation tool.
+    Returns None if image generation is disabled or no tool is selected.
     """
-    if not os.path.exists(selected_image_tool_path):
+    config = get_image_generation_config()
+
+    if not config.enabled:
         return None
 
-    try:
-        with open(selected_image_tool_path, "r") as f:
-            data = json.load(f)
-            selected_tool = data.get("selected_tool")
-            if selected_tool:
-                return str(selected_tool)
-            return None
-    except Exception:
-        logger.error(
-            "Failed to get selected image generation tool from %s",
-            selected_image_tool_path,
-        )
-        return None
-
-
-def set_selected_image_generation_tool(tool_name: Optional[str]) -> None:
-    """
-    Sets the currently selected image generation tool.
-    """
-    os.makedirs(os.path.dirname(selected_image_tool_path), exist_ok=True)
-    with open(selected_image_tool_path, "w") as f:
-        json.dump({"selected_tool": tool_name}, f, indent=2)
+    return config.selected_tool
 
 
 @router.get(
@@ -235,32 +248,31 @@ def image_generation_tools() -> list[ToolMetadata]:
 
 
 @router.get(
-    "/image-generation/selected",
-    summary="Returns the currently selected image generation tool.",
-    response_model=SelectedImageGenerationTool,
+    "/image-generation/config",
+    summary="Returns the complete image generation configuration.",
+    response_model=ImageGenerationConfig,
 )
 @exceptions.propagates
-def get_selected_image_tool() -> SelectedImageGenerationTool:
+def get_image_generation_config_endpoint() -> ImageGenerationConfig:
     """
-    Returns the currently selected image generation tool.
+    Returns the complete image generation configuration.
     """
-    selected_tool = get_selected_image_generation_tool()
-    return SelectedImageGenerationTool(selected_tool=selected_tool)
+    return get_image_generation_config()
 
 
 @router.post(
-    "/image-generation/selected",
-    summary="Sets the selected image generation tool.",
-    response_model=SelectedImageGenerationTool,
+    "/image-generation/config",
+    summary="Sets the complete image generation configuration.",
+    response_model=ImageGenerationConfig,
 )
 @exceptions.propagates
-def set_selected_image_tool(
-    selection: SelectedImageGenerationTool,
+def set_image_generation_config_endpoint(
+    config: ImageGenerationConfig,
     remote_user: Annotated[str | None, Header()] = None,
     remote_user_perm: Annotated[str, Header()] = None,
-) -> SelectedImageGenerationTool:
+) -> ImageGenerationConfig:
     """
-    Sets the selected image generation tool.
+    Sets the complete image generation configuration.
     """
     if not has_admin_rights(remote_user, remote_user_perm):
         raise HTTPException(
@@ -268,20 +280,19 @@ def set_selected_image_tool(
             detail="You do not have permission to modify tool settings.",
         )
 
-    # If selection is None, allow unselecting
-    if selection.selected_tool is not None:
-        # Validate that the tool exists
+    # If enabling and selecting a tool, validate that the tool exists
+    if config.enabled and config.selected_tool is not None:
         available_tools = get_image_generation_tool_metadata()
         available_tool_names = [tool.name for tool in available_tools]
 
-        if selection.selected_tool not in available_tool_names:
+        if config.selected_tool not in available_tool_names:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid tool selection. Available tools: {available_tool_names}",
             )
 
-    set_selected_image_generation_tool(selection.selected_tool)
-    return selection
+    set_image_generation_config(config)
+    return config
 
 
 @router.post(

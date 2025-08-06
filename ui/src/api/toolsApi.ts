@@ -68,7 +68,8 @@ export interface AddToolFormValues {
   description: string;
 }
 
-export interface SelectedImageGenerationTool {
+export interface ImageGenerationConfig {
+  enabled: boolean;
   selected_tool: string | null;
 }
 
@@ -115,35 +116,35 @@ export const useImageGenerationToolsQuery = () => {
   });
 };
 
-export const getSelectedImageGenerationTool = async (): Promise<SelectedImageGenerationTool> => {
-  return getRequest(`${llmServicePath}/tools/image-generation/selected`);
+export const getImageGenerationConfig = async (): Promise<ImageGenerationConfig> => {
+  return getRequest(`${llmServicePath}/tools/image-generation/config`);
 };
 
-export const useSelectedImageGenerationToolQuery = () => {
+export const useImageGenerationConfigQuery = () => {
   return useQuery({
-    queryKey: [QueryKeys.getSelectedImageGenerationTool],
-    queryFn: getSelectedImageGenerationTool,
+    queryKey: [QueryKeys.getImageGenerationConfig],
+    queryFn: getImageGenerationConfig,
   });
 };
 
-export const setSelectedImageGenerationTool = async (
-  selection: SelectedImageGenerationTool
-): Promise<SelectedImageGenerationTool> => {
-  return postRequest(`${llmServicePath}/tools/image-generation/selected`, selection);
+export const setImageGenerationConfig = async (
+  config: ImageGenerationConfig
+): Promise<ImageGenerationConfig> => {
+  return postRequest(`${llmServicePath}/tools/image-generation/config`, config);
 };
 
-export const useSetSelectedImageGenerationToolMutation = ({
+export const useSetImageGenerationConfigMutation = ({
   onSuccess,
   onError,
-}: UseMutationType<SelectedImageGenerationTool>) => {
+}: UseMutationType<ImageGenerationConfig>) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: setSelectedImageGenerationTool,
-    onSuccess: (selection) => {
-      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getSelectedImageGenerationTool] });
+    mutationFn: setImageGenerationConfig,
+    onSuccess: (config) => {
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getImageGenerationConfig] });
       void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
       if (onSuccess) {
-        onSuccess(selection);
+        onSuccess(config);
       }
     },
     onError,

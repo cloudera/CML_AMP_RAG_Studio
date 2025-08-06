@@ -49,7 +49,7 @@ import {
 } from "antd";
 import {
   useToolsQuery,
-  useSelectedImageGenerationToolQuery,
+  useImageGenerationConfigQuery,
   useImageGenerationToolsQuery,
 } from "src/api/toolsApi.ts";
 import {
@@ -59,29 +59,29 @@ import {
   useContext,
   useState,
   useMemo,
+  useEffect,
 } from "react";
 import { ToolOutlined } from "@ant-design/icons";
 import { cdlBlue600, cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import {
-  Session,
-  UpdateSessionRequest,
-  useUpdateSessionMutation,
-} from "src/api/sessionApi.ts";
-import messageQueue from "src/utils/messageQueue.ts";
-import { QueryKeys } from "src/api/utils.ts";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
-const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
+const ToolsManagerContent = ({
+  selectedTools,
+  onToolSelectionChange,
+}: {
+  selectedTools: string[];
+  onToolSelectionChange: (tools: string[]) => void;
+}) => {
   const { data: regularTools, isLoading: regularToolsLoading } =
     useToolsQuery();
-  const { data: selectedImageTool } = useSelectedImageGenerationToolQuery();
+  const { data: imageConfig } = useImageGenerationConfigQuery();
   const { data: imageTools } = useImageGenerationToolsQuery();
   const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
-  // Combine regular tools with the selected image generation tool
+  // Combine regular tools with the selected image generation tool (if enabled)
   const toolsList = useMemo(() => {
     const tools = [];
 
@@ -96,10 +96,10 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
       );
     }
 
-    // Add selected image generation tool if available
-    if (selectedImageTool?.selected_tool && imageTools) {
+    // Only add image generation tool if it's enabled AND selected
+    if (imageConfig?.enabled && imageConfig.selected_tool && imageTools) {
       const selectedTool = imageTools.find(
-        (tool) => tool.name === selectedImageTool.selected_tool
+        (tool) => tool.name === imageConfig.selected_tool
       );
       if (selectedTool) {
         tools.push({
@@ -111,45 +111,13 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
     }
 
     return tools;
-  }, [regularTools, selectedImageTool, imageTools]);
-
-  const queryClient = useQueryClient();
-
-  const updateSession = useUpdateSessionMutation({
-    onError: () => {
-      messageQueue.error("Failed to update session");
-    },
-    onSuccess: async () => {
-      messageQueue.success("Session updated successfully");
-      await queryClient.invalidateQueries({
-        queryKey: [QueryKeys.getSessions],
-      });
-    },
-  });
-
-  const handleUpdateSession = (selectedTools: string[]) => {
-    const request: UpdateSessionRequest = {
-      ...activeSession,
-      queryConfiguration: {
-        ...activeSession.queryConfiguration,
-        selectedTools: selectedTools,
-      },
-    };
-    updateSession.mutate(request);
-  };
+  }, [regularTools, imageConfig, imageTools]);
 
   const handleCheck = (title: string, checked: boolean) => {
     if (checked) {
-      handleUpdateSession([
-        ...activeSession.queryConfiguration.selectedTools,
-        title,
-      ]);
+      onToolSelectionChange([...selectedTools, title]);
     } else {
-      handleUpdateSession(
-        activeSession.queryConfiguration.selectedTools.filter(
-          (tool) => tool !== title
-        )
-      );
+      onToolSelectionChange(selectedTools.filter((tool) => tool !== title));
     }
   };
 
@@ -191,9 +159,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
               description={item.description}
               avatar={
                 <Checkbox
-                  checked={activeSession.queryConfiguration.selectedTools.includes(
-                    item.name
-                  )}
+                  checked={selectedTools.includes(item.name)}
                   onChange={(e: CheckboxChangeEvent) => {
                     handleCheck(item.name, e.target.checked);
                   }}
@@ -211,12 +177,14 @@ const ToolsManager = ({
   isOpen,
   setIsOpen,
   children,
-  activeSession,
+  selectedTools,
+  onToolSelectionChange,
 }: {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   children: ReactNode;
-  activeSession: Session;
+  selectedTools: string[];
+  onToolSelectionChange: (tools: string[]) => void;
 }) => {
   return (
     <Popover
@@ -224,16 +192,39 @@ const ToolsManager = ({
       trigger="click"
       onOpenChange={setIsOpen}
       placement="topRight"
-      content={<ToolsManagerContent activeSession={activeSession} />}
+      content={
+        <ToolsManagerContent
+          selectedTools={selectedTools}
+          onToolSelectionChange={onToolSelectionChange}
+        />
+      }
     >
       {children}
     </Popover>
   );
 };
 
-const ToolsManagerButton = () => {
+const ToolsManagerButton = ({
+  onSelectedToolsChange,
+}: {
+  onSelectedToolsChange?: (tools: string[]) => void;
+} = {}) => {
   const { activeSession } = useContext(RagChatContext);
   const [toolsManagerOpen, setToolsManagerOpen] = useState(false);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+
+  // Initialize with session tools when activeSession changes
+  useEffect(() => {
+    if (activeSession) {
+      setSelectedTools(activeSession.queryConfiguration.selectedTools);
+    }
+  }, [activeSession]);
+
+  // Notify parent when selected tools change
+  const handleToolSelectionChange = (tools: string[]) => {
+    setSelectedTools(tools);
+    onSelectedToolsChange?.(tools);
+  };
 
   if (!activeSession?.queryConfiguration.enableToolCalling) {
     return null;
@@ -243,7 +234,8 @@ const ToolsManagerButton = () => {
     <ToolsManager
       isOpen={toolsManagerOpen}
       setIsOpen={setToolsManagerOpen}
-      activeSession={activeSession}
+      selectedTools={selectedTools}
+      onToolSelectionChange={handleToolSelectionChange}
     >
       <Tooltip title={!toolsManagerOpen ? "Tool Selection" : ""}>
         <Button
