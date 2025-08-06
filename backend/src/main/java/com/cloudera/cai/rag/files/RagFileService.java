@@ -151,7 +151,7 @@ public class RagFileService {
     log.info("Saved document with id: {}", id);
 
     ragFileIndexReconciler.submit(ragDocument.withId(id));
-    ragFileSummaryReconciler.submit(ragDocument.withId(id));
+    ragFileSummaryReconciler.resync();
 
     return new RagDocumentMetadata(
         ragDocument.filename(), documentId, ragDocument.extension(), ragDocument.sizeInBytes());
