@@ -78,6 +78,11 @@ class CAIIModelProvider(ModelProvider):
     @timed_lru_cache(maxsize=1, seconds=300)
     def list_reranking_models() -> list[ModelResponse]:
         return get_caii_reranking_models()
+    
+    @staticmethod
+    @timed_lru_cache(maxsize=32, seconds=300)
+    def list_image_generation_models() -> list[ModelResponse]:
+        return []
 
     @staticmethod
     @timed_lru_cache(maxsize=32, seconds=300)

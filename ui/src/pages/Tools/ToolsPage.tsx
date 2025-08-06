@@ -36,7 +36,7 @@
  * DATA.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Alert,
   Button,
@@ -44,14 +44,24 @@ import {
   Flex,
   Layout,
   Modal,
+  Radio,
+  RadioChangeEvent,
   Table,
   Typography,
 } from "antd";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  PlusOutlined,
+  SaveOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import {
   Tool,
   useDeleteToolMutation,
   useToolsQuery,
+  useImageGenerationToolsQuery,
+  useSelectedImageGenerationToolQuery,
+  useSetSelectedImageGenerationToolMutation,
 } from "src/api/toolsApi.ts";
 import messageQueue from "src/utils/messageQueue.ts";
 import useModal from "src/utils/useModal.ts";
@@ -60,7 +70,20 @@ import { AddNewToolModal } from "pages/Tools/AddNewToolModal.tsx";
 const ToolsPage = () => {
   const confirmDeleteModal = useModal();
   const { data: tools = [], isLoading, error: toolsError } = useToolsQuery();
+  const { data: imageTools = [], isLoading: imageToolsLoading } =
+    useImageGenerationToolsQuery();
+  const { data: selectedImageTool } = useSelectedImageGenerationToolQuery();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [tempSelectedImageTool, setTempSelectedImageTool] = useState<
+    string | null
+  >("");
+
+  // Update temp selection when the actual selection loads
+  useEffect(() => {
+    if (selectedImageTool !== undefined && tempSelectedImageTool === "") {
+      setTempSelectedImageTool(selectedImageTool.selected_tool ?? null);
+    }
+  }, [selectedImageTool, tempSelectedImageTool]);
 
   const deleteToolMutation = useDeleteToolMutation({
     onSuccess: () => {
@@ -71,6 +94,44 @@ const ToolsPage = () => {
       messageQueue.error(`Failed to delete tool: ${error.message}`);
     },
   });
+
+  const setSelectedImageToolMutation =
+    useSetSelectedImageGenerationToolMutation({
+      onSuccess: () => {
+        messageQueue.success("Image generation tool selection updated");
+      },
+      onError: (error) => {
+        messageQueue.error(`Failed to update selection: ${error.message}`);
+      },
+    });
+
+  // Filter out image generation tools from regular tools
+  const imageToolNames = imageTools.map((tool) => tool.name);
+  const regularTools = tools.filter(
+    (tool) => !imageToolNames.includes(tool.name)
+  );
+
+  const handleTempImageToolSelectionChange = (e: RadioChangeEvent) => {
+    const value = e.target.value as string;
+    setTempSelectedImageTool(value);
+  };
+
+  const handleSaveImageToolSelection = () => {
+    setSelectedImageToolMutation.mutate({
+      selected_tool: tempSelectedImageTool,
+    });
+  };
+
+  const handleUnselectImageTool = () => {
+    setTempSelectedImageTool(null);
+  };
+
+  const isImageGenerationTool = (toolName: string) => {
+    return imageToolNames.includes(toolName);
+  };
+
+  const hasSelectionChanged =
+    tempSelectedImageTool !== (selectedImageTool?.selected_tool ?? null);
 
   const columns = [
     {
@@ -94,14 +155,16 @@ const ToolsPage = () => {
       width: 80,
       render: (_: unknown, tool: Tool) => (
         <>
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => {
-              confirmDeleteModal.setIsModalOpen(true);
-            }}
-          />
+          {!isImageGenerationTool(tool.name) && (
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                confirmDeleteModal.setIsModalOpen(true);
+              }}
+            />
+          )}
           <Modal
             title="Delete tool?"
             open={confirmDeleteModal.isModalOpen}
@@ -129,6 +192,87 @@ const ToolsPage = () => {
         paddingLeft: 60,
       }}
     >
+      {imageTools.length > 0 && (
+        <Flex vertical gap={16} style={{ width: "100%", paddingBottom: 20 }}>
+          <Typography.Title level={3} style={{ marginTop: 20 }}>
+            (Beta) Available Image Generation Tools
+          </Typography.Title>
+          <Typography.Paragraph type="secondary">
+            {imageTools.length > 1
+              ? "Select which image generation tool to make available for use in chat sessions. Only one image generation tool can be active at a time."
+              : "The following image generation tool is available for use in chat sessions."}
+          </Typography.Paragraph>
+          {imageToolsLoading ? (
+            <Typography.Text>Loading image generation tools...</Typography.Text>
+          ) : (
+            <Flex vertical gap={16}>
+              {imageTools.length === 1 ? (
+                // Show simple display for single tool
+                <Flex vertical gap={8}>
+                  <Typography.Text strong>
+                    {imageTools[0].metadata.display_name || imageTools[0].name}
+                  </Typography.Text>
+                  <Typography.Text type="secondary">
+                    {imageTools[0].metadata.description}
+                  </Typography.Text>
+                </Flex>
+              ) : (
+                // Show radio buttons for multiple tools
+                <>
+                  <Radio.Group
+                    value={tempSelectedImageTool}
+                    onChange={handleTempImageToolSelectionChange}
+                    disabled={setSelectedImageToolMutation.isPending}
+                  >
+                    <Flex vertical gap={8}>
+                      {imageTools.map((tool) => (
+                        <Radio key={tool.name} value={tool.name}>
+                          <Flex vertical style={{ marginLeft: 8 }}>
+                            <Typography.Text strong>
+                              {tool.metadata.display_name || tool.name}
+                            </Typography.Text>
+                            <Typography.Text
+                              type="secondary"
+                              style={{ fontSize: 12 }}
+                            >
+                              {tool.metadata.description}
+                            </Typography.Text>
+                          </Flex>
+                        </Radio>
+                      ))}
+                    </Flex>
+                  </Radio.Group>
+                  <Flex justify="space-between" align="center">
+                    <Button
+                      danger
+                      icon={<CloseOutlined />}
+                      onClick={handleUnselectImageTool}
+                      disabled={
+                        setSelectedImageToolMutation.isPending ||
+                        tempSelectedImageTool === null
+                      }
+                    >
+                      Unselect
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      onClick={handleSaveImageToolSelection}
+                      disabled={
+                        !hasSelectionChanged ||
+                        setSelectedImageToolMutation.isPending
+                      }
+                      loading={setSelectedImageToolMutation.isPending}
+                    >
+                      Save Selection
+                    </Button>
+                  </Flex>
+                </>
+              )}
+            </Flex>
+          )}
+        </Flex>
+      )}
       <Flex vertical gap={20}>
         <Typography.Title level={3}>
           (Beta) MCP Tools Management
@@ -144,7 +288,7 @@ const ToolsPage = () => {
             onClick={() => {
               window.open(
                 "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
-                "_blank",
+                "_blank"
               );
             }}
           >
@@ -176,7 +320,7 @@ const ToolsPage = () => {
               </Button>
             </Flex>
             <Table
-              dataSource={tools}
+              dataSource={regularTools}
               columns={columns}
               rowKey="name"
               loading={isLoading}

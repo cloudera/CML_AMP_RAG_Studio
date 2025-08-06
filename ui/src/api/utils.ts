@@ -113,6 +113,8 @@ export enum QueryKeys {
   "getSessionsForProject" = "getSessionsForProject",
   "getAmpConfig" = "getAmpConfig",
   "getTools" = "getTools",
+  "getImageGenerationTools" = "getImageGenerationTools",
+  "getSelectedImageGenerationTool" = "getSelectedImageGenerationTool",
   "getPollingAmpConfig" = "getPollingAmpConfig",
   "getCAIIModelStatus" = "getCAIIModelStatus",
 }

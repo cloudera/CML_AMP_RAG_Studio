@@ -68,6 +68,10 @@ export interface AddToolFormValues {
   description: string;
 }
 
+export interface SelectedImageGenerationTool {
+  selected_tool: string | null;
+}
+
 export const getTools = async (): Promise<Tool[]> => {
   return getRequest(`${llmServicePath}/tools`);
 };
@@ -94,6 +98,52 @@ export const useAddToolMutation = ({
       void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
       if (onSuccess) {
         onSuccess(tool);
+      }
+    },
+    onError,
+  });
+};
+
+export const getImageGenerationTools = async (): Promise<Tool[]> => {
+  return getRequest(`${llmServicePath}/tools/image-generation`);
+};
+
+export const useImageGenerationToolsQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getImageGenerationTools],
+    queryFn: getImageGenerationTools,
+  });
+};
+
+export const getSelectedImageGenerationTool = async (): Promise<SelectedImageGenerationTool> => {
+  return getRequest(`${llmServicePath}/tools/image-generation/selected`);
+};
+
+export const useSelectedImageGenerationToolQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getSelectedImageGenerationTool],
+    queryFn: getSelectedImageGenerationTool,
+  });
+};
+
+export const setSelectedImageGenerationTool = async (
+  selection: SelectedImageGenerationTool
+): Promise<SelectedImageGenerationTool> => {
+  return postRequest(`${llmServicePath}/tools/image-generation/selected`, selection);
+};
+
+export const useSetSelectedImageGenerationToolMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<SelectedImageGenerationTool>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: setSelectedImageGenerationTool,
+    onSuccess: (selection) => {
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getSelectedImageGenerationTool] });
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
+      if (onSuccess) {
+        onSuccess(selection);
       }
     },
     onError,

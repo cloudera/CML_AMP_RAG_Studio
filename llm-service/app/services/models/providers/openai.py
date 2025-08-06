@@ -81,6 +81,11 @@ class OpenAiModelProvider(ModelProvider):
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
         return []
+    
+    @staticmethod
+    def list_image_generation_models() -> list[ModelResponse]:
+        # TODO: Implement this when openAI model discovery is implemented
+        return []
 
     @staticmethod
     def _http_client() -> Optional[httpx.Client]:

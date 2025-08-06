@@ -38,15 +38,23 @@
 import json
 import logging
 import os
+import re
 from typing import Any, Optional, cast, Annotated
 from urllib.parse import unquote
 
-import re
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
 from .... import exceptions
 from ....config import settings
+from ....services.models import get_model_source, ModelSource
+from ....services.models.providers import BedrockModelProvider
+from ....services.query.agents.agent_tools.image_generation import (
+    BEDROCK_STABLE_DIFFUSION_MODEL_ID,
+    BEDROCK_TITAN_IMAGE_MODEL_ID,
+    ImageGenerationTools,
+    IMAGE_GENERATION_TOOL_METADATA,
+)
 from ....services.utils import has_admin_rights
 
 logger = logging.getLogger(__name__)
@@ -74,7 +82,18 @@ class Tool(ToolMetadata):
     env: Optional[dict[str, str]] = None
 
 
+class SelectedImageGenerationTool(BaseModel):
+    """
+    Represents the selected image generation tool.
+    """
+
+    selected_tool: Optional[str] = None
+
+
 mcp_json_path: str = os.path.join(settings.tools_dir, "mcp.json")
+selected_image_tool_path: str = os.path.join(
+    settings.tools_dir, "selected_image_tool.json"
+)
 
 
 def get_mcp_config() -> dict[str, Any]:
@@ -97,6 +116,37 @@ def get_mcp_config() -> dict[str, Any]:
         )
 
 
+def get_selected_image_generation_tool() -> Optional[str]:
+    """
+    Gets the currently selected image generation tool.
+    """
+    if not os.path.exists(selected_image_tool_path):
+        return None
+
+    try:
+        with open(selected_image_tool_path, "r") as f:
+            data = json.load(f)
+            selected_tool = data.get("selected_tool")
+            if selected_tool:
+                return str(selected_tool)
+            return None
+    except Exception:
+        logger.error(
+            "Failed to get selected image generation tool from %s",
+            selected_image_tool_path,
+        )
+        return None
+
+
+def set_selected_image_generation_tool(tool_name: Optional[str]) -> None:
+    """
+    Sets the currently selected image generation tool.
+    """
+    os.makedirs(os.path.dirname(selected_image_tool_path), exist_ok=True)
+    with open(selected_image_tool_path, "w") as f:
+        json.dump({"selected_tool": tool_name}, f, indent=2)
+
+
 @router.get(
     "",
     summary="Returns a list of available tools.",
@@ -104,9 +154,134 @@ def get_mcp_config() -> dict[str, Any]:
 )
 @exceptions.propagates
 def tools() -> list[ToolMetadata]:
-
+    # Get MCP tools from config
     mcp_config = get_mcp_config()
-    return [ToolMetadata(**server) for server in mcp_config["mcp_servers"]]
+    tool_list = [ToolMetadata(**server) for server in mcp_config["mcp_servers"]]
+
+    return tool_list
+
+
+def get_image_generation_tool_metadata() -> list[ToolMetadata]:
+    # Get current model provider
+    model_source = get_model_source()
+    # Add image generation tools based on the current model provider
+    if model_source == ModelSource.OPENAI:
+        tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
+            ImageGenerationTools.OPENAI_IMAGE_GENERATION
+        ]
+        return [
+            ToolMetadata(
+                name=ImageGenerationTools.OPENAI_IMAGE_GENERATION,
+                metadata={
+                    "description": tool_metadata["description"],
+                    "display_name": tool_metadata["display_name"],
+                },
+            )
+        ]
+    if model_source == ModelSource.BEDROCK:
+        supported_model_ids = [
+            BEDROCK_STABLE_DIFFUSION_MODEL_ID,
+            BEDROCK_TITAN_IMAGE_MODEL_ID,
+        ]
+        available_models = BedrockModelProvider.list_image_generation_models()
+        supported_bedrock_image_generation_tools = []
+        if not available_models:
+            return []
+        for model in available_models:
+            if model.model_id not in supported_model_ids:
+                continue
+            if model.model_id == BEDROCK_STABLE_DIFFUSION_MODEL_ID:
+                tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
+                    ImageGenerationTools.BEDROCK_STABLE_DIFFUSION
+                ]
+                supported_bedrock_image_generation_tools.append(
+                    ToolMetadata(
+                        name=ImageGenerationTools.BEDROCK_STABLE_DIFFUSION,
+                        metadata={
+                            "description": tool_metadata["description"],
+                            "display_name": tool_metadata["display_name"],
+                        },
+                    )
+                )
+            elif model.model_id == BEDROCK_TITAN_IMAGE_MODEL_ID:
+                tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
+                    ImageGenerationTools.BEDROCK_TITAN_IMAGE
+                ]
+                supported_bedrock_image_generation_tools.append(
+                    ToolMetadata(
+                        name=ImageGenerationTools.BEDROCK_TITAN_IMAGE,
+                        metadata={
+                            "description": tool_metadata["description"],
+                            "display_name": tool_metadata["display_name"],
+                        },
+                    )
+                )
+        return supported_bedrock_image_generation_tools
+    # Return empty list for other model providers
+    return []
+
+
+@router.get(
+    "/image-generation",
+    summary="Returns a list of available image generation tools.",
+    response_model=list[ToolMetadata],
+)
+@exceptions.propagates
+def image_generation_tools() -> list[ToolMetadata]:
+    """
+    Returns a list of available image generation tools based on the current model provider.
+    """
+    return get_image_generation_tool_metadata()
+
+
+@router.get(
+    "/image-generation/selected",
+    summary="Returns the currently selected image generation tool.",
+    response_model=SelectedImageGenerationTool,
+)
+@exceptions.propagates
+def get_selected_image_tool() -> SelectedImageGenerationTool:
+    """
+    Returns the currently selected image generation tool.
+    """
+    selected_tool = get_selected_image_generation_tool()
+    return SelectedImageGenerationTool(selected_tool=selected_tool)
+
+
+@router.post(
+    "/image-generation/selected",
+    summary="Sets the selected image generation tool.",
+    response_model=SelectedImageGenerationTool,
+)
+@exceptions.propagates
+def set_selected_image_tool(
+    selection: SelectedImageGenerationTool,
+    remote_user: Annotated[str | None, Header()] = None,
+    remote_user_perm: Annotated[str, Header()] = None,
+) -> SelectedImageGenerationTool:
+    """
+    Sets the selected image generation tool.
+    """
+    if not has_admin_rights(remote_user, remote_user_perm):
+        raise HTTPException(
+            status_code=401,
+            detail="You do not have permission to modify tool settings.",
+        )
+
+    # If selection is None, allow unselecting
+    if selection.selected_tool is not None:
+        # Validate that the tool exists
+        available_tools = get_image_generation_tool_metadata()
+        available_tool_names = [tool.name for tool in available_tools]
+
+        if selection.selected_tool not in available_tool_names:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid tool selection. Available tools: {available_tool_names}",
+            )
+
+    set_selected_image_generation_tool(selection.selected_tool)
+    return selection
 
 
 @router.post(
@@ -168,6 +343,16 @@ def delete_tool(
         )
 
     decoded_name = unquote(name)
+
+    # Prevent deletion of image generation tools
+    available_image_tools = get_image_generation_tool_metadata()
+    image_tool_names = [tool.name for tool in available_image_tools]
+
+    if decoded_name in image_tool_names:
+        raise HTTPException(
+            status_code=400,
+            detail="Image generation tools cannot be deleted.",
+        )
 
     mcp_config = get_mcp_config()
 
