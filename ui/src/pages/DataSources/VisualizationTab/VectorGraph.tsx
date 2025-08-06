@@ -120,11 +120,7 @@ const VectorGraph = ({
       width={700}
       height={400}
       series={series}
-      slotProps={{
-        legend: {
-          hidden: true,
-        },
-      }}
+      hideLegend={true}
       disableVoronoi={true}
     />
   );
