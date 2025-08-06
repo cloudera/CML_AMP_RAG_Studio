@@ -131,7 +131,10 @@ def get_selected_image_generation_tool() -> Optional[str]:
                 return str(selected_tool)
             return None
     except Exception:
-        logger.error(f"Failed to get selected image generation tool from %s", selected_image_tool_path)
+        logger.error(
+            "Failed to get selected image generation tool from %s",
+            selected_image_tool_path,
+        )
         return None
 
 
