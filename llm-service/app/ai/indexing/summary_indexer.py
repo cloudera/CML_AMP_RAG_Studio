@@ -75,7 +75,8 @@ from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import settings
 from ...services.metadata_apis import data_sources_metadata_api
-from ...services.models.providers.model_provider import ModelSource, ModelProvider
+from ...services.models.providers import ModelProvider
+from ...services.models import ModelSource
 
 logger = logging.getLogger(__name__)
 
