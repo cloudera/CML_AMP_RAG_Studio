@@ -11,3 +11,4 @@ databases/
 .history
 addresses/
 tools/mcp.json
+tools/image_generation_config.json

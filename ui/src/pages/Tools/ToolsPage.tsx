@@ -401,7 +401,13 @@ const ToolsPage = () => {
                 type="primary"
                 icon={<SaveOutlined />}
                 onClick={handleSaveImageConfig}
-                disabled={!hasConfigChanged || setImageConfigMutation.isPending}
+                disabled={
+                  !hasConfigChanged ||
+                  (tempEnabled &&
+                    imageTools.length > 1 &&
+                    tempSelectedImageTool === null) ||
+                  setImageConfigMutation.isPending
+                }
                 loading={setImageConfigMutation.isPending}
               >
                 Save Configuration
