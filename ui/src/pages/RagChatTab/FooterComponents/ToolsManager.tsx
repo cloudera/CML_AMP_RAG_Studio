@@ -47,13 +47,18 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import { useToolsQuery } from "src/api/toolsApi.ts";
+import {
+  useToolsQuery,
+  useSelectedImageGenerationToolQuery,
+  useImageGenerationToolsQuery,
+} from "src/api/toolsApi.ts";
 import {
   Dispatch,
   ReactNode,
   SetStateAction,
   useContext,
   useState,
+  useMemo,
 } from "react";
 import { ToolOutlined } from "@ant-design/icons";
 import { cdlBlue600, cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
@@ -70,14 +75,43 @@ import { Link } from "@tanstack/react-router";
 import { getAmpConfigQueryOptions } from "src/api/ampMetadataApi.ts";
 
 const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
-  const { data, isLoading } = useToolsQuery();
+  const { data: regularTools, isLoading: regularToolsLoading } =
+    useToolsQuery();
+  const { data: selectedImageTool } = useSelectedImageGenerationToolQuery();
+  const { data: imageTools } = useImageGenerationToolsQuery();
   const { data: config } = useSuspenseQuery(getAmpConfigQueryOptions);
 
-  const toolsList = data?.map((tool) => ({
-    name: tool.name,
-    displayName: tool.metadata.display_name,
-    description: tool.metadata.description,
-  }));
+  // Combine regular tools with the selected image generation tool
+  const toolsList = useMemo(() => {
+    const tools = [];
+
+    // Add regular tools
+    if (regularTools) {
+      tools.push(
+        ...regularTools.map((tool) => ({
+          name: tool.name,
+          displayName: tool.metadata.display_name,
+          description: tool.metadata.description,
+        }))
+      );
+    }
+
+    // Add selected image generation tool if available
+    if (selectedImageTool && imageTools) {
+      const selectedTool = imageTools.find(
+        (tool) => tool.name === selectedImageTool.selected_tool
+      );
+      if (selectedTool) {
+        tools.push({
+          name: selectedTool.name,
+          displayName: selectedTool.metadata.display_name,
+          description: selectedTool.metadata.description,
+        });
+      }
+    }
+
+    return tools;
+  }, [regularTools, selectedImageTool, imageTools]);
 
   const queryClient = useQueryClient();
 
@@ -113,8 +147,8 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
     } else {
       handleUpdateSession(
         activeSession.queryConfiguration.selectedTools.filter(
-          (tool) => tool !== title,
-        ),
+          (tool) => tool !== title
+        )
       );
     }
   };
@@ -148,7 +182,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
       </Flex>
       <List
         dataSource={toolsList}
-        loading={isLoading}
+        loading={regularToolsLoading}
         style={{ overflowY: "auto" }}
         renderItem={(item) => (
           <List.Item>
@@ -158,7 +192,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
               avatar={
                 <Checkbox
                   checked={activeSession.queryConfiguration.selectedTools.includes(
-                    item.name,
+                    item.name
                   )}
                   onChange={(e: CheckboxChangeEvent) => {
                     handleCheck(item.name, e.target.checked);

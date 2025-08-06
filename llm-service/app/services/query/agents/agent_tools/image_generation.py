@@ -63,6 +63,9 @@ from app.services.query.agents.agent_tools.titan_image_types import (
     ValidTitanImageSizes,
 )
 
+BEDROCK_STABLE_DIFFUSION_MODEL_ID = "stability.sd3-5-large-v1:0"
+BEDROCK_TITAN_IMAGE_MODEL_ID = "amazon.titan-image-generator-v2:0"
+OPENAI_IMAGE_GENERATION_MODEL_ID = "dall-e-3"
 
 # Define image generation tool IDs for different providers
 class ImageGenerationTools(str, Enum):
@@ -122,7 +125,7 @@ class OpenAIImageGenerationToolSpec(
     def image_generation(
         self,
         text: str,
-        model: Optional[str] = "dall-e-3",
+        model: Optional[str] = OPENAI_IMAGE_GENERATION_MODEL_ID,
         quality: Optional[str] = "standard",
         num_images: Optional[int] = 1,
         size: Optional[str] = DEFAULT_SIZE,
@@ -181,7 +184,7 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
 
     def __init__(
         self,
-        model: str = "stability.sd3-5-large-v1:0",
+        model: str = BEDROCK_STABLE_DIFFUSION_MODEL_ID,
         **kwargs: Any,
     ) -> None:
         """Initialize with parameters."""
@@ -203,8 +206,6 @@ class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
         Parameters:
             text (str): The prompt for image generation.
             image_name (str): The name to save the generated image as.
-            quality (Literal["standard", "premium"], optional): Image quality.
-            num_images (int, optional): Number of images to generate.
             seed (int, optional): Random seed for generation.
             negative_text (str, optional): Negative prompt for image generation.
             aspect_ratio (AspectRatio, optional): Aspect ratio for the generated image.
@@ -239,7 +240,7 @@ class BedrockTitanImageToolSpec(ImageGeneratorToolSpec):
 
     def __init__(
         self,
-        model: str = "amazon.titan-image-generator-v2:0",
+        model: str = BEDROCK_TITAN_IMAGE_MODEL_ID,
         **kwargs: Any,
     ) -> None:
         """Initialize with parameters."""

@@ -105,6 +105,12 @@ class ModelProvider(abc.ABC):
     def list_reranking_models() -> list[ModelResponse]:
         """Return names and IDs of available reranking models."""
         raise NotImplementedError
+    
+    @staticmethod
+    @abc.abstractmethod
+    def list_image_generation_models() -> list[ModelResponse]:
+        """Return names and IDs of available image generation models."""
+        raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
