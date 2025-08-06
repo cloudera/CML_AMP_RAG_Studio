@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef } from "react";
  */
 export const useStreamingChunkBuffer = (
   onUpdate: (accumulatedChunks: string) => void,
-  batchDelayMs = 1
+  batchDelayMs = 1,
 ) => {
   const chunkBufferRef = useRef<string>("");
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -40,7 +40,7 @@ export const useStreamingChunkBuffer = (
         flushChunkBuffer();
       }, batchDelayMs);
     },
-    [flushChunkBuffer, batchDelayMs]
+    [flushChunkBuffer, batchDelayMs],
   );
 
   // Cleanup timeout on unmount
