@@ -67,6 +67,7 @@ BEDROCK_STABLE_DIFFUSION_MODEL_ID = "stability.sd3-5-large-v1:0"
 BEDROCK_TITAN_IMAGE_MODEL_ID = "amazon.titan-image-generator-v2:0"
 OPENAI_IMAGE_GENERATION_MODEL_ID = "dall-e-3"
 
+
 # Define image generation tool IDs for different providers
 class ImageGenerationTools(str, Enum):
     """Enum for image generation tool IDs."""

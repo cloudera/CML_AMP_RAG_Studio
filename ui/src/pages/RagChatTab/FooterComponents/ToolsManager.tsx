@@ -97,7 +97,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
     }
 
     // Add selected image generation tool if available
-    if (selectedImageTool && imageTools) {
+    if (selectedImageTool?.selected_tool && imageTools) {
       const selectedTool = imageTools.find(
         (tool) => tool.name === selectedImageTool.selected_tool
       );

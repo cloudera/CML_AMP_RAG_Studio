@@ -87,7 +87,7 @@ class SelectedImageGenerationTool(BaseModel):
     Represents the selected image generation tool.
     """
 
-    selected_tool: str
+    selected_tool: Optional[str] = None
 
 
 mcp_json_path: str = os.path.join(settings.tools_dir, "mcp.json")
@@ -121,21 +121,21 @@ def get_selected_image_generation_tool() -> Optional[str]:
     Gets the currently selected image generation tool.
     """
     if not os.path.exists(selected_image_tool_path):
-        # Default to first available tool if none selected
-        available_tools = get_image_generation_tool_metadata()
-        if available_tools:
-            return available_tools[0].name
         return None
 
     try:
         with open(selected_image_tool_path, "r") as f:
             data = json.load(f)
-            return data.get("selected_tool")
+            selected_tool = data.get("selected_tool")
+            if selected_tool:
+                return str(selected_tool)
+            return None
     except Exception:
+        logger.error(f"Failed to get selected image generation tool from %s", selected_image_tool_path)
         return None
 
 
-def set_selected_image_generation_tool(tool_name: str) -> None:
+def set_selected_image_generation_tool(tool_name: Optional[str]) -> None:
     """
     Sets the currently selected image generation tool.
     """
@@ -242,11 +242,6 @@ def get_selected_image_tool() -> SelectedImageGenerationTool:
     Returns the currently selected image generation tool.
     """
     selected_tool = get_selected_image_generation_tool()
-    if not selected_tool:
-        raise HTTPException(
-            status_code=404,
-            detail="No image generation tool selected",
-        )
     return SelectedImageGenerationTool(selected_tool=selected_tool)
 
 
@@ -270,15 +265,17 @@ def set_selected_image_tool(
             detail="You do not have permission to modify tool settings.",
         )
 
-    # Validate that the tool exists
-    available_tools = get_image_generation_tool_metadata()
-    available_tool_names = [tool.name for tool in available_tools]
+    # If selection is None, allow unselecting
+    if selection.selected_tool is not None:
+        # Validate that the tool exists
+        available_tools = get_image_generation_tool_metadata()
+        available_tool_names = [tool.name for tool in available_tools]
 
-    if selection.selected_tool not in available_tool_names:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid tool selection. Available tools: {available_tool_names}",
-        )
+        if selection.selected_tool not in available_tool_names:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid tool selection. Available tools: {available_tool_names}",
+            )
 
     set_selected_image_generation_tool(selection.selected_tool)
     return selection

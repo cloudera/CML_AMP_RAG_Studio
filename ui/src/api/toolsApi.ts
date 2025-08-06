@@ -69,7 +69,7 @@ export interface AddToolFormValues {
 }
 
 export interface SelectedImageGenerationTool {
-  selected_tool: string;
+  selected_tool: string | null;
 }
 
 export const getTools = async (): Promise<Tool[]> => {
