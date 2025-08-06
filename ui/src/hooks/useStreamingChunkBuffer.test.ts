@@ -56,7 +56,7 @@ describe("useStreamingChunkBuffer", () => {
   describe("basic functionality", () => {
     it("should return onChunk and flush functions", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate)
+        useStreamingChunkBuffer(mockOnUpdate),
       );
 
       expect(result.current.onChunk).toBeTypeOf("function");
@@ -65,7 +65,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should not call onUpdate immediately when receiving chunks", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate)
+        useStreamingChunkBuffer(mockOnUpdate),
       );
 
       act(() => {
@@ -80,7 +80,7 @@ describe("useStreamingChunkBuffer", () => {
   describe("batching behavior", () => {
     it("should batch multiple chunks together after delay", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -100,7 +100,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should use default 1ms delay when no delay specified", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate)
+        useStreamingChunkBuffer(mockOnUpdate),
       );
 
       act(() => {
@@ -114,7 +114,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should use custom delay when specified", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 50)
+        useStreamingChunkBuffer(mockOnUpdate, 50),
       );
 
       act(() => {
@@ -136,7 +136,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should debounce rapid chunks correctly", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -161,7 +161,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should handle multiple separate batches", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       // First batch
@@ -189,7 +189,7 @@ describe("useStreamingChunkBuffer", () => {
   describe("manual flush", () => {
     it("should immediately flush buffered chunks when flush is called", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -204,7 +204,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should do nothing when flush is called with empty buffer", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate)
+        useStreamingChunkBuffer(mockOnUpdate),
       );
 
       act(() => {
@@ -216,7 +216,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should clear buffer after flush", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -238,7 +238,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should cancel pending timeout when flush is called", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -255,7 +255,7 @@ describe("useStreamingChunkBuffer", () => {
   describe("edge cases", () => {
     it("should handle empty string chunks", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 1)
+        useStreamingChunkBuffer(mockOnUpdate, 1),
       );
 
       act(() => {
@@ -270,7 +270,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should handle special characters and unicode", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 1)
+        useStreamingChunkBuffer(mockOnUpdate, 1),
       );
 
       act(() => {
@@ -281,13 +281,13 @@ describe("useStreamingChunkBuffer", () => {
       });
 
       expect(mockOnUpdate).toHaveBeenCalledWith(
-        "Hello 🌟 with émojis and üñíçödé"
+        "Hello 🌟 with émojis and üñíçödé",
       );
     });
 
     it("should handle very large chunks", () => {
       const { result } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 1)
+        useStreamingChunkBuffer(mockOnUpdate, 1),
       );
 
       const largeChunk = "x".repeat(10000);
@@ -306,7 +306,7 @@ describe("useStreamingChunkBuffer", () => {
       const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
 
       const { result, unmount } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -320,7 +320,7 @@ describe("useStreamingChunkBuffer", () => {
 
     it("should not call onUpdate after unmount", () => {
       const { result, unmount } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 10)
+        useStreamingChunkBuffer(mockOnUpdate, 10),
       );
 
       act(() => {
@@ -340,7 +340,7 @@ describe("useStreamingChunkBuffer", () => {
   describe("performance considerations", () => {
     it("should not create new onChunk function on every render", () => {
       const { result, rerender } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, 1)
+        useStreamingChunkBuffer(mockOnUpdate, 1),
       );
 
       const firstOnChunk = result.current.onChunk;
@@ -353,7 +353,7 @@ describe("useStreamingChunkBuffer", () => {
     it("should create new onChunk function when delay changes", () => {
       let delay = 1;
       const { result, rerender } = renderHook(() =>
-        useStreamingChunkBuffer(mockOnUpdate, delay)
+        useStreamingChunkBuffer(mockOnUpdate, delay),
       );
 
       const firstOnChunk = result.current.onChunk;
@@ -367,7 +367,7 @@ describe("useStreamingChunkBuffer", () => {
     it("should create new flush function when onUpdate changes", () => {
       let onUpdate = mockOnUpdate;
       const { result, rerender } = renderHook(() =>
-        useStreamingChunkBuffer(onUpdate, 1)
+        useStreamingChunkBuffer(onUpdate, 1),
       );
 
       const firstFlush = result.current.flush;
@@ -378,7 +378,4 @@ describe("useStreamingChunkBuffer", () => {
       expect(result.current.flush).not.toBe(firstFlush);
     });
   });
-
-  // Note: Real-world streaming scenarios are covered by the batching and manual flush tests above
-  // The hook cleanup is tested separately and works correctly in the browser environment
 });
