@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from ._model_source import ModelSource
 from .embedding import Embedding
 from .llm import LLM
 from .providers import ModelProvider
