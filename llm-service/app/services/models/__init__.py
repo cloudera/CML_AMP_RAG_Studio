@@ -35,13 +35,13 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from ._model_source import ModelSource
 from .embedding import Embedding
 from .llm import LLM
-from .providers._model_provider import ModelProvider
+from .providers import ModelProvider
 from .reranking import Reranking
+from ._model_source import ModelSource
 
-__all__ = ["Embedding", "LLM", "Reranking"]
+__all__ = ["Embedding", "LLM", "Reranking", "ModelSource"]
 
 
 def get_model_source() -> ModelSource:

@@ -68,6 +68,7 @@ import { useParams, useSearch } from "@tanstack/react-router";
 import { cdlBlue600, cdlRed600 } from "src/cuix/variables.ts";
 import { useSuggestQuestions } from "src/api/ragQueryApi.ts";
 import SuggestedQuestionsFooter from "pages/RagChatTab/FooterComponents/SuggestedQuestionsFooter.tsx";
+import { useStreamingChunkBuffer } from "src/hooks/useStreamingChunkBuffer.ts";
 import ToolsManagerButton from "pages/RagChatTab/FooterComponents/ToolsManager.tsx";
 import ChatSessionDocuments from "pages/RagChatTab/FooterComponents/ChatSessionDocuments.tsx";
 import { ChatSessionDragAndDrop } from "pages/RagChatTab/FooterComponents/ChatSessionDragAndDrop.tsx";
@@ -111,7 +112,7 @@ const RagChatQueryInput = ({
   } = useContext(RagChatContext);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedDataSourceIds, setSelectedDataSourceIds] = useState<number[]>(
-    [],
+    []
   );
 
   const [userInput, setUserInput] = useState("");
@@ -158,15 +159,20 @@ const RagChatQueryInput = ({
       session_id: sessionId ? +sessionId : undefined,
     },
     // don't make a request to get suggest questions if we know a question will be in flight soon
-    !search.question,
+    !search.question
   );
 
+  // Use custom hook to handle batched streaming updates
+  const { onChunk, flush } = useStreamingChunkBuffer((chunks) => {
+    setStreamedChat((prev) => prev + chunks);
+  });
+
   const streamChatMutation = useStreamingChatMutation({
-    onChunk: (chunk) => {
-      setStreamedChat((prev) => prev + chunk);
-    },
+    onChunk,
     onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
+      // Flush any remaining chunks before cleanup
+      flush();
       setUserInput("");
       setStreamedChat("");
     },
@@ -180,7 +186,7 @@ const RagChatQueryInput = ({
   useEffect(() => {
     // Check if any modal is currently open
     const isModalOpen = document.querySelector(
-      ".ant-modal-root, .ant-modal-mask",
+      ".ant-modal-root, .ant-modal-mask"
     );
 
     if (inputRef.current && !isModalOpen) {
@@ -241,7 +247,7 @@ const RagChatQueryInput = ({
     setInferenceModel(modelId);
     if (activeSession) {
       const supportsToolCalling = llmModels.find(
-        (model) => model.model_id === modelId,
+        (model) => model.model_id === modelId
       )?.tool_calling_supported;
       updateSession.mutate({
         ...activeSession,
