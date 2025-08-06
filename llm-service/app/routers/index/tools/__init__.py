@@ -113,10 +113,6 @@ def tools() -> list[ToolMetadata]:
     mcp_config = get_mcp_config()
     tool_list = [ToolMetadata(**server) for server in mcp_config["mcp_servers"]]
 
-    image_gen_tools = get_image_generation_tool_metadata()
-    if image_gen_tools:
-        tool_list.extend(image_gen_tools)
-
     return tool_list
 
 
@@ -141,6 +137,9 @@ def get_image_generation_tool_metadata() -> list[ToolMetadata]:
         sd_tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
             ImageGenerationTools.BEDROCK_STABLE_DIFFUSION
         ]
+        titan_tool_metadata = IMAGE_GENERATION_TOOL_METADATA[
+            ImageGenerationTools.BEDROCK_TITAN_IMAGE
+        ]
         return [
             ToolMetadata(
                 name=ImageGenerationTools.BEDROCK_STABLE_DIFFUSION,
@@ -149,8 +148,28 @@ def get_image_generation_tool_metadata() -> list[ToolMetadata]:
                     "display_name": sd_tool_metadata["display_name"],
                 },
             ),
+            ToolMetadata(
+                name=ImageGenerationTools.BEDROCK_TITAN_IMAGE,
+                metadata={
+                    "description": titan_tool_metadata["description"],
+                    "display_name": titan_tool_metadata["display_name"],
+                },
+            ),
         ]
     return []
+
+
+@router.get(
+    "/image-generation",
+    summary="Returns a list of available image generation tools.",
+    response_model=list[ToolMetadata],
+)
+@exceptions.propagates
+def image_generation_tools() -> list[ToolMetadata]:
+    """
+    Returns a list of available image generation tools based on the current model provider.
+    """
+    return get_image_generation_tool_metadata()
 
 
 @router.post(

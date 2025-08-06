@@ -100,6 +100,17 @@ export const useAddToolMutation = ({
   });
 };
 
+export const getImageGenerationTools = async (): Promise<Tool[]> => {
+  return getRequest(`${llmServicePath}/tools/image-generation`);
+};
+
+export const useImageGenerationToolsQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getImageGenerationTools],
+    queryFn: getImageGenerationTools,
+  });
+};
+
 export const deleteTool = async (name: string): Promise<void> => {
   return deleteRequest(`${llmServicePath}/tools/${name}`);
 };
