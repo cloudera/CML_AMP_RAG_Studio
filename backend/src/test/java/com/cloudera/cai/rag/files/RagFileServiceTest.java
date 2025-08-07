@@ -224,7 +224,8 @@ class RagFileServiceTest {
         prefix,
         dataSourceRepository,
         RagFileDeleteReconciler.createNull(),
-        RagFileSummaryReconciler.createNull());
+        RagFileSummaryReconciler.createNull(),
+        RagFileDownloader.createNull());
   }
 
   private long newDataSourceId() {
@@ -310,5 +311,59 @@ class RagFileServiceTest {
       }
     }
     return new MockMultipartFile("test.zip", "test.zip", contentType, outputStream.toByteArray());
+  }
+
+  @Test
+  void downloadDocument_success() throws Exception {
+    var repo = RagFileRepository.createNull();
+    var dsRepo = RagDataSourceRepository.createNull();
+    long dataSourceId = TestData.createTestDataSource(dsRepo);
+    String documentId = java.util.UUID.randomUUID().toString();
+    // Insert a document
+    Long id = TestData.createTestDocument(dataSourceId, documentId, repo);
+    // Build service with same repo and a downloader that returns bytes
+    byte[] content = "hello world".getBytes();
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            repo,
+            RagFileUploader.createNull(),
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dsRepo,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull(),
+            RagFileDownloader.createNull(java.util.Map.of("doesn't matter", content)));
+
+    var downloaded = service.downloadDocument(dataSourceId, documentId);
+    assertThat(downloaded.filename()).isNotNull();
+    try (var in = downloaded.stream()) {
+      byte[] read = in.readAllBytes();
+      assertThat(read).isNotEmpty();
+    }
+  }
+
+  @Test
+  void downloadDocument_wrongDataSourceId() {
+    var repo = RagFileRepository.createNull();
+    var dsRepo = RagDataSourceRepository.createNull();
+    long dataSourceId = TestData.createTestDataSource(dsRepo);
+    String documentId = java.util.UUID.randomUUID().toString();
+    TestData.createTestDocument(dataSourceId, documentId, repo);
+
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            repo,
+            RagFileUploader.createNull(),
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dsRepo,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull(),
+            RagFileDownloader.createNull());
+
+    assertThatThrownBy(() -> service.downloadDocument(Long.MAX_VALUE, documentId))
+        .isInstanceOf(NotFound.class);
   }
 }

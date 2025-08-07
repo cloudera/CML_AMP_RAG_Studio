@@ -73,6 +73,7 @@ public class RagFileService {
   private final RagDataSourceRepository ragDataSourceRepository;
   private final RagFileDeleteReconciler ragFileDeleteReconciler;
   private final RagFileSummaryReconciler ragFileSummaryReconciler;
+  private final RagFileDownloader ragFileDownloader;
 
   @Autowired
   public RagFileService(
@@ -83,7 +84,8 @@ public class RagFileService {
       @Qualifier("s3BucketPrefix") String s3PathPrefix,
       RagDataSourceRepository ragDataSourceRepository,
       RagFileDeleteReconciler ragFileDeleteReconciler,
-      RagFileSummaryReconciler ragFileSummaryReconciler) {
+      RagFileSummaryReconciler ragFileSummaryReconciler,
+      RagFileDownloader ragFileDownloader) {
     this.idGenerator = idGenerator;
     this.ragFileRepository = ragFileRepository;
     this.ragFileUploader = ragFileUploader;
@@ -92,6 +94,7 @@ public class RagFileService {
     this.ragDataSourceRepository = ragDataSourceRepository;
     this.ragFileDeleteReconciler = ragFileDeleteReconciler;
     this.ragFileSummaryReconciler = ragFileSummaryReconciler;
+    this.ragFileDownloader = ragFileDownloader;
   }
 
   public List<RagDocumentMetadata> saveRagFile(
@@ -214,6 +217,18 @@ public class RagFileService {
     return ragFileRepository.getRagDocuments(dataSourceId);
   }
 
+  public record DownloadedDocument(String filename, String s3Path, java.io.InputStream stream) {}
+
+  public DownloadedDocument downloadDocument(Long dataSourceId, String documentId) {
+    var document = ragFileRepository.findDocumentByDocumentId(documentId);
+    if (!document.dataSourceId().equals(dataSourceId)) {
+      throw new NotFound(
+          "Document with id " + documentId + " not found for dataSourceId: " + dataSourceId);
+    }
+    var inputStream = ragFileDownloader.openStream(document.s3Path());
+    return new DownloadedDocument(document.filename(), document.s3Path(), inputStream);
+  }
+
   public record MultipartUploadableFile(MultipartFile file) implements UploadableFile {
 
     @Override
@@ -262,6 +277,7 @@ public class RagFileService {
         "prefix",
         RagDataSourceRepository.createNull(),
         RagFileDeleteReconciler.createNull(),
-        RagFileSummaryReconciler.createNull());
+        RagFileSummaryReconciler.createNull(),
+        RagFileDownloader.createNull());
   }
 }

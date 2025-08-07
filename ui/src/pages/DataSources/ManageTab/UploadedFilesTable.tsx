@@ -46,6 +46,7 @@ import {
   Typography,
 } from "antd";
 import Icon, { DeleteOutlined } from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
   useDeleteDocumentMutation,
@@ -63,6 +64,7 @@ import { cdlWhite } from "src/cuix/variables.ts";
 import ReadyColumn from "pages/DataSources/ManageTab/ReadyColumn.tsx";
 import SummaryColumn from "pages/DataSources/ManageTab/SummaryColumn.tsx";
 import { ColumnsType } from "antd/es/table";
+import { paths, ragPath } from "src/api/utils.ts";
 
 const columns = (
   dataSourceId: string,
@@ -152,14 +154,18 @@ const columns = (
     {
       title: "Actions",
       render: (_, record) => {
+        const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.documentId}/download`;
         return (
-          <Button
-            type="text"
-            icon={<DeleteOutlined />}
-            onClick={() => {
-              handleDeleteFile(record);
-            }}
-          />
+          <Flex gap={8}>
+            <Button type="text" icon={<DownloadOutlined />} href={url} />
+            <Button
+              type="text"
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                handleDeleteFile(record);
+              }}
+            />
+          </Flex>
         );
       },
     },
