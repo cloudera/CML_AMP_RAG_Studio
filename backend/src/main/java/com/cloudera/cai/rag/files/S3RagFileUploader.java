@@ -41,9 +41,11 @@ package com.cloudera.cai.rag.files;
 import com.cloudera.cai.util.s3.AmazonS3Client;
 import com.cloudera.cai.util.s3.RefCountedS3Client;
 import java.io.IOException;
+import java.io.InputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
@@ -57,7 +59,6 @@ public class S3RagFileUploader implements RagFileUploader {
     this.bucketName = s3BucketName;
   }
 
-  @Override
   public void uploadFile(UploadableFile file, String s3Path) {
     log.info("Uploading file to S3: {}", s3Path);
     PutObjectRequest objectRequest =
@@ -69,6 +70,18 @@ public class S3RagFileUploader implements RagFileUploader {
               objectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public InputStream downloadFileStream(String path) {
+    try (RefCountedS3Client refCountedS3Client = s3Client.getRefCountedClient()) {
+      GetObjectRequest getObjectRequest =
+          GetObjectRequest.builder().bucket(bucketName).key(path).build();
+      // S3Client#getObject returns a ResponseInputStream<GetObjectResponse>
+      return refCountedS3Client.getClient().getObject(getObjectRequest);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to download file from S3: " + path, e);
     }
   }
 }

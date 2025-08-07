@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -212,6 +213,87 @@ public class RagFileService {
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {
     return ragFileRepository.getRagDocuments(dataSourceId);
+  }
+
+  /**
+   * Downloads a file by its document ID and data source ID as a stream.
+   *
+   * @param id the document ID
+   * @param dataSourceId the data source ID
+   * @return a FileDownloadStream object containing file stream, filename, and content type
+   * @throws NotFound if the file or metadata is not found
+   */
+  public FileDownloadStream downloadRagFileStream(Long id, Long dataSourceId) {
+    RagDocument doc =
+        ragFileRepository
+            .getDocumentByIdAndDataSource(id, dataSourceId)
+            .orElseThrow(
+                () ->
+                    new NotFound(
+                        "File not found for id: " + id + ", dataSourceId: " + dataSourceId));
+    InputStream stream = ragFileUploader.downloadFileStream(doc.s3Path());
+    String contentType = guessContentType(doc.filename(), doc.s3Path());
+    return new FileDownloadStream(doc.filename(), contentType, stream);
+  }
+
+  private String guessContentType(String filename, String s3Path) {
+    try {
+      String type = Files.probeContentType(Paths.get(filename));
+      if (type == null) {
+        type = Files.probeContentType(Paths.get(s3Path));
+      }
+      return type != null ? type : "application/octet-stream";
+    } catch (Exception e) {
+      return "application/octet-stream";
+    }
+  }
+
+  public static class FileDownload {
+    private final String filename;
+    private final String contentType;
+    private final byte[] content;
+
+    public FileDownload(String filename, String contentType, byte[] content) {
+      this.filename = filename;
+      this.contentType = contentType;
+      this.content = content;
+    }
+
+    public String getFilename() {
+      return filename;
+    }
+
+    public String getContentType() {
+      return contentType;
+    }
+
+    public byte[] getContent() {
+      return content;
+    }
+  }
+
+  public static class FileDownloadStream {
+    private final String filename;
+    private final String contentType;
+    private final InputStream stream;
+
+    public FileDownloadStream(String filename, String contentType, InputStream stream) {
+      this.filename = filename;
+      this.contentType = contentType;
+      this.stream = stream;
+    }
+
+    public String getFilename() {
+      return filename;
+    }
+
+    public String getContentType() {
+      return contentType;
+    }
+
+    public InputStream getStream() {
+      return stream;
+    }
   }
 
   public record MultipartUploadableFile(MultipartFile file) implements UploadableFile {

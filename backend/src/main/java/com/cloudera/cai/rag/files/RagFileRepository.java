@@ -43,6 +43,7 @@ import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.mapper.reflect.ConstructorMapper;
 import org.jdbi.v3.core.statement.Query;
@@ -154,5 +155,11 @@ public class RagFileRepository {
             return query.mapTo(Integer.class).one();
           }
         });
+  }
+
+  public Optional<RagDocument> getDocumentByIdAndDataSource(Long id, Long dataSourceId) {
+    return getRagDocuments(dataSourceId).stream()
+        .filter(doc -> doc.id() != null && doc.id().equals(id))
+        .findFirst();
   }
 }

@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.files;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,15 @@ public class FileSystemRagFileUploader implements RagFileUploader {
       Files.copy(file.getInputStream(), filePath);
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public InputStream downloadFileStream(String path) {
+    try {
+      return Files.newInputStream(Path.of(path));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to open file stream from path: " + path, e);
     }
   }
 

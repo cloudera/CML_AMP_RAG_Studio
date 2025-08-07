@@ -51,7 +51,9 @@ import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -310,5 +312,33 @@ class RagFileServiceTest {
       }
     }
     return new MockMultipartFile("test.zip", "test.zip", contentType, outputStream.toByteArray());
+  }
+
+  @Test
+  void downloadRagFileStream_returnsCorrectStreamAndMetadata() throws Exception {
+    // Arrange
+    String fileName = "test.txt";
+    String contentType = "text/plain";
+    String fileContent = "Streamed content!";
+    long dataSourceId = 1L;
+    long fileId = 99L;
+    RagFileService.FileDownloadStream fileDownloadStream =
+        new RagFileService.FileDownloadStream(
+            fileName,
+            contentType,
+            new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
+    RagFileService ragFileService = org.mockito.Mockito.mock(RagFileService.class);
+    org.mockito.Mockito.when(ragFileService.downloadRagFileStream(fileId, dataSourceId))
+        .thenReturn(fileDownloadStream);
+
+    // Act
+    RagFileService.FileDownloadStream result =
+        ragFileService.downloadRagFileStream(fileId, dataSourceId);
+
+    // Assert
+    assertThat(result.getFilename()).isEqualTo(fileName);
+    assertThat(result.getContentType()).isEqualTo(contentType);
+    String streamed = new String(result.getStream().readAllBytes(), StandardCharsets.UTF_8);
+    assertThat(streamed).isEqualTo(fileContent);
   }
 }

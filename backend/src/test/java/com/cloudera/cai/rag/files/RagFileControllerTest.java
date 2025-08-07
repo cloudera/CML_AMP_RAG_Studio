@@ -48,10 +48,15 @@ import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.util.exceptions.BadRequest;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -163,5 +168,36 @@ class RagFileControllerTest {
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     ragFileController.deleteRagFile(id, dataSourceId);
     assertThat(ragFileController.getRagDocuments(dataSourceId)).extracting("id").doesNotContain(id);
+  }
+
+  @Test
+  void downloadFile_streamsContentAndSetsHeaders() throws Exception {
+    // Arrange
+    String fileName = "test.txt";
+    String contentType = "text/plain";
+    String fileContent = "Hello, world!";
+    long dataSourceId = 1L;
+    long fileId = 42L;
+    RagFileService.FileDownloadStream fileDownloadStream =
+        new RagFileService.FileDownloadStream(
+            fileName,
+            contentType,
+            new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
+    RagFileService ragFileService = org.mockito.Mockito.mock(RagFileService.class);
+    org.mockito.Mockito.when(ragFileService.downloadRagFileStream(fileId, dataSourceId))
+        .thenReturn(fileDownloadStream);
+    RagFileController controller = new RagFileController(ragFileService);
+
+    // Act
+    ResponseEntity<InputStreamResource> response = controller.downloadRagFile(dataSourceId, fileId);
+
+    // Assert
+    assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+    assertThat(response.getHeaders().getFirst("Content-Disposition")).contains(fileName);
+    assertThat(response.getHeaders().getContentType())
+        .isEqualTo(MediaType.parseMediaType(contentType));
+    String body =
+        new String(response.getBody().getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    assertThat(body).isEqualTo(fileContent);
   }
 }

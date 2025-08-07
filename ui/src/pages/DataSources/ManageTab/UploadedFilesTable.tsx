@@ -112,6 +112,10 @@ const columns = (
       key: "filename",
       showSorterTooltip: false,
       sorter: (a, b) => a.filename.localeCompare(b.filename),
+      render: (_, data) => {
+        const url = `/api/v1/rag/dataSources/${data.dataSourceId.toString()}/files/${data.id.toString()}/download`;
+        return <a href={url}>{data.filename}</a>;
+      },
     },
   ];
 

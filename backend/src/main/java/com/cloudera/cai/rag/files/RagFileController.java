@@ -46,6 +46,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,5 +88,16 @@ public class RagFileController {
   @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{id}")
   public void deleteRagFile(@PathVariable Long id, @PathVariable Long dataSourceId) {
     ragFileService.deleteRagFile(id, dataSourceId);
+  }
+
+  @GetMapping(value = "/dataSources/{dataSourceId}/files/{id}/download")
+  public ResponseEntity<InputStreamResource> downloadRagFile(
+      @PathVariable Long dataSourceId, @PathVariable Long id) {
+    var fileDownload = ragFileService.downloadRagFileStream(id, dataSourceId);
+    return ResponseEntity.ok()
+        .header(
+            "Content-Disposition", "attachment; filename=\"" + fileDownload.getFilename() + "\"")
+        .contentType(MediaType.parseMediaType(fileDownload.getContentType()))
+        .body(new InputStreamResource(fileDownload.getStream()));
   }
 }
