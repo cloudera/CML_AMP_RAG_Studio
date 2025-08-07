@@ -42,6 +42,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -49,6 +51,27 @@ import org.springframework.stereotype.Component;
 public class FileSystemRagFileUploader implements RagFileUploader {
 
   private static final String FILE_STORAGE_ROOT = fileStoragePath();
+
+  // For testing
+  private static String customStorageRoot = null;
+
+  /**
+   * Gets the root path for file storage.
+   *
+   * @return The file storage root path
+   */
+  public static String getFileStorageRoot() {
+    return customStorageRoot != null ? customStorageRoot : FILE_STORAGE_ROOT;
+  }
+
+  /**
+   * Sets a custom storage root for testing.
+   *
+   * @param rootPath The custom root path to use
+   */
+  public static void setCustomStorageRoot(String rootPath) {
+    customStorageRoot = rootPath;
+  }
 
   @Override
   public void uploadFile(UploadableFile file, String s3Path) {
@@ -62,9 +85,36 @@ public class FileSystemRagFileUploader implements RagFileUploader {
     }
   }
 
+  @Override
+  public Resource downloadFile(String s3Path) throws IOException {
+    log.info("Downloading file from local filesystem: {}", s3Path);
+    Path filePath = Path.of(getFileStorageRoot(), s3Path);
+
+    // Check if the file exists
+    if (!Files.exists(filePath)) {
+      throw new com.cloudera.cai.util.exceptions.NotFound("File not found at path: " + filePath);
+    }
+
+    // Create an input stream from the file
+    return new InputStreamResource(Files.newInputStream(filePath));
+  }
+
   private static String fileStoragePath() {
     var fileStoragePath = System.getenv("RAG_DATABASES_DIR") + "/file_storage";
     log.info("configured with fileStoragePath = {}", fileStoragePath);
     return fileStoragePath;
+  }
+
+  // nullables below here
+
+  /**
+   * Creates a test double for FileSystemRagFileUploader.
+   *
+   * @param tempDir The temporary directory to use for file storage
+   * @return A FileSystemRagFileUploader test double
+   */
+  public static FileSystemRagFileUploader createNull(String tempDir) {
+    setCustomStorageRoot(tempDir);
+    return new FileSystemRagFileUploader();
   }
 }

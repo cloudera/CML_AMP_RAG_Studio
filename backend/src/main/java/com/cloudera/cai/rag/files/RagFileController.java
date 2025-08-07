@@ -39,6 +39,7 @@
 package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.Types.RagDocumentMetadata;
 import com.cloudera.cai.rag.util.UsernameExtractor;
 import com.cloudera.cai.util.exceptions.BadRequest;
@@ -46,6 +47,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,5 +90,31 @@ public class RagFileController {
   @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{id}")
   public void deleteRagFile(@PathVariable Long id, @PathVariable Long dataSourceId) {
     ragFileService.deleteRagFile(id, dataSourceId);
+  }
+
+  /**
+   * Downloads a file from storage.
+   *
+   * @param id The ID of the document to download
+   * @param dataSourceId The ID of the data source
+   * @return The file as a downloadable resource
+   */
+  @GetMapping(value = "/dataSources/{dataSourceId}/files/{id}/download")
+  public ResponseEntity<Resource> downloadFile(
+      @PathVariable Long id, @PathVariable Long dataSourceId) {
+    log.info("Downloading file with id: {} from dataSource: {}", id, dataSourceId);
+
+    // Get the document metadata to determine the filename
+    RagDocument document = ragFileService.getRagDocumentById(id, dataSourceId);
+
+    // Get the file as a resource
+    Resource resource = ragFileService.downloadFile(id, dataSourceId);
+
+    // Set up the response headers
+    return ResponseEntity.ok()
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.filename() + "\"")
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(resource);
   }
 }

@@ -115,13 +115,6 @@ public class RagFileRepository {
         });
   }
 
-  // Nullables stuff below here.
-
-  public static RagFileRepository createNull() {
-    // the db configuration will use in-memory db based on env vars.
-    return new RagFileRepository(JdbiConfiguration.createNull());
-  }
-
   public void deleteById(Long id) {
     databaseOperations.useTransaction(
         handle -> {
@@ -154,5 +147,86 @@ public class RagFileRepository {
             return query.mapTo(Integer.class).one();
           }
         });
+  }
+
+  // Nullables stuff below here.
+
+  public static RagFileRepository createNull() {
+    // the db configuration will use in-memory db based on env vars.
+    return new RagFileRepository(JdbiConfiguration.createNull());
+  }
+
+  /**
+   * Creates a test double for RagFileRepository that can be configured with test documents.
+   *
+   * @return A configurable test double for RagFileRepository
+   */
+  public static TestRagFileRepository createTestRepository() {
+    return new TestRagFileRepository();
+  }
+
+  /** A test double for RagFileRepository that can be configured with test documents. */
+  public static class TestRagFileRepository extends RagFileRepository {
+    private final java.util.Map<Long, RagDocument> documentsById = new java.util.HashMap<>();
+    private final java.util.Map<String, RagDocument> documentsByDocumentId =
+        new java.util.HashMap<>();
+    private final java.util.Map<Long, java.util.List<RagDocument>> documentsByDataSourceId =
+        new java.util.HashMap<>();
+
+    public TestRagFileRepository() {
+      super(JdbiConfiguration.createNull());
+    }
+
+    /**
+     * Adds a test document to the repository.
+     *
+     * @param document The document to add
+     * @return The document ID
+     */
+    public Long addDocument(RagDocument document) {
+      documentsById.put(document.id(), document);
+      documentsByDocumentId.put(document.documentId(), document);
+      documentsByDataSourceId
+          .computeIfAbsent(document.dataSourceId(), k -> new java.util.ArrayList<>())
+          .add(document);
+      return document.id();
+    }
+
+    @Override
+    public RagDocument getRagDocumentById(Long id) {
+      if (!documentsById.containsKey(id)) {
+        throw new NotFound("no document found with id: " + id);
+      }
+      return documentsById.get(id);
+    }
+
+    @Override
+    public RagDocument findDocumentByDocumentId(String documentId) {
+      if (!documentsByDocumentId.containsKey(documentId)) {
+        throw new NotFound("no document found with id: " + documentId);
+      }
+      return documentsByDocumentId.get(documentId);
+    }
+
+    @Override
+    public List<RagDocument> getRagDocuments(Long dataSourceId) {
+      return documentsByDataSourceId.getOrDefault(dataSourceId, java.util.Collections.emptyList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+      RagDocument document = documentsById.remove(id);
+      if (document != null) {
+        documentsByDocumentId.remove(document.documentId());
+        documentsByDataSourceId
+            .getOrDefault(document.dataSourceId(), java.util.Collections.emptyList())
+            .remove(document);
+      }
+    }
+
+    @Override
+    public int getNumberOfRagDocuments() {
+      return documentsById.size();
+    }
   }
 }

@@ -43,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
+import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.Types.RagDocumentMetadata;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
 import com.cloudera.cai.rag.files.RagFileService.MultipartUploadableFile;
@@ -52,11 +53,17 @@ import com.cloudera.cai.util.Tracker;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 
 class RagFileServiceTest {
@@ -310,5 +317,175 @@ class RagFileServiceTest {
       }
     }
     return new MockMultipartFile("test.zip", "test.zip", contentType, outputStream.toByteArray());
+  }
+
+  @Test
+  void downloadFile_localFileSystem(@TempDir Path tempDir) throws IOException {
+    // Setup
+    String fileContent = "test file content";
+    String filename = "test-file.txt";
+    String s3Path = "datasource/document-id";
+    Path filePath = tempDir.resolve(s3Path);
+    Files.createDirectories(filePath.getParent());
+    Files.write(filePath, fileContent.getBytes(StandardCharsets.UTF_8));
+
+    // Create test document
+    Long dataSourceId = 123L;
+    Long documentId = 456L;
+    RagDocument document =
+        RagDocument.builder()
+            .id(documentId)
+            .dataSourceId(dataSourceId)
+            .filename(filename)
+            .s3Path(s3Path)
+            .build();
+
+    // Create a test double repository and add our test document
+    RagFileRepository.TestRagFileRepository testRepo = RagFileRepository.createTestRepository();
+    testRepo.addDocument(document);
+
+    // Create a test double for FileSystemRagFileUploader
+    FileSystemRagFileUploader fileUploader =
+        FileSystemRagFileUploader.createNull(tempDir.toString());
+
+    // Create service with test doubles
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            testRepo,
+            fileUploader,
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dataSourceRepository,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull());
+
+    // Test
+    Resource resource = service.downloadFile(documentId, dataSourceId);
+
+    // Verify
+    assertThat(resource).isNotNull();
+    byte[] downloadedContent = new byte[fileContent.length()];
+    resource.getInputStream().read(downloadedContent);
+    assertThat(new String(downloadedContent, StandardCharsets.UTF_8)).isEqualTo(fileContent);
+  }
+
+  @Test
+  void downloadFile_wrongDataSourceId() {
+    // Setup
+    Long correctDataSourceId = 123L;
+    Long wrongDataSourceId = 456L;
+    Long documentId = 789L;
+
+    RagDocument document =
+        RagDocument.builder().id(documentId).dataSourceId(correctDataSourceId).build();
+
+    // Create a test double repository and add our test document
+    RagFileRepository.TestRagFileRepository testRepo = RagFileRepository.createTestRepository();
+    testRepo.addDocument(document);
+
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            testRepo,
+            RagFileUploader.createNull(),
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dataSourceRepository,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull());
+
+    // Test and verify
+    assertThatThrownBy(() -> service.downloadFile(documentId, wrongDataSourceId))
+        .isInstanceOf(NotFound.class)
+        .hasMessageContaining("not found in data source");
+  }
+
+  @Test
+  void downloadFile_fileNotFound(@TempDir Path tempDir) {
+    // Setup
+    String s3Path = "datasource/nonexistent-file";
+    Long dataSourceId = 123L;
+    Long documentId = 456L;
+
+    RagDocument document =
+        RagDocument.builder().id(documentId).dataSourceId(dataSourceId).s3Path(s3Path).build();
+
+    // Create a test double repository and add our test document
+    RagFileRepository.TestRagFileRepository testRepo = RagFileRepository.createTestRepository();
+    testRepo.addDocument(document);
+
+    // Create a test double for FileSystemRagFileUploader
+    FileSystemRagFileUploader fileUploader =
+        FileSystemRagFileUploader.createNull(tempDir.toString());
+
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            testRepo,
+            fileUploader,
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dataSourceRepository,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull());
+
+    // Test and verify
+    assertThatThrownBy(() -> service.downloadFile(documentId, dataSourceId))
+        .isInstanceOf(NotFound.class)
+        .hasMessageContaining("File not found at path");
+  }
+
+  @Test
+  void downloadFile_s3Storage(@TempDir Path tempDir) throws Exception {
+    // Setup
+    String fileContent = "test file content from S3";
+    String filename = "test-s3-file.txt";
+    String s3Path = "datasource/s3-document-id";
+    Long dataSourceId = 123L;
+    Long documentId = 456L;
+    String bucketName = "test-bucket";
+
+    // Create test document
+    RagDocument document =
+        RagDocument.builder()
+            .id(documentId)
+            .dataSourceId(dataSourceId)
+            .filename(filename)
+            .s3Path(s3Path)
+            .build();
+
+    // Create a test double repository and add our test document
+    RagFileRepository.TestRagFileRepository testRepo = RagFileRepository.createTestRepository();
+    testRepo.addDocument(document);
+
+    // Create a temporary file with test content
+    Path filePath = tempDir.resolve(s3Path);
+    Files.createDirectories(filePath.getParent());
+    Files.write(filePath, fileContent.getBytes(StandardCharsets.UTF_8));
+
+    // Create a test double for S3RagFileUploader
+    S3RagFileUploader s3Uploader = S3RagFileUploader.createNull(bucketName, tempDir.toString());
+
+    // Create service with test doubles
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            testRepo,
+            s3Uploader,
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dataSourceRepository,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull());
+
+    // Test
+    Resource resource = service.downloadFile(documentId, dataSourceId);
+
+    // Verify
+    assertThat(resource).isNotNull();
+    byte[] downloadedContent = new byte[fileContent.length()];
+    resource.getInputStream().read(downloadedContent);
+    assertThat(new String(downloadedContent, StandardCharsets.UTF_8)).isEqualTo(fileContent);
   }
 }

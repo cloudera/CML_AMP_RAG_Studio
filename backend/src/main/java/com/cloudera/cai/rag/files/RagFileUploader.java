@@ -39,9 +39,20 @@
 package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.util.Tracker;
+import java.io.IOException;
+import org.springframework.core.io.Resource;
 
 public interface RagFileUploader {
   void uploadFile(UploadableFile file, String path);
+
+  /**
+   * Downloads a file from storage.
+   *
+   * @param s3Path The path of the file to download
+   * @return A Resource containing the file content
+   * @throws IOException If an error occurs reading the file
+   */
+  org.springframework.core.io.Resource downloadFile(String s3Path) throws java.io.IOException;
 
   record UploadRequest(UploadableFile file, String documentId) {}
 
@@ -66,6 +77,12 @@ public interface RagFileUploader {
     @Override
     public void uploadFile(UploadableFile file, String s3Path) {
       tracker.track(new UploadRequest(file, s3Path));
+    }
+
+    @Override
+    public Resource downloadFile(String s3Path) throws IOException {
+      // This is a stub implementation for testing
+      throw new UnsupportedOperationException("Download not supported in test stub");
     }
   }
 }

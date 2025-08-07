@@ -59,6 +59,7 @@ import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -212,6 +213,54 @@ public class RagFileService {
 
   public List<RagDocument> getRagDocuments(Long dataSourceId) {
     return ragFileRepository.getRagDocuments(dataSourceId);
+  }
+
+  /**
+   * Gets a document by its ID and data source ID.
+   *
+   * @param id The ID of the document
+   * @param dataSourceId The ID of the data source
+   * @return The document
+   * @throws NotFound if the document is not found or doesn't belong to the data source
+   */
+  public RagDocument getRagDocumentById(Long id, Long dataSourceId) {
+    RagDocument document = ragFileRepository.getRagDocumentById(id);
+    if (!document.dataSourceId().equals(dataSourceId)) {
+      throw new NotFound("Document with id " + id + " not found in data source " + dataSourceId);
+    }
+    return document;
+  }
+
+  /**
+   * Downloads a file from storage.
+   *
+   * @param id The ID of the document to download
+   * @param dataSourceId The ID of the data source
+   * @return A Resource containing the file content
+   * @throws NotFound if the document is not found
+   */
+  public Resource downloadFile(Long id, Long dataSourceId) {
+    log.info("Downloading file with id: {} from dataSource: {}", id, dataSourceId);
+
+    // Get the document metadata from the repository
+    RagDocument document = ragFileRepository.getRagDocumentById(id);
+
+    // Verify the document belongs to the specified data source
+    if (!document.dataSourceId().equals(dataSourceId)) {
+      throw new NotFound("Document with id " + id + " not found in data source " + dataSourceId);
+    }
+
+    try {
+      // Get the file path from the document metadata
+      String s3Path = document.s3Path();
+
+      // Use the uploader's downloadFile method to get the file
+      // This delegates the implementation details to the appropriate uploader class
+      return ragFileUploader.downloadFile(s3Path);
+    } catch (IOException e) {
+      log.error("Error downloading file with id: {}", id, e);
+      throw new RuntimeException("Error downloading file: " + e.getMessage(), e);
+    }
   }
 
   public record MultipartUploadableFile(MultipartFile file) implements UploadableFile {
