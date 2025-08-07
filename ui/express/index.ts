@@ -74,6 +74,8 @@ const llmServiceProxy: Options = {
 };
 
 app.use(express.static(join(__dirname, "../..", "dist")));
+// Serve cache files from the cache directory (for generated images)
+app.use("/cache", express.static(join(__dirname, "../..", "cache")));
 app.use(createProxyMiddleware(llmServiceProxy));
 app.use(createProxyMiddleware(apiProxy));
 
