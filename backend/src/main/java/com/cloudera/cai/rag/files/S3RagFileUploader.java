@@ -38,12 +38,16 @@
 
 package com.cloudera.cai.rag.files;
 
+import com.cloudera.cai.util.exceptions.NotFound;
 import com.cloudera.cai.util.s3.AmazonS3Client;
 import com.cloudera.cai.util.s3.RefCountedS3Client;
 import java.io.IOException;
+import java.io.InputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
@@ -69,6 +73,81 @@ public class S3RagFileUploader implements RagFileUploader {
               objectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public InputStream downloadFile(String s3Path) {
+    log.info("Downloading file from S3: {}", s3Path);
+    GetObjectRequest getObjectRequest =
+        GetObjectRequest.builder().bucket(bucketName).key(s3Path).build();
+
+    try {
+      RefCountedS3Client refCountedS3Client = s3Client.getRefCountedClient();
+      try {
+        InputStream response = refCountedS3Client.getClient().getObject(getObjectRequest);
+
+        // Return a wrapped input stream that closes the RefCountedS3Client when done
+        return new S3WrappedInputStream(response, refCountedS3Client);
+      } catch (NoSuchKeyException e) {
+        refCountedS3Client.close();
+        throw new NotFound("File not found at path: " + s3Path);
+      } catch (Exception e) {
+        refCountedS3Client.close();
+        throw new RuntimeException("Failed to download file from S3: " + e.getMessage(), e);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to create S3 client: " + e.getMessage(), e);
+    }
+  }
+
+  /** A wrapped input stream that closes the RefCountedS3Client when the stream is closed. */
+  private static class S3WrappedInputStream extends InputStream {
+    private final InputStream delegate;
+    private final RefCountedS3Client client;
+
+    public S3WrappedInputStream(InputStream delegate, RefCountedS3Client client) {
+      this.delegate = delegate;
+      this.client = client;
+    }
+
+    @Override
+    public int read() throws IOException {
+      return delegate.read();
+    }
+
+    @Override
+    public int read(byte[] b) throws IOException {
+      return delegate.read(b);
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      return delegate.read(b, off, len);
+    }
+
+    @Override
+    public byte[] readAllBytes() throws IOException {
+      return delegate.readAllBytes();
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+      return delegate.skip(n);
+    }
+
+    @Override
+    public int available() throws IOException {
+      return delegate.available();
+    }
+
+    @Override
+    public void close() throws IOException {
+      try {
+        delegate.close();
+      } finally {
+        client.close();
+      }
     }
   }
 }

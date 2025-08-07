@@ -38,8 +38,11 @@
 
 package com.cloudera.cai.rag.files;
 
+import com.cloudera.cai.util.exceptions.NotFound;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -59,6 +62,19 @@ public class FileSystemRagFileUploader implements RagFileUploader {
       Files.copy(file.getInputStream(), filePath);
     } catch (IOException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public InputStream downloadFile(String path) {
+    log.info("Downloading file from FS: {}", path);
+    Path filePath = Path.of(FILE_STORAGE_ROOT, path);
+    try {
+      return Files.newInputStream(filePath);
+    } catch (NoSuchFileException e) {
+      throw new NotFound("File not found at path: " + path);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read file: " + e.getMessage(), e);
     }
   }
 

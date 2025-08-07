@@ -214,6 +214,28 @@ public class RagFileService {
     return ragFileRepository.getRagDocuments(dataSourceId);
   }
 
+  /**
+   * Downloads a document by its ID.
+   *
+   * @param id The document ID
+   * @param dataSourceId The data source ID
+   * @return A tuple containing the document metadata and input stream for the document content
+   */
+  public DocumentDownloadResult downloadRagFile(Long id, Long dataSourceId) {
+    var document = ragFileRepository.getRagDocumentById(id);
+    if (!document.dataSourceId().equals(dataSourceId)) {
+      throw new NotFound("Document with id " + id + " not found for dataSourceId: " + dataSourceId);
+    }
+
+    InputStream fileContent = ragFileUploader.downloadFile(document.s3Path());
+    return new DocumentDownloadResult(document, fileContent);
+  }
+
+  /**
+   * Result of a document download operation containing both metadata and the file content stream.
+   */
+  public record DocumentDownloadResult(RagDocument document, InputStream content) {}
+
   public record MultipartUploadableFile(MultipartFile file) implements UploadableFile {
 
     @Override

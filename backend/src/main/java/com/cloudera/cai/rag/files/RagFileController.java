@@ -40,12 +40,18 @@ package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocumentMetadata;
+import com.cloudera.cai.rag.files.RagFileService.DocumentDownloadResult;
 import com.cloudera.cai.rag.util.UsernameExtractor;
 import com.cloudera.cai.util.exceptions.BadRequest;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,5 +91,63 @@ public class RagFileController {
   @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{id}")
   public void deleteRagFile(@PathVariable Long id, @PathVariable Long dataSourceId) {
     ragFileService.deleteRagFile(id, dataSourceId);
+  }
+
+  /**
+   * Downloads a document file by ID.
+   *
+   * @param id The document ID
+   * @param dataSourceId The data source ID
+   * @return The document file as a downloadable resource
+   * @throws IOException If there's an error reading the file
+   */
+  @GetMapping(value = "/dataSources/{dataSourceId}/files/{id}/download")
+  public ResponseEntity<InputStreamResource> downloadRagFile(
+      @PathVariable Long id, @PathVariable Long dataSourceId) throws IOException {
+    DocumentDownloadResult downloadResult = ragFileService.downloadRagFile(id, dataSourceId);
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(
+        HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + downloadResult.document().filename() + "\"");
+
+    // Try to determine content type based on file extension
+    String contentType = determineContentType(downloadResult.document().extension());
+
+    return ResponseEntity.ok()
+        .headers(headers)
+        .contentType(MediaType.parseMediaType(contentType))
+        .body(new InputStreamResource(downloadResult.content()));
+  }
+
+  /**
+   * Determines the appropriate content type based on the file extension.
+   *
+   * @param extension The file extension
+   * @return The content type as a string
+   */
+  private String determineContentType(String extension) {
+    if (extension == null) {
+      return "application/octet-stream";
+    }
+
+    return switch (extension.toLowerCase()) {
+      case "pdf" -> "application/pdf";
+      case "txt" -> "text/plain";
+      case "html", "htm" -> "text/html";
+      case "doc" -> "application/msword";
+      case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      case "xls" -> "application/vnd.ms-excel";
+      case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      case "ppt" -> "application/vnd.ms-powerpoint";
+      case "pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+      case "jpg", "jpeg" -> "image/jpeg";
+      case "png" -> "image/png";
+      case "gif" -> "image/gif";
+      case "xml" -> "application/xml";
+      case "json" -> "application/json";
+      case "csv" -> "text/csv";
+      default -> "application/octet-stream";
+    };
   }
 }

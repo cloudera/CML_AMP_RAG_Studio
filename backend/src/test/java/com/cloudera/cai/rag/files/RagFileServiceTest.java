@@ -311,4 +311,66 @@ class RagFileServiceTest {
     }
     return new MockMultipartFile("test.zip", "test.zip", contentType, outputStream.toByteArray());
   }
+
+  @Test
+  void downloadRagFile_success() {
+    // Arrange
+    var dataSourceId = TestData.createTestDataSource(dataSourceRepository);
+    String documentId = UUID.randomUUID().toString();
+    RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
+
+    // Save a file first to get a document ID
+    String originalFilename = "test-document.pdf";
+    byte[] fileContent = "test content".getBytes();
+    MockMultipartFile mockFile =
+        new MockMultipartFile("file", originalFilename, "application/pdf", fileContent);
+    var uploadResult = ragFileService.saveRagFile(mockFile, dataSourceId, "test-user").getFirst();
+    var ragDocument = ragFileRepository.findDocumentByDocumentId(uploadResult.documentId());
+
+    // Act
+    var downloadResult = ragFileService.downloadRagFile(ragDocument.id(), dataSourceId);
+
+    // Assert
+    assertThat(downloadResult).isNotNull();
+    assertThat(downloadResult.document()).isNotNull();
+    assertThat(downloadResult.document().id()).isEqualTo(ragDocument.id());
+    assertThat(downloadResult.document().filename()).isEqualTo(originalFilename);
+    assertThat(downloadResult.content()).isNotNull();
+  }
+
+  @Test
+  void downloadRagFile_notFound() {
+    // Arrange
+    var dataSourceId = TestData.createTestDataSource(dataSourceRepository);
+    var nonExistentId = 9999L;
+    RagFileService ragFileService =
+        createRagFileService(UUID.randomUUID().toString(), new Tracker<>());
+
+    // Act & Assert
+    assertThatThrownBy(() -> ragFileService.downloadRagFile(nonExistentId, dataSourceId))
+        .isInstanceOf(NotFound.class)
+        .hasMessageContaining("no document found with id");
+  }
+
+  @Test
+  void downloadRagFile_wrongDataSource() {
+    // Arrange
+    var dataSourceId = TestData.createTestDataSource(dataSourceRepository);
+    var wrongDataSourceId = dataSourceId + 1;
+    String documentId = UUID.randomUUID().toString();
+    RagFileService ragFileService = createRagFileService(documentId, new Tracker<>());
+
+    // Save a file first to get a document ID
+    String originalFilename = "test-document.pdf";
+    byte[] fileContent = "test content".getBytes();
+    MockMultipartFile mockFile =
+        new MockMultipartFile("file", originalFilename, "application/pdf", fileContent);
+    var uploadResult = ragFileService.saveRagFile(mockFile, dataSourceId, "test-user").getFirst();
+    var ragDocument = ragFileRepository.findDocumentByDocumentId(uploadResult.documentId());
+
+    // Act & Assert
+    assertThatThrownBy(() -> ragFileService.downloadRagFile(ragDocument.id(), wrongDataSourceId))
+        .isInstanceOf(NotFound.class)
+        .hasMessageContaining("not found for dataSourceId");
+  }
 }

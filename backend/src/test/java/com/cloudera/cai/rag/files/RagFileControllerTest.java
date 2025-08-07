@@ -164,4 +164,43 @@ class RagFileControllerTest {
     ragFileController.deleteRagFile(id, dataSourceId);
     assertThat(ragFileController.getRagDocuments(dataSourceId)).extracting("id").doesNotContain(id);
   }
+
+  @Test
+  void downloadFile() throws Exception {
+    // Create a test document
+    var dataSourceId = createTestDataSource(dataSourceRepository);
+    String documentId = UUID.randomUUID().toString();
+    var id = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
+
+    // Create the controller with our service
+    RagFileController controller = new RagFileController(RagFileService.createNull());
+
+    // Call the download endpoint - this should not throw an exception
+    var response = controller.downloadRagFile(id, dataSourceId);
+
+    // Basic verification - just make sure we get a response
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCodeValue()).isEqualTo(200);
+  }
+
+  @Test
+  void downloadFile_unknownExtension() throws Exception {
+    // Create a test document
+    var dataSourceId = createTestDataSource(dataSourceRepository);
+    var documentId = UUID.randomUUID().toString();
+
+    // Setup the mock service with a test document
+    RagFileService mockService = RagFileService.createNull();
+    var docId = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
+
+    // Create the controller with the mock service
+    RagFileController controller = new RagFileController(mockService);
+
+    // Call the download endpoint
+    var response = controller.downloadRagFile(docId, dataSourceId);
+
+    // Verify the response uses default content type for unknown extensions
+    assertThat(response.getHeaders().getContentType().toString())
+        .isEqualTo("application/octet-stream");
+  }
 }

@@ -39,9 +39,18 @@
 package com.cloudera.cai.rag.files;
 
 import com.cloudera.cai.util.Tracker;
+import java.io.InputStream;
 
 public interface RagFileUploader {
   void uploadFile(UploadableFile file, String path);
+
+  /**
+   * Retrieves a file from storage.
+   *
+   * @param path The path where the file is stored
+   * @return InputStream of the file content
+   */
+  InputStream downloadFile(String path);
 
   record UploadRequest(UploadableFile file, String documentId) {}
 
@@ -66,6 +75,12 @@ public interface RagFileUploader {
     @Override
     public void uploadFile(UploadableFile file, String s3Path) {
       tracker.track(new UploadRequest(file, s3Path));
+    }
+
+    @Override
+    public InputStream downloadFile(String path) {
+      // Return an empty stream for testing purposes
+      return InputStream.nullInputStream();
     }
   }
 }
