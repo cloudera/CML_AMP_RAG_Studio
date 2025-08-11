@@ -155,7 +155,7 @@ const columns = (
       render: (_, record) => {
         const handleDownloadFile = () => {
           const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.documentId}/download`;
-          void downloadFile(url, record.filename);
+          void downloadFile(url, record.filename, { pageNumber: "2" });
         };
 
         return (

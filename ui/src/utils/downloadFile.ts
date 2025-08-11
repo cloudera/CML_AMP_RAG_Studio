@@ -38,7 +38,39 @@
 
 import messageQueue from "src/utils/messageQueue.ts";
 
-export const downloadFile = async (url: string, filename: string) => {
+export const downloadFile = async (
+  url: string,
+  filename: string,
+  options?: { pageNumber?: string },
+) => {
+  const isPdf = filename.toLowerCase().endsWith(".pdf");
+
+  if (isPdf && options?.pageNumber) {
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) {
+        if (res.status === 404) {
+          messageQueue.error(`File not found for file: ${filename}`);
+        } else {
+          messageQueue.error(`Failed to download file (${String(res.status)})`);
+        }
+        return;
+      }
+      const arrayBuffer = await res.arrayBuffer();
+      const pdfBlob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      window.open(
+        `${objectUrl}#page=${options.pageNumber}`,
+        "_blank",
+        "noopener",
+      );
+      // Note: do not revoke immediately to avoid breaking the viewer tab
+    } catch {
+      messageQueue.error("Failed to download file");
+    }
+    return;
+  }
+
   try {
     const res = await fetch(url, { method: "HEAD" });
     if (res.ok) {

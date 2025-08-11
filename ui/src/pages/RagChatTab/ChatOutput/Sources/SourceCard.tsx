@@ -36,7 +36,7 @@
  * DATA.
  ******************************************************************************/
 
-import Icon, { DownloadOutlined } from "@ant-design/icons";
+import Icon, { DownloadOutlined, ExportOutlined } from "@ant-design/icons";
 import {
   Alert,
   Button,
@@ -60,14 +60,24 @@ import ChunkContainer from "pages/RagChatTab/ChatOutput/Sources/ChunkContainer.t
 import { paths, ragPath } from "src/api/utils.ts";
 import { downloadFile } from "src/utils/downloadFile.ts";
 
-const CardTitle = ({ source }: { source: SourceNode }) => {
+const CardTitle = ({
+  source,
+  pageNumber,
+}: {
+  source: SourceNode;
+  pageNumber?: string;
+}) => {
   const handleDownloadFile = () => {
     if (!source.dataSourceId) {
       return;
     }
     const url = `${ragPath}/${paths.dataSources}/${source.dataSourceId.toString()}/${paths.files}/${source.doc_id}/download`;
-    void downloadFile(url, source.source_file_name);
+    void downloadFile(url, source.source_file_name, {
+      pageNumber,
+    });
   };
+
+  const isPdf = source.source_file_name.toLowerCase().endsWith(".pdf");
 
   return (
     <Flex justify="space-between" align="center" gap={8}>
@@ -75,7 +85,9 @@ const CardTitle = ({ source }: { source: SourceNode }) => {
         <Tooltip title="Download source file">
           <Button
             type="text"
-            icon={<DownloadOutlined />}
+            icon={
+              isPdf && pageNumber ? <ExportOutlined /> : <DownloadOutlined />
+            }
             onClick={handleDownloadFile}
           />
         </Tooltip>
@@ -163,7 +175,12 @@ export const SourceCard = ({
       onOpenChange={handleGetChunkContents}
       content={
         <Card
-          title={<CardTitle source={source} />}
+          title={
+            <CardTitle
+              source={source}
+              pageNumber={chunkContents.data?.metadata.page_number}
+            />
+          }
           variant="borderless"
           style={{
             width: 800,
