@@ -36,7 +36,6 @@
 #  DATA.
 #
 import logging
-import re
 import time
 import uuid
 from typing import Optional
