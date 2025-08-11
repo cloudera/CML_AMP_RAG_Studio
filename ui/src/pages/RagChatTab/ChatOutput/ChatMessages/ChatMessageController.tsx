@@ -53,6 +53,7 @@ import {
 } from "src/api/chatApi.ts";
 import { useRenameNameMutation } from "src/api/sessionApi.ts";
 import EmptyChatState from "pages/RagChatTab/ChatOutput/ChatMessages/EmptyChatState.tsx";
+import { useStreamingChunkBuffer } from "src/hooks/useStreamingChunkBuffer.ts";
 
 const ChatMessageController = () => {
   const {
@@ -80,12 +81,17 @@ const ChatMessageController = () => {
     },
   });
 
+  // Use custom hook to handle batched streaming updates
+  const { onChunk, flush } = useStreamingChunkBuffer((chunks) => {
+    setStreamedChat((prev) => prev + chunks);
+  });
+
   const { mutate: chatMutation } = useStreamingChatMutation({
-    onChunk: (chunk) => {
-      setStreamedChat((prev) => prev + chunk);
-    },
+    onChunk,
     onEvent: getOnEvent(setStreamedEvent),
     onSuccess: () => {
+      // Flush any remaining chunks before cleanup
+      flush();
       setStreamedChat("");
       const url = new URL(window.location.href);
       url.searchParams.delete("question");

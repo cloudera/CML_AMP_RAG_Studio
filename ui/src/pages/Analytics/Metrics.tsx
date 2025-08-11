@@ -139,14 +139,18 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
             height={250}
             width={500}
             series={barchartData}
-            bottomAxis={{
-              label: "Feedback Category",
-            }}
+            xAxis={[
+              {
+                position: "bottom",
+                label: "Feedback Category",
+              },
+            ]}
             yAxis={[
               {
                 disableTicks: true,
                 scaleType: "band",
                 data: labels,
+                width: 90,
               },
             ]}
             layout={"horizontal"}
@@ -211,7 +215,7 @@ const Metrics = ({ metricFilter }: { metricFilter: MetricFilter }) => {
                   x: "timestamp",
                   y: "maxScore",
                 },
-                valueFormatter: (value) => value.y.toFixed(2).toString(),
+                valueFormatter: (value) => value?.y.toFixed(2).toString() ?? "",
               },
             ]}
             disableVoronoi={true}

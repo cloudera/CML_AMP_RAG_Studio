@@ -46,8 +46,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
 @Slf4j
@@ -82,8 +86,27 @@ public class RagFileController {
     return ragFileService.getRagDocuments(dataSourceId);
   }
 
-  @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{id}")
-  public void deleteRagFile(@PathVariable Long id, @PathVariable Long dataSourceId) {
-    ragFileService.deleteRagFile(id, dataSourceId);
+  @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{documentId}")
+  public void deleteRagFile(@PathVariable Long dataSourceId, @PathVariable String documentId) {
+    ragFileService.deleteRagFileByDocumentId(documentId, dataSourceId);
+  }
+
+  @GetMapping(value = "/dataSources/{dataSourceId}/files/{documentId}/download")
+  public ResponseEntity<StreamingResponseBody> downloadRagDocument(
+      @PathVariable Long dataSourceId, @PathVariable String documentId) {
+    var downloaded = ragFileService.downloadDocumentByDocumentId(dataSourceId, documentId);
+    String filename = downloaded.filename();
+
+    StreamingResponseBody body =
+        outputStream -> {
+          try (var in = downloaded.stream()) {
+            in.transferTo(outputStream);
+          }
+        };
+
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(body);
   }
 }

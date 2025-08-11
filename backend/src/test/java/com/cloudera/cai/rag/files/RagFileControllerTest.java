@@ -47,13 +47,20 @@ import com.cloudera.cai.rag.TestData;
 import com.cloudera.cai.rag.Types;
 import com.cloudera.cai.rag.Types.RagDocument;
 import com.cloudera.cai.rag.datasources.RagDataSourceRepository;
+import com.cloudera.cai.util.IdGenerator;
 import com.cloudera.cai.util.exceptions.BadRequest;
+import com.cloudera.cai.util.exceptions.NotFound;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 class RagFileControllerTest {
 
@@ -61,7 +68,7 @@ class RagFileControllerTest {
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
 
   @Test
-  void uploadFile() throws Exception {
+  void uploadFile() {
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     String fileName = "real-filename";
     String contentType = "text/plain";
@@ -87,7 +94,7 @@ class RagFileControllerTest {
   }
 
   @Test
-  void uploadFile_noBytes() throws Exception {
+  void uploadFile_noBytes() {
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     String fileName = "file";
     String contentType = "text/plain";
@@ -161,7 +168,100 @@ class RagFileControllerTest {
     var id = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
 
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
-    ragFileController.deleteRagFile(id, dataSourceId);
+    ragFileController.deleteRagFile(dataSourceId, documentId);
     assertThat(ragFileController.getRagDocuments(dataSourceId)).extracting("id").doesNotContain(id);
+  }
+
+  @Test
+  void download_success_streamsAttachment() throws Exception {
+    var dsRepo = RagDataSourceRepository.createNull();
+    var repo = RagFileRepository.createNull();
+    long dataSourceId = TestData.createTestDataSource(dsRepo);
+    String documentId = UUID.randomUUID().toString();
+    String originalFilename = "mydoc.pdf";
+    byte[] bytes = "hello world".getBytes();
+    String prefix = "prefix";
+    String s3Path = prefix + "/" + dataSourceId + "/" + documentId;
+
+    RagFileService ragFileService =
+        new RagFileService(
+            IdGenerator.createNull(documentId),
+            repo,
+            RagFileUploader.createNull(),
+            RagFileIndexReconciler.createNull(),
+            prefix,
+            dsRepo,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull(),
+            RagFileDownloader.createNull(Map.of(s3Path, bytes)));
+    RagFileController controller = new RagFileController(ragFileService);
+
+    // First upload to create metadata with known documentId
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    controller.uploadRagDocument(
+        new MockMultipartFile("file", originalFilename, "application/pdf", bytes),
+        dataSourceId,
+        request);
+
+    // Find the created document id by filename
+    String foundDocumentId =
+        repo.getRagDocuments(dataSourceId).stream()
+            .filter(d -> d.filename().equals(originalFilename))
+            .map(RagDocument::documentId)
+            .findFirst()
+            .orElseThrow();
+
+    ResponseEntity<StreamingResponseBody> response =
+        controller.downloadRagDocument(dataSourceId, foundDocumentId);
+    assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+    assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
+        .isEqualTo("attachment; filename=\"" + originalFilename + "\"");
+    StreamingResponseBody body = response.getBody();
+    assertThat(body).isNotNull();
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    body.writeTo(out);
+    assertThat(out.toByteArray()).isEqualTo(bytes);
+  }
+
+  @Test
+  void download_wrongDataSource_throwsNotFound() {
+    var dsRepo = RagDataSourceRepository.createNull();
+    var repo = RagFileRepository.createNull();
+    long dataSourceId = TestData.createTestDataSource(dsRepo);
+    String documentId = UUID.randomUUID().toString();
+    String prefix = "prefix";
+    String s3Path = prefix + "/" + dataSourceId + "/" + documentId;
+
+    RagFileService ragFileService =
+        new RagFileService(
+            IdGenerator.createNull(documentId),
+            repo,
+            RagFileUploader.createNull(),
+            RagFileIndexReconciler.createNull(),
+            prefix,
+            dsRepo,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull(),
+            RagFileDownloader.createNull(Map.of(s3Path, "x".getBytes())));
+    RagFileController controller = new RagFileController(ragFileService);
+
+    // Create the metadata
+    var request = new MockHttpServletRequest();
+    TestData.addUserToRequest(request);
+    controller.uploadRagDocument(
+        new MockMultipartFile("file", "f.txt", "text/plain", new byte[] {1, 2, 3}),
+        dataSourceId,
+        request);
+
+    String foundDocumentId =
+        repo.getRagDocuments(dataSourceId).stream()
+            .filter(d -> d.filename().equals("f.txt"))
+            .map(RagDocument::documentId)
+            .findFirst()
+            .orElseThrow();
+
+    assertThatThrownBy(() -> controller.downloadRagDocument(Long.MAX_VALUE, foundDocumentId))
+        .isInstanceOf(NotFound.class);
   }
 }

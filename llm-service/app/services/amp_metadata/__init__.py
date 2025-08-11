@@ -58,6 +58,7 @@ from app.services.models.providers import (
     AzureModelProvider,
     BedrockModelProvider,
 )
+from app.services.utils import timed_lru_cache
 
 
 class AwsConfig(BaseModel):
@@ -286,7 +287,9 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
     return ValidationResult(valid=valid_model_config_exists, message=message)
 
 
-def validate(environ: dict[str, str]) -> ConfigValidationResults:
+@timed_lru_cache(maxsize=1, seconds=6000)
+def validate(frozen_env: frozenset[tuple[str, str]]) -> ConfigValidationResults:
+    environ = {k: v for k, v in frozen_env}
     print("Validating environment variables...")
     storage_config = validate_storage_config(environ)
     model_config = validate_model_config(environ)
@@ -382,7 +385,7 @@ def build_configuration(
         opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
         opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
-    validate_config = validate(env)
+    validate_config = validate(frozenset(env.items()))
 
     model_provider = (
         TypeAdapter(ModelProviderType).validate_python(env.get("MODEL_PROVIDER"))

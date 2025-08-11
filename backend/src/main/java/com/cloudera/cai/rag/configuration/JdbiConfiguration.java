@@ -43,6 +43,7 @@ import com.cloudera.cai.util.db.JdbiUtils;
 import com.cloudera.cai.util.db.RdbConfig;
 import com.cloudera.cai.util.db.migration.Migrator;
 import java.sql.SQLException;
+import java.util.Optional;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.HandleCallback;
@@ -105,7 +106,11 @@ public class JdbiConfiguration {
             .build();
     if (rdbConfiguration.isPostgres()) {
       rdbConfiguration =
-          rdbConfiguration.toBuilder().rdbUsername("postgres").rdbDatabaseName(null).build();
+          rdbConfiguration.toBuilder()
+              .rdbUsername(
+                  Optional.ofNullable(System.getenv("POSTGRES_ADMIN_ROLE")).orElse("postgres"))
+              .rdbDatabaseName(null)
+              .build();
     }
     return DatabaseConfig.builder().RdbConfiguration(rdbConfiguration).build();
   }

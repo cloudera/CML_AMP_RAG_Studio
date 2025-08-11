@@ -38,8 +38,11 @@
 
 package com.cloudera.cai.rag.configuration;
 
+import com.cloudera.cai.rag.files.FileSystemRagFileDownloader;
 import com.cloudera.cai.rag.files.FileSystemRagFileUploader;
+import com.cloudera.cai.rag.files.RagFileDownloader;
 import com.cloudera.cai.rag.files.RagFileUploader;
+import com.cloudera.cai.rag.files.S3RagFileDownloader;
 import com.cloudera.cai.rag.files.S3RagFileUploader;
 import com.cloudera.cai.util.reconcilers.ReconcilerConfig;
 import com.cloudera.cai.util.s3.AmazonS3Client;
@@ -160,6 +163,15 @@ public class AppConfiguration {
     }
     AmazonS3Client s3Client = new AmazonS3Client(configuration);
     return new S3RagFileUploader(s3Client, configuration.getBucketName());
+  }
+
+  @Bean
+  public RagFileDownloader ragFileDownloader(S3Config configuration) {
+    if (configuration.getBucketName().isEmpty()) {
+      return new FileSystemRagFileDownloader();
+    }
+    AmazonS3Client s3Client = new AmazonS3Client(configuration);
+    return new S3RagFileDownloader(s3Client, configuration.getBucketName());
   }
 
   public static String getLlmServiceUrl() {
