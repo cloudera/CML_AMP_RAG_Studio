@@ -36,9 +36,10 @@
  * DATA.
  ******************************************************************************/
 
-import Icon from "@ant-design/icons";
+import Icon, { DownloadOutlined } from "@ant-design/icons";
 import {
   Alert,
+  Button,
   Card,
   Flex,
   Popover,
@@ -56,12 +57,31 @@ import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
 import "../tableMarkdown.css";
 import ChunkContainer from "pages/RagChatTab/ChatOutput/Sources/ChunkContainer.tsx";
+import { paths, ragPath } from "src/api/utils.ts";
+import { downloadFile } from "src/utils/downloadFile.ts";
 
 const CardTitle = ({ source }: { source: SourceNode }) => {
+  const handleDownloadFile = () => {
+    if (!source.dataSourceId) {
+      return;
+    }
+    const url = `${ragPath}/${paths.dataSources}/${source.dataSourceId.toString()}/${paths.files}/${source.doc_id}/download`;
+    void downloadFile(url, source.source_file_name);
+  };
+
   return (
-    <Flex justify="space-between">
+    <Flex justify="space-between" align="center" gap={8}>
+      {source.dataSourceId ? (
+        <Tooltip title="Download source file">
+          <Button
+            type="text"
+            icon={<DownloadOutlined />}
+            onClick={handleDownloadFile}
+          />
+        </Tooltip>
+      ) : null}
       <Tooltip title={source.source_file_name}>
-        <Typography.Paragraph ellipsis style={{ width: "100%" }}>
+        <Typography.Paragraph ellipsis style={{ width: "100%", margin: 0 }}>
           {source.source_file_name}
         </Typography.Paragraph>
       </Tooltip>
