@@ -204,12 +204,16 @@ public class RagFileService {
     return originalFilename;
   }
 
-  public void deleteRagFile(Long id, Long dataSourceId) {
-    var document = ragFileRepository.getRagDocumentById(id);
+  public void deleteRagFileByDocumentId(String documentId, Long dataSourceId) {
+    var document = ragFileRepository.findDocumentByDocumentId(documentId);
     if (!document.dataSourceId().equals(dataSourceId)) {
-      throw new NotFound("Document with id " + id + " not found for dataSourceId: " + dataSourceId);
+      throw new NotFound(
+          "Document with documentId "
+              + documentId
+              + " not found for dataSourceId: "
+              + dataSourceId);
     }
-    ragFileRepository.deleteById(id);
+    ragFileRepository.deleteById(document.id());
     ragFileDeleteReconciler.submit(document);
   }
 
@@ -223,6 +227,19 @@ public class RagFileService {
     var document = ragFileRepository.getRagDocumentById(id);
     if (!document.dataSourceId().equals(dataSourceId)) {
       throw new NotFound("Document with id " + id + " not found for dataSourceId: " + dataSourceId);
+    }
+    var inputStream = ragFileDownloader.openStream(document.s3Path());
+    return new DownloadedDocument(document.filename(), document.s3Path(), inputStream);
+  }
+
+  public DownloadedDocument downloadDocumentByDocumentId(Long dataSourceId, String documentId) {
+    var document = ragFileRepository.findDocumentByDocumentId(documentId);
+    if (!document.dataSourceId().equals(dataSourceId)) {
+      throw new NotFound(
+          "Document with documentId "
+              + documentId
+              + " not found for dataSourceId: "
+              + dataSourceId);
     }
     var inputStream = ragFileDownloader.openStream(document.s3Path());
     return new DownloadedDocument(document.filename(), document.s3Path(), inputStream);

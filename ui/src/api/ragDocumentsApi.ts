@@ -78,7 +78,7 @@ const createRagDocumentsMutation = async ({
   dataSourceId: string;
 }) => {
   const promises = files.map((file) =>
-    createRagDocumentMutation(file, dataSourceId),
+    createRagDocumentMutation(file, dataSourceId)
   );
 
   return Promise.allSettled(promises);
@@ -93,16 +93,16 @@ const createRagDocumentMutation = async (file: File, dataSourceId: string) => {
       method: "POST",
       body: formData,
       headers: commonHeaders,
-    },
+    }
   ).then((res) => {
     if (!res.ok) {
       if (res.status === 413) {
         throw new Error(
-          `File is too large. Maximum size is 100MB: ${file.name}`,
+          `File is too large. Maximum size is 100MB: ${file.name}`
         );
       }
       throw new Error(
-        `Failed to call API backend. status: ${res.status.toString()} : ${res.statusText}`,
+        `Failed to call API backend. status: ${res.status.toString()} : ${res.statusText}`
       );
     }
     return res.json() as Promise<RagDocumentMetadata[]>;
@@ -138,7 +138,7 @@ export interface RagDocumentResponseType {
 
 export const useGetRagDocuments = (
   dataSourceId?: string,
-  summarizationModel?: string,
+  summarizationModel?: string
 ) => {
   return useQuery({
     queryKey: [QueryKeys.getRagDocuments, { dataSourceId }],
@@ -158,7 +158,7 @@ export const useGetRagDocuments = (
         return false;
       }
       const nullTimestampDocuments = data.find(
-        (file: RagDocumentResponseType) => file.vectorUploadTimestamp === null,
+        (file: RagDocumentResponseType) => file.vectorUploadTimestamp === null
       );
 
       let nullSummaryCreation = null;
@@ -166,7 +166,7 @@ export const useGetRagDocuments = (
       if (summarizationModel && summarizationModel.length > 0) {
         nullSummaryCreation = data.find(
           (file: RagDocumentResponseType) =>
-            file.summaryCreationTimestamp === null,
+            file.summaryCreationTimestamp === null
         );
       }
 
@@ -176,10 +176,10 @@ export const useGetRagDocuments = (
 };
 
 const getRagDocuments = async (
-  dataSourceId: string,
+  dataSourceId: string
 ): Promise<RagDocumentResponseType[]> => {
   return getRequest(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`,
+    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}`
   );
 };
 
@@ -196,13 +196,13 @@ export const useDeleteDocumentMutation = ({
 };
 
 export const deleteDocumentMutation = async ({
-  id,
+  documentId,
   dataSourceId,
 }: {
-  id: number;
+  documentId: string;
   dataSourceId: string;
 }): Promise<void> => {
   await deleteRequest(
-    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}/${id.toString()}`,
+    `${ragPath}/${paths.dataSources}/${dataSourceId}/${paths.files}/${documentId}`
   );
 };

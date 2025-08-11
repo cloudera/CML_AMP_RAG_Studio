@@ -69,7 +69,7 @@ const columns = (
   dataSourceId: string,
   handleDeleteFile: (document: RagDocumentResponseType) => void,
   simpleColumns: boolean,
-  summarizationModel?: string,
+  summarizationModel?: string
 ): TableProps<RagDocumentResponseType>["columns"] => {
   let columns: ColumnsType<RagDocumentResponseType> = [
     {
@@ -154,7 +154,7 @@ const columns = (
       title: "Actions",
       render: (_, record) => {
         const handleDownloadFile = () => {
-          const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.id.toString()}/download`;
+          const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.documentId}/download`;
           void downloadFile(url, record.filename);
         };
 
@@ -224,7 +224,7 @@ const UploadedFilesTable = ({
     }
 
     deleteDocumentMutation.mutate({
-      id: selectedDocument.id,
+      documentId: selectedDocument.documentId,
       dataSourceId: selectedDocument.dataSourceId.toString(),
     });
   };
@@ -253,7 +253,7 @@ const UploadedFilesTable = ({
           dataSourceId,
           handleDeleteFileModal,
           simplifiedTable,
-          summarizationModel,
+          summarizationModel
         )}
       />
       <Modal

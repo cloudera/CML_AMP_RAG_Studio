@@ -86,15 +86,15 @@ public class RagFileController {
     return ragFileService.getRagDocuments(dataSourceId);
   }
 
-  @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{id}")
-  public void deleteRagFile(@PathVariable Long id, @PathVariable Long dataSourceId) {
-    ragFileService.deleteRagFile(id, dataSourceId);
+  @DeleteMapping(value = "/dataSources/{dataSourceId}/files/{documentId}")
+  public void deleteRagFile(@PathVariable Long dataSourceId, @PathVariable String documentId) {
+    ragFileService.deleteRagFileByDocumentId(documentId, dataSourceId);
   }
 
-  @GetMapping(value = "/dataSources/{dataSourceId}/files/{id}/download")
+  @GetMapping(value = "/dataSources/{dataSourceId}/files/{documentId}/download")
   public ResponseEntity<StreamingResponseBody> downloadRagDocument(
-      @PathVariable Long dataSourceId, @PathVariable Long id) {
-    var downloaded = ragFileService.downloadDocument(dataSourceId, id);
+      @PathVariable Long dataSourceId, @PathVariable String documentId) {
+    var downloaded = ragFileService.downloadDocumentByDocumentId(dataSourceId, documentId);
     String filename = downloaded.filename();
 
     StreamingResponseBody body =

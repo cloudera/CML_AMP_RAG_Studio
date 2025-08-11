@@ -101,7 +101,7 @@ class RagFileServiceTest {
     String documentId = UUID.randomUUID().toString();
     var id = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
     RagFileService ragFileService = createRagFileService();
-    ragFileService.deleteRagFile(id, dataSourceId);
+    ragFileService.deleteRagFileByDocumentId(documentId, dataSourceId);
     assertThat(ragFileService.getRagDocuments(dataSourceId)).extracting("id").doesNotContain(id);
   }
 
@@ -110,11 +110,12 @@ class RagFileServiceTest {
     RagFileRepository ragFileRepository = RagFileRepository.createNull();
     var dataSourceId = TestData.createTestDataSource(RagDataSourceRepository.createNull());
     String documentId = UUID.randomUUID().toString();
-    var id = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
+    TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
     RagFileService ragFileService = createRagFileService();
     Long nonExistentDataSourceId = Long.MAX_VALUE;
 
-    assertThatThrownBy(() -> ragFileService.deleteRagFile(id, nonExistentDataSourceId))
+    assertThatThrownBy(
+            () -> ragFileService.deleteRagFileByDocumentId(documentId, nonExistentDataSourceId))
         .isInstanceOf(NotFound.class);
   }
 

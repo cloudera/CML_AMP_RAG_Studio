@@ -68,7 +68,7 @@ class RagFileControllerTest {
   private final RagFileRepository ragFileRepository = RagFileRepository.createNull();
 
   @Test
-  void uploadFile() throws Exception {
+  void uploadFile() {
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     String fileName = "real-filename";
     String contentType = "text/plain";
@@ -94,7 +94,7 @@ class RagFileControllerTest {
   }
 
   @Test
-  void uploadFile_noBytes() throws Exception {
+  void uploadFile_noBytes() {
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
     String fileName = "file";
     String contentType = "text/plain";
@@ -168,7 +168,7 @@ class RagFileControllerTest {
     var id = TestData.createTestDocument(dataSourceId, documentId, ragFileRepository);
 
     RagFileController ragFileController = new RagFileController(RagFileService.createNull());
-    ragFileController.deleteRagFile(id, dataSourceId);
+    ragFileController.deleteRagFile(dataSourceId, documentId);
     assertThat(ragFileController.getRagDocuments(dataSourceId)).extracting("id").doesNotContain(id);
   }
 
@@ -205,15 +205,15 @@ class RagFileControllerTest {
         request);
 
     // Find the created document id by filename
-    Long id =
+    String foundDocumentId =
         repo.getRagDocuments(dataSourceId).stream()
             .filter(d -> d.filename().equals(originalFilename))
-            .map(RagDocument::id)
+            .map(RagDocument::documentId)
             .findFirst()
             .orElseThrow();
 
     ResponseEntity<StreamingResponseBody> response =
-        controller.downloadRagDocument(dataSourceId, id);
+        controller.downloadRagDocument(dataSourceId, foundDocumentId);
     assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
         .isEqualTo("attachment; filename=\"" + originalFilename + "\"");
@@ -254,14 +254,14 @@ class RagFileControllerTest {
         dataSourceId,
         request);
 
-    Long id =
+    String foundDocumentId =
         repo.getRagDocuments(dataSourceId).stream()
             .filter(d -> d.filename().equals("f.txt"))
-            .map(RagDocument::id)
+            .map(RagDocument::documentId)
             .findFirst()
             .orElseThrow();
 
-    assertThatThrownBy(() -> controller.downloadRagDocument(Long.MAX_VALUE, id))
+    assertThatThrownBy(() -> controller.downloadRagDocument(Long.MAX_VALUE, foundDocumentId))
         .isInstanceOf(NotFound.class);
   }
 }
