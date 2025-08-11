@@ -37,6 +37,7 @@
  ******************************************************************************/
 
 import { defineConfig } from "vite";
+import type { PluginOption, ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import tsConfigPathsPlugin from "vite-tsconfig-paths";
@@ -44,85 +45,90 @@ import svgr from "vite-plugin-svgr";
 import { resolve } from "path";
 import fs from "fs";
 import path from "path";
+import type { IncomingMessage, ServerResponse } from "http";
 
 // Custom plugin to serve cache directory
-function cacheStaticPlugin() {
+function cacheStaticPlugin(): PluginOption {
   return {
     name: "cache-static",
-    configureServer(server: any) {
+    configureServer(server: ViteDevServer) {
       const cacheDir = resolve(process.cwd(), "../cache");
       
-      server.middlewares.use("/cache", (req: any, res: any, next: any) => {
-        if (!req.url) {
-          return next();
-        }
-        
-        // Clean the URL - remove leading /cache and any query params
-        let fileName = req.url;
-        if (fileName.startsWith("/cache/")) {
-          fileName = fileName.substring(7); // Remove "/cache/"
-        } else if (fileName.startsWith("/")) {
-          fileName = fileName.substring(1); // Remove leading "/"
-        }
-        
-        // Remove query params
-        const queryIndex = fileName.indexOf('?');
-        if (queryIndex !== -1) {
-          fileName = fileName.substring(0, queryIndex);
-        }
-        
-        const filePath = path.join(cacheDir, fileName);
-        
-        // Security check - ensure the file is within cache directory
-        const normalizedCacheDir = path.resolve(cacheDir);
-        const normalizedFilePath = path.resolve(filePath);
-        if (!normalizedFilePath.startsWith(normalizedCacheDir)) {
-          res.statusCode = 403;
-          res.end("Forbidden");
-          return;
-        }
-        
-        // Check if file exists
-        if (!fs.existsSync(filePath)) {
-          res.statusCode = 404;
-          res.end("Not found");
-          return;
-        }
-        
-        const stats = fs.statSync(filePath);
-        if (!stats.isFile()) {
-          res.statusCode = 404;
-          res.end("Not found");
-          return;
-        }
-        
-        // Set appropriate headers
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET");
-        res.setHeader("Access-Control-Allow-Headers", "*");
-        
-        const ext = path.extname(filePath).toLowerCase();
-        const mimeTypes: Record<string, string> = {
-          ".png": "image/png",
-          ".jpg": "image/jpeg",
-          ".jpeg": "image/jpeg", 
-          ".gif": "image/gif",
-          ".svg": "image/svg+xml",
-          ".webp": "image/webp"
-        };
-        res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
-        res.setHeader("Content-Length", stats.size);
-        
-        // Stream the file
-        const stream = fs.createReadStream(filePath);
-        stream.pipe(res);
-        stream.on("error", () => {
-          if (!res.headersSent) {
-            res.statusCode = 500;
-            res.end("Server error");
+      server.middlewares.use(
+        "/cache",
+        (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => {
+          if (!req.url) {
+            next();
+            return;
           }
-        });
-      });
+        
+          // Clean the URL - remove leading /cache and any query params
+          let fileName = req.url;
+          if (fileName.startsWith("/cache/")) {
+            fileName = fileName.substring(7); // Remove "/cache/"
+          } else if (fileName.startsWith("/")) {
+            fileName = fileName.substring(1); // Remove leading "/"
+          }
+        
+          // Remove query params
+          const queryIndex = fileName.indexOf("?");
+          if (queryIndex !== -1) {
+            fileName = fileName.substring(0, queryIndex);
+          }
+        
+          const filePath = path.join(cacheDir, fileName);
+        
+          // Security check - ensure the file is within cache directory
+          const normalizedCacheDir = path.resolve(cacheDir);
+          const normalizedFilePath = path.resolve(filePath);
+          if (!normalizedFilePath.startsWith(normalizedCacheDir)) {
+            res.statusCode = 403;
+            res.end("Forbidden");
+            return;
+          }
+        
+          // Check if file exists
+          if (!fs.existsSync(filePath)) {
+            res.statusCode = 404;
+            res.end("Not found");
+            return;
+          }
+        
+          const stats = fs.statSync(filePath);
+          if (!stats.isFile()) {
+            res.statusCode = 404;
+            res.end("Not found");
+            return;
+          }
+        
+          // Set appropriate headers
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Access-Control-Allow-Methods", "GET");
+          res.setHeader("Access-Control-Allow-Headers", "*");
+        
+          const ext = path.extname(filePath).toLowerCase();
+          const mimeTypes: Record<string, string> = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+            ".svg": "image/svg+xml",
+            ".webp": "image/webp",
+          };
+          res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
+          res.setHeader("Content-Length", stats.size);
+        
+          // Stream the file
+          const stream = fs.createReadStream(filePath);
+          stream.pipe(res);
+          stream.on("error", () => {
+            if (!res.headersSent) {
+              res.statusCode = 500;
+              res.end("Server error");
+            }
+          });
+        }
+      );
     },
   };
 }
