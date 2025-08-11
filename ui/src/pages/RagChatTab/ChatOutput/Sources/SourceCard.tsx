@@ -92,11 +92,12 @@ const CardTitle = ({
           />
         </Tooltip>
       ) : null}
-      <Tooltip title={source.source_file_name}>
-        <Typography.Paragraph ellipsis style={{ width: "100%", margin: 0 }}>
-          {source.source_file_name}
-        </Typography.Paragraph>
-      </Tooltip>
+      <Typography.Paragraph
+        ellipsis={{ tooltip: true }}
+        style={{ width: "100%", margin: 0 }}
+      >
+        {source.source_file_name}
+      </Typography.Paragraph>
       <Typography.Text style={{ color: cdlGray600 }}>
         Score: {source.score.toFixed(2)}
       </Typography.Text>
