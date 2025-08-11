@@ -45,7 +45,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import Icon, { DeleteOutlined } from "@ant-design/icons";
+import Icon, { DeleteOutlined, DownloadOutlined } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
   useDeleteDocumentMutation,
@@ -57,18 +57,19 @@ import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
 import { useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "src/api/utils.ts";
+import { paths, QueryKeys, ragPath } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
 import { cdlWhite } from "src/cuix/variables.ts";
 import ReadyColumn from "pages/DataSources/ManageTab/ReadyColumn.tsx";
 import SummaryColumn from "pages/DataSources/ManageTab/SummaryColumn.tsx";
 import { ColumnsType } from "antd/es/table";
+import { downloadFile } from "src/utils/downloadFile.ts";
 
 const columns = (
   dataSourceId: string,
   handleDeleteFile: (document: RagDocumentResponseType) => void,
   simpleColumns: boolean,
-  summarizationModel?: string,
+  summarizationModel?: string
 ): TableProps<RagDocumentResponseType>["columns"] => {
   let columns: ColumnsType<RagDocumentResponseType> = [
     {
@@ -152,14 +153,26 @@ const columns = (
     {
       title: "Actions",
       render: (_, record) => {
+        const handleDownloadFile = () => {
+          const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.documentId}/download`;
+          void downloadFile(url, record.filename, { pageNumber: "2" });
+        };
+
         return (
-          <Button
-            type="text"
-            icon={<DeleteOutlined />}
-            onClick={() => {
-              handleDeleteFile(record);
-            }}
-          />
+          <Flex gap={8}>
+            <Button
+              type="text"
+              icon={<DownloadOutlined />}
+              onClick={handleDownloadFile}
+            />
+            <Button
+              type="text"
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                handleDeleteFile(record);
+              }}
+            />
+          </Flex>
         );
       },
     },
@@ -211,7 +224,7 @@ const UploadedFilesTable = ({
     }
 
     deleteDocumentMutation.mutate({
-      id: selectedDocument.id,
+      documentId: selectedDocument.documentId,
       dataSourceId: selectedDocument.dataSourceId.toString(),
     });
   };
@@ -240,7 +253,7 @@ const UploadedFilesTable = ({
           dataSourceId,
           handleDeleteFileModal,
           simplifiedTable,
-          summarizationModel,
+          summarizationModel
         )}
       />
       <Modal

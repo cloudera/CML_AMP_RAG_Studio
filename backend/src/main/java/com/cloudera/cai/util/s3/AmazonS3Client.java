@@ -155,7 +155,7 @@ public class AmazonS3Client {
   }
 
   public RefCountedS3Client getRefCountedClient() {
-    return new RefCountedS3Client(awsCredentials, s3Client, asyncClient, referenceCounter);
+    return new RefCountedS3Client(s3Client, asyncClient, referenceCounter);
   }
 
   private void initializeWithWebIdentity(Region awsRegion) {

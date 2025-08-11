@@ -1,6 +1,6 @@
-/*******************************************************************************
+/*
  * CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
- * (C) Cloudera, Inc. 2024
+ * (C) Cloudera, Inc. 2025
  * All rights reserved.
  *
  * Applicable Open Source License: Apache 2.0
@@ -20,7 +20,7 @@
  * with an authorized and properly licensed third party, you do not
  * have any rights to access nor to use this code.
  *
- * Absent a written agreement with Cloudera, Inc. (“Cloudera”) to the
+ * Absent a written agreement with Cloudera, Inc. ("Cloudera") to the
  * contrary, A) CLOUDERA PROVIDES THIS CODE TO YOU WITHOUT WARRANTIES OF ANY
  * KIND; (B) CLOUDERA DISCLAIMS ANY AND ALL EXPRESS AND IMPLIED
  * WARRANTIES WITH RESPECT TO THIS CODE, INCLUDING BUT NOT LIMITED TO
@@ -34,42 +34,53 @@
  * RELATED TO LOST REVENUE, LOST PROFITS, LOSS OF INCOME, LOSS OF
  * BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
  * DATA.
- ******************************************************************************/
+ */
 
-package com.cloudera.cai.util.s3;
+import messageQueue from "src/utils/messageQueue.ts";
 
-import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
+export const downloadFile = async (
+  url: string,
+  filename: string,
+  options?: { pageNumber?: string },
+) => {
+  const isPdf = filename.toLowerCase().endsWith(".pdf");
 
-@Slf4j
-public class RefCountedS3Client implements AutoCloseable {
-  private final S3Client s3Client;
-  private final S3AsyncClient asyncClient;
-  private final AtomicInteger referenceCounter;
-
-  RefCountedS3Client(S3Client client, S3AsyncClient asyncClient, AtomicInteger counter) {
-    this.s3Client = client;
-    this.asyncClient = asyncClient;
-    this.referenceCounter = counter;
-    this.referenceCounter.incrementAndGet();
-  }
-
-  public S3Client getClient() {
-    return s3Client;
-  }
-
-  @Override
-  public void close() {
-    if (referenceCounter.decrementAndGet() == 0) {
-      if (s3Client != null) {
-        log.debug("shutting client down");
-        s3Client.close();
+  if (isPdf && options?.pageNumber) {
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) {
+        if (res.status === 404) {
+          messageQueue.error(`File not found for file: ${filename}`);
+        } else {
+          messageQueue.error(`Failed to download file (${String(res.status)})`);
+        }
+        return;
       }
-      if (asyncClient != null) {
-        asyncClient.close();
-      }
+      const arrayBuffer = await res.arrayBuffer();
+      const pdfBlob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      window.open(
+        `${objectUrl}#page=${options.pageNumber}`,
+        "_blank",
+        "noopener",
+      );
+      // Note: do not revoke immediately to avoid breaking the viewer tab
+    } catch {
+      messageQueue.error("Failed to download file");
     }
+    return;
   }
-}
+
+  try {
+    const res = await fetch(url, { method: "HEAD" });
+    if (res.ok) {
+      window.location.href = url;
+    } else if (res.status === 404) {
+      messageQueue.error(`File not found for file: ${filename}`);
+    } else {
+      messageQueue.error(`Failed to download file (${String(res.status)})`);
+    }
+  } catch {
+    messageQueue.error("Failed to download file");
+  }
+};
