@@ -9,6 +9,7 @@ import java.io.InputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Slf4j
 public class S3RagFileDownloader implements RagFileDownloader {
@@ -25,32 +26,26 @@ public class S3RagFileDownloader implements RagFileDownloader {
   public InputStream openStream(String s3Path) throws NotFound {
     log.info("Downloading file from S3: {}", s3Path);
     GetObjectRequest request = GetObjectRequest.builder().bucket(bucketName).key(s3Path).build();
-    RefCountedS3Client ref = s3Client.getRefCountedClient();
+    RefCountedS3Client client = s3Client.getRefCountedClient();
     try {
-      InputStream inner = ref.getClient().getObject(request);
-      return new ClosingInputStream(inner, ref);
-    } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
+      InputStream inner = client.getClient().getObject(request);
+      return new ClosingInputStream(inner, client);
+    } catch (S3Exception e) {
       if (e.statusCode() == 404) {
-        try {
-          ref.close();
-        } catch (Exception ignore) {
-        }
+        client.close();
         throw new NotFound("no document found with storage path: " + s3Path);
       }
-      try {
-        ref.close();
-      } catch (Exception ignore) {
-      }
+      client.close();
       throw e;
     }
   }
 
   private static class ClosingInputStream extends FilterInputStream {
-    private final RefCountedS3Client ref;
+    private final RefCountedS3Client client;
 
-    protected ClosingInputStream(InputStream in, RefCountedS3Client ref) {
+    protected ClosingInputStream(InputStream in, RefCountedS3Client client) {
       super(in);
-      this.ref = ref;
+      this.client = client;
     }
 
     @Override
@@ -58,11 +53,7 @@ public class S3RagFileDownloader implements RagFileDownloader {
       try {
         super.close();
       } finally {
-        try {
-          ref.close();
-        } catch (Exception e) {
-          // ignore
-        }
+        client.close();
       }
     }
   }

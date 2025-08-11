@@ -314,15 +314,14 @@ class RagFileServiceTest {
   }
 
   @Test
-  void downloadDocument_success() throws Exception {
+  void downloadDocumentById_success() throws Exception {
     var repo = RagFileRepository.createNull();
     var dsRepo = RagDataSourceRepository.createNull();
     long dataSourceId = TestData.createTestDataSource(dsRepo);
-    String documentId = java.util.UUID.randomUUID().toString();
-    // Insert a document
+    String documentId = UUID.randomUUID().toString();
     Long id = TestData.createTestDocument(dataSourceId, documentId, repo);
-    // Build service with same repo and a downloader that returns bytes
-    byte[] content = "hello world".getBytes();
+
+    byte[] content = "hello by id".getBytes();
     RagFileService service =
         new RagFileService(
             IdGenerator.createNull(),
@@ -335,7 +334,7 @@ class RagFileServiceTest {
             RagFileSummaryReconciler.createNull(),
             RagFileDownloader.createNull(java.util.Map.of("doesn't matter", content)));
 
-    var downloaded = service.downloadDocument(dataSourceId, documentId);
+    var downloaded = service.downloadDocument(dataSourceId, id);
     assertThat(downloaded.filename()).isNotNull();
     try (var in = downloaded.stream()) {
       byte[] read = in.readAllBytes();
@@ -344,12 +343,12 @@ class RagFileServiceTest {
   }
 
   @Test
-  void downloadDocument_wrongDataSourceId() {
+  void downloadDocumentById_wrongDataSourceId() {
     var repo = RagFileRepository.createNull();
     var dsRepo = RagDataSourceRepository.createNull();
     long dataSourceId = TestData.createTestDataSource(dsRepo);
-    String documentId = java.util.UUID.randomUUID().toString();
-    TestData.createTestDocument(dataSourceId, documentId, repo);
+    String documentId = UUID.randomUUID().toString();
+    Long id = TestData.createTestDocument(dataSourceId, documentId, repo);
 
     RagFileService service =
         new RagFileService(
@@ -363,7 +362,30 @@ class RagFileServiceTest {
             RagFileSummaryReconciler.createNull(),
             RagFileDownloader.createNull());
 
-    assertThatThrownBy(() -> service.downloadDocument(Long.MAX_VALUE, documentId))
+    assertThatThrownBy(() -> service.downloadDocument(Long.MAX_VALUE, id))
+        .isInstanceOf(NotFound.class);
+  }
+
+  @Test
+  void downloadDocumentById_notFound() {
+    var repo = RagFileRepository.createNull();
+    var dsRepo = RagDataSourceRepository.createNull();
+    long dataSourceId = TestData.createTestDataSource(dsRepo);
+
+    RagFileService service =
+        new RagFileService(
+            IdGenerator.createNull(),
+            repo,
+            RagFileUploader.createNull(),
+            RagFileIndexReconciler.createNull(),
+            "prefix",
+            dsRepo,
+            RagFileDeleteReconciler.createNull(),
+            RagFileSummaryReconciler.createNull(),
+            RagFileDownloader.createNull());
+
+    // Using a negative id to ensure it's not present
+    assertThatThrownBy(() -> service.downloadDocument(dataSourceId, -9999L))
         .isInstanceOf(NotFound.class);
   }
 }

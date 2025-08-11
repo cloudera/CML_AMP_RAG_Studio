@@ -154,7 +154,7 @@ const columns = (
     {
       title: "Actions",
       render: (_, record) => {
-        const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.documentId}/download`;
+        const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.id.toString()}/download`;
         return (
           <Flex gap={8}>
             <Button type="text" icon={<DownloadOutlined />} href={url} />

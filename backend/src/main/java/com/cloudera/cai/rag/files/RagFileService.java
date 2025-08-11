@@ -219,11 +219,10 @@ public class RagFileService {
 
   public record DownloadedDocument(String filename, String s3Path, java.io.InputStream stream) {}
 
-  public DownloadedDocument downloadDocument(Long dataSourceId, String documentId) {
-    var document = ragFileRepository.findDocumentByDocumentId(documentId);
+  public DownloadedDocument downloadDocument(Long dataSourceId, Long id) {
+    var document = ragFileRepository.getRagDocumentById(id);
     if (!document.dataSourceId().equals(dataSourceId)) {
-      throw new NotFound(
-          "Document with id " + documentId + " not found for dataSourceId: " + dataSourceId);
+      throw new NotFound("Document with id " + id + " not found for dataSourceId: " + dataSourceId);
     }
     var inputStream = ragFileDownloader.openStream(document.s3Path());
     return new DownloadedDocument(document.filename(), document.s3Path(), inputStream);

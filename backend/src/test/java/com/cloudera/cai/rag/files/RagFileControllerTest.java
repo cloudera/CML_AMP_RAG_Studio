@@ -52,6 +52,7 @@ import com.cloudera.cai.util.exceptions.BadRequest;
 import com.cloudera.cai.util.exceptions.NotFound;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -192,7 +193,7 @@ class RagFileControllerTest {
             dsRepo,
             RagFileDeleteReconciler.createNull(),
             RagFileSummaryReconciler.createNull(),
-            RagFileDownloader.createNull(java.util.Map.of(s3Path, bytes)));
+            RagFileDownloader.createNull(Map.of(s3Path, bytes)));
     RagFileController controller = new RagFileController(ragFileService);
 
     // First upload to create metadata with known documentId
@@ -203,8 +204,16 @@ class RagFileControllerTest {
         dataSourceId,
         request);
 
+    // Find the created document id by filename
+    Long id =
+        repo.getRagDocuments(dataSourceId).stream()
+            .filter(d -> d.filename().equals(originalFilename))
+            .map(RagDocument::id)
+            .findFirst()
+            .orElseThrow();
+
     ResponseEntity<StreamingResponseBody> response =
-        controller.downloadRagDocument(dataSourceId, documentId);
+        controller.downloadRagDocument(dataSourceId, id);
     assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
         .isEqualTo("attachment; filename=\"" + originalFilename + "\"");
@@ -234,7 +243,7 @@ class RagFileControllerTest {
             dsRepo,
             RagFileDeleteReconciler.createNull(),
             RagFileSummaryReconciler.createNull(),
-            RagFileDownloader.createNull(java.util.Map.of(s3Path, "x".getBytes())));
+            RagFileDownloader.createNull(Map.of(s3Path, "x".getBytes())));
     RagFileController controller = new RagFileController(ragFileService);
 
     // Create the metadata
@@ -245,7 +254,14 @@ class RagFileControllerTest {
         dataSourceId,
         request);
 
-    assertThatThrownBy(() -> controller.downloadRagDocument(Long.MAX_VALUE, documentId))
+    Long id =
+        repo.getRagDocuments(dataSourceId).stream()
+            .filter(d -> d.filename().equals("f.txt"))
+            .map(RagDocument::id)
+            .findFirst()
+            .orElseThrow();
+
+    assertThatThrownBy(() -> controller.downloadRagDocument(Long.MAX_VALUE, id))
         .isInstanceOf(NotFound.class);
   }
 }
