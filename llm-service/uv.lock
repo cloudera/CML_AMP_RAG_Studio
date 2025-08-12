@@ -1,22 +1,16 @@
 version = 1
+revision = 1
 requires-python = ">=3.10, <3.13"
 resolution-markers = [
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system != 'Windows' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system == 'Windows' and sys_platform == 'linux'",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_version < '0'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.11.*' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'win32'",
 ]
 
 [manifest]
@@ -221,7 +215,7 @@ wheels = [
 
 [[package]]
 name = "anthropic"
-version = "0.57.1"
+version = "0.63.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -232,9 +226,9 @@ dependencies = [
     { name = "sniffio" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d7/75/6261a1a8d92aed47e27d2fcfb3a411af73b1435e6ae1186da02b760565d0/anthropic-0.57.1.tar.gz", hash = "sha256:7815dd92245a70d21f65f356f33fc80c5072eada87fb49437767ea2918b2c4b0", size = 423775 }
+sdist = { url = "https://files.pythonhosted.org/packages/80/6e/3bedbd1c932cce98495e007b6d8007a139cf46adc5c889d700ec75ddd7f3/anthropic-0.63.0.tar.gz", hash = "sha256:d75ecfff17a0b96d845be3cbd93e06a48ea95aaa27add586748772fa5b926994", size = 427391 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/cf/ca0ba77805aec6171629a8b665c7dc224dab374539c3d27005b5d8c100a0/anthropic-0.57.1-py3-none-any.whl", hash = "sha256:33afc1f395af207d07ff1bffc0a3d1caac53c371793792569c5d2f09283ea306", size = 292779 },
+    { url = "https://files.pythonhosted.org/packages/8c/a1/83bdb1a8be76fbb3ceedae9dfe1b515cff56dcfbbc388b53070a27ce341f/anthropic-0.63.0-py3-none-any.whl", hash = "sha256:d1849fe1635ae4277f45a0e4365979ed69e6264b73350ce8a99fee701d347745", size = 296637 },
 ]
 
 [package.optional-dependencies]
@@ -320,7 +314,7 @@ wheels = [
 
 [[package]]
 name = "banks"
-version = "2.1.3"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "deprecated" },
@@ -329,9 +323,9 @@ dependencies = [
     { name = "platformdirs" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/5f/08a0c087581726044536e198c011742ccb9ced6061575f1ed00c034e6443/banks-2.1.3.tar.gz", hash = "sha256:c0dd2cb0c5487274a513a552827e6a8ddbd0ab1a1b967f177e71a6e4748a3ed2", size = 177311 }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/f8/25ef24814f77f3fd7f0fd3bd1ef3749e38a9dbd23502fbb53034de49900c/banks-2.2.0.tar.gz", hash = "sha256:d1446280ce6e00301e3e952dd754fd8cee23ff277d29ed160994a84d0d7ffe62", size = 179052 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fe/27/a30c24a74cc4f3969f3e0d184da149fa6327620c7c72333ccc3a8e3e1095/banks-2.1.3-py3-none-any.whl", hash = "sha256:9e1217dc977e6dd1ce42c5ff48e9bcaf238d788c81b42deb6a555615ffcffbab", size = 28133 },
+    { url = "https://files.pythonhosted.org/packages/b4/d6/f9168956276934162ec8d48232f9920f2985ee45aa7602e3c6b4bc203613/banks-2.2.0-py3-none-any.whl", hash = "sha256:963cd5c85a587b122abde4f4064078def35c50c688c1b9d36f43c92503854e7d", size = 29244 },
 ]
 
 [[package]]
@@ -604,7 +598,7 @@ name = "click"
 version = "8.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202", size = 286342 }
 wheels = [
@@ -1514,7 +1508,7 @@ name = "gunicorn"
 version = "23.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "packaging", marker = "platform_system != 'Windows'" },
+    { name = "packaging", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031 }
 wheels = [
@@ -1988,19 +1982,19 @@ wheels = [
 
 [[package]]
 name = "llama-index-callbacks-opik"
-version = "1.1.0"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/b7/1e9cdd3a3876e24e7a69e719036df47013e49901ea65e64bc4fce5a0ea25/llama_index_callbacks_opik-1.1.0.tar.gz", hash = "sha256:e8f4c33f59a8303275dcfe34bf9d26444265f44e10163847c9ee047cb6655988", size = 2089 }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/59/9e3792bab7eb8386d9aecf1f7d5a62650e516499b76d81ab06690ce1759d/llama_index_callbacks_opik-1.2.0.tar.gz", hash = "sha256:0b400cc5e85bacdcadaf66568a898890cde24cd3e453ee0ee7e3fbe4a2f258f8", size = 3504 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/e0/2abcafd3ec4dff7ad859008c0603dd9ad2ba1778438cd57a35e2fbbf1eb1/llama_index_callbacks_opik-1.1.0-py3-none-any.whl", hash = "sha256:2de81eb8e912f94fcab99e0bbaa738e6a9314b308296eab8a04644a39bc5e036", size = 2478 },
+    { url = "https://files.pythonhosted.org/packages/7a/c8/30cf573cc7f33704695b66d76e48254b9af910a6f15d2a91818091d1a7aa/llama_index_callbacks_opik-1.2.0-py3-none-any.whl", hash = "sha256:b3db287561594e389d7686ff87dc867ba91c4b6717359ef619f0fc43b6b2b385", size = 3094 },
 ]
 
 [[package]]
 name = "llama-index-core"
-version = "0.12.49"
+version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -2019,6 +2013,7 @@ dependencies = [
     { name = "nltk" },
     { name = "numpy" },
     { name = "pillow" },
+    { name = "platformdirs" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "requests" },
@@ -2031,50 +2026,50 @@ dependencies = [
     { name = "typing-inspect" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/dc/bf8d777c099d6c6632cdf3964e1a5ce459255bac2619ff37423cbf5dc9f0/llama_index_core-0.12.49.tar.gz", hash = "sha256:5e97be929407dfdcd6250cf2e71612b3020dd2519c37e530c669761ab8ed5cbf", size = 9929640 }
+sdist = { url = "https://files.pythonhosted.org/packages/f2/cb/de7a800e61b2283a0751fd945142986f9763f80242d72df52295286d688c/llama_index_core-0.13.1.tar.gz", hash = "sha256:04a58cb26638e186ddb02a80970d503842f68abbeb8be5af6a387c51f7995eeb", size = 7230790 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6b/1b/e511f7145e60bdae05c37c86eeb1e7ad4f4d645e78bb8accd808a55cb829/llama_index_core-0.12.49-py3-none-any.whl", hash = "sha256:d4b5dd20d21afe49b4ccd94130a38c3f3b153d0a4e7b1acfddd6e27df58803ab", size = 10296299 },
+    { url = "https://files.pythonhosted.org/packages/c0/8b/57cfcc35c53225811ea65ff2afb369dad81bba99968b7b80ee1079df47a3/llama_index_core-0.13.1-py3-none-any.whl", hash = "sha256:fde6c8c8bcacf7244bdef4908288eced5e11f47e9741d545846c3d1692830510", size = 7573978 },
 ]
 
 [[package]]
 name = "llama-index-embeddings-azure-openai"
-version = "0.3.9"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "llama-index-embeddings-openai" },
     { name = "llama-index-llms-azure-openai" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/44/3d/94fbcfe51d079db569bc7db0509fd908454b6b66f9b67ee6b84f7281f178/llama_index_embeddings_azure_openai-0.3.9.tar.gz", hash = "sha256:f5e0d143b6ff9c0a5e4f3b62dfaa5c9382934a3ef13fdd71a42ebbf5639de195", size = 4777 }
+sdist = { url = "https://files.pythonhosted.org/packages/36/c8/9b0eb78531ec2b42ca06750e5b256b122c0449d9f4e4ce3be5f4b1601a3e/llama_index_embeddings_azure_openai-0.4.0.tar.gz", hash = "sha256:092e48e79e47d9c552792dc17fd527ec2ebdc657781ccadeb43cfcbc0b5d354a", size = 4785 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/5b/db01863a69f7e9302dd282e7db93e816abd44ebc935cef603cd2f7fb7655/llama_index_embeddings_azure_openai-0.3.9-py3-none-any.whl", hash = "sha256:264702281d871471dd4e5e644536257f144cbdd1bcf85aa32618454911896113", size = 4414 },
+    { url = "https://files.pythonhosted.org/packages/3a/e3/f030182f1c9268b1d59ae7d2e73e2782ab8a152ec1dd04ed1946532825b1/llama_index_embeddings_azure_openai-0.4.0-py3-none-any.whl", hash = "sha256:4a570fb4478493baf6eeb07f584880d7369728eaf6beff6e250ce46244e37cac", size = 4419 },
 ]
 
 [[package]]
 name = "llama-index-embeddings-bedrock"
-version = "0.5.2"
+version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aioboto3" },
     { name = "boto3" },
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/85/26bfba1bb33831973af2e6b321a60f03f779fe233a4abd9ff2d36f516d51/llama_index_embeddings_bedrock-0.5.2.tar.gz", hash = "sha256:a7441985a464fc60dff2bf527e5ee840878225c9ec9ce33a874a40c751466f8e", size = 6801 }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/0f/2b8a06719289717254c5835475341996b015298115d3dab42d1a1ea36868/llama_index_embeddings_bedrock-0.6.1.tar.gz", hash = "sha256:9efce880d1c48473d1eb21d17f4e766a1ae4d0f1b7e9995c91aa50cab8ee79f2", size = 6844 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/a9/8212a30bb37ab3dd6abc8da291fa76019ab6ad3e8b75ab228b49478e03ef/llama_index_embeddings_bedrock-0.5.2-py3-none-any.whl", hash = "sha256:531190208ac47a44c60cbe42e858b20f3211444ae9b16d236faa3dc9d7a855a8", size = 6464 },
+    { url = "https://files.pythonhosted.org/packages/83/87/80fe257184c47176537ce6957d888f18da36930ace0f9f92e57ca25c47a3/llama_index_embeddings_bedrock-0.6.1-py3-none-any.whl", hash = "sha256:cd3f003810e359f9101b1e4740fc4794bd0091753dee0ed45998881d1de8eeab", size = 6515 },
 ]
 
 [[package]]
 name = "llama-index-embeddings-openai"
-version = "0.3.1"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "openai" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/02/a2604ef3a167131fdd701888f45f16c8efa6d523d02efe8c4e640238f4ea/llama_index_embeddings_openai-0.3.1.tar.gz", hash = "sha256:1368aad3ce24cbaed23d5ad251343cef1eb7b4a06d6563d6606d59cb347fef20", size = 5492 }
+sdist = { url = "https://files.pythonhosted.org/packages/26/6a/80ed46993c6827786cdec4f6b553f3f4e5fc8741c31e8903c694833d24bf/llama_index_embeddings_openai-0.5.0.tar.gz", hash = "sha256:ac587839a111089ea8a6255f9214016d7a813b383bbbbf9207799be1100758eb", size = 7019 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/45/ca55b91c4ac1b6251d4099fa44121a6c012129822906cadcc27b8cfb33a4/llama_index_embeddings_openai-0.3.1-py3-none-any.whl", hash = "sha256:f15a3d13da9b6b21b8bd51d337197879a453d1605e625a1c6d45e741756c0290", size = 6177 },
+    { url = "https://files.pythonhosted.org/packages/01/21/65f13a385292d7d573dfde472da7daff5f779345d60c5c3e274142ec8ba2/llama_index_embeddings_openai-0.5.0-py3-none-any.whl", hash = "sha256:d817edb22e3ff475e8cd1833faf1147028986bc1d688f7894ef947558864b728", size = 7009 },
 ]
 
 [[package]]
@@ -2092,20 +2087,20 @@ wheels = [
 
 [[package]]
 name = "llama-index-llms-anthropic"
-version = "0.6.19"
+version = "0.8.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anthropic", extra = ["bedrock", "vertex"] },
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/e0/3bd9dc989c48dfd800f9053cd48d1b851da610c6599d1eadcf7558bc0391/llama_index_llms_anthropic-0.6.19.tar.gz", hash = "sha256:22b42588b40cfcbb5e9b2136f1a29c4343f23f47f7b24c4322b3d71d8ed4581f", size = 11930 }
+sdist = { url = "https://files.pythonhosted.org/packages/29/b8/794b5654dfd0c9f4b54303c2986641accae765a4f3679e657dbfb37653d9/llama_index_llms_anthropic-0.8.3.tar.gz", hash = "sha256:3e79a075699decd394633b20e8bb8dde3ffe078e49d642506168a74e41f6b754", size = 12731 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/35/033c57ee41aae76bc6e1e7d9220a40c6b93e5ab1b98b69242620e657f432/llama_index_llms_anthropic-0.6.19-py3-none-any.whl", hash = "sha256:f482e3461d6776a1811d815c578ef311589c15e79212d781f82e9e977e2d6994", size = 12161 },
+    { url = "https://files.pythonhosted.org/packages/70/06/513aa4e0a40b81b076fa4e6aa4453c16b9d1dc87fb2ddfd3c5735129e72d/llama_index_llms_anthropic-0.8.3-py3-none-any.whl", hash = "sha256:a0f643f2535916d62c1cef933990e3527258040fe093492d897e42db5c3f6619", size = 12914 },
 ]
 
 [[package]]
 name = "llama-index-llms-azure-openai"
-version = "0.3.4"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "azure-identity" },
@@ -2113,121 +2108,121 @@ dependencies = [
     { name = "llama-index-core" },
     { name = "llama-index-llms-openai" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/53/a3/963da6260d74189fdf89a694883101bd7932a9ac22c433a0e475d528258f/llama_index_llms_azure_openai-0.3.4.tar.gz", hash = "sha256:ca6019c7a1721be19ccbdb993bf36fa0d24c0a0eaa3378601c5d6f8e47ebf1d9", size = 7057 }
+sdist = { url = "https://files.pythonhosted.org/packages/25/3e/70c189502d1ee84dd73db66f3c4978dc5ce975e233954dc2724c9374d659/llama_index_llms_azure_openai-0.4.0.tar.gz", hash = "sha256:bba297fd7d0e85e9cf17ac03f7617ff9812719b6312e0f56ee4242ae11fa5d9b", size = 7054 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/40/ea622bf89b014d28c29200b12478cbf3d6331c231e6a62cc7c9424dd12ae/llama_index_llms_azure_openai-0.3.4-py3-none-any.whl", hash = "sha256:296a9dfd2d7ee2af9151e18f0df9801db376d4a7bfd5d260eda5ddf36adcbac2", size = 7258 },
+    { url = "https://files.pythonhosted.org/packages/5f/1a/3992ac83c237eba455411dbd5ab2ec65dbefa8670aecd8a3f809b30cbcbc/llama_index_llms_azure_openai-0.4.0-py3-none-any.whl", hash = "sha256:f7f69cad12d7e6da75a58f6ec49f719dee3f03d30bbafc7ec29b2bf9087b0d51", size = 7257 },
 ]
 
 [[package]]
 name = "llama-index-llms-bedrock"
-version = "0.3.8"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "llama-index-core" },
     { name = "llama-index-llms-anthropic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/b1/f7172ba0c6d808863ea545a2b99c7b4a51b8109caba9df67e44cd8971ca5/llama_index_llms_bedrock-0.3.8.tar.gz", hash = "sha256:8ca2914842a1d09079c35429b15dc50659d697ae84a15a89076a12f90505800e", size = 10771 }
+sdist = { url = "https://files.pythonhosted.org/packages/93/0a/1b50ab811f6f799e848af14df829e3dbc44b5b970e2cc0c53dbe2a574702/llama_index_llms_bedrock-0.4.1.tar.gz", hash = "sha256:d46115c8f498e56e86243b7309addc4fd03b0831fe5427377120cd6d33e4c716", size = 10911 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/2f/7fc5206467151f64764bae61abd0fbbb8392fe84def15b1467f7fb174d7b/llama_index_llms_bedrock-0.3.8-py3-none-any.whl", hash = "sha256:58b804a206146bd7228590a4ee92ce13806a21040d92cb61e3046f2ee64f66cd", size = 11516 },
+    { url = "https://files.pythonhosted.org/packages/40/9d/12c9b436cbb90e4a4bdba5893fc6f56e296ba4b24d488f5df35a6ecff6fc/llama_index_llms_bedrock-0.4.1-py3-none-any.whl", hash = "sha256:e5fdd3eff863300dd4bcdfb3ed0efdb91f17473c4589fc8410ddc6ae3308ae71", size = 11515 },
 ]
 
 [[package]]
 name = "llama-index-llms-bedrock-converse"
-version = "0.7.6"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aioboto3" },
     { name = "boto3" },
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/df/d6afb59199441efcf665b56a8cabe8b30bd6b229652e6f36bbdfb5a23836/llama_index_llms_bedrock_converse-0.7.6.tar.gz", hash = "sha256:b68edcb3d0b692ea60d7e68077e5a42767d0ac62d673ea47f4aa8d7b9d38a617", size = 14887 }
+sdist = { url = "https://files.pythonhosted.org/packages/c8/73/17939af209e5196c34fadf588636608b56d7f89a4724493d2da3a238dae9/llama_index_llms_bedrock_converse-0.8.1.tar.gz", hash = "sha256:3ace9dee9e33371ebc72082c50b0682099fe150e9dd75f7d954bf62f683d785f", size = 14913 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/b6/63b83f4fe32b9f28cca6451c48aa28e801610f153a42ffa5b6583574d2f9/llama_index_llms_bedrock_converse-0.7.6-py3-none-any.whl", hash = "sha256:bd1591b00ca55d8ad3ae14f1b1a563431d56c6259af4399cf550e969a58655d0", size = 15373 },
+    { url = "https://files.pythonhosted.org/packages/42/37/59ac3cfacbc7ae543a08581a95030339d2e88228caed4979f6125992d374/llama_index_llms_bedrock_converse-0.8.1-py3-none-any.whl", hash = "sha256:6c8089af191450c3df4489d97471603d0c5adbf9462934ee6a41286a69b92d30", size = 15403 },
 ]
 
 [[package]]
 name = "llama-index-llms-nvidia"
-version = "0.3.5"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "llama-index-llms-openai" },
     { name = "llama-index-llms-openai-like" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/22/f5/2414fa12545f99e3b184eb8c57b3d4efeb7c04798196b7ab27fdd6bce764/llama_index_llms_nvidia-0.3.5.tar.gz", hash = "sha256:b7b02a834f082022318e62c4fe998eec4434500bc7e1c07e38ea20a4288fb67d", size = 10384 }
+sdist = { url = "https://files.pythonhosted.org/packages/de/be/84ef0909a20269f8a013f153995e22e5032101333f82d5e4f410d7404eb0/llama_index_llms_nvidia-0.4.1.tar.gz", hash = "sha256:5f4bc752bda84678de973708e20797b779a543a5058c8ead2f6dd6dd27831105", size = 10502 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/07/e6dcb6842d53323ecb0fceb427d4b4278a48c0e736d1c40a66f314f74a20/llama_index_llms_nvidia-0.3.5-py3-none-any.whl", hash = "sha256:fb4f45d7e96243652a020ae68d1064d53664fc21f1e7d0111130b5ede08c5bca", size = 10260 },
+    { url = "https://files.pythonhosted.org/packages/24/cc/cd80fde62f8af686595a0a767620194e09673febeb9b37686addceaddefe/llama_index_llms_nvidia-0.4.1-py3-none-any.whl", hash = "sha256:2f6dc198768564cbb6bfe33a446be4721e10c70fb14734c595355d5a2c3a6805", size = 10309 },
 ]
 
 [[package]]
 name = "llama-index-llms-openai"
-version = "0.4.7"
+version = "0.5.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "openai" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d9/39/a7ce514fb500951e9edb713ed918a9ffe49f1a76fccfc531a4ec5c7fe15a/llama_index_llms_openai-0.4.7.tar.gz", hash = "sha256:564af8ab39fb3f3adfeae73a59c0dca46c099ab844a28e725eee0c551d4869f8", size = 24251 }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/ab/a56804fc80912fee86da5270d5c1dd1230daa8c499a10036633e2a72cfb5/llama_index_llms_openai-0.5.3.tar.gz", hash = "sha256:562143d85947e711c6fc7eb7ce0be632e4465f5ef64e5148d30a662edd86a15c", size = 24224 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/e9/391926dad180ced6bb37a62edddb8483fbecde411239bd5e726841bb77b4/llama_index_llms_openai-0.4.7-py3-none-any.whl", hash = "sha256:3b8d9d3c1bcadc2cff09724de70f074f43eafd5b7048a91247c9a41b7cd6216d", size = 25365 },
+    { url = "https://files.pythonhosted.org/packages/1d/ba/32519e1662aab21f640ff0e4acd62a47f62981fbc3368353277250375170/llama_index_llms_openai-0.5.3-py3-none-any.whl", hash = "sha256:8f3cd5d61c4ac68026074b9ea7bda1ea443679e5bbb2323e0eced3e24c9a9655", size = 25351 },
 ]
 
 [[package]]
 name = "llama-index-llms-openai-like"
-version = "0.4.0"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "llama-index-llms-openai" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/df/df/807ac6bb9470295769f950562f5f7252cb491166693ee877ff77d9022fbc/llama_index_llms_openai_like-0.4.0.tar.gz", hash = "sha256:15ae1c16b01ba0bfa822d53900f03e35c19ffe47b528958234bf1942a91f587c", size = 4898 }
+sdist = { url = "https://files.pythonhosted.org/packages/72/10/562c30b4f6b0fb6bc197b4a4111ee6efd273338bc67da45ff944534229b6/llama_index_llms_openai_like-0.5.0.tar.gz", hash = "sha256:9457bedeb63b6954e150fc67b42e446e3753a714aa903a0076252fb7c20dffee", size = 4896 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/41/e080871437ec507377126165318f2da6713a4d6dc2767f2444a8bd818791/llama_index_llms_openai_like-0.4.0-py3-none-any.whl", hash = "sha256:52a3cb5ce78049fde5c9926898b90e02bc04e3d23adbc991842e9ff574df9ea1", size = 4593 },
+    { url = "https://files.pythonhosted.org/packages/32/6d/9de82f1648f1056bfa6660d9ba3dd6883fbb28811fafd294df5509891191/llama_index_llms_openai_like-0.5.0-py3-none-any.whl", hash = "sha256:6bc4a749b70f659f9bb5ed4bd412a4089353eb58d28e8057db67b29d73436cc6", size = 4596 },
 ]
 
 [[package]]
 name = "llama-index-node-parser-docling"
-version = "0.3.2"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docling-core" },
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/20/db/16f07c8af509f57ce787a2d2800254a78d43cf0aad7c1bb6a514e6dc687b/llama_index_node_parser_docling-0.3.2.tar.gz", hash = "sha256:380fe944bce73cecd3ab30427af0e824829f89254392ee5cbfdc618165f2a27d", size = 4508 }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/cd/91d74e5f5e7cd3ffa38847f42bc853ec15015e714a8a83668f615b02c443/llama_index_node_parser_docling-0.4.0.tar.gz", hash = "sha256:dc3d97e6c2806b07891b9c39a9578210c82f28f65551d238fc6b12c01f737d0e", size = 4504 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/cb/274af0ce9105941290ec21ddb0ed84d4dd00f8c7d3042dd20663fb368599/llama_index_node_parser_docling-0.3.2-py3-none-any.whl", hash = "sha256:2079272a9bcb4db950457a4ce44a0c74949fc0d0815877794454d8854df86173", size = 4054 },
+    { url = "https://files.pythonhosted.org/packages/47/ce/de7fdb0a3028e72599b1c7e445023ccf7c246cf6699e1dd416cb9d96aeba/llama_index_node_parser_docling-0.4.0-py3-none-any.whl", hash = "sha256:a89db90010f2dfbe13aae91c8cb81e9832b2a722f22068cd21189b83fc4bc7a9", size = 4056 },
 ]
 
 [[package]]
 name = "llama-index-postprocessor-bedrock-rerank"
-version = "0.4.0"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e8/3e/b0c5f0dee023f803e84f98c4127aaa08e5ead041e7109ba5a6f9fa6714f7/llama_index_postprocessor_bedrock_rerank-0.4.0.tar.gz", hash = "sha256:f8fe455722eafba2abfaa90e704a2be59626d78ffd4e1825887ac6afe0818f35", size = 5561 }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/b8/db5d79b11a605a17644c3c8d7aedb605093792d9509629aba50bc12d26ea/llama_index_postprocessor_bedrock_rerank-0.5.0.tar.gz", hash = "sha256:947224feb817f9daf2578925c8f734ae60834034e3b494bfd74bc21a9a12fc4e", size = 5562 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/85/7c8570d691c9db77ead944e975fc10e2a4cc052c2cefcddfaab7d19e82aa/llama_index_postprocessor_bedrock_rerank-0.4.0-py3-none-any.whl", hash = "sha256:bf21aaba2e63ce4ef041adca7bf01d54a5b19227df6de14daec50659f22ee2d5", size = 5341 },
+    { url = "https://files.pythonhosted.org/packages/87/fb/ba1d34b39d548adae42e88aa53a7c2422be91dc4c9e1bfc75c09940676ba/llama_index_postprocessor_bedrock_rerank-0.5.0-py3-none-any.whl", hash = "sha256:8366dbf12b0998ad22785e2da0f1daedc0c038abf80d0cf7eaf321542dd1bffc", size = 5344 },
 ]
 
 [[package]]
 name = "llama-index-postprocessor-nvidia-rerank"
-version = "0.4.3"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/19/5ba8ea06d28e17c4a69c64518ebf69e95c83245406207f21a6eeed64428c/llama_index_postprocessor_nvidia_rerank-0.4.3.tar.gz", hash = "sha256:1490769bcc18f9e75f5ea5e617b7f54b34c0dc83d3cea1191995595f3a8e5cfc", size = 9884 }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/e0/17d648f5f6d5b76ec1997d50e6c550726ab037dcf76787cab01bc6b4c49a/llama_index_postprocessor_nvidia_rerank-0.5.0.tar.gz", hash = "sha256:596307160cd22929ff86b445c72b6e8d268a58afd74482bc77fddfb532194baf", size = 9090 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/6a/edbd7cc330433d74866f41ffaacf577dcc184b40781dece9c422a5d8cf31/llama_index_postprocessor_nvidia_rerank-0.4.3-py3-none-any.whl", hash = "sha256:db057109f5a1dd864e20ed12bde13c2c5f953e595d87c7072bd912307da1cac3", size = 9490 },
+    { url = "https://files.pythonhosted.org/packages/05/6d/1df08cf9a09c186c2e0ee65b0a6c44a15c3e9d1df42590df0a3e9ad47f5c/llama_index_postprocessor_nvidia_rerank-0.5.0-py3-none-any.whl", hash = "sha256:f59e1196ff53be469a18fdc3159a832c44076b915cf23e73937c0f353c8fa252", size = 9241 },
 ]
 
 [[package]]
 name = "llama-index-readers-docling"
-version = "0.3.3"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docling" },
@@ -2235,14 +2230,14 @@ dependencies = [
     { name = "llama-index-core" },
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/eb/04bda6376819207df2337723d1ef1ee6eeb73f8ad05b9f5f63cc339d52cf/llama_index_readers_docling-0.3.3.tar.gz", hash = "sha256:e61cf60d1beda2ebd7cee077f1c9835cd1154fa49660985c68e26302dc92d741", size = 4824 }
+sdist = { url = "https://files.pythonhosted.org/packages/47/ac/cfa4ed6417c5dd349039086ec2768aa0858b8fde11bc9acf16faba7124fb/llama_index_readers_docling-0.4.0.tar.gz", hash = "sha256:6fd531256961fca9df4c839c29ef63896083d55927a9e247da1423ac3366b0e8", size = 4817 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/e4/29e545e082a8268804c231933af909277360dbabcaf4ab30481a825d5225/llama_index_readers_docling-0.3.3-py3-none-any.whl", hash = "sha256:4e1341999ee7707d8e1d9d50e9ff8d558f4fa357dd96c177598369f845061d49", size = 4387 },
+    { url = "https://files.pythonhosted.org/packages/31/4c/8cf38d8e18929642395d6724857f7bef16d6a0857c2c7574234da08df2ff/llama_index_readers_docling-0.4.0-py3-none-any.whl", hash = "sha256:da25c8eb050e5c01c0b76474ebab0cb0e70ff7f8c7f3e14d02d399a2f324d15a", size = 4388 },
 ]
 
 [[package]]
 name = "llama-index-readers-file"
-version = "0.4.11"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -2252,36 +2247,36 @@ dependencies = [
     { name = "pypdf" },
     { name = "striprtf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/14/13/529412fcd1789607e060168ccac347bc7f012ed98c1e34614d4fb443fe39/llama_index_readers_file-0.4.11.tar.gz", hash = "sha256:1b21cb66d78dd5f60e8716607d9a47ccd81bb39106d459665be1ca7799e9597b", size = 22765 }
+sdist = { url = "https://files.pythonhosted.org/packages/09/c2/4198805b2b2a76e510f2b802acfa228b2420184c2d29ef456a33dfc698d3/llama_index_readers_file-0.5.0.tar.gz", hash = "sha256:f324617bfc4d9b32136d25ff5351b92bc0b569a296173ee2a8591c1f886eff0c", size = 22764 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/b3/4977330c49538b0252ca014c2ef10352ecc8f14c489ca6d95858bcb0cceb/llama_index_readers_file-0.4.11-py3-none-any.whl", hash = "sha256:e71192d8d6d0bf95131762da15fa205cf6e0cc248c90c76ee04d0fbfe160d464", size = 41046 },
+    { url = "https://files.pythonhosted.org/packages/d8/70/fe6928b87148f1111f4d65cc210e8dc88fe16c3eb6cd6def5b0f2ca40b26/llama_index_readers_file-0.5.0-py3-none-any.whl", hash = "sha256:7fc47a9dbf11d07e78992581c20bca82b21bf336e646b4f53263f3909cb02c58", size = 41036 },
 ]
 
 [[package]]
 name = "llama-index-storage-kvstore-s3"
-version = "0.3.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
     { name = "llama-index-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/cb/1b9fb92fccef755331298458b5f8d3b94da9845e802227b66596b45e803f/llama_index_storage_kvstore_s3-0.3.0.tar.gz", hash = "sha256:8747e2b274ace8969a806800a900a415fe707d0e2d5750fb8b571b67eb6b4dff", size = 2522 }
+sdist = { url = "https://files.pythonhosted.org/packages/72/98/47f6c64339e89fd73c8e83db78f69c56aba470a7a408b9037e5b3c639bee/llama_index_storage_kvstore_s3-0.4.0.tar.gz", hash = "sha256:56472d709a02496f38c1b865e0396d49b2813455bc33f848bc41a8195506101f", size = 4011 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/dc/b60d230f56b2c85df5c611a64582e02cf206a244e213a2f958f3fd5b707f/llama_index_storage_kvstore_s3-0.3.0-py3-none-any.whl", hash = "sha256:caf70e2f543a21b14a7a31f15c3103bfc9038e1409aa42b9ee0595fa2ca9027f", size = 2795 },
+    { url = "https://files.pythonhosted.org/packages/1c/6c/12dd21381d28a95fe5ab99b3fe0e97aa51f7116542d974d0ae2f8737c3cb/llama_index_storage_kvstore_s3-0.4.0-py3-none-any.whl", hash = "sha256:2d77a325d87e744fc07084797c6a8e26a2b51acb132980614fce9624131cf44b", size = 3616 },
 ]
 
 [[package]]
 name = "llama-index-tools-mcp"
-version = "0.2.6"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "mcp" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/72/68f50de7daac85cd507a13408d68d9585c0e7bfdbadf051f83b47a594e49/llama_index_tools_mcp-0.2.6.tar.gz", hash = "sha256:9905ee4f66c8ce2c2933af0c8e3237fe5972765fb0dfc54937d019e1250a02f9", size = 11293 }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/46/79c221aa66a49e3a9371855150bf341d441a2f87b234b5b44b4ce22f12ff/llama_index_tools_mcp-0.4.0.tar.gz", hash = "sha256:135c7d3ce076acf69dd9f578f70d37b2222d2d1164ad44fd51a2def9974222d3", size = 12660 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/0d/726888d807821c18c6721e4075e8e42b2fd2ad5b5fb8a87a8ad59927c8d7/llama_index_tools_mcp-0.2.6-py3-none-any.whl", hash = "sha256:ed927acfd5167c8454acfd427dad4f5a3b6c955a5033befed7fc89f15d7463da", size = 12119 },
+    { url = "https://files.pythonhosted.org/packages/42/c4/7ef21261cd61a65e0394d7d9bd8da59990e9948aa9314406c80a02a5ac3c/llama_index_tools_mcp-0.4.0-py3-none-any.whl", hash = "sha256:1312cccfc6bc35a10af5a184baa3b1242a94090782262909fe75f693260ad7db", size = 13812 },
 ]
 
 [[package]]
@@ -2298,29 +2293,29 @@ wheels = [
 
 [[package]]
 name = "llama-index-vector-stores-opensearch"
-version = "0.5.6"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "opensearch-py", extra = ["async"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/61/e2668ad1c078b363cb9c9cbc13a2706790884e23476a3472f5b5fcb293a9/llama_index_vector_stores_opensearch-0.5.6.tar.gz", hash = "sha256:c4ae2a9dbfb43ec6088194129987f787ff2f215d96e605da362927f99640d597", size = 10517 }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/2d/7c028206254f11019570436c107d784c744cc44c56ffb35475f902a50163/llama_index_vector_stores_opensearch-0.6.0.tar.gz", hash = "sha256:668d53bc76e5430ad3ed1d9afff5edc46e640a8930a3c009c8b09ca686f36007", size = 10516 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/72/012198833690e5593ad118d834d24b5ef543a734a0ac0d3e06c54eb7785d/llama_index_vector_stores_opensearch-0.5.6-py3-none-any.whl", hash = "sha256:daa88677067e9ade5e1177b8d6fadf017afd9cd1a6ad7690beaeeb122f049537", size = 10317 },
+    { url = "https://files.pythonhosted.org/packages/ac/40/31af221fa808cbf7aa134bbb34336a0dd1fb007469aa0c2e1196b347e68e/llama_index_vector_stores_opensearch-0.6.0-py3-none-any.whl", hash = "sha256:4aaf6e57c73d998334c68e15861fd13af44cab5bc59cd195806901c89b74f9b8", size = 10318 },
 ]
 
 [[package]]
 name = "llama-index-vector-stores-qdrant"
-version = "0.6.1"
+version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "grpcio" },
     { name = "llama-index-core" },
     { name = "qdrant-client" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/8b/a13fc3036adf202ba12020d384d76b3aac87a705b6279550ea3da7bd698b/llama_index_vector_stores_qdrant-0.6.1.tar.gz", hash = "sha256:d78850fcc0abc1fd6db9c569acf6e8da62d1b8159a1c8d12e75e6c6cd0774352", size = 13008 }
+sdist = { url = "https://files.pythonhosted.org/packages/88/84/441a41a34dea214c89e3cabc177f07615ba4b434d46a70ba810c8c3c5bcd/llama_index_vector_stores_qdrant-0.7.1.tar.gz", hash = "sha256:d51a561dc5aad270c4bbed72370cea9002e4b72d0038ec5b465f6bcdb67b1213", size = 13013 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e0/2c/2b98428ce1b29417223d70afe96ba42ad9f9487ff2634bfaf0b69806c9ee/llama_index_vector_stores_qdrant-0.6.1-py3-none-any.whl", hash = "sha256:f41fa4cfcefaa176c4e4d54b846e83a718e05a3985e4dc468bd5aec4ae7af7d2", size = 13200 },
+    { url = "https://files.pythonhosted.org/packages/44/b3/623615e44ff4c19ca593a620eef670cad9bed78fe6e4d364753415b71aa0/llama_index_vector_stores_qdrant-0.7.1-py3-none-any.whl", hash = "sha256:f48eeb9228f7dc7e4d41a55d76dcf6d93b8bfbea1c943c09140a09252018f577", size = 13204 },
 ]
 
 [[package]]
@@ -2378,7 +2373,7 @@ dependencies = [
     { name = "presidio-anonymizer" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "pysqlite3-binary", marker = "platform_machine != 'aarch64' and platform_system == 'Linux'" },
+    { name = "pysqlite3-binary", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'" },
     { name = "python-pptx" },
     { name = "qdrant-client" },
     { name = "torch" },
@@ -2417,7 +2412,7 @@ requires-dist = [
     { name = "llama-index-llms-bedrock", specifier = ">=0.3.4" },
     { name = "llama-index-llms-bedrock-converse", specifier = ">=0.7.6" },
     { name = "llama-index-llms-nvidia", specifier = ">=0.3.2" },
-    { name = "llama-index-llms-openai", specifier = ">=0.4.7" },
+    { name = "llama-index-llms-openai", specifier = ">=0.5.1" },
     { name = "llama-index-node-parser-docling", specifier = ">=0.3.2" },
     { name = "llama-index-postprocessor-bedrock-rerank", specifier = ">=0.3.1" },
     { name = "llama-index-postprocessor-nvidia-rerank", specifier = ">=0.4.0" },
@@ -2438,7 +2433,7 @@ requires-dist = [
     { name = "presidio-anonymizer", specifier = ">=2.2.355" },
     { name = "pydantic", specifier = ">=2.8.2" },
     { name = "pydantic-settings", specifier = ">=2.3.4" },
-    { name = "pysqlite3-binary", marker = "platform_machine != 'aarch64' and platform_system == 'Linux'", specifier = "==0.5.4" },
+    { name = "pysqlite3-binary", marker = "platform_machine != 'aarch64' and sys_platform == 'linux'", specifier = "==0.5.4" },
     { name = "python-pptx", specifier = ">=1.0.2" },
     { name = "qdrant-client", specifier = "<1.13.0" },
     { name = "torch", specifier = ">=2.5.1" },
@@ -2769,7 +2764,7 @@ dependencies = [
     { name = "docker" },
     { name = "flask" },
     { name = "graphene" },
-    { name = "gunicorn", marker = "platform_system != 'Windows'" },
+    { name = "gunicorn", marker = "sys_platform != 'win32'" },
     { name = "jinja2" },
     { name = "markdown" },
     { name = "matplotlib" },
@@ -2781,7 +2776,7 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "sqlalchemy" },
-    { name = "waitress", marker = "platform_system == 'Windows'" },
+    { name = "waitress", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/34/37/65f82b6bf19e9f5751d28a05346a1458b2bb775f9c6a5db21c1aa115ddfc/mlflow-2.22.1.tar.gz", hash = "sha256:b7d6cb294112115cb0031a554629a21647c38ba88d0fd7455e0ddead02b4bb28", size = 28377360 }
 wheels = [
@@ -2822,7 +2817,7 @@ version = "2.10.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pygments" },
-    { name = "pywin32", marker = "platform_system == 'Windows'" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "tqdm" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3a/93/80ac75c20ce54c785648b4ed363c88f148bf22637e10c9863db4fbe73e74/mpire-2.10.2.tar.gz", hash = "sha256:f66a321e93fadff34585a4bfa05e95bd946cf714b442f51c529038eb45773d97", size = 271270 }
@@ -3043,10 +3038,8 @@ name = "networkx"
 version = "3.4.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fd/1d/06475e1cd5264c0b870ea2cc6fdb3e37177c1e565c43f56ff17a10e3937f/networkx-3.4.2.tar.gz", hash = "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1", size = 2151368 }
 wheels = [
@@ -3058,18 +3051,12 @@ name = "networkx"
 version = "3.5"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system != 'Windows' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system == 'Windows' and sys_platform == 'linux'",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.11.*' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6c/4f/ccdb8ad3a38e583f214547fd2f7ff1fc160c43a75af88e6aec213404b96a/networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037", size = 2471065 }
 wheels = [
@@ -3186,7 +3173,6 @@ version = "12.6.4.1"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/af/eb/ff4b8c503fa1f1796679dce648854d58751982426e4e4b37d6fce49d259c/nvidia_cublas_cu12-12.6.4.1-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:08ed2686e9875d01b58e3cb379c6896df8e76c75e0d4a7f7dace3d7b6d9ef8eb", size = 393138322 },
-    { url = "https://files.pythonhosted.org/packages/97/0d/f1f0cadbf69d5b9ef2e4f744c9466cb0a850741d08350736dfdb4aa89569/nvidia_cublas_cu12-12.6.4.1-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:235f728d6e2a409eddf1df58d5b0921cf80cfa9e72b9f2775ccb7b4a87984668", size = 390794615 },
 ]
 
 [[package]]
@@ -3194,8 +3180,6 @@ name = "nvidia-cuda-cupti-cu12"
 version = "12.6.80"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/8b/2f6230cb715646c3a9425636e513227ce5c93c4d65823a734f4bb86d43c3/nvidia_cuda_cupti_cu12-12.6.80-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:166ee35a3ff1587f2490364f90eeeb8da06cd867bd5b701bf7f9a02b78bc63fc", size = 8236764 },
-    { url = "https://files.pythonhosted.org/packages/25/0f/acb326ac8fd26e13c799e0b4f3b2751543e1834f04d62e729485872198d4/nvidia_cuda_cupti_cu12-12.6.80-py3-none-manylinux2014_aarch64.whl", hash = "sha256:358b4a1d35370353d52e12f0a7d1769fc01ff74a191689d3870b2123156184c4", size = 8236756 },
     { url = "https://files.pythonhosted.org/packages/49/60/7b6497946d74bcf1de852a21824d63baad12cd417db4195fc1bfe59db953/nvidia_cuda_cupti_cu12-12.6.80-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:6768bad6cab4f19e8292125e5f1ac8aa7d1718704012a0e3272a6f61c4bce132", size = 8917980 },
     { url = "https://files.pythonhosted.org/packages/a5/24/120ee57b218d9952c379d1e026c4479c9ece9997a4fb46303611ee48f038/nvidia_cuda_cupti_cu12-12.6.80-py3-none-manylinux2014_x86_64.whl", hash = "sha256:a3eff6cdfcc6a4c35db968a06fcadb061cbc7d6dde548609a941ff8701b98b73", size = 8917972 },
 ]
@@ -3205,7 +3189,6 @@ name = "nvidia-cuda-nvrtc-cu12"
 version = "12.6.77"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/2f/72df534873235983cc0a5371c3661bebef7c4682760c275590b972c7b0f9/nvidia_cuda_nvrtc_cu12-12.6.77-py3-none-manylinux2014_aarch64.whl", hash = "sha256:5847f1d6e5b757f1d2b3991a01082a44aad6f10ab3c5c0213fa3e25bddc25a13", size = 23162955 },
     { url = "https://files.pythonhosted.org/packages/75/2e/46030320b5a80661e88039f59060d1790298b4718944a65a7f2aeda3d9e9/nvidia_cuda_nvrtc_cu12-12.6.77-py3-none-manylinux2014_x86_64.whl", hash = "sha256:35b0cc6ee3a9636d5409133e79273ce1f3fd087abb0532d2d2e8fff1fe9efc53", size = 23650380 },
 ]
 
@@ -3214,8 +3197,6 @@ name = "nvidia-cuda-runtime-cu12"
 version = "12.6.77"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/ea/590b2ac00d772a8abd1c387a92b46486d2679ca6622fd25c18ff76265663/nvidia_cuda_runtime_cu12-12.6.77-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:6116fad3e049e04791c0256a9778c16237837c08b27ed8c8401e2e45de8d60cd", size = 908052 },
-    { url = "https://files.pythonhosted.org/packages/b7/3d/159023799677126e20c8fd580cca09eeb28d5c5a624adc7f793b9aa8bbfa/nvidia_cuda_runtime_cu12-12.6.77-py3-none-manylinux2014_aarch64.whl", hash = "sha256:d461264ecb429c84c8879a7153499ddc7b19b5f8d84c204307491989a365588e", size = 908040 },
     { url = "https://files.pythonhosted.org/packages/e1/23/e717c5ac26d26cf39a27fbc076240fad2e3b817e5889d671b67f4f9f49c5/nvidia_cuda_runtime_cu12-12.6.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:ba3b56a4f896141e25e19ab287cd71e52a6a0f4b29d0d31609f60e3b4d5219b7", size = 897690 },
     { url = "https://files.pythonhosted.org/packages/f0/62/65c05e161eeddbafeca24dc461f47de550d9fa8a7e04eb213e32b55cfd99/nvidia_cuda_runtime_cu12-12.6.77-py3-none-manylinux2014_x86_64.whl", hash = "sha256:a84d15d5e1da416dd4774cb42edf5e954a3e60cc945698dc1d5be02321c44dc8", size = 897678 },
 ]
@@ -3225,10 +3206,9 @@ name = "nvidia-cudnn-cu12"
 version = "9.5.1.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
+    { name = "nvidia-cublas-cu12", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/93/a201a12d3ec1caa8c6ac34c1c2f9eeb696b886f0c36ff23c638b46603bd0/nvidia_cudnn_cu12-9.5.1.17-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:9fd4584468533c61873e5fda8ca41bac3a38bcb2d12350830c69b0a96a7e4def", size = 570523509 },
     { url = "https://files.pythonhosted.org/packages/2a/78/4535c9c7f859a64781e43c969a3a7e84c54634e319a996d43ef32ce46f83/nvidia_cudnn_cu12-9.5.1.17-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:30ac3869f6db17d170e0e556dd6cc5eee02647abc31ca856634d5a40f82c15b2", size = 570988386 },
 ]
 
@@ -3237,11 +3217,9 @@ name = "nvidia-cufft-cu12"
 version = "11.3.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/37/c50d2b2f2c07e146776389e3080f4faf70bcc4fa6e19d65bb54ca174ebc3/nvidia_cufft_cu12-11.3.0.4-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:d16079550df460376455cba121db6564089176d9bac9e4f360493ca4741b22a6", size = 200164144 },
-    { url = "https://files.pythonhosted.org/packages/ce/f5/188566814b7339e893f8d210d3a5332352b1409815908dad6a363dcceac1/nvidia_cufft_cu12-11.3.0.4-py3-none-manylinux2014_aarch64.whl", hash = "sha256:8510990de9f96c803a051822618d42bf6cb8f069ff3f48d93a8486efdacb48fb", size = 200164135 },
     { url = "https://files.pythonhosted.org/packages/8f/16/73727675941ab8e6ffd86ca3a4b7b47065edcca7a997920b831f8147c99d/nvidia_cufft_cu12-11.3.0.4-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:ccba62eb9cef5559abd5e0d54ceed2d9934030f51163df018532142a8ec533e5", size = 200221632 },
     { url = "https://files.pythonhosted.org/packages/60/de/99ec247a07ea40c969d904fc14f3a356b3e2a704121675b75c366b694ee1/nvidia_cufft_cu12-11.3.0.4-py3-none-manylinux2014_x86_64.whl", hash = "sha256:768160ac89f6f7b459bee747e8d175dbf53619cfe74b2a5636264163138013ca", size = 200221622 },
 ]
@@ -3252,7 +3230,6 @@ version = "1.11.1.6"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b2/66/cc9876340ac68ae71b15c743ddb13f8b30d5244af344ec8322b449e35426/nvidia_cufile_cu12-1.11.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:cc23469d1c7e52ce6c1d55253273d32c565dd22068647f3aa59b3c6b005bf159", size = 1142103 },
-    { url = "https://files.pythonhosted.org/packages/17/bf/cc834147263b929229ce4aadd62869f0b195e98569d4c28b23edc72b85d9/nvidia_cufile_cu12-1.11.1.6-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:8f57a0051dcf2543f6dc2b98a98cb2719c37d3cee1baba8965d57f3bbc90d4db", size = 1066155 },
 ]
 
 [[package]]
@@ -3260,10 +3237,8 @@ name = "nvidia-curand-cu12"
 version = "10.3.7.77"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/ac/36543605358a355632f1a6faa3e2d5dfb91eab1e4bc7d552040e0383c335/nvidia_curand_cu12-10.3.7.77-py3-none-manylinux2014_aarch64.whl", hash = "sha256:6e82df077060ea28e37f48a3ec442a8f47690c7499bff392a5938614b56c98d8", size = 56289881 },
     { url = "https://files.pythonhosted.org/packages/73/1b/44a01c4e70933637c93e6e1a8063d1e998b50213a6b65ac5a9169c47e98e/nvidia_curand_cu12-10.3.7.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:a42cd1344297f70b9e39a1e4f467a4e1c10f1da54ff7a85c12197f6c652c8bdf", size = 56279010 },
     { url = "https://files.pythonhosted.org/packages/4a/aa/2c7ff0b5ee02eaef890c0ce7d4f74bc30901871c5e45dee1ae6d0083cd80/nvidia_curand_cu12-10.3.7.77-py3-none-manylinux2014_x86_64.whl", hash = "sha256:99f1a32f1ac2bd134897fc7a203f779303261268a65762a623bf30cc9fe79117", size = 56279000 },
-    { url = "https://files.pythonhosted.org/packages/a6/02/5362a9396f23f7de1dd8a64369e87c85ffff8216fc8194ace0fa45ba27a5/nvidia_curand_cu12-10.3.7.77-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:7b2ed8e95595c3591d984ea3603dd66fe6ce6812b886d59049988a712ed06b6e", size = 56289882 },
 ]
 
 [[package]]
@@ -3271,15 +3246,13 @@ name = "nvidia-cusolver-cu12"
 version = "11.7.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu12", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
-    { name = "nvidia-cusparse-cu12", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
-    { name = "nvidia-nvjitlink-cu12", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
+    { name = "nvidia-cublas-cu12", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
+    { name = "nvidia-cusparse-cu12", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/17/dbe1aa865e4fdc7b6d4d0dd308fdd5aaab60f939abfc0ea1954eac4fb113/nvidia_cusolver_cu12-11.7.1.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:0ce237ef60acde1efc457335a2ddadfd7610b892d94efee7b776c64bb1cac9e0", size = 157833628 },
     { url = "https://files.pythonhosted.org/packages/f0/6e/c2cf12c9ff8b872e92b4a5740701e51ff17689c4d726fca91875b07f655d/nvidia_cusolver_cu12-11.7.1.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e9e49843a7707e42022babb9bcfa33c29857a93b88020c4e4434656a655b698c", size = 158229790 },
     { url = "https://files.pythonhosted.org/packages/9f/81/baba53585da791d043c10084cf9553e074548408e04ae884cfe9193bd484/nvidia_cusolver_cu12-11.7.1.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:6cf28f17f64107a0c4d7802be5ff5537b2130bfc112f25d5a30df227058ca0e6", size = 158229780 },
-    { url = "https://files.pythonhosted.org/packages/7c/5f/07d0ba3b7f19be5a5ec32a8679fc9384cfd9fc6c869825e93be9f28d6690/nvidia_cusolver_cu12-11.7.1.2-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:dbbe4fc38ec1289c7e5230e16248365e375c3673c9c8bac5796e2e20db07f56e", size = 157833630 },
 ]
 
 [[package]]
@@ -3287,11 +3260,9 @@ name = "nvidia-cusparse-cu12"
 version = "12.5.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink-cu12", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
+    { name = "nvidia-nvjitlink-cu12", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/eb/6681efd0aa7df96b4f8067b3ce7246833dd36830bb4cec8896182773db7d/nvidia_cusparse_cu12-12.5.4.2-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:d25b62fb18751758fe3c93a4a08eff08effedfe4edf1c6bb5afd0890fe88f887", size = 216451147 },
-    { url = "https://files.pythonhosted.org/packages/d3/56/3af21e43014eb40134dea004e8d0f1ef19d9596a39e4d497d5a7de01669f/nvidia_cusparse_cu12-12.5.4.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:7aa32fa5470cf754f72d1116c7cbc300b4e638d3ae5304cfa4a638a5b87161b1", size = 216451135 },
     { url = "https://files.pythonhosted.org/packages/06/1e/b8b7c2f4099a37b96af5c9bb158632ea9e5d9d27d7391d7eb8fc45236674/nvidia_cusparse_cu12-12.5.4.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:7556d9eca156e18184b94947ade0fba5bb47d69cec46bf8660fd2c71a4b48b73", size = 216561367 },
     { url = "https://files.pythonhosted.org/packages/43/ac/64c4316ba163e8217a99680c7605f779accffc6a4bcd0c778c12948d3707/nvidia_cusparse_cu12-12.5.4.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:23749a6571191a215cb74d1cdbff4a86e7b19f1200c071b3fcf844a5bea23a2f", size = 216561357 },
 ]
@@ -3301,7 +3272,6 @@ name = "nvidia-cusparselt-cu12"
 version = "0.6.3"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/da/4de092c61c6dea1fc9c936e69308a02531d122e12f1f649825934ad651b5/nvidia_cusparselt_cu12-0.6.3-py3-none-manylinux2014_aarch64.whl", hash = "sha256:8371549623ba601a06322af2133c4a44350575f5a3108fb75f3ef20b822ad5f1", size = 156402859 },
     { url = "https://files.pythonhosted.org/packages/3b/9a/72ef35b399b0e183bc2e8f6f558036922d453c4d8237dab26c666a04244b/nvidia_cusparselt_cu12-0.6.3-py3-none-manylinux2014_x86_64.whl", hash = "sha256:e5c8a26c36445dd2e6812f1177978a24e2d37cacce7e090f297a688d1ec44f46", size = 156785796 },
 ]
 
@@ -3310,7 +3280,6 @@ name = "nvidia-nccl-cu12"
 version = "2.26.2"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/5b/ca2f213f637305633814ae8c36b153220e40a07ea001966dcd87391f3acb/nvidia_nccl_cu12-2.26.2-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5c196e95e832ad30fbbb50381eb3cbd1fadd5675e587a548563993609af19522", size = 291671495 },
     { url = "https://files.pythonhosted.org/packages/67/ca/f42388aed0fddd64ade7493dbba36e1f534d4e6fdbdd355c6a90030ae028/nvidia_nccl_cu12-2.26.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:694cf3879a206553cc9d7dbda76b13efaf610fdb70a50cba303de1b0d1530ac6", size = 201319755 },
 ]
 
@@ -3320,7 +3289,6 @@ version = "12.6.85"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9d/d7/c5383e47c7e9bf1c99d5bd2a8c935af2b6d705ad831a7ec5c97db4d82f4f/nvidia_nvjitlink_cu12-12.6.85-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl", hash = "sha256:eedc36df9e88b682efe4309aa16b5b4e78c2407eac59e8c10a6a47535164369a", size = 19744971 },
-    { url = "https://files.pythonhosted.org/packages/31/db/dc71113d441f208cdfe7ae10d4983884e13f464a6252450693365e166dcf/nvidia_nvjitlink_cu12-12.6.85-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:cf4eaa7d4b6b543ffd69d6abfb11efdeb2db48270d94dfd3a452c24150829e41", size = 19270338 },
 ]
 
 [[package]]
@@ -3328,8 +3296,6 @@ name = "nvidia-nvtx-cu12"
 version = "12.6.77"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/93/80f8a520375af9d7ee44571a6544653a176e53c2b8ccce85b97b83c2491b/nvidia_nvtx_cu12-12.6.77-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:f44f8d86bb7d5629988d61c8d3ae61dddb2015dee142740536bc7481b022fe4b", size = 90549 },
-    { url = "https://files.pythonhosted.org/packages/2b/53/36e2fd6c7068997169b49ffc8c12d5af5e5ff209df6e1a2c4d373b3a638f/nvidia_nvtx_cu12-12.6.77-py3-none-manylinux2014_aarch64.whl", hash = "sha256:adcaabb9d436c9761fca2b13959a2d237c5f9fd406c8e4b723c695409ff88059", size = 90539 },
     { url = "https://files.pythonhosted.org/packages/56/9a/fff8376f8e3d084cd1530e1ef7b879bb7d6d265620c95c1b322725c694f4/nvidia_nvtx_cu12-12.6.77-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:b90bed3df379fa79afbd21be8e04a0314336b8ae16768b58f2d34cb1d04cd7d2", size = 89276 },
     { url = "https://files.pythonhosted.org/packages/9e/4e/0d0c945463719429b7bd21dece907ad0bde437a2ff12b9b12fee94722ab0/nvidia_nvtx_cu12-12.6.77-py3-none-manylinux2014_x86_64.whl", hash = "sha256:6574241a3ec5fdc9334353ab8c479fe75841dbe8f4532a8fc97ce63503330ba1", size = 89265 },
 ]
@@ -3609,7 +3575,7 @@ name = "portalocker"
 version = "2.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pywin32", marker = "platform_system == 'Windows'" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ed/d3/c6c64067759e87af98cc668c1cc75171347d0f1577fab7ca3749134e3cd4/portalocker-2.10.1.tar.gz", hash = "sha256:ef1bf844e878ab08aee7e40184156e1151f228f103aa5c6bd0724cc330960f8f", size = 40891 }
 wheels = [
@@ -4768,10 +4734,8 @@ name = "scipy"
 version = "1.15.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'win32'",
 ]
 dependencies = [
     { name = "numpy", marker = "python_full_version < '3.11'" },
@@ -4812,18 +4776,12 @@ name = "scipy"
 version = "1.16.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system != 'Windows' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system == 'Windows' and sys_platform == 'linux'",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.11.*' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
 ]
 dependencies = [
     { name = "numpy", marker = "python_full_version >= '3.11'" },
@@ -5258,10 +5216,8 @@ name = "tifffile"
 version = "2025.5.10"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version < '3.11' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version < '3.11' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version < '3.11' and sys_platform != 'win32'",
+    "python_full_version < '3.11' and sys_platform == 'win32'",
 ]
 dependencies = [
     { name = "numpy", marker = "python_full_version < '3.11'" },
@@ -5276,18 +5232,12 @@ name = "tifffile"
 version = "2025.6.11"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'darwin'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system != 'Windows' and sys_platform == 'linux'",
-    "python_full_version >= '3.12' and platform_machine == 'aarch64' and platform_system == 'Windows' and sys_platform == 'linux'",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'win32') or (python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and platform_system == 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system != 'Windows' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and platform_system == 'Windows' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "(python_full_version >= '3.12' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')",
+    "python_full_version == '3.11.*' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and sys_platform == 'win32'",
 ]
 dependencies = [
     { name = "numpy", marker = "python_full_version >= '3.11'" },
@@ -5406,23 +5356,23 @@ dependencies = [
     { name = "jinja2" },
     { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "nvidia-cublas-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cuda-cupti-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cuda-nvrtc-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cuda-runtime-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cufft-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cufile-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-curand-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cusolver-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cusparse-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-cusparselt-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-nccl-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-nvjitlink-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
-    { name = "nvidia-nvtx-cu12", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
+    { name = "nvidia-cublas-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cuda-cupti-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cuda-nvrtc-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cuda-runtime-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cufft-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cufile-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-curand-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusolver-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusparse-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-cusparselt-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-nccl-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-nvjitlink-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "nvidia-nvtx-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "setuptools", marker = "python_full_version >= '3.12'" },
     { name = "sympy" },
-    { name = "triton", marker = "platform_machine == 'x86_64' and platform_system == 'Linux'" },
+    { name = "triton", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "typing-extensions" },
 ]
 wheels = [
@@ -5469,7 +5419,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [
@@ -5502,7 +5452,7 @@ name = "triton"
 version = "3.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools", marker = "(python_full_version < '3.12' and platform_system != 'Windows') or (platform_machine != 'aarch64' and platform_system != 'Windows') or (platform_system != 'Windows' and sys_platform != 'linux')" },
+    { name = "setuptools", marker = "(python_full_version < '3.12' and sys_platform == 'darwin') or (python_full_version < '3.12' and sys_platform == 'linux') or (platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux' and sys_platform != 'win32')" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8d/a9/549e51e9b1b2c9b854fd761a1d23df0ba2fbc60bd0c13b489ffa518cfcb7/triton-3.3.1-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b74db445b1c562844d3cfad6e9679c72e93fdfb1a90a24052b03bb5c49d1242e", size = 155600257 },
