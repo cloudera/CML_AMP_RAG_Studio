@@ -50,7 +50,6 @@ from llama_index.tools.openai import (
 )
 from llama_index.tools.openai.image_generation.base import DEFAULT_SIZE
 
-from app.config import settings
 from app.services.query.agents.agent_tools.stable_diffusion_types import (
     StableDiffusionRequest,
     GenerationMode,
@@ -102,7 +101,7 @@ class ImageGeneratorToolSpec(abc.ABC, BaseToolSpec):
     @staticmethod
     def get_cache_dir() -> str:
         """Return the cache directory."""
-        return os.path.abspath(os.path.join(settings.rag_databases_dir, "..", "cache"))
+        return "./cache"
 
     @abc.abstractmethod
     def image_generation(self, *args: Any, **kwargs: Any) -> str:
@@ -177,7 +176,7 @@ class OpenAIImageGenerationToolSpec(
             download=True,
         )
         image_name = Path(image_path[0]).name
-        return f"/cache/{image_name}"
+        return f"/llm-service/cache/{image_name}"
 
 
 class BedrockStableDiffusionToolSpec(ImageGeneratorToolSpec):
@@ -344,4 +343,4 @@ def _get_image_from_bedrock(
             i += 1
     with open(image_path, "wb") as file:
         file.write(image_data)
-    return f"/cache/{image_name}.png"
+    return f"/llm-service/cache/{image_name}.png"
