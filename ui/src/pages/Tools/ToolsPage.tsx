@@ -115,7 +115,7 @@ const ToolsPage = () => {
   // Filter out image generation tools from regular tools
   const imageToolNames = imageTools.map((tool) => tool.name);
   const regularTools = tools.filter(
-    (tool) => !imageToolNames.includes(tool.name)
+    (tool) => !imageToolNames.includes(tool.name),
   );
 
   const handleTempImageToolSelectionChange = (e: RadioChangeEvent) => {
@@ -227,7 +227,7 @@ const ToolsPage = () => {
             onClick={() => {
               window.open(
                 "https://github.com/cloudera/CML_AMP_RAG_Studio/tree/main/tools",
-                "_blank"
+                "_blank",
               );
             }}
           >
@@ -334,16 +334,6 @@ const ToolsPage = () => {
                       </Typography.Text>
                       <Typography.Text type="secondary">
                         {imageTools[0].metadata.description}
-                      </Typography.Text>
-                      <Typography.Text
-                        type="secondary"
-                        style={{ fontSize: 12, fontStyle: "italic" }}
-                      >
-                        Status:{" "}
-                        {tempEnabled &&
-                        tempSelectedImageTool === imageTools[0].name
-                          ? "Selected - Will be available when image generation is enabled"
-                          : "Available but not selected"}
                       </Typography.Text>
                     </Flex>
                   </Card>
