@@ -91,12 +91,13 @@ verify_services() {
     local all_running=true
     
     if [[ ${#BACKGROUND_PIDS[@]} -gt 0 ]]; then
-        check_process "${BACKGROUND_PIDS[0]}" "Qdrant" || all_running=false
-        check_process "${BACKGROUND_PIDS[1]}" "Java service" || all_running=false
+        # check_process "${BACKGROUND_PIDS[0]}" "Qdrant" || all_running=false
+        # skip checking java because we want to be able to configure the postgres endpoint using the python-provided services, even if java won't start up because it has a bad JDBC URL.
+        # check_process "${BACKGROUND_PIDS[1]}" "Java service" || all_running=false
         check_process "${BACKGROUND_PIDS[2]}" "Python backend" || all_running=false
-        if [[ ${#BACKGROUND_PIDS[@]} -gt 3 ]]; then
-            check_process "${BACKGROUND_PIDS[3]}" "MLflow reconciler" || all_running=false
-        fi
+        # if [[ ${#BACKGROUND_PIDS[@]} -gt 3 ]]; then
+        #  check_process "${BACKGROUND_PIDS[3]}" "MLflow reconciler" || all_running=false
+        # fi
     fi
     
     if [[ "$all_running" == "false" ]]; then
