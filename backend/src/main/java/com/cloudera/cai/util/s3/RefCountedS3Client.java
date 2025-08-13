@@ -40,23 +40,16 @@ package com.cloudera.cai.util.s3;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Slf4j
 public class RefCountedS3Client implements AutoCloseable {
-  private final AwsCredentials credentials;
   private final S3Client s3Client;
   private final S3AsyncClient asyncClient;
   private final AtomicInteger referenceCounter;
 
-  RefCountedS3Client(
-      AwsCredentials credentials,
-      S3Client client,
-      S3AsyncClient asyncClient,
-      AtomicInteger counter) {
-    this.credentials = credentials;
+  RefCountedS3Client(S3Client client, S3AsyncClient asyncClient, AtomicInteger counter) {
     this.s3Client = client;
     this.asyncClient = asyncClient;
     this.referenceCounter = counter;
@@ -65,14 +58,6 @@ public class RefCountedS3Client implements AutoCloseable {
 
   public S3Client getClient() {
     return s3Client;
-  }
-
-  public S3AsyncClient getAsyncClient() {
-    return asyncClient;
-  }
-
-  public AwsCredentials getCredentials() {
-    return credentials;
   }
 
   @Override

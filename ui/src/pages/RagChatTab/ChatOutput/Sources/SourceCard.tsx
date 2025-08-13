@@ -36,9 +36,10 @@
  * DATA.
  ******************************************************************************/
 
-import Icon from "@ant-design/icons";
+import Icon, { DownloadOutlined, ExportOutlined } from "@ant-design/icons";
 import {
   Alert,
+  Button,
   Card,
   Flex,
   Popover,
@@ -56,15 +57,47 @@ import DocumentationIcon from "src/cuix/icons/DocumentationIcon";
 import { cdlGray600 } from "src/cuix/variables.ts";
 import "../tableMarkdown.css";
 import ChunkContainer from "pages/RagChatTab/ChatOutput/Sources/ChunkContainer.tsx";
+import { paths, ragPath } from "src/api/utils.ts";
+import { downloadFile } from "src/utils/downloadFile.ts";
 
-const CardTitle = ({ source }: { source: SourceNode }) => {
+const CardTitle = ({
+  source,
+  pageNumber,
+}: {
+  source: SourceNode;
+  pageNumber?: string;
+}) => {
+  const handleDownloadFile = () => {
+    if (!source.dataSourceId) {
+      return;
+    }
+    const url = `${ragPath}/${paths.dataSources}/${source.dataSourceId.toString()}/${paths.files}/${source.doc_id}/download`;
+    void downloadFile(url, source.source_file_name, {
+      pageNumber,
+    });
+  };
+
+  const isPdf = source.source_file_name.toLowerCase().endsWith(".pdf");
+
   return (
-    <Flex justify="space-between">
-      <Tooltip title={source.source_file_name}>
-        <Typography.Paragraph ellipsis style={{ width: "100%" }}>
-          {source.source_file_name}
-        </Typography.Paragraph>
-      </Tooltip>
+    <Flex justify="space-between" align="center" gap={8}>
+      {source.dataSourceId ? (
+        <Tooltip title="Download source file">
+          <Button
+            type="text"
+            icon={
+              isPdf && pageNumber ? <ExportOutlined /> : <DownloadOutlined />
+            }
+            onClick={handleDownloadFile}
+          />
+        </Tooltip>
+      ) : null}
+      <Typography.Paragraph
+        ellipsis={{ tooltip: true }}
+        style={{ width: "100%", margin: 0 }}
+      >
+        {source.source_file_name}
+      </Typography.Paragraph>
       <Typography.Text style={{ color: cdlGray600 }}>
         Score: {source.score.toFixed(2)}
       </Typography.Text>
@@ -143,7 +176,12 @@ export const SourceCard = ({
       onOpenChange={handleGetChunkContents}
       content={
         <Card
-          title={<CardTitle source={source} />}
+          title={
+            <CardTitle
+              source={source}
+              pageNumber={chunkContents.data?.metadata.page_number}
+            />
+          }
           variant="borderless"
           style={{
             width: 800,

@@ -59,6 +59,11 @@ class OpenAiModelProvider(ModelProvider):
     def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(
+                model_id="gpt-5",
+                name="OpenAI GPT-5",
+                tool_calling_supported=True,
+            ),
+            ModelResponse(
                 model_id="gpt-4o",
                 name="OpenAI GPT-4o",
                 tool_calling_supported=True,
