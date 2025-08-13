@@ -69,7 +69,7 @@ const columns = (
   dataSourceId: string,
   handleDeleteFile: (document: RagDocumentResponseType) => void,
   simpleColumns: boolean,
-  summarizationModel?: string
+  summarizationModel?: string,
 ): TableProps<RagDocumentResponseType>["columns"] => {
   let columns: ColumnsType<RagDocumentResponseType> = [
     {
@@ -155,7 +155,7 @@ const columns = (
       render: (_, record) => {
         const handleDownloadFile = () => {
           const url = `${ragPath}/${paths.dataSources}/${record.dataSourceId.toString()}/${paths.files}/${record.documentId}/download`;
-          void downloadFile(url, record.filename, { pageNumber: "2" });
+          void downloadFile(url, record.filename);
         };
 
         return (
@@ -253,7 +253,7 @@ const UploadedFilesTable = ({
           dataSourceId,
           handleDeleteFileModal,
           simplifiedTable,
-          summarizationModel
+          summarizationModel,
         )}
       />
       <Modal
