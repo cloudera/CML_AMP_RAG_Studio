@@ -38,9 +38,74 @@
 
 set -eox pipefail
 
+# Array to store background process PIDs
+declare -a BACKGROUND_PIDS=()
+
 cleanup() {
-    # kill all processes whose parent is this process
-    pkill -P $$
+    echo "Starting cleanup process..."
+    
+    # Kill specific background processes we started
+    for pid in "${BACKGROUND_PIDS[@]}"; do
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "Killing process $pid..."
+            kill -TERM "$pid" 2>/dev/null || true
+            # Give it a moment to terminate gracefully
+            sleep 2
+            # Force kill if still running
+            if kill -0 "$pid" 2>/dev/null; then
+                kill -KILL "$pid" 2>/dev/null || true
+            fi
+        fi
+    done
+    
+    # Kill any Java processes running our rag-api.jar
+    echo "Killing any remaining Java processes running rag-api.jar..."
+    pkill -f "rag-api.jar" 2>/dev/null || true
+    
+    # Kill any remaining child processes
+    echo "Killing remaining child processes..."
+    pkill -P $$ 2>/dev/null || true
+    
+    # Kill qdrant processes specifically
+    pkill -f "qdrant/qdrant" 2>/dev/null || true
+    
+    echo "Cleanup completed."
+}
+
+# Function to check if a process is still running
+check_process() {
+    local pid=$1
+    local name=$2
+    if kill -0 "$pid" 2>/dev/null; then
+        echo "✓ $name (PID: $pid) is running"
+        return 0
+    else
+        echo "✗ $name (PID: $pid) is not running"
+        return 1
+    fi
+}
+
+# Function to verify all services are running
+verify_services() {
+    echo "Verifying all services are running..."
+    local all_running=true
+    
+    if [[ ${#BACKGROUND_PIDS[@]} -gt 0 ]]; then
+        check_process "${BACKGROUND_PIDS[0]}" "Qdrant" || all_running=false
+        check_process "${BACKGROUND_PIDS[1]}" "Java service" || all_running=false
+        check_process "${BACKGROUND_PIDS[2]}" "Python backend" || all_running=false
+        if [[ ${#BACKGROUND_PIDS[@]} -gt 3 ]]; then
+            check_process "${BACKGROUND_PIDS[3]}" "MLflow reconciler" || all_running=false
+        fi
+    fi
+    
+    if [[ "$all_running" == "false" ]]; then
+        echo "⚠️  Some services are not running properly!"
+        return 1
+    else
+        echo "✓ All services are running properly"
+        return 0
+    fi
 }
 
 ## set the RELEASE_TAG env var from the file, if it exists
@@ -68,6 +133,9 @@ export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
 # start Qdrant vector DB
 qdrant/qdrant 2>&1 &
+QDRANT_PID=$!
+BACKGROUND_PIDS+=($QDRANT_PID)
+echo "Started Qdrant with PID: $QDRANT_PID"
 
 # start up the jarva
 # grab the most recent java installation and use it for java home
@@ -75,6 +143,9 @@ export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
 
 scripts/startup_java.sh 2>&1 &
+JAVA_PID=$!
+BACKGROUND_PIDS+=($JAVA_PID)
+echo "Started Java service with PID: $JAVA_PID"
 
 source scripts/load_nvm.sh > /dev/null
 
@@ -89,22 +160,55 @@ fi
 uv run fastapi run --host 127.0.0.1 --port 8081 2>&1 &
 
 PY_BACKGROUND_PID=$!
+BACKGROUND_PIDS+=($PY_BACKGROUND_PID)
+echo "Started Python backend with PID: $PY_BACKGROUND_PID"
 # wait for the python backend to be ready
+echo "Waiting for Python backend to be ready..."
+RETRY_COUNT=0
+MAX_RETRIES=30
 while ! curl --output /dev/null --silent --fail http://localhost:8081/amp; do
     if ! kill -0 "$PY_BACKGROUND_PID" 2>/dev/null; then
-        echo "Python backend process exited unexpectedly."
+        echo "❌ Python backend process (PID: $PY_BACKGROUND_PID) exited unexpectedly."
+        echo "This will trigger cleanup of all services..."
         exit 1
     fi
-    echo "Waiting for the Python backend to be ready..."
+    
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "❌ Python backend failed to start after $MAX_RETRIES attempts ($(($MAX_RETRIES * 4)) seconds)"
+        echo "This will trigger cleanup of all services..."
+        exit 1
+    fi
+    
+    echo "Waiting for the Python backend to be ready... (attempt $RETRY_COUNT/$MAX_RETRIES)"
     sleep 4
 done
+echo "✓ Python backend is ready and responding"
 
 # start mlflow reconciler
 uv run reconciler/mlflow_reconciler.py &
+MLFLOW_PID=$!
+BACKGROUND_PIDS+=($MLFLOW_PID)
+echo "Started MLflow reconciler with PID: $MLFLOW_PID"
 
 # start Node production server
 
 cd ..
 
 cd ui
+
+# Display all tracked background processes
+echo "All background processes being tracked:"
+for i in "${!BACKGROUND_PIDS[@]}"; do
+    echo "  Process $((i+1)): PID ${BACKGROUND_PIDS[i]}"
+done
+
+# Verify all services are running before starting Node server
+if ! verify_services; then
+    echo "❌ Service verification failed. Exiting..."
+    exit 1
+fi
+
+echo "Starting Node production server (foreground process)..."
+# If Node server fails, cleanup will be called due to set -e
 node express/dist/index.js
