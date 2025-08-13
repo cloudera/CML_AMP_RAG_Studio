@@ -36,7 +36,7 @@
 #  DATA.
 #
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -49,9 +49,6 @@ class Endpoint(BaseModel):
     name: str
     model_name: str
     url: str
-    created_by: str
-    api_standard: str
-    has_chat_template: bool
     task: str
 
 
@@ -59,24 +56,12 @@ class ListEndpointEntry(Endpoint):
     """Response from CAII /listEndpoints."""
 
     state: str
-    metric_format: str
 
 
 class DescribeEndpointEntry(Endpoint):
     """Response from CAII /describeEndpoint."""
 
-    observed_generation: int
     replica_count: int
-    description: str
-    created_at: str
-    resources: dict[str, str]
-    autoscaling: dict[str, Any]
-    relevant_revisions: dict[str, str]
-    traffic: dict[str, str]
-    metric_format: str
-    instance_type: str
-    optimization_profile: Optional[dict[str, Any]]
-    crn: str
 
 
 @dataclass
