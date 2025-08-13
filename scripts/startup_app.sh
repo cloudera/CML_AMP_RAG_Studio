@@ -60,14 +60,14 @@ cleanup() {
     
     # Kill any Java processes running our rag-api.jar
     echo "Killing any remaining Java processes running rag-api.jar..."
-    pkill -f "rag-api.jar" 2>/dev/null || true
+    pkill -ef "rag-api.jar" 2>/dev/null || true
     
     # Kill any remaining child processes
     echo "Killing remaining child processes..."
-    pkill -P $$ 2>/dev/null || true
+    pkill -eP $$ 2>/dev/null || true
     
     # Kill qdrant processes specifically
-    pkill -f "qdrant/qdrant" 2>/dev/null || true
+    pkill -ef "qdrant/qdrant" 2>/dev/null || true
     
     echo "Cleanup completed."
 }
@@ -165,7 +165,7 @@ echo "Started Python backend with PID: $PY_BACKGROUND_PID"
 # wait for the python backend to be ready
 echo "Waiting for Python backend to be ready..."
 RETRY_COUNT=0
-MAX_RETRIES=30
+MAX_RETRIES=3000
 while ! curl --output /dev/null --silent --fail http://localhost:8081/amp; do
     if ! kill -0 "$PY_BACKGROUND_PID" 2>/dev/null; then
         echo "❌ Python backend process (PID: $PY_BACKGROUND_PID) exited unexpectedly."

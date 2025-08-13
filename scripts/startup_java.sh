@@ -42,7 +42,6 @@ cleanup() {
     pkill -P $$
 }
 
-
 for sig in INT QUIT HUP TERM; do
   trap "
     cleanup
