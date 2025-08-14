@@ -51,7 +51,7 @@ from ...caii.caii import (
     get_llm as get_caii_llm_model,
     get_embedding_model as get_caii_embedding_model,
     get_reranking_model as get_caii_reranking_model,
-    describe_endpoint,
+    describe_endpoint, get_models_with_task,
 )
 from ...caii.types import ModelResponse
 from ...caii.utils import get_cml_version_from_sense_bootstrap
@@ -106,7 +106,7 @@ class CAIIModelProvider(ModelProvider):
             return super().is_enabled()
         cml_version = Version(version)
         if cml_version >= Version("2.0.50-b68"):
-            available_models = cls.list_llm_models()
+            available_models = get_models_with_task("TEXT_GENERATION")
             if available_models:
                 return True
 
