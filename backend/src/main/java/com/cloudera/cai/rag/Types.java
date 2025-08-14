@@ -107,6 +107,7 @@ public class Types {
       boolean enableHyde,
       boolean enableSummaryFilter,
       boolean enableToolCalling,
+      Boolean enableStreaming,
       List<String> selectedTools) {}
 
   @With

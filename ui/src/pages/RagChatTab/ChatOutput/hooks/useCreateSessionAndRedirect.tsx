@@ -10,12 +10,12 @@ import { getDefaultProjectQueryOptions } from "src/api/projectsApi.ts";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 const useCreateSessionAndRedirect = (
-  onSuccess?: (session: Session) => void,
+  onSuccess?: (session: Session) => void
 ) => {
   const navigate = useNavigate();
   const { projectId } = useParams({ strict: false });
   const { data: defaultProject } = useSuspenseQuery(
-    getDefaultProjectQueryOptions,
+    getDefaultProjectQueryOptions
   );
 
   const { data: embeddingModels } = useGetEmbeddingModels();
@@ -35,11 +35,11 @@ const useCreateSessionAndRedirect = (
   return (
     dataSourceIds: number[],
     question?: string,
-    inferenceModel?: string,
+    inferenceModel?: string
   ) => {
     if (models) {
       const supportsToolCalling = models.find(
-        (model) => model.model_id === inferenceModel,
+        (model) => model.model_id === inferenceModel
       )?.tool_calling_supported;
       const requestBody: CreateSessionRequest = {
         name: "",
@@ -50,6 +50,7 @@ const useCreateSessionAndRedirect = (
           enableHyde: false,
           enableSummaryFilter: true,
           enableToolCalling: supportsToolCalling ?? false,
+          enableStreaming: true,
           selectedTools: [],
         },
         embeddingModel: embeddingModels?.length

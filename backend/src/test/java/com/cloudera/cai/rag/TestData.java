@@ -83,7 +83,7 @@ public class TestData {
         null,
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false, true, true, List.of()));
+        new Types.QueryConfiguration(false, true, true, true, List.of()));
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
@@ -99,7 +99,7 @@ public class TestData {
         null,
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false, true, true, List.of()),
+        new Types.QueryConfiguration(false, true, true, true, List.of()),
         projectId);
   }
 

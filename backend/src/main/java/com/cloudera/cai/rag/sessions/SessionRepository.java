@@ -57,7 +57,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionRepository {
   public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
-      new Types.QueryConfiguration(false, true, false, List.of());
+      new Types.QueryConfiguration(false, true, false, true, List.of());
   private final DatabaseOperations databaseOperations;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -176,6 +176,9 @@ public class SessionRepository {
     }
     if (queryConfiguration.selectedTools() == null) {
       queryConfiguration = queryConfiguration.withSelectedTools(List.of());
+    }
+    if (queryConfiguration.enableStreaming() == null) {
+      queryConfiguration = queryConfiguration.withEnableStreaming(true);
     }
     return queryConfiguration;
   }

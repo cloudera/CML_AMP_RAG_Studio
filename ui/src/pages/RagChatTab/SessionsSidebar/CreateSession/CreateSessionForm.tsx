@@ -158,6 +158,29 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
           >
             <Switch />
           </Form.Item>
+          <Form.Item<CreateSessionRequest>
+            name={["queryConfiguration", "enableStreaming"]}
+            initialValue={true}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Enable Streaming"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    When enabled, responses are streamed in real-time as they
+                    are generated. When disabled, the complete response is
+                    delivered all at once after generation is finished.
+                    Streaming provides better user experience for longer
+                    responses.
+                  </Typography>
+                }
+              >
+                Enable Streaming
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
         </>
       ),
     },
@@ -170,7 +193,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
       onValuesChange={(
-        changedValues: Partial<Omit<CreateSessionRequest, "id">>,
+        changedValues: Partial<Omit<CreateSessionRequest, "id">>
       ) => {
         onInferenceModelChange(changedValues, form, llmModels);
       }}

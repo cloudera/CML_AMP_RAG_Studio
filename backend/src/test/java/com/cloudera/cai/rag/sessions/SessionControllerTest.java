@@ -146,7 +146,7 @@ class SessionControllerTest {
                 .withName(updatedName)
                 .withProjectId(updatedProjectId)
                 .withQueryConfiguration(
-                    new Types.QueryConfiguration(true, false, true, List.of("foo"))),
+                    new Types.QueryConfiguration(true, false, true, true, List.of("foo"))),
             request);
 
     assertThat(updatedSession.id()).isNotNull();
@@ -161,7 +161,7 @@ class SessionControllerTest {
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
     assertThat(updatedSession.queryConfiguration())
-        .isEqualTo(new Types.QueryConfiguration(true, false, true, List.of("foo")));
+        .isEqualTo(new Types.QueryConfiguration(true, false, true, true, List.of("foo")));
   }
 
   @Test

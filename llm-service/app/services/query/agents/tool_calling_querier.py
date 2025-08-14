@@ -74,6 +74,7 @@ from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
 from app.services.query.chat_events import ChatEvent
+from app.services.query.query_configuration import QueryConfiguration
 
 if os.environ.get("ENABLE_OPIK") == "True":
     opik.configure(
@@ -199,6 +200,7 @@ def stream_chat(
     chat_messages: list[ChatMessage],
     session: Session,
     data_source_summaries: dict[int, str],
+    configuration: QueryConfiguration,
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     if session.query_configuration and session.query_configuration.selected_tools:
@@ -221,7 +223,7 @@ def stream_chat(
         tools.insert(0, retrieval_tool)
 
     gen, source_nodes = _run_streamer(
-        chat_engine, chat_messages, enhanced_query, llm, tools
+        chat_engine, chat_messages, enhanced_query, llm, tools, configuration
     )
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
@@ -233,6 +235,7 @@ def _run_streamer(
     enhanced_query: str,
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
+    configuration: QueryConfiguration,
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent, enhanced_query = build_function_agent(enhanced_query, llm, tools)
@@ -251,11 +254,68 @@ def _run_streamer(
             return chat_gen.chat_stream, chat_gen.source_nodes
 
         # If no chat engine is provided, we can use the LLM directly
-        direct_chat_gen = llm.stream_chat(
-            messages=chat_messages
-            + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
-        )
-        return direct_chat_gen, source_nodes
+        if configuration.use_streaming:
+            direct_chat_gen = llm.stream_chat(
+                messages=chat_messages
+                + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+            )
+            return direct_chat_gen, source_nodes
+        else:
+            # Use non-streaming LLM for direct chat when streaming is disabled
+            def _fake_direct_stream() -> Generator[ChatResponse, None, None]:
+                response = llm.chat(
+                    messages=chat_messages
+                    + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+                )
+                yield response
+
+            print("fake direct stream")
+            return _fake_direct_stream(), source_nodes
+
+    # Handle tool calling with agent
+    if not configuration.use_streaming:
+        print("are we here")
+
+        # Use non-streaming agent execution when streaming is disabled
+        def _fake_agent_stream() -> Generator[ChatResponse, None, None]:
+            import asyncio as aio
+
+            loop = aio.new_event_loop()
+            aio.set_event_loop(loop)
+            try:
+                # Run the agent synchronously and get the final response
+                handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
+                final_response = loop.run_until_complete(handler)
+
+                # Extract source nodes from the final response if available
+                if hasattr(final_response, "source_nodes"):
+                    source_nodes.extend(final_response.source_nodes)
+
+                # Create a single ChatResponse with the complete result
+                response = ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.ASSISTANT,
+                        content=str(final_response),
+                    ),
+                    delta=None,
+                )
+                yield response
+            except Exception as e:
+                logger.exception("Failed to execute non-streaming agent")
+                error_response = ChatResponse(
+                    message=ChatMessage(
+                        role=MessageRole.ASSISTANT,
+                        content=f"Error: {str(e)}",
+                    ),
+                    delta=None,
+                )
+                yield error_response
+            finally:
+                if not loop.is_closed():
+                    loop.stop()
+                    loop.close()
+
+        return _fake_agent_stream(), source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)

@@ -74,15 +74,15 @@ import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 export const onInferenceModelChange = (
   changedValues: Partial<Omit<CreateSessionRequest, "id">>,
   form: FormInstance<Omit<CreateSessionRequest, "id">>,
-  llmModels?: Model[],
+  llmModels?: Model[]
 ) => {
   if (changedValues.inferenceModel) {
     const model = llmModels?.find(
-      (model) => model.model_id === changedValues.inferenceModel,
+      (model) => model.model_id === changedValues.inferenceModel
     );
     form.setFieldValue(
       ["queryConfiguration", "enableToolCalling"],
-      model?.tool_calling_supported ?? false,
+      model?.tool_calling_supported ?? false
     );
   }
 };
@@ -144,6 +144,7 @@ const ChatSettingsModal = ({
             enableToolCalling: values.queryConfiguration.enableToolCalling,
             enableHyde: values.queryConfiguration.enableHyde,
             enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+            enableStreaming: values.queryConfiguration.enableStreaming,
           },
         };
         updateSession.mutate(request);
@@ -234,6 +235,31 @@ const ChatSettingsModal = ({
           >
             <Switch />
           </Form.Item>
+          <Form.Item<CreateSessionRequest>
+            name={["queryConfiguration", "enableStreaming"]}
+            initialValue={
+              activeSession.queryConfiguration.enableStreaming ?? true
+            }
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Enable Streaming"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    When enabled, responses are streamed in real-time as they
+                    are generated. When disabled, the complete response is
+                    delivered all at once after generation is finished.
+                    Streaming provides better user experience for longer
+                    responses.
+                  </Typography>
+                }
+              >
+                Enable Streaming
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
         </>
       ),
     },
@@ -262,7 +288,7 @@ const ChatSettingsModal = ({
           form={form}
           clearOnDestroy={true}
           onValuesChange={(
-            changedValues: Partial<Omit<CreateSessionRequest, "id">>,
+            changedValues: Partial<Omit<CreateSessionRequest, "id">>
           ) => {
             onInferenceModelChange(changedValues, form, llmModels);
           }}

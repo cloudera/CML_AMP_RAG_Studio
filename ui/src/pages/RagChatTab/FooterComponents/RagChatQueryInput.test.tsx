@@ -211,6 +211,7 @@ const createMockContext = (
       enableHyde: false,
       enableSummaryFilter: false,
       enableToolCalling: false,
+      enableStreaming: true,
       selectedTools: [],
     },
     projectId: 1,

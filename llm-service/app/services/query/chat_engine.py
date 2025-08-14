@@ -40,9 +40,18 @@ from typing import Any, Optional, List, Tuple
 
 from llama_index.core import PromptTemplate
 from llama_index.core.base.base_retriever import BaseRetriever
-from llama_index.core.base.llms.types import ChatMessage
+from llama_index.core.base.llms.types import (
+    ChatMessage,
+    ChatResponse,
+    MessageRole,
+    ChatResponseGen,
+)
+from llama_index.core.base.response.schema import Response
 from llama_index.core.chat_engine import (
     CondensePlusContextChatEngine,
+)
+from llama_index.core.chat_engine.types import (
+    StreamingAgentChatResponse,
 )
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
@@ -174,6 +183,36 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self._configuration: QueryConfiguration = QueryConfiguration()
+
+    def stream_chat(
+        self, message: str, chat_history: Optional[List[ChatMessage]] = None
+    ) -> StreamingAgentChatResponse:
+        if self._configuration.use_streaming:
+            return super().stream_chat(message, chat_history)
+
+        synthesizer, context_source, context_nodes = self._run_c3(message, chat_history)
+
+        response = synthesizer.synthesize(message, context_nodes)
+
+        def wrapped_gen(res: Response) -> ChatResponseGen:
+            assistant_message = ChatMessage(
+                content=res.response, role=MessageRole.ASSISTANT
+            )
+            yield ChatResponse(
+                message=assistant_message,
+                delta="",
+            )
+
+            user_message = ChatMessage(content=message, role=MessageRole.USER)
+            self._memory.put(user_message)
+            self._memory.put(assistant_message)
+
+        return StreamingAgentChatResponse(
+            response=str(response),
+            chat_stream=wrapped_gen(response),
+            sources=[context_source],
+            source_nodes=context_nodes,
+        )
 
     def condense_question(
         self, chat_history: List[ChatMessage], latest_message: str
