@@ -333,7 +333,7 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 
 def get_models_with_task(task_type: str) -> List[Endpoint]:
-    endpoints: list[ListEndpointEntry] = list_endpoints()
+    endpoints: list[Endpoint] = list_endpoints()
     llm_endpoints = list(
         filter(
             lambda endpoint: endpoint.task and endpoint.task == task_type,
