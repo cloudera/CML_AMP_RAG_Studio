@@ -334,16 +334,10 @@ def get_caii_embedding_models() -> List[ModelResponse]:
 
 def get_models_with_task(task_type: str) -> List[Endpoint]:
     endpoints: list[ListEndpointEntry] = list_endpoints()
-    endpoint_details = list(
-        map(
-            lambda endpoint: describe_endpoint_entry(endpoint.name, endpoints),
-            endpoints,
-        )
-    )
     llm_endpoints = list(
         filter(
             lambda endpoint: endpoint.task and endpoint.task == task_type,
-            endpoint_details,
+            endpoints,
         )
     )
     return llm_endpoints
