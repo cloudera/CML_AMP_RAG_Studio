@@ -239,7 +239,7 @@ def _run_streamer(
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent, enhanced_query = build_function_agent(
-        enhanced_query, llm, tools, configuration.use_streaming
+        enhanced_query, llm, tools, configuration.use_streaming or True
     )
 
     source_nodes: list[NodeWithScore] = []
@@ -262,16 +262,15 @@ def _run_streamer(
                 + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
             )
             return direct_chat_gen, source_nodes
-        else:
-            # Use non-streaming LLM for direct chat when streaming is disabled
-            def _fake_direct_stream() -> Generator[ChatResponse, None, None]:
-                response = llm.chat(
-                    messages=chat_messages
-                    + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
-                )
-                yield response
+        # Use non-streaming LLM for direct chat when streaming is disabled
+        def _fake_direct_stream() -> Generator[ChatResponse, None, None]:
+            response = llm.chat(
+                messages=chat_messages
+                + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+            )
+            yield response
 
-            return _fake_direct_stream(), source_nodes
+        return _fake_direct_stream(), source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
