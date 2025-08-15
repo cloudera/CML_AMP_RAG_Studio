@@ -239,7 +239,9 @@ def _run_streamer(
     configuration: QueryConfiguration,
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
-    agent, enhanced_query = build_function_agent(enhanced_query, llm, tools)
+    agent, enhanced_query = build_function_agent(
+        enhanced_query, llm, tools, configuration.use_streaming
+    )
 
     source_nodes: list[NodeWithScore] = []
 
@@ -271,55 +273,6 @@ def _run_streamer(
                 yield response
 
             return _fake_direct_stream(), source_nodes
-
-    # Handle tool calling with agent
-    if not configuration.use_streaming:
-
-        # Use non-streaming agent execution when streaming is disabled
-        def _fake_agent_stream() -> Generator[ChatResponse, None, None]:
-            import asyncio as aio
-
-            loop = aio.new_event_loop()
-            aio.set_event_loop(loop)
-            try:
-                # Run the agent inside the running loop and await the handler
-                async def _execute_agent() -> WorkflowHandler:
-                    handler = agent.run(
-                        user_msg=enhanced_query, chat_history=chat_messages
-                    )
-                    return await handler
-
-                final_response = loop.run_until_complete(_execute_agent())
-
-                # Extract source nodes from the final response if available
-                if hasattr(final_response, "source_nodes"):
-                    source_nodes.extend(final_response.source_nodes)
-
-                # Create a single ChatResponse with the complete result
-                response = ChatResponse(
-                    message=ChatMessage(
-                        role=MessageRole.ASSISTANT,
-                        content=str(final_response),
-                    ),
-                    delta=None,
-                )
-                yield response
-            except Exception as e:
-                logger.exception("Failed to execute non-streaming agent")
-                error_response = ChatResponse(
-                    message=ChatMessage(
-                        role=MessageRole.ASSISTANT,
-                        content=f"Error: {str(e)}",
-                    ),
-                    delta=None,
-                )
-                yield error_response
-            finally:
-                if not loop.is_closed():
-                    loop.stop()
-                    loop.close()
-
-        return _fake_agent_stream(), source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
@@ -424,20 +377,28 @@ def _run_streamer(
                     logger.info("========================")
                 yield ChatResponse(
                     message=ChatMessage(
-                        role=MessageRole.TOOL,
-                        content=(
-                            event.response.content if event.response.content else ""
+                        role=(
+                            MessageRole.TOOL
+                            if configuration.use_streaming
+                            else MessageRole.ASSISTANT
                         ),
+                        content=event.response.content,
                     ),
-                    delta="",
+                    delta=(
+                        "" if configuration.use_streaming else event.response.content
+                    ),
                     raw=event.raw,
-                    additional_kwargs={
-                        "chat_event": ChatEvent(
-                            type="agent_response",
-                            name=event.current_agent_name,
-                            data=data,
-                        ),
-                    },
+                    additional_kwargs=(
+                        {
+                            "chat_event": ChatEvent(
+                                type="agent_response",
+                                name=event.current_agent_name,
+                                data=data,
+                            ),
+                        }
+                        if configuration.use_streaming
+                        else {}
+                    ),
                 )
             elif isinstance(event, AgentStream):
                 if len(event.tool_calls) > 0:
@@ -500,7 +461,10 @@ def _run_streamer(
 
 
 def build_function_agent(
-    enhanced_query: str, llm: FunctionCallingLLM, tools: list[BaseTool]
+    enhanced_query: str,
+    llm: FunctionCallingLLM,
+    tools: list[BaseTool],
+    stream_mode: bool,
 ) -> tuple[FunctionAgent, str]:
     formatted_prompt = DEFAULT_AGENT_PROMPT.format(
         date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
@@ -508,7 +472,11 @@ def build_function_agent(
     )
     callable_tools = cast(list[BaseTool | Callable[[], Any]], tools)
     if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
-        agent = FunctionAgent(tools=callable_tools, llm=llm)
+        agent = FunctionAgent(
+            tools=callable_tools,
+            llm=llm,
+            streaming=stream_mode,
+        )
         enhanced_query = (
             "ROLE DESCRIPTION =========================================\n"
             + formatted_prompt
@@ -524,7 +492,10 @@ def build_function_agent(
         ):
             llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
         agent = FunctionAgent(
-            tools=callable_tools, llm=llm, system_prompt=formatted_prompt
+            tools=callable_tools,
+            llm=llm,
+            system_prompt=formatted_prompt,
+            streaming=stream_mode,
         )
 
     return agent, enhanced_query
