@@ -63,10 +63,6 @@ class AzureModelProvider(ModelProvider):
                 model_id="gpt-4o-mini",
                 name="OpenAI GPT-4o-mini",
             ),
-            ModelResponse(
-                model_id="gpt-5-chat",
-                name="OpenAI GPT-5-chat",
-            ),
         ]
 
     @staticmethod
