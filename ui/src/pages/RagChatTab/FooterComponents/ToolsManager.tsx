@@ -113,8 +113,8 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
     } else {
       handleUpdateSession(
         activeSession.queryConfiguration.selectedTools.filter(
-          (tool) => tool !== title,
-        ),
+          (tool) => tool !== title
+        )
       );
     }
   };
@@ -158,7 +158,7 @@ const ToolsManagerContent = ({ activeSession }: { activeSession: Session }) => {
               avatar={
                 <Checkbox
                   checked={activeSession.queryConfiguration.selectedTools.includes(
-                    item.name,
+                    item.name
                   )}
                   onChange={(e: CheckboxChangeEvent) => {
                     handleCheck(item.name, e.target.checked);

@@ -158,6 +158,29 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
           >
             <Switch />
           </Form.Item>
+          <Form.Item<CreateSessionRequest>
+            name={["queryConfiguration", "disableStreaming"]}
+            initialValue={false}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Disable Streaming"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    When enabled, responses are streamed in real-time as they
+                    are generated. When disabled, the complete response is
+                    delivered all at once after generation is finished.
+                    Streaming provides better user experience for longer
+                    responses.
+                  </Typography>
+                }
+              >
+                Disable Streaming
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
         </>
       ),
     },

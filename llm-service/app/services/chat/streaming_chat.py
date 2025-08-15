@@ -83,6 +83,7 @@ def stream_chat(
         use_hyde=session.query_configuration.enable_hyde,
         use_summary_filter=session.query_configuration.enable_summary_filter,
         use_tool_calling=session.query_configuration.enable_tool_calling,
+        use_streaming=not session.query_configuration.disable_streaming,
     )
 
     response_id = str(uuid.uuid4())
@@ -188,14 +189,20 @@ def _stream_direct_llm_chat(
     user_name: Optional[str],
 ) -> Generator[ChatResponse, None, None]:
     record_direct_llm_mlflow_run(response_id, session, user_name)
-
-    chat_response = llm_completion.stream_completion(
-        session.id, query, session.inference_model
-    )
-    response: ChatResponse = ChatResponse(message=ChatMessage(content=query))
-    for response in chat_response:
+    response: ChatResponse
+    if session.query_configuration.disable_streaming:
+        # Use non-streaming completion when streaming is disabled
+        response = llm_completion.completion(session.id, query, session.inference_model)
         response.additional_kwargs["response_id"] = response_id
         yield response
+    else:
+        chat_response = llm_completion.stream_completion(
+            session.id, query, session.inference_model
+        )
+        response = ChatResponse(message=ChatMessage(content=query))
+        for response in chat_response:
+            response.additional_kwargs["response_id"] = response_id
+            yield response
 
     new_chat_message = RagStudioChatMessage(
         id=response_id,

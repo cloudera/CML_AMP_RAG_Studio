@@ -103,6 +103,7 @@ def streaming_query(
             chat_messages,
             session,
             data_source_summaries,
+            configuration,
         )
         return chat_response
     if not chat_engine:

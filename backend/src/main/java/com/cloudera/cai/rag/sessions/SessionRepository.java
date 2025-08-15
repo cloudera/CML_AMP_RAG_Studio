@@ -43,6 +43,7 @@ import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -57,9 +58,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionRepository {
   public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
-      new Types.QueryConfiguration(false, true, false, List.of());
+      Types.QueryConfiguration.builder()
+          .enableHyde(false)
+          .enableSummaryFilter(true)
+          .enableToolCalling(false)
+          .disableStreaming(true)
+          .selectedTools(List.of())
+          .build();
   private final DatabaseOperations databaseOperations;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   public SessionRepository(DatabaseOperations databaseOperations) {
     this.databaseOperations = databaseOperations;
@@ -176,6 +184,9 @@ public class SessionRepository {
     }
     if (queryConfiguration.selectedTools() == null) {
       queryConfiguration = queryConfiguration.withSelectedTools(List.of());
+    }
+    if (queryConfiguration.disableStreaming() == null) {
+      queryConfiguration = queryConfiguration.withDisableStreaming(false);
     }
     return queryConfiguration;
   }
