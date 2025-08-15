@@ -74,15 +74,15 @@ import { cdlOrange500, cdlWhite } from "src/cuix/variables.ts";
 export const onInferenceModelChange = (
   changedValues: Partial<Omit<CreateSessionRequest, "id">>,
   form: FormInstance<Omit<CreateSessionRequest, "id">>,
-  llmModels?: Model[]
+  llmModels?: Model[],
 ) => {
   if (changedValues.inferenceModel) {
     const model = llmModels?.find(
-      (model) => model.model_id === changedValues.inferenceModel
+      (model) => model.model_id === changedValues.inferenceModel,
     );
     form.setFieldValue(
       ["queryConfiguration", "enableToolCalling"],
-      model?.tool_calling_supported ?? false
+      model?.tool_calling_supported ?? false,
     );
   }
 };
@@ -237,9 +237,7 @@ const ChatSettingsModal = ({
           </Form.Item>
           <Form.Item<CreateSessionRequest>
             name={["queryConfiguration", "enableStreaming"]}
-            initialValue={
-              activeSession.queryConfiguration.enableStreaming ?? true
-            }
+            initialValue={activeSession.queryConfiguration.enableStreaming}
             valuePropName="checked"
             label={
               <Popover
@@ -288,7 +286,7 @@ const ChatSettingsModal = ({
           form={form}
           clearOnDestroy={true}
           onValuesChange={(
-            changedValues: Partial<Omit<CreateSessionRequest, "id">>
+            changedValues: Partial<Omit<CreateSessionRequest, "id">>,
           ) => {
             onInferenceModelChange(changedValues, form, llmModels);
           }}
