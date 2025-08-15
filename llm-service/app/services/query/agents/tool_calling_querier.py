@@ -283,9 +283,14 @@ def _run_streamer(
             loop = aio.new_event_loop()
             aio.set_event_loop(loop)
             try:
-                # Run the agent synchronously and get the final response
-                handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
-                final_response = loop.run_until_complete(handler)
+                # Run the agent inside the running loop and await the handler
+                async def _execute_agent():
+                    handler = agent.run(
+                        user_msg=enhanced_query, chat_history=chat_messages
+                    )
+                    return await handler
+
+                final_response = loop.run_until_complete(_execute_agent())
 
                 # Extract source nodes from the final response if available
                 if hasattr(final_response, "source_nodes"):
