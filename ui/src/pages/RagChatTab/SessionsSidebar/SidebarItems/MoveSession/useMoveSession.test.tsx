@@ -104,7 +104,7 @@ describe("useMoveSession", () => {
       enableHyde: false,
       enableSummaryFilter: false,
       enableToolCalling: false,
-      enableStreaming: true,
+      disableStreaming: true,
       selectedTools: [],
     },
   };
@@ -153,7 +153,7 @@ describe("useMoveSession", () => {
           projects: mockProjects,
           handleCancel: mockModalHook.handleCancel,
         }),
-      { wrapper }
+      { wrapper },
     );
 
     expect(result.current).toBeDefined();
@@ -169,13 +169,13 @@ describe("useMoveSession", () => {
           projects: mockProjects,
           handleCancel: mockModalHook.handleCancel,
         }),
-      { wrapper }
+      { wrapper },
     );
 
     result.current.mutate(mockSession);
 
     expect(messageQueue.success).toHaveBeenCalledWith(
-      `Session ${mockSession.name} moved to project ${mockProjects[0].name}`
+      `Session ${mockSession.name} moved to project ${mockProjects[0].name}`,
     );
     expect(mockModalHook.handleCancel).toHaveBeenCalled();
   });
@@ -189,7 +189,7 @@ describe("useMoveSession", () => {
           projects: mockProjects,
           handleCancel: mockModalHook.handleCancel,
         }),
-      { wrapper }
+      { wrapper },
     );
 
     result.current.mutate(mockSession);

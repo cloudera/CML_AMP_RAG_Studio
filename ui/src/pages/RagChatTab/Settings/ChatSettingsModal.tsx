@@ -144,7 +144,7 @@ const ChatSettingsModal = ({
             enableToolCalling: values.queryConfiguration.enableToolCalling,
             enableHyde: values.queryConfiguration.enableHyde,
             enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
-            enableStreaming: values.queryConfiguration.enableStreaming,
+            disableStreaming: values.queryConfiguration.disableStreaming,
           },
         };
         updateSession.mutate(request);
@@ -236,12 +236,12 @@ const ChatSettingsModal = ({
             <Switch />
           </Form.Item>
           <Form.Item<CreateSessionRequest>
-            name={["queryConfiguration", "enableStreaming"]}
-            initialValue={activeSession.queryConfiguration.enableStreaming}
+            name={["queryConfiguration", "disableStreaming"]}
+            initialValue={activeSession.queryConfiguration.disableStreaming}
             valuePropName="checked"
             label={
               <Popover
-                title="Enable Streaming"
+                title="Disable Streaming"
                 content={
                   <Typography style={{ width: 300 }}>
                     When enabled, responses are streamed in real-time as they
@@ -252,7 +252,7 @@ const ChatSettingsModal = ({
                   </Typography>
                 }
               >
-                Enable Streaming
+                Disable Streaming
               </Popover>
             }
           >

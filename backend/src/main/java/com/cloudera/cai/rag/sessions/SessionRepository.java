@@ -43,6 +43,7 @@ import com.cloudera.cai.rag.configuration.DatabaseOperations;
 import com.cloudera.cai.rag.configuration.JdbiConfiguration;
 import com.cloudera.cai.util.exceptions.NotFound;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -59,7 +60,8 @@ public class SessionRepository {
   public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
       new Types.QueryConfiguration(false, true, false, true, List.of());
   private final DatabaseOperations databaseOperations;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   public SessionRepository(DatabaseOperations databaseOperations) {
     this.databaseOperations = databaseOperations;
@@ -177,8 +179,8 @@ public class SessionRepository {
     if (queryConfiguration.selectedTools() == null) {
       queryConfiguration = queryConfiguration.withSelectedTools(List.of());
     }
-    if (queryConfiguration.enableStreaming() == null) {
-      queryConfiguration = queryConfiguration.withEnableStreaming(true);
+    if (queryConfiguration.disableStreaming() == null) {
+      queryConfiguration = queryConfiguration.withDisableStreaming(false);
     }
     return queryConfiguration;
   }

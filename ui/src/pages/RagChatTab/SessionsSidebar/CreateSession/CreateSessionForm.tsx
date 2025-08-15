@@ -159,12 +159,12 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
             <Switch />
           </Form.Item>
           <Form.Item<CreateSessionRequest>
-            name={["queryConfiguration", "enableStreaming"]}
-            initialValue={true}
+            name={["queryConfiguration", "disableStreaming"]}
+            initialValue={false}
             valuePropName="checked"
             label={
               <Popover
-                title="Enable Streaming"
+                title="Disable Streaming"
                 content={
                   <Typography style={{ width: 300 }}>
                     When enabled, responses are streamed in real-time as they
@@ -175,7 +175,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
                   </Typography>
                 }
               >
-                Enable Streaming
+                Disable Streaming
               </Popover>
             }
           >
@@ -193,7 +193,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
       onValuesChange={(
-        changedValues: Partial<Omit<CreateSessionRequest, "id">>
+        changedValues: Partial<Omit<CreateSessionRequest, "id">>,
       ) => {
         onInferenceModelChange(changedValues, form, llmModels);
       }}

@@ -59,7 +59,7 @@ export interface SessionQueryConfiguration {
   enableHyde: boolean;
   enableSummaryFilter: boolean;
   enableToolCalling: boolean;
-  enableStreaming: boolean;
+  disableStreaming: boolean;
   selectedTools: string[];
 }
 
@@ -145,7 +145,7 @@ export const useCreateSessionMutation = ({
 };
 
 export const createSessionMutation = async (
-  request: CreateSessionRequest
+  request: CreateSessionRequest,
 ): Promise<Session> => {
   return await postRequest(`${ragPath}/${paths.sessions}`, request);
 };
@@ -175,11 +175,11 @@ export const useUpdateSessionMutation = ({
 };
 
 const updateSessionMutation = async (
-  request: UpdateSessionRequest
+  request: UpdateSessionRequest,
 ): Promise<Session> => {
   return await postRequest(
     `${ragPath}/${paths.sessions}/${request.id.toString()}`,
-    request
+    request,
   );
 };
 
@@ -210,7 +210,7 @@ export const useRenameNameMutation = ({
 const renameSessionMutation = async (sessionId: string): Promise<string> => {
   return await postRequest(
     `${llmServicePath}/sessions/${sessionId}/rename-session`,
-    {}
+    {},
   );
 };
 
@@ -231,7 +231,7 @@ export const useDeleteSessionMutation = ({
 };
 
 export const deleteSessionMutation = async (
-  sessionId: string
+  sessionId: string,
 ): Promise<void> => {
   await deleteRequest(`${ragPath}/${paths.sessions}/${sessionId}`);
 };
@@ -249,9 +249,9 @@ export const useDeleteChatHistoryMutation = ({
 };
 
 export const deleteChatHistoryMutation = async (
-  sessionId: string
+  sessionId: string,
 ): Promise<void> => {
   await deleteRequest(
-    `${llmServicePath}/${paths.sessions}/${sessionId}/chat-history`
+    `${llmServicePath}/${paths.sessions}/${sessionId}/chat-history`,
   );
 };

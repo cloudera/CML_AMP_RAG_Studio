@@ -126,7 +126,7 @@ vi.mock(
         </div>
       );
     },
-  })
+  }),
 );
 
 vi.mock("pages/RagChatTab/FooterComponents/ToolsManager.tsx", () => ({
@@ -195,7 +195,7 @@ afterEach(() => {
 });
 
 const createMockContext = (
-  overrides: Partial<RagChatContextType> = {}
+  overrides: Partial<RagChatContextType> = {},
 ): RagChatContextType => ({
   activeSession: {
     id: 123,
@@ -211,7 +211,7 @@ const createMockContext = (
       enableHyde: false,
       enableSummaryFilter: false,
       enableToolCalling: false,
-      enableStreaming: true,
+      disableStreaming: true,
       selectedTools: [],
     },
     projectId: 1,
@@ -237,7 +237,7 @@ const createMockContext = (
 
 const renderWithContext = (
   contextValue: RagChatContextType,
-  newSessionCallback = vi.fn()
+  newSessionCallback = vi.fn(),
 ) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -251,7 +251,7 @@ const renderWithContext = (
       <RagChatContext.Provider value={contextValue}>
         <RagChatQueryInput newSessionCallback={newSessionCallback} />
       </RagChatContext.Provider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 };
 
@@ -269,7 +269,7 @@ describe("RagChatQueryInput", () => {
       renderWithContext(mockContext);
 
       expect(
-        screen.getByPlaceholderText("Chat with the LLM")
+        screen.getByPlaceholderText("Chat with the LLM"),
       ).toBeInTheDocument();
     });
 
@@ -412,7 +412,7 @@ describe("RagChatQueryInput", () => {
       await user.click(kbButton);
 
       expect(mockSetExcludeKnowledgeBase).toHaveBeenCalledWith(
-        expect.any(Function)
+        expect.any(Function),
       );
     });
 
@@ -564,7 +564,7 @@ describe("RagChatQueryInput", () => {
       renderWithContext(mockContext);
 
       expect(
-        screen.queryByTestId("suggested-questions")
+        screen.queryByTestId("suggested-questions"),
       ).not.toBeInTheDocument();
     });
 
@@ -624,7 +624,7 @@ describe("RagChatQueryInput", () => {
 
       expect(screen.getByText("Dragging")).toBeInTheDocument();
       expect(
-        screen.queryByPlaceholderText("Ask a question")
+        screen.queryByPlaceholderText("Ask a question"),
       ).not.toBeInTheDocument();
     });
   });

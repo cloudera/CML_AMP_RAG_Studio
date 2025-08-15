@@ -303,7 +303,7 @@ def stream_chat_completion(
             stream = future.result()
 
             # If streaming is disabled, immediately send a loading event to show StreamedEvents
-            if not session.query_configuration.enable_streaming:
+            if session.query_configuration.disable_streaming:
                 loading = ChatEvent(
                     type="thinking",
                     name="thinking",
