@@ -301,6 +301,18 @@ def stream_chat_completion(
 
             first_message = True
             stream = future.result()
+
+            # If streaming is disabled, immediately send a loading event to show StreamedEvents
+            if not session.query_configuration.enable_streaming:
+                loading = ChatEvent(
+                    type="thinking",
+                    name="thinking",
+                    timestamp=time.time(),
+                    data="Preparing full response...",
+                )
+                event_json = json.dumps({"event": loading.model_dump()})
+                yield f"data: {event_json}\n\n"
+                first_message = False
             for item in stream:
                 response: ChatResponse = item
                 # Check for cancellation between each response
