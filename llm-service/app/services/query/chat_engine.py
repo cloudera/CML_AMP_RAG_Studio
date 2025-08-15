@@ -188,11 +188,12 @@ class FlexibleContextChatEngine(CondensePlusContextChatEngine):
         self, message: str, chat_history: Optional[List[ChatMessage]] = None
     ) -> StreamingAgentChatResponse:
         if self._configuration.use_streaming:
-            return super().stream_chat(message, chat_history)
+            streaming_response: StreamingAgentChatResponse = super().stream_chat(message, chat_history)
+            return streaming_response
 
         synthesizer, context_source, context_nodes = self._run_c3(message, chat_history)
 
-        response = synthesizer.synthesize(message, context_nodes)
+        response: Response = synthesizer.synthesize(message, context_nodes)
 
         def wrapped_gen(res: Response) -> ChatResponseGen:
             assistant_message = ChatMessage(
