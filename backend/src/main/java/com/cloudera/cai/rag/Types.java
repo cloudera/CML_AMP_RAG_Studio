@@ -103,6 +103,7 @@ public class Types {
       Long associatedSessionId) {}
 
   @With
+  @Builder
   public record QueryConfiguration(
       boolean enableHyde,
       boolean enableSummaryFilter,

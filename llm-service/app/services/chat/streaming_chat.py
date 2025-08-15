@@ -195,7 +195,6 @@ def _stream_direct_llm_chat(
         response = llm_completion.completion(session.id, query, session.inference_model)
         response.additional_kwargs["response_id"] = response_id
         yield response
-    # Check if streaming is enabled for this session
     else:
         chat_response = llm_completion.stream_completion(
             session.id, query, session.inference_model

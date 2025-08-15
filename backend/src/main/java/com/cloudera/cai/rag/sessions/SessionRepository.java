@@ -58,7 +58,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionRepository {
   public static final Types.QueryConfiguration DEFAULT_QUERY_CONFIGURATION =
-      new Types.QueryConfiguration(false, true, false, true, List.of());
+      Types.QueryConfiguration.builder()
+          .enableHyde(false)
+          .enableSummaryFilter(true)
+          .enableToolCalling(false)
+          .disableStreaming(true)
+          .selectedTools(List.of())
+          .build();
   private final DatabaseOperations databaseOperations;
   private final ObjectMapper objectMapper =
       new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);

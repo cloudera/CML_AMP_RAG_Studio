@@ -150,6 +150,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
             "enableToolCalling": session.query_configuration.enable_tool_calling,
             "selectedTools": session.query_configuration.selected_tools,
+            "disableStreaming": session.query_configuration.disable_streaming,
         },
         associatedDataSourceId=session.associated_data_source_id,
     )

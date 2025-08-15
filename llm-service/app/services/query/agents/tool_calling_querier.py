@@ -462,7 +462,7 @@ def build_function_agent(
     enhanced_query: str,
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
-    stream_mode: bool,
+    streaming_enabled: bool,
 ) -> tuple[FunctionAgent, str]:
     formatted_prompt = DEFAULT_AGENT_PROMPT.format(
         date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
@@ -473,7 +473,7 @@ def build_function_agent(
         agent = FunctionAgent(
             tools=callable_tools,
             llm=llm,
-            streaming=stream_mode,
+            streaming=streaming_enabled,
         )
         enhanced_query = (
             "ROLE DESCRIPTION =========================================\n"
@@ -493,7 +493,7 @@ def build_function_agent(
             tools=callable_tools,
             llm=llm,
             system_prompt=formatted_prompt,
-            streaming=stream_mode,
+            streaming=streaming_enabled,
         )
 
     return agent, enhanced_query
