@@ -53,12 +53,16 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
       children={data.rag_message.assistant.trimStart()}
       components={{
         img: (
-          props: ComponentProps<"img">,
+          props: ComponentProps<"img">
         ): ReactElement<SourceNode> | undefined => {
+          // check if the image src starts with `sandbox:` and replace it with ``
+          if (props.src?.startsWith("sandbox:")) {
+            props.src = props.src.replace("sandbox:", "");
+          }
           return <img {...props} alt={props.alt} style={{ width: "100%" }} />;
         },
         a: (
-          props: ComponentProps<"a">,
+          props: ComponentProps<"a">
         ): ReactElement<SourceNode> | undefined => {
           const { href, className, children, ...other } = props;
           if (className === "rag_citation") {
@@ -67,7 +71,7 @@ export const MarkdownResponse = ({ data }: { data: ChatMessageType }) => {
             }
             const { source_nodes } = data;
             const sourceNodeIndex = source_nodes.findIndex(
-              (source_node) => source_node.node_id === href,
+              (source_node) => source_node.node_id === href
             );
             if (sourceNodeIndex >= 0) {
               return (

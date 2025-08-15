@@ -38,7 +38,7 @@
 from typing import Literal, Optional
 from fastapi import HTTPException
 from llama_index.core import llms
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from llama_index.core.base.llms.types import ChatMessage, MessageRole, TextBlock
 
 from . import _model_type, _noop
 from .providers._model_provider import ModelProvider
@@ -76,7 +76,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
             messages=[
                 ChatMessage(
                     role=MessageRole.USER,
-                    content="Are you available to answer questions?",
+                    blocks=[TextBlock(text="Are you available to answer questions?")],
                 )
             ]
         )

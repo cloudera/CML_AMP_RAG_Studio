@@ -81,6 +81,10 @@ class AzureModelProvider(ModelProvider):
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
         return []
+    
+    @staticmethod
+    def list_image_generation_models() -> list[ModelResponse]:
+        return []
 
     @staticmethod
     def get_llm_model(name: str) -> AzureOpenAI:

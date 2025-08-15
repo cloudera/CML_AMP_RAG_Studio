@@ -61,7 +61,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 import opik
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.logging import DefaultFormatter
 
@@ -198,3 +198,46 @@ async def log_request_received(
 
 
 app.include_router(index.router)
+
+# Serve cached images via FastAPI from the llm-service/cache directory
+_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "cache"))
+os.makedirs(_cache_dir, exist_ok=True)
+
+
+@app.get("/cache/{filename:path}")
+async def serve_cached_image(filename: str) -> Response:
+    """Serve cached images with proper MIME type detection."""
+    import mimetypes
+    from pathlib import Path
+
+    file_path = Path(_cache_dir) / filename
+
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    # Determine MIME type based on file extension
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+
+    # Fallback MIME types for common image formats
+    if not mime_type:
+        file_ext = file_path.suffix.lower()
+        mime_type = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+            ".bmp": "image/bmp",
+            ".webp": "image/webp",
+            ".svg": "image/svg+xml",
+            ".ico": "image/x-icon",
+        }.get(file_ext, "application/octet-stream")
+
+    # Read file content
+    with open(file_path, "rb") as f:
+        content = f.read()
+
+    return Response(
+        content=content,
+        media_type=mime_type,
+        headers={"Cache-Control": "public, max-age=31536000"},  # Cache for 1 year
+    )

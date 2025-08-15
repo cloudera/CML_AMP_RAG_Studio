@@ -68,6 +68,11 @@ export interface AddToolFormValues {
   description: string;
 }
 
+export interface ImageGenerationConfig {
+  enabled: boolean;
+  selected_tool: string | null;
+}
+
 export const getTools = async (): Promise<Tool[]> => {
   return getRequest(`${llmServicePath}/tools`);
 };
@@ -94,6 +99,52 @@ export const useAddToolMutation = ({
       void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
       if (onSuccess) {
         onSuccess(tool);
+      }
+    },
+    onError,
+  });
+};
+
+export const getImageGenerationTools = async (): Promise<Tool[]> => {
+  return getRequest(`${llmServicePath}/tools/image-generation`);
+};
+
+export const useImageGenerationToolsQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getImageGenerationTools],
+    queryFn: getImageGenerationTools,
+  });
+};
+
+export const getImageGenerationConfig = async (): Promise<ImageGenerationConfig> => {
+  return getRequest(`${llmServicePath}/tools/image-generation/config`);
+};
+
+export const useImageGenerationConfigQuery = () => {
+  return useQuery({
+    queryKey: [QueryKeys.getImageGenerationConfig],
+    queryFn: getImageGenerationConfig,
+  });
+};
+
+export const setImageGenerationConfig = async (
+  config: ImageGenerationConfig
+): Promise<ImageGenerationConfig> => {
+  return postRequest(`${llmServicePath}/tools/image-generation/config`, config);
+};
+
+export const useSetImageGenerationConfigMutation = ({
+  onSuccess,
+  onError,
+}: UseMutationType<ImageGenerationConfig>) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: setImageGenerationConfig,
+    onSuccess: (config) => {
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getImageGenerationConfig] });
+      void queryClient.invalidateQueries({ queryKey: [QueryKeys.getTools] });
+      if (onSuccess) {
+        onSuccess(config);
       }
     },
     onError,

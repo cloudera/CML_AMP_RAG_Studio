@@ -35,7 +35,7 @@ dependencies = [
     "llama-index-postprocessor-bedrock-rerank>=0.3.1",
     "llama-index-postprocessor-nvidia-rerank>=0.4.0",
     "mlflow==2.22.1",
-    "llama-index-llms-azure-openai>=0.3.0",
+    "llama-index-llms-azure-openai>=0.3.4",
     "llama-index-embeddings-azure-openai>=0.3.0",
     "llama-index-llms-nvidia>=0.3.2",
     "llama-index-storage-kvstore-s3>=0.3.0",
@@ -48,6 +48,7 @@ dependencies = [
     "llama-index-tools-mcp>=0.2.5",
     "llama-index-readers-docling>=0.3.3",
     "llama-index-node-parser-docling>=0.3.2",
+    "llama-index-tools-openai-image-generation>=0.4.0",
 ]
 requires-python = ">=3.10,<3.13"
 readme = "README.md"

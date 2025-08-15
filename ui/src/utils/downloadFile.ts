@@ -41,7 +41,7 @@ import messageQueue from "src/utils/messageQueue.ts";
 export const downloadFile = async (
   url: string,
   filename: string,
-  options?: { pageNumber?: string },
+  options?: { pageNumber?: string }
 ) => {
   const isPdf = filename.toLowerCase().endsWith(".pdf");
 
@@ -62,7 +62,7 @@ export const downloadFile = async (
       window.open(
         `${objectUrl}#page=${options.pageNumber}`,
         "_blank",
-        "noopener",
+        "noopener"
       );
       // Note: do not revoke immediately to avoid breaking the viewer tab
     } catch {

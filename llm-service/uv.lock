@@ -2280,6 +2280,18 @@ wheels = [
 ]
 
 [[package]]
+name = "llama-index-tools-openai-image-generation"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "llama-index-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3b/47/0a40292f7f9a98bcf959018b9ca4ef6df1aa52c9cb9812dfbd3f7a11c105/llama_index_tools_openai_image_generation-0.4.0.tar.gz", hash = "sha256:ffb80420e26d55e936eded4ca1bbbc4174216a8fbfad609759833dd6fc17e869", size = 3697 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/a6/de9611742d91ab358093e06d6b14d24e580212bee2063fdbccdd9b969219/llama_index_tools_openai_image_generation-0.4.0-py3-none-any.whl", hash = "sha256:cdc14c29c232229673f3898d64ecd23bc7c9e9882858fd2e854f7bf3f0ab2fec", size = 4207 },
+]
+
+[[package]]
 name = "llama-index-vector-stores-opensearch"
 version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2348,6 +2360,7 @@ dependencies = [
     { name = "llama-index-readers-file" },
     { name = "llama-index-storage-kvstore-s3" },
     { name = "llama-index-tools-mcp" },
+    { name = "llama-index-tools-openai-image-generation" },
     { name = "llama-index-vector-stores-opensearch" },
     { name = "llama-index-vector-stores-qdrant" },
     { name = "llvmlite" },
@@ -2395,7 +2408,7 @@ requires-dist = [
     { name = "llama-index-embeddings-azure-openai", specifier = ">=0.3.0" },
     { name = "llama-index-embeddings-bedrock", specifier = ">=0.2.1" },
     { name = "llama-index-embeddings-openai", specifier = ">=0.1.11" },
-    { name = "llama-index-llms-azure-openai", specifier = ">=0.3.0" },
+    { name = "llama-index-llms-azure-openai", specifier = ">=0.3.4" },
     { name = "llama-index-llms-bedrock", specifier = ">=0.3.4" },
     { name = "llama-index-llms-bedrock-converse", specifier = ">=0.7.6" },
     { name = "llama-index-llms-nvidia", specifier = ">=0.3.2" },
@@ -2407,6 +2420,7 @@ requires-dist = [
     { name = "llama-index-readers-file", specifier = ">=0.1.33" },
     { name = "llama-index-storage-kvstore-s3", specifier = ">=0.3.0" },
     { name = "llama-index-tools-mcp", specifier = ">=0.2.5" },
+    { name = "llama-index-tools-openai-image-generation", specifier = ">=0.4.0" },
     { name = "llama-index-vector-stores-opensearch", specifier = ">=0.5.5" },
     { name = "llama-index-vector-stores-qdrant", specifier = ">=0.2.17" },
     { name = "llvmlite", specifier = "==0.43.0" },

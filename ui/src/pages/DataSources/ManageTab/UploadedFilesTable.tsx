@@ -45,7 +45,8 @@ import {
   Tooltip,
   Typography,
 } from "antd";
-import Icon, { DeleteOutlined, DownloadOutlined } from "@ant-design/icons";
+import Icon, { DeleteOutlined } from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import {
   RagDocumentResponseType,
   useDeleteDocumentMutation,
@@ -57,12 +58,13 @@ import AiAssistantIcon from "src/cuix/icons/AiAssistantIcon";
 import { useState } from "react";
 import messageQueue from "src/utils/messageQueue.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { paths, QueryKeys, ragPath } from "src/api/utils.ts";
+import { QueryKeys } from "src/api/utils.ts";
 import useModal from "src/utils/useModal.ts";
 import { cdlWhite } from "src/cuix/variables.ts";
 import ReadyColumn from "pages/DataSources/ManageTab/ReadyColumn.tsx";
 import SummaryColumn from "pages/DataSources/ManageTab/SummaryColumn.tsx";
 import { ColumnsType } from "antd/es/table";
+import { paths, ragPath } from "src/api/utils.ts";
 import { downloadFile } from "src/utils/downloadFile.ts";
 
 const columns = (

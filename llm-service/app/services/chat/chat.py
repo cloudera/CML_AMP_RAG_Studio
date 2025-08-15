@@ -156,6 +156,11 @@ def finalize_response(
         evaluations.append(Evaluation(name="relevance", value=relevance))
         evaluations.append(Evaluation(name="faithfulness", value=faithfulness))
     response_source_nodes = format_source_nodes(chat_response)
+
+    # remove the sandbox prefix from the response for OpenAI image generation responses
+    if "(sandbox:" in chat_response.response:
+        chat_response.response = chat_response.response.replace("(sandbox:", "(")
+
     new_chat_message = RagStudioChatMessage(
         id=response_id,
         session_id=session.id,

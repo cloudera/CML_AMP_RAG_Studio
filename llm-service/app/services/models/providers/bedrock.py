@@ -278,6 +278,23 @@ class BedrockModelProvider(ModelProvider):
             )
 
         return models
+    
+    @staticmethod
+    def list_image_generation_models() -> list[ModelResponse]:
+        modality: BedrockModality = TypeAdapter(BedrockModality).validate_python(
+            "IMAGE"
+        )
+        available_models = BedrockModelProvider.list_available_models(modality)
+        models = []
+        for model in available_models:
+            models.append(
+                ModelResponse(
+                    model_id=model["modelId"], 
+                    name=model["modelName"], 
+                    available=True,
+                )
+            )
+        return models
 
     @staticmethod
     def list_reranking_models() -> list[ModelResponse]:
