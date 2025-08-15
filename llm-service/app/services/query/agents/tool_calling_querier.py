@@ -270,12 +270,10 @@ def _run_streamer(
                 )
                 yield response
 
-            print("fake direct stream")
             return _fake_direct_stream(), source_nodes
 
     # Handle tool calling with agent
     if not configuration.use_streaming:
-        print("are we here")
 
         # Use non-streaming agent execution when streaming is disabled
         def _fake_agent_stream() -> Generator[ChatResponse, None, None]:
