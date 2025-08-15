@@ -59,7 +59,6 @@ from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
 from llama_index.llms.bedrock_converse import BedrockConverse
 from llama_index.llms.bedrock_converse.utils import get_model_name
-from workflows.handler import WorkflowHandler
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
