@@ -102,7 +102,11 @@ const WarningMessage = ({
   );
 };
 const ChatMessage = ({ data }: { data: ChatMessageType }) => {
-  const { activeSession } = useContext(RagChatContext);
+  const {
+    activeSession,
+    streamedEventState: [streamedEvents],
+    streamingMessageIdState: [streamingMessageId],
+  } = useContext(RagChatContext);
   const excludeKnowledgeBases =
     !activeSession?.dataSourceIds || activeSession.dataSourceIds.length === 0;
 
@@ -116,13 +120,20 @@ const ChatMessage = ({ data }: { data: ChatMessageType }) => {
   }
 
   if (isPlaceholder(data)) {
-    return <PendingRagOutputSkeleton question={data.rag_message.user} />;
+    return (
+      <PendingRagOutputSkeleton
+        question={data.rag_message.user}
+        excludeKnowledgeBase={excludeKnowledgeBases}
+      />
+    );
   }
 
   return (
     <ChatMessageBody
       data={data}
-      sessionId={activeSession?.id ?? 0}
+      streamedEvents={
+        streamingMessageId === data.id ? streamedEvents : undefined
+      }
       excludeKnowledgeBase={excludeKnowledgeBases}
     />
   );

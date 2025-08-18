@@ -58,7 +58,7 @@ export interface RagChatContextType {
     isFetchingPreviousPage: boolean;
     chatHistoryStatus?: "error" | "success" | "pending";
     fetchPreviousPage: (
-      options?: FetchPreviousPageOptions,
+      options?: FetchPreviousPageOptions
     ) => Promise<
       InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
     >;
@@ -68,6 +68,10 @@ export interface RagChatContextType {
   streamedAbortControllerState: [
     AbortController | undefined,
     Dispatch<SetStateAction<AbortController | undefined>>,
+  ];
+  streamingMessageIdState: [
+    string | undefined,
+    Dispatch<SetStateAction<string | undefined>>,
   ];
   dataSourcesQuery: {
     dataSources: DataSourceType[];
@@ -86,12 +90,13 @@ export const RagChatContext = createContext<RagChatContextType>({
     isFetchingPreviousPage: false,
     fetchPreviousPage: () =>
       Promise.resolve(
-        {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>,
+        {} as InfiniteQueryObserverResult<InfiniteData<ChatHistoryResponse>>
       ),
   },
   streamedChatState: ["", () => null],
   streamedEventState: [[], () => null],
   streamedAbortControllerState: [undefined, () => null],
+  streamingMessageIdState: [undefined, () => null],
   dataSourcesQuery: { dataSources: [], dataSourcesStatus: undefined },
   dataSourceSize: null,
   excludeKnowledgeBaseState: [false, () => null],

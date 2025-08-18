@@ -265,6 +265,65 @@ export const replacePlaceholderInChatHistory = (
   };
 };
 
+export const replaceMessageInChatHistoryById = (
+  data: ChatMessageType,
+  cachedData?: InfiniteData<ChatHistoryResponse>
+): InfiniteData<ChatHistoryResponse> => {
+  if (!cachedData || cachedData.pages.length == 0) {
+    return (
+      cachedData ?? {
+        pages: [{ data: [data], previous_id: null, next_id: null }],
+        pageParams: [0],
+      }
+    );
+  }
+  const pages = cachedData.pages.map((page) => {
+    const updated = page.data.map((message) =>
+      message.id === data.id ? data : message
+    );
+    return {
+      ...page,
+      data: updated,
+    };
+  });
+  return {
+    pageParams: cachedData.pageParams,
+    pages,
+  };
+};
+
+const updateAssistantTextById = (
+  messageId: string,
+  assistantText: string,
+  cachedData?: InfiniteData<ChatHistoryResponse>
+): InfiniteData<ChatHistoryResponse> => {
+  if (!cachedData || cachedData.pages.length == 0) {
+    return cachedData ?? { pages: [], pageParams: [0] };
+  }
+  const pages = cachedData.pages.map((page) => {
+    const updated = page.data.map((message) => {
+      if (message.id === messageId) {
+        return {
+          ...message,
+          rag_message: {
+            ...message.rag_message,
+            assistant: assistantText,
+          },
+        };
+      }
+      return message;
+    });
+    return {
+      ...page,
+      data: updated,
+    };
+  });
+  return {
+    pageParams: cachedData.pageParams,
+    pages,
+  };
+};
+
 export const createQueryConfiguration = (
   excludeKnowledgeBase: boolean
 ): QueryConfiguration => {
@@ -408,11 +467,23 @@ const handlePrepareController = (
       getController(ctrl);
 
       const onAbort = () => {
-        modifyPlaceholderInChatHistory(
-          queryClient,
-          request,
-          canceledChatMessage(request)
-        );
+        if (request.response_id) {
+          queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+            chatHistoryQueryKey({ session_id: request.session_id }),
+            (cachedData) =>
+              updateAssistantTextById(
+                request.response_id as string,
+                canceledChatMessage(request).rag_message.assistant,
+                cachedData
+              )
+          );
+        } else {
+          modifyPlaceholderInChatHistory(
+            queryClient,
+            request,
+            canceledChatMessage(request)
+          );
+        }
         ctrl.signal.removeEventListener("abort", onAbort);
       };
 
@@ -440,7 +511,10 @@ const handleStreamingSuccess = (
         chatHistoryQueryKey({
           session_id: request.session_id,
         }),
-        (cachedData) => replacePlaceholderInChatHistory(message, cachedData)
+        (cachedData) =>
+          request.response_id
+            ? replaceMessageInChatHistoryById(message, cachedData)
+            : replacePlaceholderInChatHistory(message, cachedData)
       );
       queryClient
         .invalidateQueries({
@@ -466,8 +540,20 @@ export const useStreamingChatMutation = ({
 }: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
   const handleError = (variables: ChatMutationRequest, error: Error) => {
-    const errorMessage = errorChatMessage(variables, error);
-    modifyPlaceholderInChatHistory(queryClient, variables, errorMessage);
+    if (variables.response_id) {
+      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+        chatHistoryQueryKey({ session_id: variables.session_id }),
+        (cachedData) =>
+          updateAssistantTextById(
+            variables.response_id as string,
+            error.message,
+            cachedData
+          )
+      );
+    } else {
+      const errorMessage = errorChatMessage(variables, error);
+      modifyPlaceholderInChatHistory(queryClient, variables, errorMessage);
+    }
   };
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
@@ -483,22 +569,57 @@ export const useStreamingChatMutation = ({
         request
       );
 
+      // Wrap onChunk to update the in-place message assistant text during regeneration
+      let accumulatedText = "";
+      const onChunkWrapped = (chunk: string) => {
+        accumulatedText += chunk;
+        if (request.response_id) {
+          queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+            chatHistoryQueryKey({ session_id: request.session_id }),
+            (cachedData) =>
+              updateAssistantTextById(
+                request.response_id as string,
+                accumulatedText,
+                cachedData
+              )
+          );
+        }
+        onChunk(chunk);
+      };
+
       return streamChatMutation(
         request,
-        onChunk,
+        onChunkWrapped,
         onEvent,
         convertError,
         handleGetController
       );
     },
     onMutate: (variables) => {
-      queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
-        chatHistoryQueryKey({
-          session_id: variables.session_id,
-        }),
-        (cachedData) =>
-          appendPlaceholderToChatHistory(variables.query, cachedData)
-      );
+      // Only append a placeholder when we are creating a brand new response
+      // For regeneration (response_id provided), we update the existing entry in-place after success
+      if (!variables.response_id) {
+        queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+          chatHistoryQueryKey({
+            session_id: variables.session_id,
+          }),
+          (cachedData) =>
+            appendPlaceholderToChatHistory(variables.query, cachedData)
+        );
+      } else {
+        // For regeneration, immediately clear the assistant text of the existing message
+        queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
+          chatHistoryQueryKey({
+            session_id: variables.session_id,
+          }),
+          (cachedData) =>
+            updateAssistantTextById(
+              variables.response_id as string,
+              "",
+              cachedData
+            )
+        );
+      }
     },
     onSuccess: (messageId, variables) => {
       if (!messageId) {
