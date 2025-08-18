@@ -39,6 +39,7 @@
 import { ChatMessageType, ChatEvent } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
 import { Divider, Flex, Typography } from "antd";
+import RegenerateButton from "pages/RagChatTab/ChatOutput/ChatMessages/RegenerateButton.tsx";
 import Images from "src/components/images/Images.ts";
 import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
@@ -51,9 +52,11 @@ import { MarkdownResponse } from "pages/RagChatTab/ChatOutput/ChatMessages/Markd
 export const ChatMessageBody = ({
   data,
   streamedEvents,
+  excludeKnowledgeBase,
 }: {
   data: ChatMessageType;
   streamedEvents?: ChatEvent[];
+  excludeKnowledgeBase: boolean;
 }) => {
   return (
     <div data-testid="chat-message">
@@ -99,6 +102,10 @@ export const ChatMessageBody = ({
               <SourceNodes data={data} />
               <Flex gap={16} align="center">
                 <CopyButton message={data} />
+                <RegenerateButton
+                  message={data}
+                  excludeKnowledgeBase={excludeKnowledgeBase}
+                />
                 <Evaluations evaluations={data.evaluations} />
                 <RatingFeedbackWrapper responseId={data.id} />
               </Flex>

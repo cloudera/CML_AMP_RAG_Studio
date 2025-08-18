@@ -154,3 +154,48 @@ class S3ChatHistoryManager(ChatHistoryManager):
                 f"Error appending to chat history for session {session_id}: {e}"
             )
             raise
+
+    def update_message(
+        self, session_id: int, message_id: str, message: RagStudioChatMessage
+    ) -> None:
+        """Update an existing message's content and metadata by ID in S3."""
+        s3_key = self._get_s3_key(session_id)
+        try:
+            chat_history_data = self.retrieve_chat_history(session_id=session_id)
+            updated = False
+            for idx, existing in enumerate(chat_history_data):
+                if existing.id == message_id:
+                    chat_history_data[idx] = message
+                    updated = True
+                    break
+            if not updated:
+                return
+            chat_history_json = json.dumps(
+                [m.model_dump() for m in chat_history_data]
+            )
+            self.s3_client.put_object(
+                Bucket=self.bucket_name, Key=s3_key, Body=chat_history_json
+            )
+        except Exception as e:
+            logger.error(
+                f"Error updating chat message {message.id} for session {session_id}: {e}"
+            )
+            raise
+
+    def delete_message(self, session_id: int, message_id: str) -> None:
+        """Delete a specific message by ID in S3-backed store."""
+        s3_key = self._get_s3_key(session_id)
+        try:
+            chat_history_data = self.retrieve_chat_history(session_id=session_id)
+            chat_history_data = [m for m in chat_history_data if m.id != message_id]
+            chat_history_json = json.dumps(
+                [m.model_dump() for m in chat_history_data]
+            )
+            self.s3_client.put_object(
+                Bucket=self.bucket_name, Key=s3_key, Body=chat_history_json
+            )
+        except Exception as e:
+            logger.error(
+                f"Error deleting chat message {message_id} for session {session_id}: {e}"
+            )
+            raise
