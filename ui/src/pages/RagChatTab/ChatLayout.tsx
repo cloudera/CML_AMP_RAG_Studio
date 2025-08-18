@@ -65,7 +65,7 @@ function ChatLayout() {
 
   const { projectId: routeProjectId, sessionId } = useParams({ strict: false });
   const { data: defaultProject } = useSuspenseQuery(
-    getDefaultProjectQueryOptions,
+    getDefaultProjectQueryOptions
   );
 
   const activeSession = getSessionForSessionId(sessionId, sessions);
@@ -81,6 +81,7 @@ function ChatLayout() {
   const [streamedEvent, setStreamedEvent] = useState<ChatEvent[]>([]);
   const [streamedAbortController, setStreamedAbortController] =
     useState<AbortController>();
+  const [streamingMessageId, setStreamingMessageId] = useState<string>();
   const {
     status: chatHistoryStatus,
     data: chatHistory,
@@ -122,6 +123,7 @@ function ChatLayout() {
           streamedAbortController,
           setStreamedAbortController,
         ],
+        streamingMessageIdState: [streamingMessageId, setStreamingMessageId],
         dataSourceSize,
         dataSourcesQuery: {
           dataSources: dataSources ?? [],

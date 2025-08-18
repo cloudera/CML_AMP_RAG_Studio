@@ -41,7 +41,13 @@ import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
 
-const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
+const PendingRagOutputSkeleton = ({
+  question,
+  excludeKnowledgeBase,
+}: {
+  question: string;
+  excludeKnowledgeBase: boolean;
+}) => {
   const {
     streamedChatState: [streamedChat],
     streamedEventState: [streamedEvent],
@@ -60,7 +66,11 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
   };
 
   return (
-    <ChatMessageBody data={streamedMessage} streamedEvents={streamedEvent} />
+    <ChatMessageBody
+      data={streamedMessage}
+      streamedEvents={streamedEvent}
+      excludeKnowledgeBase={excludeKnowledgeBase}
+    />
   );
 };
 
