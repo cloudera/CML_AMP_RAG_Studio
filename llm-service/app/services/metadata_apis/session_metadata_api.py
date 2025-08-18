@@ -52,6 +52,7 @@ class SessionQueryConfiguration:
     enable_summary_filter: bool
     enable_tool_calling: bool = False
     selected_tools: list[str] = field(default_factory=list)
+    disable_streaming: bool = False
 
 
 @dataclass
@@ -126,6 +127,9 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
             enable_tool_calling=data["queryConfiguration"].get(
                 "enableToolCalling", False
             ),
+            disable_streaming=data["queryConfiguration"].get(
+                "disableStreaming", False
+            ),
             selected_tools=data["queryConfiguration"]["selectedTools"] or [],
         ),
         associated_data_source_id=data.get("associatedDataSourceId", None),
@@ -146,6 +150,7 @@ def update_session(session: Session, user_name: Optional[str]) -> Session:
             "enableSummaryFilter": session.query_configuration.enable_summary_filter,
             "enableToolCalling": session.query_configuration.enable_tool_calling,
             "selectedTools": session.query_configuration.selected_tools,
+            "disableStreaming": session.query_configuration.disable_streaming,
         },
         associatedDataSourceId=session.associated_data_source_id,
     )

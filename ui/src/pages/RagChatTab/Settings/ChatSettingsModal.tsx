@@ -144,6 +144,7 @@ const ChatSettingsModal = ({
             enableToolCalling: values.queryConfiguration.enableToolCalling,
             enableHyde: values.queryConfiguration.enableHyde,
             enableSummaryFilter: values.queryConfiguration.enableSummaryFilter,
+            disableStreaming: values.queryConfiguration.disableStreaming,
           },
         };
         updateSession.mutate(request);
@@ -229,6 +230,29 @@ const ChatSettingsModal = ({
                 }
               >
                 Enable Summary Filtering
+              </Popover>
+            }
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item<CreateSessionRequest>
+            name={["queryConfiguration", "disableStreaming"]}
+            initialValue={activeSession.queryConfiguration.disableStreaming}
+            valuePropName="checked"
+            label={
+              <Popover
+                title="Disable Streaming"
+                content={
+                  <Typography style={{ width: 300 }}>
+                    When enabled, responses are streamed in real-time as they
+                    are generated. When disabled, the complete response is
+                    delivered all at once after generation is finished.
+                    Streaming provides better user experience for longer
+                    responses.
+                  </Typography>
+                }
+              >
+                Disable Streaming
               </Popover>
             }
           >

@@ -104,6 +104,7 @@ describe("useMoveSession", () => {
       enableHyde: false,
       enableSummaryFilter: false,
       enableToolCalling: false,
+      disableStreaming: true,
       selectedTools: [],
     },
   };

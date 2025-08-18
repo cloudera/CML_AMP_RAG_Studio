@@ -6,7 +6,7 @@ authors = [
     {name = "Conrado Silva Miranda", email = "csilvamiranda@cloudera.com"},
 ]
 dependencies = [
-    "llama-index-core>=0.10.68",
+    "llama-index-core>=0.13.2",
     "llama-index-readers-file>=0.1.33",
     "fastapi[standard]>=0.111.0",
     "pydantic>=2.8.2",
@@ -26,7 +26,7 @@ dependencies = [
     "torch>=2.5.1",
     "pillow>=10.4.0",
     "transformers>=4.46.3",
-    "docling>=2.40.0",
+    "docling>=2.45.0",
     "llvmlite==0.43.0",
     "llama-index-llms-bedrock-converse>=0.7.6",
     "presidio-analyzer>=2.2.355",
@@ -46,8 +46,9 @@ dependencies = [
     "mcp[cli]>=1.9.1",
     "pysqlite3-binary==0.5.4; platform_system == 'Linux' and platform_machine != 'aarch64'",
     "llama-index-tools-mcp>=0.2.5",
-    "llama-index-readers-docling>=0.3.3",
-    "llama-index-node-parser-docling>=0.3.2",
+    "llama-index-readers-docling>=0.4.0",
+    "llama-index-node-parser-docling>=0.4.0",
+    "llama-index>=0.13.2",
 ]
 requires-python = ">=3.10,<3.13"
 readme = "README.md"
@@ -57,7 +58,6 @@ license = {text = "APACHE"}
 override-dependencies = [
     "boto3-stubs==1.36.1",
     "botocore-stubs==1.36.1",
-    "docling-ibm-models==3.7.0"
 ]
 
 [dependency-groups]

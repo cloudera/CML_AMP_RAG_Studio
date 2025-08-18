@@ -58,3 +58,4 @@ class QueryConfiguration(BaseModel):
     use_summary_filter: Optional[bool] = True
     use_postprocessor: Optional[bool] = True
     use_tool_calling: Optional[bool] = False
+    use_streaming: Optional[bool] = True

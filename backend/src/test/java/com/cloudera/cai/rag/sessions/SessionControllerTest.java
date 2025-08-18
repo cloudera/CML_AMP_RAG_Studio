@@ -137,6 +137,14 @@ class SessionControllerTest {
     var updatedRerankModel = "new-rerank-model";
     var updatedProjectId = project.id();
 
+    var queryConfiguration =
+        Types.QueryConfiguration.builder()
+            .enableHyde(true)
+            .enableSummaryFilter(false)
+            .enableToolCalling(true)
+            .disableStreaming(true)
+            .selectedTools(List.of("foo"))
+            .build();
     var updatedSession =
         sessionController.update(
             insertedSession
@@ -145,8 +153,7 @@ class SessionControllerTest {
                 .withRerankModel(updatedRerankModel)
                 .withName(updatedName)
                 .withProjectId(updatedProjectId)
-                .withQueryConfiguration(
-                    new Types.QueryConfiguration(true, false, true, List.of("foo"))),
+                .withQueryConfiguration(queryConfiguration),
             request);
 
     assertThat(updatedSession.id()).isNotNull();
@@ -160,8 +167,7 @@ class SessionControllerTest {
     assertThat(updatedSession.timeUpdated()).isAfter(insertedSession.timeUpdated());
     assertThat(updatedSession.createdById()).isEqualTo("test-user");
     assertThat(updatedSession.lastInteractionTime()).isNull();
-    assertThat(updatedSession.queryConfiguration())
-        .isEqualTo(new Types.QueryConfiguration(true, false, true, List.of("foo")));
+    assertThat(updatedSession.queryConfiguration()).isEqualTo(queryConfiguration);
   }
 
   @Test
