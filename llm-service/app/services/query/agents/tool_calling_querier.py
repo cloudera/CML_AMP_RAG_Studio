@@ -239,7 +239,7 @@ def _run_streamer(
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
     agent, enhanced_query = build_function_agent(
-        enhanced_query, llm, tools, configuration.use_streaming or True
+        enhanced_query, llm, tools, configuration.use_streaming or False
     )
 
     source_nodes: list[NodeWithScore] = []
@@ -262,6 +262,7 @@ def _run_streamer(
                 + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
             )
             return direct_chat_gen, source_nodes
+
         # Use non-streaming LLM for direct chat when streaming is disabled
         def _fake_direct_stream() -> Generator[ChatResponse, None, None]:
             response = llm.chat(
@@ -373,31 +374,33 @@ def _run_streamer(
                         f"{str(event.response) if event.response else 'No content'}"
                     )
                     logger.info("========================")
-                yield ChatResponse(
-                    message=ChatMessage(
-                        role=(
-                            MessageRole.TOOL
-                            if configuration.use_streaming
-                            else MessageRole.ASSISTANT
+                if configuration.use_streaming:
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=(MessageRole.TOOL),
+                            content=event.response.content,
                         ),
-                        content=event.response.content,
-                    ),
-                    delta=(
-                        "" if configuration.use_streaming else event.response.content
-                    ),
-                    raw=event.raw,
-                    additional_kwargs=(
-                        {
-                            "chat_event": ChatEvent(
-                                type="agent_response",
-                                name=event.current_agent_name,
-                                data=data,
-                            ),
-                        }
-                        if configuration.use_streaming
-                        else {}
-                    ),
-                )
+                        delta="",
+                        raw=event.raw,
+                        additional_kwargs=(
+                            {
+                                "chat_event": ChatEvent(
+                                    type="agent_response",
+                                    name=event.current_agent_name,
+                                    data=data,
+                                ),
+                            }
+                        ),
+                    )
+                else:
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=(MessageRole.ASSISTANT),
+                            content=event.response.content,
+                        ),
+                        delta=(event.response.content),
+                        raw=event.raw,
+                    )
             elif isinstance(event, AgentStream):
                 if len(event.tool_calls) > 0:
                     continue
