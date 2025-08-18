@@ -38,7 +38,11 @@
 
 import { describe, expect, it } from "vitest";
 import { InfiniteData } from "@tanstack/react-query";
-import { ChatHistoryResponse, ChatMessageType } from "src/api/chatApi.ts";
+import {
+  ChatHistoryResponse,
+  ChatMessageType,
+  RagStudioChatMessageStatus,
+} from "src/api/chatApi.ts";
 import { flattenChatHistory } from "./useFlattenChatHistory.tsx";
 
 describe("flattenChatHistory", () => {
@@ -79,6 +83,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 1", assistant: "response 1" },
       evaluations: [],
       timestamp: 1000,
+      status: RagStudioChatMessageStatus.COMPLETE,
     };
 
     const message2: ChatMessageType = {
@@ -88,6 +93,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 2", assistant: "response 2" },
       evaluations: [],
       timestamp: 2000,
+      status: RagStudioChatMessageStatus.COMPLETE,
     };
 
     const chatHistory: InfiniteData<ChatHistoryResponse> = {
@@ -113,6 +119,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 1", assistant: "response 1" },
       evaluations: [],
       timestamp: 1000,
+      status: RagStudioChatMessageStatus.COMPLETE,
     };
 
     const message2: ChatMessageType = {
@@ -122,6 +129,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 2", assistant: "response 2" },
       evaluations: [],
       timestamp: 2000,
+      status: RagStudioChatMessageStatus.COMPLETE,
     };
 
     const message3: ChatMessageType = {
@@ -131,6 +139,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 3", assistant: "response 3" },
       evaluations: [],
       timestamp: 3000,
+      status: RagStudioChatMessageStatus.COMPLETE,
     };
 
     const chatHistory: InfiniteData<ChatHistoryResponse> = {

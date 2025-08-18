@@ -96,6 +96,11 @@ interface ChatHistoryRequestType {
   offset?: number;
 }
 
+export enum RagStudioChatMessageStatus {
+  PENDING = "pending",
+  COMPLETE = "complete",
+}
+
 export interface ChatMessageType {
   id: string;
   session_id: number;
@@ -105,6 +110,7 @@ export interface ChatMessageType {
   evaluations: Evaluation[];
   timestamp: number;
   condensed_question?: string;
+  status?: RagStudioChatMessageStatus;
 }
 
 export interface ChatResponseFeedback {
@@ -128,6 +134,7 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
     },
     evaluations: [],
     timestamp: Date.now(),
+    status: RagStudioChatMessageStatus.PENDING,
   };
 };
 
@@ -417,6 +424,7 @@ const customChatMessage = (
     },
     evaluations: [],
     timestamp: Date.now(),
+    status: RagStudioChatMessageStatus.PENDING,
   };
   return customMessage;
 };
