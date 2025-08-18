@@ -38,7 +38,11 @@
 
 import { useContext } from "react";
 import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
-import { ChatMessageType, placeholderChatResponseId } from "src/api/chatApi.ts";
+import {
+  ChatMessageType,
+  placeholderChatResponseId,
+  RagStudioChatMessageStatus,
+} from "src/api/chatApi.ts";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
 
 const PendingRagOutputSkeleton = ({
@@ -62,6 +66,7 @@ const PendingRagOutputSkeleton = ({
       assistant: streamedChat,
     },
     evaluations: [],
+    status: RagStudioChatMessageStatus.PENDING,
     timestamp: Date.now(),
   };
 

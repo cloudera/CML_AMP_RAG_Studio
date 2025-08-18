@@ -44,7 +44,10 @@ import {
   RagChatContextType,
 } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ChatMessageType } from "src/api/chatApi.ts";
+import {
+  ChatMessageType,
+  RagStudioChatMessageStatus,
+} from "src/api/chatApi.ts";
 
 // Mock scrollIntoView
 const mockScrollIntoView = vi.fn();
@@ -175,6 +178,7 @@ const createMockMessage = (
   rag_message: { user, assistant },
   evaluations: [],
   timestamp: Date.now(),
+  status: RagStudioChatMessageStatus.PENDING,
 });
 
 const createMockContext = (
