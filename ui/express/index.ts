@@ -25,7 +25,7 @@ const apiProxy: Options = {
     error: (
       err: Error,
       req: IncomingMessage,
-      res: ServerResponse<IncomingMessage> | Socket,
+      res: ServerResponse<IncomingMessage> | Socket
     ) => {
       console.error("API Proxy Error:", err);
       console.error("API Error Request URL:", req.url);
@@ -56,7 +56,7 @@ const apiProxy: Options = {
               "API service is currently unavailable. Please try again later.",
             details: err.message,
             timestamp: new Date().toISOString(),
-          }),
+          })
         );
       }
       return res;
@@ -94,7 +94,7 @@ function shutdown() {
   });
   setTimeout(() => {
     console.error(
-      "Could not close connections in time, forcefully shutting down",
+      "Could not close connections in time, forcefully shutting down"
     );
     process.exit(1);
   }, 5000);
