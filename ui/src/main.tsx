@@ -47,6 +47,8 @@ import { Flex, Spin, Typography } from "antd";
 import { CustomUnhandledError } from "src/components/ErrorComponents/CustomUnhandledError.tsx";
 import "@ant-design/v5-patch-for-react-19";
 import NotFoundComponent from "src/components/ErrorComponents/NotFoundComponent.tsx";
+// Initialize OpenTelemetry (no side effects in tests if disabled)
+import "./otel";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,5 +103,5 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLDivElement).render(
       {/*<ReactQueryDevtools initialIsOpen={false} />*/}
       <RouterProvider router={router} />
     </QueryClientProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

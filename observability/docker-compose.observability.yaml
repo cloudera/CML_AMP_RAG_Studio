@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    user: "0:0"
+    ports:
+      - "3200:3200" # Tempo HTTP API / query
+    volumes:
+      - ./tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/tmp/tempo
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.103.1
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4318:4318" # OTLP HTTP receiver (from browser/UI)
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - tempo
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    ports:
+      - "3001:3000" # Grafana UI (avoid conflict with UI on 3000)
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - tempo
+
+  otel-cors-proxy:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx/otel-cors.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "4319:8080" # Public:4319 -> NGINX:8080
+    depends_on:
+      - otel-collector
+
+volumes:
+  tempo-data:

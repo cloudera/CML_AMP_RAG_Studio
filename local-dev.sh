@@ -128,6 +128,8 @@ cd ../backend
 cd ../ui
 pnpm install
 pnpm build
+VITE_OTEL_ENABLED=true
+VITE_OTEL_TRACE_URL=http://127.0.0.1:4319/v1/traces
 pnpm dev &
 
 # start the proxy

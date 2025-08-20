@@ -1,0 +1,28 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
+    tls:
+      insecure: true
+  debug:
+    verbosity: detailed
+
+processors:
+  batch:
+  resource/ui:
+    attributes:
+      - action: insert
+        key: service.name
+        value: rag-studio-ui
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource/ui, batch]
+      exporters: [otlphttp/tempo, debug]
