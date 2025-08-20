@@ -37,13 +37,18 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Switch } from "antd";
+import { Flex, Form, Popover, Switch } from "antd";
 
 export const ProcessingFields = ({
   projectConfig,
 }: {
   projectConfig?: ProjectConfig | null;
 }) => {
+  const sufficientResources = Boolean(
+    projectConfig &&
+      projectConfig.application_config.num_of_gpus > 0 &&
+      projectConfig.application_config.memory_size_gb >= 16,
+  );
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
       <Form.Item
@@ -59,14 +64,12 @@ export const ProcessingFields = ({
           ({ getFieldValue }) => ({
             validator() {
               if (
-                projectConfig &&
-                (projectConfig.application_config.num_of_gpus === 0 ||
-                  projectConfig.application_config.memory_size_gb < 16) &&
+                !sufficientResources &&
                 getFieldValue("use_enhanced_pdf_processing")
               ) {
                 return Promise.reject(
                   new Error(
-                    "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.",
+                    "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.  Resources can be modified from within the CML Project.",
                   ),
                 );
               }
@@ -75,7 +78,25 @@ export const ProcessingFields = ({
           }),
         ]}
       >
-        <Switch />
+        <Popover
+          title="Insufficient resources to use advanced parsing"
+          zIndex={sufficientResources ? -1 : 1}
+          content={
+            <div style={{ width: 300 }}>
+              The CML Application has insufficient resources to enable advanced
+              parsing. Please make sure you have at least 16GB of RAM and a GPU
+              available. Failure to do so may crash the application. Resources
+              can be modified from within the CML Project.
+            </div>
+          }
+        >
+          <Switch
+            disabled={
+              !sufficientResources &&
+              !projectConfig?.use_enhanced_pdf_processing
+            }
+          />
+        </Popover>
       </Form.Item>
     </Flex>
   );
