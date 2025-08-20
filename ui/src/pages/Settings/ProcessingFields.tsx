@@ -86,7 +86,7 @@ export const ProcessingFields = ({
               The CML Application has insufficient resources to enable advanced
               parsing. Please make sure you have at least 16GB of RAM and a GPU
               available. Failure to do so may crash the application. Resources
-              can be modified from within the CML Project.
+              can be modified from within the CML Application settings.
             </div>
           }
         >
