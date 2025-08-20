@@ -60,7 +60,6 @@ from ....services.chat.suggested_questions import generate_suggested_questions
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     chat_history_manager,
-    RagStudioChatMessageStatus,
 )
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
@@ -198,7 +197,6 @@ def regenerate_message(
         ),
         timestamp=time.time(),
         condensed_question=None,
-        status=RagStudioChatMessageStatus.COMPLETE,
     )
 
     # Persist update in-place

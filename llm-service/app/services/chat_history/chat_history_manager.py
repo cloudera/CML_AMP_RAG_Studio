@@ -29,7 +29,6 @@
 #
 
 from abc import ABCMeta, abstractmethod
-from enum import Enum
 from typing import Optional, Literal
 
 from pydantic import BaseModel
@@ -53,11 +52,6 @@ class RagMessage(BaseModel):
     assistant: str
 
 
-class RagStudioChatMessageStatus(Enum):
-    PENDING = "pending"
-    COMPLETE = "complete"
-
-
 class RagStudioChatMessage(BaseModel):
     id: str
     session_id: int
@@ -67,7 +61,6 @@ class RagStudioChatMessage(BaseModel):
     evaluations: list[Evaluation]
     timestamp: float
     condensed_question: Optional[str]
-    status: Optional[RagStudioChatMessageStatus]
 
 
 class ChatHistoryManager(metaclass=ABCMeta):

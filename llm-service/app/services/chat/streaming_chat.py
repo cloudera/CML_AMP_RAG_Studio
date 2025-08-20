@@ -54,7 +54,6 @@ from app.services.chat_history.chat_history_manager import (
     RagMessage,
     chat_history_manager,
     Evaluation,
-    RagStudioChatMessageStatus,
 )
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run, record_rag_mlflow_run
@@ -105,8 +104,6 @@ def stream_chat(
             ),
             timestamp=time.time(),
             condensed_question=None,
-            status=RagStudioChatMessageStatus.PENDING,
-            error_message=None,
         )
         chat_history_manager.append_to_history(session.id, [new_chat_message])
 
@@ -286,7 +283,6 @@ def finalize_response(
         evaluations=evaluations,
         timestamp=time.time(),
         condensed_question=condensed_question,
-        status=RagStudioChatMessageStatus.COMPLETE,
     )
     record_rag_mlflow_run(
         new_chat_message, query_configuration, response_id, session, user_name
