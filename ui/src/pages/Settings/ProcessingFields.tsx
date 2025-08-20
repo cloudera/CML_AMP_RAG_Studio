@@ -37,7 +37,8 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Popover, Switch } from "antd";
+import { Flex, Form, Switch, Typography } from "antd";
+import { cdlWhite } from "src/cuix/variables.ts";
 
 export const ProcessingFields = ({
   projectConfig,
@@ -51,53 +52,60 @@ export const ProcessingFields = ({
   );
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
-      <Popover
-        title="Insufficient resources to use advanced parsing"
-        zIndex={sufficientResources ? -1 : 1}
-        content={
-          <div style={{ width: 300 }}>
-            The CML Application has insufficient resources to enable advanced
-            parsing. Please make sure you have at least 16GB of RAM and a GPU
-            available. Failure to do so may crash the application. Resources can
-            be modified from within the CML Project.
-          </div>
+      <Form.Item
+        label="Enhanced PDF Processing"
+        name={["use_enhanced_pdf_processing"]}
+        initialValue={projectConfig?.use_enhanced_pdf_processing}
+        valuePropName="checked"
+        tooltip={
+          sufficientResources
+            ? "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16GB of RAM is required for this option."
+            : {
+                title: (
+                  <div>
+                    <Typography.Title
+                      level={5}
+                      style={{ color: cdlWhite, marginTop: 0 }}
+                    >
+                      Insufficient resources to use advanced parsing
+                    </Typography.Title>
+                    <Typography.Paragraph style={{ color: cdlWhite }}>
+                      The CML Application has insufficient resources to enable
+                      advanced parsing. Please make sure you have at least 16GB
+                      of RAM and a GPU available. Failure to do so may crash the
+                      application. Resources can be modified from within the CML
+                      Application settings.
+                    </Typography.Paragraph>
+                  </div>
+                ),
+                placement: "bottom",
+              }
         }
+        validateTrigger="onChange"
+        rules={[
+          ({ getFieldValue }) => ({
+            validator() {
+              if (
+                !sufficientResources &&
+                getFieldValue("use_enhanced_pdf_processing")
+              ) {
+                return Promise.reject(
+                  new Error(
+                    "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.  Resources can be modified from within the CML Project.",
+                  ),
+                );
+              }
+              return Promise.resolve();
+            },
+          }),
+        ]}
       >
-        <Form.Item
-          label="Enhanced PDF Processing"
-          name={["use_enhanced_pdf_processing"]}
-          initialValue={projectConfig?.use_enhanced_pdf_processing}
-          valuePropName="checked"
-          tooltip={
-            "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16GB of RAM is required for this option."
+        <Switch
+          disabled={
+            !sufficientResources && !projectConfig?.use_enhanced_pdf_processing
           }
-          validateTrigger="onChange"
-          rules={[
-            ({ getFieldValue }) => ({
-              validator() {
-                if (
-                  !sufficientResources &&
-                  getFieldValue("use_enhanced_pdf_processing")
-                ) {
-                  return Promise.reject(
-                    new Error(
-                      "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.  Resources can be modified from within the CML Project.",
-                    ),
-                  );
-                }
-                return Promise.resolve();
-              },
-            }),
-          ]}
-        >
-          <Switch
-            disabled={
-              !sufficientResources &&
-              !projectConfig?.use_enhanced_pdf_processing
-            }
-          />
-        </Form.Item>
-      </Popover>
+        />
+      </Form.Item>
     </Flex>
   );
 };
