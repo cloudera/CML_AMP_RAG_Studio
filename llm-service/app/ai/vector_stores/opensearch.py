@@ -112,7 +112,11 @@ class OpenSearch(VectorStore, ABC):
 
     def size(self) -> Optional[int]:
         os_client = self._low_level_client
-        return int(os_client.count(index=self.table_name)["count"])
+        try:
+            return int(os_client.count(index=self.table_name)["count"])
+        except opensearchpy.exceptions.NotFoundError:
+            # Return 0 if index doesn't exist yet
+            return 0
 
     def delete(self) -> None:
         os_client = self._low_level_client
