@@ -49,8 +49,6 @@ import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.
 import "../tableMarkdown.css";
 import { ExclamationCircleTwoTone } from "@ant-design/icons";
 import { ChatMessageBody } from "pages/RagChatTab/ChatOutput/ChatMessages/ChatMessageBody.tsx";
-import { useContext } from "react";
-import { RagChatContext } from "pages/RagChatTab/State/RagChatContext.tsx";
 import { cdlAmber500 } from "src/cuix/variables.ts";
 
 const isError = (data: ChatMessageType) => {
@@ -102,10 +100,6 @@ const WarningMessage = ({
   );
 };
 const ChatMessage = ({ data }: { data: ChatMessageType }) => {
-  const { activeSession } = useContext(RagChatContext);
-  const excludeKnowledgeBases =
-    !activeSession?.dataSourceIds || activeSession.dataSourceIds.length === 0;
-
   if (isError(data)) {
     return <WarningMessage data={data} color={"#ff4d4f"} alertType={"error"} />;
   }
@@ -119,13 +113,7 @@ const ChatMessage = ({ data }: { data: ChatMessageType }) => {
     return <PendingRagOutputSkeleton question={data.rag_message.user} />;
   }
 
-  return (
-    <ChatMessageBody
-      data={data}
-      sessionId={activeSession?.id ?? 0}
-      excludeKnowledgeBase={excludeKnowledgeBases}
-    />
-  );
+  return <ChatMessageBody data={data} />;
 };
 
 export default ChatMessage;

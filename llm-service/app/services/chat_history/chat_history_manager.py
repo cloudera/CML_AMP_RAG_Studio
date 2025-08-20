@@ -84,22 +84,6 @@ class ChatHistoryManager(metaclass=ABCMeta):
     ) -> None:
         pass
 
-    @abstractmethod
-    def update_message(
-        self, session_id: int, message_id: str, message: RagStudioChatMessage
-    ) -> None:
-        """Update an existing message by ID for the given session.
-
-        Implementations should overwrite both the user and assistant entries
-        corresponding to this message ID.
-        """
-        pass
-
-    @abstractmethod
-    def delete_message(self, session_id: int, message_id: str) -> None:
-        """Delete an existing message by ID for the given session."""
-        pass
-
 
 def _create_chat_history_manager() -> ChatHistoryManager:
     from app.services.chat_history.simple_chat_history_manager import (
