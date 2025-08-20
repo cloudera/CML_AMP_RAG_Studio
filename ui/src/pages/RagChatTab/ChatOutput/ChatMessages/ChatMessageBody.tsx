@@ -58,7 +58,6 @@ export const ChatMessageBody = ({
   streamedEvents?: ChatEvent[];
   excludeKnowledgeBase: boolean;
 }) => {
-  console.log(streamedEvents);
   return (
     <div data-testid="chat-message">
       {data.rag_message.user ? (

@@ -52,8 +52,7 @@ from app.services.chat.utils import retrieve_chat_history, format_source_nodes
 from app.services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     RagMessage,
-    chat_history_manager,
-    Evaluation,
+    chat_history_manager, Evaluation,
 )
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run, record_rag_mlflow_run
@@ -63,8 +62,7 @@ from app.services.query.chat_engine import (
     build_flexible_chat_engine,
 )
 from app.services.query.querier import (
-    build_retriever,
-    get_nodes_from_output,
+    build_retriever, get_nodes_from_output,
 )
 from app.services.query.query_configuration import QueryConfiguration
 
@@ -88,24 +86,21 @@ def stream_chat(
         use_streaming=not session.query_configuration.disable_streaming,
     )
 
-    # If response_id is provided (e.g., regenerate), reuse it and do NOT append a new message.
-    # Otherwise, create a new message entry in the history.
-    if response_id is None:
-        response_id = str(uuid.uuid4())
-        new_chat_message = RagStudioChatMessage(
-            id=response_id,
-            session_id=session.id,
-            source_nodes=[],
-            inference_model=session.inference_model,
-            evaluations=[],
-            rag_message=RagMessage(
-                user=query,
-                assistant="",
-            ),
-            timestamp=time.time(),
-            condensed_question=None,
-        )
-        chat_history_manager.append_to_history(session.id, [new_chat_message])
+    response_id = response_id or str(uuid.uuid4())
+    new_chat_message = RagStudioChatMessage(
+        id=response_id,
+        session_id=session.id,
+        source_nodes=[],
+        inference_model=session.inference_model,
+        evaluations=[],
+        rag_message=RagMessage(
+            user=query,
+            assistant="",
+        ),
+        timestamp=time.time(),
+        condensed_question=None,
+    )
+    chat_history_manager.append_to_history(session.id, [new_chat_message])
 
     total_data_sources_size: int = sum(
         map(

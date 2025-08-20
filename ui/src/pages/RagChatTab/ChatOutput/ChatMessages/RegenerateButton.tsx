@@ -24,9 +24,6 @@ const RegenerateButton = ({
     streamedEventState: [, setStreamedEvent],
     streamedAbortControllerState: [, setStreamedAbortController],
   } = useContext(RagChatContext);
-  const {
-    streamingMessageIdState: [, setStreamingMessageId],
-  } = useContext(RagChatContext);
   // Use custom hook to handle batched streaming updates
   const { onChunk, flush } = useStreamingChunkBuffer((chunks) => {
     setStreamedChat((prev) => prev + chunks);
@@ -39,7 +36,6 @@ const RegenerateButton = ({
       // Flush any remaining chunks before cleanup
       flush();
       setStreamedChat("");
-      setStreamingMessageId(undefined);
     },
     getController: (ctrl) => {
       setStreamedAbortController(ctrl);
@@ -48,7 +44,6 @@ const RegenerateButton = ({
 
   const handleClick = () => {
     onStarted?.();
-    setStreamingMessageId(message.id);
     streamChatMutation.mutate({
       query: message.rag_message.user,
       session_id: message.session_id,

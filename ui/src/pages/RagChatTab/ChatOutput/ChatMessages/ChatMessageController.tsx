@@ -169,12 +169,7 @@ const ChatMessageController = () => {
   }
   if (flatChatHistory.length === 0) {
     if (search.question) {
-      return (
-        <PendingRagOutputSkeleton
-          question={search.question}
-          excludeKnowledgeBase={excludeKnowledgeBases}
-        />
-      );
+      return <PendingRagOutputSkeleton question={search.question} />;
     }
     if (isFetchingHistory) {
       return <ChatLoading />;

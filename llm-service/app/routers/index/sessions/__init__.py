@@ -66,6 +66,7 @@ from ....services.metadata_apis import session_metadata_api
 from ....services.mlflow import rating_mlflow_log_metric, feedback_mlflow_log_table
 from ....services.query.chat_events import ChatEvent
 from ....services.session import rename_session
+from ....services.metadata_apis import session_metadata_api
 from ....services import llm_completion
 from ....services.chat_history.chat_history_manager import RagMessage
 
@@ -163,28 +164,18 @@ class RegenerateRequest(BaseModel):
     summary="Regenerate an assistant message by message ID and update chat history",
 )
 @exceptions.propagates
-def regenerate_message(
-    session_id: int, message_id: str, remote_user: Optional[str] = Header(None)
-) -> RagStudioChatMessage:
+def regenerate_message(session_id: int, message_id: str, remote_user: Optional[str] = Header(None)) -> RagStudioChatMessage:
     # Load session
     session = session_metadata_api.get_session(session_id, user_name=remote_user)
 
     # Find existing message
-    messages: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(
-        session_id=session_id
-    )
-    target: Optional[RagStudioChatMessage] = next(
-        (m for m in messages if m.id == message_id), None
-    )
+    messages: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(session_id=session_id)
+    target: Optional[RagStudioChatMessage] = next((m for m in messages if m.id == message_id), None)
     if target is None:
         raise HTTPException(status_code=404, detail="Message not found")
 
     # Regenerate assistant response for the same user message
-    completion = llm_completion.completion(
-        session_id=session_id,
-        question=target.rag_message.user,
-        model_name=session.inference_model,
-    )
+    completion = llm_completion.completion(session_id=session_id, question=target.rag_message.user, model_name=session.inference_model)
 
     updated = RagStudioChatMessage(
         id=target.id,
@@ -192,17 +183,13 @@ def regenerate_message(
         source_nodes=target.source_nodes,
         inference_model=session.inference_model,
         evaluations=[],
-        rag_message=RagMessage(
-            user=target.rag_message.user, assistant=str(completion.message.content)
-        ),
+        rag_message=RagMessage(user=target.rag_message.user, assistant=str(completion.message.content)),
         timestamp=time.time(),
         condensed_question=None,
     )
 
     # Persist update in-place
-    chat_history_manager.update_message(
-        session_id=session_id, message_id=message_id, message=updated
-    )
+    chat_history_manager.update_message(session_id=session_id, message_id=message_id, message=updated)
     return updated
 
 
@@ -283,8 +270,6 @@ def feedback(
 class RagStudioChatRequest(BaseModel):
     query: str
     configuration: RagPredictConfiguration | None = None
-    # Optional existing response_id to support in-place regeneration
-    response_id: str | None = None
 
 
 class StreamCompletionRequest(BaseModel):
@@ -302,7 +287,7 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
         user_info_json = base64.b64decode(base_64_user_info + "===")
         user_info = json.loads(user_info_json)
         return str(user_info["username"])
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Failed to parse JWT cookie")
         return "unknown"
 
@@ -343,7 +328,12 @@ def stream_chat_completion(
         try:
             executor = ThreadPoolExecutor(max_workers=1)
             # If a response_id is provided in the request (e.g., regenerate), reuse it; else None
-            requested_response_id = request.response_id
+            requested_response_id = None
+            try:
+                body_dict = request.model_dump()  # Pydantic BaseModel
+                requested_response_id = body_dict.get("response_id")
+            except Exception:
+                requested_response_id = None
 
             future = executor.submit(
                 stream_chat,
@@ -406,7 +396,7 @@ def stream_chat_completion(
         except TimeoutError:
             logger.exception("Timeout: Failed to stream chat completion")
             yield 'data: {{"error" : "Timeout: Failed to stream chat completion"}}\n\n'
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
         finally:
