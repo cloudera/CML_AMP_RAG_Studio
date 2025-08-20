@@ -152,9 +152,6 @@ def chat_history(
     )
 
 
-## Regenerate endpoint removed
-
-
 @router.get(
     "/chat-history/{message_id}",
     summary="Returns a specific chat messages for the provided session.",
