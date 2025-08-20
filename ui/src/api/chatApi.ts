@@ -114,7 +114,10 @@ export interface ChatResponseFeedback {
 export const placeholderChatResponseId = "placeholder";
 
 export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
-  return chatMessage.id === placeholderChatResponseId;
+  return (
+    chatMessage.id === placeholderChatResponseId ||
+    chatMessage.rag_message.assistant === ""
+  );
 };
 
 export const placeholderChatResponse = (query: string): ChatMessageType => {
@@ -167,7 +170,7 @@ export interface ChatHistoryResponse {
 
 export const chatHistoryQuery = async (
   request: ChatHistoryRequestType,
-  pageParam: number | undefined
+  pageParam: number | undefined,
 ): Promise<ChatHistoryResponse> => {
   const params = new URLSearchParams();
   if (request.limit !== undefined) {
@@ -179,13 +182,13 @@ export const chatHistoryQuery = async (
 
   return await getRequest(
     `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history?` +
-      params.toString()
+      params.toString(),
   );
 };
 
 export const appendPlaceholderToChatHistory = (
   query: string,
-  cachedData?: InfiniteData<ChatHistoryResponse>
+  cachedData?: InfiniteData<ChatHistoryResponse>,
 ): InfiniteData<ChatHistoryResponse> => {
   if (!cachedData || cachedData.pages.length === 0) {
     const firstPage: ChatHistoryResponse = {
@@ -200,7 +203,7 @@ export const appendPlaceholderToChatHistory = (
   }
 
   const pageParams = cachedData.pageParams.map((pageParam, index) =>
-    index > 0 && typeof pageParam === "number" ? ++pageParam : pageParam
+    index > 0 && typeof pageParam === "number" ? ++pageParam : pageParam,
   );
 
   const pages = cachedData.pages.map((page) => {
@@ -216,7 +219,7 @@ export const appendPlaceholderToChatHistory = (
 
   const lastPage = pages[pages.length - 1];
   const filteredLastPageData = lastPage.data.filter(
-    (chatMessage) => !isPlaceholder(chatMessage)
+    (chatMessage) => !isPlaceholder(chatMessage),
   );
   return {
     pageParams,
@@ -232,7 +235,7 @@ export const appendPlaceholderToChatHistory = (
 
 export const replacePlaceholderInChatHistory = (
   data: ChatMessageType,
-  cachedData?: InfiniteData<ChatHistoryResponse>
+  cachedData?: InfiniteData<ChatHistoryResponse>,
 ): InfiniteData<ChatHistoryResponse> => {
   if (!cachedData || cachedData.pages.length == 0) {
     return (
@@ -256,7 +259,6 @@ export const replacePlaceholderInChatHistory = (
   });
 
   const noDataInPages = pages[pages.length - 1].data.length === 0;
-
   return {
     pageParams: cachedData.pageParams,
     pages: noDataInPages
@@ -266,7 +268,7 @@ export const replacePlaceholderInChatHistory = (
 };
 
 export const createQueryConfiguration = (
-  excludeKnowledgeBase: boolean
+  excludeKnowledgeBase: boolean,
 ): QueryConfiguration => {
   return {
     exclude_knowledge_base: excludeKnowledgeBase,
@@ -297,7 +299,7 @@ const ratingMutation = async ({
 }): Promise<ChatResponseFeedback> => {
   return await postRequest(
     `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/rating`,
-    { rating }
+    { rating },
   );
 };
 
@@ -324,7 +326,7 @@ const feedbackMutation = async ({
 }): Promise<ChatResponseFeedback> => {
   return await postRequest(
     `${llmServicePath}/sessions/${sessionId}/responses/${responseId}/feedback`,
-    { feedback }
+    { feedback },
   );
 };
 
@@ -345,7 +347,7 @@ export interface ChatEvent {
 const customChatMessage = (
   variables: ChatMutationRequest,
   message: string,
-  prefix: string
+  prefix: string,
 ) => {
   const uuid = crypto.randomUUID();
   const customMessage: ChatMessageType = {
@@ -373,7 +375,7 @@ const canceledChatMessage = (variables: ChatMutationRequest) => {
   return customChatMessage(
     variables,
     "Request canceled by user",
-    CANCELED_PREFIX_ID
+    CANCELED_PREFIX_ID,
   );
 };
 
@@ -386,7 +388,7 @@ interface StreamingChatCallbacks {
 const modifyPlaceholderInChatHistory = (
   queryClient: QueryClient,
   variables: ChatMutationRequest,
-  replacementMessage: ChatMessageType
+  replacementMessage: ChatMessageType,
 ) => {
   queryClient.setQueryData<InfiniteData<ChatHistoryResponse>>(
     chatHistoryQueryKey({
@@ -394,14 +396,14 @@ const modifyPlaceholderInChatHistory = (
       offset: 0,
     }),
     (cachedData) =>
-      replacePlaceholderInChatHistory(replacementMessage, cachedData)
+      replacePlaceholderInChatHistory(replacementMessage, cachedData),
   );
 };
 
 const handlePrepareController = (
   getController: ((ctrl: AbortController) => void) | undefined,
   queryClient: QueryClient,
-  request: ChatMutationRequest
+  request: ChatMutationRequest,
 ) => {
   return (ctrl: AbortController) => {
     if (getController) {
@@ -411,7 +413,7 @@ const handlePrepareController = (
         modifyPlaceholderInChatHistory(
           queryClient,
           request,
-          canceledChatMessage(request)
+          canceledChatMessage(request),
         );
         ctrl.signal.removeEventListener("abort", onAbort);
       };
@@ -429,10 +431,10 @@ const handleStreamingSuccess = (
     | ((data: ChatMessageType, request?: unknown, context?: unknown) => unknown)
     | undefined,
   handleError: (request: ChatMutationRequest, error: Error) => void,
-  onError: ((error: Error) => void) | undefined
+  onError: ((error: Error) => void) | undefined,
 ) => {
   fetch(
-    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history/${messageId}`
+    `${llmServicePath}/sessions/${request.session_id.toString()}/chat-history/${messageId}`,
   )
     .then(async (res) => {
       const message = (await res.json()) as ChatMessageType;
@@ -440,7 +442,7 @@ const handleStreamingSuccess = (
         chatHistoryQueryKey({
           session_id: request.session_id,
         }),
-        (cachedData) => replacePlaceholderInChatHistory(message, cachedData)
+        (cachedData) => replacePlaceholderInChatHistory(message, cachedData),
       );
       queryClient
         .invalidateQueries({
@@ -480,7 +482,7 @@ export const useStreamingChatMutation = ({
       const handleGetController = handlePrepareController(
         getController,
         queryClient,
-        request
+        request,
       );
 
       return streamChatMutation(
@@ -488,7 +490,7 @@ export const useStreamingChatMutation = ({
         onChunk,
         onEvent,
         convertError,
-        handleGetController
+        handleGetController,
       );
     },
     onMutate: (variables) => {
@@ -497,7 +499,7 @@ export const useStreamingChatMutation = ({
           session_id: variables.session_id,
         }),
         (cachedData) =>
-          appendPlaceholderToChatHistory(variables.query, cachedData)
+          appendPlaceholderToChatHistory(variables.query, cachedData),
       );
     },
     onSuccess: (messageId, variables) => {
@@ -510,7 +512,7 @@ export const useStreamingChatMutation = ({
         queryClient,
         onSuccess,
         handleError,
-        onError
+        onError,
       );
     },
     onError: (error: Error, variables) => {
@@ -525,7 +527,7 @@ const streamChatMutation = async (
   onChunk: (chunk: string) => void,
   onEvent: (event: ChatEvent) => void,
   onError: (error: string) => void,
-  getController?: (ctrl: AbortController) => void
+  getController?: (ctrl: AbortController) => void,
 ): Promise<string> => {
   const ctrl = new AbortController();
   if (getController) {
@@ -569,7 +571,7 @@ const streamChatMutation = async (
         } catch (error) {
           console.error("Error parsing message data:", error);
           onError(
-            `An error occurred while processing the response.  Error message: ${JSON.stringify(msg)}. Error details: ${JSON.stringify(error)}.`
+            `An error occurred while processing the response.  Error message: ${JSON.stringify(msg)}. Error details: ${JSON.stringify(error)}.`,
           );
           ctrl.abort();
         }
@@ -594,13 +596,13 @@ const streamChatMutation = async (
           onError("An error occurred: " + response.statusText);
         }
       },
-    }
+    },
   );
   return responseId;
 };
 
 export const getOnEvent = (
-  setStreamedEvent: Dispatch<SetStateAction<ChatEvent[]>>
+  setStreamedEvent: Dispatch<SetStateAction<ChatEvent[]>>,
 ) => {
   return (event: ChatEvent) => {
     if (event.type === "done") {
