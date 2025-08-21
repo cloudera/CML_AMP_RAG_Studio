@@ -57,6 +57,7 @@ const PendingRagOutputSkeleton = ({ question }: { question: string }) => {
     },
     evaluations: [],
     timestamp: Date.now(),
+    status: "pending",
   };
 
   return (

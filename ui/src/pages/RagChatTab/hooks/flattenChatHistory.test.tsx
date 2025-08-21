@@ -79,6 +79,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 1", assistant: "response 1" },
       evaluations: [],
       timestamp: 1000,
+      status: "success",
     };
 
     const message2: ChatMessageType = {
@@ -88,6 +89,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 2", assistant: "response 2" },
       evaluations: [],
       timestamp: 2000,
+      status: "success",
     };
 
     const chatHistory: InfiniteData<ChatHistoryResponse> = {
@@ -113,6 +115,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 1", assistant: "response 1" },
       evaluations: [],
       timestamp: 1000,
+      status: "success",
     };
 
     const message2: ChatMessageType = {
@@ -122,6 +125,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 2", assistant: "response 2" },
       evaluations: [],
       timestamp: 2000,
+      status: "success",
     };
 
     const message3: ChatMessageType = {
@@ -131,6 +135,7 @@ describe("flattenChatHistory", () => {
       rag_message: { user: "query 3", assistant: "response 3" },
       evaluations: [],
       timestamp: 3000,
+      status: "success",
     };
 
     const chatHistory: InfiniteData<ChatHistoryResponse> = {
