@@ -49,6 +49,7 @@ from app.config import settings
 from app.services.caii.types import ModelResponse
 from app.services.models import ModelProvider
 from app.services.models.providers import BedrockModelProvider
+from app.services.models.providers._model_provider import get_all_env_var_names
 
 TEXT_MODELS = [
     ("test.unavailable-text-model-v1", "NOT_AVAILABLE"),
@@ -173,15 +174,6 @@ def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
         ),
     ):
         yield
-
-
-def get_all_env_var_names() -> set[str]:
-    """Return the names of all the env vars required by all model providers."""
-    return set(
-        itertools.chain.from_iterable(
-            subcls.get_env_var_names() for subcls in ModelProvider.__subclasses__()
-        )
-    )
 
 
 # TODO: move this test function to a discoverable place
