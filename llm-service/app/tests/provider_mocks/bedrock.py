@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import itertools
 from typing import Generator
 from unittest.mock import patch
 from urllib.parse import urljoin
@@ -42,28 +43,41 @@ from urllib.parse import urljoin
 import botocore
 import pytest
 import responses
+from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 
 from app.config import settings
+from app.services.caii.types import ModelResponse
+from app.services.models import ModelProvider
+from app.services.models.providers import BedrockModelProvider
+
+TEXT_MODELS = [
+    ("test.unavailable-text-model-v1", "NOT_AVAILABLE"),
+    ("test.available-text-model-v1", "AVAILABLE"),
+]
+EMBEDDING_MODELS = [
+    ("test.unavailable-embedding-model-v1", "NOT_AVAILABLE"),
+    ("test.available-embedding-model-v1", "AVAILABLE"),
+]
+RERANKING_MODELS = [
+    ("test.available-reranking-model-v1", "AVAILABLE"),
+]
 
 
 @pytest.fixture
-def mock_bedrock() -> Generator[None, None, None]:
-    BEDROCK_URL_BASE = f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
-    TEXT_MODELS = [
-        ("test.unavailable-text-model-v1", "NOT_AVAILABLE"),
-        ("test.available-text-model-v1", "AVAILABLE"),
-    ]
-    EMBEDDING_MODELS = [
-        ("test.unavailable-embedding-model-v1", "NOT_AVAILABLE"),
-        ("test.available-embedding-model-v1", "AVAILABLE"),
-    ]
+def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
+    for name in BedrockModelProvider.get_env_var_names():
+        monkeypatch.setenv(name, "test")
+    for name in get_all_env_var_names() - BedrockModelProvider.get_env_var_names():
+        monkeypatch.delenv(name, raising=False)
 
+    # mock calls made directly through `requests`
+    bedrock_url_base = f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
     r_mock = responses.RequestsMock(assert_all_requests_are_fired=False)
     for model_id, availability in TEXT_MODELS + EMBEDDING_MODELS:
         r_mock.get(
             urljoin(
-                BEDROCK_URL_BASE,
-                f"foundation-model-availability/{model_id}:0",
+                bedrock_url_base,
+                f"foundation-model-availability/{model_id}",
             ),
             json={
                 "agreementAvailability": {
@@ -77,67 +91,54 @@ def mock_bedrock() -> Generator[None, None, None]:
             },
         )
 
+    # mock calls made through `boto3`
     make_api_call = botocore.client.BaseClient._make_api_call
 
     def mock_make_api_call(self, operation_name: str, api_params: dict[str, str]):
-        """Mock Bedrock calls, since moto doesn't have full coverage.
+        """Mock Boto3 Bedrock operations, since moto doesn't have full coverage.
 
         Based on https://docs.getmoto.org/en/latest/docs/services/patching_other_services.html.
 
         """
         if operation_name == "ListFoundationModels":
             modality = api_params["byOutputModality"]
-            if modality == "TEXT":
-                return {
-                    "modelSummaries": [
-                        {
-                            "modelArn": f"arn:aws:bedrock:{settings.aws_default_region}::foundation-model/{model_id}:0",
-                            "modelId": f"{model_id}:0",
-                            "modelName": model_id.upper(),
-                            "providerName": "Test",
-                            "inputModalities": ["TEXT"],
-                            "outputModalities": ["TEXT"],
-                            "responseStreamingSupported": True,
-                            "customizationsSupported": [],
-                            "inferenceTypesSupported": ["ON_DEMAND"],
-                            "modelLifecycle": {"status": "ACTIVE"},
-                        }
-                        for model_id, _ in TEXT_MODELS
-                    ],
-                }
-            elif modality == "EMBEDDING":
-                return {
-                    "modelSummaries": [
-                        {
-                            "modelArn": f"arn:aws:bedrock:{settings.aws_default_region}::foundation-model/{model_id}:0",
-                            "modelId": f"{model_id}:0",
-                            "modelName": model_id.upper(),
-                            "providerName": "Test",
-                            "inputModalities": ["TEXT"],
-                            "outputModalities": ["EMBEDDING"],
-                            "responseStreamingSupported": False,
-                            "customizationsSupported": [],
-                            "inferenceTypesSupported": ["ON_DEMAND"],
-                            "modelLifecycle": {"status": "ACTIVE"},
-                        }
-                        for model_id, _ in EMBEDDING_MODELS
-                    ],
-                }
-            else:
+            models = {
+                "TEXT": TEXT_MODELS,
+                "EMBEDDING": EMBEDDING_MODELS,
+            }.get(modality)
+            if models is None:
                 raise ValueError(f"test encountered unexpected modality {modality}")
+
+            return {
+                "modelSummaries": [
+                    {
+                        "modelArn": f"arn:aws:bedrock:{settings.aws_default_region}::foundation-model/{model_id}",
+                        "modelId": model_id,
+                        "modelName": model_id.upper(),
+                        "providerName": "Test",
+                        "inputModalities": ["TEXT"],
+                        "outputModalities": [modality],
+                        "responseStreamingSupported": modality == "TEXT",  # arbitrary
+                        "customizationsSupported": [],
+                        "inferenceTypesSupported": ["ON_DEMAND"],
+                        "modelLifecycle": {"status": "ACTIVE"},
+                    }
+                    for model_id, _ in models
+                ],
+            }
         elif operation_name == "ListInferenceProfiles":
             return {
                 "inferenceProfileSummaries": [
                     {
                         "inferenceProfileName": f"US {model_id.upper()}",
                         "description": f"Routes requests to {model_id.upper()} in {settings.aws_default_region}.",
-                        "inferenceProfileArn": f"arn:aws:bedrock:{settings.aws_default_region}:123456789012:inference-profile/{model_id}:0",
+                        "inferenceProfileArn": f"arn:aws:bedrock:{settings.aws_default_region}:123456789012:inference-profile/{model_id}",
                         "models": [
                             {
-                                "modelArn": f"arn:aws:bedrock:{settings.aws_default_region}::foundation-model/{model_id}:0"
+                                "modelArn": f"arn:aws:bedrock:{settings.aws_default_region}::foundation-model/{model_id}"
                             },
                         ],
-                        "inferenceProfileId": f"{model_id}:0",
+                        "inferenceProfileId": model_id,
                         "status": "ACTIVE",
                         "type": "SYSTEM_DEFINED",
                     }
@@ -149,13 +150,66 @@ def mock_bedrock() -> Generator[None, None, None]:
             # passthrough
             return make_api_call(self, operation_name, api_params)
 
-    with patch("botocore.client.BaseClient._make_api_call", new=mock_make_api_call):
-        with r_mock:
-            yield
+    # mock reranking models, which are hard-coded in our app
+    def list_reranking_models() -> list[ModelResponse]:
+        return [
+            ModelResponse(model_id=model_id, name=model_id.upper())
+            for model_id, _ in RERANKING_MODELS
+        ]
+
+    with (
+        r_mock,
+        patch(
+            "botocore.client.BaseClient._make_api_call",
+            new=mock_make_api_call,
+        ),
+        patch(
+            "app.services.models.providers.BedrockModelProvider.list_reranking_models",
+            new=list_reranking_models,
+        ),
+        patch(  # work around a llama-index filter we have in list_llm_models()
+            "app.services.models.providers.bedrock.BEDROCK_MODELS",
+            new=BEDROCK_MODELS | {model_id: 128000 for model_id, _ in TEXT_MODELS},
+        ),
+    ):
+        yield
 
 
-def test_bedrock(mock_bedrock) -> None:
-    from app.services.models.providers import BedrockModelProvider
+def get_all_env_var_names() -> set[str]:
+    """Return the names of all the env vars required by all model providers."""
+    return set(
+        itertools.chain.from_iterable(
+            subcls.get_env_var_names() for subcls in ModelProvider.__subclasses__()
+        )
+    )
 
-    BedrockModelProvider.list_available_models()
-    BedrockModelProvider._get_model_arns()
+
+# TODO: move this test function to a discoverable place
+def test_bedrock(mock_bedrock, client) -> None:
+    response = client.get("/llm-service/models/model_source")
+    assert response.status_code == 200
+    assert response.json() == "Bedrock"
+
+    response = client.get("/llm-service/models/embeddings")
+    assert response.status_code == 200
+    assert [model["model_id"] for model in response.json()] == [
+        model_id
+        for model_id, availability in EMBEDDING_MODELS
+        if availability == "AVAILABLE"
+    ]
+
+    response = client.get("/llm-service/models/llm")
+    assert response.status_code == 200
+    assert [model["model_id"] for model in response.json()] == [
+        model_id
+        for model_id, availability in TEXT_MODELS
+        if availability == "AVAILABLE"
+    ]
+
+    response = client.get("/llm-service/models/reranking")
+    assert response.status_code == 200
+    assert [model["model_id"] for model in response.json()] == [
+        model_id
+        for model_id, availability in RERANKING_MODELS
+        if availability == "AVAILABLE"
+    ]
