@@ -42,9 +42,7 @@ import os
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
-from app.services.query.agents.non_streamer_bedrock_converse import (
-    FakeStreamBedrockConverse,
-)
+
 from llama_index.core.agent.workflow import (
     FunctionAgent,
     AgentStream,
