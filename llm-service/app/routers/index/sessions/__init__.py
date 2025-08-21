@@ -318,6 +318,14 @@ def stream_chat_completion(
                 response: ChatResponse = item
                 # Check for cancellation between each response
                 if cancel_event.is_set():
+                    print("Client disconnected between events")
+                    updated_response: ChatResponse = response
+                    updated_response.additional_kwargs["status"] = "success"
+                    chat_history_manager.update_message(
+                        session_id=session_id,
+                        message_id=response.additional_kwargs["response_id"],
+                        message=updated_response,
+                    )
                     logger.info("Client disconnected during result processing")
                     break
                 if "chat_event" in response.additional_kwargs:
