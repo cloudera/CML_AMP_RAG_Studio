@@ -43,16 +43,10 @@ from app.services import models
 from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
 from app.services.models.providers import BedrockModelProvider
-from app.services.models.providers._model_provider import _ModelProvider
-
-
-def get_all_env_var_names() -> set[str]:
-    """Return the names of all the env vars required by all model providers."""
-    return set(
-        itertools.chain.from_iterable(
-            subcls.get_env_var_names() for subcls in _ModelProvider.__subclasses__()
-        )
-    )
+from app.services.models.providers._model_provider import (
+    _ModelProvider,
+    get_all_env_var_names,
+)
 
 
 @pytest.fixture(params=_ModelProvider.__subclasses__())
