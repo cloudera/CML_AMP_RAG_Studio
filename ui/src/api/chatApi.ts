@@ -105,6 +105,7 @@ export interface ChatMessageType {
   evaluations: Evaluation[];
   timestamp: number;
   condensed_question?: string;
+  status: "pending" | "error" | "success";
 }
 
 export interface ChatResponseFeedback {
@@ -116,7 +117,7 @@ export const placeholderChatResponseId = "placeholder";
 export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
   return (
     chatMessage.id === placeholderChatResponseId ||
-    chatMessage.rag_message.assistant === ""
+    chatMessage.status === "pending"
   );
 };
 
@@ -131,6 +132,7 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
     },
     evaluations: [],
     timestamp: Date.now(),
+    status: "pending",
   };
 };
 
@@ -348,6 +350,7 @@ const customChatMessage = (
   variables: ChatMutationRequest,
   message: string,
   prefix: string,
+  status: ChatMessageType["status"],
 ) => {
   const uuid = crypto.randomUUID();
   const customMessage: ChatMessageType = {
@@ -360,6 +363,7 @@ const customChatMessage = (
     },
     evaluations: [],
     timestamp: Date.now(),
+    status,
   };
   return customMessage;
 };
@@ -368,7 +372,7 @@ export const ERROR_PREFIX_ID = "error-";
 export const CANCELED_PREFIX_ID = "canceled-";
 
 const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
-  return customChatMessage(variables, error.message, ERROR_PREFIX_ID);
+  return customChatMessage(variables, error.message, ERROR_PREFIX_ID, "error");
 };
 
 const canceledChatMessage = (variables: ChatMutationRequest) => {
@@ -376,6 +380,7 @@ const canceledChatMessage = (variables: ChatMutationRequest) => {
     variables,
     "Request canceled by user",
     CANCELED_PREFIX_ID,
+    "error",
   );
 };
 

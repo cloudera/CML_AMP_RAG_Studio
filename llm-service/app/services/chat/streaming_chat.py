@@ -52,7 +52,8 @@ from app.services.chat.utils import retrieve_chat_history, format_source_nodes
 from app.services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     RagMessage,
-    chat_history_manager, Evaluation,
+    chat_history_manager,
+    Evaluation,
 )
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run, record_rag_mlflow_run
@@ -62,7 +63,8 @@ from app.services.query.chat_engine import (
     build_flexible_chat_engine,
 )
 from app.services.query.querier import (
-    build_retriever, get_nodes_from_output,
+    build_retriever,
+    get_nodes_from_output,
 )
 from app.services.query.query_configuration import QueryConfiguration
 
@@ -99,6 +101,7 @@ def stream_chat(
         ),
         timestamp=time.time(),
         condensed_question=None,
+        status="pending",
     )
     chat_history_manager.append_to_history(session.id, [new_chat_message])
 
@@ -231,6 +234,7 @@ def _stream_direct_llm_chat(
         ),
         timestamp=time.time(),
         condensed_question=None,
+        status="success",
     )
     chat_history_manager.update_message(session.id, response_id, new_chat_message)
 
@@ -278,6 +282,7 @@ def finalize_response(
         evaluations=evaluations,
         timestamp=time.time(),
         condensed_question=condensed_question,
+        status="success",
     )
     record_rag_mlflow_run(
         new_chat_message, query_configuration, response_id, session, user_name

@@ -50,7 +50,7 @@ const useCreateSessionAndRedirect = (
           enableHyde: false,
           enableSummaryFilter: true,
           enableToolCalling: supportsToolCalling ?? false,
-          disableStreaming: true,
+          disableStreaming: false,
           selectedTools: [],
         },
         embeddingModel: embeddingModels?.length

@@ -142,6 +142,7 @@ def direct_llm_chat(
         ),
         timestamp=time.time(),
         condensed_question=None,
+        status="success",
     )
     chat_history_manager.append_to_history(session.id, [new_chat_message])
     return new_chat_message

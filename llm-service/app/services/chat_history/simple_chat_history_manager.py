@@ -102,6 +102,7 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                     ),
                     timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
                     condensed_question=None,
+                    status=assistant_message.additional_kwargs.get("status", "success"),
                 )
             )
             i += 2
@@ -154,6 +155,7 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                         "inference_model": message.inference_model,
                         "evaluations": message.evaluations,
                         "timestamp": message.timestamp,
+                        "status": message.status,
                     },
                 ),
             )
@@ -187,6 +189,7 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                         "inference_model": message.inference_model,
                         "evaluations": message.evaluations,
                         "timestamp": message.timestamp,
+                        "status": message.status,
                     }
                 )
                 # Persist updated list
