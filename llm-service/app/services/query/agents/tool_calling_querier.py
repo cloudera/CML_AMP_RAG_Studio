@@ -42,6 +42,9 @@ import os
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
+from app.services.query.agents.non_streamer_bedrock_converse import (
+    FakeStreamBedrockConverse,
+)
 from llama_index.core.agent.workflow import (
     FunctionAgent,
     AgentStream,
@@ -57,8 +60,6 @@ from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
-from llama_index.llms.bedrock_converse import BedrockConverse
-from llama_index.llms.bedrock_converse.utils import get_model_name
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -66,9 +67,6 @@ from app.services.models.providers import BedrockModelProvider
 from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
-)
-from app.services.query.agents.non_streamer_bedrock_converse import (
-    FakeStreamBedrockConverse,
 )
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
@@ -486,12 +484,6 @@ def build_function_agent(
             + enhanced_query
         )
     else:
-        if (
-            isinstance(llm, BedrockConverse)
-            and get_model_name(llm.metadata.model_name)
-            not in BEDROCK_STREAMING_TOOL_MODELS
-        ):
-            llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
         agent = FunctionAgent(
             tools=callable_tools,
             llm=llm,
