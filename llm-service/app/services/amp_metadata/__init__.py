@@ -50,7 +50,7 @@ from app.config import (
     ChatStoreProviderType,
     VectorDbProviderType,
     MetadataDbProviderType,
-    ModelProviderType,
+    ModelSource,
 )
 from app.services.models.providers import (
     CAIIModelProvider,
@@ -136,7 +136,7 @@ class ProjectConfig(BaseModel):
     chat_store_provider: ChatStoreProviderType
     vector_db_provider: VectorDbProviderType
     metadata_db_provider: MetadataDbProviderType
-    model_provider: Optional[ModelProviderType] = None
+    model_provider: Optional[ModelSource] = None
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
@@ -388,7 +388,7 @@ def build_configuration(
     validate_config = validate(frozenset(env.items()))
 
     model_provider = (
-        TypeAdapter(ModelProviderType).validate_python(env.get("MODEL_PROVIDER"))
+        TypeAdapter(ModelSource).validate_python(env.get("MODEL_PROVIDER"))
         if env.get("MODEL_PROVIDER")
         else None
     )

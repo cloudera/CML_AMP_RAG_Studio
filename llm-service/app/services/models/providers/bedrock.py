@@ -51,9 +51,8 @@ from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 from pydantic import TypeAdapter
 
-from app.config import settings
+from app.config import settings, ModelSource
 from ._model_provider import _ModelProvider
-from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import raise_for_http_error, timed_lru_cache

@@ -42,7 +42,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
-from .._model_source import ModelSource
+from app.config import ModelSource
 from ...caii.types import ModelResponse
 
 

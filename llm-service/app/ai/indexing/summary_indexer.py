@@ -73,10 +73,9 @@ from app.services import models
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
-from ...config import settings
+from ...config import settings, ModelSource
 from ...services.metadata_apis import data_sources_metadata_api
 from ...services.models.providers import get_provider_class
-from ...services.models import ModelSource
 
 logger = logging.getLogger(__name__)
 
