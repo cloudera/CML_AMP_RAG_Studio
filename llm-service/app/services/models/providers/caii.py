@@ -62,12 +62,12 @@ from ...utils import timed_lru_cache
 
 class CAIIModelProvider(ModelProvider):
     @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.CAII
-
-    @staticmethod
     def get_env_var_names() -> set[str]:
         return {"CAII_DOMAIN"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.CAII
 
     @staticmethod
     @timed_lru_cache(maxsize=1, seconds=300)
@@ -105,17 +105,17 @@ class CAIIModelProvider(ModelProvider):
         return get_caii_reranking_model(name, top_n)
 
     @classmethod
-    def is_enabled(cls) -> bool:
+    def env_vars_are_set(cls) -> bool:
         version: Optional[str] = get_cml_version_from_sense_bootstrap()
         if not version:
-            return super().is_enabled()
+            return super().env_vars_are_set()
         cml_version = Version(version)
         if cml_version >= Version("2.0.50-b68"):
             available_models = get_models_with_task("TEXT_GENERATION")
             if available_models:
                 return True
 
-        return super().is_enabled()
+        return super().env_vars_are_set()
 
 
 # ensure interface is implemented

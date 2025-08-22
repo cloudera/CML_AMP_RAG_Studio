@@ -216,13 +216,13 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
             f"Preferred provider {preferred_provider} is properly configured. \n"
         )
         if preferred_provider == "Bedrock":
-            valid_model_config_exists = BedrockModelProvider.is_enabled()
+            valid_model_config_exists = BedrockModelProvider.env_vars_are_set()
         elif preferred_provider == "Azure":
-            valid_model_config_exists = AzureModelProvider.is_enabled()
+            valid_model_config_exists = AzureModelProvider.env_vars_are_set()
         elif preferred_provider == "OpenAI":
-            valid_model_config_exists = OpenAiModelProvider.is_enabled()
+            valid_model_config_exists = OpenAiModelProvider.env_vars_are_set()
         elif preferred_provider == "CAII":
-            valid_model_config_exists = CAIIModelProvider.is_enabled()
+            valid_model_config_exists = CAIIModelProvider.env_vars_are_set()
         return ValidationResult(
             valid=valid_model_config_exists,
             message=valid_message if valid_model_config_exists else message,
@@ -276,7 +276,7 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
 
     if message == "":
         # check to see if CAII models are available via discovery
-        if CAIIModelProvider.is_enabled():
+        if CAIIModelProvider.env_vars_are_set():
             message = "CAII models are available."
             valid_model_config_exists = True
         else:

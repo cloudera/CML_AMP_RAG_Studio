@@ -48,12 +48,12 @@ from ....config import settings
 
 class AzureModelProvider(ModelProvider):
     @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.AZURE
-
-    @staticmethod
     def get_env_var_names() -> set[str]:
         return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.AZURE
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:

@@ -64,10 +64,10 @@ def get_provider_class() -> type[ModelProvider]:
         return BedrockModelProvider
 
     # Fallback to priority order if no specific provider is set
-    if AzureModelProvider.is_enabled():
+    if AzureModelProvider.env_vars_are_set():
         return AzureModelProvider
-    elif OpenAiModelProvider.is_enabled():
+    elif OpenAiModelProvider.env_vars_are_set():
         return OpenAiModelProvider
-    elif BedrockModelProvider.is_enabled():
+    elif BedrockModelProvider.env_vars_are_set():
         return BedrockModelProvider
     return CAIIModelProvider

@@ -48,19 +48,19 @@ from ...caii.types import ModelResponse
 
 class ModelProvider(abc.ABC):
     @classmethod
-    def is_enabled(cls) -> bool:
-        """Return whether this model provider is enabled, based on the presence of required env vars."""
+    def env_vars_are_set(cls) -> bool:
+        """Return whether this model provider's env vars have set values."""
         return all(map(os.environ.get, cls.get_env_var_names()))
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_model_source() -> ModelSource:
-        raise NotImplementedError
 
     @staticmethod
     @abc.abstractmethod
     def get_env_var_names() -> set[str]:
         """Return the names of the env vars required by this model provider."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_model_source() -> ModelSource:
         raise NotImplementedError
 
     @staticmethod

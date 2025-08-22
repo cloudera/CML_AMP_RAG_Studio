@@ -75,12 +75,12 @@ BEDROCK_TOOL_CALLING_MODELS = {
 
 class BedrockModelProvider(ModelProvider):
     @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.BEDROCK
-
-    @staticmethod
     def get_env_var_names() -> set[str]:
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.BEDROCK
 
     @staticmethod
     def get_foundation_models(

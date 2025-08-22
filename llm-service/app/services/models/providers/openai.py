@@ -52,12 +52,12 @@ from ....config import settings
 
 class OpenAiModelProvider(ModelProvider):
     @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.OPENAI
-
-    @staticmethod
     def get_env_var_names() -> set[str]:
         return {"OPENAI_API_KEY"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.OPENAI
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:
