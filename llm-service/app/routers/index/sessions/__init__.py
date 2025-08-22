@@ -58,6 +58,7 @@ from ....services.chat.chat import (
 )
 from ....services.chat.suggested_questions import generate_suggested_questions
 from ....services.chat_history.chat_history_manager import (
+    RagMessage,
     RagStudioChatMessage,
     chat_history_manager,
 )
@@ -319,13 +320,34 @@ def stream_chat_completion(
                 # Check for cancellation between each response
                 if cancel_event.is_set():
                     print("Client disconnected between events")
-                    updated_response: ChatResponse = response
-                    updated_response.additional_kwargs["status"] = "success"
-                    chat_history_manager.update_message(
-                        session_id=session_id,
-                        message_id=response.additional_kwargs["response_id"],
-                        message=updated_response,
-                    )
+                    if response.additional_kwargs.get("response_id"):
+                        updated_response = RagStudioChatMessage(
+                            id=response.additional_kwargs["response_id"],
+                            session_id=session_id,
+                            source_nodes=(
+                                response.source_nodes
+                                if hasattr(response, "source_nodes")
+                                else []
+                            ),
+                            inference_model=session.inference_model,
+                            rag_message=RagMessage(
+                                user=request.query,
+                                assistant=(
+                                    response.message.content
+                                    if response.message.content
+                                    else ""
+                                ),
+                            ),
+                            evaluations=[],
+                            timestamp=time.time(),
+                            condensed_question=None,
+                            status="cancelled",
+                        )
+                        chat_history_manager.update_message(
+                            session_id=session_id,
+                            message_id=updated_response.id,
+                            message=updated_response,
+                        )
                     logger.info("Client disconnected during result processing")
                     break
                 if "chat_event" in response.additional_kwargs:

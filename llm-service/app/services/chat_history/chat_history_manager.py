@@ -61,7 +61,7 @@ class RagStudioChatMessage(BaseModel):
     evaluations: list[Evaluation]
     timestamp: float
     condensed_question: Optional[str]
-    status: Literal["pending", "error", "success"] = "success"
+    status: Literal["pending", "error", "cancelled", "success"] = "success"
 
 
 class ChatHistoryManager(metaclass=ABCMeta):
