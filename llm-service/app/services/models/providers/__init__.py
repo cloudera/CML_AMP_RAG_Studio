@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+from app.config import settings
 from .azure import AzureModelProvider
 from .bedrock import BedrockModelProvider
 from .caii import CAIIModelProvider
@@ -46,5 +47,27 @@ __all__ = [
     "BedrockModelProvider",
     "CAIIModelProvider",
     "OpenAiModelProvider",
-    "ModelProvider",
+    "get_provider_class",
 ]
+
+
+def get_provider_class() -> type[ModelProvider]:
+    """Return the ModelProvider subclass for the given provider name."""
+    model_provider = settings.model_provider
+    if model_provider == "Azure":
+        return AzureModelProvider
+    elif model_provider == "CAII":
+        return CAIIModelProvider
+    elif model_provider == "OpenAI":
+        return OpenAiModelProvider
+    elif model_provider == "Bedrock":
+        return BedrockModelProvider
+
+    # Fallback to priority order if no specific provider is set
+    if AzureModelProvider.is_enabled():
+        return AzureModelProvider
+    elif OpenAiModelProvider.is_enabled():
+        return OpenAiModelProvider
+    elif BedrockModelProvider.is_enabled():
+        return BedrockModelProvider
+    return CAIIModelProvider

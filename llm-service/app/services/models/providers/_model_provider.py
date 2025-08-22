@@ -42,7 +42,6 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 
-from app.config import settings
 from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 
@@ -52,35 +51,6 @@ class ModelProvider(abc.ABC):
     def is_enabled(cls) -> bool:
         """Return whether this model provider is enabled, based on the presence of required env vars."""
         return all(map(os.environ.get, cls.get_env_var_names()))
-
-    @staticmethod
-    def get_provider_class() -> type["ModelProvider"]:
-        """Return the ModelProvider subclass for the given provider name."""
-        from . import (
-            AzureModelProvider,
-            CAIIModelProvider,
-            OpenAiModelProvider,
-            BedrockModelProvider,
-        )
-
-        model_provider = settings.model_provider
-        if model_provider == "Azure":
-            return AzureModelProvider
-        elif model_provider == "CAII":
-            return CAIIModelProvider
-        elif model_provider == "OpenAI":
-            return OpenAiModelProvider
-        elif model_provider == "Bedrock":
-            return BedrockModelProvider
-
-        # Fallback to priority order if no specific provider is set
-        if AzureModelProvider.is_enabled():
-            return AzureModelProvider
-        elif OpenAiModelProvider.is_enabled():
-            return OpenAiModelProvider
-        elif BedrockModelProvider.is_enabled():
-            return BedrockModelProvider
-        return CAIIModelProvider
 
     @staticmethod
     @abc.abstractmethod
