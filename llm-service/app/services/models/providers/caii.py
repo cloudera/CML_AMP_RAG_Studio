@@ -70,6 +70,10 @@ class CAIIModelProvider(_ModelProvider):
         return ModelSource.CAII
 
     @staticmethod
+    def get_priority() -> int:
+        return 4
+
+    @staticmethod
     @timed_lru_cache(maxsize=1, seconds=300)
     def list_llm_models() -> list[ModelResponse]:
         return get_caii_llm_models()

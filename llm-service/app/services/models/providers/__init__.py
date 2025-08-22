@@ -35,12 +35,16 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import logging
+
 from app.config import settings
 from .azure import AzureModelProvider
 from .bedrock import BedrockModelProvider
 from .caii import CAIIModelProvider
 from .openai import OpenAiModelProvider
 from ._model_provider import _ModelProvider
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "AzureModelProvider",
@@ -53,21 +57,30 @@ __all__ = [
 
 def get_provider_class() -> type[_ModelProvider]:
     """Return the ModelProvider subclass for the given provider name."""
-    model_provider = settings.model_provider
-    if model_provider == "Azure":
-        return AzureModelProvider
-    elif model_provider == "CAII":
-        return CAIIModelProvider
-    elif model_provider == "OpenAI":
-        return OpenAiModelProvider
-    elif model_provider == "Bedrock":
-        return BedrockModelProvider
+    model_providers: list[type[_ModelProvider]] = sorted(
+        _ModelProvider.__subclasses__(),
+        key=lambda ModelProviderSubcls: ModelProviderSubcls.get_priority(),
+    )
 
-    # Fallback to priority order if no specific provider is set
-    if AzureModelProvider.env_vars_are_set():
-        return AzureModelProvider
-    elif OpenAiModelProvider.env_vars_are_set():
-        return OpenAiModelProvider
-    elif BedrockModelProvider.env_vars_are_set():
-        return BedrockModelProvider
+    model_provider = settings.model_provider
+    for ModelProviderSubcls in model_providers:
+        if model_provider == ModelProviderSubcls.get_model_source():
+            logger.debug(
+                "using model provider %s based on `MODEL_PROVIDER` env var: %s",
+                ModelProviderSubcls,
+                model_provider,
+            )
+            return ModelProviderSubcls
+
+    # Fallback if no specific provider is set
+    for ModelProviderSubcls in model_providers:
+        if ModelProviderSubcls.env_vars_are_set():
+            logger.debug(
+                "falling back to model provider %s based on env vars: %s",
+                ModelProviderSubcls,
+                ModelProviderSubcls.get_env_var_names(),
+            )
+            return ModelProviderSubcls
+
+    logger.debug("falling back to model provider CAII")
     return CAIIModelProvider

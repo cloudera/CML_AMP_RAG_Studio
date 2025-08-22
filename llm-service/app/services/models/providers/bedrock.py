@@ -83,6 +83,10 @@ class BedrockModelProvider(_ModelProvider):
         return ModelSource.BEDROCK
 
     @staticmethod
+    def get_priority() -> int:
+        return 3
+
+    @staticmethod
     def get_foundation_models(
         modality: Optional[BedrockModality] = None,
     ) -> list[dict[str, Any]]:

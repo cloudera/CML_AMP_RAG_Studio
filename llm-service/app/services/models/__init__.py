@@ -41,7 +41,7 @@ from .providers import get_provider_class
 from .reranking import Reranking
 from ._model_source import ModelSource
 
-__all__ = ["Embedding", "LLM", "Reranking", "ModelSource"]
+__all__ = ["Embedding", "LLM", "Reranking", "ModelSource", "get_model_source"]
 
 
 def get_model_source() -> ModelSource:

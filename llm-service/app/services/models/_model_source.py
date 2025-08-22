@@ -40,7 +40,7 @@ from enum import Enum
 
 
 class ModelSource(str, Enum):
-    BEDROCK = "Bedrock"
-    CAII = "CAII"
     AZURE = "Azure"
     OPENAI = "OpenAI"
+    BEDROCK = "Bedrock"
+    CAII = "CAII"

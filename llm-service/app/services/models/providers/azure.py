@@ -56,6 +56,10 @@ class AzureModelProvider(_ModelProvider):
         return ModelSource.AZURE
 
     @staticmethod
+    def get_priority() -> int:
+        return 1
+
+    @staticmethod
     def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(

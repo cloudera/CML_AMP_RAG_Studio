@@ -60,6 +60,10 @@ class OpenAiModelProvider(_ModelProvider):
         return ModelSource.OPENAI
 
     @staticmethod
+    def get_priority() -> int:
+        return 2
+
+    @staticmethod
     def list_llm_models() -> list[ModelResponse]:
         return [
             ModelResponse(

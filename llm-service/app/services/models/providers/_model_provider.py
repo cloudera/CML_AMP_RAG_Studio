@@ -61,6 +61,17 @@ class _ModelProvider(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def get_model_source() -> ModelSource:
+        """Return the name of this model provider"""
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_priority() -> int:
+        """Return the priority of this model provider relative to the others.
+
+        1 is the highest priority.
+
+        """
         raise NotImplementedError
 
     @staticmethod
