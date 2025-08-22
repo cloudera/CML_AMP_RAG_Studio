@@ -55,7 +55,7 @@ def get_all_env_var_names() -> set[str]:
     )
 
 
-@pytest.fixture()
+@pytest.fixture(params=ModelProvider.__subclasses__())
 def EnabledModelProvider(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
@@ -71,11 +71,6 @@ def EnabledModelProvider(
     return ModelProviderSubcls
 
 
-@pytest.mark.parametrize(
-    "EnabledModelProvider",
-    ModelProvider.__subclasses__(),
-    indirect=True,
-)
 class TestListAvailableModels:
     @pytest.fixture(autouse=True)
     def caii_get_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
