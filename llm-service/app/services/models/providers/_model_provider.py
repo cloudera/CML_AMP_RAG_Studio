@@ -46,7 +46,7 @@ from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 
 
-class ModelProvider(abc.ABC):
+class _ModelProvider(abc.ABC):
     @classmethod
     def env_vars_are_set(cls) -> bool:
         """Return whether this model provider's env vars have set values."""

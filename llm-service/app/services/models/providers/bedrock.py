@@ -52,7 +52,7 @@ from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 from pydantic import TypeAdapter
 
 from app.config import settings
-from ._model_provider import ModelProvider
+from ._model_provider import _ModelProvider
 from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
@@ -73,7 +73,7 @@ BEDROCK_TOOL_CALLING_MODELS = {
 }
 
 
-class BedrockModelProvider(ModelProvider):
+class BedrockModelProvider(_ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}

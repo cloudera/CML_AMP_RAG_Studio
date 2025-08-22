@@ -40,7 +40,7 @@ from .azure import AzureModelProvider
 from .bedrock import BedrockModelProvider
 from .caii import CAIIModelProvider
 from .openai import OpenAiModelProvider
-from ._model_provider import ModelProvider
+from ._model_provider import _ModelProvider
 
 __all__ = [
     "AzureModelProvider",
@@ -51,7 +51,7 @@ __all__ = [
 ]
 
 
-def get_provider_class() -> type[ModelProvider]:
+def get_provider_class() -> type[_ModelProvider]:
     """Return the ModelProvider subclass for the given provider name."""
     model_provider = settings.model_provider
     if model_provider == "Azure":

@@ -42,7 +42,7 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from packaging.version import Version
 
-from ._model_provider import ModelProvider
+from ._model_provider import _ModelProvider
 from .._model_source import ModelSource
 from ...caii.caii import (
     get_caii_llm_models,
@@ -60,7 +60,7 @@ from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import timed_lru_cache
 
 
-class CAIIModelProvider(ModelProvider):
+class CAIIModelProvider(_ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"CAII_DOMAIN"}

@@ -43,14 +43,14 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 
-from ._model_provider import ModelProvider
+from ._model_provider import _ModelProvider
 from .._model_source import ModelSource
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ....config import settings
 
 
-class OpenAiModelProvider(ModelProvider):
+class OpenAiModelProvider(_ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"OPENAI_API_KEY"}
