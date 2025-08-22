@@ -63,10 +63,10 @@ def EnabledModelProvider(
     """Sets and unsets environment variables for the given model provider."""
     ModelProviderSubcls: type[ModelProvider] = request.param
 
+    for name in get_all_env_var_names():
+        monkeypatch.delenv(name, raising=False)
     for name in ModelProviderSubcls.get_env_var_names():
         monkeypatch.setenv(name, "test")
-    for name in get_all_env_var_names() - ModelProviderSubcls.get_env_var_names():
-        monkeypatch.delenv(name, raising=False)
 
     return ModelProviderSubcls
 
