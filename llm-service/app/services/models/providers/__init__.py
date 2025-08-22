@@ -65,22 +65,21 @@ def get_provider_class() -> type[_ModelProvider]:
     model_provider = settings.model_provider
     for ModelProviderSubcls in model_providers:
         if model_provider == ModelProviderSubcls.get_model_source():
-            logger.debug(
-                "using model provider %s based on `MODEL_PROVIDER` env var: %s",
-                ModelProviderSubcls,
-                model_provider,
+            logger.info(
+                'using model provider "%s" based on `MODEL_PROVIDER` env var',
+                ModelProviderSubcls.get_model_source().value,
             )
             return ModelProviderSubcls
 
     # Fallback if no specific provider is set
     for ModelProviderSubcls in model_providers:
         if ModelProviderSubcls.env_vars_are_set():
-            logger.debug(
-                "falling back to model provider %s based on env vars: %s",
-                ModelProviderSubcls,
+            logger.info(
+                'falling back to model provider "%s" based on env vars %s',
+                ModelProviderSubcls.get_model_source().value,
                 ModelProviderSubcls.get_env_var_names(),
             )
             return ModelProviderSubcls
 
-    logger.debug("falling back to model provider CAII")
+    logger.info('falling back to model provider "CAII"')
     return CAIIModelProvider
