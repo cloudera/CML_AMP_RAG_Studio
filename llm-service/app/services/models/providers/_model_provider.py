@@ -84,6 +84,11 @@ class ModelProvider(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
+    def get_model_source() -> ModelSource:
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
     def get_env_var_names() -> set[str]:
         """Return the names of the env vars required by this model provider."""
         raise NotImplementedError
@@ -122,9 +127,4 @@ class ModelProvider(abc.ABC):
     @abc.abstractmethod
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         """Return reranking model with `name`."""
-        raise NotImplementedError
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_model_source() -> ModelSource:
         raise NotImplementedError

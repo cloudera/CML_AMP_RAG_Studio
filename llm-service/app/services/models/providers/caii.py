@@ -51,7 +51,8 @@ from ...caii.caii import (
     get_llm as get_caii_llm_model,
     get_embedding_model as get_caii_embedding_model,
     get_reranking_model as get_caii_reranking_model,
-    describe_endpoint, get_models_with_task,
+    describe_endpoint,
+    get_models_with_task,
 )
 from ...caii.types import ModelResponse
 from ...caii.utils import get_cml_version_from_sense_bootstrap
@@ -60,6 +61,10 @@ from ...utils import timed_lru_cache
 
 
 class CAIIModelProvider(ModelProvider):
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.CAII
+
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"CAII_DOMAIN"}
@@ -111,10 +116,6 @@ class CAIIModelProvider(ModelProvider):
                 return True
 
         return super().is_enabled()
-
-    @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.CAII
 
 
 # ensure interface is implemented

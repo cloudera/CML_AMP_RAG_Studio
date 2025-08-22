@@ -52,6 +52,10 @@ from ....config import settings
 
 class OpenAiModelProvider(ModelProvider):
     @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.OPENAI
+
+    @staticmethod
     def get_env_var_names() -> set[str]:
         return {"OPENAI_API_KEY"}
 
@@ -118,10 +122,6 @@ class OpenAiModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         raise NotImplementedError("No reranking models available")
-
-    @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.OPENAI
 
 
 # ensure interface is implemented

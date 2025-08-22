@@ -48,6 +48,10 @@ from ....config import settings
 
 class AzureModelProvider(ModelProvider):
     @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.AZURE
+
+    @staticmethod
     def get_env_var_names() -> set[str]:
         return {"AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "OPENAI_API_VERSION"}
 
@@ -104,10 +108,6 @@ class AzureModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> SimpleReranker:
         return SimpleReranker(top_n=top_n)
-
-    @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.AZURE
 
 
 # ensure interface is implemented

@@ -44,5 +44,3 @@ class ModelSource(str, Enum):
     CAII = "CAII"
     AZURE = "Azure"
     OPENAI = "OpenAI"
-
-
