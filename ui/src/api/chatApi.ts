@@ -372,16 +372,30 @@ const customChatMessage = (
 export const ERROR_PREFIX_ID = "error-";
 export const CANCELED_PREFIX_ID = "canceled-";
 
-const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
-  return customChatMessage(variables, error.message, ERROR_PREFIX_ID, "error");
+const errorChatMessage = (
+  variables: ChatMutationRequest,
+  error: Error,
+  assistantMessage: string,
+): ChatMessageType => {
+  const message = customChatMessage(
+    variables,
+    assistantMessage,
+    ERROR_PREFIX_ID,
+    "error",
+  );
+  message.error_message = error.message;
+  return message;
 };
 
-const canceledChatMessage = (variables: ChatMutationRequest) => {
+const canceledChatMessage = (
+  variables: ChatMutationRequest,
+  assistantMessage: string,
+): ChatMessageType => {
   return customChatMessage(
     variables,
-    "Request canceled by user",
+    assistantMessage,
     CANCELED_PREFIX_ID,
-    "error",
+    "cancelled",
   );
 };
 
@@ -410,16 +424,18 @@ const handlePrepareController = (
   getController: ((ctrl: AbortController) => void) | undefined,
   queryClient: QueryClient,
   request: ChatMutationRequest,
+  getStreamedText?: () => string,
 ) => {
   return (ctrl: AbortController) => {
     if (getController) {
       getController(ctrl);
 
       const onAbort = () => {
+        const streamedAssistant = getStreamedText ? getStreamedText() : "";
         modifyPlaceholderInChatHistory(
           queryClient,
           request,
-          canceledChatMessage(request),
+          canceledChatMessage(request, streamedAssistant),
         );
         ctrl.signal.removeEventListener("abort", onAbort);
       };
@@ -473,27 +489,38 @@ export const useStreamingChatMutation = ({
   getController,
 }: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
-  const handleError = (variables: ChatMutationRequest, error: Error) => {
-    const errorMessage = errorChatMessage(variables, error);
-    modifyPlaceholderInChatHistory(queryClient, variables, errorMessage);
+  const handleError = (request: ChatMutationRequest, error: Error, streamedText?: string) => {
+    const errorMessage = errorChatMessage(request, error, streamedText ?? "");
+    modifyPlaceholderInChatHistory(
+      queryClient,
+      request,
+      errorMessage
+    );
   };
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: (request: ChatMutationRequest) => {
+      let streamedText = "";
+      const accumulatingOnChunk = (chunk: string) => {
+        streamedText += chunk;
+        onChunk(chunk);
+      };
+
       const convertError = (errorMessage: string) => {
         const error = new Error(errorMessage);
-        handleError(request, error);
+        handleError(request, error, streamedText);
         onError?.(error);
       };
       const handleGetController = handlePrepareController(
         getController,
         queryClient,
         request,
+        () => streamedText,
       );
 
       return streamChatMutation(
         request,
-        onChunk,
+        accumulatingOnChunk,
         onEvent,
         convertError,
         handleGetController,
