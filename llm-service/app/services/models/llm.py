@@ -41,7 +41,7 @@ from llama_index.core import llms
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
 
 from . import _model_type, _noop
-from .providers._model_provider import ModelProvider
+from .providers import get_provider_class
 from ..caii.types import ModelResponse
 
 
@@ -51,7 +51,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
         if not model_name:
             model_name = cls.list_available()[0].model_id
 
-        return ModelProvider.get_provider_class().get_llm_model(model_name)
+        return get_provider_class().get_llm_model(model_name)
 
     @staticmethod
     def get_noop() -> llms.LLM:
@@ -59,7 +59,7 @@ class LLM(_model_type.ModelType[llms.LLM]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        return ModelProvider.get_provider_class().list_llm_models()
+        return get_provider_class().list_llm_models()
 
     @classmethod
     def test(cls, model_name: str) -> Literal["ok"]:

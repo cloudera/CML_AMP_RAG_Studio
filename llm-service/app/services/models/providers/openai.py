@@ -43,17 +43,24 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 
-from ._model_provider import ModelProvider
-from .._model_source import ModelSource
+from ._model_provider import _ModelProvider
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
-from ....config import settings
+from ....config import settings, ModelSource
 
 
-class OpenAiModelProvider(ModelProvider):
+class OpenAiModelProvider(_ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"OPENAI_API_KEY"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.OPENAI
+
+    @staticmethod
+    def get_priority() -> int:
+        return 2
 
     @staticmethod
     def list_llm_models() -> list[ModelResponse]:
@@ -118,10 +125,6 @@ class OpenAiModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         raise NotImplementedError("No reranking models available")
-
-    @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.OPENAI
 
 
 # ensure interface is implemented

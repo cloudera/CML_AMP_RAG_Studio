@@ -42,8 +42,8 @@ from llama_index.core.llms import LLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from packaging.version import Version
 
-from ._model_provider import ModelProvider
-from .._model_source import ModelSource
+from ._model_provider import _ModelProvider
+from app.config import ModelSource
 from ...caii.caii import (
     get_caii_llm_models,
     get_caii_embedding_models,
@@ -51,7 +51,8 @@ from ...caii.caii import (
     get_llm as get_caii_llm_model,
     get_embedding_model as get_caii_embedding_model,
     get_reranking_model as get_caii_reranking_model,
-    describe_endpoint, get_models_with_task,
+    describe_endpoint,
+    get_models_with_task,
 )
 from ...caii.types import ModelResponse
 from ...caii.utils import get_cml_version_from_sense_bootstrap
@@ -59,10 +60,18 @@ from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import timed_lru_cache
 
 
-class CAIIModelProvider(ModelProvider):
+class CAIIModelProvider(_ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"CAII_DOMAIN"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.CAII
+
+    @staticmethod
+    def get_priority() -> int:
+        return 4
 
     @staticmethod
     @timed_lru_cache(maxsize=1, seconds=300)
@@ -100,21 +109,17 @@ class CAIIModelProvider(ModelProvider):
         return get_caii_reranking_model(name, top_n)
 
     @classmethod
-    def is_enabled(cls) -> bool:
+    def env_vars_are_set(cls) -> bool:
         version: Optional[str] = get_cml_version_from_sense_bootstrap()
         if not version:
-            return super().is_enabled()
+            return super().env_vars_are_set()
         cml_version = Version(version)
         if cml_version >= Version("2.0.50-b68"):
             available_models = get_models_with_task("TEXT_GENERATION")
             if available_models:
                 return True
 
-        return super().is_enabled()
-
-    @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.CAII
+        return super().env_vars_are_set()
 
 
 # ensure interface is implemented

@@ -35,16 +35,51 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import logging
+
+from app.config import settings
 from .azure import AzureModelProvider
 from .bedrock import BedrockModelProvider
 from .caii import CAIIModelProvider
 from .openai import OpenAiModelProvider
-from ._model_provider import ModelProvider
+from ._model_provider import _ModelProvider
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "AzureModelProvider",
     "BedrockModelProvider",
     "CAIIModelProvider",
     "OpenAiModelProvider",
-    "ModelProvider",
+    "get_provider_class",
 ]
+
+
+def get_provider_class() -> type[_ModelProvider]:
+    """Return the ModelProvider subclass for the given provider name."""
+    model_providers: list[type[_ModelProvider]] = sorted(
+        _ModelProvider.__subclasses__(),
+        key=lambda ModelProviderSubcls: ModelProviderSubcls.get_priority(),
+    )
+
+    model_provider = settings.model_provider
+    for ModelProviderSubcls in model_providers:
+        if model_provider == ModelProviderSubcls.get_model_source():
+            logger.info(
+                'using model provider "%s" based on `MODEL_PROVIDER` env var',
+                ModelProviderSubcls.get_model_source().value,
+            )
+            return ModelProviderSubcls
+
+    # Fallback if no specific provider is set
+    for ModelProviderSubcls in model_providers:
+        if ModelProviderSubcls.env_vars_are_set():
+            logger.info(
+                'falling back to model provider "%s" based on env vars %s',
+                ModelProviderSubcls.get_model_source().value,
+                ModelProviderSubcls.get_env_var_names(),
+            )
+            return ModelProviderSubcls
+
+    logger.info('falling back to model provider "CAII"')
+    return CAIIModelProvider

@@ -42,7 +42,7 @@ from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.schema import NodeWithScore, TextNode
 
 from . import _model_type
-from .providers._model_provider import ModelProvider
+from .providers import get_provider_class
 from ..caii.types import ModelResponse
 from ..query.simple_reranker import SimpleReranker
 
@@ -57,9 +57,7 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
         if not model_name:
             return SimpleReranker(top_n=top_n)
 
-        return ModelProvider.get_provider_class().get_reranking_model(
-            name=model_name, top_n=top_n
-        )
+        return get_provider_class().get_reranking_model(name=model_name, top_n=top_n)
 
     @staticmethod
     def get_noop() -> BaseNodePostprocessor:
@@ -67,7 +65,7 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        return ModelProvider.get_provider_class().list_reranking_models()
+        return get_provider_class().list_reranking_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:

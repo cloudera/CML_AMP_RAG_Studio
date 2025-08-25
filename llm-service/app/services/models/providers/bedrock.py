@@ -51,9 +51,8 @@ from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from llama_index.postprocessor.bedrock_rerank import AWSBedrockRerank
 from pydantic import TypeAdapter
 
-from app.config import settings
-from ._model_provider import ModelProvider
-from .._model_source import ModelSource
+from app.config import settings, ModelSource
+from ._model_provider import _ModelProvider
 from ...caii.types import ModelResponse
 from ...llama_utils import completion_to_prompt, messages_to_prompt
 from ...utils import raise_for_http_error, timed_lru_cache
@@ -73,10 +72,18 @@ BEDROCK_TOOL_CALLING_MODELS = {
 }
 
 
-class BedrockModelProvider(ModelProvider):
+class BedrockModelProvider(_ModelProvider):
     @staticmethod
     def get_env_var_names() -> set[str]:
         return {"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"}
+
+    @staticmethod
+    def get_model_source() -> ModelSource:
+        return ModelSource.BEDROCK
+
+    @staticmethod
+    def get_priority() -> int:
+        return 3
 
     @staticmethod
     def get_foundation_models(
@@ -308,10 +315,6 @@ class BedrockModelProvider(ModelProvider):
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> AWSBedrockRerank:
         return AWSBedrockRerank(rerank_model_name=name, top_n=top_n)
-
-    @staticmethod
-    def get_model_source() -> ModelSource:
-        return ModelSource.BEDROCK
 
 
 # ensure interface is implemented

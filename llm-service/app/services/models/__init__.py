@@ -37,12 +37,12 @@
 #
 from .embedding import Embedding
 from .llm import LLM
-from .providers import ModelProvider
+from .providers import get_provider_class
 from .reranking import Reranking
-from ._model_source import ModelSource
+from ...config import ModelSource
 
-__all__ = ["Embedding", "LLM", "Reranking", "ModelSource"]
+__all__ = ["Embedding", "LLM", "Reranking", "get_model_source"]
 
 
 def get_model_source() -> ModelSource:
-    return ModelProvider.get_provider_class().get_model_source()
+    return get_provider_class().get_model_source()

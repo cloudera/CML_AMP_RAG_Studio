@@ -41,7 +41,7 @@ from fastapi import HTTPException
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
 from . import _model_type, _noop
-from .providers._model_provider import ModelProvider
+from .providers import get_provider_class
 from ..caii.types import ModelResponse
 
 
@@ -51,7 +51,7 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
         if model_name is None:
             model_name = cls.list_available()[0].model_id
 
-        return ModelProvider.get_provider_class().get_embedding_model(model_name)
+        return get_provider_class().get_embedding_model(model_name)
 
     @staticmethod
     def get_noop() -> BaseEmbedding:
@@ -59,7 +59,7 @@ class Embedding(_model_type.ModelType[BaseEmbedding]):
 
     @staticmethod
     def list_available() -> list[ModelResponse]:
-        return ModelProvider.get_provider_class().list_embedding_models()
+        return get_provider_class().list_embedding_models()
 
     @classmethod
     def test(cls, model_name: str) -> str:

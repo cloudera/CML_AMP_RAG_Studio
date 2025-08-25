@@ -43,39 +43,34 @@ from app.services import models
 from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
 from app.services.models.providers import BedrockModelProvider
-from app.services.models.providers._model_provider import ModelProvider
+from app.services.models.providers._model_provider import _ModelProvider
 
 
 def get_all_env_var_names() -> set[str]:
     """Return the names of all the env vars required by all model providers."""
     return set(
         itertools.chain.from_iterable(
-            subcls.get_env_var_names() for subcls in ModelProvider.__subclasses__()
+            subcls.get_env_var_names() for subcls in _ModelProvider.__subclasses__()
         )
     )
 
 
-@pytest.fixture()
+@pytest.fixture(params=_ModelProvider.__subclasses__())
 def EnabledModelProvider(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
-) -> type[ModelProvider]:
+) -> type[_ModelProvider]:
     """Sets and unsets environment variables for the given model provider."""
-    ModelProviderSubcls: type[ModelProvider] = request.param
+    ModelProviderSubcls: type[_ModelProvider] = request.param
 
+    for name in get_all_env_var_names():
+        monkeypatch.delenv(name, raising=False)
     for name in ModelProviderSubcls.get_env_var_names():
         monkeypatch.setenv(name, "test")
-    for name in get_all_env_var_names() - ModelProviderSubcls.get_env_var_names():
-        monkeypatch.delenv(name, raising=False)
 
     return ModelProviderSubcls
 
 
-@pytest.mark.parametrize(
-    "EnabledModelProvider",
-    ModelProvider.__subclasses__(),
-    indirect=True,
-)
 class TestListAvailableModels:
     @pytest.fixture(autouse=True)
     def caii_get_models(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -103,18 +98,18 @@ class TestListAvailableModels:
             BedrockModelProvider, "get_foundation_models", lambda modality: []
         )
 
-    def test_embedding(self, EnabledModelProvider: type[ModelProvider]) -> None:
+    def test_embedding(self, EnabledModelProvider: type[_ModelProvider]) -> None:
         """Verify models.Embedding.list_available() only returns models from the enabled model provider."""
         assert (
             models.Embedding.list_available()
             == EnabledModelProvider.list_embedding_models()
         )
 
-    def test_llm(self, EnabledModelProvider: type[ModelProvider]) -> None:
+    def test_llm(self, EnabledModelProvider: type[_ModelProvider]) -> None:
         """Verify models.LLM.list_available() only returns models from the enabled model provider."""
         assert models.LLM.list_available() == EnabledModelProvider.list_llm_models()
 
-    def test_reranking(self, EnabledModelProvider: type[ModelProvider]) -> None:
+    def test_reranking(self, EnabledModelProvider: type[_ModelProvider]) -> None:
         """Verify models.Reranking.list_available() only returns models from the enabled model provider."""
         assert (
             models.Reranking.list_available()
