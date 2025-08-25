@@ -305,17 +305,8 @@ def get_caii_llm_models() -> List[ModelResponse]:
     potential_text_models = get_models_with_task("TEXT_GENERATION")
     potential_text_to_text_models = get_models_with_task("TEXT_TO_TEXT_GENERATION")
 
-    # Merge and de-duplicate both task types
-    potential_models: list[Endpoint] = []
-    seen: set[str] = set()
-    for endpoint in [*potential_text_models, *potential_text_to_text_models]:
-        key = f"{endpoint.url}|{endpoint.name}"
-        if key not in seen:
-            seen.add(key)
-            potential_models.append(endpoint)
-
     results: list[Endpoint] = []
-    for potential in potential_models:
+    for potential in [*potential_text_models, *potential_text_to_text_models]:
         try:
             model = get_llm(
                 endpoint=potential,
