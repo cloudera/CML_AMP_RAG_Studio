@@ -38,15 +38,55 @@
 
 import { ChatMessageType, ChatEvent } from "src/api/chatApi.ts";
 import UserQuestion from "pages/RagChatTab/ChatOutput/ChatMessages/UserQuestion.tsx";
-import { Divider, Flex, Typography } from "antd";
+import { Alert, AlertProps, Divider, Flex, Typography } from "antd";
 import Images from "src/components/images/Images.ts";
-import { cdlBlue500, cdlGray200 } from "src/cuix/variables.ts";
+import { cdlBlue500, cdlGray200, cdlAmber500 } from "src/cuix/variables.ts";
 import { Evaluations } from "pages/RagChatTab/ChatOutput/ChatMessages/Evaluations.tsx";
 import RatingFeedbackWrapper from "pages/RagChatTab/ChatOutput/ChatMessages/RatingFeedbackWrapper.tsx";
 import CopyButton from "pages/RagChatTab/ChatOutput/ChatMessages/CopyButton.tsx";
 import StreamedEvents from "pages/RagChatTab/ChatOutput/ChatMessages/StreamedEvents.tsx";
 import SourceNodes from "pages/RagChatTab/ChatOutput/Sources/SourceNodes.tsx";
 import { MarkdownResponse } from "pages/RagChatTab/ChatOutput/ChatMessages/MarkdownResponse.tsx";
+import { ExclamationCircleTwoTone } from "@ant-design/icons";
+
+const WarningMessage = ({
+  data,
+  color,
+  alertType,
+}: {
+  data: ChatMessageType;
+  color: string;
+  alertType: AlertProps["type"];
+}) => {
+  return (
+    <Flex
+      style={{ marginTop: 15 }}
+      align="baseline"
+      justify="space-between"
+      gap={8}
+    >
+      <div style={{ flex: 1 }}>
+        <ExclamationCircleTwoTone
+          type={alertType}
+          twoToneColor={color}
+          style={{ fontSize: 22 }}
+        />
+      </div>
+      <Flex vertical gap={8} style={{ width: "100%" }}>
+        <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+          <Alert
+            type={alertType}
+            message={
+              data.status === "error"
+                ? data.error_message || "An error occurred"
+                : "Request canceled by user"
+            }
+          />
+        </Typography.Text>
+      </Flex>
+    </Flex>
+  );
+};
 
 export const ChatMessageBody = ({
   data,
@@ -55,55 +95,121 @@ export const ChatMessageBody = ({
   data: ChatMessageType;
   streamedEvents?: ChatEvent[];
 }) => {
+  const isError = data.status === "error";
+  const isCancelled = data.status === "cancelled";
+  const hasPartialResponse =
+    data.rag_message.assistant && data.rag_message.assistant.trim().length > 0;
+
   return (
     <div data-testid="chat-message">
       {data.rag_message.user ? (
         <div>
           <UserQuestion question={data.rag_message.user} />
-          <Flex
-            style={{ marginTop: 15 }}
-            align="self-start"
-            justify="space-between"
-            gap={8}
-          >
-            <div style={{ flex: 1, marginTop: 24 }}>
-              {data.source_nodes.length > 0 ? (
-                <Images.AiAssistantWhite
-                  style={{
-                    padding: 4,
-                    backgroundColor: cdlBlue500,
-                    borderRadius: 20,
-                    width: 24,
-                    height: 24,
-                    flex: 1,
-                  }}
-                />
-              ) : (
-                <Images.Models
-                  style={{
-                    padding: 4,
-                    backgroundColor: cdlGray200,
-                    borderRadius: 20,
-                    width: 26,
-                    height: 24,
-                    flex: 1,
-                  }}
-                />
-              )}
-            </div>
-            <Flex vertical gap={8} style={{ width: "100%" }}>
-              <StreamedEvents streamedEvents={streamedEvents} />
-              <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
-                <MarkdownResponse data={data} />
-              </Typography.Text>
-              <SourceNodes data={data} />
-              <Flex gap={16} align="center">
-                <CopyButton message={data} />
-                <Evaluations evaluations={data.evaluations} />
-                <RatingFeedbackWrapper responseId={data.id} />
+
+          {/* Show warning message at the top for error/cancelled status */}
+          {(isError || isCancelled) && (
+            <WarningMessage
+              data={data}
+              color={isError ? "#ff4d4f" : cdlAmber500}
+              alertType={isError ? "error" : "warning"}
+            />
+          )}
+
+          {/* Show partial response if available */}
+          {(isError || isCancelled) && hasPartialResponse && (
+            <Flex
+              style={{ marginTop: 15 }}
+              align="self-start"
+              justify="space-between"
+              gap={8}
+            >
+              <div style={{ flex: 1, marginTop: 24 }}>
+                {data.source_nodes.length > 0 ? (
+                  <Images.AiAssistantWhite
+                    style={{
+                      padding: 4,
+                      backgroundColor: cdlBlue500,
+                      borderRadius: 20,
+                      width: 24,
+                      height: 24,
+                      flex: 1,
+                    }}
+                  />
+                ) : (
+                  <Images.Models
+                    style={{
+                      padding: 4,
+                      backgroundColor: cdlGray200,
+                      borderRadius: 20,
+                      width: 26,
+                      height: 24,
+                      flex: 1,
+                    }}
+                  />
+                )}
+              </div>
+              <Flex vertical gap={8} style={{ width: "100%" }}>
+                <StreamedEvents streamedEvents={streamedEvents} />
+                <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+                  <MarkdownResponse data={data} />
+                </Typography.Text>
+                <SourceNodes data={data} />
+                <Flex gap={16} align="center">
+                  <CopyButton message={data} />
+                  <Evaluations evaluations={data.evaluations} />
+                  <RatingFeedbackWrapper responseId={data.id} />
+                </Flex>
               </Flex>
             </Flex>
-          </Flex>
+          )}
+
+          {/* Show normal layout for success status */}
+          {!isError && !isCancelled && (
+            <Flex
+              style={{ marginTop: 15 }}
+              align="self-start"
+              justify="space-between"
+              gap={8}
+            >
+              <div style={{ flex: 1, marginTop: 24 }}>
+                {data.source_nodes.length > 0 ? (
+                  <Images.AiAssistantWhite
+                    style={{
+                      padding: 4,
+                      backgroundColor: cdlBlue500,
+                      borderRadius: 20,
+                      width: 24,
+                      height: 24,
+                      flex: 1,
+                    }}
+                  />
+                ) : (
+                  <Images.Models
+                    style={{
+                      padding: 4,
+                      backgroundColor: cdlGray200,
+                      borderRadius: 20,
+                      width: 26,
+                      height: 24,
+                      flex: 1,
+                    }}
+                  />
+                )}
+              </div>
+              <Flex vertical gap={8} style={{ width: "100%" }}>
+                <StreamedEvents streamedEvents={streamedEvents} />
+                <Typography.Text style={{ fontSize: 16, marginTop: 8 }}>
+                  <MarkdownResponse data={data} />
+                </Typography.Text>
+                <SourceNodes data={data} />
+                <Flex gap={16} align="center">
+                  <CopyButton message={data} />
+                  <Evaluations evaluations={data.evaluations} />
+                  <RatingFeedbackWrapper responseId={data.id} />
+                </Flex>
+              </Flex>
+            </Flex>
+          )}
         </div>
       ) : null}
       <Divider />
