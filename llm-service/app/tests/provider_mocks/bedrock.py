@@ -36,6 +36,7 @@
 #  DATA.
 #
 import itertools
+from contextlib import AbstractContextManager
 from typing import Generator
 from unittest.mock import patch
 from urllib.parse import urljoin
@@ -47,9 +48,9 @@ from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 
 from app.config import settings
 from app.services.caii.types import ModelResponse
-from app.services.models import ModelProvider
 from app.services.models.providers import BedrockModelProvider
 from app.services.models.providers._model_provider import get_all_env_var_names
+from .utils import patch_env_vars
 
 TEXT_MODELS = [
     ("test.unavailable-text-model-v1", "NOT_AVAILABLE"),
@@ -64,14 +65,7 @@ RERANKING_MODELS = [
 ]
 
 
-@pytest.fixture
-def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
-    for name in BedrockModelProvider.get_env_var_names():
-        monkeypatch.setenv(name, "test")
-    for name in get_all_env_var_names() - BedrockModelProvider.get_env_var_names():
-        monkeypatch.delenv(name, raising=False)
-
-    # mock calls made directly through `requests`
+def _patch_requests() -> AbstractContextManager:
     bedrock_url_base = f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
     r_mock = responses.RequestsMock(assert_all_requests_are_fired=False)
     for model_id, availability in TEXT_MODELS + EMBEDDING_MODELS:
@@ -92,7 +86,10 @@ def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
             },
         )
 
-    # mock calls made through `boto3`
+    return r_mock
+
+
+def _patch_boto3() -> AbstractContextManager:
     make_api_call = botocore.client.BaseClient._make_api_call
 
     def mock_make_api_call(self, operation_name: str, api_params: dict[str, str]):
@@ -151,29 +148,28 @@ def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
             # passthrough
             return make_api_call(self, operation_name, api_params)
 
-    # mock reranking models, which are hard-coded in our app
-    def list_reranking_models() -> list[ModelResponse]:
-        return [
-            ModelResponse(model_id=model_id, name=model_id.upper())
-            for model_id, _ in RERANKING_MODELS
-        ]
+    return patch("botocore.client.BaseClient._make_api_call", new=mock_make_api_call)
 
-    with (
-        r_mock,
-        patch(
-            "botocore.client.BaseClient._make_api_call",
-            new=mock_make_api_call,
-        ),
-        patch(
-            "app.services.models.providers.BedrockModelProvider.list_reranking_models",
-            new=list_reranking_models,
-        ),
-        patch(  # work around a llama-index filter we have in list_llm_models()
-            "app.services.models.providers.bedrock.BEDROCK_MODELS",
-            new=BEDROCK_MODELS | {model_id: 128000 for model_id, _ in TEXT_MODELS},
-        ),
-    ):
-        yield
+
+@pytest.fixture
+def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
+    with patch_env_vars(BedrockModelProvider):
+        with (
+            _patch_requests(),
+            _patch_boto3(),
+            patch(  # mock reranking models, which are hard-coded in our app
+                "app.services.models.providers.BedrockModelProvider.list_reranking_models",
+                new=lambda: [
+                    ModelResponse(model_id=model_id, name=model_id.upper())
+                    for model_id, _ in RERANKING_MODELS
+                ],
+            ),
+            patch(  # work around a llama-index filter we have in list_llm_models()
+                "app.services.models.providers.bedrock.BEDROCK_MODELS",
+                new=BEDROCK_MODELS | {model_id: 128000 for model_id, _ in TEXT_MODELS},
+            ),
+        ):
+            yield
 
 
 # TODO: move this test function to a discoverable place
