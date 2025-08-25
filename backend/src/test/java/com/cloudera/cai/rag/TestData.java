@@ -83,7 +83,12 @@ public class TestData {
         null,
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false, true, true, List.of()));
+        Types.QueryConfiguration.builder()
+            .enableSummaryFilter(true)
+            .enableToolCalling(true)
+            .disableStreaming(true)
+            .selectedTools(List.of())
+            .build());
   }
 
   public static Types.CreateSession createSessionInstance(String sessionName) {
@@ -99,7 +104,13 @@ public class TestData {
         null,
         "test-rerank-model",
         3,
-        new Types.QueryConfiguration(false, true, true, List.of()),
+        Types.QueryConfiguration.builder()
+            .enableHyde(false)
+            .enableSummaryFilter(true)
+            .enableToolCalling(true)
+            .disableStreaming(true)
+            .selectedTools(List.of())
+            .build(),
         projectId);
   }
 

@@ -42,6 +42,7 @@ import os
 from typing import Optional, Generator, AsyncGenerator, Callable, cast, Any
 
 import opik
+
 from llama_index.core.agent.workflow import (
     FunctionAgent,
     AgentStream,
@@ -57,8 +58,6 @@ from llama_index.core.llms.function_calling import FunctionCallingLLM
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.tools import BaseTool
 from llama_index.core.workflow import StopEvent
-from llama_index.llms.bedrock_converse import BedrockConverse
-from llama_index.llms.bedrock_converse.utils import get_model_name
 
 from app.ai.indexing.summary_indexer import SummaryIndexer
 from app.services.metadata_apis.session_metadata_api import Session
@@ -67,13 +66,11 @@ from app.services.query.agents.agent_tools.mcp import get_llama_index_tools
 from app.services.query.agents.agent_tools.retriever import (
     build_retriever_tool,
 )
-from app.services.query.agents.non_streamer_bedrock_converse import (
-    FakeStreamBedrockConverse,
-)
 from app.services.query.chat_engine import (
     FlexibleContextChatEngine,
 )
 from app.services.query.chat_events import ChatEvent
+from app.services.query.query_configuration import QueryConfiguration
 
 if os.environ.get("ENABLE_OPIK") == "True":
     opik.configure(
@@ -199,6 +196,7 @@ def stream_chat(
     chat_messages: list[ChatMessage],
     session: Session,
     data_source_summaries: dict[int, str],
+    configuration: QueryConfiguration,
 ) -> StreamingAgentChatResponse:
     mcp_tools: list[BaseTool] = []
     if session.query_configuration and session.query_configuration.selected_tools:
@@ -221,7 +219,7 @@ def stream_chat(
         tools.insert(0, retrieval_tool)
 
     gen, source_nodes = _run_streamer(
-        chat_engine, chat_messages, enhanced_query, llm, tools
+        chat_engine, chat_messages, enhanced_query, llm, tools, configuration
     )
 
     return StreamingAgentChatResponse(chat_stream=gen, source_nodes=source_nodes)
@@ -233,9 +231,12 @@ def _run_streamer(
     enhanced_query: str,
     llm: FunctionCallingLLM,
     tools: list[BaseTool],
+    configuration: QueryConfiguration,
     verbose: bool = True,
 ) -> tuple[Generator[ChatResponse, None, None], list[NodeWithScore]]:
-    agent, enhanced_query = build_function_agent(enhanced_query, llm, tools)
+    agent, enhanced_query = build_function_agent(
+        enhanced_query, llm, tools, configuration.use_streaming or False
+    )
 
     source_nodes: list[NodeWithScore] = []
 
@@ -251,11 +252,22 @@ def _run_streamer(
             return chat_gen.chat_stream, chat_gen.source_nodes
 
         # If no chat engine is provided, we can use the LLM directly
-        direct_chat_gen = llm.stream_chat(
-            messages=chat_messages
-            + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
-        )
-        return direct_chat_gen, source_nodes
+        if configuration.use_streaming:
+            direct_chat_gen = llm.stream_chat(
+                messages=chat_messages
+                + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+            )
+            return direct_chat_gen, source_nodes
+
+        # Use non-streaming LLM for direct chat when streaming is disabled
+        def _fake_direct_stream() -> Generator[ChatResponse, None, None]:
+            response = llm.chat(
+                messages=chat_messages
+                + [ChatMessage(role=MessageRole.USER, content=enhanced_query)]
+            )
+            yield response
+
+        return _fake_direct_stream(), source_nodes
 
     async def agen() -> AsyncGenerator[ChatResponse, None]:
         handler = agent.run(user_msg=enhanced_query, chat_history=chat_messages)
@@ -358,23 +370,33 @@ def _run_streamer(
                         f"{str(event.response) if event.response else 'No content'}"
                     )
                     logger.info("========================")
-                yield ChatResponse(
-                    message=ChatMessage(
-                        role=MessageRole.TOOL,
-                        content=(
-                            event.response.content if event.response.content else ""
+                if configuration.use_streaming:
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=(MessageRole.TOOL),
+                            content=event.response.content,
                         ),
-                    ),
-                    delta="",
-                    raw=event.raw,
-                    additional_kwargs={
-                        "chat_event": ChatEvent(
-                            type="agent_response",
-                            name=event.current_agent_name,
-                            data=data,
+                        delta="",
+                        raw=event.raw,
+                        additional_kwargs=(
+                            {
+                                "chat_event": ChatEvent(
+                                    type="agent_response",
+                                    name=event.current_agent_name,
+                                    data=data,
+                                ),
+                            }
                         ),
-                    },
-                )
+                    )
+                else:
+                    yield ChatResponse(
+                        message=ChatMessage(
+                            role=(MessageRole.ASSISTANT),
+                            content=event.response.content,
+                        ),
+                        delta=(event.response.content),
+                        raw=event.raw,
+                    )
             elif isinstance(event, AgentStream):
                 if len(event.tool_calls) > 0:
                     continue
@@ -436,7 +458,10 @@ def _run_streamer(
 
 
 def build_function_agent(
-    enhanced_query: str, llm: FunctionCallingLLM, tools: list[BaseTool]
+    enhanced_query: str,
+    llm: FunctionCallingLLM,
+    tools: list[BaseTool],
+    streaming_enabled: bool,
 ) -> tuple[FunctionAgent, str]:
     formatted_prompt = DEFAULT_AGENT_PROMPT.format(
         date=datetime.datetime.now().strftime("%A, %B %d, %Y"),
@@ -444,7 +469,11 @@ def build_function_agent(
     )
     callable_tools = cast(list[BaseTool | Callable[[], Any]], tools)
     if llm.metadata.model_name in NON_SYSTEM_MESSAGE_MODELS:
-        agent = FunctionAgent(tools=callable_tools, llm=llm)
+        agent = FunctionAgent(
+            tools=callable_tools,
+            llm=llm,
+            streaming=streaming_enabled,
+        )
         enhanced_query = (
             "ROLE DESCRIPTION =========================================\n"
             + formatted_prompt
@@ -453,14 +482,11 @@ def build_function_agent(
             + enhanced_query
         )
     else:
-        if (
-            isinstance(llm, BedrockConverse)
-            and get_model_name(llm.metadata.model_name)
-            not in BEDROCK_STREAMING_TOOL_MODELS
-        ):
-            llm = FakeStreamBedrockConverse.from_bedrock_converse(llm)
         agent = FunctionAgent(
-            tools=callable_tools, llm=llm, system_prompt=formatted_prompt
+            tools=callable_tools,
+            llm=llm,
+            system_prompt=formatted_prompt,
+            streaming=streaming_enabled,
         )
 
     return agent, enhanced_query

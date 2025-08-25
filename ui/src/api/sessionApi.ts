@@ -59,6 +59,7 @@ export interface SessionQueryConfiguration {
   enableHyde: boolean;
   enableSummaryFilter: boolean;
   enableToolCalling: boolean;
+  disableStreaming: boolean;
   selectedTools: string[];
 }
 

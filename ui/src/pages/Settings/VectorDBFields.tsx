@@ -69,6 +69,11 @@ export const VectorDBFields = ({
         Embedded Qdrant will be used as the vector database.
       </StyledHelperText>
     )}
+    {selectedVectorDBProvider === "OPENSEARCH" ? (
+      <StyledHelperText>
+        We currently support OpenSearch versions up to and including 2.19.3
+      </StyledHelperText>
+    ) : null}
     <Form.Item
       label={"OpenSearch Endpoint"}
       initialValue={projectConfig?.opensearch_config.opensearch_endpoint}

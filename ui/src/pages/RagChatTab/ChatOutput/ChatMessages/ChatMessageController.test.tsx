@@ -71,7 +71,7 @@ vi.mock("src/api/chatApi.ts", () => ({
   createQueryConfiguration: vi.fn(() => ({ exclude_knowledge_base: false })),
   getOnEvent: vi.fn(() => vi.fn()),
   isPlaceholder: vi.fn(
-    (message: { id: string }) => message.id === "placeholder"
+    (message: { id: string }) => message.id === "placeholder",
   ),
   useStreamingChatMutation: vi.fn(() => ({
     mutate: vi.fn(),
@@ -119,7 +119,7 @@ vi.mock(
     default: ({ question }: { question: string }) => (
       <div data-testid="pending-skeleton">Pending: {question}</div>
     ),
-  })
+  }),
 );
 
 vi.mock("pages/RagChatTab/ChatOutput/Loaders/ChatLoading.tsx", () => ({
@@ -167,7 +167,7 @@ afterEach(() => {
 const createMockMessage = (
   id: string,
   user: string,
-  assistant: string
+  assistant: string,
 ): ChatMessageType => ({
   id,
   session_id: 123,
@@ -178,7 +178,7 @@ const createMockMessage = (
 });
 
 const createMockContext = (
-  overrides: Partial<RagChatContextType> = {}
+  overrides: Partial<RagChatContextType> = {},
 ): RagChatContextType => ({
   activeSession: {
     id: 123,
@@ -194,6 +194,7 @@ const createMockContext = (
       enableHyde: false,
       enableSummaryFilter: false,
       enableToolCalling: false,
+      disableStreaming: false,
       selectedTools: [],
     },
     projectId: 1,
@@ -230,7 +231,7 @@ const renderWithContext = (contextValue: RagChatContextType) => {
       <RagChatContext.Provider value={contextValue}>
         <ChatMessageController />
       </RagChatContext.Provider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 };
 
@@ -321,10 +322,10 @@ describe("ChatMessageController", () => {
       expect(screen.getByTestId("chat-message-1")).toBeInTheDocument();
       expect(screen.getByTestId("chat-message-2")).toBeInTheDocument();
       expect(
-        screen.getByText("Message: Hello - Hi there!")
+        screen.getByText("Message: Hello - Hi there!"),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Message: How are you? - I'm doing well!")
+        screen.getByText("Message: How are you? - I'm doing well!"),
       ).toBeInTheDocument();
     });
 
@@ -366,6 +367,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,
@@ -403,6 +405,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,
@@ -438,6 +441,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,
@@ -475,6 +479,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,
@@ -516,6 +521,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,
@@ -551,6 +557,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,
@@ -652,6 +659,7 @@ describe("ChatMessageController", () => {
             enableHyde: false,
             enableSummaryFilter: false,
             enableToolCalling: false,
+            disableStreaming: false,
             selectedTools: [],
           },
           projectId: 1,

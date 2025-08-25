@@ -126,6 +126,7 @@ cd ../backend
 
 # start frontend development server
 cd ../ui
+rm -rf node_modules
 pnpm install
 pnpm build
 pnpm dev &

@@ -103,10 +103,12 @@ public class Types {
       Long associatedSessionId) {}
 
   @With
+  @Builder
   public record QueryConfiguration(
       boolean enableHyde,
       boolean enableSummaryFilter,
       boolean enableToolCalling,
+      Boolean disableStreaming,
       List<String> selectedTools) {}
 
   @With
