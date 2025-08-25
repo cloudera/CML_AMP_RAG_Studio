@@ -35,9 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import itertools
 from contextlib import AbstractContextManager
-from typing import Generator
+from typing import Iterator
 from unittest.mock import patch
 from urllib.parse import urljoin
 
@@ -49,7 +48,6 @@ from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from app.config import settings
 from app.services.caii.types import ModelResponse
 from app.services.models.providers import BedrockModelProvider
-from app.services.models.providers._model_provider import get_all_env_var_names
 from .utils import patch_env_vars
 
 TEXT_MODELS = [
@@ -152,7 +150,7 @@ def _patch_boto3() -> AbstractContextManager:
 
 
 @pytest.fixture
-def mock_bedrock(monkeypatch) -> Generator[None, None, None]:
+def mock_bedrock(monkeypatch) -> Iterator[None]:
     with patch_env_vars(BedrockModelProvider):
         with (
             _patch_requests(),
