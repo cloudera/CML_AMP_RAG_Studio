@@ -175,6 +175,7 @@ const createMockMessage = (
   rag_message: { user, assistant },
   evaluations: [],
   timestamp: Date.now(),
+  status: "success",
 });
 
 const createMockContext = (

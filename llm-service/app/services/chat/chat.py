@@ -40,22 +40,19 @@ import time
 import uuid
 from typing import Optional
 
-from llama_index.core.chat_engine.types import AgentChatResponse
-
 from app.ai.vector_stores.vector_store_factory import VectorStoreFactory
 from app.rag_types import RagPredictConfiguration
-from app.services import evaluators, llm_completion
-from app.services.chat.utils import retrieve_chat_history, format_source_nodes
+from app.services import llm_completion
+from app.services.chat.streaming_chat import finalize_response
+from app.services.chat.utils import retrieve_chat_history
 from app.services.chat_history.chat_history_manager import (
-    Evaluation,
     RagMessage,
     RagStudioChatMessage,
     chat_history_manager,
 )
 from app.services.metadata_apis.session_metadata_api import Session
-from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
+from app.services.mlflow import record_direct_llm_mlflow_run
 from app.services.query import querier
-from app.services.query.querier import get_nodes_from_output
 from app.services.query.query_configuration import QueryConfiguration
 
 logger = logging.getLogger(__name__)
@@ -125,58 +122,6 @@ def _run_chat(
     )
 
 
-def finalize_response(
-    chat_response: AgentChatResponse,
-    condensed_question: str | None,
-    query: str,
-    query_configuration: QueryConfiguration,
-    response_id: str,
-    session: Session,
-    user_name: Optional[str],
-) -> RagStudioChatMessage:
-    if condensed_question and (condensed_question.strip() == query.strip()):
-        condensed_question = None
-
-    orig_source_nodes = chat_response.source_nodes
-    source_nodes = get_nodes_from_output(chat_response.response, session)
-
-    # if node with id present in orig_source_nodes, then don't add it again
-    node_ids_present = set([node.node_id for node in orig_source_nodes])
-    for node in source_nodes:
-        if node.node_id not in node_ids_present:
-            orig_source_nodes.append(node)
-
-    chat_response.source_nodes = orig_source_nodes
-
-    evaluations = []
-    if len(chat_response.source_nodes) != 0:
-        relevance, faithfulness = evaluators.evaluate_response(
-            query, chat_response, session.inference_model
-        )
-        evaluations.append(Evaluation(name="relevance", value=relevance))
-        evaluations.append(Evaluation(name="faithfulness", value=faithfulness))
-    response_source_nodes = format_source_nodes(chat_response)
-    new_chat_message = RagStudioChatMessage(
-        id=response_id,
-        session_id=session.id,
-        source_nodes=response_source_nodes,
-        inference_model=session.inference_model,
-        rag_message=RagMessage(
-            user=query,
-            assistant=chat_response.response,
-        ),
-        evaluations=evaluations,
-        timestamp=time.time(),
-        condensed_question=condensed_question,
-    )
-    record_rag_mlflow_run(
-        new_chat_message, query_configuration, response_id, session, user_name
-    )
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
-
-    return new_chat_message
-
-
 def direct_llm_chat(
     session: Session, response_id: str, query: str, user_name: Optional[str]
 ) -> RagStudioChatMessage:
@@ -197,6 +142,7 @@ def direct_llm_chat(
         ),
         timestamp=time.time(),
         condensed_question=None,
+        status="success",
     )
     chat_history_manager.append_to_history(session.id, [new_chat_message])
     return new_chat_message

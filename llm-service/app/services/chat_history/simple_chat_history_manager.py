@@ -102,6 +102,7 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                     ),
                     timestamp=assistant_message.additional_kwargs.get("timestamp", 0.0),
                     condensed_question=None,
+                    status=assistant_message.additional_kwargs.get("status", "success"),
                 )
             )
             i += 2
@@ -154,10 +155,72 @@ class SimpleChatHistoryManager(ChatHistoryManager):
                         "inference_model": message.inference_model,
                         "evaluations": message.evaluations,
                         "timestamp": message.timestamp,
+                        "status": message.status,
                     },
                 ),
             )
             store.persist(self._store_file(session_id))
+
+    def update_message(
+        self, session_id: int, message_id: str, message: RagStudioChatMessage
+    ) -> None:
+        """Update an existing message's user/assistant content and metadata by ID."""
+        store = self._store_for_session(session_id)
+        key = self._build_chat_key(session_id)
+        messages: list[ChatMessage] = store.get_messages(key)
+
+        # Each logical message is stored as a pair: USER, ASSISTANT with same id
+        for i in range(0, len(messages), 2):
+            user_msg = messages[i]
+            if user_msg.additional_kwargs.get("id") == message_id:
+                # Update user content
+                user_msg.content = message.rag_message.user
+                # Update assistant content and metadata (next message)
+                if i + 1 < len(messages):
+                    assistant_msg = messages[i + 1]
+                else:
+                    assistant_msg = ChatMessage(role=MessageRole.ASSISTANT, content="")
+                    messages.append(assistant_msg)
+                assistant_msg.content = message.rag_message.assistant
+                assistant_msg.additional_kwargs.update(
+                    {
+                        "id": message_id,
+                        "source_nodes": message.source_nodes,
+                        "inference_model": message.inference_model,
+                        "evaluations": message.evaluations,
+                        "timestamp": message.timestamp,
+                        "status": message.status,
+                    }
+                )
+                # Persist updated list
+                store.delete_messages(key)
+                for m in messages:
+                    store.add_message(key, m)
+                store.persist(self._store_file(session_id))
+                return
+
+    def delete_message(self, session_id: int, message_id: str) -> None:
+        """Delete both USER and ASSISTANT entries for a given message id."""
+        store = self._store_for_session(session_id)
+        key = self._build_chat_key(session_id)
+        messages: list[ChatMessage] = store.get_messages(key)
+
+        new_messages: list[ChatMessage] = []
+        i = 0
+        while i < len(messages):
+            user_msg = messages[i]
+            assistant_msg = messages[i + 1] if i + 1 < len(messages) else None
+            current_id = user_msg.additional_kwargs.get("id")
+            if current_id != message_id:
+                new_messages.append(user_msg)
+                if assistant_msg is not None:
+                    new_messages.append(assistant_msg)
+            i += 2
+
+        store.delete_messages(key)
+        for m in new_messages:
+            store.add_message(key, m)
+        store.persist(self._store_file(session_id))
 
     @staticmethod
     def _build_chat_key(session_id: int) -> str:

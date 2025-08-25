@@ -61,6 +61,8 @@ class RagStudioChatMessage(BaseModel):
     evaluations: list[Evaluation]
     timestamp: float
     condensed_question: Optional[str]
+    status: Literal["pending", "error", "cancelled", "success"] = "success"
+    error_message: Optional[str] = None
 
 
 class ChatHistoryManager(metaclass=ABCMeta):
@@ -82,6 +84,22 @@ class ChatHistoryManager(metaclass=ABCMeta):
         session_id: int,
         messages: list[RagStudioChatMessage],
     ) -> None:
+        pass
+
+    @abstractmethod
+    def update_message(
+        self, session_id: int, message_id: str, message: RagStudioChatMessage
+    ) -> None:
+        """Update an existing message by ID for the given session.
+
+        Implementations should overwrite both the user and assistant entries
+        corresponding to this message ID.
+        """
+        pass
+
+    @abstractmethod
+    def delete_message(self, session_id: int, message_id: str) -> None:
+        """Delete an existing message by ID for the given session."""
         pass
 
 

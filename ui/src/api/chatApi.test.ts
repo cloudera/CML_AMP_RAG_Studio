@@ -40,27 +40,30 @@ import { describe, expect, it, vi } from "vitest";
 import {
   appendPlaceholderToChatHistory,
   ChatHistoryResponse,
+  ChatMessageType,
   replacePlaceholderInChatHistory,
 } from "src/api/chatApi.ts";
 import { InfiniteData } from "@tanstack/react-query";
 
 describe("replacePlaceholderInChatHistory", () => {
   it("replaces placeholder with actual data when cachedData contains placeholder", () => {
-    const placeholder = {
+    const placeholder: ChatMessageType = {
       id: "placeholder",
       session_id: 0,
       source_nodes: [],
       rag_message: { user: "query", assistant: "" },
       evaluations: [],
       timestamp: Date.now(),
+      status: "pending",
     };
-    const actualData = {
+    const actualData: ChatMessageType = {
       id: "actual",
       session_id: 1,
       source_nodes: [],
       rag_message: { user: "query", assistant: "response" },
       evaluations: [],
       timestamp: Date.now(),
+      status: "success",
     };
     const cachedData: InfiniteData<ChatHistoryResponse> = {
       pages: [{ data: [placeholder], next_id: null, previous_id: null }],
@@ -76,13 +79,14 @@ describe("replacePlaceholderInChatHistory", () => {
   });
 
   it("returns actual data when cachedData is undefined", () => {
-    const actualData = {
+    const actualData: ChatMessageType = {
       id: "actual",
       session_id: 1,
       source_nodes: [],
       rag_message: { user: "query", assistant: "response" },
       evaluations: [],
       timestamp: Date.now(),
+      status: "success",
     };
 
     const result = replacePlaceholderInChatHistory(actualData, undefined);
@@ -94,15 +98,16 @@ describe("replacePlaceholderInChatHistory", () => {
   });
 
   it("does not replace any data when cachedData does not contain placeholder", () => {
-    const actualData = {
+    const actualData: ChatMessageType = {
       id: "actual",
       session_id: 1,
       source_nodes: [],
       rag_message: { user: "query", assistant: "response" },
       evaluations: [],
       timestamp: Date.now(),
+      status: "success",
     };
-    const cachedItem = [
+    const cachedItem: ChatMessageType[] = [
       {
         id: "other",
         session_id: 2,
@@ -110,6 +115,7 @@ describe("replacePlaceholderInChatHistory", () => {
         rag_message: { user: "query", assistant: "response" },
         evaluations: [],
         timestamp: Date.now(),
+        status: "success",
       },
     ];
 
@@ -143,6 +149,7 @@ describe("appendPlaceholderToChatHistory", () => {
               rag_message: { user: query, assistant: "" },
               evaluations: [],
               timestamp,
+              status: "pending",
             },
           ],
           next_id: null,
@@ -161,13 +168,14 @@ describe("appendPlaceholderToChatHistory", () => {
     const timestamp = Date.now();
     vi.spyOn(Date, "now").mockImplementation(() => timestamp);
 
-    const existingMessage = {
+    const existingMessage: ChatMessageType = {
       id: "existing",
       session_id: 1,
       source_nodes: [],
       rag_message: { user: "previous query", assistant: "previous response" },
       evaluations: [],
       timestamp: timestamp - 1000, // Earlier timestamp
+      status: "success",
     };
 
     const cachedData: InfiniteData<ChatHistoryResponse> = {
@@ -195,6 +203,7 @@ describe("appendPlaceholderToChatHistory", () => {
               rag_message: { user: query, assistant: "" },
               evaluations: [],
               timestamp,
+              status: "pending",
             },
           ],
           next_id: 6, // Incremented
@@ -213,22 +222,24 @@ describe("appendPlaceholderToChatHistory", () => {
     const timestamp = Date.now();
     vi.spyOn(Date, "now").mockImplementation(() => timestamp);
 
-    const message1 = {
+    const message1: ChatMessageType = {
       id: "msg1",
       session_id: 1,
       source_nodes: [],
       rag_message: { user: "query 1", assistant: "response 1" },
       evaluations: [],
       timestamp: timestamp - 2000,
+      status: "success",
     };
 
-    const message2 = {
+    const message2: ChatMessageType = {
       id: "msg2",
       session_id: 1,
       source_nodes: [],
       rag_message: { user: "query 2", assistant: "response 2" },
       evaluations: [],
       timestamp: timestamp - 1000,
+      status: "success",
     };
 
     const cachedData: InfiniteData<ChatHistoryResponse> = {
@@ -266,6 +277,7 @@ describe("appendPlaceholderToChatHistory", () => {
               rag_message: { user: query, assistant: "" },
               evaluations: [],
               timestamp,
+              status: "pending",
             },
           ],
           next_id: 16, // Incremented
