@@ -105,7 +105,8 @@ export interface ChatMessageType {
   evaluations: Evaluation[];
   timestamp: number;
   condensed_question?: string;
-  status: "pending" | "error" | "success";
+  status: "pending" | "error" | "cancelled" | "success";
+  error_message?: string;
 }
 
 export interface ChatResponseFeedback {

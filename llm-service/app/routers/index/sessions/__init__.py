@@ -378,6 +378,35 @@ def stream_chat_completion(
             logger.exception("Timeout: Failed to stream chat completion")
             yield 'data: {{"error" : "Timeout: Failed to stream chat completion"}}\n\n'
         except Exception as e:
+            if response.additional_kwargs.get("response_id"):
+                updated_response = RagStudioChatMessage(
+                    id=response.additional_kwargs["response_id"],
+                    session_id=session_id,
+                    source_nodes=(
+                        response.source_nodes
+                        if hasattr(response, "source_nodes")
+                        else []
+                    ),
+                    inference_model=session.inference_model,
+                    rag_message=RagMessage(
+                        user=request.query,
+                        assistant=(
+                            response.message.content
+                            if response.message.content
+                            else ""
+                        ),
+                    ),
+                    evaluations=[],
+                    timestamp=time.time(),
+                    condensed_question=None,
+                    status="error",
+                    error_message=str(e),
+                )
+                chat_history_manager.update_message(
+                    session_id=session_id,
+                    message_id=updated_response.id,
+                    message=updated_response,
+                )
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
         finally:
