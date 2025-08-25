@@ -302,9 +302,11 @@ def get_embedding_model(model_name: str) -> BaseEmbedding:
 
 
 def get_caii_llm_models() -> List[ModelResponse]:
-    potential_models = get_models_with_task("TEXT_GENERATION")
+    potential_text_models = get_models_with_task("TEXT_GENERATION")
+    potential_text_to_text_models = get_models_with_task("TEXT_TO_TEXT_GENERATION")
+
     results: list[Endpoint] = []
-    for potential in potential_models:
+    for potential in [*potential_text_models, *potential_text_to_text_models]:
         try:
             model = get_llm(
                 endpoint=potential,
