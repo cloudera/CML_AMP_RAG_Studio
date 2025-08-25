@@ -35,10 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import itertools
-
 import pytest
 
+from app.config import MODEL_PROVIDER_ENV_VAR_NAME
 from app.services import models
 from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
@@ -61,6 +60,10 @@ def EnabledModelProvider(
         monkeypatch.delenv(name, raising=False)
     for name in ModelProviderSubcls.get_env_var_names():
         monkeypatch.setenv(name, "test")
+    monkeypatch.setenv(
+        MODEL_PROVIDER_ENV_VAR_NAME,
+        ModelProviderSubcls.get_model_source(),
+    )
 
     return ModelProviderSubcls
 
