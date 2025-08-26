@@ -41,18 +41,16 @@ from contextlib import AbstractContextManager
 from typing import Callable
 from unittest.mock import patch
 
-from alembic.testing.fixtures import testing_config
-
 from app.services.chat_history.chat_history_manager import (
     ChatHistoryManager,
     RagStudioChatMessage,
     RagMessage,
 )
-from app.services.models import get_provider_class
+from app.services.models.providers import get_provider_class
 
 
 class TestingChatHistoryManager(ChatHistoryManager):
-    def __init__(self):
+    def __init__(self) -> None:
         self._chat_history: dict[int, list[RagStudioChatMessage]] = dict()
 
     def retrieve_chat_history(self, session_id: int) -> list[RagStudioChatMessage]:
@@ -70,6 +68,7 @@ class TestingChatHistoryManager(ChatHistoryManager):
         self._chat_history.setdefault(session_id, []).extend(messages)
 
 
+# TODO: we might want to specifically patch S3 and Simple to test their implementations
 def patch_get_chat_history_manager() -> (
     AbstractContextManager[Callable[[], TestingChatHistoryManager]]
 ):

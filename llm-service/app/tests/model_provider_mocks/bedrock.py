@@ -36,13 +36,14 @@
 #  DATA.
 #
 from contextlib import AbstractContextManager
-from typing import Iterator
+from typing import Iterator, Callable, Any
 from unittest.mock import patch
 from urllib.parse import urljoin
 
 import botocore
 import pytest
 import responses
+from fastapi.testclient import TestClient
 from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 
 from app.config import settings
@@ -50,7 +51,6 @@ from app.services.caii.types import ModelResponse
 from app.services.models.providers import BedrockModelProvider
 from .testing_chat_history_manager import (
     patch_get_chat_history_manager,
-    TestingChatHistoryManager,
 )
 from .utils import patch_env_vars
 
@@ -67,7 +67,7 @@ RERANKING_MODELS = [
 ]
 
 
-def _patch_requests() -> AbstractContextManager:
+def _patch_requests() -> AbstractContextManager[responses.RequestsMock]:
     bedrock_url_base = f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
     r_mock = responses.RequestsMock(assert_all_requests_are_fired=False)
     for model_id, availability in TEXT_MODELS + EMBEDDING_MODELS:
@@ -91,10 +91,17 @@ def _patch_requests() -> AbstractContextManager:
     return r_mock
 
 
-def _patch_boto3() -> AbstractContextManager:
-    make_api_call = botocore.client.BaseClient._make_api_call
+make_api_callable = Callable[[type, str, dict[str, str]], Any]
 
-    def mock_make_api_call(self, operation_name: str, api_params: dict[str, str]):
+
+def _patch_boto3() -> AbstractContextManager[make_api_callable]:
+    make_api_call: make_api_callable = botocore.client.BaseClient._make_api_call  # type: ignore
+
+    def mock_make_api_call(
+        self: type,
+        operation_name: str,
+        api_params: dict[str, str],
+    ) -> Any:
         """Mock Boto3 Bedrock operations, since moto doesn't have full coverage.
 
         Based on https://docs.getmoto.org/en/latest/docs/services/patching_other_services.html.
@@ -154,7 +161,7 @@ def _patch_boto3() -> AbstractContextManager:
 
 
 @pytest.fixture(autouse=True)
-def mock_bedrock(monkeypatch) -> Iterator[None]:
+def mock_bedrock(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     with patch_env_vars(BedrockModelProvider):
         with (
             _patch_requests(),
@@ -175,7 +182,7 @@ def mock_bedrock(monkeypatch) -> Iterator[None]:
 
 
 # TODO: move test functions to a discoverable place
-def test_bedrock_models(client) -> None:
+def test_bedrock_models(client: TestClient) -> None:
     response = client.get("/llm-service/models/model_source")
     assert response.status_code == 200
     assert response.json() == "Bedrock"
@@ -207,7 +214,7 @@ def test_bedrock_models(client) -> None:
     # response = client.get("/llm-service/models/embedding/cohere.embed-english-v3/test")
 
 
-def test_bedrock_sessions(client) -> None:
+def test_bedrock_sessions(client: TestClient) -> None:
     session_id = 1
     with patch_get_chat_history_manager() as get_testing_chat_history_manager:
         chat_history = get_testing_chat_history_manager().retrieve_chat_history(
@@ -231,7 +238,7 @@ def test_bedrock_sessions(client) -> None:
     # assert response.status_code == 200
 
 
-# def test_bedrock_chat(client) -> None:
+# def test_bedrock_chat(client: TestClient) -> None:
 #     response = client.post("/llm-service/sessions/suggest-questions")
 #     print(f"{response.json()=}")
 #     assert response.status_code == 200
