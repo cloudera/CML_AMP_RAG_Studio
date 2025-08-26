@@ -40,7 +40,7 @@ from typing import Optional
 
 from . import models
 from .chat_history.chat_history_manager import (
-    chat_history_manager,
+    get_chat_history_manager,
     RagStudioChatMessage,
 )
 from .metadata_apis import session_metadata_api
@@ -87,7 +87,7 @@ Session Name:
 
 def rename_session(session_id: int, user_name: Optional[str]) -> str:
     chat_history: list[RagStudioChatMessage] = (
-        chat_history_manager.retrieve_chat_history(session_id=session_id)
+        get_chat_history_manager().retrieve_chat_history(session_id=session_id)
     )
     if not chat_history:
         logger.info("No chat history found for session ID %s", session_id)

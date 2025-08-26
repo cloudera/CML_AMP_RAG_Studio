@@ -27,7 +27,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import functools
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Literal
 
@@ -85,7 +85,8 @@ class ChatHistoryManager(metaclass=ABCMeta):
         pass
 
 
-def _create_chat_history_manager() -> ChatHistoryManager:
+@functools.cache
+def get_chat_history_manager() -> ChatHistoryManager:
     from app.services.chat_history.simple_chat_history_manager import (
         SimpleChatHistoryManager,
     )
@@ -99,6 +100,3 @@ def _create_chat_history_manager() -> ChatHistoryManager:
         return S3ChatHistoryManager()
     else:
         return SimpleChatHistoryManager()
-
-
-chat_history_manager = _create_chat_history_manager()

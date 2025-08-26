@@ -50,7 +50,7 @@ from app.services.chat_history.chat_history_manager import (
     Evaluation,
     RagMessage,
     RagStudioChatMessage,
-    chat_history_manager,
+    get_chat_history_manager,
 )
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_rag_mlflow_run, record_direct_llm_mlflow_run
@@ -172,7 +172,7 @@ def finalize_response(
     record_rag_mlflow_run(
         new_chat_message, query_configuration, response_id, session, user_name
     )
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
+    get_chat_history_manager().append_to_history(session.id, [new_chat_message])
 
     return new_chat_message
 
@@ -198,5 +198,5 @@ def direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
+    get_chat_history_manager().append_to_history(session.id, [new_chat_message])
     return new_chat_message
