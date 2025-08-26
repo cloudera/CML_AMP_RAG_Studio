@@ -38,7 +38,7 @@
 import functools
 import json
 import logging
-from typing import List
+from typing import List, cast
 
 import boto3
 from boto3 import Session
@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 class S3ChatHistoryManager(ChatHistoryManager):
     """Chat history manager that uses S3 for storage."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.bucket_name = settings.document_bucket
         self.bucket_prefix = settings.document_bucket_prefix
@@ -66,7 +66,7 @@ class S3ChatHistoryManager(ChatHistoryManager):
     def s3_client(self) -> S3Client:
         """Lazy initialization of S3 client."""
         session: Session = boto3.session.Session()
-        return session.client("s3")
+        return cast(S3Client, session.client("s3"))
 
     def _get_s3_key(self, session_id: int) -> str:
         """Build the S3 key for a session's chat history."""

@@ -64,7 +64,7 @@ class RagStudioChatMessage(BaseModel):
 
 
 class ChatHistoryManager(metaclass=ABCMeta):
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abstractmethod
