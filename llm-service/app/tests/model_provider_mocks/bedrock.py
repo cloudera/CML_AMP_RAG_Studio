@@ -156,17 +156,12 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
                 ],
             }
         elif operation_name == "InvokeModel":
-            texts: list[str] = json.loads(api_params["body"])["inputText"]
             return {
-                "contentType": "application/json",
-                # TODO: does this need to be botocore.response.StreamingBody?
                 "body": io.BytesIO(
                     json.dumps(
                         {
-                            "texts": texts,
-                            "embeddings": [
-                                [random.gauss(mu=0.0, sigma=0.1) for _ in range(16)]
-                                for _ in texts
+                            "embedding": [
+                                random.gauss(mu=0.0, sigma=0.1) for _ in range(16)
                             ],
                         }
                     ).encode()
@@ -237,9 +232,9 @@ def test_bedrock_models(client: TestClient) -> None:
     assert [
         model["model_id"] for model in response.json()
     ] == available_embedding_models
-    # for model_id in available_embedding_models:
-    #     response = client.get(f"/llm-service/models/embedding/{model_id}/test")
-    #     assert response.status_code == 200  # TODO
+    for model_id in available_embedding_models:
+        response = client.get(f"/llm-service/models/embedding/{model_id}/test")
+        assert response.status_code == 200  # TODO
 
     available_text_models = [
         model_id
