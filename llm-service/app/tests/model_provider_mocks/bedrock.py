@@ -35,6 +35,9 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import io
+import json
+import random
 from contextlib import AbstractContextManager
 from typing import Iterator, Callable, Any
 from unittest.mock import patch
@@ -55,15 +58,15 @@ from .testing_chat_history_manager import (
 from .utils import patch_env_vars
 
 TEXT_MODELS = [
-    ("test.unavailable-text-model-v1", "NOT_AVAILABLE"),
-    ("test.available-text-model-v1", "AVAILABLE"),
+    ("amazon.unavailable-text-model-v1", "NOT_AVAILABLE"),
+    ("amazon.available-text-model-v1", "AVAILABLE"),
 ]
 EMBEDDING_MODELS = [
-    ("test.unavailable-embedding-model-v1", "NOT_AVAILABLE"),
-    ("test.available-embedding-model-v1", "AVAILABLE"),
+    ("amazon.unavailable-embedding-model-v1", "NOT_AVAILABLE"),
+    ("amazon.available-embedding-model-v1", "AVAILABLE"),
 ]
 RERANKING_MODELS = [
-    ("test.available-reranking-model-v1", "AVAILABLE"),
+    ("amazon.available-reranking-model-v1", "AVAILABLE"),
 ]
 
 
@@ -152,7 +155,44 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
                     for model_id, _ in TEXT_MODELS + EMBEDDING_MODELS
                 ],
             }
-
+        elif operation_name == "InvokeModel":
+            texts: list[str] = json.loads(api_params["body"])["inputText"]
+            return {
+                "contentType": "application/json",
+                # TODO: does this need to be botocore.response.StreamingBody?
+                "body": io.BytesIO(
+                    json.dumps(
+                        {
+                            "texts": texts,
+                            "embeddings": [
+                                [random.gauss(mu=0.0, sigma=0.1) for _ in range(16)]
+                                for _ in texts
+                            ],
+                        }
+                    ).encode()
+                ),
+            }
+        elif operation_name == "Converse":
+            return {
+                "output": {
+                    "message": {
+                        "role": "assistant",
+                        "content": [{"text": "\n\nTest response."}],
+                    }
+                },
+                "stopReason": "end_turn",
+                # "usage": {"inputTokens": 21, "outputTokens": 75, "totalTokens": 96},
+                # "metrics": {"latencyMs": 827},
+            }
+        elif operation_name == "Rerank":
+            return {
+                "results": [
+                    # TODO: Is the document store checked prior to this? Do I need to mock that too?
+                    {"index": 0, "relevanceScore": random.random()},
+                    {"index": 1, "relevanceScore": random.random()},
+                    {"index": 2, "relevanceScore": random.random()},
+                ]
+            }
         else:
             # passthrough
             return make_api_call(self, operation_name, api_params)
@@ -187,31 +227,45 @@ def test_bedrock_models(client: TestClient) -> None:
     assert response.status_code == 200
     assert response.json() == "Bedrock"
 
-    response = client.get("/llm-service/models/embeddings")
-    assert response.status_code == 200
-    assert [model["model_id"] for model in response.json()] == [
+    available_embedding_models = [
         model_id
         for model_id, availability in EMBEDDING_MODELS
         if availability == "AVAILABLE"
     ]
-
-    response = client.get("/llm-service/models/llm")
+    response = client.get("/llm-service/models/embeddings")
     assert response.status_code == 200
-    assert [model["model_id"] for model in response.json()] == [
+    assert [
+        model["model_id"] for model in response.json()
+    ] == available_embedding_models
+    # for model_id in available_embedding_models:
+    #     response = client.get(f"/llm-service/models/embedding/{model_id}/test")
+    #     assert response.status_code == 200  # TODO
+
+    available_text_models = [
         model_id
         for model_id, availability in TEXT_MODELS
         if availability == "AVAILABLE"
     ]
-
-    response = client.get("/llm-service/models/reranking")
+    response = client.get("/llm-service/models/llm")
     assert response.status_code == 200
-    assert [model["model_id"] for model in response.json()] == [
+    assert [model["model_id"] for model in response.json()] == available_text_models
+    for model_id in available_text_models:
+        response = client.get(f"/llm-service/models/llm/{model_id}/test")
+        assert response.status_code == 200
+
+    available_reranking_models = [
         model_id
         for model_id, availability in RERANKING_MODELS
         if availability == "AVAILABLE"
     ]
-
-    # response = client.get("/llm-service/models/embedding/cohere.embed-english-v3/test")
+    response = client.get("/llm-service/models/reranking")
+    assert response.status_code == 200
+    assert [
+        model["model_id"] for model in response.json()
+    ] == available_reranking_models
+    # for model_id in available_reranking_models:
+    #     response = client.get(f"/llm-service/models/reranking/{model_id}/test")
+    #     assert response.status_code == 200  # TODO
 
 
 def test_bedrock_sessions(client: TestClient) -> None:

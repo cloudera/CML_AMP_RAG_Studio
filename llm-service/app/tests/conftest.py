@@ -175,16 +175,16 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
-    model = DummyEmbeddingModel()
-    monkeypatch.setattr(models.Embedding, "get", lambda cls, model_name=None: model)
-
-
-@pytest.fixture(autouse=True)
-def llm(monkeypatch: pytest.MonkeyPatch) -> None:
-    model = models.LLM.get_noop()
-    monkeypatch.setattr(models.LLM, "get", lambda cls, model_name=None: model)
+# @pytest.fixture(autouse=True)
+# def embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
+#     model = DummyEmbeddingModel()
+#     monkeypatch.setattr(models.Embedding, "get", lambda cls, model_name=None: model)
+#
+#
+# @pytest.fixture(autouse=True)
+# def llm(monkeypatch: pytest.MonkeyPatch) -> None:
+#     model = models.LLM.get_noop()
+#     monkeypatch.setattr(models.LLM, "get", lambda cls, model_name=None: model)
 
 
 @pytest.fixture
