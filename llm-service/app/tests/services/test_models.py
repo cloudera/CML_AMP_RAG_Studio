@@ -44,7 +44,7 @@ from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
 from app.services.models.providers import BedrockModelProvider
 from app.services.models.providers._model_provider import _ModelProvider
-from app.tests.provider_mocks.utils import patch_env_vars
+from app.tests.model_provider_mocks.utils import patch_env_vars
 
 
 @pytest.fixture(params=_ModelProvider.__subclasses__())

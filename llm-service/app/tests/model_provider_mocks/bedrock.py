@@ -48,6 +48,10 @@ from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from app.config import settings
 from app.services.caii.types import ModelResponse
 from app.services.models.providers import BedrockModelProvider
+from .testing_chat_history_manager import (
+    patch_get_chat_history_manager,
+    TestingChatHistoryManager,
+)
 from .utils import patch_env_vars
 
 TEXT_MODELS = [
@@ -149,7 +153,7 @@ def _patch_boto3() -> AbstractContextManager:
     return patch("botocore.client.BaseClient._make_api_call", new=mock_make_api_call)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_bedrock(monkeypatch) -> Iterator[None]:
     with patch_env_vars(BedrockModelProvider):
         with (
@@ -170,8 +174,8 @@ def mock_bedrock(monkeypatch) -> Iterator[None]:
             yield
 
 
-# TODO: move this test function to a discoverable place
-def test_bedrock(mock_bedrock, client) -> None:
+# TODO: move test functions to a discoverable place
+def test_bedrock_models(client) -> None:
     response = client.get("/llm-service/models/model_source")
     assert response.status_code == 200
     assert response.json() == "Bedrock"
@@ -199,3 +203,38 @@ def test_bedrock(mock_bedrock, client) -> None:
         for model_id, availability in RERANKING_MODELS
         if availability == "AVAILABLE"
     ]
+
+    # response = client.get("/llm-service/models/embedding/cohere.embed-english-v3/test")
+
+
+def test_bedrock_sessions(client) -> None:
+    session_id = 1
+    with patch_get_chat_history_manager() as get_testing_chat_history_manager:
+        chat_history = get_testing_chat_history_manager().retrieve_chat_history(
+            session_id=session_id
+        )
+
+        response = client.get(f"/llm-service/sessions/{session_id}/chat-history")
+        assert response.status_code == 200
+        assert response.json()["data"] == [msg.model_dump() for msg in chat_history]
+
+        msg = chat_history[0]  # TODO: randomize?
+        response = client.get(
+            f"/llm-service/sessions/{msg.session_id}/chat-history/{msg.id}",
+        )
+        assert response.status_code == 200
+        assert response.json() == msg.model_dump()
+
+        # TODO: maybe call the chat endpoint and see if history changes
+
+    # response = client.post("/llm-service/sessions/1/rename-session")
+    # assert response.status_code == 200
+
+
+# def test_bedrock_chat(client) -> None:
+#     response = client.post("/llm-service/sessions/suggest-questions")
+#     print(f"{response.json()=}")
+#     assert response.status_code == 200
+#
+#     response = client.post("/llm-service/sessions/1/stream-completion")
+#     assert response.status_code == 200
