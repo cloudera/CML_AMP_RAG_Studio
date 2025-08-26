@@ -39,10 +39,10 @@ import base64
 import json
 import logging
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Generator, Any
 
+import time
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from llama_index.core.base.llms.types import ChatResponse
@@ -58,6 +58,7 @@ from ....services.chat.chat import (
 )
 from ....services.chat.suggested_questions import generate_suggested_questions
 from ....services.chat_history.chat_history_manager import (
+    RagMessage,
     RagStudioChatMessage,
     chat_history_manager,
 )
@@ -292,6 +293,7 @@ def stream_chat_completion(
                 query=request.query,
                 configuration=configuration,
                 user_name=remote_user,
+                response_id=None,
             )
 
             # If we get here and the cancel_event is set, the client has disconnected
@@ -317,6 +319,35 @@ def stream_chat_completion(
                 response: ChatResponse = item
                 # Check for cancellation between each response
                 if cancel_event.is_set():
+                    print("Client disconnected between events")
+                    if response.additional_kwargs.get("response_id"):
+                        updated_response = RagStudioChatMessage(
+                            id=response.additional_kwargs["response_id"],
+                            session_id=session_id,
+                            source_nodes=(
+                                response.source_nodes
+                                if hasattr(response, "source_nodes")
+                                else []
+                            ),
+                            inference_model=session.inference_model,
+                            rag_message=RagMessage(
+                                user=request.query,
+                                assistant=(
+                                    response.message.content
+                                    if response.message.content
+                                    else ""
+                                ),
+                            ),
+                            evaluations=[],
+                            timestamp=time.time(),
+                            condensed_question=None,
+                            status="cancelled",
+                        )
+                        chat_history_manager.update_message(
+                            session_id=session_id,
+                            message_id=updated_response.id,
+                            message=updated_response,
+                        )
                     logger.info("Client disconnected during result processing")
                     break
                 if "chat_event" in response.additional_kwargs:
@@ -347,6 +378,35 @@ def stream_chat_completion(
             logger.exception("Timeout: Failed to stream chat completion")
             yield 'data: {{"error" : "Timeout: Failed to stream chat completion"}}\n\n'
         except Exception as e:
+            if response.additional_kwargs.get("response_id"):
+                updated_response = RagStudioChatMessage(
+                    id=response.additional_kwargs["response_id"],
+                    session_id=session_id,
+                    source_nodes=(
+                        response.source_nodes
+                        if hasattr(response, "source_nodes")
+                        else []
+                    ),
+                    inference_model=session.inference_model,
+                    rag_message=RagMessage(
+                        user=request.query,
+                        assistant=(
+                            response.message.content
+                            if response.message.content
+                            else ""
+                        ),
+                    ),
+                    evaluations=[],
+                    timestamp=time.time(),
+                    condensed_question=None,
+                    status="error",
+                    error_message=str(e),
+                )
+                chat_history_manager.update_message(
+                    session_id=session_id,
+                    message_id=updated_response.id,
+                    message=updated_response,
+                )
             logger.exception("Failed to stream chat completion")
             yield f'data: {{"error" : "{e}"}}\n\n'
         finally:

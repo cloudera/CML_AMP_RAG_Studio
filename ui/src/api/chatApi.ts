@@ -87,6 +87,7 @@ export interface ChatMutationRequest {
   query: string;
   session_id: number;
   configuration: QueryConfiguration;
+  response_id?: string;
 }
 
 interface ChatHistoryRequestType {
@@ -104,6 +105,8 @@ export interface ChatMessageType {
   evaluations: Evaluation[];
   timestamp: number;
   condensed_question?: string;
+  status: "pending" | "error" | "cancelled" | "success";
+  error_message?: string;
 }
 
 export interface ChatResponseFeedback {
@@ -113,7 +116,10 @@ export interface ChatResponseFeedback {
 export const placeholderChatResponseId = "placeholder";
 
 export const isPlaceholder = (chatMessage: ChatMessageType): boolean => {
-  return chatMessage.id === placeholderChatResponseId;
+  return (
+    chatMessage.id === placeholderChatResponseId ||
+    chatMessage.status === "pending"
+  );
 };
 
 export const placeholderChatResponse = (query: string): ChatMessageType => {
@@ -127,6 +133,7 @@ export const placeholderChatResponse = (query: string): ChatMessageType => {
     },
     evaluations: [],
     timestamp: Date.now(),
+    status: "pending",
   };
 };
 
@@ -255,7 +262,6 @@ export const replacePlaceholderInChatHistory = (
   });
 
   const noDataInPages = pages[pages.length - 1].data.length === 0;
-
   return {
     pageParams: cachedData.pageParams,
     pages: noDataInPages
@@ -345,6 +351,7 @@ const customChatMessage = (
   variables: ChatMutationRequest,
   message: string,
   prefix: string,
+  status: ChatMessageType["status"],
 ) => {
   const uuid = crypto.randomUUID();
   const customMessage: ChatMessageType = {
@@ -357,6 +364,7 @@ const customChatMessage = (
     },
     evaluations: [],
     timestamp: Date.now(),
+    status,
   };
   return customMessage;
 };
@@ -364,15 +372,30 @@ const customChatMessage = (
 export const ERROR_PREFIX_ID = "error-";
 export const CANCELED_PREFIX_ID = "canceled-";
 
-const errorChatMessage = (variables: ChatMutationRequest, error: Error) => {
-  return customChatMessage(variables, error.message, ERROR_PREFIX_ID);
+const errorChatMessage = (
+  variables: ChatMutationRequest,
+  error: Error,
+  assistantMessage: string,
+): ChatMessageType => {
+  const message = customChatMessage(
+    variables,
+    assistantMessage,
+    ERROR_PREFIX_ID,
+    "error",
+  );
+  message.error_message = error.message;
+  return message;
 };
 
-const canceledChatMessage = (variables: ChatMutationRequest) => {
+const canceledChatMessage = (
+  variables: ChatMutationRequest,
+  assistantMessage: string,
+): ChatMessageType => {
   return customChatMessage(
     variables,
-    "Request canceled by user",
+    assistantMessage,
     CANCELED_PREFIX_ID,
+    "cancelled",
   );
 };
 
@@ -401,16 +424,18 @@ const handlePrepareController = (
   getController: ((ctrl: AbortController) => void) | undefined,
   queryClient: QueryClient,
   request: ChatMutationRequest,
+  getStreamedText?: () => string,
 ) => {
   return (ctrl: AbortController) => {
     if (getController) {
       getController(ctrl);
 
       const onAbort = () => {
+        const streamedAssistant = getStreamedText ? getStreamedText() : "";
         modifyPlaceholderInChatHistory(
           queryClient,
           request,
-          canceledChatMessage(request),
+          canceledChatMessage(request, streamedAssistant),
         );
         ctrl.signal.removeEventListener("abort", onAbort);
       };
@@ -464,27 +489,38 @@ export const useStreamingChatMutation = ({
   getController,
 }: UseMutationType<ChatMessageType> & StreamingChatCallbacks) => {
   const queryClient = useQueryClient();
-  const handleError = (variables: ChatMutationRequest, error: Error) => {
-    const errorMessage = errorChatMessage(variables, error);
-    modifyPlaceholderInChatHistory(queryClient, variables, errorMessage);
+  const handleError = (request: ChatMutationRequest, error: Error, streamedText?: string) => {
+    const errorMessage = errorChatMessage(request, error, streamedText ?? "");
+    modifyPlaceholderInChatHistory(
+      queryClient,
+      request,
+      errorMessage
+    );
   };
   return useMutation({
     mutationKey: [MutationKeys.chatMutation],
     mutationFn: (request: ChatMutationRequest) => {
+      let streamedText = "";
+      const accumulatingOnChunk = (chunk: string) => {
+        streamedText += chunk;
+        onChunk(chunk);
+      };
+
       const convertError = (errorMessage: string) => {
         const error = new Error(errorMessage);
-        handleError(request, error);
+        handleError(request, error, streamedText);
         onError?.(error);
       };
       const handleGetController = handlePrepareController(
         getController,
         queryClient,
         request,
+        () => streamedText,
       );
 
       return streamChatMutation(
         request,
-        onChunk,
+        accumulatingOnChunk,
         onEvent,
         convertError,
         handleGetController,
@@ -542,6 +578,7 @@ const streamChatMutation = async (
       body: JSON.stringify({
         query: request.query,
         configuration: request.configuration,
+        response_id: request.response_id,
       }),
       signal: ctrl.signal,
       onmessage(msg: EventSourceMessage) {
