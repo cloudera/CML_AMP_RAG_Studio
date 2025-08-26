@@ -52,6 +52,7 @@ from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 from app.config import settings
 from app.services.caii.types import ModelResponse
 from app.services.models.providers import BedrockModelProvider
+from app.services.models import Reranking
 from .testing_chat_history_manager import (
     patch_get_chat_history_manager,
 )
@@ -182,10 +183,8 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
         elif operation_name == "Rerank":
             return {
                 "results": [
-                    # TODO: Is the document store checked prior to this? Do I need to mock that too?
-                    {"index": 0, "relevanceScore": random.random()},
-                    {"index": 1, "relevanceScore": random.random()},
-                    {"index": 2, "relevanceScore": random.random()},
+                    {"index": i, "relevanceScore": random.random()}
+                    for i in range(len(Reranking._TEST_NODES))
                 ]
             }
         else:
@@ -234,7 +233,7 @@ def test_bedrock_models(client: TestClient) -> None:
     ] == available_embedding_models
     for model_id in available_embedding_models:
         response = client.get(f"/llm-service/models/embedding/{model_id}/test")
-        assert response.status_code == 200  # TODO
+        assert response.status_code == 200
 
     available_text_models = [
         model_id
@@ -258,9 +257,9 @@ def test_bedrock_models(client: TestClient) -> None:
     assert [
         model["model_id"] for model in response.json()
     ] == available_reranking_models
-    # for model_id in available_reranking_models:
-    #     response = client.get(f"/llm-service/models/reranking/{model_id}/test")
-    #     assert response.status_code == 200  # TODO
+    for model_id in available_reranking_models:
+        response = client.get(f"/llm-service/models/reranking/{model_id}/test")
+        assert response.status_code == 200
 
 
 def test_bedrock_sessions(client: TestClient) -> None:

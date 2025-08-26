@@ -67,22 +67,21 @@ class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
     def list_available() -> list[ModelResponse]:
         return get_provider_class().list_reranking_models()
 
+    _TEST_NODES = [
+        NodeWithScore(node=TextNode(text="test node"), score=0.5),
+        NodeWithScore(node=TextNode(text="another test node"), score=0.4),
+    ]
+
     @classmethod
     def test(cls, model_name: str) -> str:
         models = cls.list_available()
         for model in models:
             if model.model_id == model_name:
-                node = NodeWithScore(node=TextNode(text="test"), score=0.5)
-                another_test_node = NodeWithScore(
-                    node=TextNode(text="another test node"), score=0.4
-                )
                 reranking_model: BaseNodePostprocessor | None = cls.get(
                     model_name=model_name
                 )
                 if reranking_model:
-                    reranking_model.postprocess_nodes(
-                        [node, another_test_node], None, "test"
-                    )
+                    reranking_model.postprocess_nodes(cls._TEST_NODES, None, "test")
                     return "ok"
         raise HTTPException(status_code=404, detail="Model not found")
 
