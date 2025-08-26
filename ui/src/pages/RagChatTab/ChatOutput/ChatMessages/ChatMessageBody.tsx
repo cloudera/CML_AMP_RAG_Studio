@@ -78,7 +78,7 @@ const WarningMessage = ({
             type={alertType}
             message={
               data.status === "error"
-                ? data.error_message || "An error occurred"
+                ? data.error_message ?? "An error occurred"
                 : "Request canceled by user"
             }
           />
