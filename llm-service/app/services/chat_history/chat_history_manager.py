@@ -90,9 +90,9 @@ class ChatHistoryManager(metaclass=ABCMeta):
 
 @functools.cache
 def _get_chat_history_manager() -> ChatHistoryManager:
-    """Return a ChatHistoryManager based on the app's chat store config.
+    """Create a ChatHistoryManager the first time this function is called, and return it.
 
-    This function can be monkey-patched for testing purposes.
+    This helper function can be monkey-patched for testing purposes.
 
     """
     from app.services.chat_history.simple_chat_history_manager import (
@@ -111,4 +111,5 @@ def _get_chat_history_manager() -> ChatHistoryManager:
 
 
 def get_chat_history_manager() -> ChatHistoryManager:
+    """Return a ChatHistoryManager based on the app's chat store config."""
     return _get_chat_history_manager()
