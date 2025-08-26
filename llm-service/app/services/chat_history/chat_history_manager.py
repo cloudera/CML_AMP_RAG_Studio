@@ -89,7 +89,12 @@ class ChatHistoryManager(metaclass=ABCMeta):
 
 
 @functools.cache
-def get_chat_history_manager() -> ChatHistoryManager:
+def _get_chat_history_manager() -> ChatHistoryManager:
+    """Return a ChatHistoryManager based on the app's chat store config.
+
+    This function can be monkey-patched for testing purposes.
+
+    """
     from app.services.chat_history.simple_chat_history_manager import (
         SimpleChatHistoryManager,
     )
@@ -103,3 +108,7 @@ def get_chat_history_manager() -> ChatHistoryManager:
         return S3ChatHistoryManager()
     else:
         return SimpleChatHistoryManager()
+
+
+def get_chat_history_manager() -> ChatHistoryManager:
+    return _get_chat_history_manager()
