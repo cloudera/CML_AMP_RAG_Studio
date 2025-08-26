@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import functools
 import json
 import logging
 from typing import List
@@ -57,18 +57,16 @@ logger = logging.getLogger(__name__)
 class S3ChatHistoryManager(ChatHistoryManager):
     """Chat history manager that uses S3 for storage."""
 
-    def __init__(self, bucket_name: str = settings.document_bucket):
-        self.bucket_name = bucket_name
+    def __init__(self):
+        super().__init__()
+        self.bucket_name = settings.document_bucket
         self.bucket_prefix = settings.document_bucket_prefix
-        self._s3_client: S3Client | None = None
 
-    @property
+    @functools.cached_property
     def s3_client(self) -> S3Client:
         """Lazy initialization of S3 client."""
-        if self._s3_client is None:
-            session: Session = boto3.session.Session()
-            self._s3_client = session.client("s3")
-        return self._s3_client
+        session: Session = boto3.session.Session()
+        return session.client("s3")
 
     def _get_s3_key(self, session_id: int) -> str:
         """Build the S3 key for a session's chat history."""

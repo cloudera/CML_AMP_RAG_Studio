@@ -64,6 +64,9 @@ class RagStudioChatMessage(BaseModel):
 
 
 class ChatHistoryManager(metaclass=ABCMeta):
+    def __init__(self):
+        pass
+
     @abstractmethod
     def retrieve_chat_history(self, session_id: int) -> list[RagStudioChatMessage]:
         pass
