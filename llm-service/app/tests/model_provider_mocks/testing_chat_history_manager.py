@@ -38,7 +38,7 @@
 import time
 import uuid
 from contextlib import AbstractContextManager
-from typing import Callable
+from typing import Callable, cast
 from unittest.mock import patch
 
 from app.services.chat_history.chat_history_manager import (
@@ -92,7 +92,10 @@ def patch_get_chat_history_manager() -> (
         ],
     )
 
-    return patch(
-        "app.services.chat_history.chat_history_manager._get_chat_history_manager",
-        new=lambda: testing_chat_history_manager,
+    return cast(
+        AbstractContextManager[Callable[[], TestingChatHistoryManager]],
+        patch(
+            "app.services.chat_history.chat_history_manager._get_chat_history_manager",
+            new=lambda: testing_chat_history_manager,
+        ),
     )

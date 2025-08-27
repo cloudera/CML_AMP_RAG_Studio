@@ -39,7 +39,7 @@ import io
 import json
 import random
 from contextlib import AbstractContextManager
-from typing import Iterator, Callable, Any
+from typing import Iterator, Callable, Any, cast
 from unittest.mock import patch
 from urllib.parse import urljoin
 
@@ -203,7 +203,10 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
             # passthrough
             return make_api_call(self, operation_name, api_params)
 
-    return patch("botocore.client.BaseClient._make_api_call", new=mock_make_api_call)
+    return cast(
+        AbstractContextManager[make_api_callable],
+        patch("botocore.client.BaseClient._make_api_call", new=mock_make_api_call),
+    )
 
 
 @pytest.fixture(autouse=True)
