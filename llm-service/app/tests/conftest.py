@@ -51,7 +51,6 @@ from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
-from app.services import models
 from app.services.metadata_apis import data_sources_metadata_api
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
 

@@ -58,23 +58,37 @@ from .testing_chat_history_manager import (
 )
 from .utils import patch_env_vars
 
-TEXT_MODELS = [
-    ("amazon.unavailable-text-model-v1", "NOT_AVAILABLE"),
-    ("amazon.available-text-model-v1", "AVAILABLE"),
-]
 EMBEDDING_MODELS = [
     ("amazon.unavailable-embedding-model-v1", "NOT_AVAILABLE"),
     ("amazon.available-embedding-model-v1", "AVAILABLE"),
 ]
+TEXT_MODELS = [
+    ("amazon.unavailable-text-model-v1", "NOT_AVAILABLE"),
+    ("amazon.available-text-model-v1", "AVAILABLE"),
+]
 RERANKING_MODELS = [
     ("amazon.available-reranking-model-v1", "AVAILABLE"),
+]
+
+AVAILABLE_EMBEDDING_MODELS = [
+    model_id
+    for model_id, availability in EMBEDDING_MODELS
+    if availability == "AVAILABLE"
+]
+AVAILABLE_TEXT_MODELS = [
+    model_id for model_id, availability in TEXT_MODELS if availability == "AVAILABLE"
+]
+AVAILABLE_RERANKING_MODELS = [
+    model_id
+    for model_id, availability in RERANKING_MODELS
+    if availability == "AVAILABLE"
 ]
 
 
 def _patch_requests() -> AbstractContextManager[responses.RequestsMock]:
     bedrock_url_base = f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
     r_mock = responses.RequestsMock(assert_all_requests_are_fired=False)
-    for model_id, availability in TEXT_MODELS + EMBEDDING_MODELS:
+    for model_id, availability in EMBEDDING_MODELS + TEXT_MODELS:
         r_mock.get(
             urljoin(
                 bedrock_url_base,
@@ -114,8 +128,8 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
         if operation_name == "ListFoundationModels":
             modality = api_params["byOutputModality"]
             models = {
-                "TEXT": TEXT_MODELS,
                 "EMBEDDING": EMBEDDING_MODELS,
+                "TEXT": TEXT_MODELS,
             }.get(modality)
             if models is None:
                 raise ValueError(f"test encountered unexpected modality {modality}")
@@ -153,7 +167,7 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
                         "status": "ACTIVE",
                         "type": "SYSTEM_DEFINED",
                     }
-                    for model_id, _ in TEXT_MODELS + EMBEDDING_MODELS
+                    for model_id, _ in EMBEDDING_MODELS + TEXT_MODELS
                 ],
             }
         elif operation_name == "InvokeModel":
@@ -177,8 +191,6 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
                     }
                 },
                 "stopReason": "end_turn",
-                # "usage": {"inputTokens": 21, "outputTokens": 75, "totalTokens": 96},
-                # "metrics": {"latencyMs": 827},
             }
         elif operation_name == "Rerank":
             return {
@@ -216,80 +228,69 @@ def mock_bedrock(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 # TODO: move test functions to a discoverable place
-def test_bedrock_models(client: TestClient) -> None:
-    response = client.get("/llm-service/models/model_source")
-    assert response.status_code == 200
-    assert response.json() == "Bedrock"
-
-    available_embedding_models = [
-        model_id
-        for model_id, availability in EMBEDDING_MODELS
-        if availability == "AVAILABLE"
-    ]
-    response = client.get("/llm-service/models/embeddings")
-    assert response.status_code == 200
-    assert [
-        model["model_id"] for model in response.json()
-    ] == available_embedding_models
-    for model_id in available_embedding_models:
-        response = client.get(f"/llm-service/models/embedding/{model_id}/test")
+class TestBedrock:
+    def test_model_source(self, client: TestClient) -> None:
+        response = client.get("/llm-service/models/model_source")
         assert response.status_code == 200
+        assert response.json() == "Bedrock"
 
-    available_text_models = [
-        model_id
-        for model_id, availability in TEXT_MODELS
-        if availability == "AVAILABLE"
-    ]
-    response = client.get("/llm-service/models/llm")
-    assert response.status_code == 200
-    assert [model["model_id"] for model in response.json()] == available_text_models
-    for model_id in available_text_models:
-        response = client.get(f"/llm-service/models/llm/{model_id}/test")
+    def test_get_models(self, client: TestClient) -> None:
+        response = client.get("/llm-service/models/embeddings")
         assert response.status_code == 200
+        assert [
+            model["model_id"] for model in response.json()
+        ] == AVAILABLE_EMBEDDING_MODELS
 
-    available_reranking_models = [
-        model_id
-        for model_id, availability in RERANKING_MODELS
-        if availability == "AVAILABLE"
-    ]
-    response = client.get("/llm-service/models/reranking")
-    assert response.status_code == 200
-    assert [
-        model["model_id"] for model in response.json()
-    ] == available_reranking_models
-    for model_id in available_reranking_models:
-        response = client.get(f"/llm-service/models/reranking/{model_id}/test")
+        response = client.get("/llm-service/models/llm")
         assert response.status_code == 200
+        assert [model["model_id"] for model in response.json()] == AVAILABLE_TEXT_MODELS
 
-
-def test_bedrock_sessions(client: TestClient) -> None:
-    session_id = 1
-    with patch_get_chat_history_manager() as get_testing_chat_history_manager:
-        chat_history = get_testing_chat_history_manager().retrieve_chat_history(
-            session_id=session_id
-        )
-
-        response = client.get(f"/llm-service/sessions/{session_id}/chat-history")
+        response = client.get("/llm-service/models/reranking")
         assert response.status_code == 200
-        assert response.json()["data"] == [msg.model_dump() for msg in chat_history]
+        assert [
+            model["model_id"] for model in response.json()
+        ] == AVAILABLE_RERANKING_MODELS
 
-        msg = chat_history[0]  # TODO: randomize?
-        response = client.get(
-            f"/llm-service/sessions/{msg.session_id}/chat-history/{msg.id}",
-        )
-        assert response.status_code == 200
-        assert response.json() == msg.model_dump()
+    def test_call_models(self, client: TestClient) -> None:
+        for model_id in AVAILABLE_EMBEDDING_MODELS:
+            response = client.get(f"/llm-service/models/embedding/{model_id}/test")
+            assert response.status_code == 200
 
-        # TODO: maybe call the chat endpoint and see if history changes
+        for model_id in AVAILABLE_TEXT_MODELS:
+            response = client.get(f"/llm-service/models/llm/{model_id}/test")
+            assert response.status_code == 200
 
-    # response = client.post("/llm-service/sessions/1/rename-session")
-    # assert response.status_code == 200
+        for model_id in AVAILABLE_RERANKING_MODELS:
+            response = client.get(f"/llm-service/models/reranking/{model_id}/test")
+            assert response.status_code == 200
 
+    def test_sessions(self, client: TestClient) -> None:
+        session_id = 1
+        with patch_get_chat_history_manager() as get_testing_chat_history_manager:
+            chat_history = get_testing_chat_history_manager().retrieve_chat_history(
+                session_id=session_id
+            )
 
-# def test_bedrock_chat(client: TestClient) -> None:
-#     response = client.post("/llm-service/sessions/suggest-questions")
-#     print(f"{response.json()=}")
-#     assert response.status_code == 200
-#
-#     response = client.post("/llm-service/sessions/1/stream-completion")
-#     assert response.status_code == 200
+            response = client.get(f"/llm-service/sessions/{session_id}/chat-history")
+            assert response.status_code == 200
+            assert response.json()["data"] == [msg.model_dump() for msg in chat_history]
+
+            msg = chat_history[0]  # TODO: randomize?
+            response = client.get(
+                f"/llm-service/sessions/{msg.session_id}/chat-history/{msg.id}",
+            )
+            assert response.status_code == 200
+            assert response.json() == msg.model_dump()
+
+            # TODO: maybe call the chat endpoint and see if history changes
+
+        # response = client.post("/llm-service/sessions/1/rename-session")
+        # assert response.status_code == 200
+
+    # def test_bedrock_chat(self, client: TestClient) -> None:
+    #     response = client.post("/llm-service/sessions/suggest-questions")
+    #     print(f"{response.json()=}")
+    #     assert response.status_code == 200
+    #
+    #     response = client.post("/llm-service/sessions/1/stream-completion")
+    #     assert response.status_code == 200
