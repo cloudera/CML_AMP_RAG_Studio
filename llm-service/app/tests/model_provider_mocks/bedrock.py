@@ -519,6 +519,7 @@ class TestBedrock:
                 break
             chat_response += text
         assert chat_response == MOCK_TEXT_RESPONSE
+        # noinspection PyUnboundLocalVariable
         assert (
             data["event"].items()
             >= {
