@@ -35,9 +35,11 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import contextlib
 import io
 import json
 import random
+import re
 from contextlib import AbstractContextManager
 from typing import Iterator, Callable, Any, cast
 from unittest.mock import patch
@@ -50,7 +52,9 @@ from fastapi.testclient import TestClient
 from llama_index.llms.bedrock_converse.utils import BEDROCK_MODELS
 
 from app.config import settings
+from app.routers.index.sessions import RagStudioChatRequest
 from app.services.caii.types import ModelResponse
+from app.services.metadata_apis import session_metadata_api
 from app.services.models.providers import BedrockModelProvider
 from app.services.models import Reranking
 from .testing_chat_history_manager import (
@@ -85,15 +89,21 @@ AVAILABLE_RERANKING_MODELS = [
 ]
 
 
-def _patch_requests() -> AbstractContextManager[responses.RequestsMock]:
-    bedrock_url_base = f"https://bedrock.{settings.aws_default_region}.amazonaws.com/"
-    r_mock = responses.RequestsMock(assert_all_requests_are_fired=False)
+@pytest.fixture
+def requests_mock() -> Iterator[responses.RequestsMock]:
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as requests_mock:
+        yield requests_mock
+
+
+@contextlib.contextmanager
+def _patch_bedrock_requests(requests_mock: responses.RequestsMock) -> Iterator[None]:
+    model_availability_url_base = urljoin(
+        f"https://bedrock.{settings.aws_default_region}.amazonaws.com/",
+        "foundation-model-availability/",
+    )
     for model_id, availability in EMBEDDING_MODELS + TEXT_MODELS:
-        r_mock.get(
-            urljoin(
-                bedrock_url_base,
-                f"foundation-model-availability/{model_id}",
-            ),
+        requests_mock.get(
+            urljoin(model_availability_url_base, model_id),
             json={
                 "agreementAvailability": {
                     "errorMessage": None,
@@ -106,7 +116,14 @@ def _patch_requests() -> AbstractContextManager[responses.RequestsMock]:
             },
         )
 
-    return r_mock
+    try:
+        yield
+    finally:
+        for model_id, _ in EMBEDDING_MODELS + TEXT_MODELS:
+            requests_mock.remove(
+                responses.GET,
+                urljoin(model_availability_url_base, model_id),
+            )
 
 
 make_api_callable = Callable[[type, str, dict[str, str]], Any]
@@ -210,10 +227,13 @@ def _patch_boto3() -> AbstractContextManager[make_api_callable]:
 
 
 @pytest.fixture(autouse=True)
-def mock_bedrock(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def mock_bedrock(
+    monkeypatch: pytest.MonkeyPatch,
+    requests_mock: responses.RequestsMock,
+) -> Iterator[None]:
     with patch_env_vars(BedrockModelProvider):
         with (
-            _patch_requests(),
+            _patch_bedrock_requests(requests_mock),
             _patch_boto3(),
             patch(  # mock reranking models, which are hard-coded in our app
                 "app.services.models.providers.BedrockModelProvider.list_reranking_models",
@@ -228,6 +248,45 @@ def mock_bedrock(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
             ),
         ):
             yield
+
+
+@pytest.fixture(autouse=True)
+def mock_java(requests_mock: responses.RequestsMock) -> Iterator[None]:
+    session_metadata_url_base = re.escape(
+        session_metadata_api.url_template().format(""),
+    )
+    session_metadata_url_pattern = re.compile(session_metadata_url_base + "\d+")
+    requests_mock.get(
+        session_metadata_url_pattern,
+        json={  # TODO
+            "id": 1,
+            "name": "Greetings",
+            "dataSourceIds": [],
+            "projectId": 1,
+            "timeCreated": 1756163016.047287,
+            "timeUpdated": 1756163016.641615,
+            "createdById": "mliu",
+            "updatedById": "mliu",
+            "lastInteractionTime": None,
+            "inferenceModel": "meta.llama3-8b-instruct-v1:0",
+            "associatedDataSourceId": 2,
+            "rerankModel": None,
+            "responseChunks": 10,
+            "queryConfiguration": {
+                "enableHyde": False,
+                "enableSummaryFilter": True,
+                "enableToolCalling": False,
+                "disableStreaming": True,
+                "selectedTools": [],
+            },
+        },
+    )
+
+    try:
+        yield
+    finally:
+        requests_mock.remove(responses.GET, session_metadata_url_pattern)
+        requests_mock.remove(responses.POST, session_metadata_url_pattern)
 
 
 # TODO: move test functions to a discoverable place
@@ -267,7 +326,7 @@ class TestBedrock:
             response = client.get(f"/llm-service/models/reranking/{model_id}/test")
             assert response.status_code == 200
 
-    def test_sessions(self, client: TestClient) -> None:
+    def test_get_chat_history(self, client: TestClient) -> None:
         session_id = 1
         with patch_get_chat_history_manager() as get_testing_chat_history_manager:
             chat_history = get_testing_chat_history_manager().retrieve_chat_history(
@@ -287,13 +346,70 @@ class TestBedrock:
 
             # TODO: maybe call the chat endpoint and see if history changes
 
-        # response = client.post("/llm-service/sessions/1/rename-session")
-        # assert response.status_code == 200
-
-    # def test_bedrock_chat(self, client: TestClient) -> None:
+    # def test_session(self, client: TestClient) -> None:
+    #     session_id = 1
+    #     with patch_get_chat_history_manager():
+    #         response = client.post(f"/llm-service/sessions/{session_id}/rename-session")
+    #         print(f"{response.json()}")
+    #         assert response.status_code == 200
+    #
     #     response = client.post("/llm-service/sessions/suggest-questions")
     #     print(f"{response.json()=}")
     #     assert response.status_code == 200
     #
-    #     response = client.post("/llm-service/sessions/1/stream-completion")
+    #     # TODO: patch chat history manager?
+    #     response = client.post(f"/llm-service/sessions/{session_id}/suggest-questions")
+    #     print(f"{response.json()=}")
     #     assert response.status_code == 200
+
+    def test_non_streaming_chat(self, client: TestClient) -> None:
+        """Test ``/stream-completion`` when ``disable_streaming = True``
+
+        Checks that the endpoint returns the correct response and appends to chat history.
+
+        """
+        session_id = 1
+        with patch_get_chat_history_manager() as get_testing_chat_history_manager:
+            chat_history_manager = get_testing_chat_history_manager()
+            pre_chat_history = chat_history_manager.retrieve_chat_history(
+                session_id=session_id,
+            ).copy()
+
+            response = client.post(
+                f"/llm-service/sessions/{session_id}/stream-completion",
+                json=RagStudioChatRequest(query="test question").model_dump(),
+            )
+
+            post_chat_history = chat_history_manager.retrieve_chat_history(
+                session_id=session_id,
+            )
+
+        # check chat response
+        assert response.status_code == 200
+        response_stream: Iterator[dict[str, Any]] = map(
+            lambda line: json.loads(line.removeprefix("data: ")),
+            filter(None, response.iter_lines()),
+        )
+        assert (
+            next(response_stream)["event"].items()
+            >= {
+                "type": "thinking",
+                "name": "thinking",
+                "data": "Preparing full response...",
+            }.items()
+        )
+        assert (
+            next(response_stream)["event"].items()
+            >= {
+                "type": "done",
+                "name": "chat_done",
+                "data": None,
+            }.items()
+        )
+        response_id = next(response_stream)["response_id"]
+        with pytest.raises(StopIteration):
+            next(response_stream)
+
+        # check chat history
+        assert len(pre_chat_history) + 1 == len(post_chat_history)
+        assert post_chat_history[-1].id == response_id
