@@ -36,42 +36,51 @@
 #  DATA.
 #
 import json
-from dataclasses import dataclass, field
 from datetime import datetime
+import dataclasses
 from typing import List, Any, Optional
 
 import requests
+from pydantic import BaseModel, ConfigDict, Field, alias_generators
 
 from app.config import settings
 from app.services.utils import raise_for_http_error, body_to_json
 
 
-@dataclass
-class SessionQueryConfiguration:
+class SessionQueryConfiguration(BaseModel):
+    model_config = ConfigDict(
+        validate_by_name=True,
+        alias_generator=alias_generators.to_camel,
+    )
+
     enable_hyde: bool
     enable_summary_filter: bool
     enable_tool_calling: bool = False
-    selected_tools: list[str] = field(default_factory=list)
+    selected_tools: list[str] = Field(default_factory=list)
     disable_streaming: bool = False
 
 
-@dataclass
-class Session:
+class Session(BaseModel):
+    model_config = ConfigDict(
+        validate_by_name=True,
+        alias_generator=alias_generators.to_camel,
+    )
+
     id: int
     name: str
-    data_source_ids: List[int]
+    data_source_ids: list[int]
     project_id: int
     time_created: datetime
     time_updated: datetime
     created_by_id: str
     updated_by_id: str
     inference_model: str
-    rerank_model: str
+    rerank_model: Optional[str]
     response_chunks: int
     query_configuration: SessionQueryConfiguration
     associated_data_source_id: Optional[int] = None
 
-    def get_all_data_source_ids(self) -> List[int]:
+    def get_all_data_source_ids(self) -> list[int]:
         """
         Returns all data source IDs associated with the session.
         If the session has an associated data source ID, it is included in the list.
@@ -81,14 +90,14 @@ class Session:
         )
 
 
-@dataclass
+@dataclasses.dataclass
 class UpdatableSession:
     id: int
     name: str
     dataSourceIds: List[int]
     projectId: int
     inferenceModel: str
-    rerankModel: str
+    rerankModel: Optional[str]
     responseChunks: int
     queryConfiguration: dict[str, bool | List[str]]
     associatedDataSourceId: Optional[int]
@@ -127,9 +136,7 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
             enable_tool_calling=data["queryConfiguration"].get(
                 "enableToolCalling", False
             ),
-            disable_streaming=data["queryConfiguration"].get(
-                "disableStreaming", False
-            ),
+            disable_streaming=data["queryConfiguration"].get("disableStreaming", False),
             selected_tools=data["queryConfiguration"]["selectedTools"] or [],
         ),
         associated_data_source_id=data.get("associatedDataSourceId", None),
