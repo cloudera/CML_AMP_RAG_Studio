@@ -50,6 +50,7 @@ class SessionQueryConfiguration(BaseModel):
     model_config = ConfigDict(
         validate_by_name=True,
         alias_generator=alias_generators.to_camel,
+        revalidate_instances="always",
     )
 
     enable_hyde: bool
@@ -63,6 +64,7 @@ class Session(BaseModel):
     model_config = ConfigDict(
         validate_by_name=True,
         alias_generator=alias_generators.to_camel,
+        revalidate_instances="always",
     )
 
     id: int
