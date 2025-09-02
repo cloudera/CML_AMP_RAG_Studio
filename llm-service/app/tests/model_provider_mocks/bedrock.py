@@ -36,6 +36,7 @@
 #  DATA.
 #
 import contextlib
+import dataclasses
 import io
 import itertools
 import json
@@ -57,6 +58,10 @@ from app.config import settings
 from app.routers.index.sessions import RagStudioChatRequest
 from app.services.caii.types import ModelResponse
 from app.services.metadata_apis import session_metadata_api
+from app.services.metadata_apis.session_metadata_api import (
+    Session,
+    SessionQueryConfiguration,
+)
 from app.services.models import Reranking
 from app.services.models.providers import BedrockModelProvider
 from .testing_chat_history_manager import (
@@ -306,40 +311,54 @@ def mock_bedrock(
             yield
 
 
+@dataclasses.dataclass
+class MockJavaResponses:
+    get_session: responses.BaseResponse
+
+
 @pytest.fixture()
-def mock_java(requests_mock: responses.RequestsMock) -> Iterator[None]:
+def mock_java(
+    request: pytest.FixtureRequest,
+    requests_mock: responses.RequestsMock,
+) -> Iterator[MockJavaResponses]:
+    session_base = Session(  # TODO
+        id=1,
+        name="Greetings",
+        data_source_ids=[],
+        project_id=1,
+        inference_model="meta.llama3-8b-instruct-v1:0",  # TODO: grab from model provider?
+        associated_data_source_id=2,
+        rerank_model=None,
+        response_chunks=10,
+        query_configuration=SessionQueryConfiguration(
+            enable_hyde=False,
+            enable_summary_filter=True,
+            enable_tool_calling=False,
+            disable_streaming=False,  # TODO: make this configurable by tests
+            selected_tools=[],
+        ),
+    )
+    session_modifications = getattr(request, "param", dict()).copy()
+    session_base.query_configuration = session_base.query_configuration.model_copy(
+        update=session_modifications.pop("query_configuration", dict()),
+    )
+    SessionQueryConfiguration.model_validate(session_base.query_configuration)
+    session = session_base.model_copy(update=session_modifications)
+    Session.model_validate(session)
+
     session_metadata_url_base = re.escape(
         session_metadata_api.url_template().format(""),
     )
-    session_metadata_url_pattern = re.compile(session_metadata_url_base + "\d+")
-    requests_mock.get(
+    session_metadata_url_pattern = re.compile(session_metadata_url_base + r"\d+")
+    get_session_response = requests_mock.get(
         session_metadata_url_pattern,
-        json={  # TODO
-            "id": 1,
-            "name": "Greetings",
-            "dataSourceIds": [],
-            "projectId": 1,
-            "timeCreated": 1756163016.047287,
-            "timeUpdated": 1756163016.641615,
-            "createdById": "mliu",
-            "updatedById": "mliu",
-            "lastInteractionTime": None,
-            "inferenceModel": "meta.llama3-8b-instruct-v1:0",
-            "associatedDataSourceId": 2,
-            "rerankModel": None,
-            "responseChunks": 10,
-            "queryConfiguration": {
-                "enableHyde": False,
-                "enableSummaryFilter": True,
-                "enableToolCalling": False,
-                "disableStreaming": False,  # TODO: make this configurable by tests
-                "selectedTools": [],
-            },
-        },
+        json=session.model_dump(by_alias=True),
     )
 
     try:
-        yield
+        yield MockJavaResponses(
+            get_session=get_session_response,
+        )
     finally:
         requests_mock.remove(responses.GET, session_metadata_url_pattern)
         requests_mock.remove(responses.POST, session_metadata_url_pattern)
@@ -420,11 +439,16 @@ class TestBedrock:
     #     print(f"{response.json()=}")
     #     assert response.status_code == 200
 
-    @pytest.mark.skip(
-        reason="figure out how to configure disable_streaming in mocked Java session response",
+    @pytest.mark.parametrize(
+        "mock_java",
+        [{"query_configuration": {"disable_streaming": True}}],
+        indirect=True,
     )
-    @pytest.mark.usefixtures("mock_java")
-    def test_non_streaming_chat(self, client: TestClient) -> None:
+    def test_non_streaming_chat(
+        self,
+        client: TestClient,
+        mock_java: MockJavaResponses,
+    ) -> None:
         """Test ``/stream-completion`` when ``disable_streaming = True``
 
         Checks that the endpoint returns the correct response and appends to chat history.
@@ -476,8 +500,16 @@ class TestBedrock:
         assert pre_chat_history[-1].id != response_id
         assert post_chat_history[-1].id == response_id
 
-    @pytest.mark.usefixtures("mock_java")
-    def test_streaming_chat(self, client: TestClient) -> None:
+    @pytest.mark.parametrize(
+        "mock_java",
+        [{"query_configuration": {"disable_streaming": False}}],
+        indirect=True,
+    )
+    def test_streaming_chat(
+        self,
+        client: TestClient,
+        mock_java: MockJavaResponses,
+    ) -> None:
         """Test ``/stream-completion`` when ``disable_streaming = False``
 
         Checks that the endpoint returns the correct response and appends to chat history.
