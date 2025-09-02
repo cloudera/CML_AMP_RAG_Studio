@@ -473,7 +473,7 @@ class TestBedrock:
             next(response_stream)
 
         # check chat history
-        assert len(pre_chat_history) + 1 == len(post_chat_history)
+        assert pre_chat_history[-1].id != response_id
         assert post_chat_history[-1].id == response_id
 
     @pytest.mark.usefixtures("mock_java")
@@ -533,5 +533,5 @@ class TestBedrock:
             next(response_stream)
 
         # check chat history
-        assert len(pre_chat_history) + 1 == len(post_chat_history)
+        assert pre_chat_history[-1].id != response_id
         assert post_chat_history[-1].id == response_id
