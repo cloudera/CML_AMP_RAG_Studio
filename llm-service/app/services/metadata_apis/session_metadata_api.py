@@ -35,9 +35,8 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import json
-from datetime import datetime
 import dataclasses
+import json
 from typing import List, Any, Optional
 
 import requests
@@ -70,10 +69,6 @@ class Session(BaseModel):
     name: str
     data_source_ids: list[int]
     project_id: int
-    time_created: datetime
-    time_updated: datetime
-    created_by_id: str
-    updated_by_id: str
     inference_model: str
     rerank_model: Optional[str]
     response_chunks: int
@@ -123,10 +118,6 @@ def session_from_java_response(data: dict[str, Any]) -> Session:
         name=data["name"],
         data_source_ids=data["dataSourceIds"],
         project_id=data["projectId"],
-        time_created=datetime.fromtimestamp(data["timeCreated"]),
-        time_updated=datetime.fromtimestamp(data["timeUpdated"]),
-        created_by_id=data["createdById"],
-        updated_by_id=data["updatedById"],
         inference_model=data["inferenceModel"],
         rerank_model=data["rerankModel"],
         response_chunks=data["responseChunks"],
