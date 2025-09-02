@@ -48,8 +48,8 @@ from app.services.utils import raise_for_http_error, body_to_json
 
 class SessionQueryConfiguration(BaseModel):
     model_config = ConfigDict(
-        validate_by_name=True,
         alias_generator=alias_generators.to_camel,
+        validate_by_name=True,
         revalidate_instances="always",
     )
 
@@ -62,8 +62,8 @@ class SessionQueryConfiguration(BaseModel):
 
 class Session(BaseModel):
     model_config = ConfigDict(
-        validate_by_name=True,
         alias_generator=alias_generators.to_camel,
+        validate_by_name=True,
         revalidate_instances="always",
     )
 
