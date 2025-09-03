@@ -101,25 +101,49 @@ class OpenAiConfig(BaseModel):
 
 
 class OpenSearchConfig(BaseModel):
+    """
+    Model to represent the OpenSearch configuration.
+    """
 
     opensearch_username: Optional[str] = None
     opensearch_password: Optional[str] = None
     opensearch_endpoint: Optional[str] = None
     opensearch_namespace: Optional[str] = None
 
+class ChromaDBConfig(BaseModel):
+    """
+    Model to represent the ChromaDB configuration.
+    """
+
+    chromadb_host: Optional[str] = None
+    chromadb_port: Optional[int] = None
+    chromadb_api_key: Optional[str] = None
+    chromadb_namespace: Optional[str] = None
 
 class MetadataDbConfig(BaseModel):
+    """
+    Model to represent the metadata database configuration.
+    """
+
     jdbc_url: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
 
 
 class ValidationResult(BaseModel):
+    """
+    Model to represent the validation result.
+    """
+
     valid: bool
     message: str
 
 
 class ConfigValidationResults(BaseModel):
+    """
+    Model to represent the validation results.
+    """
+
     storage: ValidationResult
     model: ValidationResult
     metadata_api: ValidationResult
@@ -142,6 +166,7 @@ class ProjectConfig(BaseModel):
     caii_config: CaiiConfig
     openai_config: OpenAiConfig
     opensearch_config: OpenSearchConfig
+    chromadb_config: ChromaDBConfig
     metadata_db_config: MetadataDbConfig
     cdp_token: Optional[str] = None
 
@@ -339,6 +364,10 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
             "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
             "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
+            "CHROMADB_HOST": config.chromadb_config.chromadb_host or "",
+            "CHROMADB_PORT": str(config.chromadb_config.chromadb_port) or "",
+            "CHROMADB_API_KEY": config.chromadb_config.chromadb_api_key or "",
+            "CHROMADB_NAMESPACE": config.chromadb_config.chromadb_namespace or "",
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
@@ -385,6 +414,12 @@ def build_configuration(
         opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
         opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
+    chromadb_config = ChromaDBConfig(
+        chromadb_host=env.get("CHROMADB_HOST"),
+        chromadb_port=env.get("CHROMADB_PORT"),
+        chromadb_api_key=env.get("CHROMADB_API_KEY"),
+        chromadb_namespace=env.get("CHROMADB_NAMESPACE"),
+    )
     validate_config = validate(frozenset(env.items()))
 
     model_provider = (
@@ -413,6 +448,7 @@ def build_configuration(
         azure_config=azure_config,
         caii_config=caii_config,
         opensearch_config=opensearch_config,
+        chromadb_config=chromadb_config,
         is_valid_config=validate_config.valid,
         config_validation_results=validate_config,
         release_version=os.environ.get("RELEASE_TAG", "unknown"),

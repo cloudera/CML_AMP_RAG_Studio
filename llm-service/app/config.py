@@ -52,7 +52,7 @@ from typing import cast, Optional, Literal
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
-VectorDbProviderType = Literal["QDRANT", "OPENSEARCH"]
+VectorDbProviderType = Literal["QDRANT", "OPENSEARCH", "CHROMADB"]
 MetadataDbProviderType = Literal["H2", "PostgreSQL"]
 
 
@@ -133,6 +133,22 @@ class _Settings:
     @property
     def opensearch_password(self) -> str:
         return os.environ.get("OPENSEARCH_PASSWORD", "")
+
+    @property
+    def chromadb_host(self) -> str:
+        return os.environ.get("CHROMADB_HOST", "localhost")
+
+    @property
+    def chromadb_port(self) -> int:
+        return int(os.environ.get("CHROMADB_PORT", "8000"))
+
+    @property
+    def chromadb_api_key(self) -> str:
+        return os.environ.get("CHROMADB_API_KEY", "")
+
+    @property
+    def chromadb_namespace(self) -> str:
+        return os.environ.get("CHROMADB_NAMESPACE", "rag_document_index")
 
     @property
     def document_bucket_prefix(self) -> str:
