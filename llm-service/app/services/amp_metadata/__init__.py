@@ -416,7 +416,7 @@ def build_configuration(
     )
     chromadb_config = ChromaDBConfig(
         chromadb_host=env.get("CHROMADB_HOST"),
-        chromadb_port=env.get("CHROMADB_PORT"),
+        chromadb_port=int(env.get("CHROMADB_PORT")) if env.get("CHROMADB_PORT") else None,
         chromadb_api_key=env.get("CHROMADB_API_KEY"),
         chromadb_namespace=env.get("CHROMADB_NAMESPACE"),
     )

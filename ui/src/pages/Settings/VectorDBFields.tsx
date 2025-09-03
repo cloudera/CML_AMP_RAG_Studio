@@ -60,6 +60,7 @@ export const VectorDBFields = ({
         options={[
           { value: "QDRANT", label: "Qdrant" },
           { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
+          { value: "CHROMADB", label: "ChromaDB" },
         ]}
         disabled={!enableModification}
       />
@@ -72,6 +73,11 @@ export const VectorDBFields = ({
     {selectedVectorDBProvider === "OPENSEARCH" ? (
       <StyledHelperText>
         We currently support OpenSearch versions up to and including 2.19.3
+      </StyledHelperText>
+    ) : null}
+    {selectedVectorDBProvider === "CHROMADB" ? (
+      <StyledHelperText>
+        ChromaDB will be used as the vector database.
       </StyledHelperText>
     ) : null}
     <Form.Item
@@ -123,6 +129,68 @@ export const VectorDBFields = ({
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input type="password" placeholder="admin" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Host"}
+      initialValue={projectConfig?.chromadb_config.chromadb_host}
+      name={["chromadb_config", "chromadb_host"]}
+      tooltip="ChromaDB host."
+      required={selectedVectorDBProvider === "CHROMADB"}
+      rules={[
+        { required: selectedVectorDBProvider === "CHROMADB" },
+        // validate url
+        {
+          pattern: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
+          message: "Invalid URL",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="localhost" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Port"}
+      initialValue={projectConfig?.chromadb_config.chromadb_port}
+      name={["chromadb_config", "chromadb_port"]}
+      tooltip="ChromaDB port."
+      required={selectedVectorDBProvider === "CHROMADB"}
+      rules={[
+        { required: selectedVectorDBProvider === "CHROMADB" },
+        {
+          pattern: /^[0-9]+$/,
+          message: "Invalid port",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="8000" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB API Key"}
+      initialValue={projectConfig?.chromadb_config.chromadb_api_key}
+      name={["chromadb_config", "chromadb_api_key"]}
+      tooltip="ChromaDB API key."
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="api_key" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Namespace"}
+      initialValue={projectConfig?.chromadb_config.chromadb_namespace}
+      name={["chromadb_config", "chromadb_namespace"]}
+      tooltip="ChromaDB namespace."
+      rules={[
+        {
+          pattern: /^[a-zA-Z0-9]+$/,
+          message: "Only alphanumeric characters are allowed",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="rag_document_index" />
     </Form.Item>
   </Flex>
 );
