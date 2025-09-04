@@ -110,6 +110,7 @@ class OpenSearchConfig(BaseModel):
     opensearch_endpoint: Optional[str] = None
     opensearch_namespace: Optional[str] = None
 
+
 class ChromaDBConfig(BaseModel):
     """
     Model to represent the ChromaDB configuration.
@@ -117,10 +118,10 @@ class ChromaDBConfig(BaseModel):
 
     chromadb_host: Optional[str] = None
     chromadb_port: Optional[int] = None
-    chromadb_ssl: Optional[bool] = None
     chromadb_token: Optional[str] = None
     chromadb_tenant: Optional[str] = None
     chromadb_database: Optional[str] = None
+
 
 class MetadataDbConfig(BaseModel):
     """
@@ -368,7 +369,6 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
             "CHROMADB_HOST": config.chromadb_config.chromadb_host or "",
             "CHROMADB_PORT": str(config.chromadb_config.chromadb_port) or "",
-            "CHROMADB_SSL": str(config.chromadb_config.chromadb_ssl) or "",
             "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
             "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
             "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
@@ -433,7 +433,6 @@ def build_configuration(
     chromadb_config = ChromaDBConfig(
         chromadb_host=env.get("CHROMADB_HOST"),
         chromadb_port=chromadb_port,
-        chromadb_ssl=env.get("CHROMADB_SSL", "false").lower() == "true",
         chromadb_token=env.get("CHROMADB_TOKEN"),
         chromadb_tenant=env.get("CHROMADB_TENANT"),
         chromadb_database=env.get("CHROMADB_DATABASE"),

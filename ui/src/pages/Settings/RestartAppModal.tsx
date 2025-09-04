@@ -143,7 +143,7 @@ const RestartAppModal = ({
     },
     onSuccess: () => {
       messageQueue.success(
-        "Settings updated successfully.  Restarting the application.",
+        "Settings updated successfully.  Restarting the application."
       );
       restartApplication.mutate({});
     },
@@ -211,7 +211,6 @@ const RestartAppModal = ({
           values.chromadb_config = {
             chromadb_host: undefined,
             chromadb_port: undefined,
-            chromadb_ssl: undefined,
             chromadb_token: undefined,
             chromadb_tenant: undefined,
             chromadb_database: undefined,
@@ -219,11 +218,10 @@ const RestartAppModal = ({
         }
 
         // clear chromadb config if opensearch is selected
-        if (values.vector_db_provider === "OPENSEARCH"){
+        if (values.vector_db_provider === "OPENSEARCH") {
           values.chromadb_config = {
             chromadb_host: undefined,
             chromadb_port: undefined,
-            chromadb_ssl: undefined,
             chromadb_token: undefined,
             chromadb_tenant: undefined,
             chromadb_database: undefined,

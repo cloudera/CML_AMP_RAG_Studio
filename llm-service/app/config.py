@@ -140,8 +140,14 @@ class _Settings:
         return os.environ.get("CHROMADB_HOST", "localhost")
 
     @property
-    def chromadb_port(self) -> int:
-        return int(os.environ.get("CHROMADB_PORT", "8000"))
+    def chromadb_port(self) -> int | None:
+        value = os.environ.get("CHROMADB_PORT")
+        if value is None or value == "":
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
 
     @property
     def chromadb_ssl(self) -> bool:

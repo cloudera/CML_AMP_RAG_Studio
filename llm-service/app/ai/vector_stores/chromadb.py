@@ -49,6 +49,7 @@ from llama_index.vector_stores.chroma import (
 from llama_index.core.indices import VectorStoreIndex
 import chromadb
 from chromadb.api import ClientAPI
+from chromadb.api.models.Collection import Collection
 
 from app.ai.vector_stores.vector_store import VectorStore
 from app.config import settings
@@ -62,19 +63,25 @@ def _new_chroma_client() -> ClientAPI:
     # Note: chromadb.HttpClient requires host and port; ssl, token, database, and tenant are optional depending on server setup
     # We default to HTTP client to support external ChromaDB servers.
     try:
-        client: ClientAPI
-        client = chromadb.HttpClient(
-            host=settings.chromadb_host,
-            port=settings.chromadb_port,
-            ssl=settings.chromadb_ssl,
-            headers=(
+        client_kwargs: dict[str, Any] = {
+            "host": settings.chromadb_host,
+            "headers": (
                 {"X-Chroma-Token": f"{settings.chromadb_token}"}
                 if settings.chromadb_token
                 else None
             ),
-            database=settings.chromadb_database,
-            tenant=settings.chromadb_tenant,
-        )
+        }
+
+        if settings.chromadb_database:
+            client_kwargs["database"] = settings.chromadb_database
+        if settings.chromadb_tenant:
+            client_kwargs["tenant"] = settings.chromadb_tenant
+
+        # Only pass port if explicitly provided. If host includes https, Chroma infers SSL.
+        if settings.chromadb_port is not None and not settings.chromadb_host.startswith("https"):
+            client_kwargs["port"] = settings.chromadb_port
+
+        client: ClientAPI = chromadb.HttpClient(**client_kwargs)
         return client
     except Exception:
         logger.error("Failed to create ChromaDB client", exc_info=True)
@@ -171,18 +178,9 @@ class ChromaVectorStore(VectorStore, ABC):
             return False
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
+        chroma_collection: Collection = self._client.get_or_create_collection(self.collection_name)
         return LlamaIndexChromaVectorStore(
-            collection_name=self.collection_name,
-            host=settings.chromadb_host,
-            port=settings.chromadb_port,
-            ssl=settings.chromadb_ssl,
-            headers=(
-                {"X-Chroma-Token": f"{settings.chromadb_token}"}
-                if settings.chromadb_token
-                else None
-            ),
-            database=settings.chromadb_database,
-            tenant=settings.chromadb_tenant,
+            chroma_collection=chroma_collection,
         )
 
     def visualize(

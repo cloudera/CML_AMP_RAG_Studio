@@ -158,7 +158,6 @@ export interface OpenSearchConfig {
 export interface ChromaDBConfig {
   chromadb_host?: string;
   chromadb_port?: string;
-  chromadb_ssl?: boolean;
   chromadb_token?: string;
   chromadb_tenant?: string;
   chromadb_database?: string;

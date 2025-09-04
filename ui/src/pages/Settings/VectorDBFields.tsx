@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { ProjectConfig, VectorDBProvider } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio, Switch } from "antd";
+import { Flex, Form, Input, Radio } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 export const VectorDBFields = ({
@@ -130,20 +130,12 @@ export const VectorDBFields = ({
     >
       <Input type="password" placeholder="admin" />
     </Form.Item>
-    <Form.Item
-      label={"ChromaDB SSL"}
-      initialValue={projectConfig?.chromadb_config.chromadb_ssl}
-      name={["chromadb_config", "chromadb_ssl"]}
-      tooltip="SSL for the ChromaDB server."
-      hidden={selectedVectorDBProvider !== "CHROMADB"}
-    >
-      <Switch disabled={!enableModification} />
-    </Form.Item>
+    {/* CHROMADB_SSL removed; chroma infers SSL from https in host URL */}
     <Form.Item
       label={"ChromaDB Host"}
       initialValue={projectConfig?.chromadb_config.chromadb_host}
       name={["chromadb_config", "chromadb_host"]}
-      tooltip="Host URL of the ChromaDB server."
+      tooltip="Host of the ChromaDB server. If using SSL verification, prefix with https://"
       required={selectedVectorDBProvider === "CHROMADB"}
       rules={[
         { required: selectedVectorDBProvider === "CHROMADB" },
@@ -162,10 +154,10 @@ export const VectorDBFields = ({
       label={"ChromaDB Port"}
       initialValue={projectConfig?.chromadb_config.chromadb_port}
       name={["chromadb_config", "chromadb_port"]}
-      tooltip="Port number of the ChromaDB server."
-      required={selectedVectorDBProvider === "CHROMADB"}
+      tooltip="Optional. Required when the host is not https."
+      required={false}
       rules={[
-        { required: selectedVectorDBProvider === "CHROMADB" },
+        // Optional unless using http hosts
         {
           pattern: /^[0-9]+$/,
           message: "Invalid port",
@@ -183,7 +175,7 @@ export const VectorDBFields = ({
       tooltip="Token for the ChromaDB server."
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
-      <Input placeholder="api_key" />
+      <Input placeholder="token" />
     </Form.Item>
     <Form.Item
       label={"ChromaDB Tenant"}
