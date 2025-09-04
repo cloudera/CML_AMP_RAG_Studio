@@ -47,7 +47,7 @@ from llama_index.core.llms import LLM
 from . import models
 from .chat_history.chat_history_manager import (
     RagStudioChatMessage,
-    chat_history_manager,
+    get_chat_history_manager,
 )
 from .query.query_configuration import QueryConfiguration
 
@@ -60,7 +60,7 @@ def make_chat_messages(x: RagStudioChatMessage) -> list[ChatMessage]:
 
 def completion(session_id: int, question: str, model_name: str) -> ChatResponse:
     model = models.LLM.get(model_name)
-    chat_history = chat_history_manager.retrieve_chat_history(session_id)[:10]
+    chat_history = get_chat_history_manager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
             map(lambda x: make_chat_messages(x), chat_history)
@@ -78,7 +78,7 @@ def stream_completion(
     Returns a generator that yields ChatResponse objects as they become available.
     """
     model = models.LLM.get(model_name)
-    chat_history = chat_history_manager.retrieve_chat_history(session_id)[:10]
+    chat_history = get_chat_history_manager().retrieve_chat_history(session_id)[:10]
     messages = list(
         itertools.chain.from_iterable(
             map(lambda x: make_chat_messages(x), chat_history)

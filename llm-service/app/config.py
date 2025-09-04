@@ -46,6 +46,7 @@ simply the field name in all capital letters.
 
 import logging
 import os.path
+from enum import Enum
 from typing import cast, Optional, Literal
 
 
@@ -53,7 +54,13 @@ SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
 VectorDbProviderType = Literal["QDRANT", "OPENSEARCH"]
 MetadataDbProviderType = Literal["H2", "PostgreSQL"]
-ModelProviderType = Literal["Azure", "CAII", "OpenAI", "Bedrock"]
+
+
+class ModelSource(str, Enum):
+    AZURE = "Azure"
+    OPENAI = "OpenAI"
+    BEDROCK = "Bedrock"
+    CAII = "CAII"
 
 
 class _Settings:
@@ -185,14 +192,15 @@ class _Settings:
         return os.environ.get("OPENAI_API_BASE")
 
     @property
-    def model_provider(self) -> Optional[ModelProviderType]:
+    def model_provider(self) -> Optional[ModelSource]:
         """The preferred model provider to use.
         Options: 'AZURE', 'CAII', 'OPENAI', 'BEDROCK'
         If not set, will use the first available provider in priority order."""
         provider = os.environ.get("MODEL_PROVIDER")
-        if provider and provider in ["Azure", "CAII", "OpenAI", "Bedrock"]:
-            return cast(ModelProviderType, provider)
-        return None
+        try:
+            return ModelSource(provider)
+        except ValueError:
+            return None
 
 
 settings = _Settings()

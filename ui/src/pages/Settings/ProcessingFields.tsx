@@ -37,13 +37,19 @@
  ******************************************************************************/
 
 import { ProjectConfig } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Switch } from "antd";
+import { Flex, Form, Switch, Typography } from "antd";
+import { cdlWhite } from "src/cuix/variables.ts";
 
 export const ProcessingFields = ({
   projectConfig,
 }: {
   projectConfig?: ProjectConfig | null;
 }) => {
+  const sufficientResources = Boolean(
+    projectConfig &&
+      projectConfig.application_config.num_of_gpus > 0 &&
+      projectConfig.application_config.memory_size_gb >= 16,
+  );
   return (
     <Flex vertical style={{ maxWidth: 600 }}>
       <Form.Item
@@ -52,21 +58,40 @@ export const ProcessingFields = ({
         initialValue={projectConfig?.use_enhanced_pdf_processing}
         valuePropName="checked"
         tooltip={
-          "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16GB of RAM is required for this option."
+          sufficientResources
+            ? "Use enhanced PDF processing for better text extraction. This option makes PDF parsing take significantly longer. A GPU and at least 16GB of RAM is required for this option."
+            : {
+                title: (
+                  <div>
+                    <Typography.Title
+                      level={5}
+                      style={{ color: cdlWhite, marginTop: 0 }}
+                    >
+                      Insufficient resources to use advanced parsing
+                    </Typography.Title>
+                    <Typography.Paragraph style={{ color: cdlWhite }}>
+                      The CML Application has insufficient resources to enable
+                      advanced parsing. Please make sure you have at least 16GB
+                      of RAM and a GPU available. Failure to do so may crash the
+                      application. Resources can be modified from within the CML
+                      Application settings.
+                    </Typography.Paragraph>
+                  </div>
+                ),
+                placement: "bottom",
+              }
         }
         validateTrigger="onChange"
         rules={[
           ({ getFieldValue }) => ({
             validator() {
               if (
-                projectConfig &&
-                (projectConfig.application_config.num_of_gpus === 0 ||
-                  projectConfig.application_config.memory_size_gb < 16) &&
+                !sufficientResources &&
                 getFieldValue("use_enhanced_pdf_processing")
               ) {
                 return Promise.reject(
                   new Error(
-                    "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.",
+                    "Insufficient resources available for enhanced PDF processing. Please make sure you have at least 16GB of RAM and a GPU available.  Failure to do so may crash the application.  Resources can be modified from within the CML Project.",
                   ),
                 );
               }
@@ -75,7 +100,11 @@ export const ProcessingFields = ({
           }),
         ]}
       >
-        <Switch />
+        <Switch
+          disabled={
+            !sufficientResources && !projectConfig?.use_enhanced_pdf_processing
+          }
+        />
       </Form.Item>
     </Flex>
   );
