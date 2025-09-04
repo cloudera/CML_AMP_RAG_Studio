@@ -49,6 +49,7 @@ import os.path
 from enum import Enum
 from typing import cast, Optional, Literal
 
+import chromadb
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
@@ -152,11 +153,11 @@ class _Settings:
 
     @property
     def chromadb_tenant(self) -> str:
-        return os.environ.get("CHROMADB_TENANT", "default_tenant")
+        return os.environ.get("CHROMADB_TENANT", chromadb.DEFAULT_TENANT)
 
     @property
     def chromadb_database(self) -> str:
-        return os.environ.get("CHROMADB_DATABASE", "default_database")
+        return os.environ.get("CHROMADB_DATABASE", chromadb.DEFAULT_DATABASE)
 
     @property
     def document_bucket_prefix(self) -> str:
