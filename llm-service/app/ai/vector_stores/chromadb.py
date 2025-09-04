@@ -173,7 +173,16 @@ class ChromaVectorStore(VectorStore, ABC):
     def llama_vector_store(self) -> BasePydanticVectorStore:
         return LlamaIndexChromaVectorStore(
             collection_name=self.collection_name,
-            chroma_client=self._client,
+            host=settings.chromadb_host,
+            port=settings.chromadb_port,
+            ssl=settings.chromadb_ssl,
+            headers=(
+                {"X-Chroma-Token": f"{settings.chromadb_token}"}
+                if settings.chromadb_token
+                else None
+            ),
+            database=settings.chromadb_database,
+            tenant=settings.chromadb_tenant,
         )
 
     def visualize(

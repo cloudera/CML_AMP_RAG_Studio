@@ -156,7 +156,7 @@ class _Settings:
 
     @property
     def chromadb_database(self) -> str:
-        return os.environ.get("CHROMADB_DATABASE", "rag_document_index")
+        return os.environ.get("CHROMADB_DATABASE", "default_database")
 
     @property
     def document_bucket_prefix(self) -> str:
