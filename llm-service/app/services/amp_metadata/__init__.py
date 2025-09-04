@@ -117,8 +117,10 @@ class ChromaDBConfig(BaseModel):
 
     chromadb_host: Optional[str] = None
     chromadb_port: Optional[int] = None
-    chromadb_api_key: Optional[str] = None
-    chromadb_namespace: Optional[str] = None
+    chromadb_ssl: Optional[bool] = None
+    chromadb_token: Optional[str] = None
+    chromadb_tenant: Optional[str] = None
+    chromadb_database: Optional[str] = None
 
 class MetadataDbConfig(BaseModel):
     """
@@ -366,8 +368,10 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
             "CHROMADB_HOST": config.chromadb_config.chromadb_host or "",
             "CHROMADB_PORT": str(config.chromadb_config.chromadb_port) or "",
-            "CHROMADB_API_KEY": config.chromadb_config.chromadb_api_key or "",
-            "CHROMADB_NAMESPACE": config.chromadb_config.chromadb_namespace or "",
+            "CHROMADB_SSL": str(config.chromadb_config.chromadb_ssl) or "",
+            "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
+            "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
+            "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
@@ -417,8 +421,10 @@ def build_configuration(
     chromadb_config = ChromaDBConfig(
         chromadb_host=env.get("CHROMADB_HOST"),
         chromadb_port=int(env.get("CHROMADB_PORT")) if env.get("CHROMADB_PORT") else None,
-        chromadb_api_key=env.get("CHROMADB_API_KEY"),
-        chromadb_namespace=env.get("CHROMADB_NAMESPACE"),
+        chromadb_ssl=env.get("CHROMADB_SSL", "false").lower() == "true",
+        chromadb_token=env.get("CHROMADB_TOKEN"),
+        chromadb_tenant=env.get("CHROMADB_TENANT"),
+        chromadb_database=env.get("CHROMADB_DATABASE"),
     )
     validate_config = validate(frozenset(env.items()))
 

@@ -211,8 +211,10 @@ const RestartAppModal = ({
           values.chromadb_config = {
             chromadb_host: undefined,
             chromadb_port: undefined,
-            chromadb_api_key: undefined,
-            chromadb_namespace: undefined,
+            chromadb_ssl: undefined,
+            chromadb_token: undefined,
+            chromadb_tenant: undefined,
+            chromadb_database: undefined,
           };
         }
 
@@ -221,8 +223,10 @@ const RestartAppModal = ({
           values.chromadb_config = {
             chromadb_host: undefined,
             chromadb_port: undefined,
-            chromadb_api_key: undefined,
-            chromadb_namespace: undefined,
+            chromadb_ssl: undefined,
+            chromadb_token: undefined,
+            chromadb_tenant: undefined,
+            chromadb_database: undefined,
           };
         }
 

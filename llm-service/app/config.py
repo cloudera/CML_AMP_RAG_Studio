@@ -143,12 +143,20 @@ class _Settings:
         return int(os.environ.get("CHROMADB_PORT", "8000"))
 
     @property
-    def chromadb_api_key(self) -> str:
-        return os.environ.get("CHROMADB_API_KEY", "")
+    def chromadb_ssl(self) -> bool:
+        return os.environ.get("CHROMADB_SSL", "false").lower() == "true"
 
     @property
-    def chromadb_namespace(self) -> str:
-        return os.environ.get("CHROMADB_NAMESPACE", "rag_document_index")
+    def chromadb_token(self) -> str:
+        return os.environ.get("CHROMADB_TOKEN", "")
+
+    @property
+    def chromadb_tenant(self) -> str:
+        return os.environ.get("CHROMADB_TENANT", "default_tenant")
+
+    @property
+    def chromadb_database(self) -> str:
+        return os.environ.get("CHROMADB_DATABASE", "rag_document_index")
 
     @property
     def document_bucket_prefix(self) -> str:

@@ -37,7 +37,7 @@
  ******************************************************************************/
 
 import { ProjectConfig, VectorDBProvider } from "src/api/ampMetadataApi.ts";
-import { Flex, Form, Input, Radio } from "antd";
+import { Flex, Form, Input, Radio, Switch } from "antd";
 import { StyledHelperText } from "pages/Settings/AmpSettingsPage.tsx";
 
 export const VectorDBFields = ({
@@ -131,10 +131,19 @@ export const VectorDBFields = ({
       <Input type="password" placeholder="admin" />
     </Form.Item>
     <Form.Item
+      label={"ChromaDB SSL"}
+      initialValue={projectConfig?.chromadb_config.chromadb_ssl}
+      name={["chromadb_config", "chromadb_ssl"]}
+      tooltip="SSL for the ChromaDB server."
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Switch />
+    </Form.Item>
+    <Form.Item
       label={"ChromaDB Host"}
       initialValue={projectConfig?.chromadb_config.chromadb_host}
       name={["chromadb_config", "chromadb_host"]}
-      tooltip="ChromaDB host."
+      tooltip="Host URL of the ChromaDB server."
       required={selectedVectorDBProvider === "CHROMADB"}
       rules={[
         { required: selectedVectorDBProvider === "CHROMADB" },
@@ -153,7 +162,7 @@ export const VectorDBFields = ({
       label={"ChromaDB Port"}
       initialValue={projectConfig?.chromadb_config.chromadb_port}
       name={["chromadb_config", "chromadb_port"]}
-      tooltip="ChromaDB port."
+      tooltip="Port number of the ChromaDB server."
       required={selectedVectorDBProvider === "CHROMADB"}
       rules={[
         { required: selectedVectorDBProvider === "CHROMADB" },
@@ -168,19 +177,35 @@ export const VectorDBFields = ({
       <Input placeholder="8000" />
     </Form.Item>
     <Form.Item
-      label={"ChromaDB API Key"}
-      initialValue={projectConfig?.chromadb_config.chromadb_api_key}
-      name={["chromadb_config", "chromadb_api_key"]}
-      tooltip="ChromaDB API key."
+      label={"ChromaDB Token"}
+      initialValue={projectConfig?.chromadb_config.chromadb_token}
+      name={["chromadb_config", "chromadb_token"]}
+      tooltip="Token for the ChromaDB server."
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
       <Input placeholder="api_key" />
     </Form.Item>
     <Form.Item
-      label={"ChromaDB Namespace"}
-      initialValue={projectConfig?.chromadb_config.chromadb_namespace}
-      name={["chromadb_config", "chromadb_namespace"]}
-      tooltip="ChromaDB namespace."
+      label={"ChromaDB Tenant"}
+      initialValue={projectConfig?.chromadb_config.chromadb_tenant}
+      name={["chromadb_config", "chromadb_tenant"]}
+      tooltip="Tenant for the ChromaDB server."
+      rules={[
+        {
+          pattern: /^[a-zA-Z0-9]+$/,
+          message: "Only alphanumeric characters are allowed",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="default_tenant" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Database"}
+      initialValue={projectConfig?.chromadb_config.chromadb_database}
+      name={["chromadb_config", "chromadb_database"]}
+      tooltip="Database for the ChromaDB server."
       rules={[
         {
           pattern: /^[a-zA-Z0-9]+$/,
