@@ -37,7 +37,7 @@
 #
 import logging
 from abc import ABC
-from typing import Optional, List, cast
+from typing import Optional, List, cast, Any, Mapping
 
 import fastapi.exceptions
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -67,7 +67,11 @@ def _new_chroma_client() -> ClientAPI:
             host=settings.chromadb_host,
             port=settings.chromadb_port,
             ssl=settings.chromadb_ssl,
-            headers={"X-Chroma-Token": f"{settings.chromadb_token}"} if settings.chromadb_token else None,
+            headers=(
+                {"X-Chroma-Token": f"{settings.chromadb_token}"}
+                if settings.chromadb_token
+                else None
+            ),
             database=settings.chromadb_database,
             tenant=settings.chromadb_tenant,
         )
@@ -118,7 +122,7 @@ class ChromaVectorStore(VectorStore, ABC):
             # Chroma does not provide a direct count without fetching; use count() if available
             try:
                 # newer chromadb exposes count()
-                return cast(int, collection.count())
+                return collection.count()
             except Exception:
                 # Return None if cannot determine efficiently
                 return None
@@ -184,15 +188,24 @@ class ChromaVectorStore(VectorStore, ABC):
             results = collection.get(include=["embeddings", "metadatas"], limit=5000)
             embeddings: List[List[float]] = []
             filenames: List[str] = []
-            if results and "embeddings" in results and results["embeddings"]:
-                for idx, embedding in enumerate(results["embeddings"]):
-                    metadata = (
-                        results["metadatas"][idx] if results.get("metadatas") else None
-                    )
-                    filename = metadata.get("file_name") if metadata else None
-                    if filename and embedding:
-                        filenames.append(filename)
-                        embeddings.append(cast(List[float], embedding))
+            if isinstance(results, dict):
+                raw_embeddings = results.get("embeddings")
+                raw_metadatas = results.get("metadatas")
+                if isinstance(raw_embeddings, list):
+                    for idx, embedding in enumerate(raw_embeddings):
+                        metadata_entry: Mapping[str, Any] | None = None
+                        if isinstance(raw_metadatas, list) and idx < len(raw_metadatas):
+                            possible = raw_metadatas[idx]
+                            if isinstance(possible, dict):
+                                metadata_entry = possible
+                        filename_value = (
+                            metadata_entry.get("file_name") if metadata_entry else None
+                        )
+                        if isinstance(filename_value, str) and isinstance(
+                            embedding, list
+                        ):
+                            filenames.append(filename_value)
+                            embeddings.append(cast(List[float], embedding))
 
             return self.visualize_embeddings(embeddings, filenames, user_query)
         except Exception:

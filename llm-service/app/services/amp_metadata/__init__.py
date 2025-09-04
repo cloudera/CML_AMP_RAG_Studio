@@ -418,9 +418,21 @@ def build_configuration(
         opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
         opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
+
+    # Parse port safely to Optional[int]
+    chromadb_port_str = env.get("CHROMADB_PORT")
+    chromadb_port: int | None
+    if chromadb_port_str is None or chromadb_port_str == "":
+        chromadb_port = None
+    else:
+        try:
+            chromadb_port = int(chromadb_port_str)
+        except ValueError:
+            chromadb_port = None
+
     chromadb_config = ChromaDBConfig(
         chromadb_host=env.get("CHROMADB_HOST"),
-        chromadb_port=int(env.get("CHROMADB_PORT")) if env.get("CHROMADB_PORT") else None,
+        chromadb_port=chromadb_port,
         chromadb_ssl=env.get("CHROMADB_SSL", "false").lower() == "true",
         chromadb_token=env.get("CHROMADB_TOKEN"),
         chromadb_tenant=env.get("CHROMADB_TENANT"),
