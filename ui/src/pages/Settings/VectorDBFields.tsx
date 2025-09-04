@@ -137,7 +137,7 @@ export const VectorDBFields = ({
       tooltip="SSL for the ChromaDB server."
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
-      <Switch />
+      <Switch disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"ChromaDB Host"}
@@ -156,7 +156,7 @@ export const VectorDBFields = ({
       ]}
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
-      <Input placeholder="localhost" />
+      <Input placeholder="localhost" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"ChromaDB Port"}
@@ -174,7 +174,7 @@ export const VectorDBFields = ({
       ]}
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
-      <Input placeholder="8000" />
+      <Input placeholder="8000" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"ChromaDB Token"}
@@ -215,7 +215,7 @@ export const VectorDBFields = ({
       ]}
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
-      <Input placeholder="rag_document_index" />
+      <Input placeholder="default_database" />
     </Form.Item>
   </Flex>
 );
