@@ -35,6 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
+import os
 import logging
 from abc import ABC
 from typing import Optional, List, cast, Any, Mapping
@@ -48,7 +49,7 @@ from llama_index.vector_stores.chroma import (
 )
 from llama_index.core.indices import VectorStoreIndex
 import chromadb
-from chromadb.api import ClientAPI
+from chromadb.api import ClientAPI, Settings
 from chromadb.api.models.Collection import Collection
 
 from app.ai.vector_stores.vector_store import VectorStore
@@ -76,6 +77,10 @@ def _new_chroma_client() -> ClientAPI:
             client_kwargs["database"] = settings.chromadb_database
         if settings.chromadb_tenant:
             client_kwargs["tenant"] = settings.chromadb_tenant
+
+        # TODO: remove this before merging with main
+        if settings.chromadb_host.startswith("https"):
+            client_kwargs["settings"] = Settings(chroma_server_ssl_verify=os.path.join(settings.rag_databases_dir,"..", "path/to/ssl/cert"))
 
         # Only pass port if explicitly provided. If host includes https, Chroma infers SSL.
         if settings.chromadb_port is not None and not settings.chromadb_host.startswith("https"):
