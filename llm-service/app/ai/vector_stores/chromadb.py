@@ -79,7 +79,9 @@ def _new_chroma_client() -> ClientAPI:
             client_kwargs["tenant"] = settings.chromadb_tenant
 
         if settings.chromadb_server_ssl_cert_path:
-           client_kwargs["settings"] = Settings(chroma_server_ssl_verify=settings.chromadb_server_ssl_cert_path)
+            client_kwargs["settings"] = Settings(
+                chroma_server_ssl_verify=settings.chromadb_server_ssl_cert_path,
+            )
 
         # Only pass port if explicitly provided. If host includes https, Chroma infers SSL.
         if settings.chromadb_port is not None:
@@ -126,53 +128,53 @@ class ChromaVectorStore(VectorStore, ABC):
         return Embedding.get(datasource_metadata.embedding_model)
 
     def size(self) -> Optional[int]:
+        if not self.exists():
+            return None
         try:
-            if not self.exists():
-                return None
             collection = self._client.get_collection(self.collection_name)
             # Chroma does not provide a direct count without fetching; use count() if available
             try:
                 # newer chromadb exposes count()
                 return collection.count()
             except Exception:
-                # Return None if cannot determine efficiently
+                # Return None if we cannot determine efficiently
                 return None
         except Exception:
-            logger.error(
+            logger.exception(
                 "Error getting size for collection %s",
                 self.collection_name,
-                exc_info=True,
             )
             return None
 
     def delete(self) -> None:
+        if not self.exists():
+            return None
         try:
-            if self.exists():
-                self._client.delete_collection(self.collection_name)
+            self._client.delete_collection(self.collection_name)
         except Exception as exc:
-            logger.error(
-                "Failed to delete collection %s", self.collection_name, exc_info=True
-            )
+            logger.exception("Failed to delete collection %s", self.collection_name)
             raise fastapi.exceptions.HTTPException(
                 500, "Failed to delete collection"
             ) from exc
 
     def delete_document(self, document_id: str) -> None:
         if not self.exists():
-            return
+            return None
         try:
             index = VectorStoreIndex.from_vector_store(
                 vector_store=self.llama_vector_store(),
                 embed_model=Embedding.get_noop(),
             )
             index.delete_ref_doc(document_id)
-        except Exception:
+        except Exception as exc:
             logger.error(
                 "Failed to delete document %s from %s",
                 document_id,
                 self.collection_name,
-                exc_info=True,
             )
+            raise fastapi.exceptions.HTTPException(
+                500, "Failed to delete document"
+            ) from exc
 
     def exists(self) -> bool:
         try:
@@ -182,7 +184,9 @@ class ChromaVectorStore(VectorStore, ABC):
             return False
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
-        chroma_collection: Collection = self._client.get_or_create_collection(self.collection_name)
+        chroma_collection: Collection = self._client.get_or_create_collection(
+            self.collection_name
+        )
         return LlamaIndexChromaVectorStore(
             chroma_collection=chroma_collection,
         )
