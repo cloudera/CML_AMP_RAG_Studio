@@ -236,6 +236,8 @@ class _Settings:
         Options: 'AZURE', 'CAII', 'OPENAI', 'BEDROCK'
         If not set, will use the first available provider in priority order."""
         provider = os.environ.get("MODEL_PROVIDER")
+        if provider is None:
+            return None
         try:
             return ModelSource(provider)
         except ValueError:
