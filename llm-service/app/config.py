@@ -150,10 +150,6 @@ class _Settings:
             return None
 
     @property
-    def chromadb_ssl(self) -> bool:
-        return os.environ.get("CHROMADB_SSL", "false").lower() == "true"
-
-    @property
     def chromadb_token(self) -> str:
         return os.environ.get("CHROMADB_TOKEN", "")
 
@@ -164,6 +160,10 @@ class _Settings:
     @property
     def chromadb_database(self) -> str:
         return os.environ.get("CHROMADB_DATABASE", DEFAULT_DATABASE)
+
+    @property
+    def chromadb_server_ssl_cert_path(self) -> str | None:
+        return os.environ.get("CHROMADB_SERVER_SSL_CERT_PATH")
 
     @property
     def document_bucket_prefix(self) -> str:

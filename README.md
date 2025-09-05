@@ -52,6 +52,30 @@ RAG Studio can utilize the local file system or an S3 bucket for storing documen
 
 S3 will also require providing the AWS credentials for the bucket.
 
+### Vector Database Options
+
+RAG Studio supports Qdrant (default), OpenSearch (Cloudera Semantic Search), and ChromaDB.
+
+- To choose the vector DB, set `VECTOR_DB_PROVIDER` to one of `QDRANT`, `OPENSEARCH`, or `CHROMADB` in your `.env`.
+
+#### ChromaDB Setup
+
+If you select ChromaDB, configure the following environment variables in `.env`:
+
+- `CHROMADB_HOST` - Hostname or URL for ChromaDB. Use `localhost` for local Docker.
+- `CHROMADB_PORT` - Port for ChromaDB (default `8000`). Not required if `CHROMADB_HOST` starts with `https://` and the server infers the port.
+- `CHROMADB_TENANT` - Optional. Defaults to the Chroma default tenant.
+- `CHROMADB_DATABASE` - Optional. Defaults to the Chroma default database.
+- `CHROMADB_TOKEN` - Optional. Include if your Chroma server requires an auth token.
+- `CHROMADB_SERVER_SSL_CERT_PATH` - Optional. Path to PEM bundle for TLS verification when using HTTPS with a private CA.
+
+Notes:
+
+- The local-dev script will automatically start a ChromaDB Docker container when `VECTOR_DB_PROVIDER=CHROMADB`, `CHROMADB_HOST=localhost` on `CHROMADB_PORT=8000`.
+- ChromaDB collections are automatically namespaced using the tenant and database values to avoid conflicts between different RAG Studio instances.
+- For production deployments, consider using a dedicated ChromaDB server with authentication enabled via `CHROMADB_TOKEN`.
+- When using HTTPS endpoints, ensure your certificate chain is properly configured or provide the CA bundle path via `CHROMADB_SERVER_SSL_CERT_PATH`.
+
 ### Enhanced Parsing Options:
 
 RAG Studio can optionally enable enhanced parsing by providing the `USE_ENHANCED_PDF_PROCESSING` environment variable. Enabling this will allow RAG Studio to parse images and tables from PDFs. When enabling this feature, we strongly recommend using this with a GPU and at least 16GB of memory.
@@ -82,7 +106,7 @@ This variable can be set from the project settings for the AMP in CML.
 ## Air-gapped Environments
 
 If you are using an air-gapped environment, you will need to whitelist at the minimum the following domains in order to use the AMP.
-There may be other domains that need to be whitelisted depending on your environment and the model service provider you select. 
+There may be other domains that need to be whitelisted depending on your environment and the model service provider you select.
 
 - `https://github.com`
 - `https://raw.githubusercontent.com`
@@ -150,17 +174,29 @@ the Node service locally, you can do so by following these steps:
 docker run -p 6333:6333 -p 6334:6334 -v $(pwd)/databases/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 ```
 
+#### To run ChromaDB locally
+
+```
+docker run --name chromadb_dev --rm -d -p 8000:8000 -v $(pwd)/databases/chromadb_storage:/data chromadb/chroma
+```
+
+#### Use ChromaDB with local-dev.sh
+
+- Copy `.env.example` to `.env`.
+- Set `VECTOR_DB_PROVIDER=CHROMADB` in `.env` (defaults assume `CHROMADB_HOST=localhost` and `CHROMADB_PORT=8000`).
+- Run `./local-dev.sh` from the repo root. When `CHROMADB_HOST=localhost`, the script will auto-start a ChromaDB Docker container.
+
 #### Modifying UI in CML
 
-* This is an unsupported workflow, but it is possible to modify the UI code in CML.
+- This is an unsupported workflow, but it is possible to modify the UI code in CML.
 
-- Start a CML Session from a CML Project that has the RAG Studio AMP installed.
-- Open the terminal in the CML Session and navigate to the `ui` directory.
-- Run `source ~/.bashrc` to ensure the Node environment variables are loaded.
-- Install PNPM using `npm install -g pnpm`.  Docs on PNPM can be found here: https://pnpm.io/installation#using-npm
-- Run `pnpm install` to install the dependencies.
-- Make your changes to the UI code in the `ui` directory.
-- Run `pnpm build` to build the new UI bundle.
+* Start a CML Session from a CML Project that has the RAG Studio AMP installed.
+* Open the terminal in the CML Session and navigate to the `ui` directory.
+* Run `source ~/.bashrc` to ensure the Node environment variables are loaded.
+* Install PNPM using `npm install -g pnpm`. Docs on PNPM can be found here: https://pnpm.io/installation#using-npm
+* Run `pnpm install` to install the dependencies.
+* Make your changes to the UI code in the `ui` directory.
+* Run `pnpm build` to build the new UI bundle.
 
 ## The Fine Print
 
