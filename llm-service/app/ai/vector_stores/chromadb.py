@@ -79,8 +79,9 @@ def _new_chroma_client() -> ClientAPI:
             client_kwargs["tenant"] = settings.chromadb_tenant
 
         # TODO: remove this before merging with main
-        if settings.chromadb_host.startswith("https"):
-            client_kwargs["settings"] = Settings(chroma_server_ssl_verify=os.path.join(settings.rag_databases_dir,"..", "path/to/ssl/cert"))
+        # Uncomment the following block and update the path to the SSL certificate to use the correct certificate if needed
+        # if settings.chromadb_host.startswith("https"):
+        #    client_kwargs["settings"] = Settings(chroma_server_ssl_verify=os.path.join(settings.rag_databases_dir,"..", "path/to/ssl/cert"))
 
         # Only pass port if explicitly provided. If host includes https, Chroma infers SSL.
         if settings.chromadb_port is not None and not settings.chromadb_host.startswith("https"):
