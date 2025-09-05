@@ -51,6 +51,10 @@ from typing import cast, Optional, Literal
 
 from chromadb.config import DEFAULT_TENANT, DEFAULT_DATABASE
 
+
+logger = logging.getLogger(__name__)
+
+
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
 VectorDbProviderType = Literal["QDRANT", "OPENSEARCH", "CHROMADB"]
@@ -147,6 +151,10 @@ class _Settings:
         try:
             return int(value)
         except ValueError:
+            logger.exception(
+                'Failed to parse CHROMADB_PORT "%s" as int',
+                value,
+            )
             return None
 
     @property
@@ -231,6 +239,10 @@ class _Settings:
         try:
             return ModelSource(provider)
         except ValueError:
+            logger.exception(
+                'Invalid MODEL_PROVIDER "%s"',
+                provider,
+            )
             return None
 
 

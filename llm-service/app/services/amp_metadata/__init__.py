@@ -36,6 +36,7 @@
 #  DATA.
 #
 import json
+import logging
 import os
 import re
 import socket
@@ -59,6 +60,9 @@ from app.services.models.providers import (
     BedrockModelProvider,
 )
 from app.services.utils import timed_lru_cache
+
+
+logger = logging.getLogger(__name__)
 
 
 class AwsConfig(BaseModel):
@@ -428,6 +432,10 @@ def build_configuration(
         try:
             chromadb_port = int(chromadb_port_str)
         except ValueError:
+            logger.exception(
+                'Failed to parse CHROMADB_PORT "%s" as int',
+                chromadb_port_str,
+            )
             chromadb_port = None
 
     chromadb_config = ChromaDBConfig(
