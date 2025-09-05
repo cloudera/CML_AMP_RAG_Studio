@@ -78,11 +78,11 @@ def _new_chroma_client() -> ClientAPI:
         if settings.chromadb_tenant:
             client_kwargs["tenant"] = settings.chromadb_tenant
 
-        if settings.chromadb_host.startswith("https") and settings.chromadb_server_ssl_cert_path:
+        if settings.chromadb_server_ssl_cert_path:
            client_kwargs["settings"] = Settings(chroma_server_ssl_verify=settings.chromadb_server_ssl_cert_path)
 
         # Only pass port if explicitly provided. If host includes https, Chroma infers SSL.
-        if settings.chromadb_port is not None and not settings.chromadb_host.startswith("https"):
+        if settings.chromadb_port is not None:
             client_kwargs["port"] = settings.chromadb_port
 
         client: ClientAPI = chromadb.HttpClient(**client_kwargs)
