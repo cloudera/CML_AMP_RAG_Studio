@@ -357,7 +357,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
             "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
             "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
-            "MODEL_PROVIDER": config.model_provider or "",
+            "MODEL_PROVIDER": config.model_provider.value if config.model_provider else "",
             "AWS_DEFAULT_REGION": config.aws_config.region or "",
             "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
             "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
