@@ -81,7 +81,7 @@ if [ "${VECTOR_DB_PROVIDER}" = "CHROMADB" ]; then
     if [ -z "${CHROMADB_PORT}" ]; then
       CHROMADB_PORT=8000
     fi
-    uv run chroma run --host localhost --port ${CHROMADB_PORT} --path ./databases/chromadb_storage 2>&1 &
+    uvx --from "chromadb>=0.5.17" chroma run --host localhost --port "${CHROMADB_PORT}" --path ./databases/chromadb_storage 2>&1 &
   fi
 fi
 
