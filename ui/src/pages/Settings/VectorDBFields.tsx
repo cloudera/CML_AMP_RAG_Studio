@@ -139,10 +139,11 @@ export const VectorDBFields = ({
       required={selectedVectorDBProvider === "CHROMADB"}
       rules={[
         { required: selectedVectorDBProvider === "CHROMADB" },
-        // validate url
+        // validate url or host
         {
-          pattern: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/,
-          message: "Invalid URL",
+          pattern:
+            /^(?:https?:\/\/)?(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{1,5})?(?:\/\S*)?$/i,
+          message: "Invalid host or URL",
           warningOnly: false,
         },
       ]}

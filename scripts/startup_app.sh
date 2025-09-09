@@ -66,8 +66,25 @@ export LLM_SERVICE_URL="http://localhost:8081"
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
-# start Qdrant vector DB as a default if not specified
-qdrant/qdrant 2>&1 &
+# set the VECTOR_DB_PROVIDER env var to QDRANT if not specified
+if [ -z "${VECTOR_DB_PROVIDER}" ]; then
+  VECTOR_DB_PROVIDER="QDRANT"
+fi
+
+# start the vector DB
+if [ "${VECTOR_DB_PROVIDER}" = "QDRANT" ]; then
+  qdrant/qdrant 2>&1 &  
+fi
+
+if [ "${VECTOR_DB_PROVIDER}" = "CHROMADB" ]; then
+  if [ "${CHROMADB_HOST}" = "localhost" ]; then
+    if [ -z "${CHROMADB_PORT}" ]; then
+      CHROMADB_PORT=8000
+    fi
+    uv run chroma run --host localhost --port ${CHROMADB_PORT} --path ./databases/chromadb_storage 2>&1 &
+  fi
+fi
+
 
 # start up the java backend
 # grab the most recent java installation and use it for java home
