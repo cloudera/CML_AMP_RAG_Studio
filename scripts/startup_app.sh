@@ -66,10 +66,10 @@ export LLM_SERVICE_URL="http://localhost:8081"
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
-# start Qdrant vector DB
+# start Qdrant vector DB as a default if not specified
 qdrant/qdrant 2>&1 &
 
-# start up the jarva
+# start up the java backend
 # grab the most recent java installation and use it for java home
 export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"
