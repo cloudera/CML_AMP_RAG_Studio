@@ -446,9 +446,6 @@ def build_configuration(
         chromadb_token=env.get("CHROMADB_TOKEN"),
         chromadb_tenant=env.get("CHROMADB_TENANT"),
         chromadb_database=env.get("CHROMADB_DATABASE"),
-        chromadb_enable_anonymized_telemetry=TypeAdapter(bool).validate_python(
-            env.get("CHROMADB_ENABLE_ANONYMIZED_TELEMETRY", False),
-        ),
     )
     validate_config = validate(frozenset(env.items()))
 
