@@ -214,7 +214,6 @@ const RestartAppModal = ({
             chromadb_token: undefined,
             chromadb_tenant: undefined,
             chromadb_database: undefined,
-            chromadb_enable_anonymized_telemetry: undefined,
           };
         }
 
@@ -226,7 +225,6 @@ const RestartAppModal = ({
             chromadb_token: undefined,
             chromadb_tenant: undefined,
             chromadb_database: undefined,
-            chromadb_enable_anonymized_telemetry: undefined,
           };
         }
 

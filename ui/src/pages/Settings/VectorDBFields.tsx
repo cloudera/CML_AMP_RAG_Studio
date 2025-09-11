@@ -210,24 +210,5 @@ export const VectorDBFields = ({
     >
       <Input placeholder="default_database" />
     </Form.Item>
-    <Form.Item
-      label={"ChromaDB Anonymized Telemetry"}
-      initialValue={
-        projectConfig?.chromadb_config.chromadb_enable_anonymized_telemetry ??
-        false
-      }
-      name={["chromadb_config", "chromadb_enable_anonymized_telemetry"]}
-      tooltip="Enable or disable anonymized telemetry sent by the ChromaDB client."
-      hidden={selectedVectorDBProvider !== "CHROMADB"}
-    >
-      <Radio.Group
-        optionType="button"
-        buttonStyle="solid"
-        options={[
-          { value: false, label: "Disabled" },
-          { value: true, label: "Enabled" },
-        ]}
-      />
-    </Form.Item>
   </Flex>
 );

@@ -125,7 +125,6 @@ class ChromaDBConfig(BaseModel):
     chromadb_token: Optional[str] = None
     chromadb_tenant: Optional[str] = None
     chromadb_database: Optional[str] = None
-    chromadb_enable_anonymized_telemetry: Optional[bool] = None
 
 
 class MetadataDbConfig(BaseModel):
@@ -358,7 +357,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
             "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
             "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
-            "MODEL_PROVIDER": config.model_provider.value if config.model_provider else "",
+            "MODEL_PROVIDER": (
+                config.model_provider.value if config.model_provider else ""
+            ),
             "AWS_DEFAULT_REGION": config.aws_config.region or "",
             "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
             "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -377,7 +378,6 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
             "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
             "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
-            "CHROMADB_ENABLE_ANONYMIZED_TELEMETRY": str(config.chromadb_config.chromadb_enable_anonymized_telemetry or False).lower(),
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
