@@ -174,6 +174,10 @@ class _Settings:
         return os.environ.get("CHROMADB_SERVER_SSL_CERT_PATH")
 
     @property
+    def chromadb_enable_anonymized_telemetry(self) -> bool:
+        return os.environ.get("CHROMADB_ENABLE_ANONYMIZED_TELEMETRY", "false").lower() == "true"
+
+    @property
     def document_bucket_prefix(self) -> str:
         return os.environ.get("S3_RAG_BUCKET_PREFIX", "")
 

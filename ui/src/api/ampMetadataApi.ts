@@ -161,6 +161,7 @@ export interface ChromaDBConfig {
   chromadb_token?: string;
   chromadb_tenant?: string;
   chromadb_database?: string;
+  chromadb_enable_anonymized_telemetry?: boolean;
 }
 
 export interface ApplicationConfig {

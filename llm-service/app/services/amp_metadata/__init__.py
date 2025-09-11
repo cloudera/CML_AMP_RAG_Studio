@@ -125,6 +125,7 @@ class ChromaDBConfig(BaseModel):
     chromadb_token: Optional[str] = None
     chromadb_tenant: Optional[str] = None
     chromadb_database: Optional[str] = None
+    chromadb_enable_anonymized_telemetry: Optional[bool] = None
 
 
 class MetadataDbConfig(BaseModel):
@@ -376,6 +377,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
             "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
             "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
+            "CHROMADB_ENABLE_ANONYMIZED_TELEMETRY": str(config.chromadb_config.chromadb_enable_anonymized_telemetry or False).lower(),
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
@@ -444,6 +446,9 @@ def build_configuration(
         chromadb_token=env.get("CHROMADB_TOKEN"),
         chromadb_tenant=env.get("CHROMADB_TENANT"),
         chromadb_database=env.get("CHROMADB_DATABASE"),
+        chromadb_enable_anonymized_telemetry=TypeAdapter(bool).validate_python(
+            env.get("CHROMADB_ENABLE_ANONYMIZED_TELEMETRY", False),
+        ),
     )
     validate_config = validate(frozenset(env.items()))
 

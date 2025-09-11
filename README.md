@@ -68,6 +68,7 @@ If you select ChromaDB, configure the following environment variables in `.env`:
 - `CHROMADB_DATABASE` - Optional. Defaults to the Chroma default database.
 - `CHROMADB_TOKEN` - Optional. Include if your Chroma server requires an auth token.
 - `CHROMADB_SERVER_SSL_CERT_PATH` - Optional. Path to PEM bundle for TLS verification when using HTTPS with a private CA.
+- `CHROMADB_ENABLE_ANONYMIZED_TELEMETRY` - Optional. Enables anonymized telemetry in the ChromaDB client; defaults to `false`. You can also toggle this from the UI under Settings → Vector DB → ChromaDB.
 
 Notes:
 
@@ -75,6 +76,7 @@ Notes:
 - ChromaDB collections are automatically namespaced using the tenant and database values to avoid conflicts between different RAG Studio instances.
 - For production deployments, consider using a dedicated ChromaDB server with authentication enabled via `CHROMADB_TOKEN`.
 - When using HTTPS endpoints, ensure your certificate chain is properly configured or provide the CA bundle path via `CHROMADB_SERVER_SSL_CERT_PATH`.
+- Anonymized telemetry is disabled by default. You can enable it either by setting `CHROMADB_ENABLE_ANONYMIZED_TELEMETRY=true` or by using the UI toggle under Settings → Vector DB → ChromaDB.
 
 ### Enhanced Parsing Options:
 

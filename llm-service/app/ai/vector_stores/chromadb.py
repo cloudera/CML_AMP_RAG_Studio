@@ -78,10 +78,15 @@ def _new_chroma_client() -> ClientAPI:
         if settings.chromadb_tenant:
             client_kwargs["tenant"] = settings.chromadb_tenant
 
+        # Always pass Settings to control telemetry; add SSL verify when provided
+        settings_kwargs: dict[str, Any] = {
+            "anonymized_telemetry": settings.chromadb_enable_anonymized_telemetry,
+        }
         if settings.chromadb_server_ssl_cert_path:
-            client_kwargs["settings"] = Settings(
-                chroma_server_ssl_verify=settings.chromadb_server_ssl_cert_path,
+            settings_kwargs["chroma_server_ssl_verify"] = (
+                settings.chromadb_server_ssl_cert_path
             )
+        client_kwargs["settings"] = Settings(**settings_kwargs)
 
         # Only pass port if explicitly provided. If host includes https, Chroma infers SSL.
         if settings.chromadb_port is not None:
