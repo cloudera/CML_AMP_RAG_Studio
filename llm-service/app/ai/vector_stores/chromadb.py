@@ -49,8 +49,8 @@ from llama_index.vector_stores.chroma import (
 from llama_index.core.indices import VectorStoreIndex
 import chromadb
 from chromadb.api import ClientAPI
-from chromadb.config import Settings
 from chromadb.api.models.Collection import Collection
+from chromadb.config import Settings
 
 from app.ai.vector_stores.vector_store import VectorStore
 from app.config import settings
@@ -208,24 +208,15 @@ class ChromaVectorStore(VectorStore, ABC):
             results = collection.get(include=["embeddings", "metadatas"], limit=5000)
             embeddings: List[List[float]] = []
             filenames: List[str] = []
-            if isinstance(results, dict):
-                raw_embeddings = results.get("embeddings")
+            if results:
+                raw_embeddings = results.get("embeddings").tolist()
                 raw_metadatas = results.get("metadatas")
-                if isinstance(raw_embeddings, list):
-                    for idx, embedding in enumerate(raw_embeddings):
-                        metadata_entry: Mapping[str, Any] | None = None
-                        if isinstance(raw_metadatas, list) and idx < len(raw_metadatas):
-                            possible = raw_metadatas[idx]
-                            if isinstance(possible, dict):
-                                metadata_entry = possible
-                        filename_value = (
-                            metadata_entry.get("file_name") if metadata_entry else None
-                        )
-                        if isinstance(filename_value, str) and isinstance(
-                            embedding, list
-                        ):
+                for embedding, metadata in zip(raw_embeddings, raw_metadatas):
+                    if metadata:
+                        filename_value = metadata.get("file_name")
+                        if filename_value:
                             filenames.append(filename_value)
-                            embeddings.append(cast(List[float], embedding))
+                            embeddings.append(embedding)
 
             return self.visualize_embeddings(embeddings, filenames, user_query)
         except Exception:
