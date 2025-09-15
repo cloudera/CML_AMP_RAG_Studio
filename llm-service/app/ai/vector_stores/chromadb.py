@@ -37,7 +37,7 @@
 #
 import logging
 from abc import ABC
-from typing import Optional, List, cast, Any, Mapping
+from typing import Optional, List, Any, Mapping, cast
 
 import fastapi.exceptions
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -209,13 +209,14 @@ class ChromaVectorStore(VectorStore, ABC):
             embeddings: List[List[float]] = []
             filenames: List[str] = []
             if results:
-                raw_embeddings = results.get("embeddings").tolist()
-                raw_metadatas = results.get("metadatas")
+                raw_embeddings = cast(List[List[float]], results.get("embeddings"))
+                raw_metadatas = cast(List[Mapping[str, Any]], results.get("metadatas"))
                 for embedding, metadata in zip(raw_embeddings, raw_metadatas):
                     if metadata:
                         filename_value = metadata.get("file_name")
                         if filename_value:
-                            filenames.append(filename_value)
+                            filename = str(filename_value)
+                            filenames.append(filename)
                             embeddings.append(embedding)
 
             return self.visualize_embeddings(embeddings, filenames, user_query)
