@@ -50,8 +50,8 @@ class PptxReader(BaseReader):
         self.inner = LlamaIndexPptxReader()
 
     def load_chunks(self, file_path: Path) -> ChunksResult:
-
-        # TODO: maybe use .pdf.PageTracker to avoid this loop which calls everything once per slide
+        # TODO: This loop makes a lot of function calls;
+        #       if it's slow, we should try .pdf.PageTracker which consolidates contents to avoid that
         ret = ChunksResult()
         for i, document in enumerate(self.inner.load_data(file_path)):
             document.id_ = self.document_id
