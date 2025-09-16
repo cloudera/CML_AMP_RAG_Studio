@@ -39,7 +39,6 @@
 from pathlib import Path
 from typing import Any
 
-from llama_index.core import Document
 from llama_index.readers.file import PptxReader as LlamaIndexPptxReader
 
 from .base_reader import BaseReader, ChunksResult
