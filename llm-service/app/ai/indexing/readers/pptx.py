@@ -39,7 +39,6 @@
 from pathlib import Path
 from typing import Any
 
-from llama_index.core import Document
 from llama_index.readers.file import PptxReader as LlamaIndexPptxReader
 
 from .base_reader import BaseReader, ChunksResult
@@ -51,27 +50,25 @@ class PptxReader(BaseReader):
         self.inner = LlamaIndexPptxReader()
 
     def load_chunks(self, file_path: Path) -> ChunksResult:
-
-        documents = self.inner.load_data(file_path)
-        assert len(documents) == 1
-        document: Document = documents[0]
-        document.id_ = self.document_id
-
-        document_text = document.text
-
-        secrets = self._block_secrets([document_text])
-        if secrets is not None:
-            return ChunksResult(secret_types=secrets)
-
+        # TODO: This loop makes a lot of function calls;
+        #       if it's slow, we should try .pdf.PageTracker which consolidates contents to avoid that
         ret = ChunksResult()
+        for i, document in enumerate(self.inner.load_data(file_path)):
+            document.id_ = self.document_id
 
-        anonymized_text = self._anonymize_pii(document_text)
-        if anonymized_text is not None:
-            ret.pii_found = True
-            document_text = anonymized_text
+            document_text = document.text
 
-        document.set_content(document_text)
+            secrets = self._block_secrets([document_text])
+            if secrets is not None:
+                return ChunksResult(secret_types=secrets)
 
-        self._add_document_metadata(document, file_path)
-        ret.chunks = self._chunks_in_document(document)
+            anonymized_text = self._anonymize_pii(document_text)
+            if anonymized_text is not None:
+                ret.pii_found = True
+                document_text = anonymized_text
+
+            document.set_content(document_text)
+
+            self._add_document_metadata(document, file_path)
+            ret.chunks.extend(self._chunks_in_document(document))
         return ret
