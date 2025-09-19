@@ -251,7 +251,11 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
         return "unknown"
 
 
-@router.post("/chat", summary="Chat with your documents in the requested datasource")
+@router.post(
+    "/chat",
+    summary="Superseded by /stream-completion",
+    deprecated=True,
+)
 @exceptions.propagates
 def chat(
     session_id: int,

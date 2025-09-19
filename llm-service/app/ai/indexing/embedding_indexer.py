@@ -136,6 +136,12 @@ class EmbeddingIndexer(BaseTextIndexer):
             logger.debug(f"Waiting for {len(futures)} futures")
             for future in as_completed(futures):
                 i, batch_embeddings = future.result()
-                for chunk, embedding in zip(batched_chunks[i], batch_embeddings):
+                batch_chunks = batched_chunks[i]
+                if len(batch_chunks) != len(batch_embeddings):
+                    raise ValueError(
+                        f"Expected {len(batch_chunks)} embedding vectors for this batch of chunks,"
+                        + f" but got {len(batch_embeddings)} from {self.embedding_model.model_name}"
+                    )
+                for chunk, embedding in zip(batch_chunks, batch_embeddings):
                     chunk.embedding = embedding
-                yield batched_chunks[i]
+                yield batch_chunks
