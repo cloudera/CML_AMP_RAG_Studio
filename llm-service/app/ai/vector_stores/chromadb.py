@@ -102,6 +102,10 @@ def _new_chroma_client() -> ClientAPI:
 class ChromaVectorStore(VectorStore, ABC):
     """ChromaDB Vector Store."""
 
+    @property
+    def flat_metadata(self) -> bool:
+        return True
+
     @staticmethod
     def for_chunks(data_source_id: int) -> "ChromaVectorStore":
         return ChromaVectorStore(

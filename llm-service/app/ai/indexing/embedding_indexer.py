@@ -36,7 +36,6 @@
 #  DATA.
 #
 
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -110,23 +109,15 @@ class EmbeddingIndexer(BaseTextIndexer):
             converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
 
             # flatten metadata if vector store has self.flat_metadata
-            if hasattr(self.chunks_vector_store, "flat_metadata"):
-                if self.chunks_vector_store.flat_metadata:
-                    converted_chunks = [
-                        self._flatten_metadata(chunk) for chunk in converted_chunks
-                    ]
+            if self.chunks_vector_store.flat_metadata:
+                converted_chunks = [
+                    self._flatten_metadata(chunk) for chunk in converted_chunks
+                ]
 
             chunks_vector_store = self.chunks_vector_store.llama_vector_store()
             chunks_vector_store.add(converted_chunks)
 
         logger.debug(f"Indexing file: {file_path} completed")
-
-    @staticmethod
-    def _flatten_metadata(chunk: BaseNode) -> BaseNode:
-        for key, value in chunk.metadata.items():
-            if isinstance(value, list) or isinstance(value, dict):
-                chunk.metadata[key] = json.dumps(value)
-        return chunk
 
     def _compute_embeddings(
         self, chunks: List[TextNode]
