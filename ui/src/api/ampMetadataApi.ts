@@ -155,6 +155,14 @@ export interface OpenSearchConfig {
   opensearch_namespace?: string;
 }
 
+export interface ChromaDBConfig {
+  chromadb_host?: string;
+  chromadb_port?: string;
+  chromadb_token?: string;
+  chromadb_tenant?: string;
+  chromadb_database?: string;
+}
+
 export interface ApplicationConfig {
   num_of_gpus: number;
   memory_size_gb: number;
@@ -167,7 +175,7 @@ interface MetadataDBConfig {
   password?: string;
 }
 
-export type VectorDBProvider = "QDRANT" | "OPENSEARCH";
+export type VectorDBProvider = "QDRANT" | "OPENSEARCH" | "CHROMADB";
 
 export interface ValidationResult {
   valid: boolean;
@@ -194,6 +202,7 @@ export interface ProjectConfig {
   openai_config: OpenAIConfig;
   caii_config: CaiiConfig;
   opensearch_config: OpenSearchConfig;
+  chromadb_config: ChromaDBConfig;
   is_valid_config: boolean;
   config_validation_results: ConfigValidationResults;
   release_version: string;

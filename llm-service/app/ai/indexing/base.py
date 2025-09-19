@@ -1,9 +1,12 @@
+import json
 import logging
 import os
 from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, TypeVar
+
+from llama_index.core.schema import BaseNode
 
 from .readers.base_reader import BaseReader, ReaderConfig
 from .readers.csv import CSVReader
@@ -26,7 +29,6 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".docx": DocxReader,
     ".pptx": PptxReader,
     ".pptm": PptxReader,
-    ".ppt": PptxReader,
     ".csv": CSVReader,
     ".json": JSONReader,
     ".jpg": ImagesReader,
@@ -38,6 +40,9 @@ DOCLING_READERS: Dict[str, Type[BaseReader]] = {
     ".pdf": DoclingReader,
     ".html": DoclingReader,
 }
+
+
+TNode = TypeVar("TNode", bound=BaseNode)
 
 
 @dataclass
@@ -53,6 +58,13 @@ class BaseTextIndexer:
     ):
         self.data_source_id = data_source_id
         self.reader_config = reader_config
+
+    @staticmethod
+    def _flatten_metadata(chunk: TNode) -> TNode:
+        for key, value in chunk.metadata.items():
+            if isinstance(value, list) or isinstance(value, dict):
+                chunk.metadata[key] = json.dumps(value)
+        return chunk
 
     @abstractmethod
     def index_file(self, file_path: Path, doc_id: str) -> None:

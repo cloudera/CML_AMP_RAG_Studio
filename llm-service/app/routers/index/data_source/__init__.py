@@ -288,7 +288,10 @@ class DataSourceController:
             return "No summary found for this data source."
         return summary
 
-    @router.get("/visualize")
+    @router.get("/visualize", 
+        summary="visualize the data source",
+        response_model=None,
+    )
     @exceptions.propagates
     def visualize(self) -> list[tuple[tuple[float, float], str]]:
         return self.chunks_vector_store.visualize()
@@ -296,7 +299,10 @@ class DataSourceController:
     class VisualizationRequest(BaseModel):
         user_query: str
 
-    @router.post("/visualize")
+    @router.post("/visualize",
+        summary="visualize the data source with a query",
+        response_model=None,
+    )
     @exceptions.propagates
     def visualize_with_query(
         self, request: VisualizationRequest

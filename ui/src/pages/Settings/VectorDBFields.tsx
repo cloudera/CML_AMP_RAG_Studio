@@ -60,6 +60,7 @@ export const VectorDBFields = ({
         options={[
           { value: "QDRANT", label: "Qdrant" },
           { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
+          { value: "CHROMADB", label: "ChromaDB" },
         ]}
         disabled={!enableModification}
       />
@@ -72,6 +73,11 @@ export const VectorDBFields = ({
     {selectedVectorDBProvider === "OPENSEARCH" ? (
       <StyledHelperText>
         We currently support OpenSearch versions up to and including 2.19.3
+      </StyledHelperText>
+    ) : null}
+    {selectedVectorDBProvider === "CHROMADB" ? (
+      <StyledHelperText>
+        ChromaDB will be used as the vector database.
       </StyledHelperText>
     ) : null}
     <Form.Item
@@ -123,6 +129,86 @@ export const VectorDBFields = ({
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
     >
       <Input type="password" placeholder="admin" />
+    </Form.Item>
+    {/* CHROMADB_SSL removed; chroma infers SSL from https in host URL */}
+    <Form.Item
+      label={"ChromaDB Host"}
+      initialValue={projectConfig?.chromadb_config.chromadb_host}
+      name={["chromadb_config", "chromadb_host"]}
+      tooltip="Host of the ChromaDB server. If using SSL verification, prefix with https://"
+      required={selectedVectorDBProvider === "CHROMADB"}
+      rules={[
+        { required: selectedVectorDBProvider === "CHROMADB" },
+        // validate url or host
+        {
+          pattern:
+            /^(?:https?:\/\/)?(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{1,5})?(?:\/\S*)?$/i,
+          message: "Invalid host or URL",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="localhost" disabled={!enableModification} />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Port"}
+      initialValue={projectConfig?.chromadb_config.chromadb_port}
+      name={["chromadb_config", "chromadb_port"]}
+      tooltip="Optional. Required when the host is not https."
+      required={false}
+      rules={[
+        // Optional unless using http hosts
+        {
+          pattern: /^[0-9]+$/,
+          message: "Invalid port",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="8000" disabled={!enableModification} />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Token"}
+      initialValue={projectConfig?.chromadb_config.chromadb_token}
+      name={["chromadb_config", "chromadb_token"]}
+      tooltip="Token for the ChromaDB server."
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="token" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Tenant"}
+      initialValue={projectConfig?.chromadb_config.chromadb_tenant}
+      name={["chromadb_config", "chromadb_tenant"]}
+      tooltip="Tenant for the ChromaDB server."
+      rules={[
+        {
+          pattern: /^[a-zA-Z0-9]+$/,
+          message: "Only alphanumeric characters are allowed",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="default_tenant" />
+    </Form.Item>
+    <Form.Item
+      label={"ChromaDB Database"}
+      initialValue={projectConfig?.chromadb_config.chromadb_database}
+      name={["chromadb_config", "chromadb_database"]}
+      tooltip="Database for the ChromaDB server."
+      rules={[
+        {
+          pattern: /^[a-zA-Z0-9]+$/,
+          message: "Only alphanumeric characters are allowed",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "CHROMADB"}
+    >
+      <Input placeholder="default_database" />
     </Form.Item>
   </Flex>
 );

@@ -18,6 +18,7 @@ on:
           - mob/main
           - release/1
           - customer-hotfix
+          - bs/chromadb
 jobs:
   build:
     runs-on: ubuntu-latest

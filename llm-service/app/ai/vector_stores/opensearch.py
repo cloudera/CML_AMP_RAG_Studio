@@ -111,6 +111,8 @@ class OpenSearch(VectorStore, ABC):
         return len(vector)
 
     def size(self) -> Optional[int]:
+        if not self.exists():
+            return None
         os_client = self._low_level_client
         try:
             return int(os_client.count(index=self.table_name)["count"])
@@ -119,6 +121,8 @@ class OpenSearch(VectorStore, ABC):
             return 0
 
     def delete(self) -> None:
+        if not self.exists():
+            return None
         os_client = self._low_level_client
         try:
             os_client.indices.delete(index=self.table_name)
@@ -126,6 +130,8 @@ class OpenSearch(VectorStore, ABC):
             raise fastapi.exceptions.HTTPException(404, "Index not found")
 
     def delete_document(self, document_id: str) -> None:
+        if not self.exists():
+            return None
         self._get_client().delete_by_doc_id(document_id)
 
     def llama_vector_store(self) -> BasePydanticVectorStore:

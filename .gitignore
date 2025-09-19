@@ -1,6 +1,7 @@
 .env
 .idea/*
 .vscode/*
+.cursor/*
 !.idea/copyright/
 !.idea/prettier.xml
 !.idea/google-java-format.xml

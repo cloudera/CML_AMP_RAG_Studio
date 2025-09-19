@@ -66,10 +66,27 @@ export LLM_SERVICE_URL="http://localhost:8081"
 export MLFLOW_ENABLE_ARTIFACTS_PROGRESS_BAR=false
 export MLFLOW_RECONCILER_DATA_PATH=$(pwd)/llm-service/reconciler/data
 
-# start Qdrant vector DB
-qdrant/qdrant 2>&1 &
+# set the VECTOR_DB_PROVIDER env var to QDRANT if not specified
+if [ -z "${VECTOR_DB_PROVIDER}" ]; then
+  VECTOR_DB_PROVIDER="QDRANT"
+fi
 
-# start up the jarva
+# start the vector DB
+if [ "${VECTOR_DB_PROVIDER}" = "QDRANT" ]; then
+  qdrant/qdrant 2>&1 &  
+fi
+
+if [ "${VECTOR_DB_PROVIDER}" = "CHROMADB" ]; then
+  if [ "${CHROMADB_HOST}" = "localhost" ]; then
+    if [ -z "${CHROMADB_PORT}" ]; then
+      CHROMADB_PORT=8000
+    fi
+    uvx --from "chromadb>=0.5.17" chroma run --host localhost --port "${CHROMADB_PORT}" --path ./databases/chromadb_storage 2>&1 &
+  fi
+fi
+
+
+# start up the java backend
 # grab the most recent java installation and use it for java home
 export JAVA_ROOT=`ls -tr ${RAG_STUDIO_INSTALL_DIR}/java-home | tail -1`
 export JAVA_HOME="${RAG_STUDIO_INSTALL_DIR}/java-home/${JAVA_ROOT}"

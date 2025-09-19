@@ -64,6 +64,7 @@ cleanup() {
 
     # Stop Docker containers
     docker stop qdrant_dev || true
+    docker stop chromadb_dev || true
     cd ../..
     docker compose -f opensearch/docker-compose.yaml down
 }
@@ -78,6 +79,7 @@ trap cleanup EXIT
 
 # Stop any running vector db containers
 docker stop qdrant_dev || true
+docker stop chromadb_dev || true
 docker compose -f opensearch/docker-compose.yaml down
 
 # Create the databases directory if it doesn't exist
@@ -90,6 +92,11 @@ if [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "QDRANT" ]; then
 elif [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "OPENSEARCH" ]; then
   echo "Using OpenSearch as the vector database provider..."
   docker compose -f opensearch/docker-compose.yaml up --detach
+elif [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "CHROMADB" ]; then
+  echo "Using ChromaDB as the vector database provider..."
+  if [ "${CHROMADB_HOST:-}" = "localhost" ]; then
+    docker run --name chromadb_dev --rm -d -p 8000:8000 -v $(pwd)/databases/chromadb_storage:/data chromadb/chroma
+  fi
 else
   echo "Unsupported VECTOR_DB_PROVIDER: ${VECTOR_DB_PROVIDER}. Supported values are QDRANT or OPENSEARCH."
   exit 1
