@@ -49,6 +49,7 @@ import os.path
 from enum import Enum
 from typing import cast, Optional, Literal
 
+MODEL_PROVIDER_ENV_VAR_NAME = "MODEL_PROVIDER"
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
@@ -196,7 +197,7 @@ class _Settings:
         """The preferred model provider to use.
         Options: 'AZURE', 'CAII', 'OPENAI', 'BEDROCK'
         If not set, will use the first available provider in priority order."""
-        provider = os.environ.get("MODEL_PROVIDER")
+        provider = os.environ.get(MODEL_PROVIDER_ENV_VAR_NAME)
         try:
             return ModelSource(provider)
         except ValueError:

@@ -35,7 +35,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-import itertools
+from typing import Iterator
 
 import pytest
 
@@ -44,31 +44,18 @@ from app.services.caii import caii
 from app.services.caii.types import ListEndpointEntry
 from app.services.models.providers import BedrockModelProvider
 from app.services.models.providers._model_provider import _ModelProvider
-
-
-def get_all_env_var_names() -> set[str]:
-    """Return the names of all the env vars required by all model providers."""
-    return set(
-        itertools.chain.from_iterable(
-            subcls.get_env_var_names() for subcls in _ModelProvider.__subclasses__()
-        )
-    )
+from app.tests.model_provider_mocks.utils import patch_env_vars
 
 
 @pytest.fixture(params=_ModelProvider.__subclasses__())
 def EnabledModelProvider(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
-) -> type[_ModelProvider]:
-    """Sets and unsets environment variables for the given model provider."""
+) -> Iterator[type[_ModelProvider]]:
+    """Parametrize a test to run for each supported model provider."""
     ModelProviderSubcls: type[_ModelProvider] = request.param
-
-    for name in get_all_env_var_names():
-        monkeypatch.delenv(name, raising=False)
-    for name in ModelProviderSubcls.get_env_var_names():
-        monkeypatch.setenv(name, "test")
-
-    return ModelProviderSubcls
+    with patch_env_vars(ModelProviderSubcls):
+        yield ModelProviderSubcls
 
 
 class TestListAvailableModels:

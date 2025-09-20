@@ -89,6 +89,15 @@ def _configure_logger() -> None:
 
 _configure_logger()
 
+
+def _enable_http_debug() -> None:
+    urllib3_logger = logging.getLogger("urllib3")
+    urllib3_logger.setLevel(logging.DEBUG)
+    urllib3_logger.propagate = True
+
+
+_enable_http_debug()
+
 if os.environ.get("ENABLE_OPIK") == "True":
     opik.configure(
         use_local=True, url=os.environ.get("OPIK_URL", "http://localhost:5174")

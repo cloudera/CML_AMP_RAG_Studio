@@ -35,7 +35,6 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 # ##############################################################################
-
 import os
 import pathlib
 import uuid
@@ -53,9 +52,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding, Embedding
 from app.ai.vector_stores.qdrant import QdrantVectorStore
 from app.main import app
 from app.services.metadata_apis import data_sources_metadata_api
-from app.services import models
 from app.services.metadata_apis.data_sources_metadata_api import RagDataSource
-from app.services.models.providers import BedrockModelProvider
 
 
 @dataclass
@@ -177,16 +174,16 @@ def datasource_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.fixture(autouse=True)
-def embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
-    model = DummyEmbeddingModel()
-    monkeypatch.setattr(models.Embedding, "get", lambda cls, model_name=None: model)
-
-
-@pytest.fixture(autouse=True)
-def llm(monkeypatch: pytest.MonkeyPatch) -> None:
-    model = models.LLM.get_noop()
-    monkeypatch.setattr(models.LLM, "get", lambda cls, model_name=None: model)
+# @pytest.fixture(autouse=True)
+# def embedding_model(monkeypatch: pytest.MonkeyPatch) -> None:
+#     model = DummyEmbeddingModel()
+#     monkeypatch.setattr(models.Embedding, "get", lambda cls, model_name=None: model)
+#
+#
+# @pytest.fixture(autouse=True)
+# def llm(monkeypatch: pytest.MonkeyPatch) -> None:
+#     model = models.LLM.get_noop()
+#     monkeypatch.setattr(models.LLM, "get", lambda cls, model_name=None: model)
 
 
 @pytest.fixture
@@ -219,10 +216,10 @@ def client() -> Iterator[TestClient]:
         yield test_client
 
 
-@pytest.fixture(autouse=True)
-def _get_model_arn_by_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        BedrockModelProvider,
-        "_get_model_arns",
-        lambda: [],
-    )
+# @pytest.fixture(autouse=True)
+# def _get_model_arn_by_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
+#     monkeypatch.setattr(
+#         BedrockModelProvider,
+#         "_get_model_arns",
+#         lambda: [],
+#     )

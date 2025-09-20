@@ -36,6 +36,7 @@
 #  DATA.
 #
 import abc
+import itertools
 import os
 
 from llama_index.core.base.embeddings.base import BaseEmbedding
@@ -109,3 +110,12 @@ class _ModelProvider(abc.ABC):
     def get_reranking_model(name: str, top_n: int) -> BaseNodePostprocessor:
         """Return reranking model with `name`."""
         raise NotImplementedError
+
+
+def get_all_env_var_names() -> set[str]:
+    """Return the names of all the env vars required by all model providers."""
+    return set(
+        itertools.chain.from_iterable(
+            subcls.get_env_var_names() for subcls in _ModelProvider.__subclasses__()
+        )
+    )

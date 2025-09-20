@@ -1,6 +1,6 @@
 #
 #  CLOUDERA APPLIED MACHINE LEARNING PROTOTYPE (AMP)
-#  (C) Cloudera, Inc. 2024
+#  (C) Cloudera, Inc. 2025
 #  All rights reserved.
 #
 #  Applicable Open Source License: Apache 2.0
@@ -35,56 +35,4 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-from typing import Optional
 
-from fastapi import HTTPException
-from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore, TextNode
-
-from . import _model_type
-from .providers import get_provider_class
-from ..caii.types import ModelResponse
-from ..query.simple_reranker import SimpleReranker
-
-
-class Reranking(_model_type.ModelType[BaseNodePostprocessor]):
-    @classmethod
-    def get(
-        cls,
-        model_name: Optional[str] = None,
-        top_n: int = 5,
-    ) -> BaseNodePostprocessor:
-        if not model_name:
-            return SimpleReranker(top_n=top_n)
-
-        return get_provider_class().get_reranking_model(name=model_name, top_n=top_n)
-
-    @staticmethod
-    def get_noop() -> BaseNodePostprocessor:
-        raise NotImplementedError
-
-    @staticmethod
-    def list_available() -> list[ModelResponse]:
-        return get_provider_class().list_reranking_models()
-
-    _TEST_NODES = [
-        NodeWithScore(node=TextNode(text="test node"), score=0.5),
-        NodeWithScore(node=TextNode(text="another test node"), score=0.4),
-    ]
-
-    @classmethod
-    def test(cls, model_name: str) -> str:
-        models = cls.list_available()
-        for model in models:
-            if model.model_id == model_name:
-                reranking_model: BaseNodePostprocessor | None = cls.get(
-                    model_name=model_name
-                )
-                if reranking_model:
-                    reranking_model.postprocess_nodes(cls._TEST_NODES, None, "test")
-                    return "ok"
-        raise HTTPException(status_code=404, detail="Model not found")
-
-
-# ensure interface is implemented
-_ = Reranking()
