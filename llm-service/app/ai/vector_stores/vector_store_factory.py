@@ -38,6 +38,7 @@
 
 from app.ai.vector_stores.opensearch import OpenSearch
 from app.ai.vector_stores.qdrant import QdrantVectorStore
+from app.ai.vector_stores.chromadb import ChromaVectorStore
 from app.ai.vector_stores.vector_store import VectorStore
 from app.config import settings
 
@@ -48,10 +49,14 @@ class VectorStoreFactory:
         vector_db_provider = settings.vector_db_provider
         if vector_db_provider == "OPENSEARCH":
             return OpenSearch.for_chunks(data_source_id)
+        if vector_db_provider == "CHROMADB":
+            return ChromaVectorStore.for_chunks(data_source_id)
         return QdrantVectorStore.for_chunks(data_source_id)
 
     @staticmethod
     def for_summaries(data_source_id: int) -> VectorStore:
         if settings.vector_db_provider == "OPENSEARCH":
             return OpenSearch.for_summaries(data_source_id)
+        if settings.vector_db_provider == "CHROMADB":
+            return ChromaVectorStore.for_summaries(data_source_id)
         return QdrantVectorStore.for_summaries(data_source_id)

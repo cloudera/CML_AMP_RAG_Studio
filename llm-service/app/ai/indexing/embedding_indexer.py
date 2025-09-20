@@ -108,6 +108,12 @@ class EmbeddingIndexer(BaseTextIndexer):
             # we're capturing "text".
             converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
 
+            # flatten metadata if vector store has self.flat_metadata
+            if self.chunks_vector_store.flat_metadata:
+                converted_chunks = [
+                    self._flatten_metadata(chunk) for chunk in converted_chunks
+                ]
+
             chunks_vector_store = self.chunks_vector_store.llama_vector_store()
             chunks_vector_store.add(converted_chunks)
 
