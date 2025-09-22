@@ -51,6 +51,8 @@ dependencies = [
     "llama-index>=0.13.2",
     "chromadb>=0.5.17",
     "llama-index-vector-stores-chroma>=0.5.2",
+    "pgvector>=0.4.1",
+    "llama-index-vector-stores-postgres>=0.6.8",
 ]
 requires-python = ">=3.10,<3.13"
 readme = "README.md"

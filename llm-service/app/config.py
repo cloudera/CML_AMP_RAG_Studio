@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
-VectorDbProviderType = Literal["QDRANT", "OPENSEARCH", "CHROMADB"]
+VectorDbProviderType = Literal["QDRANT", "OPENSEARCH", "CHROMADB", "PGVECTOR"]
 MetadataDbProviderType = Literal["H2", "PostgreSQL"]
 
 
@@ -175,7 +175,30 @@ class _Settings:
 
     @property
     def chromadb_enable_anonymized_telemetry(self) -> bool:
-        return os.environ.get("CHROMADB_ENABLE_ANONYMIZED_TELEMETRY", "false").lower() == "true"
+        return (
+            os.environ.get("CHROMADB_ENABLE_ANONYMIZED_TELEMETRY", "false").lower()
+            == "true"
+        )
+
+    @property
+    def pgvector_host(self) -> str:
+        return os.environ.get("PGVECTOR_HOST", "localhost")
+
+    @property
+    def pgvector_port(self) -> int:
+        return int(os.environ.get("PGVECTOR_PORT", "5432"))
+
+    @property
+    def pgvector_db(self) -> str:
+        return os.environ.get("PGVECTOR_DB", "postgres")
+
+    @property
+    def pgvector_user(self) -> str:
+        return os.environ.get("PGVECTOR_USER", "postgres")
+
+    @property
+    def pgvector_password(self) -> str:
+        return os.environ.get("PGVECTOR_PASSWORD", "postgres")
 
     @property
     def document_bucket_prefix(self) -> str:
