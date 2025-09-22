@@ -1,1 +1,1 @@
-export RELEASE_TAG=dev-chromadb
+export RELEASE_TAG=dev
