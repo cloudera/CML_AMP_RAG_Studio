@@ -57,7 +57,7 @@ from app.services.metadata_apis import data_sources_metadata_api
 logger = logging.getLogger(__name__)
 
 
-def _new_pg_connection():
+def _new_pg_connection() -> psycopg2_connection:
     try:
         conn = psycopg2.connect(
             host=settings.pgvector_host,
@@ -121,7 +121,7 @@ class PgVectorStore(VectorStore):
                     """,
                     (self.table_name,),
                 )
-                return cur.fetchone()["count"] > 0
+                return cast(int, cur.fetchone()["count"]) > 0
         except Exception as e:
             logger.error(f"Error checking if table {self.table_name} exists: {e}")
             return False
@@ -132,7 +132,7 @@ class PgVectorStore(VectorStore):
         try:
             with self.conn.cursor() as cur:
                 cur.execute(f"SELECT COUNT(*) as count FROM {self.table_name}")
-                return cur.fetchone()["count"]
+                return cast(int, cur.fetchone()["count"])
         except Exception as e:
             logger.error(f"Error getting size of table {self.table_name}: {e}")
             return None
@@ -164,12 +164,15 @@ class PgVectorStore(VectorStore):
             raise e
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
+        connection_string = "postgresql://{username}:{password}@{host}:{port}/{db}"
         return LlamaIndexPGVectorStore(
-            database=settings.pgvector_db,
-            host=settings.pgvector_host,
-            port=settings.pgvector_port,
-            user=settings.pgvector_user,
-            password=settings.pgvector_password,
+            connection_string=connection_string.format(
+                username=settings.pgvector_user,
+                password=settings.pgvector_password,
+                host=settings.pgvector_host,
+                port=settings.pgvector_port,
+                db=settings.pgvector_db,
+            ),
             table_name=self.table_name,
             embed_dim=self._find_dim(self.data_source_id),
         )
