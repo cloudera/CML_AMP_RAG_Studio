@@ -129,10 +129,7 @@ class _Settings:
 
     @property
     def opensearch_namespace(self) -> str:
-        # handle case where OPENSEARCH_NAMESPACE is blank string
-        if not os.environ.get("OPENSEARCH_NAMESPACE"):
-            return "rag_document_index"
-        return os.environ.get("OPENSEARCH_NAMESPACE", "rag_document_index")
+        return os.environ.get("OPENSEARCH_NAMESPACE") or "rag_document_index"
 
     @property
     def opensearch_username(self) -> str:
@@ -166,17 +163,11 @@ class _Settings:
 
     @property
     def chromadb_tenant(self) -> str:
-        # handle case where CHROMADB_TENANT is blank string
-        if not os.environ.get("CHROMADB_TENANT"):
-            return DEFAULT_TENANT
-        return os.environ.get("CHROMADB_TENANT", DEFAULT_TENANT)
+        return os.environ.get("CHROMADB_TENANT") or DEFAULT_TENANT
 
     @property
     def chromadb_database(self) -> str:
-        # handle case where CHROMADB_DATABASE is blank string
-        if not os.environ.get("CHROMADB_DATABASE"):
-            return DEFAULT_DATABASE
-        return os.environ.get("CHROMADB_DATABASE", DEFAULT_DATABASE)
+        return os.environ.get("CHROMADB_DATABASE") or DEFAULT_DATABASE
 
     @property
     def chromadb_server_ssl_cert_path(self) -> str | None:
