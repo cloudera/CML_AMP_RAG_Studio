@@ -81,6 +81,7 @@ trap cleanup EXIT
 docker stop qdrant_dev || true
 docker stop chromadb_dev || true
 docker compose -f opensearch/docker-compose.yaml down
+docker stop pgvector_dev || true
 
 # Create the databases directory if it doesn't exist
 mkdir -p databases
@@ -97,8 +98,11 @@ elif [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "CHROMADB" ]; then
   if [ "${CHROMADB_HOST:-}" = "localhost" ]; then
     docker run --name chromadb_dev --rm -d -p 8000:8000 -v $(pwd)/databases/chromadb_storage:/data chromadb/chroma
   fi
+elif [ "${VECTOR_DB_PROVIDER:-QDRANT}" = "PGVECTOR" ]; then
+  echo "Using PGVector as the vector database provider..."
+  docker run --name pgvector_dev --rm -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -v $(pwd)/databases/pgvector_storage:/var/lib/postgresql/data pgvector/pgvector:pg17-trixie
 else
-  echo "Unsupported VECTOR_DB_PROVIDER: ${VECTOR_DB_PROVIDER}. Supported values are QDRANT or OPENSEARCH."
+  echo "Unsupported VECTOR_DB_PROVIDER: ${VECTOR_DB_PROVIDER}. Supported values are QDRANT, CHROMADB, PGVECTOR, or OPENSEARCH."
   exit 1
 fi
 

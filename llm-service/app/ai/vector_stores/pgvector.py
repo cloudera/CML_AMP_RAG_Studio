@@ -164,15 +164,12 @@ class PgVectorStore(VectorStore):
             raise e
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
-        connection_string = "postgresql://{username}:{password}@{host}:{port}/{db}"
-        return LlamaIndexPGVectorStore(
-            connection_string=connection_string.format(
-                username=settings.pgvector_user,
-                password=settings.pgvector_password,
-                host=settings.pgvector_host,
-                port=settings.pgvector_port,
-                db=settings.pgvector_db,
-            ),
+        return LlamaIndexPGVectorStore.from_params(
+            host=settings.pgvector_host,
+            port=settings.pgvector_port,
+            database=settings.pgvector_db,
+            user=settings.pgvector_user,
+            password=settings.pgvector_password,
             table_name=self.table_name,
             embed_dim=self._find_dim(self.data_source_id),
         )
