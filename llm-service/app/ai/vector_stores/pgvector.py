@@ -101,6 +101,7 @@ class PgVectorStore(VectorStore):
         self.conn = conn or _new_pg_connection()
         self.table_name = table_name
         self.data_source_id = data_source_id
+        self.data_table_name = f"data_{self.table_name}"
 
     @staticmethod
     @functools.cache
@@ -119,7 +120,7 @@ class PgVectorStore(VectorStore):
                     FROM information_schema.tables
                     WHERE table_name = %s
                     """,
-                    (self.table_name,),
+                    (self.data_table_name,),
                 )
                 return cast(int, cur.fetchone()["count"]) > 0
         except Exception as e:
@@ -127,11 +128,12 @@ class PgVectorStore(VectorStore):
             return False
 
     def size(self) -> Optional[int]:
+        print(f"Checking size of table {self.table_name}")
         if not self.exists():
             return None
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"SELECT COUNT(*) as count FROM {self.table_name}")
+                cur.execute(f"SELECT COUNT(*) as count FROM {self.data_table_name}")
                 return cast(int, cur.fetchone()["count"])
         except Exception as e:
             logger.error(f"Error getting size of table {self.table_name}: {e}")
@@ -142,7 +144,7 @@ class PgVectorStore(VectorStore):
             return None
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"DROP TABLE IF EXISTS {self.table_name} CASCADE")
+                cur.execute(f"DROP TABLE IF EXISTS {self.data_table_name} CASCADE")
             self.conn.commit()
         except Exception as e:
             logger.error(f"Error deleting table {self.table_name}: {e}")
@@ -185,7 +187,7 @@ class PgVectorStore(VectorStore):
 
         with self.conn.cursor() as cur:
             cur.execute(
-                f"SELECT embedding, file_name FROM {self.table_name} LIMIT 5000"
+                f"SELECT embedding, file_name FROM {self.data_table_name} LIMIT 5000"
             )
             rows = cur.fetchall()
 

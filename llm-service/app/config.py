@@ -185,8 +185,8 @@ class _Settings:
         return os.environ.get("PGVECTOR_HOST", "localhost")
 
     @property
-    def pgvector_port(self) -> int:
-        return int(os.environ.get("PGVECTOR_PORT", "5432"))
+    def pgvector_port(self) -> str:
+        return os.environ.get("PGVECTOR_PORT", "5432")
 
     @property
     def pgvector_db(self) -> str:
