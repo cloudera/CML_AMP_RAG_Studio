@@ -73,6 +73,9 @@ def _new_pg_connection() -> psycopg2.extensions.connection:
 
 
 class PgVectorStore(VectorStore):
+    # https://github.com/run-llama/llama_index/blob/v0.14.2/llama-index-integrations/vector_stores/llama-index-vector-stores-postgres/llama_index/vector_stores/postgres/base.py#L123
+    _LLAMA_INDEX_TABLE_NAME_PREFIX = "data_"
+
     @staticmethod
     def for_chunks(
         data_source_id: int,
@@ -102,12 +105,11 @@ class PgVectorStore(VectorStore):
         conn: Optional[psycopg2.extensions.connection] = None,
     ):
         self.conn = conn or _new_pg_connection()
-        self.table_name = table_name
+        if table_name.startswith(self._LLAMA_INDEX_TABLE_NAME_PREFIX):
+            self.table_name = table_name
+        else:
+            self.table_name = self._LLAMA_INDEX_TABLE_NAME_PREFIX + table_name
         self.data_source_id = data_source_id
-
-    @property
-    def data_table_name(self) -> str:
-        return f"data_{self.table_name}"
 
     def get_embedding_model(self) -> BaseEmbedding:
         data_source_metadata = data_sources_metadata_api.get_metadata(
@@ -120,7 +122,7 @@ class PgVectorStore(VectorStore):
             return None
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"SELECT COUNT(*) as count FROM {self.data_table_name}")
+                cur.execute(f"SELECT COUNT(*) as count FROM {self.table_name}")
                 return cast(int, cur.fetchone()["count"])
         except Exception as e:
             logger.warning("Error getting size of table %s: %s", self.table_name, e)
@@ -131,7 +133,7 @@ class PgVectorStore(VectorStore):
             return None
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"DROP TABLE IF EXISTS {self.data_table_name} CASCADE")
+                cur.execute(f"DROP TABLE IF EXISTS {self.table_name} CASCADE")
             self.conn.commit()
         except Exception as e:
             logger.error("Error deleting table %s: %s", self.table_name, e)
@@ -170,7 +172,7 @@ class PgVectorStore(VectorStore):
                     FROM information_schema.tables
                     WHERE table_name = %s
                     """,
-                    (self.data_table_name,),
+                    (self.table_name,),
                 )
                 return cast(int, cur.fetchone()["count"]) > 0
         except Exception as e:
@@ -192,7 +194,9 @@ class PgVectorStore(VectorStore):
             database=settings.pgvector_db,
             user=settings.pgvector_user,
             password=settings.pgvector_password,
-            table_name=self.table_name,  # TODO: maybe derive from self.data_table_name
+            table_name=self.table_name.removeprefix(
+                self._LLAMA_INDEX_TABLE_NAME_PREFIX,
+            ),
             embed_dim=self._find_dim(self.data_source_id),
         )
 
@@ -207,7 +211,7 @@ class PgVectorStore(VectorStore):
 
         with self.conn.cursor() as cur:
             cur.execute(
-                f"SELECT embedding, metadata_->>'file_name' as file_name FROM {self.data_table_name} LIMIT 5000"
+                f"SELECT embedding, metadata_->>'file_name' as file_name FROM {self.table_name} LIMIT 5000"
             )
             rows = cur.fetchall()
             for row in rows:
