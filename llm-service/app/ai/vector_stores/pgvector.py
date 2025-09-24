@@ -36,29 +36,27 @@
 #  DATA.
 #
 
+import functools
 import json
 import logging
-import functools
 from typing import Optional, cast
-from psycopg2.extensions import connection as psycopg2_connection
+
+import fastapi.exceptions
 import psycopg2
-
-from psycopg2.extras import RealDictCursor
-
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices import VectorStoreIndex
-from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.vector_stores.postgres import PGVectorStore as LlamaIndexPGVectorStore
+from psycopg2.extras import RealDictCursor
 
-from app.ai.vector_stores.vector_store import VectorStore
 from app.config import settings
-from app.services.models import Embedding
+from app.services import models
 from app.services.metadata_apis import data_sources_metadata_api
+from .vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
 
-def _new_pg_connection() -> psycopg2_connection:
+def _new_pg_connection() -> psycopg2.extensions.connection:
     try:
         conn = psycopg2.connect(
             host=settings.pgvector_host,
@@ -70,7 +68,7 @@ def _new_pg_connection() -> psycopg2_connection:
         )
         return conn
     except Exception as e:
-        logger.error(f"Error connecting to PostgreSQL: {e}")
+        logger.error("Error connecting to PostgreSQL: %s", e)
         raise e
 
 
@@ -78,37 +76,44 @@ class PgVectorStore(VectorStore):
     @staticmethod
     def for_chunks(
         data_source_id: int,
+        conn: Optional[psycopg2.extensions.connection] = None,
     ) -> "PgVectorStore":
         return PgVectorStore(
             table_name=f"index_{data_source_id}",
             data_source_id=data_source_id,
+            conn=conn,
         )
 
     @staticmethod
     def for_summaries(
         data_source_id: int,
+        conn: Optional[psycopg2.extensions.connection] = None,
     ) -> "PgVectorStore":
         return PgVectorStore(
             table_name=f"summary_index_{data_source_id}",
             data_source_id=data_source_id,
+            conn=conn,
         )
 
     def __init__(
         self,
         table_name: str,
         data_source_id: int,
-        conn: Optional[psycopg2_connection] = None,
+        conn: Optional[psycopg2.extensions.connection] = None,
     ):
         self.conn = conn or _new_pg_connection()
         self.table_name = table_name
         self.data_source_id = data_source_id
-        self.data_table_name = f"data_{self.table_name}"
+
+    @property
+    def data_table_name(self) -> str:
+        return f"data_{self.table_name}"
 
     @staticmethod
     @functools.cache
     def _find_dim(data_source_id: int) -> int:
         datasource_metadata = data_sources_metadata_api.get_metadata(data_source_id)
-        embedding_model = Embedding.get(datasource_metadata.embedding_model)
+        embedding_model = models.Embedding.get(datasource_metadata.embedding_model)
         vector = embedding_model.get_query_embedding("any")
         return len(vector)
 
@@ -125,11 +130,10 @@ class PgVectorStore(VectorStore):
                 )
                 return cast(int, cur.fetchone()["count"]) > 0
         except Exception as e:
-            logger.error(f"Error checking if table {self.table_name} exists: {e}")
+            logger.warning("Error checking if table %s exists: %s", self.table_name, e)
             return False
 
     def size(self) -> Optional[int]:
-        print(f"Checking size of table {self.table_name}")
         if not self.exists():
             return None
         try:
@@ -137,7 +141,7 @@ class PgVectorStore(VectorStore):
                 cur.execute(f"SELECT COUNT(*) as count FROM {self.data_table_name}")
                 return cast(int, cur.fetchone()["count"])
         except Exception as e:
-            logger.error(f"Error getting size of table {self.table_name}: {e}")
+            logger.warning("Error getting size of table %s: %s", self.table_name, e)
             return None
 
     def delete(self) -> None:
@@ -148,8 +152,11 @@ class PgVectorStore(VectorStore):
                 cur.execute(f"DROP TABLE IF EXISTS {self.data_table_name} CASCADE")
             self.conn.commit()
         except Exception as e:
-            logger.error(f"Error deleting table {self.table_name}: {e}")
-            raise e
+            logger.error("Error deleting table %s: %s", self.table_name, e)
+            raise fastapi.exceptions.HTTPException(
+                status_code=500,
+                detail=f"Error deleting table {self.table_name}: {e}",
+            ) from e
 
     def delete_document(self, document_id: str) -> None:
         if not self.exists():
@@ -157,23 +164,29 @@ class PgVectorStore(VectorStore):
         try:
             index = VectorStoreIndex.from_vector_store(
                 vector_store=self.llama_vector_store(),
-                embed_model=Embedding.get_noop(),
+                embed_model=models.Embedding.get_noop(),
             )
             index.delete_ref_doc(document_id)
         except Exception as e:
             logger.error(
-                f"Error deleting document {document_id} from {self.table_name}: {e}"
+                "Error deleting document %s from table %s: %s",
+                document_id,
+                self.table_name,
+                e,
             )
-            raise e
+            raise fastapi.exceptions.HTTPException(
+                status_code=500,
+                detail=f"Error deleting document {document_id} from table {self.table_name}: {e}",
+            ) from e
 
-    def llama_vector_store(self) -> BasePydanticVectorStore:
+    def llama_vector_store(self) -> LlamaIndexPGVectorStore:
         return LlamaIndexPGVectorStore.from_params(
             host=settings.pgvector_host,
             port=settings.pgvector_port,
             database=settings.pgvector_db,
             user=settings.pgvector_user,
             password=settings.pgvector_password,
-            table_name=self.table_name,
+            table_name=self.table_name,  # TODO: maybe derive from self.data_table_name
             embed_dim=self._find_dim(self.data_source_id),
         )
 
@@ -201,9 +214,9 @@ class PgVectorStore(VectorStore):
                         embeddings.append(cast(list[float], embedding))
 
         return self.visualize_embeddings(embeddings, filenames, user_query)
- 
+
     def get_embedding_model(self) -> BaseEmbedding:
         data_source_metadata = data_sources_metadata_api.get_metadata(
             self.data_source_id
         )
-        return Embedding.get(data_source_metadata.embedding_model)
+        return models.Embedding.get(data_source_metadata.embedding_model)
