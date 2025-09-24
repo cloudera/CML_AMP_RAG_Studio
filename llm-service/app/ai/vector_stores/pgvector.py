@@ -109,29 +109,11 @@ class PgVectorStore(VectorStore):
     def data_table_name(self) -> str:
         return f"data_{self.table_name}"
 
-    @staticmethod
-    @functools.cache
-    def _find_dim(data_source_id: int) -> int:
-        datasource_metadata = data_sources_metadata_api.get_metadata(data_source_id)
-        embedding_model = models.Embedding.get(datasource_metadata.embedding_model)
-        vector = embedding_model.get_query_embedding("any")
-        return len(vector)
-
-    def exists(self) -> bool:
-        try:
-            with self.conn.cursor() as cur:
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as count
-                    FROM information_schema.tables
-                    WHERE table_name = %s
-                    """,
-                    (self.data_table_name,),
-                )
-                return cast(int, cur.fetchone()["count"]) > 0
-        except Exception as e:
-            logger.warning("Error checking if table %s exists: %s", self.table_name, e)
-            return False
+    def get_embedding_model(self) -> BaseEmbedding:
+        data_source_metadata = data_sources_metadata_api.get_metadata(
+            self.data_source_id
+        )
+        return models.Embedding.get(data_source_metadata.embedding_model)
 
     def size(self) -> Optional[int]:
         if not self.exists():
@@ -179,6 +161,30 @@ class PgVectorStore(VectorStore):
                 detail=f"Error deleting document {document_id} from table {self.table_name}: {e}",
             ) from e
 
+    def exists(self) -> bool:
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT COUNT(*) as count
+                    FROM information_schema.tables
+                    WHERE table_name = %s
+                    """,
+                    (self.data_table_name,),
+                )
+                return cast(int, cur.fetchone()["count"]) > 0
+        except Exception as e:
+            logger.warning("Error checking if table %s exists: %s", self.table_name, e)
+            return False
+
+    @staticmethod
+    @functools.cache
+    def _find_dim(data_source_id: int) -> int:
+        datasource_metadata = data_sources_metadata_api.get_metadata(data_source_id)
+        embedding_model = models.Embedding.get(datasource_metadata.embedding_model)
+        vector = embedding_model.get_query_embedding("any")
+        return len(vector)
+
     def llama_vector_store(self) -> LlamaIndexPGVectorStore:
         return LlamaIndexPGVectorStore.from_params(
             host=settings.pgvector_host,
@@ -214,9 +220,3 @@ class PgVectorStore(VectorStore):
                         embeddings.append(cast(list[float], embedding))
 
         return self.visualize_embeddings(embeddings, filenames, user_query)
-
-    def get_embedding_model(self) -> BaseEmbedding:
-        data_source_metadata = data_sources_metadata_api.get_metadata(
-            self.data_source_id
-        )
-        return models.Embedding.get(data_source_metadata.embedding_model)
