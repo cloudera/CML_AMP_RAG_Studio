@@ -46,6 +46,7 @@ import psycopg2
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.vector_stores.postgres import PGVectorStore as LlamaIndexPGVectorStore
+from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
 
 from app.config import settings
@@ -122,7 +123,10 @@ class PgVectorStore(VectorStore):
             return None
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"SELECT COUNT(*) as count FROM {self.table_name}")
+                query = sql.SQL("SELECT COUNT(*) as count FROM {table}").format(
+                    table=sql.Identifier(self.table_name),
+                )
+                cur.execute(query)
                 return cast(int, cur.fetchone()["count"])
         except Exception as e:
             logger.warning("Error getting size of table %s: %s", self.table_name, e)
@@ -133,7 +137,10 @@ class PgVectorStore(VectorStore):
             return None
         try:
             with self.conn.cursor() as cur:
-                cur.execute(f"DROP TABLE IF EXISTS {self.table_name} CASCADE")
+                query = sql.SQL("DROP TABLE IF EXISTS {table} CASCADE").format(
+                    table=sql.Identifier(self.table_name),
+                )
+                cur.execute(query)
             self.conn.commit()
         except Exception as e:
             logger.error("Error deleting table %s: %s", self.table_name, e)
@@ -210,9 +217,15 @@ class PgVectorStore(VectorStore):
         filenames: list[str] = []
 
         with self.conn.cursor() as cur:
-            cur.execute(
-                f"SELECT embedding, metadata_->>'file_name' as file_name FROM {self.table_name} LIMIT 5000"
+            query = sql.SQL(
+                """
+                SELECT embedding, metadata_->>'file_name' as file_name
+                FROM {table} LIMIT 5000
+                """
+            ).format(
+                table=sql.Identifier(self.table_name),
             )
+            cur.execute(query)
             rows = cur.fetchall()
             for row in rows:
                 if row["file_name"] and row["embedding"]:
