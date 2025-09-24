@@ -36,6 +36,7 @@
 #  DATA.
 #
 
+import json
 import logging
 import functools
 from typing import Optional, cast
@@ -187,17 +188,20 @@ class PgVectorStore(VectorStore):
 
         with self.conn.cursor() as cur:
             cur.execute(
-                f"SELECT embedding, file_name FROM {self.data_table_name} LIMIT 5000"
+                f"SELECT embedding, metadata_->>'file_name' as file_name FROM {self.data_table_name} LIMIT 5000"
             )
             rows = cur.fetchall()
-
             for row in rows:
                 if row["file_name"] and row["embedding"]:
                     filenames.append(row["file_name"])
-                    embeddings.append(cast(list[float], row["embedding"]))
+                    embedding = row["embedding"]
+                    if isinstance(embedding, str):
+                        embedding = json.loads(embedding)
+                    if isinstance(embedding, list):
+                        embeddings.append(cast(list[float], embedding))
 
         return self.visualize_embeddings(embeddings, filenames, user_query)
-
+ 
     def get_embedding_model(self) -> BaseEmbedding:
         data_source_metadata = data_sources_metadata_api.get_metadata(
             self.data_source_id
