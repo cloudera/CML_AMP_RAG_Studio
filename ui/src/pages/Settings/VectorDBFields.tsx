@@ -229,7 +229,7 @@ export const VectorDBFields = ({
       ]}
       hidden={selectedVectorDBProvider !== "PGVECTOR"}
     >
-      <Input placeholder="localhost" />
+      <Input placeholder="localhost" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"PGVector Port"}
@@ -246,7 +246,7 @@ export const VectorDBFields = ({
       ]}
       hidden={selectedVectorDBProvider !== "PGVECTOR"}
     >
-      <Input placeholder="5432" />
+      <Input placeholder="5432" disabled={!enableModification} />
     </Form.Item>
     <Form.Item
       label={"PGVector Database"}

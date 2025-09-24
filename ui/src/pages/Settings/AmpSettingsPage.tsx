@@ -231,6 +231,7 @@ const AmpSettingsPage = () => {
                   messageQueue.error("Please fill all required fields");
                 });
             }}
+            disabled={!enableSettingsModification}            
           >
             Submit
           </Button>
