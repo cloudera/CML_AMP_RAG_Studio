@@ -200,7 +200,7 @@ const RestartAppModal = ({
           };
         }
 
-        // clear open search and chromadb configs if QDRANT is selected
+        // clear open search, chromadb, and pgvector configs if QDRANT is selected
         if (values.vector_db_provider === "QDRANT") {
           values.opensearch_config = {
             opensearch_username: undefined,
@@ -215,9 +215,16 @@ const RestartAppModal = ({
             chromadb_tenant: undefined,
             chromadb_database: undefined,
           };
+          values.pgvector_config = {
+            pgvector_host: undefined,
+            pgvector_port: undefined,
+            pgvector_db: undefined,
+            pgvector_user: undefined,
+            pgvector_password: undefined,
+          };
         }
 
-        // clear chromadb config if opensearch is selected
+        // clear chromadb, and pgvector configs if opensearch is selected
         if (values.vector_db_provider === "OPENSEARCH") {
           values.chromadb_config = {
             chromadb_host: undefined,
@@ -226,15 +233,29 @@ const RestartAppModal = ({
             chromadb_tenant: undefined,
             chromadb_database: undefined,
           };
+          values.pgvector_config = {
+            pgvector_host: undefined,
+            pgvector_port: undefined,
+            pgvector_db: undefined,
+            pgvector_user: undefined,
+            pgvector_password: undefined,
+          };
         }
 
-        // clear opensearch config if chromadb is selected
+        // clear opensearch, and pgvector configs if chromadb is selected
         if (values.vector_db_provider === "CHROMADB") {
           values.opensearch_config = {
             opensearch_username: undefined,
             opensearch_password: undefined,
             opensearch_endpoint: undefined,
             opensearch_namespace: undefined,
+          };
+          values.pgvector_config = {
+            pgvector_host: undefined,
+            pgvector_port: undefined,
+            pgvector_db: undefined,
+            pgvector_user: undefined,
+            pgvector_password: undefined,
           };
         }
 

@@ -61,6 +61,7 @@ export const VectorDBFields = ({
           { value: "QDRANT", label: "Qdrant" },
           { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
           { value: "CHROMADB", label: "ChromaDB" },
+          { value: "PGVECTOR", label: "Postgres Vector (PGVector)" },
         ]}
         disabled={!enableModification}
       />
@@ -80,11 +81,15 @@ export const VectorDBFields = ({
         ChromaDB will be used as the vector database.
       </StyledHelperText>
     ) : null}
+    {selectedVectorDBProvider === "PGVECTOR" ? (
+      <StyledHelperText>
+        Postgres Vector (PGVector) will be used as the vector database.
+      </StyledHelperText>
+    ) : null}
     <Form.Item
       label={"OpenSearch Endpoint"}
       initialValue={projectConfig?.opensearch_config.opensearch_endpoint}
       name={["opensearch_config", "opensearch_endpoint"]}
-      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="Cloudera Semantic Search instance endpoint."
       rules={[{ required: selectedVectorDBProvider === "OPENSEARCH" }]}
       hidden={selectedVectorDBProvider !== "OPENSEARCH"}
@@ -98,7 +103,6 @@ export const VectorDBFields = ({
       label={"OpenSearch Namespace"}
       initialValue={projectConfig?.opensearch_config.opensearch_namespace}
       name={["opensearch_config", "opensearch_namespace"]}
-      required={selectedVectorDBProvider === "OPENSEARCH"}
       tooltip="The namespace or prefix to use for Cloudera Semantic Search. This is arbitrary, but must be unique to your project."
       rules={[
         { required: selectedVectorDBProvider === "OPENSEARCH" },
@@ -136,7 +140,6 @@ export const VectorDBFields = ({
       initialValue={projectConfig?.chromadb_config.chromadb_host}
       name={["chromadb_config", "chromadb_host"]}
       tooltip="Host of the ChromaDB server. If using SSL verification, prefix with https://"
-      required={selectedVectorDBProvider === "CHROMADB"}
       rules={[
         { required: selectedVectorDBProvider === "CHROMADB" },
         // validate url or host
@@ -182,7 +185,7 @@ export const VectorDBFields = ({
       label={"ChromaDB Tenant"}
       initialValue={projectConfig?.chromadb_config.chromadb_tenant}
       name={["chromadb_config", "chromadb_tenant"]}
-      tooltip="Tenant for the ChromaDB server."
+      tooltip="Tenant to use for the ChromaDB server."
       rules={[
         {
           pattern: /^[a-zA-Z0-9]+$/,
@@ -198,7 +201,7 @@ export const VectorDBFields = ({
       label={"ChromaDB Database"}
       initialValue={projectConfig?.chromadb_config.chromadb_database}
       name={["chromadb_config", "chromadb_database"]}
-      tooltip="Database for the ChromaDB server."
+      tooltip="Database to use for the ChromaDB server."
       rules={[
         {
           pattern: /^[a-zA-Z0-9]+$/,
@@ -209,6 +212,85 @@ export const VectorDBFields = ({
       hidden={selectedVectorDBProvider !== "CHROMADB"}
     >
       <Input placeholder="default_database" />
+    </Form.Item>
+    <Form.Item
+      label={"PGVector Host"}
+      initialValue={projectConfig?.pgvector_config.pgvector_host}
+      name={["pgvector_config", "pgvector_host"]}
+      tooltip="Host for the Postgres Vector (PGVector) server."
+      rules={[
+        { required: selectedVectorDBProvider === "PGVECTOR" },
+        {
+          pattern:
+            /^(?:https?:\/\/)?(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d{1,5})?(?:\/\S*)?$/i,
+          message: "Invalid host or URL",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "PGVECTOR"}
+    >
+      <Input placeholder="localhost" />
+    </Form.Item>
+    <Form.Item
+      label={"PGVector Port"}
+      initialValue={projectConfig?.pgvector_config.pgvector_port}
+      name={["pgvector_config", "pgvector_port"]}
+      tooltip="Port for the Postgres Vector (PGVector) server."
+      required={false}
+      rules={[
+        {
+          pattern: /^[0-9]+$/,
+          message: "Invalid port",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "PGVECTOR"}
+    >
+      <Input placeholder="5432" />
+    </Form.Item>
+    <Form.Item
+      label={"PGVector Database"}
+      initialValue={projectConfig?.pgvector_config.pgvector_db}
+      name={["pgvector_config", "pgvector_db"]}
+      tooltip="Database for vector store tables in the Postgres Vector (PGVector) server."
+      required={false}
+      rules={[
+        {
+          pattern: /^[a-zA-Z0-9_-]+$/,
+          message: "Only alphanumeric characters, underscores, and hyphens are allowed",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "PGVECTOR"}
+    >
+      <Input placeholder="postgres" />
+    </Form.Item>
+    <Form.Item
+      label={"PGVector Username"}
+      initialValue={projectConfig?.pgvector_config.pgvector_user}
+      name={["pgvector_config", "pgvector_user"]}
+      tooltip="Username for the Postgres Vector (PGVector) server."
+      required={false}
+      rules={[
+        {
+          pattern: /^[a-zA-Z0-9_-]+$/,
+          message: "Only alphanumeric characters, underscores, and hyphens are allowed",
+          warningOnly: false,
+        },
+      ]}
+      hidden={selectedVectorDBProvider !== "PGVECTOR"}
+    >
+      <Input placeholder="postgres" />
+    </Form.Item>
+    <Form.Item
+      label={"PGVector Password"}
+      initialValue={projectConfig?.pgvector_config.pgvector_password}
+      name={["pgvector_config", "pgvector_password"]}
+      tooltip="Password for the Postgres Vector (PGVector) server."
+      required={false}
+      hidden={selectedVectorDBProvider !== "PGVECTOR"}
+    >
+      <Input placeholder="postgres" />
     </Form.Item>
   </Flex>
 );

@@ -155,12 +155,20 @@ export interface OpenSearchConfig {
   opensearch_namespace?: string;
 }
 
-export interface ChromaDBConfig {
+export interface ChromaDbConfig {
   chromadb_host?: string;
   chromadb_port?: string;
   chromadb_token?: string;
   chromadb_tenant?: string;
   chromadb_database?: string;
+}
+
+export interface PgVectorConfig {
+  pgvector_host?: string;
+  pgvector_port?: string;
+  pgvector_db?: string;
+  pgvector_user?: string;
+  pgvector_password?: string;
 }
 
 export interface ApplicationConfig {
@@ -175,7 +183,7 @@ interface MetadataDBConfig {
   password?: string;
 }
 
-export type VectorDBProvider = "QDRANT" | "OPENSEARCH" | "CHROMADB";
+export type VectorDBProvider = "QDRANT" | "OPENSEARCH" | "CHROMADB" | "PGVECTOR";
 
 export interface ValidationResult {
   valid: boolean;
@@ -202,7 +210,8 @@ export interface ProjectConfig {
   openai_config: OpenAIConfig;
   caii_config: CaiiConfig;
   opensearch_config: OpenSearchConfig;
-  chromadb_config: ChromaDBConfig;
+  chromadb_config: ChromaDbConfig;
+  pgvector_config: PgVectorConfig;
   is_valid_config: boolean;
   config_validation_results: ConfigValidationResults;
   release_version: string;

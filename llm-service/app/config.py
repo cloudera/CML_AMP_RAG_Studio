@@ -182,23 +182,23 @@ class _Settings:
 
     @property
     def pgvector_host(self) -> str:
-        return os.environ.get("PGVECTOR_HOST", "localhost")
+        return os.environ.get("PGVECTOR_HOST") or "localhost"
 
     @property
     def pgvector_port(self) -> str:
-        return os.environ.get("PGVECTOR_PORT", "5432")
+        return os.environ.get("PGVECTOR_PORT") or "5432"
 
     @property
     def pgvector_db(self) -> str:
-        return os.environ.get("PGVECTOR_DB", "postgres")
+        return os.environ.get("PGVECTOR_DB") or "postgres"
 
     @property
     def pgvector_user(self) -> str:
-        return os.environ.get("PGVECTOR_USER", "postgres")
+        return os.environ.get("PGVECTOR_USER") or "postgres"
 
     @property
     def pgvector_password(self) -> str:
-        return os.environ.get("PGVECTOR_PASSWORD", "postgres")
+        return os.environ.get("PGVECTOR_PASSWORD") or "postgres"
 
     @property
     def document_bucket_prefix(self) -> str:
