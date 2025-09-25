@@ -1,1 +1,1 @@
-export RELEASE_TAG=dev
+export RELEASE_TAG=1.30.0
