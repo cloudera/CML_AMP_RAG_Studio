@@ -46,14 +46,26 @@ simply the field name in all capital letters.
 
 import logging
 import os.path
+from enum import Enum
 from typing import cast, Optional, Literal
+
+from chromadb.config import DEFAULT_TENANT, DEFAULT_DATABASE
+
+
+logger = logging.getLogger(__name__)
 
 
 SummaryStorageProviderType = Literal["Local", "S3"]
 ChatStoreProviderType = Literal["Local", "S3"]
-VectorDbProviderType = Literal["QDRANT", "OPENSEARCH"]
+VectorDbProviderType = Literal["QDRANT", "OPENSEARCH", "CHROMADB"]
 MetadataDbProviderType = Literal["H2", "PostgreSQL"]
-ModelProviderType = Literal["Azure", "CAII", "OpenAI", "Bedrock"]
+
+
+class ModelSource(str, Enum):
+    AZURE = "Azure"
+    OPENAI = "OpenAI"
+    BEDROCK = "Bedrock"
+    CAII = "CAII"
 
 
 class _Settings:
@@ -117,7 +129,7 @@ class _Settings:
 
     @property
     def opensearch_namespace(self) -> str:
-        return os.environ.get("OPENSEARCH_NAMESPACE", "rag_document_index")
+        return os.environ.get("OPENSEARCH_NAMESPACE") or "rag_document_index"
 
     @property
     def opensearch_username(self) -> str:
@@ -126,6 +138,44 @@ class _Settings:
     @property
     def opensearch_password(self) -> str:
         return os.environ.get("OPENSEARCH_PASSWORD", "")
+
+    @property
+    def chromadb_host(self) -> str:
+        return os.environ.get("CHROMADB_HOST", "localhost")
+
+    @property
+    def chromadb_port(self) -> int | None:
+        value = os.environ.get("CHROMADB_PORT")
+        if value is None or value == "":
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            logger.exception(
+                'Failed to parse CHROMADB_PORT "%s" as int',
+                value,
+            )
+            return None
+
+    @property
+    def chromadb_token(self) -> str:
+        return os.environ.get("CHROMADB_TOKEN", "")
+
+    @property
+    def chromadb_tenant(self) -> str:
+        return os.environ.get("CHROMADB_TENANT") or DEFAULT_TENANT
+
+    @property
+    def chromadb_database(self) -> str:
+        return os.environ.get("CHROMADB_DATABASE") or DEFAULT_DATABASE
+
+    @property
+    def chromadb_server_ssl_cert_path(self) -> str | None:
+        return os.environ.get("CHROMADB_SERVER_SSL_CERT_PATH")
+
+    @property
+    def chromadb_enable_anonymized_telemetry(self) -> bool:
+        return os.environ.get("CHROMADB_ENABLE_ANONYMIZED_TELEMETRY", "false").lower() == "true"
 
     @property
     def document_bucket_prefix(self) -> str:
@@ -185,14 +235,21 @@ class _Settings:
         return os.environ.get("OPENAI_API_BASE")
 
     @property
-    def model_provider(self) -> Optional[ModelProviderType]:
+    def model_provider(self) -> Optional[ModelSource]:
         """The preferred model provider to use.
         Options: 'AZURE', 'CAII', 'OPENAI', 'BEDROCK'
         If not set, will use the first available provider in priority order."""
         provider = os.environ.get("MODEL_PROVIDER")
-        if provider and provider in ["Azure", "CAII", "OpenAI", "Bedrock"]:
-            return cast(ModelProviderType, provider)
-        return None
+        if provider is None:
+            return None
+        try:
+            return ModelSource(provider)
+        except ValueError:
+            logger.exception(
+                'Invalid MODEL_PROVIDER "%s"',
+                provider,
+            )
+            return None
 
 
 settings = _Settings()

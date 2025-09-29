@@ -53,7 +53,7 @@ from app.services.chat.utils import retrieve_chat_history
 from app.services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
     RagMessage,
-    chat_history_manager,
+    get_chat_history_manager,
 )
 from app.services.metadata_apis.session_metadata_api import Session
 from app.services.mlflow import record_direct_llm_mlflow_run
@@ -217,4 +217,4 @@ def _stream_direct_llm_chat(
         timestamp=time.time(),
         condensed_question=None,
     )
-    chat_history_manager.append_to_history(session.id, [new_chat_message])
+    get_chat_history_manager().append_to_history(session.id, [new_chat_message])

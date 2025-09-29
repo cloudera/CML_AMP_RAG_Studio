@@ -52,7 +52,7 @@ class DocxReader(BaseReader):
     def load_chunks(self, file_path: Path) -> ChunksResult:
         documents = self.inner.load_data(file_path)
         assert len(documents) == 1
-        document = documents[0]
+        document = documents[0]  # single document contains all pages' contents
         document.id_ = self.document_id
 
         document_text = document.text

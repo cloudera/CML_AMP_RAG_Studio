@@ -70,13 +70,13 @@ from llama_index.storage.kvstore.s3 import S3DBKVStore
 from qdrant_client.http.exceptions import UnexpectedResponse
 
 from app.services import models
+from app.ai.vector_stores.vector_store import VectorStore
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ..vector_stores.vector_store_factory import VectorStoreFactory
-from ...config import settings
+from ...config import settings, ModelSource
 from ...services.metadata_apis import data_sources_metadata_api
-from ...services.models.providers import ModelProvider
-from ...services.models import ModelSource
+from ...services.models.providers import get_provider_class
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +102,7 @@ class SummaryIndexer(BaseTextIndexer):
         self.splitter = splitter
         self.llm = llm
         self.embedding_model = embedding_model
+        self.summary_vector_store = VectorStoreFactory.for_summaries(data_source_id)
 
     @staticmethod
     def __database_dir(data_source_id: int) -> str:
@@ -133,9 +134,7 @@ class SummaryIndexer(BaseTextIndexer):
         embed_summaries: bool = True,
     ) -> Dict[str, Any]:
         prompt_helper: Optional[PromptHelper] = None
-        model_source: ModelSource = (
-            ModelProvider.get_provider_class().get_model_source()
-        )
+        model_source: ModelSource = get_provider_class().get_model_source()
         if model_source == "CAII":
             # if we're using CAII, let's be conservative and use a small context window to account for mistral's small context
             prompt_helper = PromptHelper(context_window=3000)
@@ -180,6 +179,7 @@ class SummaryIndexer(BaseTextIndexer):
             return SummaryIndexer.__summary_indexer_with_config(
                 persist_dir=persist_dir,
                 index_configuration=self.__index_kwargs(embed_summaries),
+                summary_vector_store=self.summary_vector_store,
             )
         except (ValueError, FileNotFoundError):
             doc_summary_index = self.__init_summary_store(persist_dir)
@@ -187,12 +187,12 @@ class SummaryIndexer(BaseTextIndexer):
 
     @staticmethod
     def __summary_indexer_with_config(
-        persist_dir: str, index_configuration: Dict[str, Any]
+        persist_dir: str, index_configuration: Dict[str, Any], 
+        summary_vector_store: VectorStore,
     ) -> DocumentSummaryIndex:
-        data_source_id: int = index_configuration.get("data_source_id")
         storage_context = SummaryIndexer.create_storage_context(
             persist_dir,
-            VectorStoreFactory.for_summaries(data_source_id).llama_vector_store(),
+            summary_vector_store.llama_vector_store(),
         )
         doc_summary_index: DocumentSummaryIndex = cast(
             DocumentSummaryIndex,
@@ -296,6 +296,8 @@ class SummaryIndexer(BaseTextIndexer):
         with _write_lock:
             persist_dir = self.__persist_dir()
             summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
+            if self.summary_vector_store.flat_metadata:
+                nodes = [self._flatten_metadata(node) for node in nodes]
             summary_store.insert_nodes(nodes)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
@@ -314,7 +316,7 @@ class SummaryIndexer(BaseTextIndexer):
         # and re-index it with the addition/removal.
         global_persist_dir = self.__persist_root_dir()
         global_summary_store = self.__summary_indexer(
-            global_persist_dir, embed_summaries=False
+            global_persist_dir, embed_summaries=False,
         )
         data_source_node = Document(doc_id=str(self.data_source_id))
 
@@ -496,7 +498,8 @@ class SummaryIndexer(BaseTextIndexer):
                     embed_summaries=False,
                 )
                 global_summary_store = SummaryIndexer.__summary_indexer_with_config(
-                    global_persist_dir, configuration
+                    global_persist_dir, configuration,
+                    summary_vector_store=vector_store,
                 )
             except FileNotFoundError:
                 ## global summary store doesn't exist, nothing to do

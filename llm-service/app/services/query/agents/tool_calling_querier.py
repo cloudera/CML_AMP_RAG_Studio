@@ -405,7 +405,7 @@ def _run_streamer(
 
                     # if delta is empty and response is empty,
                     # it is a start to a tool call stream
-                    if BedrockModelProvider.is_enabled():
+                    if BedrockModelProvider.env_vars_are_set():
                         delta = event.delta or ""
                         if (
                             isinstance(event.raw, dict)

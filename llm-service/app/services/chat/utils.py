@@ -43,7 +43,7 @@ from llama_index.core.chat_engine.types import AgentChatResponse
 from pydantic import BaseModel
 
 from app.services.chat_history.chat_history_manager import (
-    chat_history_manager,
+    get_chat_history_manager,
     RagPredictSourceNode,
 )
 
@@ -54,7 +54,7 @@ class RagContext(BaseModel):
 
 
 def retrieve_chat_history(session_id: int) -> List[RagContext]:
-    chat_history = chat_history_manager.retrieve_chat_history(session_id)[-10:]
+    chat_history = get_chat_history_manager().retrieve_chat_history(session_id)[-10:]
     history: List[RagContext] = []
     for message in chat_history:
         history.append(

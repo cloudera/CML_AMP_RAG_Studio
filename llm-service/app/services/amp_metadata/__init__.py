@@ -36,6 +36,7 @@
 #  DATA.
 #
 import json
+import logging
 import os
 import re
 import socket
@@ -50,7 +51,7 @@ from app.config import (
     ChatStoreProviderType,
     VectorDbProviderType,
     MetadataDbProviderType,
-    ModelProviderType,
+    ModelSource,
 )
 from app.services.models.providers import (
     CAIIModelProvider,
@@ -59,6 +60,9 @@ from app.services.models.providers import (
     BedrockModelProvider,
 )
 from app.services.utils import timed_lru_cache
+
+
+logger = logging.getLogger(__name__)
 
 
 class AwsConfig(BaseModel):
@@ -101,6 +105,9 @@ class OpenAiConfig(BaseModel):
 
 
 class OpenSearchConfig(BaseModel):
+    """
+    Model to represent the OpenSearch configuration.
+    """
 
     opensearch_username: Optional[str] = None
     opensearch_password: Optional[str] = None
@@ -108,18 +115,42 @@ class OpenSearchConfig(BaseModel):
     opensearch_namespace: Optional[str] = None
 
 
+class ChromaDBConfig(BaseModel):
+    """
+    Model to represent the ChromaDB configuration.
+    """
+
+    chromadb_host: Optional[str] = None
+    chromadb_port: Optional[int] = None
+    chromadb_token: Optional[str] = None
+    chromadb_tenant: Optional[str] = None
+    chromadb_database: Optional[str] = None
+
+
 class MetadataDbConfig(BaseModel):
+    """
+    Model to represent the metadata database configuration.
+    """
+
     jdbc_url: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
 
 
 class ValidationResult(BaseModel):
+    """
+    Model to represent the validation result.
+    """
+
     valid: bool
     message: str
 
 
 class ConfigValidationResults(BaseModel):
+    """
+    Model to represent the validation results.
+    """
+
     storage: ValidationResult
     model: ValidationResult
     metadata_api: ValidationResult
@@ -136,12 +167,13 @@ class ProjectConfig(BaseModel):
     chat_store_provider: ChatStoreProviderType
     vector_db_provider: VectorDbProviderType
     metadata_db_provider: MetadataDbProviderType
-    model_provider: Optional[ModelProviderType] = None
+    model_provider: Optional[ModelSource] = None
     aws_config: AwsConfig
     azure_config: AzureConfig
     caii_config: CaiiConfig
     openai_config: OpenAiConfig
     opensearch_config: OpenSearchConfig
+    chromadb_config: ChromaDBConfig
     metadata_db_config: MetadataDbConfig
     cdp_token: Optional[str] = None
 
@@ -216,13 +248,13 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
             f"Preferred provider {preferred_provider} is properly configured. \n"
         )
         if preferred_provider == "Bedrock":
-            valid_model_config_exists = BedrockModelProvider.is_enabled()
+            valid_model_config_exists = BedrockModelProvider.env_vars_are_set()
         elif preferred_provider == "Azure":
-            valid_model_config_exists = AzureModelProvider.is_enabled()
+            valid_model_config_exists = AzureModelProvider.env_vars_are_set()
         elif preferred_provider == "OpenAI":
-            valid_model_config_exists = OpenAiModelProvider.is_enabled()
+            valid_model_config_exists = OpenAiModelProvider.env_vars_are_set()
         elif preferred_provider == "CAII":
-            valid_model_config_exists = CAIIModelProvider.is_enabled()
+            valid_model_config_exists = CAIIModelProvider.env_vars_are_set()
         return ValidationResult(
             valid=valid_model_config_exists,
             message=valid_message if valid_model_config_exists else message,
@@ -276,7 +308,7 @@ def validate_model_config(environ: dict[str, str]) -> ValidationResult:
 
     if message == "":
         # check to see if CAII models are available via discovery
-        if CAIIModelProvider.is_enabled():
+        if CAIIModelProvider.env_vars_are_set():
             message = "CAII models are available."
             valid_model_config_exists = True
         else:
@@ -325,7 +357,9 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "SUMMARY_STORAGE_PROVIDER": config.summary_storage_provider or "Local",
             "CHAT_STORE_PROVIDER": config.chat_store_provider or "Local",
             "VECTOR_DB_PROVIDER": config.vector_db_provider or "QDRANT",
-            "MODEL_PROVIDER": config.model_provider or "",
+            "MODEL_PROVIDER": (
+                config.model_provider.value if config.model_provider else ""
+            ),
             "AWS_DEFAULT_REGION": config.aws_config.region or "",
             "S3_RAG_DOCUMENT_BUCKET": config.aws_config.document_bucket_name or "",
             "S3_RAG_BUCKET_PREFIX": config.aws_config.bucket_prefix or "",
@@ -339,6 +373,11 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENSEARCH_PASSWORD": config.opensearch_config.opensearch_password or "",
             "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
             "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
+            "CHROMADB_HOST": config.chromadb_config.chromadb_host or "",
+            "CHROMADB_PORT": str(config.chromadb_config.chromadb_port) or "",
+            "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
+            "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
+            "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
             "OPENAI_API_KEY": config.openai_config.openai_api_key or "",
             "OPENAI_API_BASE": config.openai_config.openai_api_base or "",
             "DB_TYPE": config.metadata_db_provider or "H2",
@@ -385,10 +424,33 @@ def build_configuration(
         opensearch_endpoint=env.get("OPENSEARCH_ENDPOINT"),
         opensearch_namespace=env.get("OPENSEARCH_NAMESPACE"),
     )
+
+    # Parse port safely to Optional[int]
+    chromadb_port_str = env.get("CHROMADB_PORT")
+    chromadb_port: int | None
+    if chromadb_port_str is None or chromadb_port_str == "":
+        chromadb_port = None
+    else:
+        try:
+            chromadb_port = int(chromadb_port_str)
+        except ValueError:
+            logger.exception(
+                'Failed to parse CHROMADB_PORT "%s" as int',
+                chromadb_port_str,
+            )
+            chromadb_port = None
+
+    chromadb_config = ChromaDBConfig(
+        chromadb_host=env.get("CHROMADB_HOST"),
+        chromadb_port=chromadb_port,
+        chromadb_token=env.get("CHROMADB_TOKEN"),
+        chromadb_tenant=env.get("CHROMADB_TENANT"),
+        chromadb_database=env.get("CHROMADB_DATABASE"),
+    )
     validate_config = validate(frozenset(env.items()))
 
     model_provider = (
-        TypeAdapter(ModelProviderType).validate_python(env.get("MODEL_PROVIDER"))
+        TypeAdapter(ModelSource).validate_python(env.get("MODEL_PROVIDER"))
         if env.get("MODEL_PROVIDER")
         else None
     )
@@ -413,6 +475,7 @@ def build_configuration(
         azure_config=azure_config,
         caii_config=caii_config,
         opensearch_config=opensearch_config,
+        chromadb_config=chromadb_config,
         is_valid_config=validate_config.valid,
         config_validation_results=validate_config,
         release_version=os.environ.get("RELEASE_TAG", "unknown"),

@@ -59,7 +59,7 @@ from ....services.chat.chat import (
 from ....services.chat.suggested_questions import generate_suggested_questions
 from ....services.chat_history.chat_history_manager import (
     RagStudioChatMessage,
-    chat_history_manager,
+    get_chat_history_manager,
 )
 from ....services.chat_history.paginator import paginate
 from ....services.metadata_apis import session_metadata_api
@@ -142,7 +142,7 @@ class RagStudioChatHistoryResponse(BaseModel):
 def chat_history(
     session_id: int, limit: Optional[int] = None, offset: Optional[int] = None
 ) -> RagStudioChatHistoryResponse:
-    results = chat_history_manager.retrieve_chat_history(session_id=session_id)
+    results = get_chat_history_manager().retrieve_chat_history(session_id=session_id)
 
     paginated_results, previous_id, next_id = paginate(results, limit, offset)
     return RagStudioChatHistoryResponse(
@@ -158,8 +158,8 @@ def chat_history(
 )
 @exceptions.propagates
 def get_message_by_id(session_id: int, message_id: str) -> RagStudioChatMessage:
-    results: list[RagStudioChatMessage] = chat_history_manager.retrieve_chat_history(
-        session_id=session_id
+    results: list[RagStudioChatMessage] = (
+        get_chat_history_manager().retrieve_chat_history(session_id=session_id)
     )
     for message in results:
         if message.id == message_id:
@@ -175,14 +175,14 @@ def get_message_by_id(session_id: int, message_id: str) -> RagStudioChatMessage:
 )
 @exceptions.propagates
 def clear_chat_history(session_id: int) -> str:
-    chat_history_manager.clear_chat_history(session_id=session_id)
+    get_chat_history_manager().clear_chat_history(session_id=session_id)
     return "Chat history cleared."
 
 
 @router.delete("", summary="Deletes the requested session.")
 @exceptions.propagates
 def delete_session(session_id: int) -> str:
-    chat_history_manager.delete_chat_history(session_id=session_id)
+    get_chat_history_manager().delete_chat_history(session_id=session_id)
     return "Chat history deleted."
 
 
@@ -251,7 +251,11 @@ def parse_jwt_cookie(jwt_cookie: str | None) -> str:
         return "unknown"
 
 
-@router.post("/chat", summary="Chat with your documents in the requested datasource")
+@router.post(
+    "/chat",
+    summary="Superseded by /stream-completion",
+    deprecated=True,
+)
 @exceptions.propagates
 def chat(
     session_id: int,

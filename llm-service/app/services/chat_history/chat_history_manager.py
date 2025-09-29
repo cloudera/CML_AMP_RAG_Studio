@@ -27,7 +27,7 @@
 #  BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 #  DATA.
 #
-
+import functools
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Literal
 
@@ -64,6 +64,9 @@ class RagStudioChatMessage(BaseModel):
 
 
 class ChatHistoryManager(metaclass=ABCMeta):
+    def __init__(self) -> None:
+        pass
+
     @abstractmethod
     def retrieve_chat_history(self, session_id: int) -> list[RagStudioChatMessage]:
         pass
@@ -85,7 +88,13 @@ class ChatHistoryManager(metaclass=ABCMeta):
         pass
 
 
-def _create_chat_history_manager() -> ChatHistoryManager:
+@functools.cache
+def _get_chat_history_manager() -> ChatHistoryManager:
+    """Create a ChatHistoryManager the first time this function is called, and return it.
+
+    This helper function can be monkey-patched for testing purposes.
+
+    """
     from app.services.chat_history.simple_chat_history_manager import (
         SimpleChatHistoryManager,
     )
@@ -101,4 +110,6 @@ def _create_chat_history_manager() -> ChatHistoryManager:
         return SimpleChatHistoryManager()
 
 
-chat_history_manager = _create_chat_history_manager()
+def get_chat_history_manager() -> ChatHistoryManager:
+    """Return a ChatHistoryManager based on the app's chat store config."""
+    return _get_chat_history_manager()

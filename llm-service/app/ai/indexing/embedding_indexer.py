@@ -108,6 +108,12 @@ class EmbeddingIndexer(BaseTextIndexer):
             # we're capturing "text".
             converted_chunks: List[BaseNode] = [chunk for chunk in chunk_batch]
 
+            # flatten metadata if vector store has self.flat_metadata
+            if self.chunks_vector_store.flat_metadata:
+                converted_chunks = [
+                    self._flatten_metadata(chunk) for chunk in converted_chunks
+                ]
+
             chunks_vector_store = self.chunks_vector_store.llama_vector_store()
             chunks_vector_store.add(converted_chunks)
 
@@ -130,6 +136,12 @@ class EmbeddingIndexer(BaseTextIndexer):
             logger.debug(f"Waiting for {len(futures)} futures")
             for future in as_completed(futures):
                 i, batch_embeddings = future.result()
-                for chunk, embedding in zip(batched_chunks[i], batch_embeddings):
+                batch_chunks = batched_chunks[i]
+                if len(batch_chunks) != len(batch_embeddings):
+                    raise ValueError(
+                        f"Expected {len(batch_chunks)} embedding vectors for this batch of chunks,"
+                        + f" but got {len(batch_embeddings)} from {self.embedding_model.model_name}"
+                    )
+                for chunk, embedding in zip(batch_chunks, batch_embeddings):
                     chunk.embedding = embedding
-                yield batched_chunks[i]
+                yield batch_chunks

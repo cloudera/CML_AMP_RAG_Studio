@@ -50,6 +50,11 @@ logger = logging.getLogger(__name__)
 class VectorStore(metaclass=ABCMeta):
     """RAG Studio Vector Store functionality. Implementations of this should house the vectors for a single document collection."""
 
+    @property
+    def flat_metadata(self) -> bool:
+        """Whether the vector store only supports flat metadata"""
+        return False
+
     @abstractmethod
     def size(self) -> Optional[int]:
         """
