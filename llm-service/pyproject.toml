@@ -19,7 +19,7 @@ dependencies = [
     "llama-index-vector-stores-qdrant>=0.2.17",
     "qdrant-client<1.13.0",
     "docx2txt>=0.8",
-    "pandas>=2.2.3",
+    "pandas[excel]>=2.2.3",
     "fastapi-utils>=0.8.0",
     "umap-learn>=0.5.7",
     "python-pptx>=1.0.2",
