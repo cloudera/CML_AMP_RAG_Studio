@@ -18,6 +18,7 @@ from .readers.markdown import MdReader
 from .readers.pdf import PDFReader
 from .readers.pptx import PptxReader
 from .readers.simple_file import SimpleFileReader
+from .readers.xlsx import XlsxReader
 from ...config import settings
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ READERS: Dict[str, Type[BaseReader]] = {
     ".pptx": PptxReader,
     ".pptm": PptxReader,
     ".csv": CSVReader,
+    ".xlsx": XlsxReader,
     ".json": JSONReader,
     ".jpg": ImagesReader,
     ".jpeg": ImagesReader,
