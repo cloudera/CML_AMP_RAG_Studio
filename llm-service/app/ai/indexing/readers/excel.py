@@ -85,13 +85,13 @@ class _XlsxSplitter(MetadataAwareTextSplitter):
             return []
 
 
-class XlsxReader(BaseReader):
+class ExcelReader(BaseReader):
     def load_chunks(self, file_path: Path) -> ChunksResult:
         ret = ChunksResult()
 
         try:
             # Read all sheets into a dict of {sheet_name: DataFrame}
-            sheets = pd.read_excel(file_path, sheet_name=None)
+            sheets = pd.read_excel(file_path, sheet_name=None, engine="calamine")
         except Exception as e:
             logger.error("Error reading Excel file %s: %s", file_path, e)
             return ret

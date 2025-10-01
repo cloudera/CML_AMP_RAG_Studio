@@ -138,7 +138,7 @@ class SummaryIndexer(BaseTextIndexer):
         if model_source == "CAII":
             # if we're using CAII, let's be conservative and use a small context window to account for mistral's small context
             prompt_helper = PromptHelper(context_window=3000)
-        if model_source == "Azure" or model_source == "OpenAI":
+        if model_source == "Azure" or model_source == "OpenAI" or model_source == "Bedrock":
             prompt_helper = PromptHelper(
                 context_window=min(llm.metadata.context_window, 10000)
             )
