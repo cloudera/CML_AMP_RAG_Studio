@@ -128,13 +128,14 @@ class EmbeddingIndexer(BaseTextIndexer):
         with ThreadPoolExecutor(max_workers=20) as executor:
             futures = [
                 executor.submit(
-                    lambda b, idx=i: (
-                        idx,
-                        self.embedding_model.get_text_embedding_batch(b),
+                    lambda batch_text, batch_index: (
+                        batch_index,
+                        self.embedding_model.get_text_embedding_batch(batch_text),
                     ),
-                    batch,
+                    b,
+                    i,
                 )
-                for i, batch in enumerate(batched_texts)
+                for i, b in enumerate(batched_texts)
             ]
             logger.debug(f"Waiting for {len(futures)} futures")
             for future in as_completed(futures):
