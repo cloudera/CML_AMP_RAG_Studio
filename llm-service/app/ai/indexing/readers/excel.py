@@ -42,7 +42,7 @@ from typing import List, cast
 
 import pandas as pd
 from llama_index.core.node_parser.interface import MetadataAwareTextSplitter
-from llama_index.core.schema import BaseNode, Document, TextNode
+from llama_index.core.schema import Document, TextNode
 
 from .base_reader import BaseReader, ChunksResult
 
@@ -128,16 +128,17 @@ class ExcelReader(BaseReader):
         local_splitter = _ExcelSplitter()
 
         try:
-            rows: List[BaseNode] = local_splitter.get_nodes_from_documents([document])
+            # LlamaIndex annotates NodeParser.get_nodes_from_documents() as returning list[BaseNode]
+            # but because MetadataAwareTextSplitter._parse_nodes() calls build_nodes_from_splits(),
+            # it's actually list[TextNode] for our _ExcelSplitter
+            rows = cast(list[TextNode], local_splitter.get_nodes_from_documents([document]))
         except Exception as e:
             logger.error("Error processing XLSX file %s: %s", file_path, e)
             return ret
 
         # Extract embedded metadata and clean up the row JSON
-        converted_rows: List[TextNode] = []
         for i, row in enumerate(rows):
             try:
-                row = cast(TextNode, row)
                 row_data = json.loads(row.text)
                 sheet_name = row_data.pop("__sheet_name__", "")
                 row_number = row_data.pop("__row_number__", i + 1)
@@ -153,9 +154,8 @@ class ExcelReader(BaseReader):
                 row.metadata["row_number"] = row_number
                 row.metadata["sheet_name"] = sheet_name
                 row.metadata["chunk_format"] = "json"
-                converted_rows.append(row)
             except Exception as e:
                 logger.error("Error processing row %d: %s", i, e)
 
-        ret.chunks = converted_rows
+        ret.chunks = rows
         return ret
