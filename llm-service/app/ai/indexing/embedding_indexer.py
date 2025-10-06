@@ -50,6 +50,7 @@ from typing_extensions import Optional
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from ...ai.vector_stores.vector_store import VectorStore
+from ...config import settings
 from ...services.utils import batch_sequence, flatten_sequence
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,11 @@ class EmbeddingIndexer(BaseTextIndexer):
         batched_chunks = list(batch_sequence(chunks, 100))
         batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]
 
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        # Use configurable concurrency to avoid overwhelming connection pools
+        max_workers = settings.embedding_concurrency
+        logger.debug(f"Using {max_workers} workers for embedding generation")
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
                 executor.submit(
                     lambda batch_text, batch_index: (

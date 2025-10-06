@@ -41,6 +41,7 @@ from typing import Optional, cast, Any, Literal
 from urllib.parse import unquote
 
 import boto3
+from botocore.config import Config
 import requests
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
@@ -84,6 +85,14 @@ class BedrockModelProvider(_ModelProvider):
     @staticmethod
     def get_priority() -> int:
         return 3
+
+    @staticmethod
+    def _get_boto3_config() -> Config:
+        """Get boto3 config with increased connection pool size."""
+        return Config(
+            max_pool_connections=settings.boto3_max_pool_connections,
+            retries={"max_attempts": 3, "mode": "adaptive"},
+        )
 
     @staticmethod
     def get_foundation_models(
@@ -310,7 +319,10 @@ class BedrockModelProvider(_ModelProvider):
 
     @staticmethod
     def get_embedding_model(name: str) -> BedrockEmbedding:
-        return BedrockEmbedding(model_name=name)
+        return BedrockEmbedding(
+            model_name=name,
+            aws_config=BedrockModelProvider._get_boto3_config(),
+        )
 
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> AWSBedrockRerank:
