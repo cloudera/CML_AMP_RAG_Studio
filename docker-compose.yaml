@@ -52,12 +52,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - S3_RAG_DOCUMENT_BUCKET=cloudera-ai-rag-dev-us-west-2
       - QDRANT_HOST=qdrant
-      - QDRANT_GRPC_PORT=6334
-      - QDRANT_TIMEOUT=300
       - API_URL=http://api:8080
       - MLFLOW_RECONCILER_DATA_PATH=/tmp
-      - EMBEDDING_CONCURRENCY=10
-      - BOTO3_MAX_POOL_CONNECTIONS=20
     depends_on:
       - qdrant
   db:

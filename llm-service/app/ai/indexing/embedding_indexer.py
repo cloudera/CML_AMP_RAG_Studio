@@ -127,7 +127,7 @@ class EmbeddingIndexer(BaseTextIndexer):
         batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]
 
         # Use configurable concurrency to avoid overwhelming connection pools
-        max_workers = settings.embedding_concurrency
+        max_workers = 15
         logger.debug(f"Using {max_workers} workers for embedding generation")
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:

@@ -116,6 +116,10 @@ class _Settings:
         return int(os.environ.get("QDRANT_PORT", "6333"))
 
     @property
+    def qdrant_timeout(self) -> int:
+        return int(os.environ.get("QDRANT_TIMEOUT", "300"))
+
+    @property
     def advanced_pdf_parsing(self) -> bool:
         return os.environ.get("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
 
@@ -253,30 +257,6 @@ class _Settings:
                 provider,
             )
             return None
-
-    @property
-    def embedding_concurrency(self) -> int:
-        """Maximum number of concurrent threads for embedding generation.
-        Defaults to 10 to avoid overwhelming connection pools."""
-        return int(os.environ.get("EMBEDDING_CONCURRENCY", "10"))
-
-    @property
-    def boto3_max_pool_connections(self) -> int:
-        """Maximum number of connections in the boto3 connection pool.
-        Defaults to 20 to support concurrent embedding requests."""
-        return int(os.environ.get("BOTO3_MAX_POOL_CONNECTIONS", "20"))
-
-    @property
-    def qdrant_timeout(self) -> int:
-        """Timeout in seconds for Qdrant operations.
-        Defaults to 300 seconds (5 minutes)."""
-        return int(os.environ.get("QDRANT_TIMEOUT", "300"))
-
-    @property
-    def qdrant_grpc_port(self) -> int:
-        """gRPC port for Qdrant (optional, for better performance).
-        If not set, uses HTTP API."""
-        return int(os.environ.get("QDRANT_GRPC_PORT", "6334"))
 
 
 settings = _Settings()

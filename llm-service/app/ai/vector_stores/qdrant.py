@@ -65,14 +65,8 @@ def _new_qdrant_client() -> qdrant_client.QdrantClient:
         "host": settings.qdrant_host,
         "port": settings.qdrant_port,
         "auth_token_provider": auth_token_provider if auth_token else None,
-        "timeout": settings.qdrant_timeout,
+        "timeout": 60, # 1 minute
     }
-
-    # Use gRPC if port is configured (better performance and connection handling)
-    if settings.qdrant_grpc_port:
-        client_kwargs["grpc_port"] = settings.qdrant_grpc_port
-        client_kwargs["prefer_grpc"] = True
-        logger.debug(f"Using Qdrant gRPC on port {settings.qdrant_grpc_port}")
 
     return qdrant_client.QdrantClient(**client_kwargs)
 

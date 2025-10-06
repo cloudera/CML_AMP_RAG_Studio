@@ -90,7 +90,7 @@ class BedrockModelProvider(_ModelProvider):
     def _get_boto3_config() -> Config:
         """Get boto3 config with increased connection pool size."""
         return Config(
-            max_pool_connections=settings.boto3_max_pool_connections,
+            max_pool_connections=15,
             retries={"max_attempts": 3, "mode": "adaptive"},
         )
 
