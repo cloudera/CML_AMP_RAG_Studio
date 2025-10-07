@@ -73,6 +73,8 @@ from app.services import models
 from app.ai.vector_stores.vector_store import VectorStore
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
+from .readers.csv import CSVReader
+from .readers.excel import ExcelReader
 from ..vector_stores.vector_store_factory import VectorStoreFactory
 from ...config import settings, ModelSource
 from ...services.metadata_apis import data_sources_metadata_api
@@ -187,7 +189,8 @@ class SummaryIndexer(BaseTextIndexer):
 
     @staticmethod
     def __summary_indexer_with_config(
-        persist_dir: str, index_configuration: Dict[str, Any], 
+        persist_dir: str,
+        index_configuration: Dict[str, Any],
         summary_vector_store: VectorStore,
     ) -> DocumentSummaryIndex:
         storage_context = SummaryIndexer.create_storage_context(
@@ -286,8 +289,17 @@ class SummaryIndexer(BaseTextIndexer):
         chunks: ChunksResult = reader.load_chunks(file_path)
         nodes: List[TextNode] = chunks.chunks
 
-        nodes = self.sample_nodes(nodes, 1000, 20)
-        logger.debug(f"Using {len(nodes)} nodes from {len(chunks.chunks)} total nodes")
+        is_tabular_document = reader_cls in (ExcelReader, CSVReader)
+        max_samples = 300 if is_tabular_document else 1000
+        sample_block_size = 10 if is_tabular_document else 20
+
+        nodes = self.sample_nodes(nodes, max_samples, sample_block_size)
+        logger.debug(
+            "Using %s nodes from %s total nodes (tabular=%s)",
+            len(nodes),
+            len(chunks.chunks),
+            is_tabular_document,
+        )
 
         if not nodes:
             logger.warning(f"No chunks found for file {file_path}")
@@ -298,12 +310,25 @@ class SummaryIndexer(BaseTextIndexer):
             summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
             if self.summary_vector_store.flat_metadata:
                 nodes = [self._flatten_metadata(node) for node in nodes]
-            summary_store.insert_nodes(nodes)
+            batch_size = 40 if is_tabular_document else 200
+            self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)
 
         logger.debug(f"Summary for file {file_path} created")
+
+    @staticmethod
+    def _insert_summary_nodes(
+        summary_store: DocumentSummaryIndex,
+        nodes: List[TextNode],
+        batch_size: int,
+    ) -> None:
+        for start in range(0, len(nodes), batch_size):
+            batch = nodes[start : start + batch_size]
+            if not batch:
+                continue
+            summary_store.insert_nodes(batch)
 
     def __update_global_summary_store(
         self,
@@ -316,7 +341,8 @@ class SummaryIndexer(BaseTextIndexer):
         # and re-index it with the addition/removal.
         global_persist_dir = self.__persist_root_dir()
         global_summary_store = self.__summary_indexer(
-            global_persist_dir, embed_summaries=False,
+            global_persist_dir,
+            embed_summaries=False,
         )
         data_source_node = Document(doc_id=str(self.data_source_id))
 
@@ -498,7 +524,8 @@ class SummaryIndexer(BaseTextIndexer):
                     embed_summaries=False,
                 )
                 global_summary_store = SummaryIndexer.__summary_indexer_with_config(
-                    global_persist_dir, configuration,
+                    global_persist_dir,
+                    configuration,
                     summary_vector_store=vector_store,
                 )
             except FileNotFoundError:

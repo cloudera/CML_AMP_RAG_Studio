@@ -79,6 +79,8 @@ class EmbeddingIndexer(BaseTextIndexer):
 
         reader_cls = self._get_reader_class(file_path)
 
+        is_tabular_document = reader_cls in (ExcelReader, CSVReader)
+
         reader = reader_cls(
             splitter=self.splitter,
             document_id=document_id,
@@ -100,10 +102,8 @@ class EmbeddingIndexer(BaseTextIndexer):
         chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
         acc = 0
-        batch_size = 1000
         # Use small batches to avoid Qdrant timeouts with large Excel/CSV files
-        if reader_cls in [ExcelReader, CSVReader]:
-            batch_size = 50
+        batch_size = 40 if is_tabular_document else 1000
         for chunk_batch in batch_sequence(chunks_with_embeddings, batch_size):
             acc += len(chunk_batch)
             logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
