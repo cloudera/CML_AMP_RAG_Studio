@@ -49,8 +49,8 @@ from typing_extensions import Optional
 
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
+from .readers.excel import ExcelReader
 from ...ai.vector_stores.vector_store import VectorStore
-from ...config import settings
 from ...services.utils import batch_sequence, flatten_sequence
 
 logger = logging.getLogger(__name__)
@@ -100,8 +100,11 @@ class EmbeddingIndexer(BaseTextIndexer):
         chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
         acc = 0
-        # Reduce batch size to avoid Qdrant timeouts with large uploads
-        for chunk_batch in batch_sequence(chunks_with_embeddings, 250):
+        # Use small batches to avoid Qdrant timeouts with large Excel files
+        batch_size = 1000
+        if reader_cls == ExcelReader:
+            batch_size = 50
+        for chunk_batch in batch_sequence(chunks_with_embeddings, batch_size):
             acc += len(chunk_batch)
             logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
 
