@@ -107,9 +107,9 @@ class EmbeddingIndexer(BaseTextIndexer):
         use_qdrant_safe_batches = isinstance(
             self.chunks_vector_store, QdrantVectorStore
         )
-        batch_size = 250 if use_qdrant_safe_batches else 1000
+        batch_size = 200 if use_qdrant_safe_batches else 1000
         if use_qdrant_safe_batches and is_tabular_document:
-            batch_size = 50
+            batch_size = 100
         for chunk_batch in batch_sequence(chunks_with_embeddings, batch_size):
             acc += len(chunk_batch)
             logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")

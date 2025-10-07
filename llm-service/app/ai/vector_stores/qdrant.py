@@ -128,7 +128,13 @@ class QdrantVectorStore(VectorStore):
         return self.client.collection_exists(self.table_name)
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
-        vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
+        vector_store = LlamaIndexQdrantVectorStore(
+            self.table_name, 
+            self.client, 
+            parallel=10,
+            batch_size=100,
+            max_retries=5,
+        )
         return vector_store
 
     def visualize(
