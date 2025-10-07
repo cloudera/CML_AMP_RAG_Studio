@@ -90,7 +90,7 @@ class BedrockModelProvider(_ModelProvider):
     def _get_boto3_config() -> Config:
         """Get boto3 config with increased connection pool size."""
         return Config(
-            max_pool_connections=15,
+            max_pool_connections=30,
             retries={"max_attempts": 3, "mode": "adaptive"},
         )
 
@@ -321,7 +321,7 @@ class BedrockModelProvider(_ModelProvider):
     def get_embedding_model(name: str) -> BedrockEmbedding:
         return BedrockEmbedding(
             model_name=name,
-            aws_config=BedrockModelProvider._get_boto3_config(),
+            botocore_config=BedrockModelProvider._get_boto3_config(),
         )
 
     @staticmethod

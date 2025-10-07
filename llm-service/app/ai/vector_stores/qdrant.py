@@ -65,7 +65,7 @@ def _new_qdrant_client() -> qdrant_client.QdrantClient:
         "host": settings.qdrant_host,
         "port": settings.qdrant_port,
         "auth_token_provider": auth_token_provider if auth_token else None,
-        "timeout": 60, # 1 minute
+        "timeout": settings.qdrant_timeout,
     }
 
     return qdrant_client.QdrantClient(**client_kwargs)
