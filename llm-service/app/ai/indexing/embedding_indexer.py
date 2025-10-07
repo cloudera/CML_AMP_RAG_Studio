@@ -100,7 +100,8 @@ class EmbeddingIndexer(BaseTextIndexer):
         chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
         acc = 0
-        for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
+        # Reduce batch size to avoid Qdrant timeouts with large uploads
+        for chunk_batch in batch_sequence(chunks_with_embeddings, 250):
             acc += len(chunk_batch)
             logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
 

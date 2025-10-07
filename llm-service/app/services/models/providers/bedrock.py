@@ -315,6 +315,7 @@ class BedrockModelProvider(_ModelProvider):
             messages_to_prompt=messages_to_prompt,
             completion_to_prompt=completion_to_prompt,
             max_tokens=2048,
+            botocore_config=BedrockModelProvider._get_boto3_config(),
         )
 
     @staticmethod
@@ -326,7 +327,11 @@ class BedrockModelProvider(_ModelProvider):
 
     @staticmethod
     def get_reranking_model(name: str, top_n: int) -> AWSBedrockRerank:
-        return AWSBedrockRerank(rerank_model_name=name, top_n=top_n)
+        return AWSBedrockRerank(
+            rerank_model_name=name,
+            top_n=top_n,
+            botocore_config=BedrockModelProvider._get_boto3_config(),
+        )
 
 
 # ensure interface is implemented
