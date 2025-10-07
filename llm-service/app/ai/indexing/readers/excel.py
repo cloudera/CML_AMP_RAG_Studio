@@ -96,6 +96,14 @@ class ExcelReader(BaseReader):
             logger.error("Error reading Excel file %s: %s", file_path, e)
             return ret
 
+        if len(sheets) == 0:
+            logger.error("No sheets found in Excel file %s", file_path)
+            return ret
+
+        # Convert all row data to string to avoid JSON serialization errors
+        for sheet_name, df in sheets.items():
+            df = df.applymap(str)
+
         # Convert workbook to JSON representation for the splitter
         workbook_data = {
             "sheets": [
