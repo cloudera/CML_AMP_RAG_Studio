@@ -76,6 +76,7 @@ from .readers.base_reader import ReaderConfig, ChunksResult
 from .readers.csv import CSVReader
 from .readers.excel import ExcelReader
 from ..vector_stores.vector_store_factory import VectorStoreFactory
+from ..vector_stores.qdrant import QdrantVectorStore
 from ...config import settings, ModelSource
 from ...services.metadata_apis import data_sources_metadata_api
 from ...services.models.providers import get_provider_class
@@ -290,15 +291,24 @@ class SummaryIndexer(BaseTextIndexer):
         nodes: List[TextNode] = chunks.chunks
 
         is_tabular_document = reader_cls in (ExcelReader, CSVReader)
-        max_samples = 300 if is_tabular_document else 1000
-        sample_block_size = 10 if is_tabular_document else 20
+        use_qdrant_safe_batches = isinstance(
+            self.summary_vector_store, QdrantVectorStore
+        )
+
+        if use_qdrant_safe_batches:
+            max_samples = 300 if is_tabular_document else 1000
+            sample_block_size = 10 if is_tabular_document else 20
+        else:
+            max_samples = 1000
+            sample_block_size = 20
 
         nodes = self.sample_nodes(nodes, max_samples, sample_block_size)
         logger.debug(
-            "Using %s nodes from %s total nodes (tabular=%s)",
+            "Using %s nodes from %s total nodes (tabular=%s, qdrant_safe=%s)",
             len(nodes),
             len(chunks.chunks),
             is_tabular_document,
+            use_qdrant_safe_batches,
         )
 
         if not nodes:
@@ -310,8 +320,12 @@ class SummaryIndexer(BaseTextIndexer):
             summary_store: DocumentSummaryIndex = self.__summary_indexer(persist_dir)
             if self.summary_vector_store.flat_metadata:
                 nodes = [self._flatten_metadata(node) for node in nodes]
-            batch_size = 40 if is_tabular_document else 200
-            self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
+
+            if use_qdrant_safe_batches:
+                batch_size = 40 if is_tabular_document else 200
+                self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
+            else:
+                summary_store.insert_nodes(nodes)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)

@@ -51,10 +51,12 @@ from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
 from .readers.excel import ExcelReader
 from .readers.csv import CSVReader
+from ...ai.vector_stores.qdrant import QdrantVectorStore
 from ...ai.vector_stores.vector_store import VectorStore
 from ...services.utils import batch_sequence, flatten_sequence
 
 logger = logging.getLogger(__name__)
+
 
 class EmbeddingIndexer(BaseTextIndexer):
     def __init__(
@@ -102,8 +104,12 @@ class EmbeddingIndexer(BaseTextIndexer):
         chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
         acc = 0
-        # Use small batches to avoid Qdrant timeouts with large Excel/CSV files
-        batch_size = 40 if is_tabular_document else 1000
+        use_qdrant_safe_batches = isinstance(
+            self.chunks_vector_store, QdrantVectorStore
+        )
+        batch_size = 250 if use_qdrant_safe_batches else 1000
+        if use_qdrant_safe_batches and is_tabular_document:
+            batch_size = 50
         for chunk_batch in batch_sequence(chunks_with_embeddings, batch_size):
             acc += len(chunk_batch)
             logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
