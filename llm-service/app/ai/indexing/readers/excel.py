@@ -101,17 +101,26 @@ class ExcelReader(BaseReader):
             return ret
 
         # Convert all row data to string to avoid JSON serialization errors
+        normalized_sheets = {}
         for sheet_name, df in sheets.items():
-            df = df.applymap(str)
+            if df is None:
+                normalized_sheets[sheet_name] = None
+                continue
+
+            normalized_sheets[sheet_name] = df.applymap(str)
 
         # Convert workbook to JSON representation for the splitter
         workbook_data = {
             "sheets": [
                 {
                     "name": str(sheet_name),
-                    "rows": df.to_dict(orient="records") if df is not None else [],
+                    "rows": (
+                        normalized_sheets[sheet_name].to_dict(orient="records")
+                        if normalized_sheets[sheet_name] is not None
+                        else []
+                    ),
                 }
-                for sheet_name, df in sheets.items()
+                for sheet_name in normalized_sheets
             ]
         }
         content = json.dumps(workbook_data)
@@ -139,7 +148,9 @@ class ExcelReader(BaseReader):
             # LlamaIndex annotates NodeParser.get_nodes_from_documents() as returning list[BaseNode]
             # but because MetadataAwareTextSplitter._parse_nodes() calls build_nodes_from_splits(),
             # it's actually list[TextNode] for our _ExcelSplitter
-            rows = cast(list[TextNode], local_splitter.get_nodes_from_documents([document]))
+            rows = cast(
+                list[TextNode], local_splitter.get_nodes_from_documents([document])
+            )
         except Exception as e:
             logger.error("Error processing XLSX file %s: %s", file_path, e)
             return ret
