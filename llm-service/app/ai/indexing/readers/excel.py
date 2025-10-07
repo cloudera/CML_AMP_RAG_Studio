@@ -107,7 +107,7 @@ class ExcelReader(BaseReader):
                 normalized_sheets[sheet_name] = None
                 continue
 
-            normalized_sheets[sheet_name] = df.applymap(str)
+            normalized_sheets[sheet_name] = df.map(str)
 
         # Convert workbook to JSON representation for the splitter
         workbook_data = {
