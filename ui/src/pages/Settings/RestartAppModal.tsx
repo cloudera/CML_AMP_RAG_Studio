@@ -143,7 +143,7 @@ const RestartAppModal = ({
     },
     onSuccess: () => {
       messageQueue.success(
-        "Settings updated successfully.  Restarting the application.",
+        "Settings updated successfully.  Restarting the application."
       );
       restartApplication.mutate({});
     },
@@ -200,7 +200,36 @@ const RestartAppModal = ({
           };
         }
 
+        // clear open search and chromadb configs if QDRANT is selected
         if (values.vector_db_provider === "QDRANT") {
+          values.opensearch_config = {
+            opensearch_username: undefined,
+            opensearch_password: undefined,
+            opensearch_endpoint: undefined,
+            opensearch_namespace: undefined,
+          };
+          values.chromadb_config = {
+            chromadb_host: undefined,
+            chromadb_port: undefined,
+            chromadb_token: undefined,
+            chromadb_tenant: undefined,
+            chromadb_database: undefined,
+          };
+        }
+
+        // clear chromadb config if opensearch is selected
+        if (values.vector_db_provider === "OPENSEARCH") {
+          values.chromadb_config = {
+            chromadb_host: undefined,
+            chromadb_port: undefined,
+            chromadb_token: undefined,
+            chromadb_tenant: undefined,
+            chromadb_database: undefined,
+          };
+        }
+
+        // clear opensearch config if chromadb is selected
+        if (values.vector_db_provider === "CHROMADB") {
           values.opensearch_config = {
             opensearch_username: undefined,
             opensearch_password: undefined,

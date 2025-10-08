@@ -14,7 +14,7 @@ sequenceDiagram
     participant MLflow as MLflow
 
     User->>UI: Enters query
-    UI->>API: POST /sessions/{session_id}/chat
+    UI->>API: POST /sessions/{session_id}/stream-completion
     Note over UI,API: Request includes query and configuration
 
     API->>MetadataApi: GET session metadata
