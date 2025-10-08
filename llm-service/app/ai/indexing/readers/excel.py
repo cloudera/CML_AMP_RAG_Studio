@@ -101,7 +101,7 @@ class ExcelReader(BaseReader):
             return ret
 
         # Convert all row data to string to avoid JSON serialization errors
-        normalized_sheets = {}
+        normalized_sheets: dict[str, pd.DataFrame | None] = {}
         for sheet_name, df in sheets.items():
             if df is None:
                 normalized_sheets[sheet_name] = None
