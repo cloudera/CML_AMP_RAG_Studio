@@ -374,6 +374,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
             "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
             "CHROMADB_HOST": config.chromadb_config.chromadb_host or "",
+            "CHROMADB_PORT": str(config.chromadb_config.chromadb_port or ""),
             "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
             "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
             "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
@@ -385,11 +386,6 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "DB_PASSWORD": config.metadata_db_config.password or "",
         }.items()
     }
-
-    if config.chromadb_config.chromadb_port is None:
-        new_env["CHROMADB_PORT"] = ""
-    else:
-        new_env["CHROMADB_PORT"] = str(config.chromadb_config.chromadb_port)
 
     if config.metadata_db_provider == "H2":
         new_env["DB_URL"] = ""

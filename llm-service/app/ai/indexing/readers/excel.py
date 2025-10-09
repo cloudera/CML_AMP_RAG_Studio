@@ -42,6 +42,8 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
 import pandas as pd
+from openpyxl import load_workbook
+from pyxlsb import open_workbook as open_xlsb_workbook
 from llama_index.core.node_parser.interface import MetadataAwareTextSplitter
 from llama_index.core.schema import Document, TextNode
 
@@ -49,16 +51,6 @@ from .base_reader import BaseReader, ChunksResult
 
 
 logger = logging.getLogger(__name__)
-
-try:  # pragma: no cover - optional dependency
-    from openpyxl import load_workbook
-except ImportError:  # pragma: no cover
-    load_workbook = None  # type: ignore[assignment]
-
-try:  # pragma: no cover - optional dependency
-    from pyxlsb import open_workbook as open_xlsb_workbook
-except ImportError:  # pragma: no cover
-    open_xlsb_workbook = None  # type: ignore[assignment]
 
 
 class _ExcelSplitter(MetadataAwareTextSplitter):
@@ -104,11 +96,12 @@ class ExcelReader(BaseReader):
 
         try:
             # Build workbook data structure by streaming rows
-            sheets_data = []
+            sheets_data: List[Dict[str, Any]] = []
             for sheet_name, row_number, row_dict in self._iter_rows(file_path):
                 # Find or create sheet in sheets_data
                 sheet_entry = next(
-                    (s for s in sheets_data if s["name"] == sheet_name), None
+                    (s for s in sheets_data if s["name"] == sheet_name),
+                    None,
                 )
                 if sheet_entry is None:
                     sheet_entry = {"name": sheet_name, "rows": []}
@@ -151,6 +144,7 @@ class ExcelReader(BaseReader):
             # Extract embedded metadata and clean up the row JSON
             for i, row in enumerate(rows):
                 try:
+                    assert isinstance(row, TextNode)
                     row_data = json.loads(row.text)
                     sheet_name = row_data.pop("__sheet_name__", "")
                     row_number = row_data.pop("__row_number__", i + 1)
@@ -180,20 +174,21 @@ class ExcelReader(BaseReader):
         suffix = file_path.suffix.lower()
 
         if suffix == ".xlsb":
-            if open_xlsb_workbook is None:
-                logger.warning(
-                    "pyxlsb is not available, falling back to pandas for %s", file_path
-                )
-                yield from self._iter_pandas_rows(file_path)
-            else:
+            try:
                 yield from self._iter_xlsb_rows(file_path)
-            return
+                return
+            except Exception as exc:
+                logger.warning(
+                    "pyxlsb streaming failed for %s: %s. Falling back to pandas.",
+                    file_path,
+                    exc,
+                )
 
-        if load_workbook is not None and suffix != ".xls":
+        if suffix == ".xls":
             try:
                 yield from self._iter_openpyxl_rows(file_path)
                 return
-            except Exception as exc:  # pragma: no cover - fallback path
+            except Exception as exc:
                 logger.warning(
                     "openpyxl streaming failed for %s: %s. Falling back to pandas.",
                     file_path,
@@ -205,9 +200,6 @@ class ExcelReader(BaseReader):
     def _iter_openpyxl_rows(
         self, file_path: Path
     ) -> Iterator[Tuple[str, int, Dict[str, str]]]:
-        if load_workbook is None:  # pragma: no cover - guarded import
-            raise RuntimeError("openpyxl is not installed")
-
         workbook = load_workbook(filename=file_path, read_only=True, data_only=True)
         try:
             for worksheet in workbook.worksheets:
@@ -228,7 +220,7 @@ class ExcelReader(BaseReader):
                     self._ensure_header_length(headers, len(values))
                     row_dict = self._build_row_dict(headers, values)
 
-                    if self._is_empty_row(row_dict.values()):
+                    if self._is_empty_row(list(row_dict.values())):
                         continue
 
                     yield worksheet.title, row_index, row_dict
@@ -238,9 +230,6 @@ class ExcelReader(BaseReader):
     def _iter_xlsb_rows(
         self, file_path: Path
     ) -> Iterator[Tuple[str, int, Dict[str, str]]]:
-        if open_xlsb_workbook is None:  # pragma: no cover - guarded import
-            raise RuntimeError("pyxlsb is not installed")
-
         with open_xlsb_workbook(str(file_path)) as workbook:
             for sheet_name in workbook.sheets:
                 with workbook.get_sheet(sheet_name) as sheet:
@@ -259,7 +248,7 @@ class ExcelReader(BaseReader):
                         self._ensure_header_length(headers, len(values))
                         row_dict = self._build_row_dict(headers, values)
 
-                        if self._is_empty_row(row_dict.values()):
+                        if self._is_empty_row(list(row_dict.values())):
                             continue
 
                         yield sheet_name, row_index, row_dict
@@ -291,7 +280,7 @@ class ExcelReader(BaseReader):
                 self._ensure_header_length(headers, len(values))
                 row_dict = self._build_row_dict(headers, values)
 
-                if self._is_empty_row(row_dict.values()):
+                if self._is_empty_row(list(row_dict.values())):
                     continue
 
                 yield str(sheet_name), row_counter, row_dict
@@ -345,7 +334,7 @@ class ExcelReader(BaseReader):
         if isinstance(value, time):
             try:
                 return value.isoformat()
-            except ValueError:  # pragma: no cover - time without date
+            except ValueError:
                 return value.strftime("%H:%M:%S")
 
         return str(value)
