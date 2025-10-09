@@ -37,8 +37,9 @@
 
 import json
 import logging
+from datetime import date, datetime, time
 from pathlib import Path
-from typing import List, cast
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
 import pandas as pd
 from llama_index.core.node_parser.interface import MetadataAwareTextSplitter
@@ -49,9 +50,19 @@ from .base_reader import BaseReader, ChunksResult
 
 logger = logging.getLogger(__name__)
 
+try:  # pragma: no cover - optional dependency
+    from openpyxl import load_workbook
+except ImportError:  # pragma: no cover
+    load_workbook = None  # type: ignore[assignment]
+
+try:  # pragma: no cover - optional dependency
+    from pyxlsb import open_workbook as open_xlsb_workbook
+except ImportError:  # pragma: no cover
+    open_xlsb_workbook = None  # type: ignore[assignment]
+
 
 class _ExcelSplitter(MetadataAwareTextSplitter):
-    """Custom splitter for XLSX files that handles multiple sheets and converts rows to JSON."""
+    """Custom splitter for Excel files that handles multiple sheets and converts rows to JSON."""
 
     def split_text_metadata_aware(self, text: str, metadata_str: str) -> List[str]:
         return self.split_text(text)
@@ -81,100 +92,260 @@ class _ExcelSplitter(MetadataAwareTextSplitter):
 
             return row_chunks
         except Exception as e:
-            logger.error("Error splitting XLSX text: %s", e)
+            logger.error("Error splitting Excel text: %s", e)
             return []
 
 
 class ExcelReader(BaseReader):
+    """Reader that creates a Document from Excel files and uses splitter for chunking."""
+
     def load_chunks(self, file_path: Path) -> ChunksResult:
         ret = ChunksResult()
 
         try:
-            # Read all sheets into a dict of {sheet_name: DataFrame}
-            sheets = pd.read_excel(file_path, sheet_name=None, engine="calamine")
-        except Exception as e:
-            logger.error("Error reading Excel file %s: %s", file_path, e)
+            # Build workbook data structure by streaming rows
+            sheets_data = []
+            for sheet_name, row_number, row_dict in self._iter_rows(file_path):
+                # Find or create sheet in sheets_data
+                sheet_entry = next(
+                    (s for s in sheets_data if s["name"] == sheet_name), None
+                )
+                if sheet_entry is None:
+                    sheet_entry = {"name": sheet_name, "rows": []}
+                    sheets_data.append(sheet_entry)
+                sheet_entry["rows"].append(row_dict)
+
+            if not sheets_data or all(not s["rows"] for s in sheets_data):
+                logger.warning("No data rows found in Excel file %s", file_path)
+                return ret
+
+            # Create JSON representation of the workbook
+            workbook_data = {"sheets": sheets_data}
+            content = json.dumps(workbook_data)
+
+            # Check for secrets in the serialized content
+            secrets = self._block_secrets([content])
+            if secrets is not None:
+                ret.secret_types = secrets
+                return ret
+
+            # Optionally anonymize PII
+            anonymized_text = self._anonymize_pii(content)
+            if anonymized_text is not None:
+                ret.pii_found = True
+                content = anonymized_text
+
+            # Create document and use splitter (following CSV reader pattern)
+            document = Document(text=content)
+            document.id_ = self.document_id
+            self._add_document_metadata(document, file_path)
+
+            local_splitter = _ExcelSplitter()
+
+            try:
+                rows = local_splitter.get_nodes_from_documents([document])
+            except Exception as e:
+                logger.error("Error processing Excel file %s: %s", file_path, e)
+                return ret
+
+            # Extract embedded metadata and clean up the row JSON
+            for i, row in enumerate(rows):
+                try:
+                    row_data = json.loads(row.text)
+                    sheet_name = row_data.pop("__sheet_name__", "")
+                    row_number = row_data.pop("__row_number__", i + 1)
+
+                    # Store cleaned row JSON without metadata fields
+                    row.text = json.dumps(row_data, sort_keys=True)
+
+                    # Add metadata
+                    row.metadata["file_name"] = document.metadata["file_name"]
+                    row.metadata["document_id"] = document.metadata["document_id"]
+                    row.metadata["data_source_id"] = document.metadata["data_source_id"]
+                    row.metadata["chunk_number"] = i
+                    row.metadata["row_number"] = row_number
+                    row.metadata["sheet_name"] = sheet_name
+                    row.metadata["chunk_format"] = "json"
+                except Exception as e:
+                    logger.error("Error processing row %d: %s", i, e)
+
+            ret.chunks = rows
             return ret
+
+        except Exception as exc:
+            logger.error("Error reading Excel file %s: %s", file_path, exc)
+            return ret
+
+    def _iter_rows(self, file_path: Path) -> Iterator[Tuple[str, int, Dict[str, str]]]:
+        suffix = file_path.suffix.lower()
+
+        if suffix == ".xlsb":
+            if open_xlsb_workbook is None:
+                logger.warning(
+                    "pyxlsb is not available, falling back to pandas for %s", file_path
+                )
+                yield from self._iter_pandas_rows(file_path)
+            else:
+                yield from self._iter_xlsb_rows(file_path)
+            return
+
+        if load_workbook is not None and suffix != ".xls":
+            try:
+                yield from self._iter_openpyxl_rows(file_path)
+                return
+            except Exception as exc:  # pragma: no cover - fallback path
+                logger.warning(
+                    "openpyxl streaming failed for %s: %s. Falling back to pandas.",
+                    file_path,
+                    exc,
+                )
+
+        yield from self._iter_pandas_rows(file_path)
+
+    def _iter_openpyxl_rows(
+        self, file_path: Path
+    ) -> Iterator[Tuple[str, int, Dict[str, str]]]:
+        if load_workbook is None:  # pragma: no cover - guarded import
+            raise RuntimeError("openpyxl is not installed")
+
+        workbook = load_workbook(filename=file_path, read_only=True, data_only=True)
+        try:
+            for worksheet in workbook.worksheets:
+                headers: Optional[List[str]] = None
+
+                for row_index, row in enumerate(
+                    worksheet.iter_rows(values_only=True), start=1
+                ):
+                    values = [self._stringify_value(cell) for cell in row]
+
+                    if headers is None:
+                        headers = self._normalize_headers(values)
+                        continue
+
+                    if not headers:
+                        continue
+
+                    self._ensure_header_length(headers, len(values))
+                    row_dict = self._build_row_dict(headers, values)
+
+                    if self._is_empty_row(row_dict.values()):
+                        continue
+
+                    yield worksheet.title, row_index, row_dict
+        finally:
+            workbook.close()
+
+    def _iter_xlsb_rows(
+        self, file_path: Path
+    ) -> Iterator[Tuple[str, int, Dict[str, str]]]:
+        if open_xlsb_workbook is None:  # pragma: no cover - guarded import
+            raise RuntimeError("pyxlsb is not installed")
+
+        with open_xlsb_workbook(str(file_path)) as workbook:
+            for sheet_name in workbook.sheets:
+                with workbook.get_sheet(sheet_name) as sheet:
+                    headers: Optional[List[str]] = None
+
+                    for row_index, row in enumerate(sheet.rows(), start=1):
+                        values = [self._stringify_value(cell.v) for cell in row]
+
+                        if headers is None:
+                            headers = self._normalize_headers(values)
+                            continue
+
+                        if not headers:
+                            continue
+
+                        self._ensure_header_length(headers, len(values))
+                        row_dict = self._build_row_dict(headers, values)
+
+                        if self._is_empty_row(row_dict.values()):
+                            continue
+
+                        yield sheet_name, row_index, row_dict
+
+    def _iter_pandas_rows(
+        self, file_path: Path
+    ) -> Iterator[Tuple[str, int, Dict[str, str]]]:
+        try:
+            sheets = pd.read_excel(file_path, sheet_name=None, engine="calamine")
+        except Exception as exc:
+            logger.error("Error reading Excel file %s: %s", file_path, exc)
+            return
 
         if len(sheets) == 0:
             logger.error("No sheets found in Excel file %s", file_path)
-            return ret
+            return
 
-        # Convert all row data to string to avoid JSON serialization errors
-        normalized_sheets: dict[str, pd.DataFrame | None] = {}
         for sheet_name, df in sheets.items():
-            if df is None:
-                normalized_sheets[sheet_name] = None
+            if df.empty:
                 continue
 
-            normalized_sheets[sheet_name] = df.map(str)
+            df = df.map(str)
+            headers = [str(column) for column in df.columns]
+            row_counter = 1  # headers come from the first row in pandas
 
-        # Convert workbook to JSON representation for the splitter
-        workbook_data = {
-            "sheets": [
-                {
-                    "name": str(sheet_name),
-                    "rows": (
-                        normalized_sheets[sheet_name].to_dict(orient="records")
-                        if normalized_sheets[sheet_name] is not None
-                        else []
-                    ),
-                }
-                for sheet_name in normalized_sheets
-            ]
-        }
-        content = json.dumps(workbook_data)
+            for record in df.itertuples(index=False, name=None):
+                row_counter += 1
+                values = [str(value) if value is not None else "" for value in record]
+                self._ensure_header_length(headers, len(values))
+                row_dict = self._build_row_dict(headers, values)
 
-        # Check for secrets in the serialized content
-        secrets = self._block_secrets([content])
-        if secrets is not None:
-            ret.secret_types = secrets
-            return ret
+                if self._is_empty_row(row_dict.values()):
+                    continue
 
-        # Optionally anonymize PII
-        anonymized_text = self._anonymize_pii(content)
-        if anonymized_text is not None:
-            ret.pii_found = True
-            content = anonymized_text
+                yield str(sheet_name), row_counter, row_dict
 
-        # Create document and use splitter
-        document = Document(text=content)
-        document.id_ = self.document_id
-        self._add_document_metadata(document, file_path)
+    @staticmethod
+    def _normalize_headers(values: Sequence[Any]) -> List[str]:
+        headers: List[str] = []
+        seen: Dict[str, int] = {}
 
-        local_splitter = _ExcelSplitter()
+        for index, value in enumerate(values):
+            base = str(value).strip() if value not in (None, "") else ""
+            if not base:
+                base = f"column_{index + 1}"
 
-        try:
-            # LlamaIndex annotates NodeParser.get_nodes_from_documents() as returning list[BaseNode]
-            # but because MetadataAwareTextSplitter._parse_nodes() calls build_nodes_from_splits(),
-            # it's actually list[TextNode] for our _ExcelSplitter
-            rows = cast(
-                list[TextNode], local_splitter.get_nodes_from_documents([document])
-            )
-        except Exception as e:
-            logger.error("Error processing XLSX file %s: %s", file_path, e)
-            return ret
+            count = seen.get(base, 0)
+            header = f"{base}_{count}" if count else base
+            seen[base] = count + 1
+            headers.append(header)
 
-        # Extract embedded metadata and clean up the row JSON
-        for i, row in enumerate(rows):
+        if not headers:
+            headers.append("column_1")
+
+        return headers
+
+    @staticmethod
+    def _ensure_header_length(headers: List[str], value_count: int) -> None:
+        while len(headers) < value_count:
+            headers.append(f"column_{len(headers) + 1}")
+
+    @staticmethod
+    def _build_row_dict(
+        headers: Sequence[str], values: Sequence[str]
+    ) -> Dict[str, str]:
+        row: Dict[str, str] = {}
+        for index, header in enumerate(headers):
+            row[header] = values[index] if index < len(values) else ""
+        return row
+
+    @staticmethod
+    def _is_empty_row(values: Sequence[str]) -> bool:
+        return all(value == "" for value in values)
+
+    @staticmethod
+    def _stringify_value(value: Any) -> str:
+        if value is None:
+            return ""
+
+        if isinstance(value, (datetime, date)):
+            return value.isoformat()
+
+        if isinstance(value, time):
             try:
-                row_data = json.loads(row.text)
-                sheet_name = row_data.pop("__sheet_name__", "")
-                row_number = row_data.pop("__row_number__", i + 1)
+                return value.isoformat()
+            except ValueError:  # pragma: no cover - time without date
+                return value.strftime("%H:%M:%S")
 
-                # Store cleaned row JSON without metadata fields
-                row.text = json.dumps(row_data, sort_keys=True)
-
-                # Add metadata
-                row.metadata["file_name"] = document.metadata["file_name"]
-                row.metadata["document_id"] = document.metadata["document_id"]
-                row.metadata["data_source_id"] = document.metadata["data_source_id"]
-                row.metadata["chunk_number"] = i
-                row.metadata["row_number"] = row_number
-                row.metadata["sheet_name"] = sheet_name
-                row.metadata["chunk_format"] = "json"
-            except Exception as e:
-                logger.error("Error processing row %d: %s", i, e)
-
-        ret.chunks = rows
-        return ret
+        return str(value)

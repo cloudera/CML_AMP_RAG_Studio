@@ -120,6 +120,11 @@ class _Settings:
         return int(os.environ.get("QDRANT_TIMEOUT", "300"))
 
     @property
+    def qdrant_grpc_port(self) -> int:
+        port = os.environ.get("QDRANT_GRPC_PORT", "6334")
+        return int(port)
+
+    @property
     def advanced_pdf_parsing(self) -> bool:
         return os.environ.get("USE_ENHANCED_PDF_PROCESSING", "false").lower() == "true"
 

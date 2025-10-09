@@ -323,9 +323,9 @@ class SummaryIndexer(BaseTextIndexer):
 
             if use_qdrant_safe_batches:
                 batch_size = 40 if is_tabular_document else 200
-                self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
             else:
-                summary_store.insert_nodes(nodes)
+                batch_size = 1000
+            self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
             self.__update_global_summary_store(summary_store, added_node_id=document_id)
