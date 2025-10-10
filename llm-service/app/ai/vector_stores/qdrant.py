@@ -137,8 +137,8 @@ class QdrantVectorStore(VectorStore):
             collection_name=self.table_name,
             client=self.client,
             parallel=4,
-            batch_size=100,
-            max_retries=5,
+            batch_size=64,
+            max_retries=3,
         )
         return vector_store
 

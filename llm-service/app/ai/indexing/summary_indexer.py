@@ -297,10 +297,9 @@ class SummaryIndexer(BaseTextIndexer):
 
         if use_qdrant_safe_batches:
             max_samples = 300 if is_tabular_document else 1000
-            sample_block_size = 10 if is_tabular_document else 20
         else:
             max_samples = 1000
-            sample_block_size = 20
+        sample_block_size = 20
 
         nodes = self.sample_nodes(nodes, max_samples, sample_block_size)
         logger.debug(
@@ -321,8 +320,8 @@ class SummaryIndexer(BaseTextIndexer):
             if self.summary_vector_store.flat_metadata:
                 nodes = [self._flatten_metadata(node) for node in nodes]
 
-            if use_qdrant_safe_batches:
-                batch_size = 40 if is_tabular_document else 200
+            if use_qdrant_safe_batches and is_tabular_document:
+                batch_size = 256
             else:
                 batch_size = 1000
             self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
