@@ -139,12 +139,12 @@ export interface AzureConfig {
   openai_api_version?: string;
 }
 
-export interface OpenAIConfig {
+export interface OpenAiConfig {
   openai_api_key?: string;
   openai_api_base?: string;
 }
 
-export interface CaiiConfig {
+export interface CAIIConfig {
   caii_domain?: string;
 }
 
@@ -155,7 +155,7 @@ export interface OpenSearchConfig {
   opensearch_namespace?: string;
 }
 
-export interface ChromaDBConfig {
+export interface ChromaDbConfig {
   chromadb_host?: string;
   chromadb_port?: string;
   chromadb_token?: string;
@@ -199,10 +199,10 @@ export interface ProjectConfig {
   metadata_db_config: MetadataDBConfig;
   aws_config: AwsConfig;
   azure_config: AzureConfig;
-  openai_config: OpenAIConfig;
-  caii_config: CaiiConfig;
+  openai_config: OpenAiConfig;
+  caii_config: CAIIConfig;
   opensearch_config: OpenSearchConfig;
-  chromadb_config: ChromaDBConfig;
+  chromadb_config: ChromaDbConfig;
   is_valid_config: boolean;
   config_validation_results: ConfigValidationResults;
   release_version: string;
