@@ -1,5 +1,29 @@
 ### RAG Studio UI Guide
 
+#### Table of contents
+
+- [Navigation overview](#navigation-overview)
+- [Configuration check and redirection (CML + CAII)](#-configuration-check-and-redirection-cml--caii)
+- [Knowledge Bases](#knowledge-bases)
+  - [Create a knowledge base](#create-a-knowledge-base)
+  - [Upload and manage documents](#upload-and-manage-documents)
+  - [Edit knowledge base settings](#edit-knowledge-base-settings)
+  - [Other knowledge base tabs](#other-knowledge-base-tabs)
+- [Chats](#chats)
+  - [Start a new chat](#start-a-new-chat)
+  - [Ask questions](#ask-questions)
+  - [Input controls and quick settings](#input-controls-and-quick-settings)
+  - [Use knowledge bases in a chat](#use-knowledge-bases-in-a-chat)
+  - [Upload documents to the active chat](#upload-documents-to-the-active-chat)
+  - [Suggested questions and sources](#suggested-questions-and-sources)
+  - [Chat Settings (session-level)](#chat-settings-session-level)
+  - [Inference model quick switch](#inference-model-quick-switch)
+  - [Tools (beta)](#tools-beta)
+- [Analytics](#analytics)
+- [Settings](#settings)
+  - [Studio Settings configurations](#studio-settings-configurations)
+  - [Add tools from the UI](#add-tools-from-the-ui)
+
 This guide explains how to use RAG Studio entirely from the UI. It focuses on the main navigation, creating and managing knowledge bases, starting chats, tuning chat settings, using tools, and reviewing analytics.
 
 ## ![landing-page](images/landing-page.png)
@@ -195,6 +219,92 @@ Use the Analytics page to view:
 
 ## ![settings-tools](images/settings-tools-management.png)
 
+### Studio Settings configurations
+
+Use Settings → Studio Settings to configure the application. Some fields are only editable when there are no chats or knowledge bases.
+
+#### Processing Settings
+
+- Enhanced PDF Processing: Improves text extraction for PDFs; requires a GPU and at least 16GB RAM. Disabled with a warning if resources are insufficient.
+
+#### Metadata Database
+
+- Embedded (H2): Default metadata database.
+- External PostgreSQL: Provide JDBC URL, Username, Password. Use “Test Connection” to validate; success/failure indicators are shown inline.
+
+## ![external-postgres](images/settings-metadatadb-external-postgres.png)
+
+#### File Storage
+
+- Project Filesystem (Local): Stores files in the project filesystem.
+- AWS S3: Set Document Bucket Name and optional Bucket Prefix.
+  - Store Document Summaries in S3: Toggle when summarization is enabled for knowledge bases.
+  - Store Chat History in S3: Toggle to persist chat history in S3.
+  ## ![file-storage-s3](images/settings-file-storage-S3.png)
+
+#### Vector Database
+
+- Qdrant: Embedded Qdrant (default).
+- Cloudera Semantic Search (OpenSearch): Set Endpoint, Namespace (alphanumeric), optional Username/Password. Supported up to OpenSearch 2.19.3.
+
+## ![vectordb-css](images/settings-vectordb-css.png)
+
+- ChromaDB: Set Host (URL or host), optional Port, Token, Tenant, Database. SSL inferred from https in host.
+
+## ![vectordb-chromadb](images/settings-vectordb-chromadb.png)
+
+#### Model Provider
+
+Choose a provider (e.g., CAII, OpenAI, Azure, Bedrock). Credentials are set under Authentication.
+
+- CAII
+
+  - If there are no hosted CAII endpoints on the same environment, you can optionally provide one which has hosted endpoints along with the CDP Auth Token
+
+  ## ![model-provider-caii](images/settings-model-provider-caii.png)
+
+- OpenAI
+
+  - API Key: Provide your OpenAI API Key for authentication.
+  - Base URL: Optional custom base URL for OpenAI-compatible endpoints.
+
+  ## ![model-provider-openai](images/settings-model-provider-open-ai.png)
+
+- Azure OpenAI
+
+  - API Key: Your Azure OpenAI service API key.
+  - Endpoint: The Azure OpenAI service endpoint URL.
+  - API Version: The API version to use (e.g., 2024-02-01).
+
+  ## ![model-provider-azure](images/settings-model-provider-azure-openai.png)
+
+- AWS Bedrock
+  - Region: AWS region where your Bedrock models are hosted.
+  - Access credentials are configured in the Authentication section.
+  ## ![model-provider-bedrock](images/settings-model-provider-aws-bedrock.png)
+
+#### Authentication
+
+- AWS: Region, Access Key ID, Secret Access Key (visible when using Bedrock/S3/Summary S3).
+
+## ![authentication-s3-and-or-bedrock](images/settings-authentication-s3-and-or-bedrock.png)
+
+- Azure: Azure OpenAI Key (when Azure is selected).
+- OpenAI: OpenAI API Key (when OpenAI is selected).
+- CAII: CDP Auth Token may be required depending on environment.
+
+#### Applying changes
+
+- Click Submit to review and confirm. A restart modal guides you to apply changes.
+
+## ![update-settings-modal](images/settings-update-settings-modal.png)
+
+## ![updates-settings-progress](images/settings-update-settings-progress-modal.png)
+
+- If chats or knowledge bases exist, a warning shows and certain settings are disabled until data is removed.
+
+## ![settings-studio](images/settings-studio-settings-data.png)
+
 ### Add tools from the UI
 
 ## ![tools-page](images/settings-tools-management.png)
@@ -206,20 +316,23 @@ Use the Analytics page to view:
    - Display Name
    - Description
 4. Choose Tool Type:
+
    - Command-based: enter Command, optional Arguments (comma-separated), and add Environment Variables (key/value) as needed.
-        - For eg. to add Serper Search & Scrape MCP -
-            ```
-            Command - npx
-            Arguments - -y, serper-search-scrape-mcp-server
-            Environment Variables -
-                - SERPER_API_KEY": your_api_key_here
-            ```
-    ## ![tools-add-command](images/settings-add-tools-command.png)
+     - For eg. to add Serper Search & Scrape MCP -
+       ```
+       Command - npx
+       Arguments - -y, serper-search-scrape-mcp-server
+       Environment Variables -
+           - SERPER_API_KEY": your_api_key_here
+       ```
+
+   ## ![tools-add-command](images/settings-add-tools-command.png)
 
    - URL-based: enter one or more URLs (comma-separated). (Not recommended)
-    ## ![tools-add-url](images/settings-add-tools-url.png)
+
+   ## ![tools-add-url](images/settings-add-tools-url.png)
+
 5. Click “Add”. The tool appears in the Available Tools table (you can delete it later).
 6. To use a tool in chat, enable Tool Calling in Chat Settings, then click the wrench icon in the input bar and select the tool(s).
-
 
 ---

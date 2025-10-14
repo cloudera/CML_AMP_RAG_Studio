@@ -1,6 +1,15 @@
 ### RAG Studio Quickstart (UI)
 
-Follow this checklist to get productive fast.
+#### Table of contents
+
+- [1) Open the app](#1-open-the-app)
+- [2) Create a knowledge base](#2-create-a-knowledge-base)
+- [3) Upload documents](#3-upload-documents)
+- [4) Start a chat](#4-start-a-chat)
+- [5) Tune chat settings (optional)](#5-tune-chat-settings-optional)
+- [6) Use Tools (beta, optional)](#6-use-tools-beta-optional)
+- [7) Review analytics (optional)](#7-review-analytics-optional)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -13,7 +22,8 @@ Landing Page:
 Note on configuration (CML + CAII):
 
 - If your CML deployment and CAII (Cloudera AI Inference) endpoints (LLM, Embeddings, Rerankers) are in the same environment, the app validates Studio configuration with CAII.
-- If no valid configuration is detected, after clicking “Get started” you will be redirected to Settings to configure the Studio.
+- If no valid configuration is detected, you will be redirected to Settings to configure the Studio.
+- For a breakdown of each option, see Studio Settings configurations in the [UI Guide](rag-studio-ui-guide.md#studio-settings-configurations).
 
 ## ![settings-no-data](images/settings-studio-settings-no-data.png)
 

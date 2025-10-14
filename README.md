@@ -4,6 +4,11 @@
 
 An AMP that provides a no-code tool to build RAG applications
 
+## Documentation
+
+- UI Guide: [docs/rag-studio-ui-guide.md](docs/rag-studio-ui-guide.md)
+- Quickstart: [docs/rag-studio-quickstart.md](docs/rag-studio-quickstart.md)
+
 ## Installation
 
 ### Important
