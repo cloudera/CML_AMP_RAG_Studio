@@ -17,7 +17,7 @@
 
 Landing Page:
 
-## ![landing-page](images/landing-page.png)
+![landing-page](images/landing-page.png)
 
 **Note on Configuration (CML + CAII):**
 
@@ -25,7 +25,7 @@ Landing Page:
 - If no valid configuration is detected, you will be redirected to Settings to configure the Studio.
 - For a breakdown of each option, see Studio Settings Configurations in the [UI Guide](rag-studio-ui-guide.md#studio-settings-configurations).
 
-## ![settings-no-data](images/settings-studio-settings-no-data.png)
+![settings-no-data](images/settings-studio-settings-no-data.png)
 
 ### 2) Create a Knowledge Base
 
@@ -34,7 +34,7 @@ Landing Page:
 3. Optional: Select a Summarization Model.
 4. Click **Save**.
 
-## ![create-kb](images/rag-studio-kb-create-kb.png)
+![create-kb](images/rag-studio-kb-create-kb.png)
 
 ---
 
@@ -44,7 +44,7 @@ Landing Page:
 2. Drag-and-drop or select files, then click **Start Upload**.
 3. Confirm the uploaded files appear in the table.
 
-## ![manage-tab](images/rag-studio-kb-manage-page.png)
+![manage-tab](images/rag-studio-kb-manage-page.png)
 
 ---
 
@@ -68,9 +68,9 @@ Landing Page:
 - If a session is created with no messages, you'll see Suggested Questions in the chat body (KB-aware when KBs are selected; default list if none).
 - After you send a message, follow-up suggestions appear after the response.
 
-## ![chat](images/rag-studio-chats-page.png)
+![chat](images/rag-studio-chats-page.png)
 
-## ![follow-up-question](images/suggested-questions-follow-up.png)
+![follow-up-question](images/suggested-questions-follow-up.png)
 
 ---
 
@@ -80,7 +80,7 @@ Landing Page:
 2. Adjust: session name, knowledge bases, response model, rerank model, max docs, and advanced options (Tool Calling, HyDE, Summary Filter, Disable Streaming).
 3. Click **Save**.
 
-## ![chat-settings](images/chat-settings-update.png)
+![chat-settings](images/chat-settings-update.png)
 
 ---
 
@@ -90,7 +90,7 @@ Landing Page:
 - If Tool Calling is enabled, click the wrench icon and select tools.
 - Manage available tools in **Settings → Tools**.
 
-## ![select-tool-modal](images/chat-select-tool-modal.png)
+![select-tool-modal](images/chat-select-tool-modal.png)
 
 ---
 
@@ -100,9 +100,9 @@ Landing Page:
 2. Review App Metrics and Session Metrics.
 3. Filter by model, reranker (or None), summary filter usage, HyDE, knowledge base usage, and project.
 
-## ![analytics-filter](images/rag-studio-analytics-page.png)
+![analytics-filter](images/rag-studio-analytics-page.png)
 
-## ![analytics-charts](images/rag-studio-analytics-charts.png)
+![analytics-charts](images/rag-studio-analytics-charts.png)
 
 ---
 
@@ -112,6 +112,6 @@ Landing Page:
 - **Upload errors** → Check file size/type and retry.
 - **Chat not using knowledge base** → Ensure the database icon is filled (included) or select KBs for the session.
 
-## ![kb-selected](images/chat-input-kb-selected.png)
+![kb-selected](images/chat-input-kb-selected.png)
 
-## ![kb-unselected](images/chat-input-kb-unselected.png)
+![kb-unselected](images/chat-input-kb-unselected.png)
