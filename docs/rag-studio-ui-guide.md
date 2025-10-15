@@ -44,7 +44,7 @@ This guide explains how to use RAG Studio entirely from the UI, focusing on navi
 ### Configuration Check and Redirection (CML + CAII)
 
 - If the CML deployment and CAII (Cloudera AI Inference) endpoints for LLM, Embeddings, and/or Rerankers are in the same environment, the app validates Studio configuration with CAII.
-- If there is no valid configuration, clicking "Get Started" will redirect you to the Settings page to configure the Studio.
+- If there is no valid configuration, the app will redirect you to the Settings page to configure the Studio.
 
 ## ![settings-no-data](images/settings-studio-settings-no-data.png)
 
