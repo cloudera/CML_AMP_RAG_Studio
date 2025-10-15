@@ -48,8 +48,6 @@ This guide explains how to use RAG Studio entirely from the UI, focusing on navi
 
 ## ![settings-no-data](images/settings-studio-settings-no-data.png)
 
-## ![settings-data](images/settings-studio-settings-data.png)
-
 ---
 
 ### Knowledge Bases
@@ -64,11 +62,12 @@ This guide explains how to use RAG Studio entirely from the UI, focusing on navi
    - **Embedding Model** (required)
    - Optional: **Summarization Model** to enable summary-based retrieval
    - Advanced (optional): **Chunk Overlap**, **Distance Metric** (Cosine)
+
+## ![create-kb](images/rag-studio-kb-create-kb.png)
+
 4. Click **Save**.
 
 ## ![kb-list](images/rag-studio-kb-page.png)
-
-## ![create-kb](images/rag-studio-kb-create-kb.png)
 
 #### Upload and Manage Documents
 
@@ -115,17 +114,15 @@ Type a question and send. If no session exists, a new session is created automat
 - Click the stop icon to cancel a streaming response.
 - If knowledge bases exist, the placeholder reads "Ask a question"; otherwise, it reads "Chat with the LLM".
 
-## ![input-bar](images/chat-input-bar.png)
-
 #### Input Controls and Quick Settings
+
+## ![input-bar](images/chat-input-bar.png)
 
 - **Knowledge Base Selector**: When no session exists, pick one or more knowledge bases next to the input before sending the first message.
 - **Inference Model Selector**: Choose the response model next to the input. If a session exists, this updates the session; if not, it's used for the new session.
 - **Tools** (wrench icon): When Tool Calling is enabled, click to open Tool Selection and enable/disable tools for the session.
 - **Include/Exclude Knowledge Base Toggle** (database icon): Per-message control to include or exclude knowledge base retrieval.
 - **Stop Streaming Button**: Appears while a response is streaming.
-
-## ![input-bar](images/chat-input-bar.png)
 
 #### Use Knowledge Bases in a Chat
 
@@ -138,6 +135,12 @@ Type a question and send. If no session exists, a new session is created automat
 - For new sessions, you can optionally select knowledge base(s) next to the input before sending the first message.
 
 ## ![new-chat-kb-select-dd](images/chat-input-add-kb.png)
+
+#### Inference Model Quick Switch
+
+- Next to the input, change the model on the fly. If the new model supports tool calling, the session setting updates accordingly.
+
+## ![inference-model](images/chat-inference-model.png)
 
 #### Upload Documents to the Active Chat
 
@@ -176,12 +179,6 @@ Click **Chat Settings** in the header to modify the active session:
   - Disable streaming
 
 ## ![chat-settings](images/chat-settings-update.png)
-
-#### Inference Model Quick Switch
-
-- Next to the input, change the model on the fly. If the new model supports tool calling, the session setting updates accordingly.
-
-## ![inference-model](images/chat-inference-model.png)
 
 #### Tools (Beta)
 
