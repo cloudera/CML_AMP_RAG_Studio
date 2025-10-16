@@ -38,18 +38,18 @@
 # DATA.
 #
 
-CRAFT_MLT_MODEL_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth
-LATIN_G2_URL=https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth
+CRAFT_MLT_MODEL=/app/prebuilt_artifacts/models/craft_mlt_25k.pth
+LATIN_G2_MODEL=/app/prebuilt_artifacts/models/latin_g2.pth
 
 mkdir -p .EasyOCR/model
 cd .EasyOCR/model
 
-if [ -f /app/craft_mlt_25k.pth ]; then
-    cp /app/craft_mlt_25k.pth craft_mlt_25k.pth
-    cp /app/latin_g2.pth latin_g2.pth
+if [ -f ${CRAFT_MLT_MODEL} ]; then
+    cp ${CRAFT_MLT_MODEL} craft_mlt_25k.pth
+    cp ${LATIN_G2_MODEL} latin_g2.pth
 else
-    wget --no-verbose -O craft_mlt_25k.pth ${CRAFT_MLT_MODEL_URL}
-    wget --no-verbose -O latin_g2.pth ${LATIN_G2_URL}
+    echo "Warning: Model files not found in prebuilt_artifacts"
+    exit 1
 fi
 
 
