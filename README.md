@@ -25,15 +25,16 @@ If you do not want to use the catalog-entry, then you should specify the release
 
 ### LLM Model Options
 
-RAG Studio can be used with Cloudera AI Inference (CAII), AWS Bedrock, or Azure OpenAI for selecting LLM and embedding models.
+RAG Studio can be used with Cloudera AI Inference (CAII), AWS Bedrock, Azure OpenAI, or OpenAI for selecting LLM and embedding models.
 
-#### Cloudera AI Inference (CAII) Setup:
+#### Cloudera AI Inference (CAII) Setup
 
 To use CAII, you must provide the following environment variables:
 
 - `CAII_DOMAIN` - The domain of the Cloudera AI Inference instance
+- `CDP_TOKEN_OVERRIDE` - Optional. Override the default CDP token used within RAG Studio (see [CDP Token Override](#cdp-token-override))
 
-#### AWS Bedrock Setup:
+#### AWS Bedrock Setup
 
 To use AWS Bedrock, you must provide the following environment variables:
 
@@ -41,7 +42,7 @@ To use AWS Bedrock, you must provide the following environment variables:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 
-#### Azure OpenAI Setup:
+#### Azure OpenAI Setup
 
 To use Azure OpenAI, you must provide the following environment variables:
 
@@ -49,12 +50,45 @@ To use Azure OpenAI, you must provide the following environment variables:
 - `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI service endpoint URL
 - `OPENAI_API_VERSION` - The Azure OpenAI API version to use
 
-### Document Storage Options:
+#### OpenAI Setup
+
+To use OpenAI, you must provide the following environment variables:
+
+- `OPENAI_API_KEY` - Your OpenAI API key
+- `OPENAI_BASE_URL` - Optional. Custom base URL for OpenAI-compatible endpoints
+
+### Metadata Database Options
+
+RAG Studio supports two metadata database options:
+
+#### Embedded H2 (Default)
+
+No configuration needed. RAG Studio uses an embedded H2 database by default.
+
+#### External PostgreSQL
+
+To use an external PostgreSQL database, provide the following environment variables:
+
+- `METADATA_DB_URL` - JDBC URL for the PostgreSQL database
+- `METADATA_DB_USERNAME` - PostgreSQL username
+- `METADATA_DB_PASSWORD` - PostgreSQL password
+
+### Document Storage Options
+
+RAG Studio can utilize the local file system or AWS S3 for storing documents, document summaries, and chat history.
+
+#### Local Filesystem (Default)
+
+No configuration needed. Files are stored in the project filesystem by default.
+
+#### AWS S3
 
 RAG Studio can utilize the local file system or an S3 bucket for storing documents. If you are using an S3 bucket, you will need to provide the following environment variables:
 
-- `S3_RAG_BUCKET_PREFIX` - A prefix added to all S3 paths used by Rag Studio
 - `S3_RAG_DOCUMENT_BUCKET` - The S3 bucket where uploaded documents are stored
+- `S3_RAG_BUCKET_PREFIX` - Optional. A prefix added to all S3 paths used by RAG Studio
+- `STORE_DOC_SUMMARY_IN_S3` - Optional. Set to `true` to store document summaries in S3 (when summarization is enabled)
+- `STORE_CHAT_HISTORY_IN_S3` - Optional. Set to `true` to persist chat history in S3
 
 S3 will also require providing the AWS credentials for the bucket.
 
@@ -63,6 +97,21 @@ S3 will also require providing the AWS credentials for the bucket.
 RAG Studio supports Qdrant (default), OpenSearch (Cloudera Semantic Search), and ChromaDB.
 
 - To choose the vector DB, set `VECTOR_DB_PROVIDER` to one of `QDRANT`, `OPENSEARCH`, or `CHROMADB` in your `.env`.
+
+#### Qdrant (Default)
+
+No configuration needed. RAG Studio uses an embedded Qdrant instance by default.
+
+#### OpenSearch (Cloudera Semantic Search)
+
+To use OpenSearch, configure the following environment variables in `.env`:
+
+- `OPENSEARCH_ENDPOINT` - The OpenSearch endpoint URL
+- `OPENSEARCH_NAMESPACE` - Namespace for collections (alphanumeric characters only)
+- `OPENSEARCH_USERNAME` - Optional. Username for authentication
+- `OPENSEARCH_PASSWORD` - Optional. Password for authentication
+
+**Note:** Supported up to OpenSearch 2.19.3.
 
 #### ChromaDB Setup
 
@@ -90,11 +139,16 @@ RAG Studio can optionally enable enhanced parsing by providing the `USE_ENHANCED
 
 ### Cloudera DataFlow (Nifi) Setup:
 
-Rag Studio provides a Nifi template that can be downloaded for a given Knowledge Base from the `Connections` tab.
-The Nifi template can then be imported into your Cloudera DataFlow (CDF) environment and used to setup a pipeline into Rag Studio.
+RAG Studio provides a NiFi template that can be downloaded for a given Knowledge Base from the **Connections** tab.
+The NiFi template can then be imported into your Cloudera DataFlow (CDF) environment and used to setup a pipeline into RAG Studio.
 
-IMPORTANT: In order to inject data from CDF, users must disable authentication of the AMP Project from their Cloudera Machine Learning (CML) workspace.
+**IMPORTANT:** In order to inject data from CDF, users must disable authentication of the AMP Project from their Cloudera Machine Learning (CML) workspace.
 This carries a security risk and should be carefully considered before proceeding.
+
+### CDP Token Override
+
+If you are using Cloudera AI Inference and would like to override the default CDP token used within RAG Studio, you can do so by providing the `CDP_TOKEN_OVERRIDE` environment variable.
+This variable can be set from the project settings for the AMP in CML.
 
 ### Updating RAG Studio
 
@@ -106,12 +160,7 @@ Cloudera for assistance. Additionally, further details on the AMP status can be 
 
 - TBD
 
-## CDP Token Override
-
-If you are using Cloudera AI Inference and would like to override the default CDP token used within RAG Studio, you can do so by providing the `CDP_TOKEN_OVERRIDE` environment variable.
-This variable can be set from the project settings for the AMP in CML.
-
-## Air-gapped Environments
+### Air-Gapped Environments
 
 If you are using an air-gapped environment, you will need to whitelist at the minimum the following domains in order to use the AMP.
 There may be other domains that need to be whitelisted depending on your environment and the model service provider you select.
