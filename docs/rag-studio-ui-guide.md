@@ -185,10 +185,8 @@ Click **Chat Settings** in the header to modify the active session:
 
 #### Tools (Beta)
 
-- If Tool Calling is enabled, click the wrench icon to open Tool Selection. Check tools to enable them for the session.
+- If Tool Calling is enabled, click the wrench icon (![tools-icon](images/chat-tool-icon.png)) to open Tool Selection. Check tools to enable them for the session.
 - Available tools are managed in **Settings → Tools**.
-
-![tools-icon](images/chat-tool-icon.png)
 
 ![tools-modal](images/chat-select-tool-modal.png)
 
@@ -210,12 +208,14 @@ Use the Analytics page to view:
 ### Settings
 
 - **Studio Settings**: Environment and studio configuration.
-- **Model Configuration**: Manage embedding and LLM models used across the app.
-- **Tools**: Enable and configure tools available for Tool Calling.
 
 ![settings-studio](images/settings-studio-settings-data.png)
 
+- **Model Configuration**: Manage embedding and LLM models used across the app.
+
 ![settings-models](images/settings-model-configuration.png)
+
+- **Tools**: Enable and configure tools available for Tool Calling.
 
 ![settings-tools](images/settings-tools-management.png)
 
@@ -289,9 +289,6 @@ Choose a provider (e.g., CAII, OpenAI, Azure, Bedrock). Credentials are set unde
 #### Authentication
 
 - **AWS**: Region, Access Key ID, Secret Access Key (visible when using Bedrock/S3/Summary S3).
-
-![authentication-s3-and-or-bedrock](images/settings-authentication-s3-and-or-bedrock.png)
-
 - **Azure**: Azure OpenAI Key (when Azure is selected).
 - **OpenAI**: OpenAI API Key (when OpenAI is selected).
 - **CAII**: CDP Auth Token may be required depending on the environment.
@@ -309,8 +306,6 @@ Choose a provider (e.g., CAII, OpenAI, Azure, Bedrock). Credentials are set unde
 ![settings-studio](images/settings-studio-settings-data.png)
 
 ### Add Tools from the UI
-
-![tools-page](images/settings-tools-management.png)
 
 1. Go to **Settings → Tools**.
 2. Click **Add Tool**.
