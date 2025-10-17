@@ -38,8 +38,8 @@
 # DATA.
 #
 
-CRAFT_MLT_MODEL=prebuilt_artifacts/models/craft_mlt_25k.pth
-LATIN_G2_MODEL=prebuilt_artifacts/models/latin_g2.pth
+CRAFT_MLT_MODEL=/app/prebuilt_artifacts/models/craft_mlt_25k.pth
+LATIN_G2_MODEL=/app/prebuilt_artifacts/models/latin_g2.pth
 
 mkdir -p .EasyOCR/model
 cd .EasyOCR/model
