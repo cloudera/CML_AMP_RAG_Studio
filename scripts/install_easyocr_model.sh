@@ -38,16 +38,11 @@
 # DATA.
 #
 
-CRAFT_MLT_MODEL=/app/prebuilt_artifacts/models/craft_mlt_25k.pth
-LATIN_G2_MODEL=/app/prebuilt_artifacts/models/latin_g2.pth
+CRAFT_MLT_MODEL=prebuilt_artifacts/models/craft_mlt_25k.pth
+LATIN_G2_MODEL=prebuilt_artifacts/models/latin_g2.pth
 
 mkdir -p .EasyOCR/model
 cd .EasyOCR/model
 
-# If model files exist in the current directory then don't copy them from prebuilt_artifacts
-if [ -f craft_mlt_25k.pth ] && [ -f latin_g2.pth ]; then
-    echo "Model files already exist in the current directory"
-else
-    cp ${CRAFT_MLT_MODEL} craft_mlt_25k.pth
-    cp ${LATIN_G2_MODEL} latin_g2.pth
-fi
+cp ${CRAFT_MLT_MODEL} craft_mlt_25k.pth
+cp ${LATIN_G2_MODEL} latin_g2.pth
