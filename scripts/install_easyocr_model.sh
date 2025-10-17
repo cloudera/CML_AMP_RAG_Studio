@@ -37,9 +37,13 @@
 # BUSINESS ADVANTAGE OR UNAVAILABILITY, OR LOSS OR CORRUPTION OF
 # DATA.
 #
-
-CRAFT_MLT_MODEL=prebuilt_artifacts/models/craft_mlt_25k.pth
-LATIN_G2_MODEL=prebuilt_artifacts/models/latin_g2.pth
+if [ -z "$IS_COMPOSABLE" ]; then
+  CRAFT_MLT_MODEL=/home/cdsw/prebuilt_artifacts/models/craft_mlt_25k.pth
+  LATIN_G2_MODEL=/home/cdsw/prebuilt_artifacts/models/latin_g2.pth
+else
+  CRAFT_MLT_MODEL=/home/cdsw/rag-studio/prebuilt_artifacts/models/craft_mlt_25k.pth
+  LATIN_G2_MODEL=/home/cdsw/rag-studio/prebuilt_artifacts/models/latin_g2.pth
+fi
 
 mkdir -p .EasyOCR/model
 cd .EasyOCR/model
