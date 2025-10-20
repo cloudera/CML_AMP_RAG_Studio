@@ -61,7 +61,12 @@ def _new_qdrant_client() -> qdrant_client.QdrantClient:
     def auth_token_provider() -> str:
         return auth_token or "You should never see this"
 
-    logger.info(f"Using Qdrant host: {settings.qdrant_host}, port: {settings.qdrant_port}, grpc port: {settings.qdrant_grpc_port}")
+    logger.info(
+        "Using Qdrant host: %s, port: %s, grpc port: %s",
+        settings.qdrant_host,
+        settings.qdrant_port,
+        settings.qdrant_grpc_port,
+    )
     
     return qdrant_client.QdrantClient(
         host=settings.qdrant_host,
