@@ -137,7 +137,7 @@ class EmbeddingIndexer(BaseTextIndexer):
         batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]
 
         max_workers = 15
-        logger.debug(f"Using {max_workers} workers for embedding generation")
+        logger.debug("Using %s workers for embedding generation", max_workers)
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
