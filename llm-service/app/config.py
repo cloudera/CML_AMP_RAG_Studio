@@ -121,8 +121,7 @@ class _Settings:
 
     @property
     def qdrant_grpc_port(self) -> int:
-        port = os.environ.get("QDRANT_GRPC_PORT", "6334")
-        return int(port)
+        return int(os.environ.get("QDRANT_GRPC_PORT", "6334"))
 
     @property
     def advanced_pdf_parsing(self) -> bool:
