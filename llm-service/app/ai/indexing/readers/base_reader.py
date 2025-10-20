@@ -14,7 +14,7 @@ from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
 
 
-@functools.lru_cache(maxsize=1)
+@functools.cache
 def _get_analyzer() -> AnalyzerEngine:
     """Cached analyzer engine to reuse compiled regex patterns."""
     return AnalyzerEngine()
