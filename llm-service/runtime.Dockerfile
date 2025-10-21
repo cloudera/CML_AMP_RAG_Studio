@@ -11,8 +11,8 @@ WORKDIR /app
 RUN uv sync -n -p /usr/local/bin/python3.12
 
 RUN wget https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz -O amazon-corretto-21-x64-linux-jdk.tar.gz
-RUN wget https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/craft_mlt_25k.pth -O craft_mlt_25k.pth
-RUN wget https://github.com/cloudera/CML_AMP_RAG_Studio/releases/download/model_download/latin_g2.pth -O latin_g2.pth
+COPY --chown=cdsw:cdsw ../prebuilt_artifacts/models/craft_mlt_25k.pth /app/craft_mlt_25k.pth
+COPY --chown=cdsw:cdsw ../prebuilt_artifacts/models/latin_g2.pth /app/latin_g2.pth
 RUN wget https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x86_64-unknown-linux-musl.tar.gz -O qdrant.tar.gz
 
 USER root
