@@ -53,6 +53,8 @@ logger = logging.getLogger(__name__)
 
 class _CsvSplitter(MetadataAwareTextSplitter):
     def split_text_metadata_aware(self, text: str, metadata_str: str) -> List[str]:
+        # metadata_str is kept as an argument to satisfy the interface, but it is not used
+        # because metadata is added to the chunks later.
         return self.split_text(text)
 
     def split_text(self, text: str) -> List[str]:

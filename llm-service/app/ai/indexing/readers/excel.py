@@ -48,7 +48,7 @@ from llama_index.core.node_parser.interface import MetadataAwareTextSplitter
 from llama_index.core.schema import Document, TextNode
 
 from .base_reader import BaseReader, ChunksResult
-
+from ....exceptions import DocumentParseError
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,8 @@ class _ExcelSplitter(MetadataAwareTextSplitter):
     """Custom splitter for Excel files that handles multiple sheets and converts rows to JSON."""
 
     def split_text_metadata_aware(self, text: str, metadata_str: str) -> List[str]:
+        # metadata_str is kept as an argument to satisfy the interface, but it is not used
+        # because metadata is added to the chunks later.
         return self.split_text(text)
 
     def split_text(self, text: str) -> List[str]:
@@ -85,7 +87,7 @@ class _ExcelSplitter(MetadataAwareTextSplitter):
             return row_chunks
         except Exception as e:
             logger.error("Error splitting Excel text: %s", e)
-            return []
+            raise DocumentParseError("Error splitting Excel text") from e
 
 
 class ExcelReader(BaseReader):

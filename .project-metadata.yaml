@@ -59,6 +59,6 @@ tasks:
     short_summary: Create and start RagStudio.
     long_summary: Create and start RagStudio.
     cpu: 2
-    memory: 8
+    memory: 4
     environment_variables:
       TASK_TYPE: START_APPLICATION
