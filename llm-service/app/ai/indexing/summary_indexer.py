@@ -320,9 +320,10 @@ class SummaryIndexer(BaseTextIndexer):
             if self.summary_vector_store.flat_metadata:
                 nodes = [self._flatten_metadata(node) for node in nodes]
 
-            batch_size = (
-                256 if use_qdrant_safe_batches and is_tabular_document else 1000
-            )
+            if use_qdrant_safe_batches and is_tabular_document:
+                batch_size = 256
+            else:
+                batch_size = 1000
             self._insert_summary_nodes(summary_store, nodes, batch_size=batch_size)
             summary_store.storage_context.persist(persist_dir=persist_dir)
 
