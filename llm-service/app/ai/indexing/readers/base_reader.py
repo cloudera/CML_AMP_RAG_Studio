@@ -26,7 +26,7 @@ def _get_anonymizer() -> AnonymizerEngine:
     return AnonymizerEngine()  # type: ignore[no-untyped-call]
 
 
-@functools.lru_cache(maxsize=1)
+@functools.cache
 def _get_secret_collection() -> SecretsCollection:
     """Cached secrets collection to reuse compiled regex patterns."""
     with default_settings():
