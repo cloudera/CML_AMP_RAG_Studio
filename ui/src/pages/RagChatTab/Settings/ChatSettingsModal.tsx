@@ -334,7 +334,7 @@ const ChatSettingsModal = ({
           <Form.Item
             name="responseChunks"
             initialValue={activeSession.responseChunks}
-            label="Maximum number of documents"
+            label="Maximum number of document chunks"
           >
             <Slider marks={ResponseChunksRange} min={1} max={20} />
           </Form.Item>

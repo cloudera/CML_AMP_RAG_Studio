@@ -58,7 +58,7 @@ export const VectorDBFields = ({
         optionType="button"
         buttonStyle="solid"
         options={[
-          { value: "QDRANT", label: "Qdrant" },
+          { value: "QDRANT", label: "Embedded Qdrant" },
           { value: "OPENSEARCH", label: "Cloudera Semantic Search" },
           { value: "CHROMADB", label: "ChromaDB" },
         ]}
