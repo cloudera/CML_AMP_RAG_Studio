@@ -296,9 +296,9 @@ class SummaryIndexer(BaseTextIndexer):
         )
 
         if use_qdrant_safe_batches and is_tabular_document:
-            batch_size = 300
+            max_samples = 300
         else:
-            batch_size = 1000
+            max_samples = 1000
         sample_block_size = 20
 
         nodes = self.sample_nodes(nodes, max_samples, sample_block_size)
