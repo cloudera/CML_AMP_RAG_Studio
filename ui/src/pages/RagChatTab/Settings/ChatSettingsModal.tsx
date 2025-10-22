@@ -167,7 +167,7 @@ const ChatSettingsModal = ({
             valuePropName="checked"
             label={
               <Popover
-                title="Tool Calling (Technical Preview)"
+                title="Tool Calling (Beta)"
                 content={
                   <Typography style={{ width: 300 }}>
                     Enable tool calling. This feature is highly dependent on the
