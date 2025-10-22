@@ -167,7 +167,7 @@ const ChatSettingsModal = ({
             valuePropName="checked"
             label={
               <Popover
-                title="Tool Calling (Beta)"
+                title="Tool Calling (Technical Preview)"
                 content={
                   <Typography style={{ width: 300 }}>
                     Enable tool calling. This feature is highly dependent on the
@@ -334,7 +334,7 @@ const ChatSettingsModal = ({
           <Form.Item
             name="responseChunks"
             initialValue={activeSession.responseChunks}
-            label="Maximum number of documents"
+            label="Maximum number of document chunks"
           >
             <Slider marks={ResponseChunksRange} min={1} max={20} />
           </Form.Item>
