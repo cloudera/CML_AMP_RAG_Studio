@@ -193,7 +193,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       style={{ width: "100%", paddingTop: 20 }}
       {...layout}
       onValuesChange={(
-        changedValues: Partial<Omit<CreateSessionRequest, "id">>,
+        changedValues: Partial<Omit<CreateSessionRequest, "id">>
       ) => {
         onInferenceModelChange(changedValues, form, llmModels);
       }}
@@ -238,7 +238,7 @@ const CreateSessionForm = ({ form, dataSources }: CreateSessionFormProps) => {
       <Form.Item<CreateSessionRequest>
         name="responseChunks"
         initialValue={10}
-        label="Maximum number of documents"
+        label="Maximum number of document chunks"
       >
         <Slider marks={ResponseChunksRange} min={1} max={20} />
       </Form.Item>

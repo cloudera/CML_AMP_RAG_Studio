@@ -135,7 +135,7 @@ const MetadataDatabaseFields = ({
           optionType="button"
           buttonStyle="solid"
           options={[
-            { value: "H2", label: "Embedded" },
+            { value: "H2", label: "Embedded H2" },
             { value: "PostgreSQL", label: "External PostgreSQL" },
           ]}
           disabled={!enableModification}
