@@ -20,7 +20,7 @@ def _get_analyzer() -> AnalyzerEngine:
     return AnalyzerEngine()
 
 
-@functools.lru_cache(maxsize=1)
+@functools.cache
 def _get_anonymizer() -> AnonymizerEngine:
     """Cached anonymizer engine to reuse compiled patterns."""
     return AnonymizerEngine()  # type: ignore[no-untyped-call]
