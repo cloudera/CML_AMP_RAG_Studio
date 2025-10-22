@@ -295,10 +295,10 @@ class SummaryIndexer(BaseTextIndexer):
             self.summary_vector_store, QdrantVectorStore
         )
 
-        if use_qdrant_safe_batches:
-            max_samples = 300 if is_tabular_document else 1000
+        if use_qdrant_safe_batches and is_tabular_document:
+            batch_size = 300
         else:
-            max_samples = 1000
+            batch_size = 1000
         sample_block_size = 20
 
         nodes = self.sample_nodes(nodes, max_samples, sample_block_size)
