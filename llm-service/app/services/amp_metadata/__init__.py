@@ -115,7 +115,7 @@ class OpenSearchConfig(BaseModel):
     opensearch_namespace: Optional[str] = None
 
 
-class ChromaDBConfig(BaseModel):
+class ChromaDbConfig(BaseModel):
     """
     Model to represent the ChromaDB configuration.
     """
@@ -173,7 +173,7 @@ class ProjectConfig(BaseModel):
     caii_config: CaiiConfig
     openai_config: OpenAiConfig
     opensearch_config: OpenSearchConfig
-    chromadb_config: ChromaDBConfig
+    chromadb_config: ChromaDbConfig
     metadata_db_config: MetadataDbConfig
     cdp_token: Optional[str] = None
 
@@ -374,7 +374,7 @@ def config_to_env(config: ProjectConfig) -> dict[str, str]:
             "OPENSEARCH_ENDPOINT": config.opensearch_config.opensearch_endpoint or "",
             "OPENSEARCH_NAMESPACE": config.opensearch_config.opensearch_namespace or "",
             "CHROMADB_HOST": config.chromadb_config.chromadb_host or "",
-            "CHROMADB_PORT": str(config.chromadb_config.chromadb_port) or "",
+            "CHROMADB_PORT": str(config.chromadb_config.chromadb_port or ""),
             "CHROMADB_TOKEN": config.chromadb_config.chromadb_token or "",
             "CHROMADB_TENANT": config.chromadb_config.chromadb_tenant or "",
             "CHROMADB_DATABASE": config.chromadb_config.chromadb_database or "",
@@ -440,7 +440,7 @@ def build_configuration(
             )
             chromadb_port = None
 
-    chromadb_config = ChromaDBConfig(
+    chromadb_config = ChromaDbConfig(
         chromadb_host=env.get("CHROMADB_HOST"),
         chromadb_port=chromadb_port,
         chromadb_token=env.get("CHROMADB_TOKEN"),

@@ -49,6 +49,9 @@ from typing_extensions import Optional
 
 from .base import BaseTextIndexer
 from .readers.base_reader import ReaderConfig, ChunksResult
+from .readers.excel import ExcelReader
+from .readers.csv import CSVReader
+from ...ai.vector_stores.qdrant import QdrantVectorStore
 from ...ai.vector_stores.vector_store import VectorStore
 from ...services.utils import batch_sequence, flatten_sequence
 
@@ -78,6 +81,8 @@ class EmbeddingIndexer(BaseTextIndexer):
 
         reader_cls = self._get_reader_class(file_path)
 
+        is_tabular_document = reader_cls in (ExcelReader, CSVReader)
+
         reader = reader_cls(
             splitter=self.splitter,
             document_id=document_id,
@@ -99,7 +104,14 @@ class EmbeddingIndexer(BaseTextIndexer):
         chunks_with_embeddings = flatten_sequence(self._compute_embeddings(nodes))
 
         acc = 0
-        for chunk_batch in batch_sequence(chunks_with_embeddings, 1000):
+        use_qdrant_safe_batches = isinstance(
+            self.chunks_vector_store, QdrantVectorStore
+        )
+        if use_qdrant_safe_batches and is_tabular_document:
+            batch_size = 256
+        else:
+            batch_size = 1000
+        for chunk_batch in batch_sequence(chunks_with_embeddings, batch_size):
             acc += len(chunk_batch)
             logger.debug(f"Adding {acc}/{len(nodes)} chunks to vector store")
 
@@ -125,13 +137,20 @@ class EmbeddingIndexer(BaseTextIndexer):
         batched_chunks = list(batch_sequence(chunks, 100))
         batched_texts = [[chunk.text for chunk in batch] for batch in batched_chunks]
 
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        max_workers = 15
+        logger.debug("Using %s workers for embedding generation", max_workers)
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
                 executor.submit(
-                    lambda b: (i, self.embedding_model.get_text_embedding_batch(b)),
-                    batch,
+                    lambda batch_text, batch_index: (
+                        batch_index,
+                        self.embedding_model.get_text_embedding_batch(batch_text),
+                    ),
+                    b,
+                    i,
                 )
-                for i, batch in enumerate(batched_texts)
+                for i, b in enumerate(batched_texts)
             ]
             logger.debug(f"Waiting for {len(futures)} futures")
             for future in as_completed(futures):
