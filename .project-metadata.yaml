@@ -1,5 +1,5 @@
 name: RAG Studio
-description: | 
+description: |
   "Build a RAG application to ask questions about your documents.  Configuration for access to models will be available inside the application itself once it has been deployed."
 author: "Cloudera"
 date: "2024-09-10"
@@ -7,10 +7,10 @@ specification_version: 1.0
 prototype_version: 1.0
 
 environment_variables:
-    UV_HTTP_TIMEOUT:
-        description: "Timeout for UV processing in seconds."
-        default: "60000"
-        required: false
+  UV_HTTP_TIMEOUT:
+    description: "Timeout for UV processing in seconds."
+    default: "60000"
+    required: false
 
 runtimes:
   - editor: JupyterLab

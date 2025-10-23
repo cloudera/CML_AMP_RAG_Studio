@@ -61,10 +61,20 @@ def _new_qdrant_client() -> qdrant_client.QdrantClient:
     def auth_token_provider() -> str:
         return auth_token or "You should never see this"
 
+    logger.info(
+        "Using Qdrant host: %s, port: %s, grpc port: %s",
+        settings.qdrant_host,
+        settings.qdrant_port,
+        settings.qdrant_grpc_port,
+    )
+    
     return qdrant_client.QdrantClient(
         host=settings.qdrant_host,
         port=settings.qdrant_port,
         auth_token_provider=auth_token_provider if auth_token else None,
+        timeout=settings.qdrant_timeout,
+        prefer_grpc=True,
+        grpc_port=settings.qdrant_grpc_port,
     )
 
 
@@ -128,7 +138,13 @@ class QdrantVectorStore(VectorStore):
         return self.client.collection_exists(self.table_name)
 
     def llama_vector_store(self) -> BasePydanticVectorStore:
-        vector_store = LlamaIndexQdrantVectorStore(self.table_name, self.client)
+        vector_store = LlamaIndexQdrantVectorStore(
+            collection_name=self.table_name,
+            client=self.client,
+            parallel=4,
+            batch_size=64,
+            max_retries=3,
+        )
         return vector_store
 
     def visualize(

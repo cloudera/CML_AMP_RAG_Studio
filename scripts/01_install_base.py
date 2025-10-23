@@ -64,4 +64,4 @@ print(
         ["bash scripts/install_easyocr_model.sh"], shell=True, check=True
     )
 )
-print("Downloading EASYOCR models complete")
+print("Installing EASYOCR models complete")

@@ -1,3 +1,4 @@
+import functools
 import os
 import tempfile
 from abc import ABC, abstractmethod
@@ -11,6 +12,25 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import Document, TextNode, BaseNode
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
+
+
+@functools.cache
+def _get_analyzer() -> AnalyzerEngine:
+    """Cached analyzer engine to reuse compiled regex patterns."""
+    return AnalyzerEngine()
+
+
+@functools.cache
+def _get_anonymizer() -> AnonymizerEngine:
+    """Cached anonymizer engine to reuse compiled patterns."""
+    return AnonymizerEngine()  # type: ignore[no-untyped-call]
+
+
+@functools.cache
+def _get_secret_collection() -> SecretsCollection:
+    """Cached secrets collection to reuse compiled regex patterns."""
+    with default_settings():
+        return SecretsCollection()
 
 
 @dataclass
@@ -70,19 +90,19 @@ class BaseReader(ABC):
         if not self.config.block_secrets:
             return None
 
+        # Create a fresh collection each time since clear() doesn't exist
+        # but still benefit from cached settings/plugins via default_settings()
         with tempfile.TemporaryDirectory() as tmpdir:
+            paths = []
             for i, chunk in enumerate(chunks):
-                with open(os.path.join(tmpdir, f"chunk_{i}.txt"), "w") as f:
+                path = os.path.join(tmpdir, f"chunk_{i}.txt")
+                with open(path, "w") as f:
                     f.write(chunk)
+                paths.append(path)
 
-            secrets_collection = SecretsCollection()
+            secrets_collection = _get_secret_collection()
             with default_settings():
-                secrets_collection.scan_files(
-                    *[
-                        os.path.join(tmpdir, f"chunk_{i}.txt")
-                        for i in range(len(chunks))
-                    ]
-                )
+                secrets_collection.scan_files(*paths)
 
         secrets_json = secrets_collection.json()
 
@@ -97,12 +117,12 @@ class BaseReader(ABC):
         if not self.config.anonymize_pii:
             return None
 
-        analyzer = AnalyzerEngine()
+        analyzer = _get_analyzer()
 
         # TODO: support other languages
         results = analyzer.analyze(text=text, entities=None, language="en")
 
-        anonymizer = AnonymizerEngine()  # type: ignore[no-untyped-call]
+        anonymizer = _get_anonymizer()
 
         anonymized_text = anonymizer.anonymize(text=text, analyzer_results=results)  # type: ignore[arg-type]
         if anonymized_text.text == text:
