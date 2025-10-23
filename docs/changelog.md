@@ -4,6 +4,7 @@ This changelog summarizes notable changes per tagged release from 1.0.0 through 
 
 #### Table of Contents
 
+- [1.31.0](#1310)
 - [1.30.0](#1300)
 - [1.29.0](#1290)
 - [1.28.1](#1281)
@@ -41,6 +42,12 @@ This changelog summarizes notable changes per tagged release from 1.0.0 through 
 - [1.2.0](#120)
 - [1.1.0](#110)
 - [1.0.0](#100)
+
+## 1.31.0
+
+- Added Excel (.xlsx) file support for document ingestion
+- Enhanced indexing performance for tabular documents (CSV, Excel)
+- Updated dependencies and internal improvements
 
 ## 1.30.0
 

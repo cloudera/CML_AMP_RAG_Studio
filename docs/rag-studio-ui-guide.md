@@ -76,6 +76,14 @@ This guide explains how to use RAG Studio entirely from the UI, focusing on navi
 2. Drag-and-drop or select files, then click **Start Upload**.
 3. Use the table to view, delete, or summarize documents (if a summarization model is configured).
 
+**Supported Document Formats:**
+
+- **Documents**: PDF (`.pdf`), Word (`.docx`), Markdown (`.md`), Text (`.txt`), HTML (`.html`, with advanced PDF processing)
+- **Spreadsheets**: Excel (`.xlsx`, `.xlsm`, `.xlsb`, `.xls`), OpenDocument (`.ods`), CSV (`.csv`)
+- **Presentations**: PowerPoint (`.pptx`, `.pptm`)
+- **Data**: JSON (`.json`)
+- **Images**: JPEG (`.jpg`, `.jpeg`), PNG (`.png`)
+
 ![kb-manage](images/rag-studio-kb-manage-page.png)
 
 #### Edit Knowledge Base Settings
@@ -149,6 +157,7 @@ Type a question and send. If no session exists, a new session is created automat
 
 - Drag files anywhere in the chat area; a drop overlay will appear. Drop to upload into the associated knowledge base for the session.
 - Alternatively, open the **Documents** control (paperclip/folder icon) near the input to manage uploads.
+- Supports the same document formats as knowledge base uploads (PDF, Word, Excel, PowerPoint, CSV, JSON, Markdown, Text, Images, and more).
 
 ![documents-icon](images/chat-documents-icon.png)
 

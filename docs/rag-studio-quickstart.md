@@ -44,6 +44,14 @@ Landing Page:
 2. Drag-and-drop or select files, then click **Start Upload**.
 3. Confirm the uploaded files appear in the table.
 
+**Supported Document Formats:**
+
+- **Documents**: PDF (`.pdf`), Word (`.docx`), Markdown (`.md`), Text (`.txt`), HTML (`.html`, with advanced PDF processing)
+- **Spreadsheets**: Excel (`.xlsx`, `.xlsm`, `.xlsb`, `.xls`), OpenDocument (`.ods`), CSV (`.csv`)
+- **Presentations**: PowerPoint (`.pptx`, `.pptm`)
+- **Data**: JSON (`.json`)
+- **Images**: JPEG (`.jpg`, `.jpeg`), PNG (`.png`)
+
 ![manage-tab](images/rag-studio-kb-manage-page.png)
 
 ---
