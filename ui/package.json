@@ -31,13 +31,13 @@
     "antd": "^5.25.3",
     "date-fns": "^4.1.0",
     "lodash": "^4.17.21",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.1.2",
+    "react-dom": "^19.1.2",
     "react-intersection-observer": "^9.16.0",
     "react-markdown": "^9.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "swagger-ui-react": "^5.22.0",
+    "swagger-ui-react": "^5.28.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
