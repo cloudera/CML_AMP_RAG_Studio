@@ -37,7 +37,7 @@
     "react-markdown": "^9.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "swagger-ui-react": "^5.22.0",
+    "swagger-ui-react": "^5.28.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
