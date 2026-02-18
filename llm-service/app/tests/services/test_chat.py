@@ -36,7 +36,7 @@
 #  DATA.
 # ##############################################################################
 
-import lipsum
+from lorem_text import lorem
 from hypothesis import example, given
 from hypothesis import strategies as st
 
@@ -68,7 +68,7 @@ def suggested_questions_responses(
         bullet: str = draw(st.sampled_from(["*", "-"]))
 
         question_length: int = draw(st.integers(min_length, max_length))
-        question: str = lipsum.generate_words(question_length).replace(" - ", " ")
+        question: str = lorem.words(question_length).replace(" - ", " ")
 
         if generate_bold and draw(st.booleans()):
             question = f"*{question}*"
