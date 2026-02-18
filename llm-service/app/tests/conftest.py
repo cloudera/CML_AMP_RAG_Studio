@@ -44,7 +44,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, cast
 
-import lipsum
+from lorem_text import lorem
 import pytest
 import qdrant_client as q_client
 from fastapi.testclient import TestClient
@@ -191,7 +191,7 @@ def llm(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def test_file(databases_dir: str, s3_object: BotoObject) -> pathlib.Path:
-    body = lipsum.generate_words(1000)
+    body = lorem.words(1000)
     target_path = f"{databases_dir}/file_storage/{s3_object.key}"
     path = pathlib.Path(target_path)
     os.makedirs(path.parent, exist_ok=True)
